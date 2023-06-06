@@ -100,16 +100,23 @@ public class AdSelectionEncryptionKeyManager {
      */
     @Nullable
     public ObliviousHttpKeyConfig getLatestActiveOhttpKeyConfigOfType(
-            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
-                    int adSelectionEncryptionKeyType) {
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            long timeoutMs) {
         AdSelectionEncryptionKey encryptionKey =
                 getLatestActiveKeyOfType(adSelectionEncryptionKeyType);
         try {
-            return encryptionKey == null ? null : getOhttpKeyConfigForKey(encryptionKey);
+            if (encryptionKey == null) {
+                encryptionKey =
+                        fetchPersistAndGetActiveKeyOfType(adSelectionEncryptionKeyType, timeoutMs)
+                                .get();
+            }
+            return getOhttpKeyConfigForKey(encryptionKey);
         } catch (InvalidKeySpecException e) {
             // TODO(b/286839408): Delete all keys of given keyType if they can't be parsed into
             // key config.
             throw new IllegalStateException("Unable to parse the key into ObliviousHttpKeyConfig.");
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to fetch the key into ObliviousHttpKeyConfig.");
         }
     }
 
@@ -119,15 +126,23 @@ public class AdSelectionEncryptionKeyManager {
      */
     @Nullable
     public ObliviousHttpKeyConfig getLatestOhttpKeyConfigOfType(
-            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
-                    int adSelectionEncryptionKeyType) {
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            long timeoutMs) {
         AdSelectionEncryptionKey encryptionKey = getLatestKeyOfType(adSelectionEncryptionKeyType);
         try {
-            return encryptionKey == null ? null : getOhttpKeyConfigForKey(encryptionKey);
+            if (encryptionKey == null) {
+                encryptionKey =
+                        fetchPersistAndGetActiveKeyOfType(adSelectionEncryptionKeyType, timeoutMs)
+                                .get();
+            }
+            return getOhttpKeyConfigForKey(encryptionKey);
+
         } catch (InvalidKeySpecException e) {
             // TODO(b/286839408): Delete all keys of given keyType if they can't be parsed into
             // key config.
             throw new IllegalStateException("Unable to parse the key into ObliviousHttpKeyConfig.");
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to fetch the key into ObliviousHttpKeyConfig.");
         }
     }
 
@@ -175,8 +190,7 @@ public class AdSelectionEncryptionKeyManager {
      */
     public FluentFuture<AdSelectionEncryptionKey> fetchPersistAndGetActiveKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
-            long timeoutMs)
-            throws Exception {
+            long timeoutMs) {
         Instant fetchInstant = mClock.instant();
         return fetchAndPersistActiveKeysOfType(adSelectionKeyType, fetchInstant, timeoutMs)
                 .transform(keys -> selectRandomDbKeyAndParse(keys), mLightweightExecutor);

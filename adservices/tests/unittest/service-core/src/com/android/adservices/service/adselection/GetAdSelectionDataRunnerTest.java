@@ -1,0 +1,277 @@
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.adservices.service.adselection;
+
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+
+import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.GetAdSelectionDataCallback;
+import android.adservices.adselection.GetAdSelectionDataInput;
+import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.GetAdSelectionDataResponse;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
+import android.adservices.common.FledgeErrorResponse;
+import android.content.Context;
+import android.net.Uri;
+import android.os.Process;
+import android.os.RemoteException;
+
+import androidx.room.Room;
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.Spy;
+import org.mockito.quality.Strictness;
+
+import java.security.spec.InvalidKeySpecException;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+
+public class GetAdSelectionDataRunnerTest {
+    private static final int CALLER_UID = Process.myUid();
+    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
+    private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
+    private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private Flags mFlags;
+    private Context mContext;
+    private ExecutorService mLightweightExecutorService;
+    private ExecutorService mBackgroundExecutorService;
+    private CustomAudienceDao mCustomAudienceDao;
+    private EncryptionKeyDao mEncryptionKeyDao;
+    @Spy private EncryptionContextDao mEncryptionContextDaoSpy;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+    private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
+    private MockitoSession mStaticMockSession = null;
+
+    @Before
+    public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
+        mFlags = new GetAdSelectionDataRunnerTestFlags();
+        mContext = ApplicationProvider.getApplicationContext();
+        mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
+        mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mCustomAudienceDao =
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .build()
+                        .customAudienceDao();
+        AdSelectionServerDatabase serverDb =
+                Room.inMemoryDatabaseBuilder(
+                                ApplicationProvider.getApplicationContext(),
+                                AdSelectionServerDatabase.class)
+                        .build();
+        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEncryptionContextDaoSpy = serverDb.encryptionContextDao();
+
+        // Test applications don't have the required permissions to read config P/H flags, and
+        // injecting mocked flags everywhere is annoying and non-trivial for static methods
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .mockStatic(PackageManagerCompatUtils.class)
+                        .initMocks(this)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        MockitoAnnotations.initMocks(this); // init @Mock mocks
+
+        doNothing()
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        SELLER,
+                        CALLER_PACKAGE_NAME,
+                        true,
+                        true,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+        mGetAdSelectionDataRunner =
+                new GetAdSelectionDataRunner(
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.createNoOpCache()),
+                        mCustomAudienceDao,
+                        mEncryptionKeyDao,
+                        mEncryptionContextDaoSpy,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mFlags,
+                        CALLER_UID);
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        createAndPersistDBCustomAudiences();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setAdSelectionDataRequest(
+                                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
+        Mockito.verify(mEncryptionContextDaoSpy, times(1)).insertEncryptionContext(any());
+    }
+
+    @Test
+    public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        anyBoolean(),
+                        eq(true),
+                        eq(CALLER_UID),
+                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA));
+
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setAdSelectionDataRequest(
+                                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertNull(callback.mGetAdSelectionDataResponse);
+        Mockito.verify(mEncryptionContextDaoSpy, times(0)).insertEncryptionContext(any());
+    }
+
+    private void createAndPersistDBCustomAudiences() {
+        Map<String, AdTechIdentifier> nameAndBuyers =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2);
+
+        for (Map.Entry<String, AdTechIdentifier> entry : nameAndBuyers.entrySet()) {
+            AdTechIdentifier buyer = entry.getValue();
+            String name = entry.getKey();
+            DBCustomAudience thisCustomAudience =
+                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
+        }
+    }
+
+    private GetAdSelectionDataTestCallback invokeGetAdSelectionData(
+            GetAdSelectionDataRunner runner, GetAdSelectionDataInput inputParams)
+            throws InterruptedException {
+
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        GetAdSelectionDataTestCallback callback =
+                new GetAdSelectionDataTestCallback(countdownLatch);
+
+        runner.run(inputParams, callback);
+        callback.mCountDownLatch.await();
+        return callback;
+    }
+
+    public static class GetAdSelectionDataRunnerTestFlags implements Flags {
+        @Override
+        public long getFledgeCustomAudienceActiveTimeWindowInMs() {
+            return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
+    }
+
+    static class GetAdSelectionDataTestCallback extends GetAdSelectionDataCallback.Stub {
+        final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        GetAdSelectionDataResponse mGetAdSelectionDataResponse;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        GetAdSelectionDataTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+            mGetAdSelectionDataResponse = null;
+            mFledgeErrorResponse = null;
+        }
+
+        @Override
+        public void onSuccess(GetAdSelectionDataResponse getAdSelectionDataResponse)
+                throws RemoteException {
+            mIsSuccess = true;
+            mGetAdSelectionDataResponse = getAdSelectionDataResponse;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mIsSuccess = false;
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+}
