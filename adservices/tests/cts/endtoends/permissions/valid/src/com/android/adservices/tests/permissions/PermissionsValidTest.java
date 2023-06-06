@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -187,13 +188,12 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-    // TODO(b/274723533): Uncomment after un-hiding the API
-    /*
+
     @Test
-    public void testValidPermissions_reportInteraction() {
+    public void testValidPermissions_reportEvent() {
         long adSelectionId = 1;
-        String interactionKey = "click";
-        String interactionData = "{\"key\":\"value\"}";
+        String eventKey = "click";
+        String eventData = "{\"key\":\"value\"}";
 
         AdSelectionClient mAdSelectionClient =
                 new AdSelectionClient.Builder()
@@ -202,21 +202,21 @@ public class PermissionsValidTest {
                         .build();
 
         ReportEventRequest request =
-                new ReportEventRequest(
-                        adSelectionId,
-                        interactionKey,
-                        interactionData,
-                        ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
-                                | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+                new ReportEventRequest.Builder(
+                                adSelectionId,
+                                eventKey,
+                                eventData,
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                        | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .build();
 
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> mAdSelectionClient.reportInteraction(request).get());
+                        () -> mAdSelectionClient.reportEvent(request).get());
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-    */
 
     @Test
     public void testValidPermissions_updateAdCounterHistogram() {

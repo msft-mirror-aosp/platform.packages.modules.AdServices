@@ -156,12 +156,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "}\n"
                     + "function reportResult(ad_selection_config, render_uri, bid,"
                     + " contextual_signals) { \n"
-                    + "    registerAdBeacon('click', '"
+                    + "const beacons = {'click': '"
                     + SELLER_CLICK_URI
-                    + "');\n"
-                    + "    registerAdBeacon('hover', '"
+                    + "', 'hover': '"
                     + SELLER_HOVER_URI
-                    + "');\n"
+                    + "'};\n"
+                    + "registerAdBeacon(beacons);"
                     + " return {'status': 0, 'results': {'signals_for_buyer':"
                     + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                     + SELLER_REPORTING_URI
@@ -222,27 +222,20 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
-    private static final String BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
-            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
-                    + "    trusted_bidding_signals, contextual_signals) {\n"
-                    + "    const ads = customAudience.ads;\n"
-                    + "    let result = null;\n"
-                    + "    for (const ad of ads) {\n"
-                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                    + "            result = ad;\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                    + "'render': result.render_uri };\n"
+    private static final String BUYER_2_BIDDING_LOGIC_JS_REGISTER_AD_BEACON =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
+                    + " custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + "    registerAdBeacon('click', '"
+                    + "const beacons = {'click': '"
                     + BUYER_2_CLICK_URI
-                    + "');\n"
-                    + "    registerAdBeacon('hover', '"
+                    + "', 'hover': '"
                     + BUYER_2_HOVER_URI
-                    + "');\n"
+                    + "'};\n"
+                    + "registerAdBeacon(beacons);"
                     + " return {'status': 0, 'results': {'reporting_uri': '"
                     + BUYER_2_REPORTING_URI
                     + "' } };\n"
@@ -270,27 +263,20 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
-    private static final String BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
-            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
-                    + "    trusted_bidding_signals, contextual_signals) {\n"
-                    + "    const ads = customAudience.ads;\n"
-                    + "    let result = null;\n"
-                    + "    for (const ad of ads) {\n"
-                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                    + "            result = ad;\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                    + "'render': result.render_uri };\n"
+    private static final String BUYER_1_BIDDING_LOGIC_JS_REGISTER_AD_BEACON =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
+                    + " custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + "    registerAdBeacon('click', '"
+                    + "const beacons = {'click': '"
                     + BUYER_1_CLICK_URI
-                    + "');\n"
-                    + "    registerAdBeacon('hover', '"
+                    + "', 'hover': '"
                     + BUYER_1_HOVER_URI
-                    + "');\n"
+                    + "'};\n"
+                    + "registerAdBeacon(beacons);"
                     + " return {'status': 0, 'results': {'reporting_uri': '"
                     + BUYER_1_REPORTING_URI
                     + "' } };\n"
@@ -797,11 +783,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
     */
 
-    @Ignore
     @Test
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable registerAdBeacon feature
         PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(true);
@@ -839,14 +825,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_REGISTER_AD_BEACON)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_REGISTER_AD_BEACON)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -903,14 +889,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Performing interaction reporting, and asserting that no exception is thrown
         mAdSelectionClient
-                .reportInteraction(reportInteractionClickRequest)
+                .reportEvent(reportInteractionClickRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
         mAdSelectionClient
-                .reportInteraction(reportInteractionHoverRequest)
+                .reportEvent(reportInteractionHoverRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
