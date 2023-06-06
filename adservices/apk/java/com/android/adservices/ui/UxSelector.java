@@ -22,12 +22,12 @@ import com.android.adservices.service.FlagsFactory;
  * Activities and Action Delegates should implement this interface to ensure they implement all
  * existing modes of AdServices.
  */
-public interface ModeSelector {
+public interface UxSelector {
     /**
      * Contains all the modes for AdServices module. Each mode should have a corresponding method to
      * get the layoutResId for that mode.
      */
-    enum ModeEnum {
+    enum UxEnum {
         BETA,
         GA,
         U18,
@@ -37,17 +37,15 @@ public interface ModeSelector {
      * Temporary Utility class to get the current mode for AdServices module. This will be replace
      * with UX Engine.
      */
-    class CurrentMode {
-        private static ModeEnum sCurrentMode;
+    class CurrentUx {
+        private static UxEnum sCurrentUx;
 
-        public static ModeEnum get(boolean refresh) {
-            if (refresh || sCurrentMode == null) {
-                sCurrentMode =
-                        FlagsFactory.getFlags().getGaUxFeatureEnabled()
-                                ? ModeEnum.GA
-                                : ModeEnum.BETA;
+        public static UxEnum get(boolean refresh) {
+            if (refresh || sCurrentUx == null) {
+                sCurrentUx =
+                        FlagsFactory.getFlags().getGaUxFeatureEnabled() ? UxEnum.GA : UxEnum.BETA;
             }
-            return sCurrentMode;
+            return sCurrentUx;
         }
     }
 
@@ -58,8 +56,8 @@ public interface ModeSelector {
      * @param refresh if true, will re-fetch current UI mode. Should only be true at start of UI
      *     flows (e.g. main view of settings, notification landing page, notification card)
      */
-    default void initWithMode(boolean refresh) {
-        switch (CurrentMode.get(refresh)) {
+    default void initWithUx(boolean refresh) {
+        switch (CurrentUx.get(refresh)) {
             case BETA:
                 initBeta();
                 break;
@@ -75,18 +73,12 @@ public interface ModeSelector {
         }
     }
 
-    /**
-     * This method will be called in {@link #initWithMode} if app is in {@link ModeEnum#BETA} mode.
-     */
+    /** This method will be called in {@link #initWithUx} if app is in {@link UxEnum#BETA} mode. */
     void initBeta();
 
-    /**
-     * This method will be called in {@link #initWithMode} if app is in {@link ModeEnum#GA} mode.
-     */
+    /** This method will be called in {@link #initWithUx} if app is in {@link UxEnum#GA} mode. */
     void initGA();
 
-    /**
-     * This method will be called in {@link #initWithMode} if app is in {@link ModeEnum#U18} mode.
-     */
+    /** This method will be called in {@link #initWithUx} if app is in {@link UxEnum#U18} mode. */
     void initU18();
 }
