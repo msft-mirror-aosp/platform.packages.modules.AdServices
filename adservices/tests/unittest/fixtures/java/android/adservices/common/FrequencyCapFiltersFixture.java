@@ -16,6 +16,10 @@
 
 package android.adservices.common;
 
+import android.os.Parcel;
+
+import com.google.common.collect.ImmutableList;
+
 /** Utility class for creating and testing {@link FrequencyCapFilters} objects. */
 public class FrequencyCapFiltersFixture {
     public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS =
@@ -55,5 +59,35 @@ public class FrequencyCapFiltersFixture {
                         KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                 .setKeyedFrequencyCapsForClickEvents(
                         KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
+    }
+
+    public static FrequencyCapFilters getFrequencyCapFiltersWithExcessiveNumFilters() {
+        // Distribute the maximum number of filters across all event types
+        final int distributedNumFilters = FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS / 4;
+        ImmutableList.Builder<KeyedFrequencyCap> listBuilder = ImmutableList.builder();
+        for (int key = 0; key < distributedNumFilters; key++) {
+            listBuilder.add(
+                    KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(key)
+                            .build());
+        }
+
+        Parcel sourceParcel = Parcel.obtain();
+        sourceParcel.writeTypedList(listBuilder.build());
+        sourceParcel.writeTypedList(listBuilder.build());
+        sourceParcel.writeTypedList(listBuilder.build());
+
+        // Add extra filters to the final list so that the total is exceeded
+        final int numExtraFiltersToExceed =
+                FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS - (4 * distributedNumFilters) + 1;
+        for (int key = 0; key < numExtraFiltersToExceed; key++) {
+            listBuilder.add(
+                    KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(key)
+                            .build());
+        }
+
+        sourceParcel.writeTypedList(listBuilder.build());
+        sourceParcel.setDataPosition(0);
+
+        return FrequencyCapFilters.CREATOR.createFromParcel(sourceParcel);
     }
 }

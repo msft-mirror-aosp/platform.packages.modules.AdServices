@@ -17,7 +17,9 @@
 package android.adservices.common;
 
 import android.net.Uri;
+import android.os.Parcel;
 
+import com.android.adservices.AdServicesParcelableUtil;
 import com.android.adservices.common.JsonFixture;
 
 import com.google.common.collect.ImmutableList;
@@ -125,5 +127,25 @@ public class AdDataFixture {
 
     public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
         return getValidAdDataBuilderByBuyer(buyer, sequenceNumber).build();
+    }
+
+    public static AdData getAdDataWithExceededFrequencyCapLimits(
+            AdTechIdentifier buyer, int sequenceNumber) {
+        AdData sourceAdData = getValidAdDataByBuyer(buyer, sequenceNumber);
+
+        Parcel sourceParcel = Parcel.obtain();
+        sourceAdData.getRenderUri().writeToParcel(sourceParcel, 0);
+        sourceParcel.writeString(sourceAdData.getMetadata());
+        AdServicesParcelableUtil.writeNullableToParcel(
+                sourceParcel,
+                getExcessiveNumberOfAdCounterKeys(),
+                AdServicesParcelableUtil::writeIntegerSetToParcel);
+        AdServicesParcelableUtil.writeNullableToParcel(
+                sourceParcel,
+                FrequencyCapFiltersFixture.getFrequencyCapFiltersWithExcessiveNumFilters(),
+                (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, 0));
+        sourceParcel.setDataPosition(0);
+
+        return AdData.CREATOR.createFromParcel(sourceParcel);
     }
 }
