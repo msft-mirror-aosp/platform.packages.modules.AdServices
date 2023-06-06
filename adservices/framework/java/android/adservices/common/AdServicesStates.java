@@ -1,0 +1,168 @@
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.adservices.common;
+
+import android.annotation.NonNull;
+import android.annotation.SystemApi;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+/**
+ * AdServicesStates exposed to system apps/services through the enableAdServices API.
+ *
+ * @hide
+ */
+@SystemApi
+public final class AdServicesStates implements Parcelable {
+
+    public static final @NonNull Creator<AdServicesStates> CREATOR =
+            new Parcelable.Creator<AdServicesStates>() {
+                @Override
+                public AdServicesStates createFromParcel(Parcel in) {
+                    return new AdServicesStates(in);
+                }
+
+                @Override
+                public AdServicesStates[] newArray(int size) {
+                    return new AdServicesStates[size];
+                }
+            };
+
+    private boolean mIsPrivacySandboxUiEnabled;
+    private boolean mIsPrivacySandboxUiRequest;
+    private boolean mIsU18Account;
+    private boolean mIsAdultAccount;
+    private boolean mIsAdIdEnabled;
+
+    private AdServicesStates(
+            boolean isPrivacySandboxUiEnabled,
+            boolean isPrivacySandboxUiRequest,
+            boolean isU18Account,
+            boolean isAdultAccount,
+            boolean isAdIdEnabled) {
+        mIsPrivacySandboxUiEnabled = isPrivacySandboxUiEnabled;
+        mIsPrivacySandboxUiRequest = isPrivacySandboxUiRequest;
+        mIsU18Account = isU18Account;
+        mIsAdultAccount = isAdultAccount;
+        mIsAdIdEnabled = isAdIdEnabled;
+    }
+
+    private AdServicesStates(@NonNull Parcel in) {
+        mIsPrivacySandboxUiEnabled = in.readBoolean();
+        mIsPrivacySandboxUiRequest = in.readBoolean();
+        mIsU18Account = in.readBoolean();
+        mIsAdultAccount = in.readBoolean();
+        mIsAdIdEnabled = in.readBoolean();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel out, int flags) {
+        out.writeBoolean(mIsPrivacySandboxUiEnabled);
+        out.writeBoolean(mIsPrivacySandboxUiRequest);
+        out.writeBoolean(mIsU18Account);
+        out.writeBoolean(mIsAdultAccount);
+        out.writeBoolean(mIsAdIdEnabled);
+    }
+
+    /** Returns whether the AdServices entry point is enabled. */
+    @NonNull
+    public boolean isPrivacySandboxUiEnabled() {
+        return mIsPrivacySandboxUiEnabled;
+    }
+
+    /** Returns whether the API was an entry point request. */
+    @NonNull
+    public boolean isPrivacySandboxUiRequest() {
+        return mIsPrivacySandboxUiRequest;
+    }
+
+    /** Returns whether Advertising ID is enabled. */
+    @NonNull
+    public boolean isAdIdEnabled() {
+        return mIsAdIdEnabled;
+    }
+
+    /** Returns whether the account is an U18 account. */
+    @NonNull
+    public boolean isU18Account() {
+        return mIsU18Account;
+    }
+
+    /** Returns whether the account is an adult account. */
+    @NonNull
+    public boolean isAdultAccount() {
+        return mIsAdultAccount;
+    }
+
+    /** Builder for {@link AdServicesStates} objects. */
+    public static final class Builder {
+        private boolean mIsPrivacySandboxUiEnabled;
+        private boolean mIsPrivacySandboxUiRequest;
+        private boolean mIsU18Account;
+        private boolean mIsAdultAccount;
+        private boolean mIsAdIdEnabled;
+
+        public Builder() {}
+
+        /** Set if the privacy sandbox UX entry point is enabled. */
+        public @NonNull Builder setPrivacySandboxUiEnabled(
+                @NonNull boolean isPrivacySandboxUiEnabled) {
+            mIsPrivacySandboxUiEnabled = isPrivacySandboxUiEnabled;
+            return this;
+        }
+
+        /** Set if the API call was the result of a privacy sandbox UX entry point request. */
+        public @NonNull Builder setPrivacySandboxUiRequest(
+                @NonNull boolean isPrivacySandboxUiRequest) {
+            mIsPrivacySandboxUiRequest = isPrivacySandboxUiRequest;
+            return this;
+        }
+
+        /** Set if the device is currently running under an U18 account. */
+        public @NonNull Builder setU18Account(@NonNull boolean isU18Account) {
+            mIsU18Account = isU18Account;
+            return this;
+        }
+
+        /** Set if the device is currently running under an adult account. */
+        public @NonNull Builder setAdultAccount(@NonNull boolean isAdultAccount) {
+            mIsAdultAccount = isAdultAccount;
+            return this;
+        }
+
+        /** Set if user has opt-in/out of Advertising ID. */
+        public @NonNull Builder setAdIdEnabled(@NonNull boolean isAdIdEnabled) {
+            mIsAdIdEnabled = isAdIdEnabled;
+            return this;
+        }
+
+        /** Builds a {@link AdServicesStates} instance. */
+        public @NonNull AdServicesStates build() {
+            return new AdServicesStates(
+                    mIsPrivacySandboxUiEnabled,
+                    mIsPrivacySandboxUiRequest,
+                    mIsU18Account,
+                    mIsAdultAccount,
+                    mIsAdIdEnabled);
+        }
+    }
+}
