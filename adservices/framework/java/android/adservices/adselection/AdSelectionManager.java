@@ -466,12 +466,28 @@ public class AdSelectionManager {
      *
      * <p>The function definition of {@code registerBeacon} is:
      *
-     * <p>{@code function registerAdBeacon(event_key, reporting_url) }
+     * <p>{@code function registerAdBeacon(beacons)}, where {@code beacons} is a dict of string to
+     * string pairs
      *
-     * <p>For each ad event a buyer/seller is interested in reports for, they would invoke {@code
-     * registerAdBeacon}, where {@code event_key} is an identifier for that specific event. This
-     * {@code event_key} should match {@link ReportEventRequest#getKey()} when the SDK invokes
-     * {@link #reportEvent}.
+     * <p>For each ad event a buyer/seller is interested in reports for, they would add an {@code
+     * event_key}: {@code event_reporting_uri} pair to the {@code beacons} dict, where {@code
+     * event_key} is an identifier for that specific event. This {@code event_key} should match
+     * {@link ReportEventRequest#getKey()} when the SDK invokes {@link #reportEvent}. In addition,
+     * each {@code event_reporting_uri} should parse properly into a {@link android.net.Uri}. This
+     * will be the {@link android.net.Uri} reported to when the SDK invokes {@link #reportEvent}.
+     *
+     * <p>When the buyer/seller has added all the pairings they want to receive events for, they can
+     * invoke {@code registerAdBeacon(beacons)}, where {@code beacons} is the name of the dict they
+     * added the pairs to.
+     *
+     * <p>{@code registerAdBeacon} will throw a {@code TypeError} in these situations:
+     *
+     * <ol>
+     *   <li>{@code registerAdBeacon}is called more than once. If this error is caught in
+     *       reportWin/reportResult, the original set of pairings will be registered
+     *   <li>{@code registerAdBeacon} doesn't have exactly 1 dict argument.
+     *   <li>The contents of the 1 dict argument are not all {@code String: String} pairings.
+     * </ol>
      *
      * <p>The output is passed by the {@code receiver}, which either returns an empty {@link Object}
      * for a successful run, or an {@link Exception} includes the type of the exception thrown and
