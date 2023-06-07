@@ -44,5 +44,7 @@
     <string name="on_click_package">Package To Open</string>
     <string name="positioning">Positioning</string>
     <string name="placement">Placement</string>
+    <string name="size">Size</string>
+    <string name="ad_size">Ad Size</string>
     <string name="feature_flags">Feature Flags</string>
 </resources>
