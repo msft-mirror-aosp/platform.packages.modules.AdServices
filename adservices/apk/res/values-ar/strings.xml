@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"إزالة الحظر"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"الاهتمامات المحظورة"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"إعادة ضبط جميع الاهتمامات"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"لا تتوفّر اهتمامات لعرضها في الوقت الحالي."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"لا تتوفّر مواضيع لعرضها في الوقت الحالي.\nمزيد من المعلومات حول "<a href="https://support.google.com/android?p=ad_privacy">"مواضيع الإعلانات"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"مبادرة حماية الخصوصية"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏يوفّر الإصدار التجريبي من الخصوصية في عرض الإعلانات على Android ميزات جديدة يمكن للتطبيقات استخدامها لعرض الإعلانات التي قد تعجبك. لا تستخدم هذه التقنيات معرّفات الأجهزة.\n\nيمكن لنظام Android أن يُحدّد أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام على جهازك مؤقّتًا. يتيح ذلك للتطبيقات عرض الإعلانات ذات الصلة لك، بدون أن يتم تتبُّع نشاطك على المواقع الإلكترونية والتطبيقات التابعة لمطوّرين آخرين."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ليس لديك فئات اهتمام محظورة"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"عرض التطبيقات المحظورة"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"إعادة ضبط الاهتمامات المحددّة وفقًا للتطبيقات"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ليس هناك تطبيقات تقترح اهتمامات الآن."</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"لا تتوفّر تطبيقات لعرضها في الوقت الحالي. \nمزيد من المعلومات حول "<a href="https://support.google.com/android?p=ad_privacy">"الإعلانات المقترَحة من التطبيقات"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"مبادرة حماية الخصوصية"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏يوفّر الإصدار التجريبي من الخصوصية في عرض الإعلانات على Android ميزات جديدة يمكن للتطبيقات استخدامها لعرض الإعلانات التي قد تعجبك. لا تستخدم هذه التقنيات معرّفات الأجهزة.\n\nيمكن أن تُحدّد التطبيقات أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام هذه على جهازك مؤقّتًا. يتيح ذلك للتطبيقات عرض الإعلانات ذات الصلة لك، بدون أن يتم تتبُّع نشاطك على المواقع الإلكترونية والتطبيقات التابعة لمطوّرين آخرين."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ليس هناك تطبيقات محظورة."</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"هل تريد إعادة ضبط الإعلانات المقترَحة من التطبيقات؟"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"سيتم حذف بيانات اقتراح الإعلانات من التطبيقات التي في قائمتك وستقترح التطبيقات إعلانات جديدة من الآن فصاعدًا. قد يستمر ظهور بعض الإعلانات ذات الصلة."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"تمت إعادة ضبط بيانات التطبيقات."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"هل تريد إعادة ضبط كل المواضيع؟"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"هل تريد إعادة ضبط الإعلانات المقترَحة من التطبيقات؟"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"الخصوصية في عرض الإعلانات"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"مواضيع الإعلانات"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"الإعلانات المقترَحة من التطبيقات"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"‏يسجِّل نظام Android المواضيع ذات الأهمية بناءً على التطبيقات التي استخدمتها مؤخرًا ومعدّل استخدامك لها."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"يمكن للتطبيقات التي تستخدمها أيضًا تحديد المحتوى الذي يعجبك بناءً على طريقة استخدامك لها."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏التطبيقات التي تستخدمها يمكن أن تطلب من Android معلومات تساعدها في قياس أداء إعلاناتها. يسمح Android للتطبيقات بجمع أنواع محدودة من البيانات."</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"‏مزيد من المعلومات حول "<a href="https://support.google.com/android?p=ad_privacy">"الخصوصية في عرض الإعلانات على Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"الخيار مفعَّل / عدد المواضيع: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{الخيار مفعَّل / موضوع واحد}zero{الخيار مفعَّل / # موضوع}two{الخيار مفعَّل / موضوعان}few{الخيار مفعَّل / # مواضيع}many{الخيار مفعَّل / # موضوعًا}other{الخيار مفعَّل / # موضوع}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"الخيار مفعَّل/ عدد التطبيقات: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>

@@ -71,7 +71,7 @@
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"תכונות חדשות של פרטיות בפרסום"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"נושאי המודעות ואמצעי בקרה חדשים מאפשרים לך לבחור טוב יותר את המודעות שמוצגות לך"</string>
     <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"‏מתגבשת ב-Android של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. גם האפליקציות עצמן יכולות להעריך מה מעניין אותך. לאחר מכן, האפליקציות יכולות לשלוח בקשה לקבלת המידע הזה כדי להציג לך מודעות בהתאמה אישית. יש לך אפשרות לבחור אילו אפליקציות ונושאים ישמשו כדי להציג לך מודעות."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"‏מתגבשת ב-Android רשימה של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. גם האפליקציות עצמן יכולות להעריך מה מעניין אותך. לאחר מכן, האפליקציות יכולות לשלוח בקשה לקבלת המידע הזה כדי להציג לך מודעות בהתאמה אישית. יש לך אפשרות לבחור אילו אפליקציות ונושאים ישמשו כדי להציג לך מודעות."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"כדי למדוד את הביצועים של מודעה מסוימת, סוגים מסוימים של נתונים ישותפו בין האפליקציות."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"‏מידע נוסף על מודעות ב-Android"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"מודעות מועילות יותר"</string>
@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ביטול חסימה"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"תחומי עניין שחסמת"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"איפוס כל תחומי העניין"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"אין כרגע תחומי עניין שאפשר להציג."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"אין כרגע נושאים שאפשר להציג.\nמידע נוסף על "<a href="https://support.google.com/android?p=ad_privacy">"נושאים של מודעות"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"‏תוכנית הבטא של פרטיות בפרסום ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nמערכת Android יכולה להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"לא חסמת אף תחום עניין"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"הצגת האפליקציות החסומות"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"איפוס הנתונים שהוערכו על ידי האפליקציות"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"אף אפליקציה לא מייצרת תחומי עניין עבורך כרגע"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"אין כרגע אפליקציות שאפשר להציג. \nמידע נוסף על "<a href="https://support.google.com/android?p=ad_privacy">"מודעות שאפליקציות מציעות"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"‏תוכנית הבטא של פרטיות בפרסום ב-Android מספקת תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nהאפליקציות יכולות להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני על המכשיר. באופן הזה, האפליקציות יכולות להציג לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"לא חסמת אף אפליקציה"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"לאפס את הנתונים של מודעות שהאפליקציות מציעות?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"הנתונים של המודעות שהציעו האפליקציות ברשימה שלך יימחקו, ומעכשיו האפליקציות האלה יציעו לך מודעות חדשות. ייתכן שעדיין יוצגו כמה מודעות קשורות."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"נתוני האפליקציות אופסו"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"לאפס את כל הנושאים?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"לאפס את הנתונים של מודעות שהאפליקציות מציעות?"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"פרטיות בפרסום"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"נושאי מודעות"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"מודעות שאפליקציות מציעות"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"‏נערכת ב-Android רשימה של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה ותדירות השימוש בהן."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"אפליקציות שבהן השתמשת יכולות להעריך מה מעניין אותך על סמך אופן השימוש שלך בהן."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏האפליקציות שבהן השתמשת יכולות לשלוח ל-Android בקשה לקבלת מידע שיעזור להן למדוד את ביצועי המודעות שלהן. אפליקציות ב-Android מורשות לאסוף סוגים מסוימים של נתונים."</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"‏מידע נוסף על "<a href="https://support.google.com/android?p=ad_privacy">"פרטיות בפרסום ב-Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"מופעלת / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> נושאים"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{מופעל / נושא אחד (#)}one{מופעל / # נושאים}two{מופעל / # נושאים}other{מופעל / # נושאים}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"מופעלת / <xliff:g id="APPS_COUNT">%1$d</xliff:g> אפליקציות"</string>
