@@ -20,10 +20,10 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.service.ui.enrollment.BetaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.U18UxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 
 /** Collection of privacy sandbox UXs, ordered by their priority. */
 @RequiresApi(Build.VERSION_CODES.S)

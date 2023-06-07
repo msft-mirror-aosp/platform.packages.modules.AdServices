@@ -16,14 +16,13 @@
 
 package com.android.adservices.service.ui;
 
-import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 
 import java.util.stream.Stream;

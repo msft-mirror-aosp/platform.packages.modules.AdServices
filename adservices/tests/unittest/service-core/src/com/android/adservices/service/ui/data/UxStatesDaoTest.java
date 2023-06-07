@@ -23,7 +23,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 
 import org.junit.Before;
