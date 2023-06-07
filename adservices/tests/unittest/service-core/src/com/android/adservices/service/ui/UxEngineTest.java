@@ -31,9 +31,9 @@ import static org.mockito.Mockito.doReturn;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.BetaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.U18UxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 

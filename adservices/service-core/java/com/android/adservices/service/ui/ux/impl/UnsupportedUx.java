@@ -24,9 +24,10 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 
 // TO-DO(b/284177542): Implement revoke consent logic for Unsupported UX.
+
 /** Unsupported UX class that ensures no privacy sandbox features are available. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class UnsupportedUx implements PrivacySandboxUx {

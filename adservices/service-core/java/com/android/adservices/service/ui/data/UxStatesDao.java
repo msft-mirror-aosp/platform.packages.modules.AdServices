@@ -23,7 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 
