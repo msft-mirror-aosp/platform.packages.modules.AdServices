@@ -24,7 +24,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /** Enrollment channel for checking if user has already enrolled in an UX. */
 @RequiresApi(Build.VERSION_CODES.S)
