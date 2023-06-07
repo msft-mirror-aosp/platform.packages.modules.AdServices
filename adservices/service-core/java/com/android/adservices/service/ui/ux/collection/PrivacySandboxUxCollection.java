@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.collection;
 
 import android.os.Build;
 
@@ -24,6 +24,11 @@ import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentC
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
+import com.android.adservices.service.ui.ux.impl.BetaUx;
+import com.android.adservices.service.ui.ux.impl.GaUx;
+import com.android.adservices.service.ui.ux.impl.U18Ux;
+import com.android.adservices.service.ui.ux.impl.UnsupportedUx;
 
 /** Collection of privacy sandbox UXs, ordered by their priority. */
 @RequiresApi(Build.VERSION_CODES.S)

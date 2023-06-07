@@ -34,7 +34,7 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
