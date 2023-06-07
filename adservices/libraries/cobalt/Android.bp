@@ -20,8 +20,18 @@ android_library {
     name: "adservices-cobalt",
     srcs: [
         "java/**/*.java",
+        "proto/**/*.proto",
     ],
+    proto: {
+        type: "lite",
+        include_dirs: [
+            "external/protobuf/src",
+            "external/protobuf/java",
+	    "packages/modules/AdServices/adservices/libraries",
+        ],
+    },
     static_libs: [
         "guava",
+        "libprotobuf-java-lite",
     ],
 }
