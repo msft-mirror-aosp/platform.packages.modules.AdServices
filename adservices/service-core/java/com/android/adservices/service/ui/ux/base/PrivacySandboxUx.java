@@ -19,7 +19,7 @@ import android.content.Context;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 
 import com.google.errorprone.annotations.Immutable;
 

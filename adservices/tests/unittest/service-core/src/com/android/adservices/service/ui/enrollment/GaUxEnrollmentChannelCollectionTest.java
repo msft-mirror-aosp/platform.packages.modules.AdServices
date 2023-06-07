@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+
 import org.junit.Test;
 
 public class GaUxEnrollmentChannelCollectionTest {

@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.collection;
 
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
+
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.enrollment.impl.AlreadyEnrolledChannel;
+import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationDebugChannel;
+import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
+import com.android.adservices.service.ui.enrollment.impl.GaGraduationChannel;
+import com.android.adservices.service.ui.enrollment.impl.ReconsentNotificationChannel;
 
 /* Collection of GA UX enrollment channels. */
 @RequiresApi(Build.VERSION_CODES.S)
