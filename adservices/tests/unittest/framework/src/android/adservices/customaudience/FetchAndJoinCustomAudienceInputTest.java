@@ -29,14 +29,14 @@ import org.junit.Test;
 
 // TODO(b/278016822): Move to CTS tests once public APIs are unhidden
 @SmallTest
-public class FetchCustomAudienceInputTest {
+public class FetchAndJoinCustomAudienceInputTest {
     public static final Uri VALID_FETCH_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");
 
     @Test
     public void testBuildValidRequest_all_success() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -57,8 +57,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testBuildValidRequest_onlyFetchUriAndCallerPackageName_success() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .build();
 
@@ -68,8 +68,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testBuildValidRequest_withName_success() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .build();
@@ -81,8 +81,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testBuildValidRequest_withActivationTime_success() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .build();
@@ -95,8 +95,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testBuildValidRequest_withExpirationTime_success() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                         .build();
@@ -109,8 +109,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testBuildValidRequest_withUserBiddingSignals_success() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
@@ -126,7 +126,7 @@ public class FetchCustomAudienceInputTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new FetchCustomAudienceInput.Builder(
+                        new FetchAndJoinCustomAudienceInput.Builder(
                                         null, CustomAudienceFixture.VALID_OWNER)
                                 .setName(CustomAudienceFixture.VALID_NAME)
                                 .build());
@@ -137,15 +137,15 @@ public class FetchCustomAudienceInputTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new FetchCustomAudienceInput.Builder(VALID_FETCH_URI_1, null)
+                        new FetchAndJoinCustomAudienceInput.Builder(VALID_FETCH_URI_1, null)
                                 .setName(CustomAudienceFixture.VALID_NAME)
                                 .build());
     }
 
     @Test
     public void testEquals_identical() {
-        final FetchCustomAudienceInput request1 =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request1 =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -153,8 +153,8 @@ public class FetchCustomAudienceInputTest {
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
-        final FetchCustomAudienceInput request2 =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request2 =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -168,8 +168,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testEquals_different() {
-        final FetchCustomAudienceInput request1 =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request1 =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -177,8 +177,8 @@ public class FetchCustomAudienceInputTest {
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
-        final FetchCustomAudienceInput request2 =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request2 =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME + "123")
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -192,8 +192,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testEquals_null() {
-        final FetchCustomAudienceInput request1 =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request1 =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -201,7 +201,7 @@ public class FetchCustomAudienceInputTest {
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
-        final FetchCustomAudienceInput request2 = null;
+        final FetchAndJoinCustomAudienceInput request2 = null;
 
         assertThat(request1.equals(request2)).isFalse();
     }
@@ -209,7 +209,7 @@ public class FetchCustomAudienceInputTest {
     @Test
     public void testHashCode_identical() {
         final int hashCode1 =
-                new FetchCustomAudienceInput.Builder(
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -219,7 +219,7 @@ public class FetchCustomAudienceInputTest {
                         .hashCode();
 
         final int hashCode2 =
-                new FetchCustomAudienceInput.Builder(
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -234,7 +234,7 @@ public class FetchCustomAudienceInputTest {
     @Test
     public void testHashCode_different() {
         final int hashCode1 =
-                new FetchCustomAudienceInput.Builder(
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -244,7 +244,7 @@ public class FetchCustomAudienceInputTest {
                         .hashCode();
 
         final int hashCode2 =
-                new FetchCustomAudienceInput.Builder(
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME + "123")
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -258,8 +258,8 @@ public class FetchCustomAudienceInputTest {
 
     @Test
     public void testToString() {
-        final FetchCustomAudienceInput request =
-                new FetchCustomAudienceInput.Builder(
+        final FetchAndJoinCustomAudienceInput request =
+                new FetchAndJoinCustomAudienceInput.Builder(
                                 VALID_FETCH_URI_1, CustomAudienceFixture.VALID_OWNER)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
@@ -269,7 +269,7 @@ public class FetchCustomAudienceInputTest {
 
         final String expected =
                 String.format(
-                        "FetchCustomAudienceInput{fetchUri=%s, name=%s,"
+                        "FetchAndJoinCustomAudienceInput{fetchUri=%s, name=%s,"
                                 + " activationTime=%s, expirationTime=%s, userBiddingSignals=%s, "
                                 + "callerPackageName=%s}",
                         VALID_FETCH_URI_1,

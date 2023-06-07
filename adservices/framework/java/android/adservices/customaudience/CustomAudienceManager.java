@@ -219,30 +219,32 @@ public class CustomAudienceManager {
      *
      * @hide
      */
-    // TODO(b/278016822): Unhide for fetchCustomAudience API review.
+    // TODO(b/278016822): Unhide for fetchAndJoinCustomAudience API review.
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
-    public void fetchCustomAudience(
-            @NonNull FetchCustomAudienceRequest fetchCustomAudienceRequest,
+    public void fetchAndJoinCustomAudience(
+            @NonNull FetchAndJoinCustomAudienceRequest fetchAndJoinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {
-        Objects.requireNonNull(fetchCustomAudienceRequest);
+        Objects.requireNonNull(fetchAndJoinCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final ICustomAudienceService service = getService();
 
-            service.fetchCustomAudience(
-                    new FetchCustomAudienceInput.Builder(
-                                    fetchCustomAudienceRequest.getFetchUri(),
+            service.fetchAndJoinCustomAudience(
+                    new FetchAndJoinCustomAudienceInput.Builder(
+                                    fetchAndJoinCustomAudienceRequest.getFetchUri(),
                                     getCallerPackageName())
-                            .setName(fetchCustomAudienceRequest.getName())
-                            .setActivationTime(fetchCustomAudienceRequest.getActivationTime())
-                            .setExpirationTime(fetchCustomAudienceRequest.getExpirationTime())
+                            .setName(fetchAndJoinCustomAudienceRequest.getName())
+                            .setActivationTime(
+                                    fetchAndJoinCustomAudienceRequest.getActivationTime())
+                            .setExpirationTime(
+                                    fetchAndJoinCustomAudienceRequest.getExpirationTime())
                             .setUserBiddingSignals(
-                                    fetchCustomAudienceRequest.getUserBiddingSignals())
+                                    fetchAndJoinCustomAudienceRequest.getUserBiddingSignals())
                             .build(),
-                    new FetchCustomAudienceCallback.Stub() {
+                    new FetchAndJoinCustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));

@@ -16,16 +16,11 @@
 
 package android.adservices.customaudience;
 
-import android.adservices.common.FledgeErrorResponse;
-
 /**
- * This interface defines callback functions for an fetchCustomAudience request, which contains
- * a function to be called upon success that accepts a void argument and a function to be called
- * upon failure that accepts a {@link FledgeErrorResponse} argument.
+ * A FetchAndJoinCustomAudienceInput is a Parcelable object input to the fetchAndJoinCustomAudience
+ * API that contains a fetch URI, the custom audience's name, activation time, expiration time, user
+ * bidding signals and the caller app's package name.
  *
  * @hide
  */
-oneway interface FetchCustomAudienceCallback {
-    void onSuccess();
-    void onFailure(in FledgeErrorResponse responseParcel);
-}
+parcelable FetchAndJoinCustomAudienceInput;

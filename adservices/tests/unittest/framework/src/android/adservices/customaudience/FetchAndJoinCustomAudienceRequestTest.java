@@ -29,14 +29,14 @@ import org.junit.Test;
 
 // TODO(b/278016822): Move to CTS tests once public APIs are unhidden
 @SmallTest
-public class FetchCustomAudienceRequestTest {
+public class FetchAndJoinCustomAudienceRequestTest {
     public static final Uri VALID_FETCH_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");
 
     @Test
     public void testBuildValidRequest_all_success() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -55,16 +55,16 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testBuildValidRequest_onlyFetchUri_success() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1).build();
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1).build();
 
         assertThat(request.getFetchUri()).isEqualTo(VALID_FETCH_URI_1);
     }
 
     @Test
     public void testBuildValidRequest_withName_success() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .build();
 
@@ -74,8 +74,8 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testBuildValidRequest_withActivationTime_success() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .build();
 
@@ -86,8 +86,8 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testBuildValidRequest_withExpirationTime_success() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                         .build();
 
@@ -98,8 +98,8 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testBuildValidRequest_withUserBiddingSignals_success() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
@@ -113,23 +113,23 @@ public class FetchCustomAudienceRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new FetchCustomAudienceRequest.Builder(null)
+                        new FetchAndJoinCustomAudienceRequest.Builder(null)
                                 .setName(CustomAudienceFixture.VALID_NAME)
                                 .build());
     }
 
     @Test
     public void testEquals_identical() {
-        final FetchCustomAudienceRequest request1 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request1 =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
-        final FetchCustomAudienceRequest request2 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request2 =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -142,16 +142,16 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testEquals_different() {
-        final FetchCustomAudienceRequest request1 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request1 =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
-        final FetchCustomAudienceRequest request2 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request2 =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME + "123")
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -164,15 +164,15 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testEquals_null() {
-        final FetchCustomAudienceRequest request1 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request1 =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .build();
 
-        final FetchCustomAudienceRequest request2 = null;
+        final FetchAndJoinCustomAudienceRequest request2 = null;
 
         assertThat(request1.equals(request2)).isFalse();
     }
@@ -180,7 +180,7 @@ public class FetchCustomAudienceRequestTest {
     @Test
     public void testHashCode_identical() {
         final int hashCode1 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -189,7 +189,7 @@ public class FetchCustomAudienceRequestTest {
                         .hashCode();
 
         final int hashCode2 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -203,7 +203,7 @@ public class FetchCustomAudienceRequestTest {
     @Test
     public void testHashCode_different() {
         final int hashCode1 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -212,7 +212,7 @@ public class FetchCustomAudienceRequestTest {
                         .hashCode();
 
         final int hashCode2 =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_OWNER)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -225,8 +225,8 @@ public class FetchCustomAudienceRequestTest {
 
     @Test
     public void testToString() {
-        final FetchCustomAudienceRequest request =
-                new FetchCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
+        final FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(VALID_FETCH_URI_1)
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                         .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
@@ -235,7 +235,7 @@ public class FetchCustomAudienceRequestTest {
 
         final String expected =
                 String.format(
-                        "FetchCustomAudienceRequest{fetchUri=%s, name=%s,"
+                        "FetchAndJoinCustomAudienceRequest{fetchUri=%s, name=%s,"
                                 + " activationTime=%s, expirationTime=%s, userBiddingSignals=%s}",
                         VALID_FETCH_URI_1,
                         CustomAudienceFixture.VALID_NAME,
