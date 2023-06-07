@@ -26,6 +26,8 @@ import com.android.internal.util.Preconditions;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -40,6 +42,15 @@ public class ReportEventRequest {
     private static final String INVALID_REPORTING_DESTINATIONS_MESSAGE =
             "Invalid reporting destinations bitfield!";
 
+    /** @hide */
+    public static final long REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B = 64 * 1024; // 64 KB
+
+    private static final String EVENT_DATA_SIZE_MAX_EXCEEDED =
+            String.format(
+                    Locale.ENGLISH,
+                    "Event data should not exceed %d bytes",
+                    REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B);
+
     private final long mAdSelectionId;
     @NonNull private final String mEventKey;
     @NonNull private final String mEventData;
@@ -47,6 +58,19 @@ public class ReportEventRequest {
 
     private ReportEventRequest(@NonNull Builder builder) {
         Objects.requireNonNull(builder);
+
+        Preconditions.checkArgument(
+                builder.mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
+        Preconditions.checkArgument(
+                builder.mReportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                UNSET_REPORTING_DESTINATIONS_MESSAGE);
+        Preconditions.checkArgument(
+                isValidDestination(builder.mReportingDestinations),
+                INVALID_REPORTING_DESTINATIONS_MESSAGE);
+        Preconditions.checkArgument(
+                builder.mEventData.getBytes(StandardCharsets.UTF_8).length
+                        <= REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B,
+                EVENT_DATA_SIZE_MAX_EXCEEDED);
 
         this.mAdSelectionId = builder.mAdSelectionId;
         this.mEventKey = builder.mEventKey;
@@ -117,6 +141,12 @@ public class ReportEventRequest {
     @Retention(RetentionPolicy.SOURCE)
     public @interface ReportingDestination {}
 
+    private static boolean isValidDestination(@ReportingDestination int reportingDestinations) {
+        return 0 < reportingDestinations
+                && reportingDestinations
+                        <= (FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER);
+    }
+
     /** Builder for {@link ReportEventRequest} objects. */
     public static final class Builder {
 
@@ -138,22 +168,18 @@ public class ReportEventRequest {
             Preconditions.checkArgument(
                     reportingDestinations != UNSET_REPORTING_DESTINATIONS,
                     UNSET_REPORTING_DESTINATIONS_MESSAGE);
-
             Preconditions.checkArgument(
                     isValidDestination(reportingDestinations),
                     INVALID_REPORTING_DESTINATIONS_MESSAGE);
+            Preconditions.checkArgument(
+                    eventData.getBytes(StandardCharsets.UTF_8).length
+                            <= REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B,
+                    EVENT_DATA_SIZE_MAX_EXCEEDED);
 
             this.mAdSelectionId = adSelectionId;
             this.mEventKey = eventKey;
             this.mEventData = eventData;
             this.mReportingDestinations = reportingDestinations;
-        }
-
-        private boolean isValidDestination(@ReportingDestination int reportingDestinations) {
-            return 0 < reportingDestinations
-                    && reportingDestinations
-                            <= (FLAG_REPORTING_DESTINATION_SELLER
-                                    | FLAG_REPORTING_DESTINATION_BUYER);
         }
 
         /**

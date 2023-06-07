@@ -589,7 +589,6 @@ public class AdSelectionManager {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
-
         try {
             final AdSelectionService service = getService();
             service.reportInteraction(

@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
@@ -170,8 +171,7 @@ public class InteractionReporter {
                                                                 .getInteractionData()
                                                                 .getBytes(StandardCharsets.UTF_8)
                                                                 .length
-                                                        <= mFlags
-                                                                .getFledgeReportInteractionMaxInteractionDataSizeB(),
+                                                        <= REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B,
                                                 INTERACTION_DATA_SIZE_MAX_EXCEEDED);
                                     } finally {
                                         sLogger.v("Completed filtering and validation.");

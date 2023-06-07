@@ -108,4 +108,18 @@ public class ReportEventRequestTest {
                             .build();
                 });
     }
+
+    @Test
+    public void testFailsToBuildWithEventDataExceedsMaxSize() {
+        char[] largePayload = new char[65 * 1024]; // 65KB
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    new ReportEventRequest.Builder(
+                            AD_SELECTION_ID,
+                            INTERACTION_KEY,
+                            new String(largePayload),
+                            DESTINATIONS);
+                });
+    }
 }
