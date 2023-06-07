@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -56,7 +57,9 @@ public class AdIdManagerTest {
     @Before
     public void setup() throws Exception {
         overrideAdIdKillSwitch(true);
-        overridePpapiAppAllowList();
+        mPreviousAppAllowList =
+                CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                        sContext.getPackageName());
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
     }
@@ -64,7 +67,7 @@ public class AdIdManagerTest {
     @After
     public void tearDown() {
         overrideAdIdKillSwitch(false);
-        setPpapiAppAllowList(mPreviousAppAllowList);
+        CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
     }
 
     // Override adid related kill switch to ignore the effect of actual PH values.
@@ -74,17 +77,6 @@ public class AdIdManagerTest {
     private void overrideAdIdKillSwitch(boolean shouldOverride) {
         String overrideString = shouldOverride ? "false" : "null";
         ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
-    }
-
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
-    }
-
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
     }
 
     @Test

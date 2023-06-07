@@ -45,7 +45,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
@@ -72,7 +71,9 @@ public class PermissionsNoPermTest {
     @Before
     public void setup() {
         if (!SdkLevel.isAtLeastT()) {
-            overridePpapiAppAllowList();
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
     }
@@ -80,20 +81,9 @@ public class PermissionsNoPermTest {
     @After
     public void tearDown() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
-            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-    }
-
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
-    }
-
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
     }
 
     @Test
