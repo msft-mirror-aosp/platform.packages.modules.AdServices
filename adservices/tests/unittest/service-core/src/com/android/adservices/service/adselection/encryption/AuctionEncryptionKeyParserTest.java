@@ -32,6 +32,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
@@ -134,12 +135,62 @@ public class AuctionEncryptionKeyParserTest {
         assertThat(keys).hasSize(5);
     }
 
+    @Test
+    public void getObliviousHttpKeyConfig_keyIdNotInteger_throwsException() {
+        assertThrows(
+                NumberFormatException.class,
+                () ->
+                        mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(
+                                AdSelectionEncryptionKey.builder()
+                                        .setKeyType(
+                                                AdSelectionEncryptionKey
+                                                        .AdSelectionEncryptionKeyType.AUCTION)
+                                        .setKeyIdentifier("key_id")
+                                        .setPublicKey("public_key".getBytes(StandardCharsets.UTF_8))
+                                        .build()));
+    }
+
+    @Test
+    public void getObliviousHttpKeyConfig_returnsKeyConfig() throws Exception {
+        byte[] keyContent =
+                "7tabvCt19oMF5Quu4cAQetS6xlLFkjIbcY6330+cjlo=".getBytes(StandardCharsets.UTF_8);
+        AdSelectionEncryptionKey key =
+                AdSelectionEncryptionKey.builder()
+                        .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
+                        .setKeyIdentifier("1")
+                        .setPublicKey(keyContent)
+                        .build();
+
+        ObliviousHttpKeyConfig keyConfig =
+                mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(key);
+        assertThat(keyConfig.keyId()).isEqualTo(1);
+        assertThat(keyConfig.getPublicKey()).isEqualTo(keyContent);
+        assertThat(keyConfig.kemId()).isEqualTo(0x0005);
+        assertThat(keyConfig.kdfId()).isEqualTo(0x0002);
+        assertThat(keyConfig.aeadId()).isEqualTo(0x0022);
+    }
+
     private static class AuctionEncryptionKeyParserTestFlags implements Flags {
         AuctionEncryptionKeyParserTestFlags() {}
 
         @Override
         public long getAdSelectionDataEncryptionKeyMaxAgeSeconds() {
             return DEFAULT_MAX_AGE_SECONDS;
+        }
+
+        @Override
+        public int getAdSelectionDataAuctionEncryptionAlgorithmKdfId() {
+            return 0x0002;
+        }
+
+        @Override
+        public int getAdSelectionDataAuctionEncryptionAlgorithmKemId() {
+            return 0x0005;
+        }
+
+        @Override
+        public int getAdSelectionDataAuctionEncryptionAlgorithmAeadId() {
+            return 0x0022;
         }
     }
 }

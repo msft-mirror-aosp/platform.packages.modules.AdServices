@@ -21,6 +21,9 @@ import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECO
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
 import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID;
+import static com.android.adservices.service.Flags.AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID;
+import static com.android.adservices.service.Flags.AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_SECOND;
@@ -220,6 +223,9 @@ import static com.android.adservices.service.PhFlags.KEY_ADID_REQUEST_PERMITS_PE
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID;
+import static com.android.adservices.service.PhFlags.KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID;
+import static com.android.adservices.service.PhFlags.KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
@@ -5506,5 +5512,50 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementVtcConfigurableMaxEventReportsCount()).isEqualTo(3);
+    }
+
+    @Test
+    public void testFledgeAdSelectionDataAuctionEncryptionKemId() {
+        assertThat(FlagsFactory.getFlags().getAdSelectionDataAuctionEncryptionAlgorithmKemId())
+                .isEqualTo(AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID,
+                "1",
+                /* makeDefault */ false);
+
+        assertThat(FlagsFactory.getFlags().getAdSelectionDataAuctionEncryptionAlgorithmKemId())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testFledgeAdSelectionDataAuctionEncryptionKdfId() {
+        assertThat(FlagsFactory.getFlags().getAdSelectionDataAuctionEncryptionAlgorithmKdfId())
+                .isEqualTo(AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID,
+                "1",
+                /* makeDefault */ false);
+
+        assertThat(FlagsFactory.getFlags().getAdSelectionDataAuctionEncryptionAlgorithmKdfId())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testFledgeAdSelectionDataAuctionEncryptionAeadId() {
+        assertThat(FlagsFactory.getFlags().getAdSelectionDataAuctionEncryptionAlgorithmAeadId())
+                .isEqualTo(AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID,
+                "1",
+                /* makeDefault */ false);
+
+        assertThat(FlagsFactory.getFlags().getAdSelectionDataAuctionEncryptionAlgorithmAeadId())
+                .isEqualTo(1);
     }
 }

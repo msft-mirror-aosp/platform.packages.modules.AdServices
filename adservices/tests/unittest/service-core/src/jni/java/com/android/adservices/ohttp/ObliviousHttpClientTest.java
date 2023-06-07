@@ -63,7 +63,7 @@ public class ObliviousHttpClientTest {
         ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.mKeyConfig);
         Assert.assertEquals(
                 actualClient.getHpkeAlgorithmSpec().kem().identifier(),
-                testVector.mKeyConfig.kemid());
+                testVector.mKeyConfig.kemId());
     }
 
     @Test
