@@ -17,7 +17,6 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.FIRST_ENTRY_REQUEST_TIMESTAMP;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
 
 import android.app.job.JobInfo;
@@ -200,9 +199,7 @@ public class ConsentNotificationJobService extends JobService {
             LogUtil.d(
                     "Disabling ConsentNotificationJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(
-                    params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         LogUtil.d("ConsentNotificationJobService.onStartJob");
@@ -271,11 +268,18 @@ public class ConsentNotificationJobService extends JobService {
         return shouldRetry;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
-        this.getSystemService(JobScheduler.class).cancel(CONSENT_NOTIFICATION_JOB_ID);
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
 
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(CONSENT_NOTIFICATION_JOB_ID);
+        }
+
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.

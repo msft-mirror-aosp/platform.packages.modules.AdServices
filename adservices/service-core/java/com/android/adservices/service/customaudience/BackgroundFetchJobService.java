@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
@@ -67,9 +66,7 @@ public class BackgroundFetchJobService extends JobService {
             LogUtil.d(
                     "Disabling BackgroundFetchJobService job because it's running in ExtServices"
                             + " on T+");
-            return skipAndCancelBackgroundJob(
-                    params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStartJob");
@@ -82,7 +79,8 @@ public class BackgroundFetchJobService extends JobService {
                     .d("FLEDGE background fetch is disabled; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()) {
@@ -90,7 +88,8 @@ public class BackgroundFetchJobService extends JobService {
                     .d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         // Skip the execution and cancel the job if user consent is revoked. Use the aggregated
@@ -105,7 +104,8 @@ public class BackgroundFetchJobService extends JobService {
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED,
+                    /* doRecord=*/ true);
         }
 
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
@@ -175,11 +175,17 @@ public class BackgroundFetchJobService extends JobService {
         return true;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
-        this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+        }
 
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordJobSkipped(FLEDGE_BACKGROUND_FETCH_JOB_ID, skipReason);
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(FLEDGE_BACKGROUND_FETCH_JOB_ID, skipReason);
+        }
 
         jobFinished(params, false);
         return false;

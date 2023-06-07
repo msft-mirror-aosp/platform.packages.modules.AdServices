@@ -16,7 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 
@@ -71,9 +70,7 @@ public final class MaintenanceJobService extends JobService {
             LogUtil.d(
                     "Disabling MaintenanceJobService job because it's running in ExtServices on"
                             + " T+");
-            return skipAndCancelBackgroundJob(
-                    params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         LogUtil.d("MaintenanceJobService.onStartJob");
@@ -86,7 +83,8 @@ public final class MaintenanceJobService extends JobService {
                             + " MaintenanceJobService");
             return skipAndCancelBackgroundJob(
                     params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         ListenableFuture<Void> appReconciliationFuture;
@@ -221,11 +219,17 @@ public final class MaintenanceJobService extends JobService {
         return true;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
-        this.getSystemService(JobScheduler.class).cancel(MAINTENANCE_JOB_ID);
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(MAINTENANCE_JOB_ID);
+        }
 
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordJobSkipped(MAINTENANCE_JOB_ID, skipReason);
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(MAINTENANCE_JOB_ID, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.
