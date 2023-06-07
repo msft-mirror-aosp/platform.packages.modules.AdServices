@@ -41,7 +41,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
@@ -72,7 +71,9 @@ public class PermissionsAppOptOutTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         if (!SdkLevel.isAtLeastT()) {
-            overridePpapiAppAllowList();
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
     }
@@ -84,22 +85,11 @@ public class PermissionsAppOptOutTest {
         }
 
         if (!SdkLevel.isAtLeastT()) {
-            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
-    }
-
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
-    }
-
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
     }
 
     @Test
