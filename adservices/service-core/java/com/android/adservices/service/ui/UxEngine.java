@@ -23,15 +23,15 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 import java.util.stream.Stream;
 
 /* UxEngine for coordinating UX components such as UXs, enrollment channels, and modes. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxEngine {
-    private ConsentManager mConsentManager;
-    private UxStatesManager mUxStatesManager;
+    private final ConsentManager mConsentManager;
+    private final UxStatesManager mUxStatesManager;
 
     public UxEngine(ConsentManager consentManager, UxStatesManager uxStatesManager) {
         mConsentManager = consentManager;

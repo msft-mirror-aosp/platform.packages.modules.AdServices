@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.base;
 
 import android.content.Context;
 

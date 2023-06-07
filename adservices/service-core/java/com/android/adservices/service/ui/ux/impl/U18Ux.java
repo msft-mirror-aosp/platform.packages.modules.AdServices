@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.impl;
 
 import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
 
@@ -25,6 +25,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
 
 import com.google.errorprone.annotations.Immutable;
 
