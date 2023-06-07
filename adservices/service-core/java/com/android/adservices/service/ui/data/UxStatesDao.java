@@ -75,7 +75,7 @@ public class UxStatesDao {
                 return uxCollection;
             }
         }
-        return null;
+        return PrivacySandboxUxCollection.UNSUPPORTED_UX;
     }
 
     /** Set the current UX. */

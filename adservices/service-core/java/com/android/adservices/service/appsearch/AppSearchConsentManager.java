@@ -39,6 +39,8 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -555,5 +557,28 @@ public class AppSearchConsentManager {
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     public Boolean wasU18NotificationDisplayed() {
         return mAppSearchConsentWorker.wasU18NotificationDisplayed();
+    }
+
+    /** Returns the current privacy sandbox UX. */
+    public PrivacySandboxUxCollection getUx() {
+        return mAppSearchConsentWorker.getUx();
+    }
+
+    /** Set the current privacy sandbox UX. */
+    public void setUx(PrivacySandboxUxCollection ux) {
+        mAppSearchConsentWorker.setUx(ux);
+    }
+
+    /** Returns the current privacy sandbox enrollment channel. */
+    public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
+            PrivacySandboxUxCollection ux) {
+        return mAppSearchConsentWorker.getEnrollmentChannel(ux);
+    }
+
+    /** Set the current privacy sandbox enrollment channel. */
+    public void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+        mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
     }
 }
