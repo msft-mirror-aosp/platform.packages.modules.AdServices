@@ -37,6 +37,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -89,6 +90,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid) {
         super(
                 context,
@@ -102,6 +104,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
                 adFilterer,
+                frequencyCapAdDataValidator,
                 callerUid);
 
         Objects.requireNonNull(adServicesHttpsClient);
@@ -169,7 +172,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
             @NonNull final AdFilterer adFilterer,
-            @NonNull final AdCounterKeyCopier adCounterKeyCopier) {
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator) {
         super(
                 context,
                 customAudienceDao,
@@ -184,6 +188,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 callerUid,
                 adSelectionServiceFilter,
                 adFilterer,
+                frequencyCapAdDataValidator,
                 adSelectionExecutionLogger);
 
         Objects.requireNonNull(adsScoreGenerator);

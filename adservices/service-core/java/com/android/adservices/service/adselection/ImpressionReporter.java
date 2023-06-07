@@ -52,6 +52,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -115,6 +116,7 @@ public class ImpressionReporter {
     private int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+    @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -129,6 +131,7 @@ public class ImpressionReporter {
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
@@ -141,6 +144,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
@@ -157,9 +161,7 @@ public class ImpressionReporter {
             mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperEnabled();
             long maxInteractionReportingUrisSize =
                     BinderFlagReader.readFlag(
-                            () ->
-                                    flags
-                                            .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount());
+                            flags::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
             registerAdBeaconScriptEngineHelper =
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled(
                             maxInteractionReportingUrisSize);
@@ -182,6 +184,7 @@ public class ImpressionReporter {
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
         mJsFetcher =
                 new JsFetcher(
@@ -614,7 +617,8 @@ public class ImpressionReporter {
     private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator =
-                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
+                new AdSelectionConfigValidator(
+                        mPrebuiltLogicGenerator, mFrequencyCapAdDataValidator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 

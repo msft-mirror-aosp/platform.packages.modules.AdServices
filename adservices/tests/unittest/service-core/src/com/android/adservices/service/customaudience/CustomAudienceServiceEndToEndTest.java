@@ -67,6 +67,8 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -124,6 +126,9 @@ public class CustomAudienceServiceEndToEndTest {
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
+    private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
+            new FrequencyCapAdDataValidatorNoOpImpl();
+
     private CustomAudienceDao mCustomAudienceDao;
 
     private CustomAudienceServiceImpl mService;
@@ -164,7 +169,9 @@ public class CustomAudienceServiceEndToEndTest {
 
         CustomAudienceValidator customAudienceValidator =
                 new CustomAudienceValidator(
-                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        CommonFixture.FLAGS_FOR_TEST,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP);
 
         mService =
                 new CustomAudienceServiceImpl(
@@ -219,7 +226,9 @@ public class CustomAudienceServiceEndToEndTest {
 
         CustomAudienceValidator customAudienceValidator =
                 new CustomAudienceValidator(
-                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        CommonFixture.FLAGS_FOR_TEST,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP);
 
         mService =
                 new CustomAudienceServiceImpl(
@@ -367,7 +376,9 @@ public class CustomAudienceServiceEndToEndTest {
 
         CustomAudienceValidator customAudienceValidator =
                 new CustomAudienceValidator(
-                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        CommonFixture.FLAGS_FOR_TEST,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP);
 
         mService =
                 new CustomAudienceServiceImpl(
@@ -1018,7 +1029,9 @@ public class CustomAudienceServiceEndToEndTest {
 
         CustomAudienceValidator customAudienceValidator =
                 new CustomAudienceValidator(
-                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        CommonFixture.FLAGS_FOR_TEST,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP);
         Throttler.destroyExistingThrottler();
         CustomAudienceServiceImpl customAudienceService =
                 mService =

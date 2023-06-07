@@ -165,6 +165,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
 public class FledgeE2ETest {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
@@ -2574,13 +2575,15 @@ public class FledgeE2ETest {
                         CONTEXT,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
-                                new CustomAudienceQuantityChecker(
-                                        mCustomAudienceDao, DEFAULT_FLAGS),
+                                new CustomAudienceQuantityChecker(mCustomAudienceDao, flags),
                                 new CustomAudienceValidator(
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                        DEFAULT_FLAGS),
+                                        flags,
+                                        flags.getFledgeAdSelectionFilteringEnabled()
+                                                ? new FrequencyCapAdDataValidatorImpl()
+                                                : new FrequencyCapAdDataValidatorNoOpImpl()),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                DEFAULT_FLAGS),
+                                flags),
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilter,

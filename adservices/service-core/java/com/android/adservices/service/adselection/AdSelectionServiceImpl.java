@@ -319,6 +319,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         adSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -345,6 +346,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         adSelectionExecutionLogger,
                         adSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -439,6 +441,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mFledgeAuthorizationFilter,
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         callingUid);
         reporter.reportImpression(requestParams, callback);
     }

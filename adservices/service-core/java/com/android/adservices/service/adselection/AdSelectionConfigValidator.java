@@ -27,6 +27,7 @@ import android.net.Uri;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.AdDataValidator;
 import com.android.adservices.service.common.AdTechUriValidator;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -82,11 +83,16 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     private static final String HTTPS_SCHEME = "https";
 
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
 
-    public AdSelectionConfigValidator(@NonNull PrebuiltLogicGenerator prebuiltLogicGenerator) {
+    public AdSelectionConfigValidator(
+            @NonNull PrebuiltLogicGenerator prebuiltLogicGenerator,
+            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator) {
         Objects.requireNonNull(prebuiltLogicGenerator);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
 
         mPrebuiltLogicGenerator = prebuiltLogicGenerator;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
     }
 
     @Override
@@ -192,7 +198,6 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
 
         for (Map.Entry<AdTechIdentifier, ContextualAds> entry : contextualAdsMap.entrySet()) {
-
             // Validate that the buyer decision logic for Contextual Ads satisfies buyer ETLd+1
             AdTechUriValidator buyerUriValidator =
                     new AdTechUriValidator(
@@ -206,7 +211,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
             AdDataValidator adDataValidator =
                     new AdDataValidator(
                             ValidatorUtil.AD_TECH_ROLE_BUYER,
-                            entry.getValue().getBuyer().toString());
+                            entry.getValue().getBuyer().toString(),
+                            mFrequencyCapAdDataValidator);
             for (AdWithBid ad : entry.getValue().getAdsWithBid()) {
                 adDataValidator.addValidation(ad.getAdData(), violations);
             }
