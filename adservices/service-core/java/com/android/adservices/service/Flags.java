@@ -800,10 +800,10 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
     }
 
-    // Enable FLEDGE fetchCustomAudience API.
+    // Enable FLEDGE fetchAndJoinCustomAudience API.
     boolean FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED = false;
 
-    /** Returns {@code true} if FLEDGE fetchCustomAudience API is enabled. */
+    /** Returns {@code true} if FLEDGE fetchAndJoinCustomAudience API is enabled. */
     default boolean getFledgeFetchCustomAudienceEnabled() {
         return FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
     }
