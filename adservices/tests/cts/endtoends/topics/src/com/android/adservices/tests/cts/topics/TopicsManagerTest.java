@@ -159,6 +159,67 @@ public class TopicsManagerTest {
     }
 
     @Test
+    public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
+            throws Exception {
+        // Override Topics on device classifier kill switch to disable on device classifier.
+        overrideTopicsOnDeviceSwitch(true);
+
+        // Set classifier flag to use on-device classifier.
+        overrideClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+
+        // The Test App has 1 SDK: sdk5
+        // sdk3 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient5 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk5")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        // At beginning, Sdk5 receives no topic.
+        GetTopicsResponse sdk5Result = advertisingTopicsClient5.getTopics().get();
+        assertThat(sdk5Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk5 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk5Result = advertisingTopicsClient5.getTopics().get();
+        assertThat(sdk5Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk5Result.getTopics()).hasSize(1);
+        Topic topic = sdk5Result.getTopics().get(0);
+
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
+        // Topic should be from the precomputed list and not the on device classifier due to the
+        // override.
+        List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        // Set classifier flag back to default.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
+        // Override Topics on device classifier kill switch to disable Topics API.
+        overrideTopicsOnDeviceSwitch(false);
+    }
+
+    @Test
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
@@ -382,6 +443,11 @@ public class TopicsManagerTest {
 
         // Set classifier flag back to default.
         overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+    }
+
+    private void overrideTopicsOnDeviceSwitch(boolean val) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices topics_on_device_classifier_kill_switch " + val);
     }
 
     private void overrideTopicsKillSwitch(boolean val) {
