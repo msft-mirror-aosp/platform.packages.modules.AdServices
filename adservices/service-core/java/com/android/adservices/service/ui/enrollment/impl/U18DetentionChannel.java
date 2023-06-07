@@ -30,7 +30,7 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
 @RequiresApi(Build.VERSION_CODES.S)
 public class U18DetentionChannel implements PrivacySandboxEnrollmentChannel {
 
-    /** Checks if user is eligible for the U18 dention channel. */
+    /** Checks if user is eligible for the U18 detention channel. */
     public boolean isEligible(
             PrivacySandboxUxCollection uxCollection,
             ConsentManager consentManager,

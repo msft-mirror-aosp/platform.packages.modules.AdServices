@@ -44,7 +44,7 @@ public class UxStatesManager {
         mUxFlags = flags.getUxFlags();
     }
 
-    /** Returns an instansce of the UxStatesManager. */
+    /** Returns an instance of the UxStatesManager. */
     @NonNull
     public static UxStatesManager getInstance() {
 
