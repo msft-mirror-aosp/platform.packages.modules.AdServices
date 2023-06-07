@@ -118,7 +118,7 @@ public class FrequencyCapFilteringE2ETest {
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_BUYER_1)
                     .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
-                    .setContextualSignals(AdSelectionSignals.EMPTY.toString())
+                    .setBuyerContextualSignals(AdSelectionSignals.EMPTY.toString())
                     .setBiddingLogicUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/bidding"))
                     .setWinningAdRenderUri(
@@ -136,7 +136,7 @@ public class FrequencyCapFilteringE2ETest {
                             CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
                                     .setBuyer(CommonFixture.VALID_BUYER_2)
                                     .build())
-                    .setContextualSignals(AdSelectionSignals.EMPTY.toString())
+                    .setBuyerContextualSignals(AdSelectionSignals.EMPTY.toString())
                     .setBiddingLogicUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/bidding"))
                     .setWinningAdRenderUri(

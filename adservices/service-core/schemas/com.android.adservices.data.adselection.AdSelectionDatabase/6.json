@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "111c8b7c7fe5b8767577484813670749",
+    "identityHash": "ef50393e2415e75952fb8fdc3a422f64",
     "entities": [
       {
         "tableName": "ad_selection",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `contextual_signals` TEXT, `bidding_logic_uri` TEXT, `winning_ad_render_uri` TEXT, `winning_ad_bid` REAL NOT NULL, `creation_timestamp` INTEGER, `caller_package_name` TEXT, `ad_counter_keys` TEXT, `ad_counter_int_keys` TEXT, `custom_audience_signals_owner` TEXT, `custom_audience_signals_buyer` TEXT, `custom_audience_signals_name` TEXT, `custom_audience_signals_activation_time` INTEGER, `custom_audience_signals_expiration_time` INTEGER, `custom_audience_signals_user_bidding_signals` TEXT, PRIMARY KEY(`ad_selection_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `contextual_signals` TEXT, `bidding_logic_uri` TEXT, `winning_ad_render_uri` TEXT, `winning_ad_bid` REAL NOT NULL, `creation_timestamp` INTEGER, `caller_package_name` TEXT, `ad_counter_keys` TEXT, `ad_counter_int_keys` TEXT, `seller_contextual_signals` TEXT, `custom_audience_signals_owner` TEXT, `custom_audience_signals_buyer` TEXT, `custom_audience_signals_name` TEXT, `custom_audience_signals_activation_time` INTEGER, `custom_audience_signals_expiration_time` INTEGER, `custom_audience_signals_user_bidding_signals` TEXT, PRIMARY KEY(`ad_selection_id`))",
         "fields": [
           {
             "fieldPath": "mAdSelectionId",
@@ -15,7 +15,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "mContextualSignals",
+            "fieldPath": "mBuyerContextualSignals",
             "columnName": "contextual_signals",
             "affinity": "TEXT",
             "notNull": false
@@ -59,6 +59,12 @@
           {
             "fieldPath": "mAdCounterIntKeys",
             "columnName": "ad_counter_int_keys",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "mSellerContextualSignals",
+            "columnName": "seller_contextual_signals",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -303,7 +309,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '111c8b7c7fe5b8767577484813670749')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ef50393e2415e75952fb8fdc3a422f64')"
     ]
   }
 }

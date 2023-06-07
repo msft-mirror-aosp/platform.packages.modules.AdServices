@@ -345,7 +345,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         .setWinningAdRenderUri(winningAdRenderUri)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setBiddingLogicUri(customAudience.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(callerPackageName);
 
         return new Pair<>(builder, customAudience);

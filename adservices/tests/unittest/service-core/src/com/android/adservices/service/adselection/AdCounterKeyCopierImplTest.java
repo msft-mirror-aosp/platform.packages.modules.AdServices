@@ -233,7 +233,7 @@ public class AdCounterKeyCopierImplTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(sourceOutcome.getBiddingLogicUri())
-                        .setContextualSignals("{}");
+                        .setBuyerContextualSignals("{}");
 
         DBAdSelection outputSelection =
                 mAdCounterKeyCopier

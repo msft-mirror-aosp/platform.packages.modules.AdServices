@@ -554,7 +554,7 @@ public class ImpressionReporter {
                                     ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
                                     ctx.mDBAdSelectionEntry.getWinningAdBid(),
                                     AdSelectionSignals.fromString(
-                                            ctx.mDBAdSelectionEntry.getContextualSignals())))
+                                            ctx.mDBAdSelectionEntry.getBuyerContextualSignals())))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);
@@ -589,7 +589,7 @@ public class ImpressionReporter {
                                     signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
-                                            ctx.mDBAdSelectionEntry.getContextualSignals()),
+                                            ctx.mDBAdSelectionEntry.getBuyerContextualSignals()),
                                     customAudienceSignals))
                     .transform(
                             buyerReportingResult ->

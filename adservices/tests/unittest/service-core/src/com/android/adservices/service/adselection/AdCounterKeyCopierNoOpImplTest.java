@@ -217,7 +217,7 @@ public class AdCounterKeyCopierNoOpImplTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(sourceOutcome.getBiddingLogicUri())
-                        .setContextualSignals("{}");
+                        .setBuyerContextualSignals("{}");
 
         DBAdSelection.Builder outputBuilder =
                 mAdCounterKeyCopier.copyAdCounterKeys(targetBuilder, sourceOutcome);
