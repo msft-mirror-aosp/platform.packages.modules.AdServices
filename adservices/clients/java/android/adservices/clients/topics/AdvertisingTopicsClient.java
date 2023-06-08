@@ -20,7 +20,6 @@ import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -190,14 +189,7 @@ public class AdvertisingTopicsClient {
         }
 
         private TopicsManager createManager() {
-            if (mUseGetMethodToCreateManagerInstance) {
-                return TopicsManager.get(mContext);
-            }
-
-            // By default, use getSystemService for T+ and get(context) for S-.
-            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    ? mContext.getSystemService(TopicsManager.class)
-                    : TopicsManager.get(mContext);
+            return mContext.getSystemService(TopicsManager.class);
         }
     }
 }

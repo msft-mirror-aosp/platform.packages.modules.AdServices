@@ -149,7 +149,7 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
@@ -209,7 +209,7 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
@@ -325,7 +325,7 @@ public class MeasurementManagerCtsTest {
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -395,7 +395,7 @@ public class MeasurementManagerCtsTest {
      */
     private boolean callMeasurementApiStatus() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
         List<Integer> resultCodes = new ArrayList<>();
 
         manager.getMeasurementApiStatus(
