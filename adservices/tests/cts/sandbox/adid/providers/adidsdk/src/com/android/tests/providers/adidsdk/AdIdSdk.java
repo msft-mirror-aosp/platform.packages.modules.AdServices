@@ -39,7 +39,7 @@ public class AdIdSdk extends SandboxedSdkProvider {
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         try {
-            AdIdManager adIdManager = AdIdManager.get(getContext());
+            AdIdManager adIdManager = getContext().getSystemService(AdIdManager.class);
 
             CompletableFuture<AdId> future = new CompletableFuture<>();
             OutcomeReceiver<AdId, Exception> callback =
