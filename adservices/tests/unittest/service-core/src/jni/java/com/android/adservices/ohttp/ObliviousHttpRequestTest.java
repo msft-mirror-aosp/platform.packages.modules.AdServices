@@ -21,13 +21,14 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 
 public class ObliviousHttpRequestTest {
 
     @Test
-    public void serialize_serializesCorrectly() throws InvalidKeySpecException {
+    public void serialize_serializesCorrectly() throws InvalidKeySpecException, IOException {
         String keyConfigHex =
                 "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
                         + "00080001000100010003";
@@ -57,6 +58,7 @@ public class ObliviousHttpRequestTest {
         String expectedCipherTextHexString =
                 BaseEncoding.base16().lowerCase().encode(cipherTextBytes);
         Assert.assertEquals(
-                request.serialize(), expectedHeader + encString + expectedCipherTextHexString);
+                BaseEncoding.base16().lowerCase().encode(request.serialize()),
+                expectedHeader + encString + expectedCipherTextHexString);
     }
 }
