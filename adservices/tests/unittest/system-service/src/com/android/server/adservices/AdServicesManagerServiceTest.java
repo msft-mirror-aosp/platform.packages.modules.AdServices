@@ -63,6 +63,7 @@ import com.android.server.adservices.data.topics.TopicsDbHelper;
 import com.android.server.adservices.data.topics.TopicsDbTestUtil;
 import com.android.server.adservices.data.topics.TopicsTables;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Before;
@@ -83,6 +84,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
@@ -957,6 +959,24 @@ public class AdServicesManagerServiceTest {
                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
         assertThat(service.getCurrentPrivacySandboxFeature())
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+    }
+
+    @Test
+    public void uxConformanceTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // The default UX is UNSUPPORTED_UX
+        assertThat(service.getUx()).isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
+
+        Stream.of(PrivacySandboxUxCollection.values())
+                .forEach(
+                        ux -> {
+                            service.setUx(ux.toString());
+                            assertThat(service.getUx()).isEqualTo(ux.toString());
+                        });
     }
 
     @Test

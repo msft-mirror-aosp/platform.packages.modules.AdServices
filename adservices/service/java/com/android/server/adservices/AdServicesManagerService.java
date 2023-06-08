@@ -50,6 +50,7 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import java.io.FileDescriptor;
@@ -808,7 +809,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                             userIdentifier, getAdServicesApexVersion())
                     .resetAdServicesDataDeletion(deletionType);
         } catch (IOException e) {
-            LogUtil.e(e, "Failed to remove the measurement deletion status.");
+            LogUtil.e(e, "Failed to remove the fmeasurement deletion status.");
         }
     }
 
@@ -1201,6 +1202,38 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     .setU18NotificationDisplayed(wasU18NotificationDisplayed);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to call setU18NotificationDisplayed().");
+        }
+    }
+
+    /** Get the current UX. */
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public String getUx() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getUx() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getUx();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get current UX: " + e.getMessage());
+        }
+        return PrivacySandboxUxCollection.UNSUPPORTED_UX.toString();
+    }
+
+    /** Set the currently running privacy sandbox feature on device. */
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setUx(String ux) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setUx() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager.getOrCreateUserConsentManagerInstance(userIdentifier).setUx(ux);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to set current UX: " + e.getMessage());
         }
     }
 

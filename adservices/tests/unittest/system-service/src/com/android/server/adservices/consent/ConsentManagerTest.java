@@ -32,6 +32,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.server.adservices.common.BooleanFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 /** Tests for {@link ConsentManager} */
 public class ConsentManagerTest {
@@ -336,7 +338,7 @@ public class ConsentManagerTest {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
-        // All bits are fall in the beginning.
+        // All bits are false in the beginning.
         assertThat(
                         consentManager.isPrivacySandboxFeatureEnabled(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
@@ -394,6 +396,22 @@ public class ConsentManagerTest {
                         consentManager.isPrivacySandboxFeatureEnabled(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
                 .isEqualTo(false);
+    }
+
+    @Test
+    public void uxConformanceTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(consentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
+
+        Stream.of(PrivacySandboxUxCollection.values())
+                .forEach(
+                        ux -> {
+                            consentManager.setUx(ux.toString());
+                            assertThat(consentManager.getUx()).isEqualTo(ux.toString());
+                        });
     }
 
     @Test
