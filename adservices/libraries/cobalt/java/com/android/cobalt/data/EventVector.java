@@ -23,16 +23,16 @@ import java.util.List;
 
 /** An ordered list of event codes. */
 @AutoValue
-abstract class EventVector {
+public abstract class EventVector {
     /** The list of event codes. */
-    abstract ImmutableList<Integer> eventCodes();
+    public abstract ImmutableList<Integer> eventCodes();
 
     /**
      * Creates an {@link EventVector}.
      *
      * <p>Used by Room to instantiate objects.
      */
-    static EventVector create(List<Integer> eventCodes) {
+    public static EventVector create(List<Integer> eventCodes) {
         return new AutoValue_EventVector(ImmutableList.copyOf(eventCodes));
     }
 
@@ -41,7 +41,7 @@ abstract class EventVector {
      *
      * <p>Used by Room to instantiate objects.
      */
-    static EventVector create(Integer... eventCodes) {
+    public static EventVector create(Integer... eventCodes) {
         return new AutoValue_EventVector(ImmutableList.copyOf(eventCodes));
     }
 }
