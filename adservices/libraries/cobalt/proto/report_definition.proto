@@ -20,6 +20,14 @@ import "cobalt/proto/window_size.proto";
 option java_multiple_files = true;
 option java_package = "com.google.cobalt";
 
+////////////////////////////////////////////////////////////////////////////////
+// NOTE: This file is used by the Cobalt client and the Cobalt servers.
+// The source-of-truth of this file is located in Cobalt's open source code
+// repository, and the file is copied to Android where it is used by the Cobalt
+// client. Do not edit the copy of this file in this Android repo as those edits
+// will be overwritten when the file is next copied.
+////////////////////////////////////////////////////////////////////////////////
+
 // A Report analyzes Events that were logged to Cobalt and emits an aggregated
 // output that may then be queried or visualized by an analyst user of Cobalt.
 //
