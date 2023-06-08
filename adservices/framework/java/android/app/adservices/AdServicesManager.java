@@ -595,4 +595,24 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Returns the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getUx() {
+        try {
+            return mService.getUx();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setUx(String ux) {
+        try {
+            mService.setUx(ux);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
