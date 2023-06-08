@@ -32,7 +32,6 @@ public class TopicsManagerTest {
     public void testTopicsManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
         final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(TopicsManager.get(context)).isNotNull();
         assertThat(context.getSystemService(TopicsManager.class)).isNotNull();
     }
 
@@ -40,7 +39,6 @@ public class TopicsManagerTest {
     public void testTopicsManagerCtor_SMinus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
         final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(TopicsManager.get(context)).isNotNull();
         assertThat(context.getSystemService(TopicsManager.class)).isNull();
     }
 }

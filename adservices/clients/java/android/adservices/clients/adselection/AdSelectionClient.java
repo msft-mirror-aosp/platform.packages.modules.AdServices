@@ -25,7 +25,6 @@ import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -244,13 +243,7 @@ public class AdSelectionClient {
         }
 
         private AdSelectionManager createAdSelectionManager() {
-            if (mUseGetMethodToCreateManagerInstance) {
-                return AdSelectionManager.get(mContext);
-            }
-
-            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    ? mContext.getSystemService(AdSelectionManager.class)
-                    : AdSelectionManager.get(mContext);
+            return mContext.getSystemService(AdSelectionManager.class);
         }
     }
 }
