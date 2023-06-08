@@ -19,7 +19,6 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.ConsentNotificationJobService.ADID_ENABLE_STATUS;
 import static com.android.adservices.service.common.ConsentNotificationJobService.MILLISECONDS_IN_THE_DAY;
 import static com.android.adservices.service.common.ConsentNotificationJobService.RE_CONSENT_STATUS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -254,21 +253,16 @@ public class ConsentNotificationJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobShouldDisableJobTrue_withLogging() {
+    public void testOnStartJobShouldDisableJobTrue_withLoggingEnabled() {
         // Logging killswitch is off.
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         Mockito.doReturn(false).when(mFlags).getBackgroundJobsLoggingKillSwitch();
 
         testOnStartJobShouldDisableJobTrue();
 
-        // Verify logging has happened
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
-                        anyInt());
+        // Verify logging has not happened even though logging is enabled because this field is not
+        // logged
+        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     /** Test successful onStop method execution. */
