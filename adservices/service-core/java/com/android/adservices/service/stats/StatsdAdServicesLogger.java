@@ -233,22 +233,35 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
 
     @Override
     public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
+        int[] topicIds = new int[] {};
+        if (stats.getTopicIds() != null) {
+            topicIds = stats.getTopicIds().stream().mapToInt(Integer::intValue).toArray();
+        }
+
         boolean isCompatLoggingEnabled = !mFlags.getCompatLoggingKillSwitch();
         if (isCompatLoggingEnabled) {
+            long modeBytesFieldId =
+                    ProtoOutputStream.FIELD_COUNT_REPEATED // topic_ids field is repeated.
+                            // topic_id is represented by int32 type.
+                            | ProtoOutputStream.FIELD_TYPE_INT32
+                            // Field ID of topic_ids field in AdServicesTopicIds proto.
+                            | AD_SERVICES_TOPIC_IDS_FIELD_ID;
+
             AdServicesStatsLog.write(
                     AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED,
                     // TODO(b/266626836) Add topic ids logging once long term solution is identified
                     stats.getDuplicateTopicCount(),
                     stats.getFilteredBlockedTopicCount(),
-                    stats.getTopicIdsCount());
+                    stats.getTopicIdsCount(),
+                    toBytes(modeBytesFieldId, topicIds));
         }
 
         // This atom can only be logged on T+ due to usage of repeated fields. See go/rbc-ww-logging
-        // for why we are temporarily double logging on T+.
+        // for why we are temporarily double logging on T+.s
         if (SdkLevel.isAtLeastT()) {
             AdServicesStatsLog.write(
                     AD_SERVICES_GET_TOPICS_REPORTED,
-                    new int[] {}, // TODO(b/256649873): Log empty list until long term solution.
+                    topicIds,
                     stats.getDuplicateTopicCount(),
                     stats.getFilteredBlockedTopicCount(),
                     stats.getTopicIdsCount());

@@ -61,6 +61,8 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
+    static final String KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION =
+            "topics_privacy_budget_for_topic_ids_distribution";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
@@ -780,6 +782,23 @@ public final class PhFlags implements Flags {
         }
 
         return topicsNumberOfLookBackEpochs;
+    }
+
+    @Override
+    public float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        float topicsPrivacyBudgetForTopicIdDistribution =
+                DeviceConfig.getFloat(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                        /* defaultValue */ TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
+
+        if (topicsPrivacyBudgetForTopicIdDistribution <= 0) {
+            throw new IllegalArgumentException(
+                    "topicsPrivacyBudgetForTopicIdDistribution should be > 0");
+        }
+
+        return topicsPrivacyBudgetForTopicIdDistribution;
     }
 
     @Override
