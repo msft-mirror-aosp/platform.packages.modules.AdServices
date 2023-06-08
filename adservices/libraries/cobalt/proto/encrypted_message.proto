@@ -20,11 +20,10 @@ option java_package = "com.google.cobalt";
 
 ////////////////////////////////////////////////////////////////////////////////
 // NOTE: This file is used by the Cobalt client and the Cobalt servers.
-// The source-of-truth of this file is located in Google's internal code
-// repository, and the file is automatically copied to Cobalt's open source
-// repo where it is used by the Cobalt client code. Do not edit the copy of this
-// file in the open-source repo as those edits will be overwritten when the file
-// is next copied.
+// The source-of-truth of this file is located in Google's internsl code
+// repository, and the file is copied to Android where it is used by the Cobalt
+// client. Do not edit the copy of this file in this Android repo as those edits
+// will be overwritten when the file is next copied.
 ////////////////////////////////////////////////////////////////////////////////
 
 // An EncryptedMessage carries the encrypted bytes of another proto message,
