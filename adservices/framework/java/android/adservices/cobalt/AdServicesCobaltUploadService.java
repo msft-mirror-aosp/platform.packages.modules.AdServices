@@ -18,6 +18,7 @@ package android.adservices.cobalt;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SystemApi;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -29,6 +30,7 @@ import android.os.IBinder;
  *
  * @hide
  */
+@SystemApi
 public abstract class AdServicesCobaltUploadService extends Service {
     /** Abstract method which will be overridden by the sender to upload the data */
     public abstract void onUploadEncryptedCobaltEnvelope(
