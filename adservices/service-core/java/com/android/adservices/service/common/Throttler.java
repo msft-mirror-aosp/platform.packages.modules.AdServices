@@ -45,6 +45,9 @@ public class Throttler {
         // Key to throttle Join Custom Audience API
         FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
 
+        // Key to throttle Fetch Custom Audience API
+        FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+
         // Key to throttle Leave Custom Audience API
         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
 
