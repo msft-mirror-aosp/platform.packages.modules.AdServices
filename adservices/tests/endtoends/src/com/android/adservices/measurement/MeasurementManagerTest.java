@@ -104,7 +104,7 @@ public class MeasurementManagerTest {
     }
 
     private MeasurementManager getMeasurementManager() {
-        return spy(MeasurementManager.get(sContext));
+        return spy(sContext.getSystemService(MeasurementManager.class));
     }
 
     @Before

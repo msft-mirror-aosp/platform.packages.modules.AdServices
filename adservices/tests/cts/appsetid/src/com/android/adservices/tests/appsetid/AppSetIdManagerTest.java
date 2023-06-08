@@ -103,7 +103,7 @@ public class AppSetIdManagerTest {
     public void testAppSetIdManager() throws Exception {
         Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
 
-        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        AppSetIdManager appSetIdManager = sContext.getSystemService(AppSetIdManager.class);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
                 new OutcomeReceiver<AppSetId, Exception>() {
@@ -128,7 +128,7 @@ public class AppSetIdManagerTest {
     public void testAppSetIdManager_verifyRateLimitReached() throws Exception {
         Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
 
-        final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        final AppSetIdManager appSetIdManager = sContext.getSystemService(AppSetIdManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
