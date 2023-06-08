@@ -264,6 +264,7 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPIC
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.Flags.TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
 import static com.android.adservices.service.Flags.UI_DIALOG_FRAGMENT;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
@@ -510,6 +511,7 @@ import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_RANDOM
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.PhFlags.KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
 import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_UI_EEA_COUNTRIES;
@@ -739,6 +741,34 @@ public class PhFlagsTest {
                 () -> {
                     phFlags.getTopicsNumberOfLookBackEpochs();
                 });
+    }
+
+    @Test
+    public void testGetTopicsPrivacyBudgetForTopicIdDistribution() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getTopicsPrivacyBudgetForTopicIdDistribution())
+                .isEqualTo(TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
+
+        final float phOverridingValue = 5f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                Double.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getTopicsPrivacyBudgetForTopicIdDistribution())
+                .isEqualTo(phOverridingValue);
+
+        // Validate that topicsPrivacyBudgetForTopicIdDistribution got from PH >= 1
+        final float illegalPhOverridingValue = -1f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                Double.toString(illegalPhOverridingValue),
+                /* makeDefault */ false);
+        assertThrows(IllegalArgumentException.class,
+                phFlags::getTopicsPrivacyBudgetForTopicIdDistribution);
     }
 
     @Test
