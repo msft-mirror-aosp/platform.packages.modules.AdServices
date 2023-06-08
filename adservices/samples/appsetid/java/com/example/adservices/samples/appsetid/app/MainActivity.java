@@ -54,10 +54,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        mAppSetIdManager =
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        ? this.getSystemService(AppSetIdManager.class)
-                        : AppSetIdManager.get(this);
+        mAppSetIdManager = this.getSystemService(AppSetIdManager.class);
         registerAppSetIdButton();
     }
 

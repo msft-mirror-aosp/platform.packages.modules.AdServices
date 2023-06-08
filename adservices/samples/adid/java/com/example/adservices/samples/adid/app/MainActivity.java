@@ -54,10 +54,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        mAdIdManager =
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        ? this.getSystemService(AdIdManager.class)
-                        : AdIdManager.get(this);
+        mAdIdManager = this.getSystemService(AdIdManager.class);
         registerAdIdButton();
     }
 
