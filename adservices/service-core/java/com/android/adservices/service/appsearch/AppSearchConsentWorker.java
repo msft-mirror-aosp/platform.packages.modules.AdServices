@@ -41,11 +41,14 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -618,12 +621,7 @@ class AppSearchConsentWorker {
                         new AppSearchUxStatesDao(
                                 AppSearchUxStatesDao.getRowId(mUid),
                                 mUid,
-                                AppSearchUxStatesDao.NAMESPACE,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false);
+                                AppSearchUxStatesDao.NAMESPACE);
             }
             dao.setAdIdEnabled(isAdIdEnabled);
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
@@ -658,12 +656,7 @@ class AppSearchConsentWorker {
                         new AppSearchUxStatesDao(
                                 AppSearchUxStatesDao.getRowId(mUid),
                                 mUid,
-                                AppSearchUxStatesDao.NAMESPACE,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false);
+                                AppSearchUxStatesDao.NAMESPACE);
             }
             dao.setU18Account(isU18Account);
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
@@ -699,12 +692,7 @@ class AppSearchConsentWorker {
                         new AppSearchUxStatesDao(
                                 AppSearchUxStatesDao.getRowId(mUid),
                                 mUid,
-                                AppSearchUxStatesDao.NAMESPACE,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false);
+                                AppSearchUxStatesDao.NAMESPACE);
             }
             dao.setEntryPointEnabled(isEntryPointEnabled);
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
@@ -739,12 +727,7 @@ class AppSearchConsentWorker {
                         new AppSearchUxStatesDao(
                                 AppSearchUxStatesDao.getRowId(mUid),
                                 mUid,
-                                AppSearchUxStatesDao.NAMESPACE,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false);
+                                AppSearchUxStatesDao.NAMESPACE);
             }
             dao.setAdultAccount(isAdultAccount);
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
@@ -780,12 +763,7 @@ class AppSearchConsentWorker {
                         new AppSearchUxStatesDao(
                                 AppSearchUxStatesDao.getRowId(mUid),
                                 mUid,
-                                AppSearchUxStatesDao.NAMESPACE,
-                                false,
-                                false,
-                                false,
-                                false,
-                                false);
+                                AppSearchUxStatesDao.NAMESPACE);
             }
             dao.setU18NotificationDisplayed(wasU18NotificationDisplayed);
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
@@ -793,6 +771,83 @@ class AppSearchConsentWorker {
             LogUtil.d("Wrote the wasU18NotificationDisplayed bit to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e("Failed to write the wasU18NotificationDisplayed to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns the current privacy sandbox UX. */
+    PrivacySandboxUxCollection getUx() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readUx(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the current privacy sandbox UX. */
+    void setUx(PrivacySandboxUxCollection ux) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setUx(ux.toString());
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote PrivacySandboxUx to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write PrivacySandboxUx to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns the privacy sandbox enrollment channel. */
+    PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(PrivacySandboxUxCollection ux) {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readEnrollmentChannel(
+                    mGlobalSearchSession, mExecutor, mUid, ux);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the current privacy sandbox enrollment channel. */
+    void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            if (!Arrays.asList(ux.getEnrollmentChannelCollection()).contains(enrollmentChannel)) {
+                // setting an enrollment channel that is not part of the given UX is a no-op.
+                return;
+            }
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setEnrollmentChannel(enrollmentChannel.toString());
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote PrivacySandboxUx to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write PrivacySandboxUx to AppSearch ", e);
             throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();

@@ -23,6 +23,8 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -63,7 +65,17 @@ public class AppSearchUxStatesDaoTest {
     @Test
     public void testToString() {
         AppSearchUxStatesDao dao =
-                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, false, false, false, false, false);
+                new AppSearchUxStatesDao(
+                        ID1,
+                        ID2,
+                        NAMESPACE,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        "testUx",
+                        "testEnrollmentChannel");
         assertThat(dao.toString())
                 .isEqualTo(
                         "id="
@@ -76,17 +88,22 @@ public class AppSearchUxStatesDaoTest {
                                 + "; isU18Account=false"
                                 + "; isAdultAccount=false"
                                 + "; isAdIdEnabled=false"
-                                + "; wasU18NotificationDisplayed=false");
+                                + "; wasU18NotificationDisplayed=false"
+                                + "; ux=testUx"
+                                + "; enrollmentChannel=testEnrollmentChannel");
     }
 
     @Test
     public void testEquals() {
         AppSearchUxStatesDao dao1 =
-                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, true, false, false, false, false);
+                new AppSearchUxStatesDao(
+                        ID1, ID2, NAMESPACE, true, false, false, false, false, null, null);
         AppSearchUxStatesDao dao2 =
-                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, true, false, false, false, false);
+                new AppSearchUxStatesDao(
+                        ID1, ID2, NAMESPACE, true, false, false, false, false, null, null);
         AppSearchUxStatesDao dao3 =
-                new AppSearchUxStatesDao(ID1, "foo", NAMESPACE, true, false, false, false, false);
+                new AppSearchUxStatesDao(
+                        ID1, "foo", NAMESPACE, true, false, false, false, false, null, null);
         assertThat(dao1.equals(dao2)).isTrue();
         assertThat(dao1.equals(dao3)).isFalse();
         assertThat(dao2.equals(dao3)).isFalse();
@@ -289,5 +306,79 @@ public class AppSearchUxStatesDaoTest {
                 AppSearchUxStatesDao.readIsU18NotificationDisplayed(
                         mockSearchSession, mockExecutor, ID2);
         assertThat(result2).isTrue();
+    }
+
+    @Test
+    public void getUxTest_nullDao() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+        PrivacySandboxUxCollection result =
+                AppSearchUxStatesDao.readUx(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+    }
+
+    @Test
+    public void getUxTest_allUxs() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+
+        String query = "userId:" + ID1;
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            Mockito.when(dao.getUx()).thenReturn(ux.toString());
+            ExtendedMockito.doReturn(dao)
+                    .when(
+                            () ->
+                                    AppSearchDao.readConsentData(
+                                            any(), any(), any(), any(), eq(query)));
+
+            PrivacySandboxUxCollection result =
+                    AppSearchUxStatesDao.readUx(mockSearchSession, mockExecutor, ID1);
+            assertThat(result).isEqualTo(ux);
+        }
+    }
+
+    @Test
+    public void getEnrollmentChannelTest_nullDao() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+        PrivacySandboxEnrollmentChannelCollection result =
+                AppSearchUxStatesDao.readEnrollmentChannel(
+                        mockSearchSession,
+                        mockExecutor,
+                        ID1,
+                        PrivacySandboxUxCollection.UNSUPPORTED_UX);
+        assertThat(result).isEqualTo(null);
+    }
+
+    @Test
+    public void getEnrollmentChannelTest_allUxsAllChannels() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+
+        String query = "userId:" + ID1;
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                Mockito.when(dao.getEnrollmentChannel()).thenReturn(channel.toString());
+                ExtendedMockito.doReturn(dao)
+                        .when(
+                                () ->
+                                        AppSearchDao.readConsentData(
+                                                any(), any(), any(), any(), eq(query)));
+
+                PrivacySandboxEnrollmentChannelCollection result =
+                        AppSearchUxStatesDao.readEnrollmentChannel(
+                                mockSearchSession, mockExecutor, ID1, ux);
+                assertThat(result).isEqualTo(channel);
+            }
+        }
     }
 }
