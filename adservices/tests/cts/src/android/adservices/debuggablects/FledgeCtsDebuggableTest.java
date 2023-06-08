@@ -91,6 +91,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public static final String TAG = "adservices";
@@ -301,6 +302,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private String mPreviousAppAllowList;
 
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
+    private AtomicInteger mFrequencyCapKeyToFilter = new AtomicInteger(0);
 
     @Before
     public void setup() throws InterruptedException {
@@ -2038,7 +2040,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        final int keyToFilter = 10;
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
@@ -2209,21 +2213,735 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    @Ignore("TODO(b/221876775): Add more tests for beta release")
     @Test
-    public void testFrequencyCapFiltering_DifferentNonWinEvent_DoesNotFilterAds() {}
+    public void testFrequencyCapFiltering_DifferentNonWinEvent_IsNotFiltered()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-    @Ignore("TODO(b/221876775): Add more tests for beta release")
-    @Test
-    public void testFrequencyCapFiltering_NonWinEventDifferentKey_DoesNotFilterAds() {}
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
-    @Ignore("TODO(b/221876775): Add more tests for beta release")
-    @Test
-    public void testFrequencyCapFiltering_NonWinEventDifferentBuyer_DoesNotFilterAds() {}
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
 
-    @Ignore("TODO(b/221876775): Add more tests for beta release")
+        FrequencyCapFilters nonWinFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithNonWinFrequencyCapFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad_with_filters"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(nonWinFilter)
+                                        .build())
+                        .build();
+
+        AdData adWithoutFilters =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/ad_without_filters"))
+                        .setMetadata("{\"result\":5}")
+                        .build();
+
+        CustomAudience.Builder sameCustomAudienceBuilder =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_1)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH));
+
+        CustomAudience customAudienceWithFrequencyCapFilters =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setAds(ImmutableList.of(adWithNonWinFrequencyCapFilter))
+                        .build();
+
+        CustomAudience customAudienceWithoutFrequencyCapFilters =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_without_filters")
+                        .setAds(ImmutableList.of(adWithoutFilters))
+                        .build();
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithFrequencyCapFilters);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceWithFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceWithoutFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithoutFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithoutFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithoutFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri())
+                .isEqualTo(adWithNonWinFrequencyCapFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Update ad counter histogram for the first ad selection outcome on the wrong event type
+        UpdateAdCounterHistogramRequest updateRequest =
+                new UpdateAdCounterHistogramRequest.Builder(
+                                outcome1.getAdSelectionId(),
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                BUYER_1)
+                        .build();
+        mAdSelectionClient
+                .updateAdCounterHistogram(updateRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won even after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri())
+                .isEqualTo(adWithNonWinFrequencyCapFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
     @Test
-    public void testFrequencyCapFiltering_NonWinEventWrongAdSelection_DoesNotFilterAds() {}
+    public void testFrequencyCapFiltering_NonWinEventDifferentKey_IsNotFiltered()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+        final int otherKeyNotFiltered = -1 * keyToFilter;
+
+        FrequencyCapFilters nonWinFilterWithKeyToFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithFrequencyCapKeyToFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/adWithFrequencyCapKeyToFilter"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(nonWinFilterWithKeyToFilter)
+                                        .build())
+                        .build();
+
+        FrequencyCapFilters nonWinFilterWithOtherKey =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        otherKeyNotFiltered,
+                                                        1,
+                                                        Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithOtherFrequencyCapKey =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/adWithOtherFrequencyCapKey"))
+                        .setMetadata("{\"result\":5}")
+                        .setAdCounterKeys(ImmutableSet.of(otherKeyNotFiltered))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(nonWinFilterWithOtherKey)
+                                        .build())
+                        .build();
+
+        CustomAudience customAudienceWithFrequencyCapFilters =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_1)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setAds(
+                                ImmutableList.of(
+                                        adWithFrequencyCapKeyToFilter, adWithOtherFrequencyCapKey))
+                        .build();
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithFrequencyCapFilters);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceWithFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri()).isEqualTo(adWithFrequencyCapKeyToFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Update ad counter histogram for the first ad selection outcome
+        UpdateAdCounterHistogramRequest updateRequest =
+                new UpdateAdCounterHistogramRequest.Builder(
+                                outcome1.getAdSelectionId(),
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                BUYER_1)
+                        .build();
+        mAdSelectionClient
+                .updateAdCounterHistogram(updateRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with a different key won after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri()).isEqualTo(adWithOtherFrequencyCapKey.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFrequencyCapFiltering_NonWinEventDifferentBuyer_IsNotFiltered()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+
+        FrequencyCapFilters nonWinFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adForBuyer1ToFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad_for_buyer1"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(nonWinFilter)
+                                        .build())
+                        .build();
+
+        AdData adForBuyer2 =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad_for_buyer2"))
+                        .setMetadata("{\"result\":5}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(nonWinFilter)
+                                        .build())
+                        .build();
+
+        CustomAudience.Builder sameCustomAudienceBuilder =
+                new CustomAudience.Builder()
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+
+        CustomAudience customAudienceForBuyer1 =
+                sameCustomAudienceBuilder
+                        .setBuyer(BUYER_1)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setAds(ImmutableList.of(adForBuyer1ToFilter))
+                        .build();
+
+        CustomAudience customAudienceForBuyer2 =
+                sameCustomAudienceBuilder
+                        .setBuyer(BUYER_2)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2))
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_2))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setAds(ImmutableList.of(adForBuyer2))
+                        .build();
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceForBuyer1);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceForBuyer2);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceForBuyer1OverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceForBuyer1.getBuyer())
+                        .setName(customAudienceForBuyer1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceForBuyer2OverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceForBuyer2.getBuyer())
+                        .setName(customAudienceForBuyer2.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceForBuyer1OverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceForBuyer2OverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri()).isEqualTo(adForBuyer1ToFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Update ad counter histogram for the first ad selection outcome
+        UpdateAdCounterHistogramRequest updateRequest =
+                new UpdateAdCounterHistogramRequest.Builder(
+                                outcome1.getAdSelectionId(),
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                BUYER_1)
+                        .build();
+        mAdSelectionClient
+                .updateAdCounterHistogram(updateRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad without filters won after updating the ad counter histogram
+        assertThat(outcome2.getRenderUri()).isEqualTo(adForBuyer2.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFrequencyCapFiltering_NonWinEventWrongAdSelection_DoesNotFilterAds()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        // Because frequency cap events are per-buyer and not per-CA, they cannot be cleared,
+        // so to eliminate flakiness within a suite run, each test case will have its own unique key
+        final int keyToFilter = mFrequencyCapKeyToFilter.incrementAndGet();
+
+        FrequencyCapFilters nonWinFilter =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                ImmutableList.of(
+                                        new KeyedFrequencyCap.Builder(
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
+                                                .build()))
+                        .build();
+
+        AdData adWithNonWinFrequencyCapFilter =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad_with_filters"))
+                        .setMetadata("{\"result\":10}")
+                        .setAdCounterKeys(ImmutableSet.of(keyToFilter))
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(nonWinFilter)
+                                        .build())
+                        .build();
+
+        AdData adWithoutFilters =
+                new AdData.Builder()
+                        .setRenderUri(
+                                CommonFixture.getUri(
+                                        BUYER_1, AD_URI_PREFIX + "/ad_without_filters"))
+                        .setMetadata("{\"result\":5}")
+                        .build();
+
+        CustomAudience.Builder sameCustomAudienceBuilder =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_1)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1))
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_1))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH));
+
+        CustomAudience customAudienceWithFrequencyCapFilters =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_with_filters")
+                        .setAds(ImmutableList.of(adWithNonWinFrequencyCapFilter))
+                        .build();
+
+        CustomAudience customAudienceWithoutFrequencyCapFilters =
+                sameCustomAudienceBuilder
+                        .setName(keyToFilter + "_ca_without_filters")
+                        .setAds(ImmutableList.of(adWithoutFilters))
+                        .build();
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithFrequencyCapFilters);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on
+        // Failures will generate an exception
+        joinCustomAudience(customAudienceWithoutFrequencyCapFilters);
+
+        // Adding AdSelection override, no result to do assertion on
+        // Failures will generate an exception
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceWithFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceWithoutFiltersOverrideRequest =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudienceWithoutFrequencyCapFilters.getBuyer())
+                        .setName(customAudienceWithoutFrequencyCapFilters.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on
+        // Failures will generate an exception
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceWithoutFiltersOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome1 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won
+        assertThat(outcome1.getRenderUri())
+                .isEqualTo(adWithNonWinFrequencyCapFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest1 =
+                new ReportImpressionRequest(outcome1.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Update ad counter histogram for an incorrect ad selection ID
+        UpdateAdCounterHistogramRequest updateRequest =
+                new UpdateAdCounterHistogramRequest.Builder(
+                                outcome1.getAdSelectionId() + 1,
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                BUYER_1)
+                        .build();
+        mAdSelectionClient
+                .updateAdCounterHistogram(updateRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection again and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome2 =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with filters won after updating the ad counter histogram for the
+        // wrong ad selection ID
+        assertThat(outcome2.getRenderUri())
+                .isEqualTo(adWithNonWinFrequencyCapFilter.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest2 =
+                new ReportImpressionRequest(outcome2.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
 
     private String insertJsWait(long waitTime) {
         return "    const wait = (ms) => {\n"
