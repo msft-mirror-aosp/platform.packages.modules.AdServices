@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MAX_REPORT_DELAY;
-import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MIN_REPORT_DELAY;
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
+import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 
@@ -85,6 +85,7 @@ import java.util.stream.Collectors;
 class AttributionJobHandler {
 
     private static final String API_VERSION = "0.1";
+    private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
@@ -335,12 +336,7 @@ class AttributionJobHandler {
             }
 
             source.setAggregateContributions(newAggregateContributions.getAsInt());
-            long randomTime =
-                    (long)
-                            ((Math.random()
-                                            * (AGGREGATE_MAX_REPORT_DELAY
-                                                    - AGGREGATE_MIN_REPORT_DELAY))
-                                    + AGGREGATE_MIN_REPORT_DELAY);
+            long randomTime = getAggregateReportDelay();
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                     new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
@@ -1009,5 +1005,37 @@ class AttributionJobHandler {
                                 .setRegistrationDelay(
                                         delayedSourceRegistrationStatus.getRegistrationDelay())
                                 .build());
+    }
+
+    private long getAggregateReportDelay() {
+        long reportDelayFromDefaults = (long) (Math.random() * AGGREGATE_REPORT_DELAY_SPAN
+                    + AGGREGATE_REPORT_MIN_DELAY);
+
+        if (!mFlags.getMeasurementEnableConfigurableAggregateReportDelay()) {
+            return reportDelayFromDefaults;
+        }
+
+        String aggregateReportDelayString = mFlags.getMeasurementAggregateReportDelayConfig();
+
+        if (aggregateReportDelayString == null) {
+            LogUtil.d("Invalid configurable aggregate report delay: null");
+            return reportDelayFromDefaults;
+        }
+
+        String[] split = aggregateReportDelayString.split(AGGREGATE_REPORT_DELAY_DELIMITER);
+
+        if (split.length != 2) {
+            LogUtil.d("Invalid configurable aggregate report delay: length is not two");
+            return reportDelayFromDefaults;
+        }
+
+        try {
+            final long minDelay = Long.parseLong(split[0].trim());
+            final long delaySpan =  Long.parseLong(split[1].trim());
+            return (long) (Math.random() * delaySpan + minDelay);
+        } catch (NumberFormatException e) {
+            LogUtil.e(e, "Configurable aggregate report delay parsing failed.");
+            return reportDelayFromDefaults;
+        }
     }
 }

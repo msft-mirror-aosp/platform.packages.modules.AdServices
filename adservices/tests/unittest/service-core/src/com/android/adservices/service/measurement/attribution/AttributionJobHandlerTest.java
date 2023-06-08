@@ -47,6 +47,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -1227,6 +1228,190 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void shouldObserveFlagOverriddenAggregateReportDelay()
+            throws DatastoreException, JSONException {
+        Trigger trigger = getAggregateTrigger();
+        Source source = getAggregateSource();
+
+        long reportMinDelay = TimeUnit.MINUTES.toMillis(61);
+        long reportDelaySpan = TimeUnit.MINUTES.toMillis(10);
+        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
+        when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn(
+                String.valueOf(reportMinDelay) + "," + String.valueOf(reportDelaySpan));
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+
+        // Assert expected aggregate report time range
+        long lowerBound = reportMinDelay;
+        // Add slightly more delay to upper bound to account for execution.
+        long upperBound = reportMinDelay + reportDelaySpan + 1000;
+        AggregateReport capturedReport = aggregateReportCaptor.getValue();
+        assertTrue(capturedReport.getScheduledReportTime() > lowerBound
+                && capturedReport.getScheduledReportTime() < upperBound);
+    }
+
+    @Test
+    public void shouldObserveDefaultAggregateReportDelay()
+            throws DatastoreException, JSONException {
+        Trigger trigger = getAggregateTrigger();
+        Source source = getAggregateSource();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+
+        // Assert expected aggregate report time range
+        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        // Add slightly more delay to upper bound to account for execution.
+        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        AggregateReport capturedReport = aggregateReportCaptor.getValue();
+        assertTrue(capturedReport.getScheduledReportTime() > lowerBound
+                && capturedReport.getScheduledReportTime() < upperBound);
+    }
+
+    @Test
+    public void shouldObserveDefaultAggregateReportDelayWhenFlagOverrideIsNull()
+            throws DatastoreException, JSONException {
+        Trigger trigger = getAggregateTrigger();
+        Source source = getAggregateSource();
+
+        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
+        when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn(null);
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+
+        // Assert expected aggregate report time range
+        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        // Add slightly more delay to upper bound to account for execution.
+        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        AggregateReport capturedReport = aggregateReportCaptor.getValue();
+        assertTrue(capturedReport.getScheduledReportTime() > lowerBound
+                && capturedReport.getScheduledReportTime() < upperBound);
+    }
+
+    @Test
+    public void shouldObserveDefaultAggregateReportDelayWhenFlagOverrideSizeIsInvalid()
+            throws DatastoreException, JSONException {
+        Trigger trigger = getAggregateTrigger();
+        Source source = getAggregateSource();
+
+        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
+        when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn("12");
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+
+        // Assert expected aggregate report time range
+        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        // Add slightly more delay to upper bound to account for execution.
+        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        AggregateReport capturedReport = aggregateReportCaptor.getValue();
+        assertTrue(capturedReport.getScheduledReportTime() > lowerBound
+                && capturedReport.getScheduledReportTime() < upperBound);
+    }
+
+    @Test
+    public void shouldObserveDefaultAggregateReportDelayWhenFlagOverrideValueIsInvalid()
+            throws DatastoreException, JSONException {
+        Trigger trigger = getAggregateTrigger();
+        Source source = getAggregateSource();
+
+        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
+        when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn("1200u0000r,3600000");
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+
+        // Assert expected aggregate report time range
+        long lowerBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+        // Add slightly more delay to upper bound to account for execution.
+        long upperBound = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN + 1000;
+        AggregateReport capturedReport = aggregateReportCaptor.getValue();
+        assertTrue(capturedReport.getScheduledReportTime() > lowerBound
+                && capturedReport.getScheduledReportTime() < upperBound);
+    }
+
+    @Test
     public void shouldDoSimpleAttributionGenerateUnencryptedAggregateReport()
             throws DatastoreException, JSONException {
         JSONArray triggerDatas = new JSONArray();
@@ -1263,6 +1448,7 @@ public class AttributionJobHandlerTest {
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
                         .build();
+
         AggregateReport expectedAggregateReport =
                 new AggregateReport.Builder()
                         .setApiVersion("0.1")
@@ -3561,5 +3747,42 @@ public class AttributionJobHandlerTest {
         assertEquals(expectedReport.getSourceDebugKey(), actualReport.getSourceDebugKey());
         assertEquals(expectedReport.getTriggerDebugKey(), actualReport.getTriggerDebugKey());
         assertEquals(expectedReport.getRegistrationOrigin(), actualReport.getRegistrationOrigin());
+    }
+
+    private static Trigger getAggregateTrigger() throws JSONException {
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        return TriggerFixture.getValidTriggerBuilder()
+                .setId("triggerId1")
+                .setStatus(Trigger.Status.PENDING)
+                .setEventTriggers(
+                        "[\n"
+                                + "{\n"
+                                + "  \"trigger_data\": \"5\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"deduplication_key\": \"1\"\n"
+                                + "}"
+                                + "]\n")
+                .setAggregateTriggerData(triggerDatas.toString())
+                .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                .build();
+    }
+
+    private static Source getAggregateSource() {
+        return SourceFixture.getValidSourceBuilder()
+                .setId("sourceId1")
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setAggregateSource(
+                        "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                .build();
     }
 }

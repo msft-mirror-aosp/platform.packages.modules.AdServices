@@ -538,6 +538,12 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_ctc_early_reporting_windows";
 
+    static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY =
+            "measurement_enable_configurable_aggregate_report_delay";
+
+    static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
+            "measurement_aggregate_report_delay_config";
+
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
@@ -2606,6 +2612,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableConfigurableAggregateReportDelay() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
+                /* defaultValue */ MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY);
+    }
+
+    @Override
+    public String getMeasurementAggregateReportDelayConfig() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
+                /* defaultValue */ MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG);
+    }
+
+    @Override
     public boolean isEnrollmentBlocklisted(String enrollmentId) {
         return getEnrollmentBlocklist().contains(enrollmentId);
     }
@@ -2961,6 +2985,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
                         + " = "
                         + getMeasurementEventReportsCtcEarlyReportingWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY
+                        + " = "
+                        + getMeasurementEnableConfigurableAggregateReportDelay());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG
+                        + " = "
+                        + getMeasurementAggregateReportDelayConfig());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
