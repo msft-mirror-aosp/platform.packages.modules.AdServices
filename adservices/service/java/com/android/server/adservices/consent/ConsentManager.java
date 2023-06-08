@@ -23,10 +23,12 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Manager to handle user's consent. We will have one ConsentManager instance per user.
@@ -568,6 +570,34 @@ public final class ConsentManager {
             } catch (IOException e) {
                 LogUtil.e(e, "setU18NotificationDisplayed operation failed: " + e.getMessage());
             }
+        }
+    }
+
+    /** Set the current enabled privacy sux. */
+    public void setUx(String eligibleUx) {
+        synchronized (this) {
+            Stream.of(PrivacySandboxUxCollection.values())
+                    .forEach(
+                            ux -> {
+                                try {
+                                    mDatastore.put(ux.toString(), ux.toString().equals(eligibleUx));
+                                } catch (IOException e) {
+                                    LogUtil.e(
+                                            "IOException caught while setting the current UX."
+                                                    + e.getMessage());
+                                }
+                            });
+        }
+    }
+
+    /** Returns the current UX. */
+    public String getUx() {
+        synchronized (this) {
+            return Stream.of(PrivacySandboxUxCollection.values())
+                    .filter(ux -> Boolean.TRUE.equals(mDatastore.get(ux.toString())))
+                    .findFirst()
+                    .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX)
+                    .toString();
         }
     }
 }
