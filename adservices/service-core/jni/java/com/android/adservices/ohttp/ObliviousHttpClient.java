@@ -19,8 +19,7 @@ package com.android.adservices.ohttp;
 import com.android.adservices.ohttp.algorithms.AeadAlgorithmSpec;
 import com.android.adservices.ohttp.algorithms.HpkeAlgorithmSpec;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
