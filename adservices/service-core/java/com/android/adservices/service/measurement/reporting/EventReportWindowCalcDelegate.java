@@ -41,8 +41,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
@@ -174,7 +172,7 @@ public class EventReportWindowCalcDelegate {
                             ? EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                             : NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
         }
-        return LongStream.of(earlyWindows).boxed().collect(Collectors.toList());
+        return asList(earlyWindows);
     }
 
     private List<Long> getConfiguredOrDefaultEarlyReportingWindows(
@@ -229,5 +227,13 @@ public class EventReportWindowCalcDelegate {
         return sourceType == Source.SourceType.EVENT
                 ? flags.getMeasurementEventReportsVtcEarlyReportingWindows()
                 : flags.getMeasurementEventReportsCtcEarlyReportingWindows();
+    }
+
+    private static List<Long> asList(long[] values) {
+        final List<Long> list = new ArrayList<>();
+        for (Long value : values) {
+            list.add(value);
+        }
+        return list;
     }
 }
