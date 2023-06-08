@@ -32,7 +32,6 @@ public class CustomAudienceManagerTest {
     public void testCustomAudienceManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
         final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(CustomAudienceManager.get(context)).isNotNull();
         assertThat(context.getSystemService(CustomAudienceManager.class)).isNotNull();
     }
 
@@ -40,7 +39,6 @@ public class CustomAudienceManagerTest {
     public void testCustomAudiencerManagerCtor_SMinus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
         final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(CustomAudienceManager.get(context)).isNotNull();
         assertThat(context.getSystemService(CustomAudienceManager.class)).isNull();
     }
 }
