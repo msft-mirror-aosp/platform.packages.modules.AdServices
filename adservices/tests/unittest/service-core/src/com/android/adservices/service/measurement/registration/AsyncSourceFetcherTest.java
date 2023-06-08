@@ -4669,7 +4669,7 @@ public final class AsyncSourceFetcherTest {
         return new RegistrationRequest.Builder(
                 RegistrationRequest.REGISTER_SOURCE,
                 Uri.parse(registrationUri),
-                sContext.getAttributionSource().getPackageName(),
+                sContext.getPackageName(),
                 SDK_PACKAGE_NAME);
     }
 
