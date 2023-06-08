@@ -69,7 +69,7 @@ public final class CustomAudienceFixture {
             CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 72);
 
     public static final AdSelectionSignals VALID_USER_BIDDING_SIGNALS =
-            AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
+            AdSelectionSignals.fromString("{\"valid\":\"yep\",\"opaque\":\"definitely\"}");
 
     public static Uri getValidFetchUriByBuyer(AdTechIdentifier buyer, String token) {
         boolean hasToken = token != null && !token.isEmpty();
