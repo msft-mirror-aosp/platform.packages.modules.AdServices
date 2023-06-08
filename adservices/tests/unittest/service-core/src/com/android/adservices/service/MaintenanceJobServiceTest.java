@@ -16,7 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
@@ -571,21 +570,16 @@ public class MaintenanceJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLogging() {
+    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
         // Logging killswitch is off.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
         testOnStartJob_shouldDisableJobTrue();
 
-        // Verify logging has happened
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
-                        anyInt());
+        // Verify logging has not happened even though logging is enabled because this field is not
+        // logged
+        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     private void testOnStartJob_killSwitchOn() {
