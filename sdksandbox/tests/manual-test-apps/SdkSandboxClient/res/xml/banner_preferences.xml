@@ -67,4 +67,17 @@
         />
     </PreferenceCategory>
 
+    <PreferenceCategory
+        app:key="banner_size"
+        app:title="@string/size">
+        <ListPreference
+            app:key="banner_ad_size"
+            app:title="@string/ad_size"
+            app:useSimpleSummaryProvider="true"
+            android:entries="@array/banner_ad_size"
+            android:entryValues="@array/banner_ad_size_values"
+            android:defaultValue="SMALL"
+        />
+    </PreferenceCategory>
+
 </PreferenceScreen>

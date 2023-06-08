@@ -56,6 +56,7 @@ import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -395,6 +396,30 @@ public class MainActivity extends AppCompatActivity {
                                 (options.getPlacement() == BannerOptions.Placement.BOTTOM)
                                         ? mBottomBannerView
                                         : mInScrollBannerView;
+
+                        int adSize = 0;
+                        switch (options.getAdSize()) {
+                            case SMALL:
+                                {
+                                    adSize = 80;
+                                    break;
+                                }
+                            case MEDIUM:
+                                {
+                                    adSize = 150;
+                                    break;
+                                }
+                            case LARGE:
+                                {
+                                    adSize = 250;
+                                    break;
+                                }
+                        }
+                        ViewGroup.LayoutParams svParams = surfaceView.getLayoutParams();
+                        float factor =
+                                getApplicationContext().getResources().getDisplayMetrics().density;
+                        svParams.height = (int) (adSize * factor);
+                        surfaceView.setLayoutParams(svParams);
 
                         final OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
                                 new RequestSurfacePackageReceiver(surfaceView);
@@ -833,7 +858,7 @@ public class MainActivity extends AppCompatActivity {
     private Bundle getRequestSurfacePackageParams(String commType, SurfaceView surfaceView) {
         Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, surfaceView.getWidth());
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, surfaceView.getHeight());
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, surfaceView.getLayoutParams().height);
         params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
         params.putBinder(EXTRA_HOST_TOKEN, surfaceView.getHostToken());
         params.putString(EXTRA_SDK_SDK_ENABLED_KEY, commType);

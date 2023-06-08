@@ -39,10 +39,17 @@ public class BannerOptions {
         SCROLL_VIEW
     }
 
+    public enum AdSize {
+        SMALL,
+        MEDIUM,
+        LARGE,
+    };
+
     private final ViewType mViewType;
     private final String mVideoUrl;
     private final OnClick mOnClick;
     private final Placement mPlacement;
+    private final AdSize mAdSize;
 
     private final String mPackageToOpen;
 
@@ -66,11 +73,15 @@ public class BannerOptions {
         return mPackageToOpen;
     }
 
+    public AdSize getAdSize() {
+        return mAdSize;
+    }
+
     @Override
     public String toString() {
         return String.format(
-                "BannerOptions { ViewType=%s, VideoUrl=%s, OnClick=%s, Placement=%s }",
-                mViewType, mVideoUrl, mOnClick, mPlacement);
+                "BannerOptions { ViewType=%s, VideoUrl=%s, OnClick=%s, Placement=%s AdSize=%s }",
+                mViewType, mVideoUrl, mOnClick, mPlacement, mAdSize);
     }
 
     private BannerOptions(
@@ -78,12 +89,14 @@ public class BannerOptions {
             String videoUrl,
             OnClick onClick,
             String packageToOpen,
-            Placement placement) {
+            Placement placement,
+            AdSize adSize) {
         mViewType = viewType;
         mVideoUrl = videoUrl;
         mOnClick = onClick;
         mPlacement = placement;
         mPackageToOpen = packageToOpen;
+        mAdSize = adSize;
     }
 
     public static BannerOptions fromSharedPreferences(SharedPreferences sharedPreferences) {
@@ -92,6 +105,7 @@ public class BannerOptions {
                 sharedPreferences.getString("banner_video_url", ""),
                 OnClick.valueOf(sharedPreferences.getString("banner_on_click", "")),
                 sharedPreferences.getString("package_to_open", ""),
-                Placement.valueOf(sharedPreferences.getString("banner_placement", "")));
+                Placement.valueOf(sharedPreferences.getString("banner_placement", "")),
+                AdSize.valueOf(sharedPreferences.getString("banner_ad_size", "")));
     }
 }
