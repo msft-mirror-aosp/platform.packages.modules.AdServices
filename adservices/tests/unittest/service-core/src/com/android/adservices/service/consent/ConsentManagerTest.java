@@ -109,6 +109,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
@@ -176,6 +177,7 @@ public class ConsentManagerTest {
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
+    @Mock private UserProfileIdManager mUserProfileIdManager;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -600,6 +602,7 @@ public class ConsentManagerTest {
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mUserProfileIdManager).deleteId();
     }
 
     @Test
@@ -617,6 +620,7 @@ public class ConsentManagerTest {
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verifyZeroInteractions(mAppInstallDaoMock);
+        verify(mUserProfileIdManager).deleteId();
     }
 
     @Test
@@ -632,6 +636,8 @@ public class ConsentManagerTest {
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mUserProfileIdManager).deleteId();
+        verify(mUserProfileIdManager).getOrCreateId();
     }
 
     @Test
@@ -648,6 +654,8 @@ public class ConsentManagerTest {
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verifyZeroInteractions(mAppInstallDaoMock);
+        verify(mUserProfileIdManager).deleteId();
+        verify(mUserProfileIdManager).getOrCreateId();
     }
 
     @Test
@@ -2858,6 +2866,7 @@ public class ConsentManagerTest {
                         mAdServicesManager,
                         mConsentDatastore,
                         mAppSearchConsentManager,
+                        mUserProfileIdManager,
                         mMockFlags,
                         Flags.PPAPI_ONLY);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
@@ -2987,6 +2996,40 @@ public class ConsentManagerTest {
         when(mAppSearchConsentManager.getConsent(AdServicesApiType.CONSENT_TOPICS))
                 .thenReturn(true);
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
+    }
+
+    @Test
+    public void testFledgeConsentIsEnabled_userProfileIdIsClearedThanRecreated()
+            throws RemoteException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForConsentPerApiTesting(
+                        isGiven, consentSourceOfTruth, AdServicesApiType.FLEDGE.toConsentApiType());
+
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isTrue();
+        verify(mUserProfileIdManager).deleteId();
+        verify(mUserProfileIdManager).getOrCreateId();
+    }
+
+    @Test
+    public void testFledgeConsentIsDisabled_userProfileIdIsCleared() throws RemoteException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = false;
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForConsentPerApiTesting(
+                        isGiven, consentSourceOfTruth, AdServicesApiType.FLEDGE.toConsentApiType());
+
+        spyConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isFalse();
+        verify(mUserProfileIdManager).deleteId();
     }
 
     @Test
@@ -3314,6 +3357,7 @@ public class ConsentManagerTest {
                 mAdServicesManager,
                 mConsentDatastore,
                 mAppSearchConsentManager,
+                mUserProfileIdManager,
                 mMockFlags,
                 consentSourceOfTruth);
     }
