@@ -25,10 +25,11 @@ import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -46,13 +47,13 @@ public class AdSelectionClient {
     private Context mContext;
     private Executor mExecutor;
 
-    private AdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
+    private AdSelectionClient(
+            @NonNull Context context,
+            @NonNull Executor executor,
+            @NonNull AdSelectionManager adSelectionManager) {
         mContext = context;
         mExecutor = executor;
-        mAdSelectionManager =
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        ? mContext.getSystemService(AdSelectionManager.class)
-                        : AdSelectionManager.get(context);
+        mAdSelectionManager = adSelectionManager;
     }
 
     /**
@@ -188,6 +189,7 @@ public class AdSelectionClient {
     public static final class Builder {
         private Context mContext;
         private Executor mExecutor;
+        private boolean mUseGetMethodToCreateManagerInstance;
 
         /** Empty-arg constructor with an empty body for Builder */
         public Builder() {}
@@ -215,6 +217,19 @@ public class AdSelectionClient {
         }
 
         /**
+         * Sets whether to use the AdSelectionManager.get(context) method explicitly.
+         *
+         * @param value flag indicating whether to use the AdSelectionManager.get(context) method
+         *     explicitly. Default is {@code false}.
+         */
+        @VisibleForTesting
+        @NonNull
+        public Builder setUseGetMethodToCreateManagerInstance(boolean value) {
+            mUseGetMethodToCreateManagerInstance = value;
+            return this;
+        }
+
+        /**
          * Builds the Ad Selection Client.
          *
          * @throws NullPointerException if {@code mContext} is null or if {@code mExecutor} is null
@@ -224,7 +239,11 @@ public class AdSelectionClient {
             Objects.requireNonNull(mContext);
             Objects.requireNonNull(mExecutor);
 
-            return new AdSelectionClient(mContext, mExecutor);
+            return new AdSelectionClient(mContext, mExecutor, createAdSelectionManager());
+        }
+
+        private AdSelectionManager createAdSelectionManager() {
+            return mContext.getSystemService(AdSelectionManager.class);
         }
     }
 }

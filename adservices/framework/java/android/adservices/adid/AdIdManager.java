@@ -67,6 +67,7 @@ public class AdIdManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link AdIdManager} instance
+     * @hide
      */
     @NonNull
     public static AdIdManager get(@NonNull Context context) {
