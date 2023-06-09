@@ -602,6 +602,35 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testSDKCanNotStartSandboxActivityDirectlyByAction() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        final ICtsSdkProviderApi sdk = loadSdk();
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class, () -> sdk.startSandboxActivityDirectlyByAction());
+
+        assertThat(exception.getMessage())
+                .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
+    }
+
+    @Test
+    public void testSDKCanNotStartSandboxActivityDirectlyByComponent() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        final ICtsSdkProviderApi sdk = loadSdk();
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () -> sdk.startSandboxActivityDirectlyByComponent());
+
+        assertThat(exception.getMessage())
+                .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
+    }
+
+    @Test
     public void testStartSdkSandboxedActivities() {
         assumeTrue(SdkLevel.isAtLeastU());
 
