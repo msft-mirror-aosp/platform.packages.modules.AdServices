@@ -237,10 +237,10 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
 
     // FLEDGE Ad Counter Histogram keys
-    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT =
-            "fledge_ad_counter_histogram_absolute_max_event_count";
-    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT =
-            "fledge_ad_counter_histogram_lower_max_event_count";
+    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =
+            "fledge_ad_counter_histogram_absolute_max_total_event_count";
+    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT =
+            "fledge_ad_counter_histogram_lower_max_total_event_count";
 
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
@@ -1345,19 +1345,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+    public int getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT,
-                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT);
+                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT);
     }
 
     @Override
-    public int getFledgeAdCounterHistogramLowerMaxEventCount() {
+    public int getFledgeAdCounterHistogramLowerMaxTotalEventCount() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT,
-                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT);
+                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT,
+                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT);
     }
 
     // MDD related flags.
@@ -2996,14 +2996,14 @@ public final class PhFlags implements Flags {
                         + getFledgeHttpCacheMaxAgeSeconds());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT
+                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT
                         + " = "
-                        + getFledgeAdCounterHistogramAbsoluteMaxEventCount());
+                        + getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT
+                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT
                         + " = "
-                        + getFledgeAdCounterHistogramLowerMaxEventCount());
+                        + getFledgeAdCounterHistogramLowerMaxTotalEventCount());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED

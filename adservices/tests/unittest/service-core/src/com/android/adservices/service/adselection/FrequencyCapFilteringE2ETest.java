@@ -649,7 +649,7 @@ public class FrequencyCapFilteringE2ETest {
     }
 
     @Test
-    public void testUpdateHistogramBeyondMaxEventCountDoesNotFilterAds()
+    public void testUpdateHistogramBeyondMaxTotalEventCountDoesNotFilterAds()
             throws InterruptedException {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
@@ -667,12 +667,12 @@ public class FrequencyCapFilteringE2ETest {
             }
 
             @Override
-            public int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+            public int getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount() {
                 return 5;
             }
 
             @Override
-            public int getFledgeAdCounterHistogramLowerMaxEventCount() {
+            public int getFledgeAdCounterHistogramLowerMaxTotalEventCount() {
                 return 1;
             }
         }
