@@ -53,7 +53,7 @@ public final class DBAdSelection {
 
     @ColumnInfo(name = "contextual_signals")
     @NonNull
-    private final String mContextualSignals;
+    private final String mBuyerContextualSignals;
 
     @ColumnInfo(name = "bidding_logic_uri")
     @Nullable
@@ -83,10 +83,14 @@ public final class DBAdSelection {
     @Nullable
     private final Set<Integer> mAdCounterIntKeys;
 
+    @ColumnInfo(name = "seller_contextual_signals")
+    @Nullable
+    private final String mSellerContextualSignals;
+
     public DBAdSelection(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
-            @NonNull String contextualSignals,
+            @NonNull String buyerContextualSignals,
             @Nullable Uri biddingLogicUri,
             @NonNull Uri winningAdRenderUri,
             double winningAdBid,
@@ -94,10 +98,11 @@ public final class DBAdSelection {
             @NonNull String callerPackageName,
             // String keys deprecated but kept in ctor for Room DB backwards compatibility
             @Nullable Set<String> adCounterKeys,
-            @Nullable Set<Integer> adCounterIntKeys) {
+            @Nullable Set<Integer> adCounterIntKeys,
+            @Nullable String sellerContextualSignals) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
-        this.mContextualSignals = contextualSignals;
+        this.mBuyerContextualSignals = buyerContextualSignals;
         this.mBiddingLogicUri = biddingLogicUri;
         this.mWinningAdRenderUri = winningAdRenderUri;
         this.mWinningAdBid = winningAdBid;
@@ -105,6 +110,7 @@ public final class DBAdSelection {
         this.mCallerPackageName = callerPackageName;
         this.mAdCounterKeys = adCounterKeys;
         this.mAdCounterIntKeys = adCounterIntKeys;
+        this.mSellerContextualSignals = sellerContextualSignals;
     }
 
     @Override
@@ -114,14 +120,16 @@ public final class DBAdSelection {
 
             return mAdSelectionId == adSelection.mAdSelectionId
                     && Objects.equals(mCustomAudienceSignals, adSelection.mCustomAudienceSignals)
-                    && mContextualSignals.equals(adSelection.mContextualSignals)
+                    && mBuyerContextualSignals.equals(adSelection.mBuyerContextualSignals)
                     && Objects.equals(mBiddingLogicUri, adSelection.mBiddingLogicUri)
                     && Objects.equals(mWinningAdRenderUri, adSelection.mWinningAdRenderUri)
                     && mWinningAdBid == adSelection.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp)
                     && mCallerPackageName.equals(adSelection.mCallerPackageName)
                     && Objects.equals(mAdCounterKeys, adSelection.mAdCounterKeys)
-                    && Objects.equals(mAdCounterIntKeys, adSelection.mAdCounterIntKeys);
+                    && Objects.equals(mAdCounterIntKeys, adSelection.mAdCounterIntKeys)
+                    && Objects.equals(
+                            mSellerContextualSignals, adSelection.mSellerContextualSignals);
         }
         return false;
     }
@@ -131,14 +139,15 @@ public final class DBAdSelection {
         return Objects.hash(
                 mAdSelectionId,
                 mCustomAudienceSignals,
-                mContextualSignals,
+                mBuyerContextualSignals,
                 mBiddingLogicUri,
                 mWinningAdRenderUri,
                 mWinningAdBid,
                 mCreationTimestamp,
                 mCallerPackageName,
                 mAdCounterKeys,
-                mAdCounterIntKeys);
+                mAdCounterIntKeys,
+                mSellerContextualSignals);
     }
 
     /**
@@ -158,11 +167,11 @@ public final class DBAdSelection {
     }
 
     /**
-     * @return the contextual signals i.e. application name used in this ad selection.
+     * @return the contextual signals that will be used in buyer scripts
      */
     @NonNull
-    public String getContextualSignals() {
-        return mContextualSignals;
+    public String getBuyerContextualSignals() {
+        return mBuyerContextualSignals;
     }
 
     /**
@@ -218,17 +227,26 @@ public final class DBAdSelection {
         return mAdCounterIntKeys;
     }
 
+    /**
+     * @return the contextual signals that will be used in seller scripts
+     */
+    @Nullable
+    public String getSellerContextualSignals() {
+        return mSellerContextualSignals;
+    }
+
     /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         private CustomAudienceSignals mCustomAudienceSignals;
-        private String mContextualSignals;
+        private String mBuyerContextualSignals;
         private Uri mBiddingLogicUri;
         private Uri mWinningAdRenderUri;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mCallerPackageName;
         private Set<Integer> mAdCounterIntKeys;
+        private String mSellerContextualSignals;
 
         public Builder() {}
 
@@ -251,9 +269,10 @@ public final class DBAdSelection {
 
         /** Sets the contextual signals with this ad selection. */
         @NonNull
-        public DBAdSelection.Builder setContextualSignals(@NonNull String contextualSignals) {
-            Objects.requireNonNull(contextualSignals);
-            this.mContextualSignals = contextualSignals;
+        public DBAdSelection.Builder setBuyerContextualSignals(
+                @NonNull String buyerContextualSignals) {
+            Objects.requireNonNull(buyerContextualSignals);
+            this.mBuyerContextualSignals = buyerContextualSignals;
             return this;
         }
 
@@ -315,6 +334,17 @@ public final class DBAdSelection {
         }
 
         /**
+         * Sets the seller contextual signals with this ad selection. These signals will only be
+         * used for seller scripts.
+         */
+        @Nullable
+        public DBAdSelection.Builder setSellerContextualSignals(
+                @Nullable String sellerContextualSignals) {
+            this.mSellerContextualSignals = sellerContextualSignals;
+            return this;
+        }
+
+        /**
          * Builds an {@link DBAdSelection} instance.
          *
          * @throws NullPointerException if any non-null params are null.
@@ -329,7 +359,7 @@ public final class DBAdSelection {
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
             Preconditions.checkArgument(
                     mBiddingLogicUri != null, "Buyer decision logic uri should not be null.");
-            Objects.requireNonNull(mContextualSignals);
+            Objects.requireNonNull(mBuyerContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
             Objects.requireNonNull(mCallerPackageName);
@@ -337,14 +367,15 @@ public final class DBAdSelection {
             return new DBAdSelection(
                     mAdSelectionId,
                     mCustomAudienceSignals,
-                    mContextualSignals,
+                    mBuyerContextualSignals,
                     mBiddingLogicUri,
                     mWinningAdRenderUri,
                     mWinningAdBid,
                     mCreationTimestamp,
                     mCallerPackageName,
                     null,
-                    mAdCounterIntKeys);
+                    mAdCounterIntKeys,
+                    mSellerContextualSignals);
         }
     }
 }

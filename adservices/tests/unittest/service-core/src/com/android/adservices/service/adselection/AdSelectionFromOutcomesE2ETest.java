@@ -584,7 +584,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(entry.getKey())
                             .setCustomAudienceSignals(customAudienceSignals)
-                            .setContextualSignals(contextualSignals)
+                            .setBuyerContextualSignals(contextualSignals)
                             .setBiddingLogicUri(biddingLogicUri1)
                             .setWinningAdRenderUri(renderUri)
                             .setWinningAdBid(entry.getValue())
