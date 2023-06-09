@@ -241,6 +241,10 @@ public final class PhFlags implements Flags {
             "fledge_ad_counter_histogram_absolute_max_total_event_count";
     static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT =
             "fledge_ad_counter_histogram_lower_max_total_event_count";
+    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT =
+            "fledge_ad_counter_histogram_absolute_max_per_buyer_event_count";
+    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT =
+            "fledge_ad_counter_histogram_lower_max_per_buyer_event_count";
 
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
@@ -1360,6 +1364,22 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT,
                 /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT);
+    }
+
+    @Override
+    public int getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT);
+    }
+
+    @Override
+    public int getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT);
     }
 
     // MDD related flags.
@@ -3017,6 +3037,16 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT
                         + " = "
                         + getFledgeAdCounterHistogramLowerMaxTotalEventCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT
+                        + " = "
+                        + getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT
+                        + " = "
+                        + getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED

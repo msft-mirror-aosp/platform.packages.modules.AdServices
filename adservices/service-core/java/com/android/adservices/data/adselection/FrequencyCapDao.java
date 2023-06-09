@@ -49,7 +49,7 @@ public abstract class FrequencyCapDao {
      * rolled back.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #insertHistogramEvent(HistogramEvent, int, int)} instead.
+     * #insertHistogramEvent(HistogramEvent, int, int, int, int)} instead.
      *
      * @return the row ID of the identifier in the table, or {@code -1} if the specified row ID is
      *     already occupied
@@ -65,7 +65,7 @@ public abstract class FrequencyCapDao {
      * returned.
      *
      * <p>This method is not intended to be called on its own. It should only be used in {@link
-     * #insertHistogramEvent(HistogramEvent, int, int)}.
+     * #insertHistogramEvent(HistogramEvent, int, int, int, int)}.
      *
      * @return the row ID of the identifier in the table, or {@code null} if not found
      */
@@ -91,7 +91,7 @@ public abstract class FrequencyCapDao {
      * transaction is canceled and rolled back.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #insertHistogramEvent(HistogramEvent, int, int)} instead.
+     * #insertHistogramEvent(HistogramEvent, int, int, int, int)} instead.
      *
      * @return the row ID of the event data in the table, or -1 if the event data already exists
      */
@@ -112,21 +112,42 @@ public abstract class FrequencyCapDao {
     public void insertHistogramEvent(
             @NonNull HistogramEvent event,
             int absoluteMaxTotalHistogramEventCount,
-            int lowerMaxTotalHistogramEventCount)
+            int lowerMaxTotalHistogramEventCount,
+            int absoluteMaxPerBuyerHistogramEventCount,
+            int lowerMaxPerBuyerHistogramEventCount)
             throws IllegalStateException {
         Objects.requireNonNull(event);
         Preconditions.checkArgument(absoluteMaxTotalHistogramEventCount > 0);
         Preconditions.checkArgument(lowerMaxTotalHistogramEventCount > 0);
+        Preconditions.checkArgument(absoluteMaxPerBuyerHistogramEventCount > 0);
+        Preconditions.checkArgument(lowerMaxPerBuyerHistogramEventCount > 0);
         Preconditions.checkArgument(
                 absoluteMaxTotalHistogramEventCount > lowerMaxTotalHistogramEventCount);
+        Preconditions.checkArgument(
+                absoluteMaxPerBuyerHistogramEventCount > lowerMaxPerBuyerHistogramEventCount);
 
         // TODO(b/275581841): Collect and send telemetry on frequency cap eviction
+        int numEventsDeleted = 0;
+
         // Check the table size first and evict older events if necessary
         int currentTotalHistogramEventCount = getTotalNumHistogramEvents();
         if (currentTotalHistogramEventCount >= absoluteMaxTotalHistogramEventCount) {
             int numEventsToDelete =
                     currentTotalHistogramEventCount - lowerMaxTotalHistogramEventCount;
-            deleteOldestHistogramEventData(numEventsToDelete);
+            numEventsDeleted += deleteOldestHistogramEventData(numEventsToDelete);
+        }
+
+        // Check the per-buyer quota
+        int currentPerBuyerHistogramEventCount = getNumHistogramEventsByBuyer(event.getBuyer());
+        if (currentPerBuyerHistogramEventCount >= absoluteMaxPerBuyerHistogramEventCount) {
+            int numEventsToDelete =
+                    currentPerBuyerHistogramEventCount - lowerMaxPerBuyerHistogramEventCount;
+            numEventsDeleted +=
+                    deleteOldestHistogramEventDataByBuyer(event.getBuyer(), numEventsToDelete);
+        }
+
+        // Be efficient with I/O operations; background maintenance job will also clean up data
+        if (numEventsDeleted > 0) {
             deleteUnpairedHistogramIdentifiers();
         }
 
@@ -210,11 +231,12 @@ public abstract class FrequencyCapDao {
     protected abstract int deleteHistogramEventDataBeforeTime(@NonNull Instant expiryTime);
 
     /**
-     * Deletes the oldest N histogram events, where N is at most {@code numEventsToDelete}, and
-     * returns the number of entries deleted.
+     * Deletes the oldest {@code N} histogram events, where {@code N} is at most {@code
+     * numEventsToDelete}, and returns the number of entries deleted.
      *
      * <p>This method is not meant to be called on its own. Please use {@link
-     * #insertHistogramEvent(HistogramEvent, int, int)} to evict data when the table is full.
+     * #insertHistogramEvent(HistogramEvent, int, int, int, int)} to evict data when the table is
+     * full.
      */
     @Query(
             "DELETE FROM fcap_histogram_data "
@@ -223,6 +245,26 @@ public abstract class FrequencyCapDao {
                     + "ORDER BY timestamp ASC "
                     + "LIMIT :numEventsToDelete)")
     protected abstract int deleteOldestHistogramEventData(int numEventsToDelete);
+
+    /**
+     * Deletes the oldest {@code N} histogram events that belong to a given {@code buyer}, where
+     * {@code N} is at most {@code numEventsToDelete}, and returns the number of entries deleted.
+     *
+     * <p>This method is not meant to be called on its own. Please use {@link
+     * #insertHistogramEvent(HistogramEvent, int, int, int, int)} to evict data when the table is
+     * full.
+     */
+    @Query(
+            "DELETE FROM fcap_histogram_data "
+                    + "WHERE row_id IN "
+                    + "(SELECT data.row_id FROM fcap_histogram_data AS data "
+                    + "INNER JOIN fcap_histogram_ids AS ids "
+                    + "ON data.foreign_key_id = ids.foreign_key_id "
+                    + "WHERE ids.buyer = :buyer "
+                    + "ORDER BY data.timestamp ASC "
+                    + "LIMIT :numEventsToDelete)")
+    protected abstract int deleteOldestHistogramEventDataByBuyer(
+            @NonNull AdTechIdentifier buyer, int numEventsToDelete);
 
     /**
      * Deletes histogram identifiers which have no associated event data.
@@ -261,4 +303,14 @@ public abstract class FrequencyCapDao {
     /** Returns the current total number of histogram events in the data table. */
     @Query("SELECT COUNT(DISTINCT row_id) FROM fcap_histogram_data")
     public abstract int getTotalNumHistogramEvents();
+
+    /**
+     * Returns the current number of histogram events in the data table for the given {@code buyer}.
+     */
+    @Query(
+            "SELECT COUNT(DISTINCT data.row_id) FROM fcap_histogram_data AS data "
+                    + "INNER JOIN fcap_histogram_ids AS ids "
+                    + "ON data.foreign_key_id = ids.foreign_key_id "
+                    + "WHERE ids.buyer = :buyer ")
+    public abstract int getNumHistogramEventsByBuyer(@NonNull AdTechIdentifier buyer);
 }

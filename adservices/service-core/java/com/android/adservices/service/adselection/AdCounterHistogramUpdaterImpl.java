@@ -40,23 +40,33 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
     private final FrequencyCapDao mFrequencyCapDao;
     private final int mAbsoluteMaxTotalHistogramEventCount;
     private final int mLowerMaxTotalHistogramEventCount;
+    private final int mAbsoluteMaxPerBuyerHistogramEventCount;
+    private final int mLowerMaxPerBuyerHistogramEventCount;
 
     public AdCounterHistogramUpdaterImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             int absoluteMaxTotalHistogramEventCount,
-            int lowerMaxTotalHistogramEventCount) {
+            int lowerMaxTotalHistogramEventCount,
+            int absoluteMaxPerBuyerHistogramEventCount,
+            int lowerMaxPerBuyerHistogramEventCount) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
         Preconditions.checkArgument(absoluteMaxTotalHistogramEventCount > 0);
         Preconditions.checkArgument(lowerMaxTotalHistogramEventCount > 0);
+        Preconditions.checkArgument(absoluteMaxPerBuyerHistogramEventCount > 0);
+        Preconditions.checkArgument(lowerMaxPerBuyerHistogramEventCount > 0);
         Preconditions.checkArgument(
                 absoluteMaxTotalHistogramEventCount > lowerMaxTotalHistogramEventCount);
+        Preconditions.checkArgument(
+                absoluteMaxPerBuyerHistogramEventCount > lowerMaxPerBuyerHistogramEventCount);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mFrequencyCapDao = frequencyCapDao;
         mAbsoluteMaxTotalHistogramEventCount = absoluteMaxTotalHistogramEventCount;
         mLowerMaxTotalHistogramEventCount = lowerMaxTotalHistogramEventCount;
+        mAbsoluteMaxPerBuyerHistogramEventCount = absoluteMaxPerBuyerHistogramEventCount;
+        mLowerMaxPerBuyerHistogramEventCount = lowerMaxPerBuyerHistogramEventCount;
     }
 
     @Override
@@ -107,7 +117,9 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
             mFrequencyCapDao.insertHistogramEvent(
                     eventBuilder.setAdCounterKey(key).build(),
                     mAbsoluteMaxTotalHistogramEventCount,
-                    mLowerMaxTotalHistogramEventCount);
+                    mLowerMaxTotalHistogramEventCount,
+                    mAbsoluteMaxPerBuyerHistogramEventCount,
+                    mLowerMaxPerBuyerHistogramEventCount);
         }
     }
 }

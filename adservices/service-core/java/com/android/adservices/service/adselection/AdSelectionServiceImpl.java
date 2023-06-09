@@ -537,14 +537,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         final int adCounterHistogramLowerMaxTotalEventCount =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAdCounterHistogramLowerMaxTotalEventCount);
+        final int adCounterHistogramAbsoluteMaxPerBuyerEventCount =
+                BinderFlagReader.readFlag(
+                        mFlags::getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount);
+        final int adCounterHistogramLowerMaxPerBuyerEventCount =
+                BinderFlagReader.readFlag(
+                        mFlags::getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount);
 
-        UpdateAdCounterHistogramWorker worker =
+        final UpdateAdCounterHistogramWorker worker =
                 new UpdateAdCounterHistogramWorker(
                         new AdCounterHistogramUpdaterImpl(
                                 mAdSelectionEntryDao,
                                 mFrequencyCapDao,
                                 adCounterHistogramAbsoluteMaxTotalEventCount,
-                                adCounterHistogramLowerMaxTotalEventCount),
+                                adCounterHistogramLowerMaxTotalEventCount,
+                                adCounterHistogramAbsoluteMaxPerBuyerEventCount,
+                                adCounterHistogramLowerMaxPerBuyerEventCount),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage
