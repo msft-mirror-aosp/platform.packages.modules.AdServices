@@ -1443,7 +1443,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void onBindingDied(ComponentName name) {
             Log.d(TAG, "Sandbox service for " + mCallingInfo + " : died on binding");
-            mServiceProvider.unbindService(mCallingInfo);
+            // We call the lifecycle callback only after service is unbound to avoid a race
+            // condition with a new binding, if the app immediately reloads the SDK.
+            synchronized (mLock) {
+                mServiceProvider.unbindService(mCallingInfo);
+                handleSandboxLifecycleCallbacksLocked(mCallingInfo);
+            }
         }
 
         @Override
@@ -1476,7 +1481,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 service.asBinder().linkToDeath(() -> onSdkSandboxDeath(mCallingInfo), 0);
             } catch (RemoteException e) {
-                // Sandbox had already died, cleanup sdk links, notify app etc.
+                // Sandbox had already died, cleanup sdk links.
                 onSdkSandboxDeath(mCallingInfo);
                 return false;
             }
@@ -1527,8 +1532,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void onSdkSandboxDeath(CallingInfo callingInfo) {
         synchronized (mLock) {
             killAppOnSandboxDeathIfNeededLocked(callingInfo);
-            handleSandboxLifecycleCallbacksLocked(callingInfo);
             mSandboxBindingCallbacks.remove(callingInfo);
+            // If SDK sandbox is already unbound then we can invoke callbacks immediately,
+            // otherwise we defer until onBindingDied is called.
+            if (mServiceProvider.getSandboxStatusForApp(callingInfo)
+                            != SdkSandboxServiceProvider.NON_EXISTENT
+                    && !mServiceProvider.isSandboxBoundForApp(callingInfo)) {
+                handleSandboxLifecycleCallbacksLocked(callingInfo);
+            }
+
             mServiceProvider.onSandboxDeath(callingInfo);
             // All SDK state is lost on death.
             if (mLoadSdkSessions.containsKey(callingInfo)) {
