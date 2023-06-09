@@ -60,7 +60,7 @@ public class NotificationTriggerTest {
         // Grant runtime permission to the AOSP adservices app.
         UiUtils.enableNotificationPermission();
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).

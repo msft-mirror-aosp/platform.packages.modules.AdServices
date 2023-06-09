@@ -89,7 +89,7 @@ public class AdIdManagerTest {
 
     @Test
     public void testAdIdManager() throws Exception {
-        AdIdManager adIdManager = AdIdManager.get(sContext);
+        AdIdManager adIdManager = sContext.getSystemService(AdIdManager.class);
         CompletableFuture<AdId> future = new CompletableFuture<>();
         OutcomeReceiver<AdId, Exception> callback =
                 new OutcomeReceiver<AdId, Exception>() {
@@ -111,7 +111,7 @@ public class AdIdManagerTest {
 
     @Test
     public void testAdIdManager_verifyRateLimitReached() throws Exception {
-        final AdIdManager adIdManager = AdIdManager.get(sContext);
+        final AdIdManager adIdManager = sContext.getSystemService(AdIdManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
