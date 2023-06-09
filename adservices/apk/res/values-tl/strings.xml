@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"I-unblock"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mga interes na na-block mo"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"I-reset ang lahat ng interes"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Walang interes na maipapakita sa ngayon."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Walang maipapakitang paksa sa ngayon.\nMatuto pa tungkol sa "<a href="https://support.google.com/android?p=ad_privacy">"mga paksa ng ad"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng Android ang mga uri ng mga ad kung saan ka posibleng may interes, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Wala kang naka-block na interes"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Tingnan ang mga naka-block na app"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"I-reset ang mga interes na tinatantya ng mga app"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Walang app na bumubuo ng mga interes para sa iyo sa ngayon"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Walang app na maipapakita sa ngayon. \nMatuto pa tungkol sa "<a href="https://support.google.com/android?p=ad_privacy">"mga ad na iminumungkahi ng app"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng mga app ang mga uri ng mga ad kung saan posibleng interesado ka, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Wala kang naka-block na app"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"I-reset ang mga ad na iminumungkahi ng mga app?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Ide-delete ang data ng suhestyon ng ad mula sa mga app na nasa listahan mo at magmumungkahi ang mga app ng mga bagong ad mula roon. Posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Na-reset ang data ng app"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"I-reset lahat ng paksa?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"I-reset ang mga ad na iminumungkahi ng mga app?"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privacy sa ad"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Mga paksa ng ad"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Mga ad na iminumungkahi ng app"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Nagtatala ang Android ng mga paksa kung saan ka interesado batay sa mga app na kamakailan mong ginamit at kung gaano mo kadalas gamitin ang mga ito."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Matutukoy din ng mga ginagamit mong app kung ano ang gusto mo batay sa kung paano mo ginagamit ang mga iyon."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Puwedeng humiling ng impormasyon sa Android ang mga ginagamit mong app para masukat ng mga ito ang performance ng mga ad ng mga ito. Pinapayagan ng Android ang mga app na mangolekta ng limitadong uri ng data."</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Matuto pa tungkol sa "<a href="https://support.google.com/android?p=ad_privacy">"privacy sa ad sa Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Naka-on / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> (na) paksa"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Naka-on / # paksa}one{Naka-on / # paksa}other{Naka-on / # na paksa}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Naka-on / <xliff:g id="APPS_COUNT">%1$d</xliff:g> (na) app"</string>
