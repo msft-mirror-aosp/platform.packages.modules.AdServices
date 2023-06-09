@@ -2218,7 +2218,7 @@ public interface Flags {
      * seconds.
      */
     default String getMeasurementEventReportsCtcEarlyReportingWindows() {
-        return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+        return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
     /** Default U18 UX feature flag.. */
