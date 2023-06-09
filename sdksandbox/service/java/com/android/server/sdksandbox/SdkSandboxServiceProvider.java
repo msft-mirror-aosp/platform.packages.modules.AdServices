@@ -112,6 +112,13 @@ public interface SdkSandboxServiceProvider {
     void onSandboxDeath(CallingInfo callingInfo);
 
     /**
+     * Returns true if the sandbox is currently bound for the given app.
+     *
+     * @param callingInfo app for which the sandbox bound status is being requested.
+     */
+    boolean isSandboxBoundForApp(CallingInfo callingInfo);
+
+    /**
      * Returns the status of the sandbox for the given app.
      *
      * @param callingInfo app for which the sandbox status is being requested.
