@@ -25,6 +25,7 @@ import android.os.Bundle;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -67,6 +68,7 @@ public class SandboxedAppSetIdManagerTest {
     public void loadSdkAndRunAppSetIdApi() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
 
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
