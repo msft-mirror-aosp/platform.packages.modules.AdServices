@@ -213,7 +213,7 @@ public class InteractionReporterTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setBiddingLogicUri(mMockWebServerRule.uriForPath(biddingLogicPath))
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)

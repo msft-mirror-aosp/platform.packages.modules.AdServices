@@ -418,7 +418,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -559,7 +559,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -666,7 +666,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -684,7 +684,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getAdData()
                                         .getRenderUri())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer2.getBiddingLogicUri())
@@ -892,7 +892,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer2.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -1219,7 +1219,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -1634,7 +1634,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -1941,7 +1941,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getCustomAudienceBiddingInfo()
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 
@@ -2618,7 +2618,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys());
 
         doReturn(dbAdSelectionBuilder)

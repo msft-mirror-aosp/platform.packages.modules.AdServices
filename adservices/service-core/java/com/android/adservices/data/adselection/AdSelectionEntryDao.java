@@ -169,10 +169,11 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
                 + " winning_ad_bid,ad_selection.creation_timestamp as"
                 + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
-                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri"
-                + " FROM ad_selection LEFT JOIN buyer_decision_logic ON"
-                + " ad_selection.bidding_logic_uri = buyer_decision_logic.bidding_logic_uri WHERE"
-                + " ad_selection.ad_selection_id = :adSelectionId")
+                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id ="
+                + " :adSelectionId")
     public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
@@ -197,8 +198,9 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
                 + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
-                + " ad_selection.bidding_logic_uri AS bidding_logic_uri FROM ad_selection LEFT"
-                + " JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
                 + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) ")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
@@ -225,8 +227,9 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
                 + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
-                + " ad_selection.bidding_logic_uri AS bidding_logic_uri FROM ad_selection LEFT"
-                + " JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
                 + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(

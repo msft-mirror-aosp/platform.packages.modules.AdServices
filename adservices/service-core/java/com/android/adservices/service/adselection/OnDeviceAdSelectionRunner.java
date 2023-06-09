@@ -360,7 +360,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
-                .setContextualSignals("{}");
+                .setBuyerContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =
