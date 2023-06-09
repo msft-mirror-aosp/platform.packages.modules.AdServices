@@ -17,14 +17,11 @@
 package com.android.adservices.tests.cts.measurement;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import android.adservices.clients.measurement.MeasurementClient;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -47,8 +44,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
-
-import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -73,8 +68,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SmallTest
 @RunWith(AndroidJUnit4.class)
 public class MeasurementManagerCtsTest {
-    private MeasurementClient mMeasurementClient;
+    private MeasurementManager mMeasurementManager;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+    private static final long CALLBACK_TIMEOUT = 5_000L;
 
     /* Note: The source and trigger registration used here must match one of those in
        {@link PreEnrolledAdTechForTest}.
@@ -116,11 +112,8 @@ public class MeasurementManagerCtsTest {
 
         overrideMeasurementKillSwitches(true);
 
-        mMeasurementClient =
-                new MeasurementClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
+        mMeasurementManager = MeasurementManager.get(sContext);
+
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
     }
@@ -140,32 +133,35 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterSource_withCallbackButNoServerSetup_NoErrors() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        ListenableFuture<Void> result =
-                mMeasurementClient.registerSource(SOURCE_REGISTRATION_URI, /* inputEvent = */ null);
-        assertThat(result.get()).isNull();
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerSource(
+                SOURCE_REGISTRATION_URI,
+                /* inputEvent= */ null,
+                CALLBACK_EXECUTOR,
+                result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+            assertFalse(registerSourceAndVerifyRateLimitReached(mMeasurementManager));
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
-        registerSourceAndVerifyRateLimitReached(manager);
+        registerSourceAndVerifyRateLimitReached(mMeasurementManager);
 
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit = registerSourceAndVerifyRateLimitReached(manager);
+        final boolean reachedLimit = registerSourceAndVerifyRateLimitReached(mMeasurementManager);
         final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
@@ -178,9 +174,10 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        ListenableFuture<Void> result =
-                mMeasurementClient.registerTrigger(TRIGGER_REGISTRATION_URI);
-        assertThat(result.get()).isNull();
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerTrigger(
+                TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -201,32 +198,36 @@ public class MeasurementManagerCtsTest {
                         .setVerifiedDestination(null)
                         .build();
 
-        ListenableFuture<Void> result =
-                mMeasurementClient.registerWebSource(webSourceRegistrationRequest);
-        assertThat(result.get()).isNull();
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerWebSource(
+                webSourceRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+            assertFalse(registerWebSourceAndVerifyRateLimitReached(mMeasurementManager));
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
-        registerWebSourceAndVerifyRateLimitReached(manager);
+        registerWebSourceAndVerifyRateLimitReached(mMeasurementManager);
 
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit = registerWebSourceAndVerifyRateLimitReached(manager);
+        final boolean reachedLimit =
+                registerWebSourceAndVerifyRateLimitReached(mMeasurementManager);
         final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
@@ -246,9 +247,12 @@ public class MeasurementManagerCtsTest {
                                 Collections.singletonList(webTriggerParams), DESTINATION)
                         .build();
 
-        ListenableFuture<Void> result =
-                mMeasurementClient.registerWebTrigger(webTriggerRegistrationRequest);
-        assertThat(result.get()).isNull();
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerWebTrigger(
+                webTriggerRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -257,8 +261,11 @@ public class MeasurementManagerCtsTest {
             throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertNull(result.get());
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -268,12 +275,16 @@ public class MeasurementManagerCtsTest {
                     throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertWithMessage("first deleteRegistrations result").that(result.get()).isNull();
+        final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest, CALLBACK_EXECUTOR, result -> firstCountDownLatch.countDown());
+        assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         // Call it once more to ensure that there is no error when recording deletions back-to-back
         TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
-        result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertWithMessage("second deleteRegistrations result").that(result.get()).isNull();
+        final CountDownLatch secondCountDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest, CALLBACK_EXECUTOR, result -> secondCountDownLatch.countDown());
+        assertThat(secondCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -286,8 +297,10 @@ public class MeasurementManagerCtsTest {
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .build();
-        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertNull(result.get());
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -302,8 +315,10 @@ public class MeasurementManagerCtsTest {
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertNull(result.get());
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
@@ -318,8 +333,10 @@ public class MeasurementManagerCtsTest {
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertNull(result.get());
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
