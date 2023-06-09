@@ -103,26 +103,17 @@ public class SdkSandboxManagerTest {
             new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
-        unloadAllSdks();
+        killSandboxIfExists();
         mScenario = mRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
     }
 
     @After
-    public void tearDown() {
-        unloadAllSdks();
-    }
-
-    private void unloadAllSdks() {
-        try {
-            mSdkSandboxManager.unloadSdk(SDK_NAME_1);
-            mSdkSandboxManager.unloadSdk(SDK_NAME_2);
-            mDeviceConfig.close();
-        } catch (Exception ignored) {
-        }
+    public void tearDown() throws Exception {
+        killSandboxIfExists();
     }
 
     @Test
