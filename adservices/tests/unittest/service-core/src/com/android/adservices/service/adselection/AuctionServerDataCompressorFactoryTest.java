@@ -29,16 +29,14 @@ public class AuctionServerDataCompressorFactoryTest {
     @Test
     public void testFactory_validVersion_returnImplementationSuccess() {
         AuctionServerDataCompressor compressor =
-                AuctionServerDataCompressorFactory.getAuctionServerDataCompressor(VALID_VERSION);
+                AuctionServerDataCompressorFactory.getDataCompressor(VALID_VERSION);
         Assert.assertTrue(compressor instanceof AuctionServerDataCompressorV0);
     }
 
     @Test
     public void testFactory_invalidVersion_throwsExceptionFailure() {
         ThrowingRunnable runnable =
-                () ->
-                        AuctionServerDataCompressorFactory.getAuctionServerDataCompressor(
-                                INVALID_VERSION);
+                () -> AuctionServerDataCompressorFactory.getDataCompressor(INVALID_VERSION);
         Assert.assertThrows(
                 String.format(NO_IMPLEMENTATION_FOUND, INVALID_VERSION),
                 IllegalArgumentException.class,

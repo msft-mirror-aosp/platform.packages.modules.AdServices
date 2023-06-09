@@ -126,10 +126,10 @@ public class GetAdSelectionDataRunner {
                         mLightweightExecutorService,
                         mBackgroundExecutorService);
         mDataCompressor =
-                AuctionServerDataCompressorFactory.getAuctionServerDataCompressor(
+                AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
         mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.getAuctionServerPayloadFormatter(
+                AuctionServerPayloadFormatterFactory.getPayloadFormatter(
                         mFlags.getFledgeAuctionServerPayloadFormatVersion());
         mEncryptionKeyManager =
                 new AdSelectionEncryptionKeyManager(
