@@ -1237,6 +1237,41 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    /** Get the current enrollment channel. */
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public String getEnrollmentChannel() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getUx() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getEnrollmentChannel();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get current enrollment channel: " + e.getMessage());
+        }
+        return PrivacySandboxUxCollection.UNSUPPORTED_UX.toString();
+    }
+
+    /** Set the current enrollment channel. */
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setUx() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setEnrollmentChannel(enrollmentChannel);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to set current enrollment channel: " + e.getMessage());
+        }
+    }
+
     @FunctionalInterface
     interface ThrowableGetter<R> {
         R apply(int userId) throws IOException;

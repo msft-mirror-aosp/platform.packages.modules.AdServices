@@ -615,4 +615,24 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Returns the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getEnrollmentChannel() {
+        try {
+            return mService.getEnrollmentChannel();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        try {
+            mService.setEnrollmentChannel(enrollmentChannel);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }

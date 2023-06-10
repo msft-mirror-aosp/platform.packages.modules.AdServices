@@ -22,6 +22,7 @@ import android.app.adservices.consent.ConsentParcel;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
@@ -675,5 +676,48 @@ public final class ConsentManager {
         } finally {
             mReadWriteLock.readLock().unlock();
         }
+    }
+
+    /** Set the current enrollment channel. */
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                    .forEach(
+                            channel -> {
+                                try {
+                                    mDatastore.put(
+                                            channel.toString(),
+                                            channel.toString().equals(enrollmentChannel));
+                                } catch (IOException e) {
+                                    LogUtil.e(
+                                            "IOException caught while setting the current "
+                                                    + "enrollment channel."
+                                                    + e.getMessage());
+                                }
+                            });
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /** Returns the current enrollment channel. */
+    public String getEnrollmentChannel() {
+        mReadWriteLock.readLock().lock();
+        try {
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
+                    Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                            .filter(
+                                    channel ->
+                                            Boolean.TRUE.equals(mDatastore.get(channel.toString())))
+                            .findFirst()
+                            .orElse(null);
+            if (enrollmentChannel != null) {
+                return enrollmentChannel.toString();
+            }
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+        return null;
     }
 }
