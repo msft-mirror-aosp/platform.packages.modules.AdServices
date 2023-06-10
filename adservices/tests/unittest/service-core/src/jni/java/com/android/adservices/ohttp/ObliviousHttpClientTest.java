@@ -104,7 +104,9 @@ public class ObliviousHttpClientTest {
                             .lowerCase()
                             .encode(request.requestContext().encapsulatedSharedSecret().getBytes()),
                     testVector.mExpectedEnc);
-            Assert.assertEquals(request.serialize(), testVector.mRequestCipherText);
+            Assert.assertEquals(
+                    BaseEncoding.base16().lowerCase().encode(request.serialize()),
+                    testVector.mRequestCipherText);
         }
     }
 
