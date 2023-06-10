@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"እገዳውን አንሳ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"እርስዎ ያገዷቸው ዝንባሌዎች"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ሁሉንም ዝንባሌዎች ዳግም አስጀምር"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"አሁን ምንም የሚታዩ ዝንባሌዎች የሉም።"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"አሁን ምንም የሚታዩ መተግበሪያዎች የሉም።\nስለ "<a href="https://support.google.com/android?p=ad_privacy">"የማስታወቂያ ርዕሶች"</a>" የበለጠ ይወቁ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"የግላዊነት Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"የAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታ መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሏቸው ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሉ አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nAndroid እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና እነዚህን ዝንባሌዎች በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላል። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ እርስዎ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ ተዛማጅነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ምንም የታገዱ ዝንባሌዎች የሉዎትም"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"የታገዱ መተግበሪያዎችን አሳይ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"በመተግበሪያዎች የተገመቱ ዝንባሌዎችን ዳግም አስጀምር"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"አሁን ላይ ምንም መተግበሪያዎች ለእርስዎ ዝንባሌዎችን እያመነጩ አይደለም"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"አሁን ምንም የሚታዩ መተግበሪያዎች የሉም። \nስለ "<a href="https://support.google.com/android?p=ad_privacy">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች"</a>" የበለጠ ይወቁ"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"የግላዊነት Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"የAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታ መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሏቸው ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሉ አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nመተግበሪያዎች እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና እነዚህን ዝንባሌዎች በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላሉ። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ እርስዎ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ ተዛማጅነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ምንም የታገዱ መተግበሪያዎች የሉዎትም"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"በመተግበሪያዎች የተጠቆሙ ማስታወቂያዎች ዳግም ይጀመሩ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"በዝርዝርዎ ላይ ካሉ መተግበሪያዎች ያለ የማስታወቂያ ጥቆማ ውሂብ ይሰረዛል እና መተግበሪያዎቹ ለወደፊት አዳዲስ ማስታወቂያዎችን ይጠቁማሉ። አሁንም አንዳንድ ተዛማጅ ማስታወቂያዎችን ሊመለከቱ ይችላሉ።"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"የመተግበሪያ ውሂብ ዳግም ጀምሯል"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"ሁሉም ርዕሶች ዳግም ይጀምሩ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"በመተግበሪያዎች የተጠቆሙ ማስታወቂያዎች ዳግም ይጀመሩ?"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"የማስታወቂያ ግላዊነት"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"የማስታወቂያ ርዕሶች"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android በቅርብ ጊዜ በተጠቀሟቸው መተግበሪያዎች ላይ እና ምን ያህል በተደጋጋሚ እንደተጠቀሟቸው ላይ በመመስረት በዝንባሌ ርዕሶች ላይ ማስታወሻ ይይዛል።"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"እንዲሁም የሚጠቀሟቸው መተግበሪያዎች እርስዎ እነሱን በሚጠቀሙበት መንገድ መሰረት ምን እንደሚወዱ መወሰን ይችላሉ።"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች የተገደቡ የውሂብ ዓይነቶችን እንዲሰበስቡ ያደርጋል።"</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"ስለ "<a href="https://support.google.com/android?p=ad_privacy">"Android ላይ ያለ የማስታወቂያ ግላዊነት"</a>" የበለጠ ይወቁ"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"በርቷል / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ርዕሶች"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{በማሳየት ላይ / # ርዕስ}one{በማሳየት ላይ / # ርዕስ}other{በማሳየት ላይ / # ርዕሶች}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"በርቷል / <xliff:g id="APPS_COUNT">%1$d</xliff:g> መተግበሪያዎች"</string>
