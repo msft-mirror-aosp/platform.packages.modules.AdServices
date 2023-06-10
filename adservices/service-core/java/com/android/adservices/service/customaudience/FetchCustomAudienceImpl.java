@@ -27,7 +27,6 @@ import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
@@ -37,15 +36,13 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
-import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -163,7 +160,16 @@ public class FetchCustomAudienceImpl {
                                                 t,
                                                 "Error encountered in fetchCustomAudience"
                                                         + " execution");
-                                        if (t instanceof ConsentManager.RevokedConsentException) {
+                                        if (t instanceof FilterException
+                                                && t.getCause()
+                                                        instanceof
+                                                        ConsentManager.RevokedConsentException) {
+                                            // Skip logging if a FilterException occurs.
+                                            // AdSelectionServiceFilter ensures the failing
+                                            // assertion is logged
+                                            // internally.
+
+                                            // Fail Silently by notifying success to caller
                                             notifySuccess(callback);
                                         } else {
                                             notifyFailure(callback, t);
@@ -189,19 +195,17 @@ public class FetchCustomAudienceImpl {
         mBuyer = AdTechIdentifier.fromString(host);
 
         // Filter request
-        mCustomAudienceServiceFilter.filterRequest(
-                mBuyer,
-                input.getCallerPackageName(),
-                mEnforceForegroundStatusForFledgeCustomAudience,
-                false,
-                mCallingAppUidSupplier.getCallingAppUid(),
-                API_NAME,
-                FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
-
-        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                input.getCallerPackageName())) {
-            sLogger.v("Consent revoked");
-            throw new ConsentManager.RevokedConsentException();
+        try {
+            mCustomAudienceServiceFilter.filterRequest(
+                    mBuyer,
+                    input.getCallerPackageName(),
+                    mEnforceForegroundStatusForFledgeCustomAudience,
+                    true,
+                    mCallingAppUidSupplier.getCallingAppUid(),
+                    API_NAME,
+                    FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+        } catch (Throwable t) {
+            throw new FilterException(t);
         }
 
         // Validate request
@@ -337,35 +341,33 @@ public class FetchCustomAudienceImpl {
     // TODO(b/283857101): Move DB handling to persistResponse using a common CustomAudienceReader.
     // private Void persistResponse (@NonNull DBCustomAudience customAudience) {}
 
-    private void notifyFailure(FetchAndJoinCustomAudienceCallback callback, Throwable exception) {
+    private void notifyFailure(FetchAndJoinCustomAudienceCallback callback, Throwable t) {
         try {
-            int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+            int resultCode;
 
-            if (exception instanceof NullPointerException
-                    || exception instanceof IllegalArgumentException) {
+            boolean isFilterException = t instanceof FilterException;
+
+            if (isFilterException) {
+                resultCode = FilterException.getResultCode(t);
+            } else if (t instanceof IllegalArgumentException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-            } else if (exception
-                    instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
-                resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-            } else if (exception instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-                resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-            } else if (exception instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                    || exception instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-                resultCode = AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
-            } else if (exception instanceof LimitExceededException) {
-                resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-            } else if (exception instanceof IllegalStateException) {
-                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             } else {
-                sLogger.e(exception, "Unexpected error during operation");
+                sLogger.d(t, "Unexpected error during operation");
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
+
+            // Skip logging if a FilterException occurs.
+            // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+            // Note: Failure is logged before the callback to ensure deterministic testing.
+            if (!isFilterException) {
+                mAdServicesLogger.logFledgeApiCallStats(API_NAME, resultCode, 0);
+            }
+
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
                             .setStatusCode(resultCode)
-                            .setErrorMessage(exception.getMessage())
+                            .setErrorMessage(t.getMessage())
                             .build());
-            mAdServicesLogger.logFledgeApiCallStats(API_NAME, resultCode, 0);
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
@@ -377,9 +379,9 @@ public class FetchCustomAudienceImpl {
     /** Invokes the onSuccess function from the callback and handles the exception. */
     private void notifySuccess(@NonNull FetchAndJoinCustomAudienceCallback callback) {
         try {
-            callback.onSuccess();
             mAdServicesLogger.logFledgeApiCallStats(
                     API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+            callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(

@@ -16,16 +16,17 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -259,5 +260,54 @@ public class CustomAudienceServiceFilterTest {
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
+    }
+
+    @Test
+    public void testAssertAndPersistCallerHasUserConsentForApp_enforceConsentTrue_succeeds() {
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        mCustomAudienceServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                true,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN);
+    }
+
+    @Test
+    public void testAssertAndPersistCallerHasUserConsentForApp_enforceConsentTrue_throws() {
+        doReturn(true)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mCustomAudienceServiceFilter.filterRequest(
+                                SELLER_VALID,
+                                CALLER_PACKAGE_NAME,
+                                false,
+                                true,
+                                MY_UID,
+                                API_NAME,
+                                Throttler.ApiKey.UNKNOWN));
+    }
+
+    @Test
+    public void testAssertAndPersistCallerHasUserConsentForApp_enforceConsentFalse_succeeds() {
+        doReturn(true)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        mCustomAudienceServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN);
     }
 }

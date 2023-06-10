@@ -63,7 +63,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      *     skipped.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
-     * @param enforceConsent currently unused in CustomAudienceServiceFilter
+     * @param enforceConsent whether to enforce per-app consent
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -106,5 +106,10 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
 
         sLogger.v("Validating caller package is in allow list.");
         assertAppInAllowList(callerPackageName, apiName);
+
+        if (enforceConsent) {
+            sLogger.v("Validating per-app user consent.");
+            assertAndPersistCallerHasUserConsentForApp(callerPackageName);
+        }
     }
 }
