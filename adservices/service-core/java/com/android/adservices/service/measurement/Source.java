@@ -223,7 +223,6 @@ public class Source {
                 && Objects.equals(mPlatformAdId, source.mPlatformAdId)
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
-                && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
     }
 
@@ -352,7 +351,8 @@ public class Source {
     }
 
     /** Debug key of {@link Source}. */
-    public @Nullable UnsignedLong getDebugKey() {
+    @Nullable
+    public UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -726,7 +726,8 @@ public class Source {
         }
 
         /** See {@link Source#getAppDestinations()}. */
-        public Builder setAppDestinations(List<Uri> appDestinations) {
+        @NonNull
+        public Builder setAppDestinations(@Nullable List<Uri> appDestinations) {
             Optional.ofNullable(appDestinations).ifPresent(uris -> {
                 Validation.validateNotEmpty(uris);
                 if (uris.size() > 1) {
