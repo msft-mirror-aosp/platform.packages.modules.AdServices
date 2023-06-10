@@ -64,6 +64,7 @@ import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -1712,6 +1713,38 @@ public class ConsentManager {
                 () -> mUxStatesDao.setUx(ux),
                 () -> mAdServicesManager.setUx(ux.toString()),
                 () -> mAppSearchConsentManager.setUx(ux),
+                /* errorLogger= */ null);
+    }
+
+    private PrivacySandboxEnrollmentChannelCollection convertEnrollmentChannelString(
+            PrivacySandboxUxCollection ux, String enrollmentChannelString) {
+        if (enrollmentChannelString == null) {
+            return null;
+        }
+        return Stream.of(ux.getEnrollmentChannelCollection())
+                .filter(channel -> enrollmentChannelString.equals(channel.toString()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /** Returns current enrollment channel based on consent_source_of_truth. */
+    public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
+            PrivacySandboxUxCollection ux) {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ null,
+                () -> mUxStatesDao.getEnrollmentChannel(ux),
+                () -> convertEnrollmentChannelString(ux, mAdServicesManager.getEnrollmentChannel()),
+                () -> mAppSearchConsentManager.getEnrollmentChannel(ux),
+                /* errorLogger= */ null);
+    }
+
+    /** Set the current enrollment channel to storage based on consent_source_of_truth. */
+    public void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux, PrivacySandboxEnrollmentChannelCollection channel) {
+        executeSettersByConsentSourceOfTruth(
+                () -> mUxStatesDao.setEnrollmentChannel(ux, channel),
+                () -> mAdServicesManager.setEnrollmentChannel(channel.toString()),
+                () -> mAppSearchConsentManager.setEnrollmentChannel(ux, channel),
                 /* errorLogger= */ null);
     }
 
