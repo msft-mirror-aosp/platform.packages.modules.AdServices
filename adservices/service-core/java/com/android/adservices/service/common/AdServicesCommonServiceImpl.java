@@ -30,6 +30,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IEnableAdServicesCallback;
@@ -274,5 +275,17 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     @RequiresPermission(ACCESS_ADSERVICES_STATE)
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
-            @NonNull IEnableAdServicesCallback callback) {}
+            @NonNull IEnableAdServicesCallback callback) {
+        // TO-DO (b/286664178): remove the block after API is fully ramped up.
+        try {
+            if (!mFlags.getEnableAdServicesSystemApi()) {
+                callback.onResult(
+                        new EnableAdServicesResponse.Builder().setApiEnabled(false).build());
+                LogUtil.d("enableAdServices(): API is disabled.");
+            }
+        } catch (Exception e) {
+            LogUtil.e("enableAdServices(): setApiDisabled failed.");
+            return;
+        }
+    }
 }
