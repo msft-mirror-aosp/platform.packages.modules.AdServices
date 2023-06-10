@@ -29,8 +29,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 
+import android.adservices.common.AdServicesStates;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
+import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -61,10 +63,10 @@ import java.util.concurrent.Executor;
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
-    private final Context mContext;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
-    private final Flags mFlags;
     public final String ADSERVICES_STATUS_SHARED_PREFERENCE = "AdserviceStatusSharedPreference";
+    private final Context mContext;
+    private final Flags mFlags;
 
     public AdServicesCommonServiceImpl(Context context, Flags flags) {
         mContext = context;
@@ -267,4 +269,10 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 && consentManager.wasNotificationDisplayed()
                 && consentManager.getConsent().isGiven();
     }
+
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
+    public void enableAdServices(
+            @NonNull AdServicesStates adServicesStates,
+            @NonNull IEnableAdServicesCallback callback) {}
 }
