@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ನಿರ್ಬಂಧವನ್ನು ತೆಗೆದುಹಾಕಿ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ನೀವು ನಿರ್ಬಂಧಿಸಿದ ಆಸಕ್ತಿಗಳು"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ಎಲ್ಲಾ ಆಸಕ್ತಿಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"ಇದೀಗ ತೋರಿಸಲು ಯಾವುದೇ ಆಸಕ್ತಿಗಳಿಲ್ಲ."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"ಈಗ ತೋರಿಸಲು ಯಾವುದೇ ವಿಷಯಗಳು ಇಲ್ಲ.\n"<a href="https://support.google.com/android?p=ad_privacy">"ಆ್ಯಡ್ ವಿಷಯಗಳು"</a>"ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nAndroid ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲದು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲದು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆಸಕ್ತಿಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ನಿರ್ಬಂಧಿಸಲಾದ ಆ್ಯಪ್‌ಗಳನ್ನು ವೀಕ್ಷಿಸಿ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ಆ್ಯಪ್‌ಗಳು ಅಂದಾಜು ಮಾಡಿರುವ ಆಸಕ್ತಿಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ಈ ಸಮಯದಲ್ಲಿ ಯಾವುದೇ ಆ್ಯಪ್‌ಗಳು ನಿಮಗಾಗಿ ಆಸಕ್ತಿಗಳನ್ನು ಉತ್ಪತ್ತಿ ಮಾಡುತ್ತಿಲ್ಲ"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"ಇದೀಗ ತೋರಿಸಲು ಯಾವುದೇ ಆ್ಯಪ್‌ಗಳಿಲ್ಲ. \n"<a href="https://support.google.com/android?p=ad_privacy">"ಆ್ಯಪ್ ಶಿಫಾರಸು ಮಾಡಿದ ಆ್ಯಡ್‌ಗಳು"</a>" ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ಗೌಪ್ಯತೆ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲವು ಮತ್ತು ಈ ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲವು. ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಸೂಕ್ತವಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಇದು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ನೀವು ಯಾವುದೇ ನಿರ್ಬಂಧಿತ ಆ್ಯಪ್‌ಗಳನ್ನು ಹೊಂದಿಲ್ಲ"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ಆ್ಯಪ್‌ಗಳು ಸೂಚಿಸಿದ ಜಾಹೀರಾತುಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಬೇಕೆ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ನಿಮ್ಮ ಪಟ್ಟಿಯಲ್ಲಿರುವ ಆ್ಯಪ್‌ಗಳಿಂದ ಜಾಹೀರಾತು-ಸಲಹೆ ಡೇಟಾವನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಆ್ಯಪ್‌ಗಳು ಮುಂದೆ ಹೊಸ ಜಾಹೀರಾತುಗಳನ್ನು ಸೂಚಿಸುತ್ತವೆ. ನಿಮಗೆ ಆಗಲೂ ಕೆಲವು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳು ಕಾಣಿಸಬಹುದು."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ಆ್ಯಪ್ ಡೇಟಾವನ್ನು ರೀಸೆಟ್ ಮಾಡಲಾಗಿದೆ"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"ಎಲ್ಲಾ ವಿಷಯಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಬೇಕೆ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ಆ್ಯಪ್‌ಗಳು ಸೂಚಿಸಿದ ಜಾಹೀರಾತುಗಳನ್ನು ರೀಸೆಟ್ ಮಾಡಬೇಕೆ?"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ಜಾಹೀರಾತು ಗೌಪ್ಯತೆ"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ಜಾಹೀರಾತು ವಿಷಯಗಳು"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ಆ್ಯಪ್ ಸೂಚಿಸಿದ ಜಾಹೀರಾತುಗಳು"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"ನೀವು ಇತ್ತೀಚೆಗೆ ಬಳಸಿದ ಆ್ಯಪ್‌ಗಳು ಮತ್ತು ನೀವು ಅವುಗಳನ್ನು ಎಷ್ಟು ಬಾರಿ ಬಳಸುತ್ತೀರಿ ಎಂಬುದರ ಆಧಾರದ ಮೇಲೆ ಆಸಕ್ತಿಯ ವಿಷಯಗಳನ್ನು Android ಗುರುತು ಹಾಕಿಕೊಳ್ಳುತ್ತದೆ."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳನ್ನು ನೀವು ಹೇಗೆ ಬಳಸುತ್ತೀರಿ ಎಂಬುದರ ಆಧಾರದ ಮೇಲೆ ನೀವು ಇಷ್ಟಪಡುವುದನ್ನು ನಿರ್ಧರಿಸಬಹುದು."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು ತಮ್ಮ ಜಾಹೀರಾತುಗಳ ಕಾರ್ಯಕ್ಷಮತೆಯನ್ನು ಅಳೆಯುವುದಕ್ಕಾಗಿ ಸಹಾಯ ಮಾಡಲು Android ಬಳಿ ಮಾಹಿತಿಯನ್ನು ಕೇಳಬಹುದು. Android, ಡೇಟಾದ ಸೀಮಿತ ಪ್ರಕಾರಗಳನ್ನು ಸಂಗ್ರಹಿಸಲು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android ನಲ್ಲಿ ಆ್ಯಡ್ ಗೌಪ್ಯತೆ"</a>" ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ಆನ್ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ವಿಷಯಗಳು"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ಆನ್ / # ವಿಷಯ}one{ಆನ್ / # ವಿಷಯಗಳು}other{ಆನ್ / # ವಿಷಯಗಳು}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ಆನ್ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ಆ್ಯಪ್‌ಗಳು"</string>

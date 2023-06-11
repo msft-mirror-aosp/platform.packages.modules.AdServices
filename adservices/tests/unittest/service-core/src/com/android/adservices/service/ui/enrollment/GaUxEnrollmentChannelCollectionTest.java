@@ -25,7 +25,7 @@ import org.junit.Test;
 public class GaUxEnrollmentChannelCollectionTest {
     @Test
     public void gaUxEnrollmentChannelCollectionTest_cardinalityCheck() {
-        assertEquals(4, GaUxEnrollmentChannelCollection.values().length);
+        assertEquals(5, GaUxEnrollmentChannelCollection.values().length);
     }
 
     @Test
@@ -45,6 +45,9 @@ public class GaUxEnrollmentChannelCollectionTest {
         assertEquals(
                 GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[3]);
+        assertEquals(
+                GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL,
+                enrollmentChannelCollection[4]);
     }
 
     @Test
@@ -66,6 +69,11 @@ public class GaUxEnrollmentChannelCollectionTest {
                                 < GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL
                                         .getPriority())
                 .isTrue();
+        assertThat(
+                        GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL.getPriority()
+                                < GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL
+                                        .getPriority())
+                .isTrue();
     }
 
     @Test
@@ -83,6 +91,8 @@ public class GaUxEnrollmentChannelCollectionTest {
         assertThat(
                         GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL
                                 .getEnrollmentChannel())
+                .isNotNull();
+        assertThat(GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL.getEnrollmentChannel())
                 .isNotNull();
     }
 }
