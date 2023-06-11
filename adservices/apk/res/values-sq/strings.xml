@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Zhblloko"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesat që ke bllokuar"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Rivendos të gjitha interesat"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Nuk ka interesa për të shfaqur për momentin."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Nuk ka asnjë temë për të shfaqur për momentin.\nMëso më shumë rreth "<a href="https://support.google.com/android?p=ad_privacy">"temave të reklamave"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versioni beta i privatësisë së reklamave të Android ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAndroid mund të përllogarisë llojet e reklamave që mund të të interesojnë dhe t\'i ruajë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nuk ke asnjë interes të bllokuar"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Shiko aplikacionet e bllokuara"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Rivendos interesat e përllogaritur nga aplikacionet"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Asnjë aplikacion nuk po gjeneron interesa për ty për momentin"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Nuk ka aplikacione për të shfaqur për momentin. \nMëso më shumë rreth "<a href="https://support.google.com/android?p=ad_privacy">"reklamave të sugjeruara nga aplikacionet"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Versioni beta i privatësisë së reklamave të Android ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAplikacionet mund të përllogarisin llojet e reklamave që mund të të interesojnë dhe t\'i ruajnë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nuk ke asnjë aplikacion të bllokuar"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Të dhënat për sugjerimin e reklamave nga aplikacionet në listën tënde do të fshihen dhe aplikacionet do të sugjerojnë reklama të reja në vazhdim. Mund të shikosh përsëri disa reklama në lidhje me të."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Të dhënat e aplikacionit u rivendosën"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Të rivendosen të gjitha temat?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privatësia e reklamave"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temat e reklamave"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamat e sugjeruara nga aplikacionet"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android shënon temat e interesit bazuar në aplikacionet që ke përdorur së fundi dhe sa shpesh i përdor ato."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacionet që ti përdor mund të përcaktojnë gjithashtu se çfarë të pëlqen bazuar në mënyrën se si i përdor."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikacionet që ti përdor mund t\'i kërkojnë informacione Android për t\'i ndihmuar të matin performancën e reklamave të tyre. Android i lejon aplikacionet të mbledhin lloje të kufizuara të dhënash."</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Mëso më shumë rreth "<a href="https://support.google.com/android?p=ad_privacy">"privatësisë së reklamave në Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktivizuar/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tema"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktive/# temë}other{Aktive/# tema}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktivizuar/<xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikacione"</string>
