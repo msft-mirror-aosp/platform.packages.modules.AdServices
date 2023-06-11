@@ -63,6 +63,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.service.ui.data.UxStatesDao;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -76,6 +78,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Manager to handle user's consent.
@@ -118,6 +121,7 @@ public class ConsentManager {
     private final int mConsentSourceOfTruth;
     private final AppSearchConsentManager mAppSearchConsentManager;
     private final UserProfileIdManager mUserProfileIdManager;
+    private final UxStatesDao mUxStatesDao;
 
     private static final Object LOCK = new Object();
 
@@ -132,6 +136,7 @@ public class ConsentManager {
             @NonNull BooleanFileDatastore booleanFileDatastore,
             @NonNull AppSearchConsentManager appSearchConsentManager,
             @NonNull UserProfileIdManager userProfileIdManager,
+            @NonNull UxStatesDao uxStatesDao,
             @NonNull Flags flags,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(topicsWorker);
@@ -159,6 +164,7 @@ public class ConsentManager {
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
         mAppInstallDao = appInstallDao;
+        mUxStatesDao = uxStatesDao;
 
         mAppSearchConsentManager = appSearchConsentManager;
         mUserProfileIdManager = userProfileIdManager;
@@ -223,6 +229,7 @@ public class ConsentManager {
                                     appSearchConsentManager,
                                     UserProfileIdManager.getInstance(context),
                                     // TODO(b/260601944): Remove Flag Instance.
+                                    UxStatesDao.getInstance(context),
                                     FlagsFactory.getFlags(),
                                     consentSourceOfTruth);
                 }
@@ -1679,6 +1686,32 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setU18NotificationDisplayed(
                                 wasU18NotificationDisplayed),
+                /* errorLogger= */ null);
+    }
+
+    private PrivacySandboxUxCollection convertUxString(String uxString) {
+        return Stream.of(PrivacySandboxUxCollection.values())
+                .filter(ux -> uxString.equals(ux.toString()))
+                .findFirst()
+                .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+    }
+
+    /** Returns current UX based on consent_source_of_truth. */
+    public PrivacySandboxUxCollection getUx() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ PrivacySandboxUxCollection.UNSUPPORTED_UX,
+                () -> mUxStatesDao.getUx(),
+                () -> convertUxString(mAdServicesManager.getUx()),
+                () -> mAppSearchConsentManager.getUx(),
+                /* errorLogger= */ null);
+    }
+
+    /** Set the current UX to storage based on consent_source_of_truth. */
+    public void setUx(PrivacySandboxUxCollection ux) {
+        executeSettersByConsentSourceOfTruth(
+                () -> mUxStatesDao.setUx(ux),
+                () -> mAdServicesManager.setUx(ux.toString()),
+                () -> mAppSearchConsentManager.setUx(ux),
                 /* errorLogger= */ null);
     }
 

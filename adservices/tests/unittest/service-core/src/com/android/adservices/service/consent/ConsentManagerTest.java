@@ -129,6 +129,8 @@ import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.service.ui.data.UxStatesDao;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -178,6 +180,7 @@ public class ConsentManagerTest {
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
     @Mock private UserProfileIdManager mUserProfileIdManager;
+    @Mock private UxStatesDao mUxStatesDao;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -2867,6 +2870,7 @@ public class ConsentManagerTest {
                         mConsentDatastore,
                         mAppSearchConsentManager,
                         mUserProfileIdManager,
+                        mUxStatesDao,
                         mMockFlags,
                         Flags.PPAPI_ONLY);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
@@ -3358,6 +3362,7 @@ public class ConsentManagerTest {
                 mConsentDatastore,
                 mAppSearchConsentManager,
                 mUserProfileIdManager,
+                mUxStatesDao,
                 mMockFlags,
                 consentSourceOfTruth);
     }
@@ -4035,5 +4040,78 @@ public class ConsentManagerTest {
 
         verify(mAppSearchConsentManager, times(2)).wasU18NotificationDisplayed();
         verify(mAppSearchConsentManager).setU18NotificationDisplayed(anyBoolean());
+    }
+
+    @Test
+    public void getUx_PpApiOnly() throws RemoteException, IOException {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            doReturn(ux).when(mUxStatesDao).getUx();
+            assertThat(spyConsentManager.getUx()).isEqualTo(ux);
+
+            spyConsentManager.setUx(ux);
+        }
+
+        verify(mUxStatesDao, times(4)).getUx();
+        verify(mUxStatesDao, times(4)).setUx(any());
+    }
+
+    @Test
+    public void getUxTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            doReturn(ux.toString()).when(mMockIAdServicesManager).getUx();
+            assertThat(spyConsentManager.getUx()).isEqualTo(ux);
+
+            spyConsentManager.setUx(ux);
+        }
+
+        verify(mMockIAdServicesManager, times(4)).getUx();
+        verify(mMockIAdServicesManager, times(4)).setUx(any());
+    }
+
+    @Test
+    public void getUxTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            doReturn(ux.toString()).when(mMockIAdServicesManager).getUx();
+            assertThat(spyConsentManager.getUx()).isEqualTo(ux);
+
+            spyConsentManager.setUx(ux);
+        }
+
+        verify(mMockIAdServicesManager, times(4)).getUx();
+        verify(mMockIAdServicesManager, times(4)).setUx(any());
+    }
+
+    @Test
+    public void getUxTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            doReturn(ux).when(mAppSearchConsentManager).getUx();
+            assertThat(spyConsentManager.getUx()).isEqualTo(ux);
+
+            spyConsentManager.setUx(ux);
+        }
+
+        verify(mAppSearchConsentManager, times(4)).getUx();
+        verify(mAppSearchConsentManager, times(4)).setUx(any());
     }
 }
