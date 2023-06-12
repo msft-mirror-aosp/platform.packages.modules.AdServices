@@ -208,7 +208,7 @@ public final class MaintenanceJobService extends JobService {
 
             if (flagsMaintenanceJobPeriodMs == maintenanceJobPeriodMs
                     && flagsMaintenanceJobFlexMs == maintenanceJobFlexMs) {
-                LogUtil.i(
+                LogUtil.d(
                         "Maintenance Job Service has been scheduled with same parameters, skip"
                                 + " rescheduling!");
                 return false;

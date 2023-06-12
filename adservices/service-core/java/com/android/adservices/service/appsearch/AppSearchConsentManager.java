@@ -416,7 +416,7 @@ public class AppSearchConsentManager {
         // ExtServices, and bail out if that's the case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to migrate Consent data to PPAPI and System Service in"
                             + " ExtServices");
             return false;

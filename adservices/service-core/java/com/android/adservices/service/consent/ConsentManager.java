@@ -1149,7 +1149,7 @@ public class ConsentManager {
         // case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i("Aborting attempt to migrate consent in ExtServices");
+            LogUtil.d("Aborting attempt to migrate consent in ExtServices");
             return;
         }
         Objects.requireNonNull(datastore);
@@ -1443,7 +1443,7 @@ public class ConsentManager {
         // ExtServices, and bail out if that's the case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to migrate AppSearch to PPAPI and System Service in"
                             + " ExtServices");
             return;
