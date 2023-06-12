@@ -77,6 +77,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -124,6 +126,7 @@ public class ConsentManager {
     private final UxStatesDao mUxStatesDao;
 
     private static final Object LOCK = new Object();
+    private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
     ConsentManager(
             @NonNull TopicsWorker topicsWorker,
@@ -1741,38 +1744,37 @@ public class ConsentManager {
             ThrowableSetter appSearchSetter, /* MUST pass lambdas instead of method references
             for back compat. */
             ErrorLogger errorLogger) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        appSetter.apply();
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        systemServiceSetter.apply();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        appSetter.apply();
-                        systemServiceSetter.apply();
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            appSearchSetter.apply();
-                        }
-                        break;
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                if (errorLogger != null) {
-                    errorLogger.apply(e);
-                }
-                throw new RuntimeException(
-                        getClass().getSimpleName()
-                                + " failed. "
-                                + e.getMessage());
+        mReadWriteLock.writeLock().lock();
+        try {
+            switch (mConsentSourceOfTruth) {
+                case Flags.PPAPI_ONLY:
+                    appSetter.apply();
+                    break;
+                case Flags.SYSTEM_SERVER_ONLY:
+                    systemServiceSetter.apply();
+                    break;
+                case Flags.PPAPI_AND_SYSTEM_SERVER:
+                    appSetter.apply();
+                    systemServiceSetter.apply();
+                    break;
+                case Flags.APPSEARCH_ONLY:
+                    if (mFlags.getEnableAppsearchConsentData()) {
+                        appSearchSetter.apply();
+                    }
+                    break;
+                default:
+                    throw new RuntimeException(
+                            ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
             }
+        } catch (IOException | RuntimeException e) {
+            if (errorLogger != null) {
+                errorLogger.apply(e);
+            }
+            throw new RuntimeException(getClass().getSimpleName() + " failed. " + e.getMessage());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
+
     }
 
     @FunctionalInterface
@@ -1798,31 +1800,33 @@ public class ConsentManager {
             ThrowableGetter<T> appSearchGetter, /* MUST pass lambdas instead of method references
              for back compat. */
             ErrorLogger errorLogger) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        return appGetter.apply();
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        // Intentional fallthrough.
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        return systemServiceGetter.apply();
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            return appSearchGetter.apply();
-                        }
-                        break;
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                        return defaultReturn;
-                }
-            } catch (IOException | RuntimeException e) {
-                if (errorLogger != null) {
-                    errorLogger.apply(e);
-                }
-                LogUtil.e(getClass().getSimpleName() + " failed. " + e.getMessage());
+        mReadWriteLock.readLock().lock();
+        try {
+            switch (mConsentSourceOfTruth) {
+                case Flags.PPAPI_ONLY:
+                    return appGetter.apply();
+                case Flags.SYSTEM_SERVER_ONLY:
+                    // Intentional fallthrough.
+                case Flags.PPAPI_AND_SYSTEM_SERVER:
+                    return systemServiceGetter.apply();
+                case Flags.APPSEARCH_ONLY:
+                    if (mFlags.getEnableAppsearchConsentData()) {
+                        return appSearchGetter.apply();
+                    }
+                    break;
+                default:
+                    LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    return defaultReturn;
             }
-            return defaultReturn;
+        } catch (IOException | RuntimeException e) {
+            if (errorLogger != null) {
+                errorLogger.apply(e);
+            }
+            LogUtil.e(getClass().getSimpleName() + " failed. " + e.getMessage());
+        } finally {
+            mReadWriteLock.readLock().unlock();
         }
+
+        return defaultReturn;
     }
 }
