@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"යෙදුම් මගින් යෝජිත දැන්වීම් යළි සකසන්න ද?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ඔබේ ලැයිස්තුවේ ඇති යෙදුම් වලින් දැන්වීම්-යෝජනා දත්ත මකා දමනු ඇති අතර යෙදුම් ඉදිරියට යාමට නව දැන්වීම් යෝජනා කරයි. ඔබ තවමත් යම් අදාළ දැන්වීම් දැකිය හැක."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"යෙදුම් දත්ත යළි සකසන ලදි"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"දැන්වීම් මාතෘකා ක්‍රියාත්මකයි"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android උනන්දුවක් දක්වන මාතෘකා සටහන් කිරීම ආරම්භ කරනු ඇති නමුත්, ඔබේ පළමු මාතෘකා දිස් වීමට යම් කාලයක් ගත විය හැක."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"දැන්වීම් මාතෘකා ක්‍රියාවිරහිත කරන්න ද?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"මෙම මාතෘකා ලැයිස්තුව මකා දැමෙනු ඇත. Android තවදුරටත් උනන්දුවක් දක්වන මාතෘකා සටහන් නොකරනු ඇති නමුත්, ඔබ තවමත් අදාළ දැන්වීම් දැකිය හැක."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"යෙදුම්-යෝජිත දැන්වීම් ක්‍රියාත්මකයි"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"යෙදුම් දැන්වීම් යෝජනා කිරීම ආරම්භ කළ හැක. ඔවුන් දැන්වීම් යෝජනා කිරීම ආරම්භ කළ පසු ඔබට යෙදුම් ලැයිස්තුවක් පෙනෙනු ඇත."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"යෙදුම්-යෝජිත දැන්වීම් ක්‍රියාවිරහිත කරන්න ද?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"සියලු දැන්වීම් යෝජනා දත්ත මකා දැමෙනු ඇත. යෙදුම්වලට තවදුරටත් දැන්වීම් යෝජනා කිරීමට නොහැකි වනු ඇති නමුත්, ඔබ තවමත් අදාළ දැන්වීම් දැකිය හැක."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"දැන්වීම් මැනීම ක්‍රියාත්මකයි"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android හට යෙදුම්වලට ඔවුන්ගේ දැන්වීම්වල ක්‍රියාකාරීත්වය මැනීමට උදවු කිරීමට යෙදුම් සමග බෙදා ගත හැක්කේ ඉතා සීමිත තොරතුරු පමණි."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"දැන්වීම් මැනීම ක්‍රියා විරහිත කරන්න ද?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"සියලු පොරොත්තු දැන්වීම් මිනුම් වාර්තා මකා දමනු ඇති අතර නව වාර්තා උත්පාදනය කිරීම හෝ බෙදා ගැනීම සිදු කරනු නොලැබේ."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"දැන්වීම් පෞද්ගලිකත්වය"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"දැන්වීම් මාතෘකා"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"යෙදුම්-යෝජිත දැන්වීම්"</string>
