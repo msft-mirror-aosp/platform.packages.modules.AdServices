@@ -131,7 +131,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         if (SdkLevel.isAtLeastT()
                 && packageName != null
                 && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to receive in PackageChangedReceiver on T+ for"
                             + " ExtServices");
             return;

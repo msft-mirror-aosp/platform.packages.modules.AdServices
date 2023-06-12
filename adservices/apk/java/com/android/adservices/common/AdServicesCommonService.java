@@ -48,7 +48,7 @@ public class AdServicesCommonService extends Service {
             mAdServicesCommonService =
                     new AdServicesCommonServiceImpl(this, FlagsFactory.getFlags());
         }
-        LogUtil.i("created adservices common service");
+        LogUtil.d("created adservices common service");
         try {
             AdServicesSyncUtil.getInstance()
                     .register(
@@ -56,7 +56,7 @@ public class AdServicesCommonService extends Service {
                                 @Override
                                 public void accept(
                                         Context context, Boolean shouldDisplayEuNotification) {
-                                    LogUtil.i(
+                                    LogUtil.d(
                                             "running trigger command with "
                                                     + shouldDisplayEuNotification);
                                     ConsentNotificationTrigger.showConsentNotification(
