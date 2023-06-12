@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
@@ -52,6 +53,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.ui.UxEngine;
 
 import java.util.concurrent.Executor;
 
@@ -67,11 +69,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     public final String ADSERVICES_STATUS_SHARED_PREFERENCE = "AdserviceStatusSharedPreference";
     private final Context mContext;
+    private final UxEngine mUxEngine;
     private final Flags mFlags;
 
-    public AdServicesCommonServiceImpl(Context context, Flags flags) {
+    public AdServicesCommonServiceImpl(Context context, Flags flags, UxEngine uxEngine) {
         mContext = context;
         mFlags = flags;
+        mUxEngine = uxEngine;
     }
 
     @Override
@@ -276,16 +280,41 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
             @NonNull IEnableAdServicesCallback callback) {
-        // TO-DO (b/286664178): remove the block after API is fully ramped up.
-        try {
-            if (!mFlags.getEnableAdServicesSystemApi()) {
-                callback.onResult(
-                        new EnableAdServicesResponse.Builder().setApiEnabled(false).build());
-                LogUtil.d("enableAdServices(): API is disabled.");
-            }
-        } catch (Exception e) {
-            LogUtil.e("enableAdServices(): setApiDisabled failed.");
-            return;
-        }
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d("enableAdServices(): Caller is not authorized.");
+                            return;
+                        }
+
+                        // TO-DO (b/286664178): remove the block after API is fully ramped up.
+                        if (!mFlags.getEnableAdServicesSystemApi()) {
+                            callback.onResult(
+                                    new EnableAdServicesResponse.Builder()
+                                            .setStatusCode(STATUS_SUCCESS)
+                                            .setApiEnabled(false)
+                                            .setSuccess(false)
+                                            .build());
+                            LogUtil.d("enableAdServices(): API is disabled.");
+                            return;
+                        }
+
+                        mUxEngine.start(adServicesStates);
+                        LogUtil.d("enableAdServices(): UxEngine started.");
+
+                        callback.onResult(
+                                new EnableAdServicesResponse.Builder()
+                                        .setStatusCode(STATUS_SUCCESS)
+                                        .setApiEnabled(true)
+                                        .setSuccess(true)
+                                        .build());
+                    } catch (Exception e) {
+                        LogUtil.e("enableAdServices() failed to complete: " + e.getMessage());
+                    }
+                });
     }
 }
