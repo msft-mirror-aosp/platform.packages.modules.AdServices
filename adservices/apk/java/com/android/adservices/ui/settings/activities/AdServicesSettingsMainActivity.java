@@ -83,7 +83,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     protected void onResume() {
         super.onResume();
         if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithMode(true);
+            initWithUx(true);
         }
     }
 
@@ -102,7 +102,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
 
     private void initMainActivity() {
         setContentView(R.layout.main_activity);
-        // no need to store since no
+        // no need to store since not using
         new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }
