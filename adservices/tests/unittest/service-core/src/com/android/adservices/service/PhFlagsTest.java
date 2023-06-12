@@ -195,6 +195,7 @@ import static com.android.adservices.service.Flags.PPAPI_ONLY;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
 import static com.android.adservices.service.Flags.RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -401,6 +402,7 @@ import static com.android.adservices.service.PhFlags.KEY_UI_DIALOG_FRAGMENT_ENAB
 import static com.android.adservices.service.PhFlags.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.PhFlags.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.PhFlags.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -2606,6 +2608,24 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getUiDialogFragmentEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetToggleSpeedBumpEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getUiDialogFragmentEnabled())
+                .isEqualTo(TOGGLE_SPEED_BUMP_ENABLED);
+
+        // Now overriding with the value from PH.
+        final boolean phOverridingValue = !TOGGLE_SPEED_BUMP_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_UI_TOGGLE_SPEED_BUMP_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getToggleSpeedBumpEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

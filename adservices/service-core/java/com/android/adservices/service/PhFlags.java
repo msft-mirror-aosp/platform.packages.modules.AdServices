@@ -457,6 +457,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOG_FRAGMENT_ENABLED = "ui_dialog_fragment_enabled";
 
+    static final String KEY_UI_TOGGLE_SPEED_BUMP_ENABLED = "ui_toggle_speed_bump_enabled";
+
     public static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
     // Back-compat keys
@@ -2444,6 +2446,17 @@ public final class PhFlags implements Flags {
                         NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_GA_UX_FEATURE_ENABLED,
                         /* defaultValue */ GA_UX_FEATURE_ENABLED));
+    }
+
+    @Override
+    public boolean getToggleSpeedBumpEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_TOGGLE_SPEED_BUMP_ENABLED,
+                        /* defaultValue */ TOGGLE_SPEED_BUMP_ENABLED));
     }
 
     @Override
