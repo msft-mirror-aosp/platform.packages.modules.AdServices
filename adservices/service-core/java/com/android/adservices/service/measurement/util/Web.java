@@ -67,6 +67,9 @@ public final class Web {
 
         try {
             InternetDomainName domainName = InternetDomainName.from(host);
+            if (!domainName.hasPublicSuffix()) {
+                return Optional.empty();
+            }
             InternetDomainName domain = useOrigin ? domainName : domainName.topPrivateDomain();
             String url = scheme + "://" + domain;
             if (useOrigin && port >= 0) {
