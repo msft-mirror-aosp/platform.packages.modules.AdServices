@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.ui;
 
+import android.adservices.common.AdServicesStates;
+import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -33,10 +35,24 @@ public class UxEngine {
     private final ConsentManager mConsentManager;
     private final UxStatesManager mUxStatesManager;
 
-    public UxEngine(ConsentManager consentManager, UxStatesManager uxStatesManager) {
+    UxEngine(ConsentManager consentManager, UxStatesManager uxStatesManager) {
         mConsentManager = consentManager;
         mUxStatesManager = uxStatesManager;
     }
+
+    /**
+     * Returns an instance of the UxEngine. This method should only be invoked by the common
+     * manager.
+     */
+    public static UxEngine getInstance(Context context) {
+        return new UxEngine(ConsentManager.getInstance(context), UxStatesManager.getInstance());
+    }
+
+    /**
+     * Starts the UxEgine. In which the general UX flow would be carried out as the engine
+     * orchestrates tasks and events between vairous UX components.
+     */
+    public void start(AdServicesStates adServicesStates) {}
 
     /* Select the first eligible UX based on UX states, falls back to UNSUPPORTED_UX. */
     PrivacySandboxUxCollection getEligibleUxCollection() {
