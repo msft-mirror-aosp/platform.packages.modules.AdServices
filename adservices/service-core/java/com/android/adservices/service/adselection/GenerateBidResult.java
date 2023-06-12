@@ -17,8 +17,11 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdWithBid;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+
 import androidx.annotation.Nullable;
+
 import com.google.auto.value.AutoValue;
 
 @AutoValue
@@ -26,15 +29,38 @@ abstract class GenerateBidResult {
     abstract AdWithBid getAdWithBid();
 
     @Nullable
+    abstract String getCustomAudienceName();
+
+    @Nullable
+    abstract String getOwnerAppPackage();
+
+    @Nullable
+    abstract AdTechIdentifier getCustomAudienceBuyer();
+
+    @Nullable
     abstract Uri getWinDebugReportUri();
 
     @Nullable
     abstract Uri getLossDebugReportUri();
 
-    static GenerateBidResult of(
-            AdWithBid adWithBid,
-            @Nullable Uri winDebugReportUri,
-            @Nullable Uri lossDebugReportUri) {
-        return new AutoValue_GenerateBidResult(adWithBid, winDebugReportUri, lossDebugReportUri);
+    static Builder builder() {
+        return new AutoValue_GenerateBidResult.Builder();
+    }
+
+    @AutoValue.Builder
+    abstract static class Builder {
+        abstract Builder setAdWithBid(AdWithBid adWithBid);
+
+        abstract Builder setCustomAudienceName(String customAudienceName);
+
+        abstract Builder setOwnerAppPackage(String ownerAppPackage);
+
+        abstract Builder setWinDebugReportUri(Uri winDebugReportUri);
+
+        abstract Builder setLossDebugReportUri(Uri lossDebugReportUri);
+
+        abstract Builder setCustomAudienceBuyer(AdTechIdentifier customAudienceOwner);
+
+        abstract GenerateBidResult build();
     }
 }

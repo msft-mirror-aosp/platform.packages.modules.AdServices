@@ -320,7 +320,19 @@ public class AdsScoreGeneratorImplTest {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
-                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
+                            scores.stream()
+                                    .map(
+                                            score ->
+                                                    ScoreAdResult.builder()
+                                                            .setAdScore(score)
+                                                            .setCustomAudienceName("test_ca")
+                                                            .setCustomAudienceBuyer(BUYER_1)
+                                                            .setPublisher(
+                                                                    CommonFixture.VALID_BUYER_1)
+                                                            .setOwnerAppPackage(
+                                                                    CommonFixture.TEST_PACKAGE_NAME)
+                                                            .build())
+                                    .collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -433,7 +445,19 @@ public class AdsScoreGeneratorImplTest {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
-                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
+                            scores.stream()
+                                    .map(
+                                            score ->
+                                                    ScoreAdResult.builder()
+                                                            .setAdScore(score)
+                                                            .setCustomAudienceName("test_ca")
+                                                            .setCustomAudienceBuyer(BUYER_1)
+                                                            .setPublisher(
+                                                                    CommonFixture.VALID_BUYER_1)
+                                                            .setOwnerAppPackage(
+                                                                    CommonFixture.TEST_PACKAGE_NAME)
+                                                            .build())
+                                    .collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -576,7 +600,19 @@ public class AdsScoreGeneratorImplTest {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
-                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
+                            scores.stream()
+                                    .map(
+                                            score ->
+                                                    ScoreAdResult.builder()
+                                                            .setAdScore(score)
+                                                            .setCustomAudienceName("test_ca")
+                                                            .setCustomAudienceBuyer(BUYER_1)
+                                                            .setPublisher(
+                                                                    CommonFixture.VALID_BUYER_1)
+                                                            .setOwnerAppPackage(
+                                                                    CommonFixture.TEST_PACKAGE_NAME)
+                                                            .build())
+                                    .collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -709,7 +745,19 @@ public class AdsScoreGeneratorImplTest {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
-                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
+                            scores.stream()
+                                    .map(
+                                            score ->
+                                                    ScoreAdResult.builder()
+                                                            .setAdScore(score)
+                                                            .setCustomAudienceName("test_ca")
+                                                            .setCustomAudienceBuyer(BUYER_1)
+                                                            .setPublisher(
+                                                                    CommonFixture.VALID_BUYER_1)
+                                                            .setOwnerAppPackage(
+                                                                    CommonFixture.TEST_PACKAGE_NAME)
+                                                            .build())
+                                    .collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -884,7 +932,19 @@ public class AdsScoreGeneratorImplTest {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
                     return Futures.immediateFuture(
-                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
+                            scores.stream()
+                                    .map(
+                                            score ->
+                                                    ScoreAdResult.builder()
+                                                            .setAdScore(score)
+                                                            .setCustomAudienceName("test_ca")
+                                                            .setCustomAudienceBuyer(BUYER_1)
+                                                            .setPublisher(
+                                                                    CommonFixture.VALID_BUYER_1)
+                                                            .setOwnerAppPackage(
+                                                                    CommonFixture.TEST_PACKAGE_NAME)
+                                                            .build())
+                                    .collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -1313,7 +1373,7 @@ public class AdsScoreGeneratorImplTest {
     private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
         Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
 
-        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
+        AdTechIdentifier buyer1 = BUYER_1;
         ContextualAds contextualAds1 =
                 ContextualAdsFixture.generateContextualAds(
                                 buyer1, ImmutableList.of(100.0, 200.0, 300.0))
