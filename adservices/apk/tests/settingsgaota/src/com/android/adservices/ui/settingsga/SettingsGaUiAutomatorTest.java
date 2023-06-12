@@ -227,11 +227,11 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void measurementDialogTest() throws UiObjectNotFoundException {
+    public void measurementDialogTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
-
+        sDevice.setOrientationNatural();
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // open measurement view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
@@ -421,7 +421,7 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialog_fragment_enabled true");
         sDevice.unfreezeRotation();
-
+        sDevice.setOrientationNatural();
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
@@ -439,6 +439,184 @@ public class SettingsGaUiAutomatorTest {
 
         sDevice.setOrientationRight();
         assertThat(dialogTitle.exists()).isTrue();
+        sDevice.setOrientationNatural();
+    }
+
+    @Test
+    public void topicsToggleDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled true");
+        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
+
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
+        sDevice.waitForIdle();
+
+        UiObject topicsToggle =
+                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        topicsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        if (topicsToggle.isChecked()) {
+            // turn it off
+            topicsToggle.click();
+            UiObject dialogOptOutTitle =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_topics_opt_out_title);
+            UiObject positiveButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogOptOutTitle.exists()).isTrue();
+            positiveButton.click();
+            assertThat(topicsToggle.isChecked()).isFalse();
+            // then turn it on again
+            topicsToggle.click();
+            UiObject dialogOptInTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_topics_opt_in_title);
+            UiObject okButton =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_acknowledge);
+            assertThat(dialogOptInTitle.exists()).isTrue();
+            okButton.click();
+            assertThat(topicsToggle.isChecked()).isTrue();
+        } else {
+            // turn it on
+            topicsToggle.click();
+            UiObject dialogOptInTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_topics_opt_in_title);
+            UiObject okButton =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_acknowledge);
+            assertThat(dialogOptInTitle.exists()).isTrue();
+            okButton.click();
+            assertThat(topicsToggle.isChecked()).isTrue();
+            // then turn it off
+            topicsToggle.click();
+            UiObject dialogOptOutTitle =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_topics_opt_out_title);
+            UiObject positiveButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogOptOutTitle.exists()).isTrue();
+            positiveButton.click();
+            assertThat(topicsToggle.isChecked()).isFalse();
+        }
+    }
+
+    @Test
+    public void appsToggleDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled true");
+        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
+
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
+        sDevice.waitForIdle();
+
+        UiObject appsToggle =
+                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        appsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        if (appsToggle.isChecked()) {
+            // turn it off
+            appsToggle.click();
+            UiObject dialogOptOutTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_apps_opt_out_title);
+            UiObject positiveButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogOptOutTitle.exists()).isTrue();
+            positiveButton.click();
+            assertThat(appsToggle.isChecked()).isFalse();
+            // then turn it on again
+            appsToggle.click();
+            UiObject dialogOptInTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_apps_opt_in_title);
+            UiObject okButton =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_acknowledge);
+            assertThat(dialogOptInTitle.exists()).isTrue();
+            okButton.click();
+            assertThat(appsToggle.isChecked()).isTrue();
+        } else {
+            // turn it on
+            appsToggle.click();
+            UiObject dialogOptInTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_apps_opt_in_title);
+            UiObject okButton =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_acknowledge);
+            assertThat(dialogOptInTitle.exists()).isTrue();
+            okButton.click();
+            assertThat(appsToggle.isChecked()).isTrue();
+            // then turn it off
+            appsToggle.click();
+            UiObject dialogOptOutTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_apps_opt_out_title);
+            UiObject positiveButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogOptOutTitle.exists()).isTrue();
+            positiveButton.click();
+            assertThat(appsToggle.isChecked()).isFalse();
+        }
+    }
+
+    @Test
+    public void measurementToggleDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled true");
+        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
+
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_ga_title);
+        sDevice.waitForIdle();
+
+        UiObject measurementToggle =
+                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        measurementToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        if (measurementToggle.isChecked()) {
+            // turn it off
+            measurementToggle.click();
+            UiObject dialogOptOutTitle =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_measurement_opt_out_title);
+            UiObject positiveButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogOptOutTitle.exists()).isTrue();
+            positiveButton.click();
+            assertThat(measurementToggle.isChecked()).isFalse();
+            // then turn it on again
+            measurementToggle.click();
+            UiObject dialogOptInTitle =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_measurement_opt_in_title);
+            UiObject okButton =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_acknowledge);
+            assertThat(dialogOptInTitle.exists()).isTrue();
+            okButton.click();
+            assertThat(measurementToggle.isChecked()).isTrue();
+        } else {
+            // turn it on
+            measurementToggle.click();
+            UiObject dialogOptInTitle =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_measurement_opt_in_title);
+            UiObject okButton =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_acknowledge);
+            assertThat(dialogOptInTitle.exists()).isTrue();
+            okButton.click();
+            assertThat(measurementToggle.isChecked()).isTrue();
+            // then turn it off
+            measurementToggle.click();
+            UiObject dialogOptOutTitle =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_measurement_opt_out_title);
+            UiObject positiveButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogOptOutTitle.exists()).isTrue();
+            positiveButton.click();
+            assertThat(measurementToggle.isChecked()).isFalse();
+        }
     }
 
     private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)

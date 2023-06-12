@@ -573,6 +573,8 @@
     <string name="settingsUI_dialog_measurement_opt_out_title">Turn off ad measurement?</string>
     <!-- Text for speedbump dialog message of turning off switch of measurement.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_measurement_opt_out_message">All pending ad measurement reports will be deleted and no new reports will be generated or shared.</string>
+    <!-- Text for dialog button to acknowledge and dismiss dialog.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_acknowledge" translatable="false">@string/notificationUI_right_control_button_text</string>
     <!--    TODO (b/265360122): remove these strings of the speed bump of resetting ad measurement -->
     <!--    title for button to reset ads measurement. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_measurement_title" translatable="false">Clear data for Ads measurement?</string>
