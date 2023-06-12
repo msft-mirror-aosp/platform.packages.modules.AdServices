@@ -25,6 +25,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.settings.activitydelegates.MainActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
@@ -60,19 +61,48 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
         }
-        super.onCreate(savedInstanceState);
         UiStatsLogger.logSettingsPageDisplayed(getApplication());
+        super.onCreate(savedInstanceState);
+        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+            initMainFragment();
+        }
+    }
+
+    private void initMainFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container_view, AdServicesSettingsMainFragment.class, null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new MainActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (FlagsFactory.getFlags().getU18UxEnabled()) {
+            initWithMode(true);
+        }
+    }
+
+    @Override
+    public void initBeta() {
+        initMainActivity();
+    }
+
+    @Override
+    public void initGA() {
+        initMainActivity();
+    }
+
+    @Override
+    public void initU18() {}
+
+    private void initMainActivity() {
+        setContentView(R.layout.main_activity);
+        // no need to store since no
+        new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }
