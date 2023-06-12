@@ -60,6 +60,8 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         // create the ResourcesLoader.
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            // apply to activity context as well since activity context has been created already.
+            OTAResourcesManager.applyOTAResources(this, false);
         }
         UiStatsLogger.logSettingsPageDisplayed(getApplication());
         super.onCreate(savedInstanceState);
