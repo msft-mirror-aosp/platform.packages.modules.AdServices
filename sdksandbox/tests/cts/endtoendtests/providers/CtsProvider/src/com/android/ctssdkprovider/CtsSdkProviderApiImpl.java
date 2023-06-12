@@ -16,15 +16,21 @@
 
 package com.android.ctssdkprovider;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 import android.annotation.NonNull;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
@@ -150,6 +156,36 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 new ActivityManager.RunningAppProcessInfo();
         ActivityManager.getMyMemoryState(processInfo);
         return processInfo.importance;
+    }
+
+    @Override
+    public void startSandboxActivityDirectlyByAction() {
+        Intent intent = new Intent();
+        intent.setAction("android.app.sdksandbox.action.START_SANDBOXED_ACTIVITY");
+        intent.setPackage(mContext.getPackageManager().getSdkSandboxPackageName());
+        intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+
+        Bundle params = new Bundle();
+        params.putBinder("android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER", new Binder());
+        intent.putExtras(params);
+
+        mContext.startActivity(intent);
+    }
+
+    @Override
+    public void startSandboxActivityDirectlyByComponent() {
+        Intent intent = new Intent();
+        intent.setComponent(
+                new ComponentName(
+                        mContext.getPackageManager().getSdkSandboxPackageName(),
+                        "com.android.sdksandbox.SandboxedActivity"));
+        intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+
+        Bundle params = new Bundle();
+        params.putBinder("android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER", new Binder());
+        intent.putExtras(params);
+
+        mContext.startActivity(intent);
     }
 
     @Override
