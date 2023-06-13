@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -95,6 +96,7 @@ public class AttributionJobHandlerTest {
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(111111L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(222222L);
+    private static final String TRIGGER_ID = "triggerId1";
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -113,7 +115,7 @@ public class AttributionJobHandlerTest {
 
     private static Trigger createAPendingTrigger() {
         return TriggerFixture.getValidTriggerBuilder()
-                .setId("triggerId1")
+                .setId(TRIGGER_ID)
                 .setStatus(Trigger.Status.PENDING)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .build();
@@ -442,6 +444,43 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performPendingAttributions_vtcWithConfiguredReportsCount_attributeUptoConfigLimit()
+            throws DatastoreException {
+        // Setup
+        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
+        doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+        doReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()))
+                .when(mMeasurementDao)
+                .getSourceDestinations(source.getId());
+        // 2 event reports already present for the source
+        doReturn(Arrays.asList(mock(EventReport.class), mock(EventReport.class)))
+                .when(mMeasurementDao)
+                .getSourceEventReports(source);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        Trigger trigger = createAPendingTrigger();
+        doReturn(trigger).when(mMeasurementDao).getTrigger(trigger.getId());
+        doReturn(matchingSourceList).when(mMeasurementDao).getMatchingActiveSources(trigger);
+        doReturn(Collections.singletonList(trigger.getId()))
+                .when(mMeasurementDao)
+                .getPendingTriggerIds();
+
+        // Execution
+        mHandler.performPendingAttributions();
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+
+        // Assertion
+        verify(mMeasurementDao, times(1)).insertEventReport(any());
     }
 
     @Test
