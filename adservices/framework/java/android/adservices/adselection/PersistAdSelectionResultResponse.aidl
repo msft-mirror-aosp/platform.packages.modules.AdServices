@@ -16,17 +16,8 @@
 
 package android.adservices.adselection;
 
-import android.adservices.adselection.ProcessAdSelectionResultResponse;
-import android.adservices.common.FledgeErrorResponse;
-
 /**
- * Defines a callback for the processAdSelectionResults API, which contains both an onSuccess
- * and an onFailure function. The success function accepts a {@link ProcessAdSelectionResultResponse}, while the
- * failure function accepts an {@link FledgeErrorResponse}
- *
- * {@hide}
+ * This defines the PersistAdSelectionResultResponse class that contains the ad selection id and
+ * the render uri.
  */
-oneway interface ProcessAdSelectionResultCallback {
-    void onSuccess(in ProcessAdSelectionResultResponse outcomeParcel);
-    void onFailure(in FledgeErrorResponse responseParcel);
-}
+parcelable PersistAdSelectionResultResponse;
