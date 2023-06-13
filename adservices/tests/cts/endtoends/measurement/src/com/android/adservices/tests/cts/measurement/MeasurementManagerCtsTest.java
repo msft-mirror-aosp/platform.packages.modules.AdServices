@@ -77,6 +77,7 @@ public class MeasurementManagerCtsTest {
     */
     private static final Uri SOURCE_REGISTRATION_URI = Uri.parse("https://test.com/source");
     private static final Uri TRIGGER_REGISTRATION_URI = Uri.parse("https://test.com/trigger");
+    private static final Uri LOCALHOST = Uri.parse("https://localhost");
     private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
@@ -142,6 +143,35 @@ public class MeasurementManagerCtsTest {
                 CALLBACK_EXECUTOR,
                 result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterSource_localhostUriNonDebuggableCaller_fails() throws Exception {
+        final MeasurementManager manager = MeasurementManager.get(sContext);
+        Objects.requireNonNull(manager);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        OutcomeReceiver<Object, Exception> callback =
+                new OutcomeReceiver<Object, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Object ignoredResult) {
+                        fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        countDownLatch.countDown();
+                        future.complete(null);
+                        assertTrue(error instanceof SecurityException);
+                    }
+                };
+        manager.registerSource(
+                LOCALHOST,
+                /* inputEvent= */ null,
+                CALLBACK_EXECUTOR,
+                callback);
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Assert.assertNull(future.get());
     }
 
     @Test
