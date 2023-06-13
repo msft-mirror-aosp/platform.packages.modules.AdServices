@@ -103,27 +103,29 @@ public abstract class FrequencyCapDao {
      * transaction.
      *
      * <p>If the current number of events in the histogram table is larger than the given {@code
-     * absoluteMaxHistogramEventCount}, then the oldest events in the table will be evicted so that
-     * the count of events is the given {@code lowerMaxHistogramEventCount}.
+     * absoluteMaxTotalHistogramEventCount}, then the oldest events in the table will be evicted so
+     * that the count of events is the given {@code lowerMaxTotalHistogramEventCount}.
      *
      * @throws IllegalStateException if an error was encountered adding the event
      */
     @Transaction
     public void insertHistogramEvent(
             @NonNull HistogramEvent event,
-            int absoluteMaxHistogramEventCount,
-            int lowerMaxHistogramEventCount)
+            int absoluteMaxTotalHistogramEventCount,
+            int lowerMaxTotalHistogramEventCount)
             throws IllegalStateException {
         Objects.requireNonNull(event);
-        Preconditions.checkArgument(absoluteMaxHistogramEventCount > 0);
-        Preconditions.checkArgument(lowerMaxHistogramEventCount > 0);
-        Preconditions.checkArgument(absoluteMaxHistogramEventCount > lowerMaxHistogramEventCount);
+        Preconditions.checkArgument(absoluteMaxTotalHistogramEventCount > 0);
+        Preconditions.checkArgument(lowerMaxTotalHistogramEventCount > 0);
+        Preconditions.checkArgument(
+                absoluteMaxTotalHistogramEventCount > lowerMaxTotalHistogramEventCount);
 
         // TODO(b/275581841): Collect and send telemetry on frequency cap eviction
         // Check the table size first and evict older events if necessary
-        int currentHistogramEventCount = getTotalNumHistogramEvents();
-        if (currentHistogramEventCount >= absoluteMaxHistogramEventCount) {
-            int numEventsToDelete = currentHistogramEventCount - lowerMaxHistogramEventCount;
+        int currentTotalHistogramEventCount = getTotalNumHistogramEvents();
+        if (currentTotalHistogramEventCount >= absoluteMaxTotalHistogramEventCount) {
+            int numEventsToDelete =
+                    currentTotalHistogramEventCount - lowerMaxTotalHistogramEventCount;
             deleteOldestHistogramEventData(numEventsToDelete);
             deleteUnpairedHistogramIdentifiers();
         }
