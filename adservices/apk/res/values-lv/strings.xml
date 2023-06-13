@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Vai atiestatīt lietotņu ieteiktās reklāmas?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Reklāmu ieteikumu dati no jūsu sarakstā iekļautajām lietotnēm tiks dzēsti, un turpmāk lietotnēs tiks ieteiktas jaunas reklāmas. Jums joprojām var tikt rādītas dažas atbilstošas reklāmas."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Tika atiestatīti lietotņu dati."</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Reklāmu tēmas ir ieslēgtas"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Operētājsistēmā Android tiks sākta interesējošo tēmu reģistrēšana, taču var paiet kāds laiks, līdz tiks parādītas pirmās tēmas."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vai izslēgt reklāmu tēmas?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Tēmu saraksts tiks izdzēsts. Operētājsistēmā Android vairs netiks reģistrētas interesējošās tēmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Lietotņu ieteiktas reklāmas ir ieslēgtas"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Lietotnēs var tikt sākta reklāmu ieteikšana. Kad tajās tiks sākta reklāmu ieteikšana, tiks parādīts lietotņu saraksts."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vai izslēgt lietotņu ieteiktas reklāmas?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Visi reklāmu ieteikumu dati tiks izdzēsti. Lietotnēs vairs nevarēs ieteikt reklāmas, taču jums joprojām var tikt rādītas atbilstošas reklāmas."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklāmu novērtēšana ir ieslēgta"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Operētājsistēmā Android drīkst kopīgot ar lietotnēm tikai stingri ierobežotu informāciju, lai lietotnēs varētu efektīvāk mērīt attiecīgo lietotņu reklāmu veiktspēju."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vai izslēgt reklāmu novērtēšanu?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Visi neapstiprinātie reklāmu novērtēšanas pārskati tiks izdzēsti, un netiks ne ģenerēti, ne kopīgoti jauni pārskati."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklāmu konfidencialitāte"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklāmu tēmas"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Lietotnēs ieteiktās reklāmas"</string>
