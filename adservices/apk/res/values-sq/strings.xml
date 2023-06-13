@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Të dhënat për sugjerimin e reklamave nga aplikacionet në listën tënde do të fshihen dhe aplikacionet do të sugjerojnë reklama të reja në vazhdim. Mund të shikosh përsëri disa reklama në lidhje me të."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Të dhënat e aplikacionit u rivendosën"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Temat e reklamave janë aktive"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android do të fillojë të shënojë temat me interes, por mund të duhet pak kohë sa të shfaqen temat e tua të para."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Të çaktivizohen temat e reklamave?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Kjo listë me tema do të fshihet. Android nuk do të shënojë më tema me interes, por mund të shohësh ende reklama të përshtatshme."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Reklamat e sugjeruara nga aplikacioni janë aktive"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplikacionet mund të fillojnë të sugjerojnë reklama. Do të shohësh një listë aplikacionesh sapo ato të fillojnë të sugjerojnë reklama."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Të çaktivizohen reklamat e sugjeruara nga aplikacionet?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Të gjitha të dhënat e sugjerimeve të reklamave do të fshihen. Aplikacionet nuk do të mund të sugjerojnë më reklama, por mund të shohësh ende reklama të përshtatshme."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Matja e reklamave është aktive"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android mund të ndajë vetëm informacione shumë të kufizuara me aplikacionet për t\'i ndihmuar të matin performancën e reklamave të tyre."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Të çaktivizohet matja e reklamave?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Të gjitha raportet e matjes së reklamave në pritje do të fshihen dhe asnjë raport i ri nuk do të krijohet apo ndahet."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privatësia e reklamave"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temat e reklamave"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamat e sugjeruara nga aplikacionet"</string>
