@@ -130,6 +130,7 @@ import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
@@ -4113,5 +4114,90 @@ public class ConsentManagerTest {
 
         verify(mAppSearchConsentManager, times(4)).getUx();
         verify(mAppSearchConsentManager, times(4)).setUx(any());
+    }
+
+    @Test
+    public void getEnrollmentChannel_PpApiOnly() throws RemoteException, IOException {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                doReturn(channel).when(mUxStatesDao).getEnrollmentChannel(ux);
+                assertThat(spyConsentManager.getEnrollmentChannel(ux)).isEqualTo(channel);
+
+                spyConsentManager.setEnrollmentChannel(ux, channel);
+            }
+        }
+
+        verify(mUxStatesDao, times(12)).getEnrollmentChannel(any());
+        verify(mUxStatesDao, times(12)).setEnrollmentChannel(any(), any());
+    }
+
+    @Test
+    public void getEnrollmentChannel_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                doReturn(channel.toString()).when(mMockIAdServicesManager).getEnrollmentChannel();
+                assertThat(spyConsentManager.getEnrollmentChannel(ux)).isEqualTo(channel);
+
+                spyConsentManager.setEnrollmentChannel(ux, channel);
+            }
+        }
+
+        verify(mMockIAdServicesManager, times(12)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(12)).setEnrollmentChannel(anyString());
+    }
+
+    @Test
+    public void getEnrollmentChannel_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                doReturn(channel.toString()).when(mMockIAdServicesManager).getEnrollmentChannel();
+                assertThat(spyConsentManager.getEnrollmentChannel(ux)).isEqualTo(channel);
+
+                spyConsentManager.setEnrollmentChannel(ux, channel);
+            }
+        }
+
+        verify(mMockIAdServicesManager, times(12)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(12)).setEnrollmentChannel(anyString());
+    }
+
+    @Test
+    public void getEnrollmentChannel_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                doReturn(channel).when(mAppSearchConsentManager).getEnrollmentChannel(ux);
+                assertThat(spyConsentManager.getEnrollmentChannel(ux)).isEqualTo(channel);
+
+                spyConsentManager.setEnrollmentChannel(ux, channel);
+            }
+        }
+
+        verify(mAppSearchConsentManager, times(12)).getEnrollmentChannel(any());
+        verify(mAppSearchConsentManager, times(12)).setEnrollmentChannel(any(), any());
     }
 }
