@@ -255,6 +255,8 @@ public class SettingsGaUiAutomatorTest {
     public void topicsToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // 1) disable Topics API is enabled
@@ -297,6 +299,8 @@ public class SettingsGaUiAutomatorTest {
     public void fledgeToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled
@@ -339,6 +343,8 @@ public class SettingsGaUiAutomatorTest {
     public void measurementToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // 1) disable Measurement API is enabled
@@ -382,6 +388,8 @@ public class SettingsGaUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
@@ -394,6 +402,8 @@ public class SettingsGaUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
@@ -406,6 +416,8 @@ public class SettingsGaUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ui_toggle_speed_bump_enabled false");
 
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
@@ -420,7 +432,7 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialog_fragment_enabled true");
-        sDevice.unfreezeRotation();
+
         sDevice.setOrientationNatural();
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
