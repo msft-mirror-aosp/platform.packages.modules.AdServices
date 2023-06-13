@@ -258,6 +258,12 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_off_device_enabled";
     static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
+    static final String KEY_AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI =
+            "ad_selection_data_auction_key_fetch_uri";
+    static final String KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING =
+            "ad_selection_data_auction_key_sharding";
+    static final String KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI =
+            "ad_selection_data_join_key_fetch_uri";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -2057,6 +2063,30 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getAdSelectionDataAuctionKeyFetchUri() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI,
+                AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI);
+    }
+
+    @Override
+    public String getAdSelectionDataJoinKeyFetchUri() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI,
+                AD_SELECTION_DATA_JOIN_KEY_FETCH_URI);
+    }
+
+    @Override
+    public int getAdSelectionDataAuctionKeySharding() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING,
+                AD_SELECTION_DATA_AUCTION_KEY_SHARDING);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -3093,6 +3123,21 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
                         + " = "
                         + getAdSelectionSelectingOutcomeTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI
+                        + " = "
+                        + getAdSelectionDataAuctionKeyFetchUri());
+        writer.println(
+                "\t"
+                        + KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI
+                        + " = "
+                        + getAdSelectionDataJoinKeyFetchUri());
+        writer.println(
+                "\t"
+                        + KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING
+                        + " = "
+                        + getAdSelectionDataAuctionKeySharding());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
