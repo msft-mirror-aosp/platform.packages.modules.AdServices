@@ -148,7 +148,8 @@ public class SourceNoiseHandler {
 
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability(@NonNull Source source) {
-        if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()) {
+        if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()
+                || mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()) {
             return calculateNoiseDynamically(source);
         }
 
