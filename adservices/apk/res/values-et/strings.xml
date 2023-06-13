@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Kas lähtestada rakenduste soovitatud reklaamid?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Teie loendis olevate rakenduste reklaamisoovituste andmed kustutatakse ja edaspidi soovitavad rakendused uusi reklaame. Võite siiski näha mõnda seotud reklaami."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Rakenduste andmed lähtestati"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Reklaamiteemad on sisse lülitatud"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android hakkab huvipakkuvaid teemasid üles märkima, kuid teie esimeste teemade ilmumine võib veidi aega võtta."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Kas lülitada reklaamiteemad välja?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"See teemade loend kustutatakse. Android ei märgi enam huvipakkuvaid teemasid, kuid võite siiski näha asjakohaseid reklaame."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Rakenduse soovitatud reklaamid on sisse lülitatud"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Rakendused võivad hakata reklaame soovitama. Näete rakenduste loendit, kui need hakkavad reklaame soovitama."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Kas lülitada rakenduse soovitatud reklaamid välja?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Kõik reklaamisoovituste andmed kustutatakse. Rakendused ei saa enam reklaame soovitada, kuid võite siiski näha asjakohaseid reklaame."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklaamide mõõtmine on sisse lülitatud"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android saab rakendustega jagada vaid väga piiratud teavet, et aidata rakendustel oma reklaamide toimivust mõõta."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Kas lülitada reklaamide mõõtmine välja?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Kõik ootel olevad reklaamide mõõtmisaruanded kustutatakse ning uusi aruandeid ei genereerita ega jagata."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklaamide privaatsus"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklaamiteemad"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Rakenduste soovitatud reklaamid"</string>
