@@ -228,4 +228,10 @@ interface IAdServicesManager {
 
     /** Set the current UX. */
     void setUx(in String ux);
+
+    /** Returns the current enrollement channel. */
+    String getEnrollmentChannel();
+
+    /** Set the current enrollment channel. */
+    void setEnrollmentChannel(in String enrollmentChannel);
 }

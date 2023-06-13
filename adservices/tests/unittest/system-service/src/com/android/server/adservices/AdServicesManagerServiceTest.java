@@ -62,6 +62,7 @@ import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.data.topics.TopicsDbHelper;
 import com.android.server.adservices.data.topics.TopicsDbTestUtil;
 import com.android.server.adservices.data.topics.TopicsTables;
+import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
@@ -1125,5 +1126,24 @@ public class AdServicesManagerServiceTest {
         assertThat(service.wasU18NotificationDisplayed()).isFalse();
         service.setU18NotificationDisplayed(true);
         assertThat(service.wasU18NotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void enrollmentChannelConformanceTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // The default enrollment channel is null.
+        assertThat(service.getEnrollmentChannel()).isEqualTo(null);
+
+        Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                .forEach(
+                        channel -> {
+                            service.setEnrollmentChannel(channel.toString());
+                            assertThat(service.getEnrollmentChannel())
+                                    .isEqualTo(channel.toString());
+                        });
     }
 }
