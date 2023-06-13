@@ -14,6 +14,8 @@
 
 package com.android.ctssdkprovider;
 
+import android.os.Bundle;
+
 import com.android.ctssdkprovider.IActivityStarter;
 
 interface ICtsSdkProviderApi {
@@ -25,9 +27,8 @@ interface ICtsSdkProviderApi {
     int getProcessImportance();
     void startSandboxActivityDirectlyByAction();
     void startSandboxActivityDirectlyByComponent();
-    void startActivity(IActivityStarter callback);
+    void startActivity(IActivityStarter callback, in Bundle extras);
     String getPackageName();
     String getOpPackageName();
-    void startActivityAfterUnregisterHandler(IActivityStarter callback);
     String getClientPackageName();
 }

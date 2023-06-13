@@ -18,5 +18,7 @@ import android.os.IBinder;
 
 interface IActivityStarter {
     void startActivity(IBinder token);
-    void activityStartedSuccessfully();
+    void onActivityResumed();
+    void onActivityPaused();
+
 }

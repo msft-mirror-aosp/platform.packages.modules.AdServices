@@ -69,6 +69,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /** End-to-end tests of {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
@@ -88,6 +90,7 @@ public class SdkSandboxManagerTest {
     private static final String NAMESPACE_WINDOW_MANAGER = "window_manager";
     private static final String ASM_RESTRICTIONS_ENABLED =
             "ActivitySecurity__asm_restrictions_enabled";
+    private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
 
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
@@ -649,40 +652,37 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testStartSdkSandboxedActivities() {
+    public void testStartSdkSandboxActivity() {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        // Load SDK in sandbox
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            ActivityStarter activityStarter = new ActivityStarter(clientActivity);
+                            startSandboxActivity(sdk, activityStarter);
+                            assertThat(activityStarter.isActivityVisible()).isTrue();
+                        });
+    }
+
+    @Test
+    public void testStartSdkSandboxActivityOnTopOfASandboxActivity() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
         ICtsSdkProviderApi sdk = loadSdk();
 
         mRule.getScenario()
                 .onActivity(
                         clientActivity -> {
                             ActivityStarter activityStarter1 = new ActivityStarter(clientActivity);
-                            try {
-                                sdk.startActivity(activityStarter1);
-                                // Wait for the activity to start and send confirmation back
-                                Thread.sleep(1000);
-                                assertThat(activityStarter1.isActivityStarted()).isTrue();
-                            } catch (Exception e) {
-                                fail(
-                                        "Exception is thrown while starting activity: "
-                                                + e.getMessage());
-                            }
+                            startSandboxActivity(sdk, activityStarter1);
+                            assertThat(activityStarter1.isActivityVisible()).isTrue();
 
-                            // Start another sandbox activity is important, to make sure that the
-                            // system is not restarting the sandbox activities after test is done.
                             ActivityStarter activityStarter2 = new ActivityStarter(clientActivity);
-                            try {
-                                sdk.startActivity(activityStarter2);
-                                // Wait for the activity to start and send confirmation back
-                                Thread.sleep(1000);
-                                assertThat(activityStarter2.isActivityStarted()).isTrue();
-                            } catch (Exception e) {
-                                fail(
-                                        "Exception is thrown while starting activity: "
-                                                + e.getMessage());
-                            }
+                            startSandboxActivity(sdk, activityStarter2);
+                            assertThat(activityStarter1.isActivityVisible()).isFalse();
+                            assertThat(activityStarter2.isActivityVisible()).isTrue();
                         });
     }
 
@@ -698,14 +698,12 @@ public class SdkSandboxManagerTest {
                         activity -> {
                             ActivityStarter activityStarter = new ActivityStarter(activity);
                             try {
-                                sdk.startActivityAfterUnregisterHandler(activityStarter);
-                                // Wait for the activity to be initiated and destroyed.
-                                Thread.sleep(1000);
-                                assertThat(activityStarter.isActivityStarted()).isFalse();
+                                Bundle extras = new Bundle();
+                                extras.putBoolean(UNREGISTER_BEFORE_STARTING_KEY, true);
+                                startSandboxActivity(sdk, activityStarter, extras);
+                                assertThat(activityStarter.isActivityVisible()).isFalse();
                             } catch (Exception e) {
-                                fail(
-                                        "Exception is thrown while starting activity: "
-                                                + e.getMessage());
+                                fail("Got exception while starting activity: " + e.getMessage());
                             }
                         });
     }
@@ -728,26 +726,53 @@ public class SdkSandboxManagerTest {
         return processInfo.importance;
     }
 
-    private class ActivityStarter extends IActivityStarter.Stub {
-        private Activity mActivity;
-        private boolean mActivityStarted = false;
+    private void startSandboxActivity(ICtsSdkProviderApi sdk, ActivityStarter activityStarter) {
+        startSandboxActivity(sdk, activityStarter, new Bundle());
+    }
 
-        ActivityStarter(Activity activity) {
-            this.mActivity = activity;
+    private void startSandboxActivity(
+            ICtsSdkProviderApi sdk, ActivityStarter activityStarter, Bundle extras) {
+        try {
+            sdk.startActivity(activityStarter, extras);
+        } catch (RemoteException e) {
+            fail("Got exception while starting activity: " + e.getMessage());
+        }
+    }
+
+    private class ActivityStarter extends IActivityStarter.Stub {
+        private final Activity mFromActivity;
+        private boolean mActivityVisible = false;
+        private final CountDownLatch mWaitingForActivityToStartLatch = new CountDownLatch(1);
+
+        ActivityStarter(Activity fromActivity) {
+            this.mFromActivity = fromActivity;
         }
 
         @Override
         public void startActivity(IBinder token) throws RemoteException {
-            mSdkSandboxManager.startSdkSandboxActivity(mActivity, token);
-        }
-        // SDK will call this function to notify that the activity is successfully created
-        @Override
-        public void activityStartedSuccessfully() {
-            mActivityStarted = true;
+            mSdkSandboxManager.startSdkSandboxActivity(mFromActivity, token);
+            try {
+                mWaitingForActivityToStartLatch.await(1, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                fail("Exception while waiting for the sandbox activity: " + e.getMessage());
+            }
         }
 
-        public boolean isActivityStarted() {
-            return mActivityStarted;
+        // SDK calls this function when onResumed() gets called.
+        @Override
+        public void onActivityResumed() {
+            mActivityVisible = true;
+            mWaitingForActivityToStartLatch.countDown();
+        }
+
+        // SDK calls this function when onPaused() gets called.
+        @Override
+        public void onActivityPaused() {
+            mActivityVisible = false;
+        }
+
+        public boolean isActivityVisible() {
+            return mActivityVisible;
         }
     }
 
