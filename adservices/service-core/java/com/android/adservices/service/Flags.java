@@ -2261,6 +2261,24 @@ public interface Flags {
         return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
+    /** Disable conversions configurability by default. */
+    boolean DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS = false;
+
+    /**
+     * Returns true, if event reports max conversions configurability is enabled, false otherwise.
+     */
+    default boolean getMeasurementEnableVtcConfigurableMaxEventReports() {
+        return DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
+    }
+
+    /** Disable conversions configurability by default. */
+    int DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT = 2;
+
+    /** Returns the default max allowed number of event reports. */
+    default int getMeasurementVtcConfigurableMaxEventReportsCount() {
+        return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
