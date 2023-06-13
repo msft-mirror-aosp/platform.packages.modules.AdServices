@@ -31,7 +31,7 @@ import java.util.Objects;
 
 /** Room based database for ad selection encryption keys. */
 @Database(
-        entities = {DBEncryptionKey.class},
+        entities = {DBEncryptionKey.class, DBEncryptionContext.class},
         version = AdSelectionEncryptionDatabase.ENCRYPTION_DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionEncryptionDatabase extends RoomDatabase {
@@ -62,4 +62,9 @@ public abstract class AdSelectionEncryptionDatabase extends RoomDatabase {
 
     /** @return a Dao to access entities in EncryptionKey database. */
     public abstract EncryptionKeyDao encryptionKeyDao();
+
+    /**
+     * @return a Dao to access entities in EncryptionContext database.
+     */
+    public abstract EncryptionContextDao encryptionContextDao();
 }
