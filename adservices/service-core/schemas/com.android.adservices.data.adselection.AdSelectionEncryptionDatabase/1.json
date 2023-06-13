@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "c01fb00f9478984f9974c146f3255d17",
+    "identityHash": "f6f308c8bcae1fc25d7969f327fd304b",
     "entities": [
       {
         "tableName": "encryption_key",
@@ -46,11 +46,11 @@
           }
         ],
         "primaryKey": {
+          "autoGenerate": false,
           "columnNames": [
             "encryption_key_type",
             "key_identifier"
-          ],
-          "autoGenerate": false
+          ]
         },
         "indices": [
           {
@@ -65,12 +65,57 @@
           }
         ],
         "foreignKeys": []
+      },
+      {
+        "tableName": "encryption_context",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`context_id` INTEGER NOT NULL, `encryption_key_type` INTEGER NOT NULL, `key_config` TEXT, `shared_secret` TEXT, `context_ref` INTEGER, PRIMARY KEY(`context_id`, `encryption_key_type`))",
+        "fields": [
+          {
+            "fieldPath": "contextId",
+            "columnName": "context_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encryptionKeyType",
+            "columnName": "encryption_key_type",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "keyConfig",
+            "columnName": "key_config",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "sharedSecret",
+            "columnName": "shared_secret",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "hpkeContextNativeRef",
+            "columnName": "context_ref",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "context_id",
+            "encryption_key_type"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c01fb00f9478984f9974c146f3255d17')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f6f308c8bcae1fc25d7969f327fd304b')"
     ]
   }
 }

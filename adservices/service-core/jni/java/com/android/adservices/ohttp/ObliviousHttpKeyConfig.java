@@ -186,6 +186,12 @@ public abstract class ObliviousHttpKeyConfig {
         return Arrays.copyOf(publicKey(), publicKey().length);
     }
 
+    /** Serialize the ObliviousHttpKeyConfig to bytes. */
+    public byte[] serializeKeyConfigToBytes() {
+        // TODO(b/286277223): Replace the placeholder implementation with serialize implementation.
+        return new byte[1];
+    }
+
     private static int writeUptoTwoBytesIntoInteger(
             byte[] keyConfig, int startingIndex, int numberOfBytes) throws InvalidKeySpecException {
         Preconditions.checkArgument(
