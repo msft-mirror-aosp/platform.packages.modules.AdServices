@@ -38,6 +38,7 @@ android_app {
     max_sdk_version: "32",
     certificate: ":com.android.adservices.api.certificate",
     privileged: true,
+    privapp_allowlist: ":privapp_allowlist_android.ext_sminus.services.xml",
     srcs: [
         "java/**/*.java",
     ],

@@ -203,7 +203,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
+    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
     instrumentation_for: "AdExtServicesApk",
     jni_libs: [
         "libhpke_jni",
@@ -289,7 +289,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
+    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
     instrumentation_for: "AdExtServicesApk",
 }
 

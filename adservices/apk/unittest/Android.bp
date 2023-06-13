@@ -86,7 +86,7 @@ android_test {
         "general-tests",
         "mts-extservices",
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
+    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
     instrumentation_for: "AdExtServicesApk",
     test_config: "AndroidTest.ExtServices.xml",
 }
