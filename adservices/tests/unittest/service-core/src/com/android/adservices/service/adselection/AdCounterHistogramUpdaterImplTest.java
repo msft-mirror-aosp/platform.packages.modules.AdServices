@@ -43,8 +43,8 @@ import org.mockito.junit.MockitoRule;
 
 public class AdCounterHistogramUpdaterImplTest {
     private static final long AD_SELECTION_ID = 10;
-    private static final int ABSOLUTE_MAX_EVENT_COUNT = 20;
-    private static final int LOWER_MAX_EVENT_COUNT = 15;
+    private static final int ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 20;
+    private static final int LOWER_MAX_TOTAL_EVENT_COUNT = 15;
     private static final String SERIALIZED_AD_COUNTER_KEYS =
             FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
 
@@ -60,8 +60,8 @@ public class AdCounterHistogramUpdaterImplTest {
                 new AdCounterHistogramUpdaterImpl(
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
-                        ABSOLUTE_MAX_EVENT_COUNT,
-                        LOWER_MAX_EVENT_COUNT);
+                        ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                        LOWER_MAX_TOTAL_EVENT_COUNT);
     }
 
     @Test
@@ -72,8 +72,8 @@ public class AdCounterHistogramUpdaterImplTest {
                         new AdCounterHistogramUpdaterImpl(
                                 null,
                                 mFrequencyCapDaoMock,
-                                ABSOLUTE_MAX_EVENT_COUNT,
-                                LOWER_MAX_EVENT_COUNT));
+                                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                                LOWER_MAX_TOTAL_EVENT_COUNT));
     }
 
     @Test
@@ -84,12 +84,12 @@ public class AdCounterHistogramUpdaterImplTest {
                         new AdCounterHistogramUpdaterImpl(
                                 mAdSelectionEntryDaoMock,
                                 null,
-                                ABSOLUTE_MAX_EVENT_COUNT,
-                                LOWER_MAX_EVENT_COUNT));
+                                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                                LOWER_MAX_TOTAL_EVENT_COUNT));
     }
 
     @Test
-    public void testNewUpdater_invalidAbsoluteMaxEventCountThrows() {
+    public void testNewUpdater_invalidAbsoluteMaxTotalEventCountThrows() {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -97,7 +97,7 @@ public class AdCounterHistogramUpdaterImplTest {
                                 mAdSelectionEntryDaoMock,
                                 mFrequencyCapDaoMock,
                                 0,
-                                LOWER_MAX_EVENT_COUNT));
+                                LOWER_MAX_TOTAL_EVENT_COUNT));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -105,18 +105,18 @@ public class AdCounterHistogramUpdaterImplTest {
                                 mAdSelectionEntryDaoMock,
                                 mFrequencyCapDaoMock,
                                 -1,
-                                LOWER_MAX_EVENT_COUNT));
+                                LOWER_MAX_TOTAL_EVENT_COUNT));
     }
 
     @Test
-    public void testNewUpdater_invalidLowerMaxEventCountThrows() {
+    public void testNewUpdater_invalidLowerMaxTotalEventCountThrows() {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new AdCounterHistogramUpdaterImpl(
                                 mAdSelectionEntryDaoMock,
                                 mFrequencyCapDaoMock,
-                                ABSOLUTE_MAX_EVENT_COUNT,
+                                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 0));
         assertThrows(
                 IllegalArgumentException.class,
@@ -124,20 +124,20 @@ public class AdCounterHistogramUpdaterImplTest {
                         new AdCounterHistogramUpdaterImpl(
                                 mAdSelectionEntryDaoMock,
                                 mFrequencyCapDaoMock,
-                                ABSOLUTE_MAX_EVENT_COUNT,
+                                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 -1));
     }
 
     @Test
-    public void testNewUpdater_invalidAbsoluteAndLowerMaxEventCountThrows() {
+    public void testNewUpdater_invalidAbsoluteAndLowerMaxTotalEventCountThrows() {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new AdCounterHistogramUpdaterImpl(
                                 mAdSelectionEntryDaoMock,
                                 mFrequencyCapDaoMock,
-                                LOWER_MAX_EVENT_COUNT,
-                                ABSOLUTE_MAX_EVENT_COUNT));
+                                LOWER_MAX_TOTAL_EVENT_COUNT,
+                                ABSOLUTE_MAX_TOTAL_EVENT_COUNT));
     }
 
     @Test

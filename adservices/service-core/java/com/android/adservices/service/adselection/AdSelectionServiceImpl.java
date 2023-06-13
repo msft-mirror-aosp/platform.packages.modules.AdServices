@@ -530,17 +530,21 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
-        int callingUid = getCallingUid(apiName);
+        final int callingUid = getCallingUid(apiName);
+        final int adCounterHistogramAbsoluteMaxTotalEventCount =
+                BinderFlagReader.readFlag(
+                        mFlags::getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount);
+        final int adCounterHistogramLowerMaxTotalEventCount =
+                BinderFlagReader.readFlag(
+                        mFlags::getFledgeAdCounterHistogramLowerMaxTotalEventCount);
 
         UpdateAdCounterHistogramWorker worker =
                 new UpdateAdCounterHistogramWorker(
                         new AdCounterHistogramUpdaterImpl(
                                 mAdSelectionEntryDao,
                                 mFrequencyCapDao,
-                                BinderFlagReader.readFlag(
-                                        mFlags::getFledgeAdCounterHistogramAbsoluteMaxEventCount),
-                                BinderFlagReader.readFlag(
-                                        mFlags::getFledgeAdCounterHistogramLowerMaxEventCount)),
+                                adCounterHistogramAbsoluteMaxTotalEventCount,
+                                adCounterHistogramLowerMaxTotalEventCount),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage
