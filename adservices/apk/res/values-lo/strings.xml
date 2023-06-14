@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ຣີເຊັດໂຄສະນາທີ່ແອັບແນະນຳບໍ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ຂໍ້ມູນການແນະນຳໂຄສະນາຈາກແອັບໃນລາຍການຂອງທ່ານຈະຖືກລຶບອອກ ແລະ ແອັບຈະແນະນຳໂຄສະນາໃໝ່ໃນອະນາຄົດ. ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງບາງຢ່າງຢູ່."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ຣີເຊັດຂໍ້ມູນແອັບແລ້ວ"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"ຫົວຂໍ້ໂຄສະນາເປີດຢູ່"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android ຈະເລີ່ມບັນທຶກຫົວຂໍ້ທີ່ໜ້າສົນໃຈ, ແຕ່ມັນອາດຈະໃຊ້ເວລາໄລຍະໜຶ່ງເພື່ອໃຫ້ຫົວຂໍ້ທຳອິດຂອງທ່ານປາກົດ."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"ປິດຫົວຂໍ້ໂຄສະນາບໍ?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"ຫົວຂໍ້ໂຄສະນານີ້ຈະຖືກລຶບ. Android ຈະບໍ່ບັນທຶກຫົວຂໍ້ທີ່ໜ້າສົນໃຈອີກຕໍ່ໄປ, ແຕ່ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງຢູ່."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ໂຄສະນາແນະນຳແອັບເປີດຢູ່"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ແອັບອາດຈະເລີ່ມການແນະນຳໂຄສະນາ. ທ່ານຈະເຫັນລາຍຊື່ຂອງແອັບເມື່ອພວກມັນເລີ່ມການແນະນຳໂຄສະນາ."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ປິດໂຄສະນາແນະນຳແອັບບໍ?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"ຂໍ້ມູນການແນະນຳໂຄສະນາທັງໝົດຈະຖືກລຶບ. ແອັບຈະບໍ່ສາມາດແນະນຳໂຄສະນາໄດ້ອີກຕໍ່ໄປ, ແຕ່ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງຢູ່."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"ການວັດແທກຜົນຂອງໂຄສະນາເປີດຢູ່"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ສາມາດແບ່ງປັນສະເພາະຂໍ້ມູນຈໍາກັດຫຼາຍກັບແອັບ ເພື່ອຊ່ວຍໃຫ້ແອັບສາມາດວັດແທກປະສິດທິພາບຂອງໂຄສະນາຂອງເຂົາເຈົ້າໄດ້."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"ປິດການວັດແທກຜົນຂອງໂຄສະນາບໍ?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"ລາຍງານການວັດແທກຜົນຂອງໂຄສະນາທີ່ຄ້າງຢູ່ຈະຖືກລຶບ ແລະ ຈະບໍ່ມີການສ້າງລາຍງານ ຫຼື ການແບ່ງປັນໃໝ່."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ຄວາມເປັນສ່ວນກ່ຽວກັບຕົວໂຄສະນາ"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ຫົວຂໍ້ໂຄສະນາ"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ໂຄສະນາທີ່ແອັບແນະນຳ"</string>

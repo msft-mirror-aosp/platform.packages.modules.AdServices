@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"I-reset ang mga ad na iminumungkahi ng mga app?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Ide-delete ang data ng suhestyon ng ad mula sa mga app na nasa listahan mo at magmumungkahi ang mga app ng mga bagong ad mula roon. Posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Na-reset ang data ng app"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Naka-on ang mga paksa ng ad"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Magsisimula ang Android na magtala ng mga paksang pinagkakainteresan, pero posibleng magtagal bago lumabas ang mga una mong paksa."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"I-off ang mga paksa ng ad?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Ide-delete ang listahang ito ng mga paksa. Hindi na magtatala ang Android ng mga paksang pinagkakainteresan, pero posible ka pa ring makakita ng mga kaugnay na ad."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Naka-on ang mga ad na iminumungkahi ng app"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Posibleng magsimulang magmungkahi ng mga ad ang mga app. Makakakita ka ng listahan ng mga app kapag nagsimula nang magmungkahi ng mga ad ang mga ito."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"I-off ang mga ad na iminumungkahi ng app?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Ide-delete ang lahat ng data ng suhestyon sa ad. Hindi na makakapagmungkahi ng mga ad ang mga app, pero posible ka pa ring makakita ng mga nauugnay na ad."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Naka-on ang pagsukat sa ad"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Puwede lang magbahagi ang Android ng napakalimitadong impormasyon sa mga app para makatulong sa mga app na sukatin ang performance ng mga ad ng mga ito."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"I-off ang pagsukat sa ad?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Made-delete ang lahat ng nakabinbing ulat at walang mabubuo o maibabahaging bagong ulat."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privacy sa ad"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Mga paksa ng ad"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Mga ad na iminumungkahi ng app"</string>

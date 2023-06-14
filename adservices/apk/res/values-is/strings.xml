@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Endurstilla auglýsingatillögur frá forritum?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Gögnum auglýsingatillagna frá forritum á listanum þínum verður eytt og forritin munu stinga upp á nýjum auglýsingum í framhaldinu. Þú gætir áfram séð tengdar auglýsingar."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Forritsgögn voru endurstillt"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Kveikt er á umfjöllunarefnum auglýsinga"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android mun byrja að skrá áhugasvið umfjöllunarefna en nokkur tími getur liðið áður en fyrstu umfjöllunarefnin birtast."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Slökkva á umfjöllunarefnum auglýsinga?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Þessum lista yfir umfjöllunarefni verður eytt. Android hættir að nota áhugasvið umfjöllunarefna en þú kannt að sjá viðeigandi auglýsingar áfram."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Kveikt er á auglýsingatillögum forrita"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Forrit kunna að byrja að koma með auglýsingatillögur. Þú sérð lista yfir forrit um leið og þau byrja að koma með auglýsingatillögur."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Slökkva á auglýsingatillögum forrita?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Öllum gögnum auglýsingatillaga verður eytt. Forrit hætta að geta komið með auglýsingatillögur en þú kannt áfram að sjá viðeigandi auglýsingar."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Kveikt er á auglýsingamælingum"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android getur aðeins deilt mjög takmörkuðum gögnum með forritum til að hjálpa þeim að mæla árangur auglýsinga."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Slökkva á auglýsingamælingum?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Öllum auglýsingamælingaskýrslum í bið verður eytt og engar nýjar skýrslur verða búnar til eða þeim deilt."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Persónuvernd auglýsinga"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Umfjöllunarefni auglýsinga"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Auglýsingatillögur forrita"</string>
