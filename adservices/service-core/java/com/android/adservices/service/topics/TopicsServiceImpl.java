@@ -150,13 +150,12 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                             return;
                         }
 
-                        // Record usage before returning the results.
+                        callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
+
                         if (topicsParam.shouldRecordObservation()) {
                             mTopicsWorker.recordUsage(
                                     topicsParam.getAppPackageName(), topicsParam.getSdkName());
                         }
-
-                        callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
                     } catch (RemoteException e) {
                         sLogger.e(e, "Unable to send result to the callback");
                         ErrorLogUtil.e(
