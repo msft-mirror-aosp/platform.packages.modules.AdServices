@@ -42,7 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 public class CustomAudienceDailyUpdateUriValidatorTest {
-    private static final int CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B =
+    public static final int CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxDailyUpdateUriSizeB();
     private final CustomAudienceDailyUpdateUriValidator mValidator =
             new CustomAudienceDailyUpdateUriValidator(CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B);

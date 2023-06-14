@@ -42,7 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 public class CustomAudienceBiddingLogicUriValidatorTest {
-    private static final int CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B =
+    public static final int CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxBiddingLogicUriSizeB();
     private final CustomAudienceBiddingLogicUriValidator mValidator =
             new CustomAudienceBiddingLogicUriValidator(
