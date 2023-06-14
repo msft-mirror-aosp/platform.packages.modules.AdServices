@@ -25,6 +25,7 @@
         android:process="com.android.sdksandboxclient.processname"
         android:label="@string/title_activity_main">
 
+        <profileable android:shell="true" android:enabled="true" />
         <activity
             android:name="com.android.sdksandboxclient.MainActivity"
             android:exported="true"
