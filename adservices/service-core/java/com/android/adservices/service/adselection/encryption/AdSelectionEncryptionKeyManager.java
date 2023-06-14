@@ -25,6 +25,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -33,6 +34,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 
+import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -89,6 +91,43 @@ public class AdSelectionEncryptionKeyManager {
     }
 
     /**
+     * Returns an ObliviousHttpKeyConfig consisting of the latest active key of keyType. Can return
+     * null if no active keys are available.
+     */
+    @Nullable
+    public ObliviousHttpKeyConfig getLatestActiveOhttpKeyConfigOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+                    int adSelectionEncryptionKeyType) {
+        AdSelectionEncryptionKey encryptionKey =
+                getLatestActiveKeyOfType(adSelectionEncryptionKeyType);
+        try {
+            return encryptionKey == null ? null : getOhttpKeyConfigForKey(encryptionKey);
+        } catch (InvalidKeySpecException e) {
+            // TODO(b/286839408): Delete all keys of given keyType if they can't be parsed into
+            // key config.
+            throw new IllegalStateException("Unable to parse the key into ObliviousHttpKeyConfig.");
+        }
+    }
+
+    /**
+     * Returns an ObliviousHttpKeyConfig consisting of the latest key of keyType. The key might be
+     * expired. Can return null if no keys are available.
+     */
+    @Nullable
+    public ObliviousHttpKeyConfig getLatestOhttpKeyConfigOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+                    int adSelectionEncryptionKeyType) {
+        AdSelectionEncryptionKey encryptionKey = getLatestKeyOfType(adSelectionEncryptionKeyType);
+        try {
+            return encryptionKey == null ? null : getOhttpKeyConfigForKey(encryptionKey);
+        } catch (InvalidKeySpecException e) {
+            // TODO(b/286839408): Delete all keys of given keyType if they can't be parsed into
+            // key config.
+            throw new IllegalStateException("Unable to parse the key into ObliviousHttpKeyConfig.");
+        }
+    }
+
+    /**
      * Returns the latest active key of keyType JOIN. Can return null if no active keys are
      * available.
      */
@@ -113,6 +152,7 @@ public class AdSelectionEncryptionKeyManager {
      * be useful if no active keys are available. If null is returned, then no keys are available in
      * the db.
      */
+    @Nullable
     public AdSelectionEncryptionKey getLatestKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
                     int adSelectionEncryptionKeyType) {
@@ -221,6 +261,21 @@ public class AdSelectionEncryptionKeyManager {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
             default:
                 return 0;
+        }
+    }
+
+    private ObliviousHttpKeyConfig getOhttpKeyConfigForKey(AdSelectionEncryptionKey encryptionKey)
+            throws InvalidKeySpecException {
+        Objects.requireNonNull(encryptionKey);
+        switch (encryptionKey.keyType()) {
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
+                return mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(encryptionKey);
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
+                return mJoinEncryptionKeyParser.getObliviousHttpKeyConfig(encryptionKey);
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
+            default:
+                throw new IllegalArgumentException(
+                        "Encryption Key of given type is not supported.");
         }
     }
 }

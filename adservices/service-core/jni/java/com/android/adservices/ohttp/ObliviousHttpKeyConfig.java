@@ -40,14 +40,14 @@ public abstract class ObliviousHttpKeyConfig {
     private static String sOhttpReqLabel = "message/bhttp request";
 
     /** Returns the Key Identifier that tells the server which public key we are using */
-    public abstract int keyid();
+    public abstract int keyId();
 
     /**
      * Returns the Key Encapsulation Mechanism algorithm Identifier
      *
      * <p>https://www.rfc-editor.org/rfc/rfc9180#name-key-encapsulation-mechanism
      */
-    public abstract int kemid();
+    public abstract int kemId();
 
     /**
      * Returns the KDF Id from the first Symmetric Algorithm specified in the keyConfig
@@ -127,7 +127,13 @@ public abstract class ObliviousHttpKeyConfig {
 
         int aeadId = writeUptoTwoBytesIntoInteger(keyConfig, currentIndex, sAeadIdSizeInBytes);
 
-        return new AutoValue_ObliviousHttpKeyConfig(keyId, kemId, kdfId, aeadId, publicKey);
+        return builder()
+                .setKeyId(keyId)
+                .setKemId(kemId)
+                .setKdfId(kdfId)
+                .setAeadId(aeadId)
+                .setPublicKey(publicKey)
+                .build();
     }
 
     /**
@@ -144,11 +150,11 @@ public abstract class ObliviousHttpKeyConfig {
         byte[] header = new byte[7];
 
         // read one byte from integer keyId
-        header[0] = (byte) (keyid() & 0xFF);
+        header[0] = (byte) (keyId() & 0xFF);
 
         // read two bytes from integer kemId
-        header[1] = (byte) ((kemid() >> 8) & 0xFF);
-        header[2] = (byte) (kemid() & 0xFF);
+        header[1] = (byte) ((kemId() >> 8) & 0xFF);
+        header[2] = (byte) (kemId() & 0xFF);
 
         // read two bytes from integer kdfId
         header[3] = (byte) ((kdfId() >> 8) & 0xFF);
@@ -186,10 +192,39 @@ public abstract class ObliviousHttpKeyConfig {
         return Arrays.copyOf(publicKey(), publicKey().length);
     }
 
+
     /** Serialize the ObliviousHttpKeyConfig to bytes. */
     public byte[] serializeKeyConfigToBytes() {
         // TODO(b/286277223): Replace the placeholder implementation with serialize implementation.
         return new byte[1];
+    }
+
+    /** Builder for ObliviousHttpKeyConfig. */
+    public static ObliviousHttpKeyConfig.Builder builder() {
+        return new AutoValue_ObliviousHttpKeyConfig.Builder();
+    }
+
+    /** Builder for {@link com.android.adservices.ohttp.ObliviousHttpKeyConfig}. */
+    @AutoValue.Builder
+    public abstract static class Builder {
+
+        /** Sets key id. */
+        public abstract Builder setKeyId(int keyId);
+
+        /** Sets KEM id. */
+        public abstract Builder setKemId(int kemId);
+
+        /** Sets KDF id. */
+        public abstract Builder setKdfId(int kdfId);
+
+        /** Sets AEAD id. */
+        public abstract Builder setAeadId(int aeadId);
+
+        /** Sets public key. */
+        public abstract Builder setPublicKey(byte[] publicKey);
+
+        /** Builds the ObliviousHttpKeyConfig object. */
+        public abstract ObliviousHttpKeyConfig build();
     }
 
     private static int writeUptoTwoBytesIntoInteger(

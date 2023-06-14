@@ -875,6 +875,24 @@ public interface Flags {
         return AD_SELECTION_DATA_ENCRYPTION_KEY_MAX_AGE_SECONDS;
     }
 
+    int AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID = 0x0001;
+
+    default int getAdSelectionDataAuctionEncryptionAlgorithmKdfId() {
+        return AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID;
+    }
+
+    int AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID = 0x0020;
+
+    default int getAdSelectionDataAuctionEncryptionAlgorithmKemId() {
+        return AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID;
+    }
+
+    int AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID = 0x0002;
+
+    default int getAdSelectionDataAuctionEncryptionAlgorithmAeadId() {
+        return AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */

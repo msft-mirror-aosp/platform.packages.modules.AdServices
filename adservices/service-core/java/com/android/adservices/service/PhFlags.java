@@ -264,6 +264,13 @@ public final class PhFlags implements Flags {
             "ad_selection_data_auction_key_sharding";
     static final String KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI =
             "ad_selection_data_join_key_fetch_uri";
+    static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID =
+            "ad_selection_data_auction_encryption_algorithm_kem_id";
+    static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID =
+            "ad_selection_data_auction_encryption_algorithm_kdf_id";
+    static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID =
+            "ad_selection_data_auction_encryption_algorithm_aead_id";
+
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -2086,6 +2093,29 @@ public final class PhFlags implements Flags {
                 AD_SELECTION_DATA_AUCTION_KEY_SHARDING);
     }
 
+    public int getAdSelectionDataAuctionEncryptionAlgorithmKemId() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID,
+                AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID);
+    }
+
+    @Override
+    public int getAdSelectionDataAuctionEncryptionAlgorithmKdfId() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID,
+                AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID);
+    }
+
+    @Override
+    public int getAdSelectionDataAuctionEncryptionAlgorithmAeadId() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID,
+                AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID);
+    }
+
     @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
@@ -3138,6 +3168,21 @@ public final class PhFlags implements Flags {
                         + KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING
                         + " = "
                         + getAdSelectionDataAuctionKeySharding());
+        writer.println(
+                "\t"
+                        + KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID
+                        + " = "
+                        + getAdSelectionDataAuctionEncryptionAlgorithmKemId());
+        writer.println(
+                "\t"
+                        + KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID
+                        + " = "
+                        + getAdSelectionDataAuctionEncryptionAlgorithmKdfId());
+        writer.println(
+                "\t"
+                        + KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID
+                        + " = "
+                        + getAdSelectionDataAuctionEncryptionAlgorithmAeadId());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
