@@ -15,7 +15,7 @@ syntax = "proto3";
 
 package cobalt;
 
-import "cobalt/proto/observation_batch.proto";
+import "observation_batch.proto";
 
 option java_multiple_files = true;
 option java_package = "com.google.cobalt";
