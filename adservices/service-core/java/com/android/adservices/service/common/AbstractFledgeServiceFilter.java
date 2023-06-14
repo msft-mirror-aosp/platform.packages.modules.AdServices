@@ -94,6 +94,20 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
+     * Asserts caller has user consent to use FLEDGE APIs in the calling app and persists consent
+     * for.
+     *
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     */
+    protected void assertAndPersistCallerHasUserConsentForApp(String callerPackageName)
+            throws ConsentManager.RevokedConsentException {
+        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName)) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+    }
+
+    /**
      * Asserts that the caller has the appropriate foreground status.
      *
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check
