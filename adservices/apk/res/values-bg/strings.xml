@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Да се нулират ли предложените от приложенията реклами?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Данните за предложения за реклами от приложенията в списъка ви ще бъдат изтрити и от сега нататък приложенията ще предлагат нови реклами. Възможно е да продължите да виждате някои свързани реклами."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Данните от приложенията бяха нулирани"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Рекламните теми са включени"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android ще започне да отбелязва теми, които ви интересуват, но показването на първите няколко може да отнеме известно време."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Искате ли да изключите рекламните теми?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Този списък с теми ще бъде изтрит. Android повече няма да отбелязва теми, които ви интересуват, но е възможно да продължите да виждате уместни реклами."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Функцията за предлагани от приложенията реклами е включена"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Приложенията може да започнат да предлагат реклами. В такъв случай ще видите списък с приложения."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Искате ли да изключите функцията за предлагани от приложенията реклами?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Всички данни за предложени реклами ще бъдат изтрити. Приложенията повече няма да правят предложения, но е възможно да продължите да виждате уместни реклами."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Измерването на рекламите е включено"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android може да споделя само много ограничена информация с приложенията, за да им помага да измерват ефективността на рекламите си."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Искате ли да изключите измерването на рекламите?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Всички предстоящи отчети за измерването на рекламите ще бъдат изтрити и няма да се генерират и споделят нови отчети."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Поверителност при рекламите"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Рекламни теми"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Предложени от приложенията реклами"</string>
