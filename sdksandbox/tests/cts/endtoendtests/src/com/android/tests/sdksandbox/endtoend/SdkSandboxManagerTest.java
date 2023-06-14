@@ -631,6 +631,24 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testSandboxProcessShouldBeRunningToHostTheSandboxActivity() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            SecurityException exception =
+                                    assertThrows(
+                                            SecurityException.class,
+                                            () ->
+                                                    mSdkSandboxManager.startSdkSandboxActivity(
+                                                            clientActivity, new Binder()));
+                            assertThat(exception.getMessage())
+                                    .contains("There is no sandbox process running");
+                        });
+    }
+
+    @Test
     public void testStartSdkSandboxedActivities() {
         assumeTrue(SdkLevel.isAtLeastU());
 
