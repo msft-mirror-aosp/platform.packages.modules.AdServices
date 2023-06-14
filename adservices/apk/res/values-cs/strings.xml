@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Resetovat reklamy navrhované aplikacemi?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data o návrzích reklam z aplikací na vašem seznamu budou smazána a aplikace budou v budoucnu navrhovat nové reklamy. Související reklamy se vám však mohou zobrazovat i nadále."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Data aplikací byla resetována"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Témata reklam jsou zapnutá"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android začne zaznamenávat témata zájmu, ale zobrazení prvních témat může chvíli trvat."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vypnout témata reklam?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Tento seznam témat bude smazán. Android už nebude zaznamenávat témata zájmu, ale stále se vám mohou zobrazovat relevantní reklamy."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Reklamy navrhované aplikací jsou zapnuté"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplikace mohou začít navrhovat reklamy. Jakmile začnou, zobrazí se vám seznam aplikací."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vypnout reklamy navrhované aplikací?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Veškerá data o návrzích reklam budou smazána. Aplikace už nebudou moci navrhovat reklamy, ale stále se vám mohou zobrazovat relevantní reklamy."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Měření reklam je zapnuto"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Systém Android může s aplikacemi sdílet jen velmi omezené informace, aby aplikacím pomohl měřit výkon reklam."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vypnout měření reklam?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Všechny rozpracované přehledy měření reklam budou smazány a již nebudou vygenerovány ani sdíleny žádné nové přehledy."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Ochrana soukromí v reklamách"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Témata reklam"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamy navrhované aplikacemi"</string>
