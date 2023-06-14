@@ -16,27 +16,29 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library {
-    name: "adservices-cobalt",
+filegroup {
+    name: "adservices-cobalt-proto",
     srcs: [
-        "java/**/*.java",
+        "*.proto",
     ],
-    plugins: [
-        "androidx.room_room-compiler-plugin",
-        "auto_value_plugin",
-        "auto_annotation_plugin"
+}
+
+// Generate the Proto builders, etc.
+java_library {
+    name: "adservices-cobalt-proto-lite",
+    sdk_version: "core_current",
+    proto: {
+        type: "lite",
+        include_dirs: [
+            "external/protobuf/src",
+            "external/protobuf/java"
+        ],
+        canonical_path_from_root: false,
+    },
+    srcs: [
+        ":adservices-cobalt-proto",
+        ":libprotobuf-internal-protos",
     ],
-    javacflags: [
-        "-Aroom.schemaLocation=packages/modules/AdServices/adservices/libraries/cobalt/schemas",
-    ],
-    libs: [
-        "androidx.room_room-runtime",
-        "auto_value_annotations"
-    ],
-    static_libs: [
-        "adservices-cobalt-proto-lite",
-        "androidx.annotation_annotation",
-        "guava",
-        "libprotobuf-java-lite",
-    ],
+    static_libs: ["libprotobuf-java-lite"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
 }
