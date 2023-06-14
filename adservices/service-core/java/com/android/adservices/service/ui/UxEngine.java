@@ -35,6 +35,7 @@ public class UxEngine {
     private final ConsentManager mConsentManager;
     private final UxStatesManager mUxStatesManager;
 
+    // TO-DO(b/287060615): Clean up dependencies between UX classes.
     UxEngine(ConsentManager consentManager, UxStatesManager uxStatesManager) {
         mConsentManager = consentManager;
         mUxStatesManager = uxStatesManager;
@@ -45,7 +46,8 @@ public class UxEngine {
      * manager.
      */
     public static UxEngine getInstance(Context context) {
-        return new UxEngine(ConsentManager.getInstance(context), UxStatesManager.getInstance());
+        return new UxEngine(
+                ConsentManager.getInstance(context), UxStatesManager.getInstance(context));
     }
 
     /**
