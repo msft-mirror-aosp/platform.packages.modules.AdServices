@@ -24,6 +24,8 @@ import androidx.room.PrimaryKey;
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
 
+import java.time.Instant;
+
 /** Stores values used for features as string (key, value) pairs. */
 @AutoValue
 @CopyAnnotations
@@ -55,5 +57,13 @@ abstract class GlobalValueEntity {
     @NonNull
     static GlobalValueEntity create(Key key, String value) {
         return new AutoValue_GlobalValueEntity(key, value);
+    }
+
+    static Instant timeFromDbString(String time) {
+        return Instant.parse(time);
+    }
+
+    static String timeToDbString(Instant time) {
+        return time.toString();
     }
 }
