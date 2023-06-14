@@ -35,8 +35,8 @@ public class ObliviousHttpKeyConfigTest {
 
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
 
-        Assert.assertEquals(keyConfig.keyid(), 0X01);
-        Assert.assertEquals(keyConfig.kemid(), 0X0020);
+        Assert.assertEquals(keyConfig.keyId(), 0X01);
+        Assert.assertEquals(keyConfig.kemId(), 0X0020);
         String publicKeyHex = BaseEncoding.base16().lowerCase().encode(keyConfig.getPublicKey());
         Assert.assertEquals(
                 publicKeyHex, "31e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155");

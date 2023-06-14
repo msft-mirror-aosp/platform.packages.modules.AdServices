@@ -29,14 +29,18 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
+
+import com.google.common.io.BaseEncoding;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 public class JoinEncryptionKeyParserTest {
@@ -113,6 +117,43 @@ public class JoinEncryptionKeyParserTest {
         assertThat(keys.get(0).getEncryptionKeyType())
                 .isEqualTo(EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN);
         assertThat(keys.get(0).getExpiryTtlSeconds()).isEqualTo(DEFAULT_MAX_AGE_SECONDS);
+    }
+
+    @Test
+    public void getObliviousHttpKeyConfig_wrongFormat_throwsException() {
+        assertThrows(
+                InvalidKeySpecException.class,
+                () ->
+                        mJoinEncryptionKeyParser.getObliviousHttpKeyConfig(
+                                AdSelectionEncryptionKey.builder()
+                                        .setKeyIdentifier("key_id")
+                                        .setKeyType(
+                                                AdSelectionEncryptionKey
+                                                        .AdSelectionEncryptionKeyType.JOIN)
+                                        .setPublicKey("public_key".getBytes(StandardCharsets.UTF_8))
+                                        .build()));
+    }
+
+    @Test
+    public void getObliviousHttpKeyConfig_returnsKeyConfig() throws Exception {
+        String keyConfigHex =
+                "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
+                        + "00080001000100010003";
+        byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
+        AdSelectionEncryptionKey key =
+                AdSelectionEncryptionKey.builder()
+                        .setKeyIdentifier("1")
+                        .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN)
+                        .setPublicKey(bytes)
+                        .build();
+
+        ObliviousHttpKeyConfig keyConfig = mJoinEncryptionKeyParser.getObliviousHttpKeyConfig(key);
+        assertThat(keyConfig.keyId()).isEqualTo(0x01);
+        assertThat(BaseEncoding.base16().lowerCase().encode(keyConfig.getPublicKey()))
+                .isEqualTo("31e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155");
+        assertThat(keyConfig.kemId()).isEqualTo(0x0020);
+        assertThat(keyConfig.kdfId()).isEqualTo(0x0001);
+        assertThat(keyConfig.aeadId()).isEqualTo(0x0001);
     }
 
     private static class JoinEncryptionKeyParserTestFlags implements Flags {

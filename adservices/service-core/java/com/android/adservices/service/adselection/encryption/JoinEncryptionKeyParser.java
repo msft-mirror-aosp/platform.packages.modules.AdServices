@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection.encryption;
 
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
@@ -25,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.charset.StandardCharsets;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 /** Class to parse JOIN encryption key. */
@@ -92,6 +94,18 @@ public class JoinEncryptionKeyParser implements EncryptionKeyParser {
                 .setExpiryTtlSeconds(mFlags.getAdSelectionDataEncryptionKeyMaxAgeSeconds())
                 .build();
 
+        // TODO(b/286839408): Validate that the built key can be parsed into ObliviousHttpKeyConfig.
         return ImmutableList.of(keyBuilder.build());
+    }
+
+    @Override
+    public ObliviousHttpKeyConfig getObliviousHttpKeyConfig(AdSelectionEncryptionKey key)
+            throws InvalidKeySpecException {
+        Preconditions.checkNotNull(key, "AdSelectionEncryptionKey is null.");
+        Preconditions.checkArgument(
+                key.keyType() == AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
+                "AdSelectionEncryptionKey is not of keyType JOIN - " + key);
+
+        return ObliviousHttpKeyConfig.fromSerializedKeyConfig(key.publicKey());
     }
 }

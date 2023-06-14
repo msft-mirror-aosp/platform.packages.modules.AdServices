@@ -43,7 +43,7 @@ public abstract class AdSelectionEncryptionKey {
     public abstract int keyType();
     /** Key identifier used to uniquely identify key of this key type. */
     public abstract String keyIdentifier();
-    /** The public key of the asymmetric key pair as unencoded bytes. */
+    /** The public key of the asymmetric key pair as bytes sent by the key server. */
     @SuppressWarnings("mutable")
     public abstract byte[] publicKey();
 

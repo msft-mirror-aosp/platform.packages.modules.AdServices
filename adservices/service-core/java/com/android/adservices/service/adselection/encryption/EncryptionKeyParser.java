@@ -17,8 +17,10 @@
 package com.android.adservices.service.adselection.encryption;
 
 import com.android.adservices.data.adselection.DBEncryptionKey;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 /** Interface to parse encryption key. */
@@ -29,4 +31,11 @@ public interface EncryptionKeyParser {
 
     /** Parses the HTTP response from key fetch server into the storage encryption key. */
     List<DBEncryptionKey> getDbEncryptionKeys(AdServicesHttpClientResponse response);
+
+    /**
+     * Parses the AdSelectionEncryptionKey into {@link
+     * com.android.adservices.ohttp.ObliviousHttpKeyConfig}.
+     */
+    ObliviousHttpKeyConfig getObliviousHttpKeyConfig(AdSelectionEncryptionKey key)
+            throws InvalidKeySpecException;
 }
