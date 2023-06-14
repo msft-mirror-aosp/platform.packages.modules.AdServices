@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Vill du återställa annonsförslag från appar?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"All data om annonsförslag från apparna på listan raderas och apparna föreslår nya annonser från och med nu. Du kanske fortfarande ser relaterade annonser."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Appdata har återställts"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Annonsämnen är aktiverat"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android börjar identifiera ämnen du är intresserad av, men det kan ta ett tag innan de första ämnena visas."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vill du inaktivera annonsämnen?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Listan över ämnen raderas. Android identifierar inte ämnen du är intresserad av längre, men relevanta annonser kanske fortsätter att visas."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Föreslagna annonser i appar är aktiverat"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Du kan få förslag på annonser i appar. Du kan se en lista över dessa appar när annonserna börjar föreslås."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vill du inaktivera föreslagna annonser i appar?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"All data för annonsförslag raderas. Du får inte längre förslag på annonser i apparna, men relevanta annonser kanske fortsätter att visas."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Annonsmätning är aktiverat"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android delar endast mycket begränsad information med apparna så att annonsprestandan kan mätas för apparna."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vill du inaktivera annonsmätning?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Alla väntande annonsmätningsrapporter raderas och inga nya rapporter skapas eller delas."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Annonsintegritet"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Annonsämnen"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Föreslagna annonser i appar"</string>

@@ -136,7 +136,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"رازداری سینڈ باکس"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"‏Android کے ذریعے تخمینہ شدہ دلچسپیاں"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"دلچسپیوں کا تخمینہ لگانے والی ایپس"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Ad measurement"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"اشتہار کی اثرپذیری کی پیمائش"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"‏اپنے اشتہارات کی اثرپذیری کی پیمائش کرنے کیلئے، ایپس رازداری سینڈ باکس کا استعمال کر سکتی ہیں۔ ایسا کرنے کیلئے، مشتہرین Android کی مدد سے ان کے اشتہارات اور ایپس کے درمیان آپ کے تعاملات سے متعلق ڈیٹا کو عارضی طور پر محفوظ کر سکتے ہیں۔ آپ کتنا ڈیٹا محفوظ کر سکتے ہیں، یہ امر محدود کردہ ہے اور اسے باقاعدگی سے حذف کیا جائے گا۔\n\nآپ رازداری سینڈ باکس آف کر کے کسی بھی وقت اس ڈیٹا کو حذف کر سکتے ہیں۔"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"‏آپ کی استعمال کی جانے والی ایپس کی بنیاد پر، Android وقتاً فوقتاً آپ کی سرفہرست دلچسپیوں کا تخمینہ لگاتا ہے۔ ایپس Android سے ان دلچسپیوں کا استعمال کرتے ہوئے آپ کو متعلقہ اشتہارات دکھانے کیلئے کہہ سکتی ہیں۔\n\nاگر آپ کسی دلچسپی کو مسدود کریں گے تو اسے اس وقت تک دوبارہ فہرست میں شامل نہیں کیا جائے گا جب تک آپ اسے غیر مسدود نہ کر دیں۔ آپ کو اب بھی کچھ متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"مسدود کریں"</string>
@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ایپس کے ذریعے تجویز کردہ اشتہارات کو ری سیٹ کریں؟"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"آپ کی فہرست میں موجود ایپس سے اشتہار کی تجویز کا ڈیٹا حذف کر دیا جائے گا اور ایپس مستقبل میں نئے اشتہارات تجویز کریں گی۔ آپ اب بھی کچھ متعلقہ اشتہارات دیکھ سکتے ہیں۔"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ایپ کے ڈیٹا کو ری سیٹ کر دیا گیا"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"\'اشتہار کے عنوانات\' آن ہے"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"‏Android دلچسپی کے عنوانات کو نوٹ کرنا شروع کرے گا، لیکن آپ کے ابتدائی عنوانات کو دکھائی دینے میں کچھ وقت لگ سکتا ہے۔"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"\'اشتہار کے عنوانات\' آف کریں؟"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"‏عنوانات کی یہ فہرست حذف ہو جائے گی۔ Android دلچسپی کے عنوانات کو مزید نوٹ نہیں کرے گا، لیکن اس کے باوجود آپ کو متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"\'ایپس کے تجویز کردہ اشتہارات\' آن ہے"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ایپس اشتہارات تجویز کرنا شروع کر سکتی ہیں۔ ایپس کی جانب سے اشتہارات تجویز کرنا شروع کرنے کے بعد، آپ کو ان کی فہرست دکھائی دے گی۔"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"\'ایپس کے تجویز کردہ اشتہارات\' آف کریں؟"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"اشتہار کی تجویز کا تمام ڈیٹا حذف ہو جائے گا۔ ایپس اشتہارات مزید تجویز نہیں کر پائیں گی، لیکن اس کے باوجود آپ کو متعلقہ اشتہارات دکھائی دے سکتے ہیں۔"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"اشتہار کی پیمائش آن ہے"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"‏اپنے اشتہارات کی کارکردگی کی پیمائش کرنے میں ایپس کی مدد کرنے کیلئے، ایپس کے ساتھ Android صرف بہت ہی محدود معلومات کا اشتراک کر سکتا ہے۔"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"اشتہار کی پیمائش آف کریں؟"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"اشتہار کی پیمائش کی تمام زیر التواء رپورٹس حذف ہو جائیں گی اور کوئی نئی رپورٹ جنریٹ نہیں ہوگی یا کسی نئی رپورٹ کا اشتراک نہیں کیا جائے گا۔"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"اشتہارات کی رازداری"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"اشتہار کے موضوعات"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ایپس کے تجویز کردہ اشتہارات"</string>

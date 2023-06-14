@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ஆப்ஸ் பரிந்துரைத்த விளம்பரங்களை ரீசெட் செய்யவா?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"உங்கள் பட்டியலில் உள்ள ஆப்ஸின் விளம்பரப் பரிந்துரைத் தரவு நீக்கப்படும், புதிய விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கும். எனினும், தொடர்புடைய சில விளம்பரங்களை நீங்கள் தொடர்ந்து பார்க்கக்கூடும்."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ஆப்ஸ் தரவு ரீசெட் செய்யப்பட்டது"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"\'விளம்பரத் தலைப்புகள்\' இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"ஆர்வமுள்ள தலைப்புகளை Android குறித்துக்கொள்ளத் தொடங்கும். ஆனால் உங்கள் முதல் சில தலைப்புகள் தோன்றுவதற்குச் சிறிது நேரம் ஆகலாம்."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"\'விளம்பரத் தலைப்புகளை\' முடக்கவா?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"இந்தத் தலைப்புகளின் பட்டியல் நீக்கப்படும். ஆர்வமுள்ள தலைப்புகளை Android இனி குறித்துக்கொள்ளாது. எனினும் தொடர்புடைய விளம்பரங்கள் உங்களுக்குக் காட்டப்படலாம்."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"\'ஆப்ஸால் பரிந்துரைக்கப்படும் விளம்பரங்கள்\' இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கத் தொடங்கலாம். விளம்பரங்களை ஆப்ஸ் பரிந்துரைக்கத் தொடங்கியதும் ஆப்ஸின் பட்டியலை நீங்கள் பார்ப்பீர்கள்."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"\'ஆப்ஸால் பரிந்துரைக்கப்படும் விளம்பரங்களை\' முடக்கவா?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"விளம்பரப் பரிந்துரை தொடர்பான தரவு அனைத்தும் நீக்கப்படும். ஆப்ஸால் இனி விளம்பரங்களைப் பரிந்துரைக்க முடியாது. எனினும் தொடர்புடைய விளம்பரங்கள் உங்களுக்குக் காட்டப்படலாம்."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"விளம்பரம் தொடர்பான அளவீடு இயக்கப்பட்டுள்ளது"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"ஆப்ஸ் அதன் விளம்பரங்களின் செயல்திறனை அளவிட உதவ, மிகக் குறைவான தகவல்களை மட்டுமே ஆப்ஸுடன் Android பகிர முடியும்."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"விளம்பரம் தொடர்பான அளவீட்டை முடக்கவா?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"நிலுவையிலுள்ள \'விளம்பரம் தொடர்பான அளவீட்டு அறிக்கைகள்\' அனைத்தும் நீக்கப்படும். மேலும் புதிதாக எந்த அறிக்கைகளும் உருவாக்கப்படாது/பகிரப்படாது."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"விளம்பரத் தனியுரிமை"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"விளம்பரத் தலைப்புகள்"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ஆப்ஸ் பரிந்துரைக்கும் விளம்பரங்கள்"</string>
