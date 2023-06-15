@@ -54,7 +54,9 @@ public class UxEngine {
      * Starts the UxEgine. In which the general UX flow would be carried out as the engine
      * orchestrates tasks and events between vairous UX components.
      */
-    public void start(AdServicesStates adServicesStates) {}
+    public void start(AdServicesStates adServicesStates) {
+        mUxStatesManager.persistAdServicesStates(adServicesStates);
+    }
 
     /* Select the first eligible UX based on UX states, falls back to UNSUPPORTED_UX. */
     PrivacySandboxUxCollection getEligibleUxCollection() {

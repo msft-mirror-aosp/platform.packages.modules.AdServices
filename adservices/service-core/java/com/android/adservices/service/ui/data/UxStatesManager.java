@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.ui.data;
 
+import android.adservices.common.AdServicesStates;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -65,6 +66,15 @@ public class UxStatesManager {
             }
         }
         return sUxStatesManager;
+    }
+
+    /** Saves the AdServices states into data stores. */
+    public void persistAdServicesStates(AdServicesStates adServicesStates) {
+        // Only a subset of states should be persisted.
+        mConsentManager.setAdIdEnabled(adServicesStates.isAdIdEnabled());
+        mConsentManager.setU18Account(adServicesStates.isU18Account());
+        mConsentManager.setAdultAccount(adServicesStates.isAdultAccount());
+        mConsentManager.setEntryPointEnabled(adServicesStates.isPrivacySandboxUiEnabled());
     }
 
     /** Return the sessionized UX flags. */
