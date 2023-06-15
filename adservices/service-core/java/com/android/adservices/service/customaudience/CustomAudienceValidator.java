@@ -60,13 +60,17 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
     @NonNull private final CustomAudienceFieldSizeValidator mCustomAudienceFieldSizeValidator;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
 
+    // Process-stable flag values
+    private final int mCustomAudienceMaxTrustedBiddingDataSizeB;
+
     @VisibleForTesting
     public CustomAudienceValidator(
             @NonNull CustomAudienceTimestampValidator customAudienceTimestampValidator,
             @NonNull AdTechIdentifierValidator buyerValidator,
             @NonNull JsonValidator userBiddingSignalsValidator,
             @NonNull CustomAudienceFieldSizeValidator customAudienceFieldSizeValidator,
-            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator) {
+            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            int customAudienceMaxTrustedBiddingDataSizeB) {
         Objects.requireNonNull(customAudienceTimestampValidator);
         Objects.requireNonNull(buyerValidator);
         Objects.requireNonNull(userBiddingSignalsValidator);
@@ -78,6 +82,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
         mUserBiddingSignalsValidator = userBiddingSignalsValidator;
         mCustomAudienceFieldSizeValidator = customAudienceFieldSizeValidator;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mCustomAudienceMaxTrustedBiddingDataSizeB = customAudienceMaxTrustedBiddingDataSizeB;
     }
 
     @VisibleForTesting
@@ -91,7 +96,8 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                         CUSTOM_AUDIENCE_CLASS_NAME, ValidatorUtil.AD_TECH_ROLE_BUYER),
                 new JsonValidator(CUSTOM_AUDIENCE_CLASS_NAME, USER_BIDDING_SIGNALS_FIELD_NAME),
                 new CustomAudienceFieldSizeValidator(flags),
-                frequencyCapAdDataValidator);
+                frequencyCapAdDataValidator,
+                flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB());
     }
 
     /**
@@ -160,7 +166,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                     customAudience.getUserBiddingSignals().toString(), violations);
         }
         if (customAudience.getTrustedBiddingData() != null) {
-            new TrustedBiddingDataValidator(buyer)
+            new TrustedBiddingDataValidator(buyer, mCustomAudienceMaxTrustedBiddingDataSizeB)
                     .addValidation(customAudience.getTrustedBiddingData(), violations);
         }
         AdDataValidator adDataValidator =

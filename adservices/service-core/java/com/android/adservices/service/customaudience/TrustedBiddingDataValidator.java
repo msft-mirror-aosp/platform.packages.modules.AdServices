@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.customaudience.CustomAudienceFieldSizeValidator.VIOLATION_TRUSTED_BIDDING_DATA_TOO_BIG;
+
 import android.adservices.customaudience.TrustedBiddingData;
 import android.annotation.NonNull;
 
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.common.ValidatorUtil;
@@ -26,33 +29,42 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableCollection;
 
+import java.util.Locale;
 import java.util.Objects;
 
-/** Validator for a trusted bidding data. */
+/** Validator for {@link TrustedBiddingData}. */
 public class TrustedBiddingDataValidator implements Validator<TrustedBiddingData> {
     @VisibleForTesting
     static final String TRUSTED_BIDDING_DATA_CLASS_NAME = TrustedBiddingData.class.getName();
 
     public static final String TRUSTED_BIDDING_URI_FIELD_NAME = "trusted bidding URI";
 
-    @NonNull private final AdTechUriValidator mTrustedBiddingUriValidator;
+    @NonNull private final AdTechUriValidator mAdTechUriValidator;
+    private final int mCustomAudienceMaxTrustedBiddingDataSizeB;
 
-    public TrustedBiddingDataValidator(@NonNull String buyer) {
+    public TrustedBiddingDataValidator(
+            @NonNull String buyer, int customAudienceMaxTrustedBiddingDataSizeB) {
         Objects.requireNonNull(buyer);
 
-        mTrustedBiddingUriValidator =
+        mAdTechUriValidator =
                 new AdTechUriValidator(
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         buyer,
                         TRUSTED_BIDDING_DATA_CLASS_NAME,
                         TRUSTED_BIDDING_URI_FIELD_NAME);
+        mCustomAudienceMaxTrustedBiddingDataSizeB = customAudienceMaxTrustedBiddingDataSizeB;
     }
 
     /**
-     * Validate a trusted bidding data, the trusted bidding uri should be in buyer domain and should
-     * be a valid uri.
+     * Validates the {@link TrustedBiddingData} as follows:
      *
-     * @param trustedBiddingData the trusted bidding data to be validated.
+     * <ul>
+     *   <li>{@link TrustedBiddingData#getTrustedBiddingUri()} is well-formed.
+     *   <li>Size is less than {@link #mCustomAudienceMaxTrustedBiddingDataSizeB}
+     * </ul>
+     *
+     * @param trustedBiddingData the {@link TrustedBiddingData} instance to be validated.
+     * @param violations the collection of violations to add to.
      */
     @Override
     public void addValidation(
@@ -61,7 +73,19 @@ public class TrustedBiddingDataValidator implements Validator<TrustedBiddingData
         Objects.requireNonNull(trustedBiddingData);
         Objects.requireNonNull(violations);
 
-        mTrustedBiddingUriValidator.addValidation(
-                trustedBiddingData.getTrustedBiddingUri(), violations);
+        // Validate trustedBiddingUri is well-formed.
+        mAdTechUriValidator.addValidation(trustedBiddingData.getTrustedBiddingUri(), violations);
+
+        // Validate the size is within limits.
+        int trustedBiddingDataSize =
+                DBTrustedBiddingData.fromServiceObject(trustedBiddingData).size();
+        if (trustedBiddingDataSize > mCustomAudienceMaxTrustedBiddingDataSizeB) {
+            violations.add(
+                    String.format(
+                            Locale.ENGLISH,
+                            VIOLATION_TRUSTED_BIDDING_DATA_TOO_BIG,
+                            mCustomAudienceMaxTrustedBiddingDataSizeB,
+                            trustedBiddingDataSize));
+        }
     }
 }
