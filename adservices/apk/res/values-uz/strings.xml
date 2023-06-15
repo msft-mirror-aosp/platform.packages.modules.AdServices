@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Ilovalar taklif qiladigan reklama axboroti tiklansinmi?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Roʻyxatingizdagi ilovalardan reklama taklifi maʼlumotlari oʻchirib tashlanadi va ilovalar kelgusida yangi reklamalarni taklif qiladi. Aloqador ayrim reklamalar chiqib turishi mumkin."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Ilova maʼlumotlari tiklandi"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Reklama mavzulari yoniq"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android qiziqish mavzularini qayd qilishni boshlaydi, lekin birinchi mavzularingiz chiqishi uchun biroz vaqt ketishi mumkin."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Reklama mavzulari faolsizlantirilsinmi?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Mavzularning bu roʻyxati oʻchirib tashlanadi. Endi Android hech qanday qiziqish mavzularini qayd qilmaydi, lekin sizga mos reklamalar chiqishi mumkin."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Ilova taklif qiladigan reklamalar yoniq"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Ilovalar reklamalar taklif qilishni boshlashi mumkin. Reklama taklif qilishni boshlagandan keyin ilovalar roʻyxatini koʻrishingiz mumkin."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Ilova taklif qiladigan reklamalar faolsizlantirilsinmi?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Barcha reklama tavsiyasi maʼlumotlari oʻchirib tashlanadi. Ilovalar endi hech qachon reklamalar taklif qila olmaydi, lekin sizga mos reklamalar chiqarilishi mumkin."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklamalar samaradorligini hisoblash yoniq"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ilovalarga oʻz reklamalarining samaradorligini hisoblashga yordam berish uchun ilovalar bilan juda cheklangan maʼlumotlarni ulashishi mumkin."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Reklamalar samaradorligini hisoblash faolsizlantirilsinmi?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Barcha kutilayotgan reklamalar samaradorligini hisoblash hisobotlari oʻchirib tashlanadi va hech qanday yangi hisobotlar yaratilmaydi yoki ulashilmaydi."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklamalardagi maxfiylik"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklama mavzulari"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Ilovalar taklif qiladigan reklama"</string>
