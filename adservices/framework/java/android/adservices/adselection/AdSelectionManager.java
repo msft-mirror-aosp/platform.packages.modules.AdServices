@@ -181,32 +181,32 @@ public class AdSelectionManager {
     }
 
     /**
-     * Processes the ad selection results from the server-side.
+     * Persists the ad selection results from the server-side.
      *
      * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
-    public void processAdSelectionResult(
-            @NonNull ProcessAdSelectionResultRequest processAdSelectionResultRequest,
+    public void persistAdSelectionResult(
+            @NonNull PersistAdSelectionResultRequest persistAdSelectionResultRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
-        Objects.requireNonNull(processAdSelectionResultRequest);
+        Objects.requireNonNull(persistAdSelectionResultRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final AdSelectionService service = getService();
-            service.processAdSelectionResult(
-                    new ProcessAdSelectionResultInput.Builder()
-                            .setProcessAdSelectionResultRequest(processAdSelectionResultRequest)
+            service.persistAdSelectionResult(
+                    new PersistAdSelectionResultInput.Builder()
+                            .setPersistAdSelectionResultRequest(persistAdSelectionResultRequest)
                             .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new CallerMetadata.Builder()
                             .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                             .build(),
-                    new ProcessAdSelectionResultCallback.Stub() {
+                    new PersistAdSelectionResultCallback.Stub() {
                         @Override
-                        public void onSuccess(ProcessAdSelectionResultResponse resultParcel) {
+                        public void onSuccess(PersistAdSelectionResultResponse resultParcel) {
                             executor.execute(
                                     () ->
                                             receiver.onResult(

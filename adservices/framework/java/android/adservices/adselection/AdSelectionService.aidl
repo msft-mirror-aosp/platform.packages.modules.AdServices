@@ -16,32 +16,31 @@
 
 package android.adservices.adselection;
 
-import android.adservices.adselection.ProcessAdSelectionResultCallback;
-import android.adservices.adselection.ProcessAdSelectionResultInput;
 import android.adservices.adselection.AdSelectionCallback;
-import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
-import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.GetAdSelectionDataCallback;
+import android.adservices.adselection.GetAdSelectionDataInput;
+import android.adservices.adselection.PersistAdSelectionResultCallback;
+import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.adselection.ReportInteractionCallback;
+import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
-import android.adservices.adselection.ReportInteractionCallback;
-import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.net.Uri;
-
 import java.util.List;
 
 /**
@@ -56,20 +55,21 @@ import java.util.List;
  * @hide
  */
 interface AdSelectionService {
-
     /**
      * This method collects data from device for ad selection
      *
-     * {@hide}
+     * @hide
      */
-    void getAdSelectionData(in GetAdSelectionDataInput request, in CallerMetadata callerMetadata, in GetAdSelectionDataCallback callback);
+    void getAdSelectionData(in GetAdSelectionDataInput request, in CallerMetadata callerMetadata,
+            in GetAdSelectionDataCallback callback);
 
     /**
-     * This method processes the results from a finished ad selection on servers
+     * This method persists the results from a finished ad selection on servers
      *
-     * {@hide}
+     * @hide
      */
-    void processAdSelectionResult(in ProcessAdSelectionResultInput request, in CallerMetadata callerMetadata, in ProcessAdSelectionResultCallback callback);
+    void persistAdSelectionResult(in PersistAdSelectionResultInput request,
+            in CallerMetadata callerMetadata, in PersistAdSelectionResultCallback callback);
 
     /**
      * This method orchestrates the buyer and seller side logic to pick the winning ad amongst all
@@ -102,7 +102,7 @@ interface AdSelectionService {
      *
      * Otherwise, this call fails to send the response to the callback and throws a RemoteException.
      *
-     * {@hide}
+     * @hide
      */
     void selectAds(in AdSelectionInput request, in CallerMetadata callerMetadata,
             in AdSelectionCallback callback);
@@ -170,13 +170,12 @@ interface AdSelectionService {
      */
     void reportImpression(in ReportImpressionInput request, in ReportImpressionCallback callback);
 
-
     /**
      * Notifies PPAPI that there is a new interaction to report for the
      * ad selected by the ad-selection run identified by {@code adSelectionId}.
      */
-    void reportInteraction(in ReportInteractionInput inputParams,
-            in ReportInteractionCallback callback);
+    void reportInteraction(
+            in ReportInteractionInput inputParams, in ReportInteractionCallback callback);
 
     /**
      * Updates the counter histograms for the ad event counters associated with a FLEDGE-selected
@@ -198,8 +197,7 @@ interface AdSelectionService {
      */
     void overrideAdSelectionConfigRemoteInfo(in AdSelectionConfig adSelectionConfig,
             in String decisionLogicJS, in AdSelectionSignals trustedScoringSignals,
-            in BuyersDecisionLogic buyersDecisionLogic,
-            in AdSelectionOverrideCallback callback);
+            in BuyersDecisionLogic buyersDecisionLogic, in AdSelectionOverrideCallback callback);
     /**
      * Gives the provided list of adtechs permission do app install filtering based on the presence
      * of the calling app.
