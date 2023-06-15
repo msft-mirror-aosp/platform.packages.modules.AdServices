@@ -482,6 +482,7 @@ public class MeasurementDaoTest {
             assertEquals(debugReport.getBody().toString(), report.getBody().toString());
             assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
             assertEquals(debugReport.getRegistrationOrigin(), report.getRegistrationOrigin());
+            assertEquals(debugReport.getReferenceId(), report.getReferenceId());
         }
     }
 

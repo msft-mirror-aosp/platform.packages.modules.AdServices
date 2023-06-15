@@ -333,6 +333,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
                 builder::setRegistrationOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REFERENCE_ID,
+                builder::setReferenceId);
 
         return builder.build();
     }
