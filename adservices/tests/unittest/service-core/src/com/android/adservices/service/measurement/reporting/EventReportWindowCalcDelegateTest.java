@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -291,6 +292,70 @@ public class EventReportWindowCalcDelegateTest {
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
                 mEventReportWindowCalcDelegate.getMaxReportCount(
                         navigationSourceInstallAttributed, true));
+    }
+
+    @Test
+    public void getMaxReportCount_configuredConversionsNonInstall_returnsConfiguredCount() {
+        // Setup
+        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
+        doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        Source nonInstallEventSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(false)
+                        .build();
+
+        // Execution & assertion
+        Assert.assertEquals(
+                3, mEventReportWindowCalcDelegate.getMaxReportCount(nonInstallEventSource, false));
+    }
+
+    @Test
+    public void getMaxReportCount_configuredConversionsInstallCase_returnsConfiguredCount() {
+        // Setup
+        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
+        doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        Source installEventSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(true)
+                        .build();
+
+        // Execution & assertion
+        Assert.assertEquals(
+                2, mEventReportWindowCalcDelegate.getMaxReportCount(installEventSource, true));
+    }
+
+    @Test
+    public void getMaxReportCount_configuredConversionsToOneInstallCase_incrementConfiguredCount() {
+        // Setup
+        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
+        doReturn(1).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        Source installEventSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(true)
+                        .build();
+
+        // Execution & assertion
+        Assert.assertEquals(
+                2, mEventReportWindowCalcDelegate.getMaxReportCount(installEventSource, true));
+    }
+
+    @Test
+    public void getMaxReportCount_configuredConversionsToOneInstallCase_noEffectOnCtc() {
+        // Setup
+        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
+        doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        Source navigationSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setInstallAttributed(false)
+                        .build();
+
+        // Execution & assertion
+        Assert.assertEquals(
+                3, mEventReportWindowCalcDelegate.getMaxReportCount(navigationSource, false));
     }
 
     @Test
