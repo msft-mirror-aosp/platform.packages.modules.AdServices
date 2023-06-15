@@ -34,32 +34,32 @@ import java.util.Objects;
  * Represents a request containing the seller, the ad selection id and data.
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
- * AdSelectionManager#processAdSelectionResult} methods in {@link AdSelectionManager}.
+ * AdSelectionManager#persistAdSelectionResult} methods in {@link AdSelectionManager}.
  *
  * @hide
  */
-public final class ProcessAdSelectionResultRequest implements Parcelable {
+public final class PersistAdSelectionResultRequest implements Parcelable {
     private final long mAdSelectionId;
     @Nullable private final AdTechIdentifier mSeller;
     @Nullable private final byte[] mAdSelectionResult;
 
     @NonNull
-    public static final Parcelable.Creator<ProcessAdSelectionResultRequest> CREATOR =
+    public static final Parcelable.Creator<PersistAdSelectionResultRequest> CREATOR =
             new Parcelable.Creator<>() {
                 @Override
-                public ProcessAdSelectionResultRequest createFromParcel(@NonNull Parcel in) {
+                public PersistAdSelectionResultRequest createFromParcel(@NonNull Parcel in) {
                     Objects.requireNonNull(in);
 
-                    return new ProcessAdSelectionResultRequest(in);
+                    return new PersistAdSelectionResultRequest(in);
                 }
 
                 @Override
-                public ProcessAdSelectionResultRequest[] newArray(int size) {
-                    return new ProcessAdSelectionResultRequest[size];
+                public PersistAdSelectionResultRequest[] newArray(int size) {
+                    return new PersistAdSelectionResultRequest[size];
                 }
             };
 
-    private ProcessAdSelectionResultRequest(
+    private PersistAdSelectionResultRequest(
             long adSelectionId,
             @Nullable AdTechIdentifier seller,
             @Nullable byte[] adSelectionResult) {
@@ -68,7 +68,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         this.mAdSelectionResult = adSelectionResult;
     }
 
-    private ProcessAdSelectionResultRequest(@NonNull Parcel in) {
+    private PersistAdSelectionResultRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
         this.mAdSelectionId = in.readLong();
@@ -120,8 +120,8 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ProcessAdSelectionResultRequest)) return false;
-        ProcessAdSelectionResultRequest that = (ProcessAdSelectionResultRequest) o;
+        if (!(o instanceof PersistAdSelectionResultRequest)) return false;
+        PersistAdSelectionResultRequest that = (PersistAdSelectionResultRequest) o;
         return mAdSelectionId == that.mAdSelectionId
                 && Objects.equals(mSeller, that.mSeller)
                 && Arrays.equals(mAdSelectionResult, that.mAdSelectionResult);
@@ -132,8 +132,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         return Objects.hash(mAdSelectionId, mSeller, Arrays.hashCode(mAdSelectionResult));
     }
 
-    /**
-     * Builder for {@link ProcessAdSelectionResultRequest} objects.
+    /** Builder for {@link PersistAdSelectionResultRequest} objects.
      *
      * @hide
      */
@@ -146,14 +145,14 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
 
         /** Sets the ad selection id {@link Long}. */
         @NonNull
-        public ProcessAdSelectionResultRequest.Builder setAdSelectionId(long adSelectionId) {
+        public PersistAdSelectionResultRequest.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }
 
         /** Sets the seller {@link AdTechIdentifier}. */
         @NonNull
-        public ProcessAdSelectionResultRequest.Builder setSeller(
+        public PersistAdSelectionResultRequest.Builder setSeller(
                 @Nullable AdTechIdentifier seller) {
             this.mSeller = seller;
             return this;
@@ -161,7 +160,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
 
         /** Sets the ad selection result {@link String}. */
         @NonNull
-        public ProcessAdSelectionResultRequest.Builder setAdSelectionResult(
+        public PersistAdSelectionResultRequest.Builder setAdSelectionResult(
                 @Nullable byte[] adSelectionResult) {
             if (!Objects.isNull(adSelectionResult)) {
                 this.mAdSelectionResult =
@@ -173,17 +172,17 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         }
 
         /**
-         * Builds a {@link ProcessAdSelectionResultRequest} instance.
+         * Builds a {@link PersistAdSelectionResultRequest} instance.
          *
          * @throws IllegalArgumentException if the adSelectionIid is not set
          * @throws NullPointerException if the mAdSelectionResult or Seller is null
          */
         @NonNull
-        public ProcessAdSelectionResultRequest build() {
+        public PersistAdSelectionResultRequest build() {
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-            return new ProcessAdSelectionResultRequest(mAdSelectionId, mSeller, mAdSelectionResult);
+            return new PersistAdSelectionResultRequest(mAdSelectionId, mSeller, mAdSelectionResult);
         }
     }
 }

@@ -30,37 +30,37 @@ import com.android.internal.util.Preconditions;
 import java.util.Objects;
 
 /**
- * Represents the response from processAdSelectionResult.
+ * Represents the response from persistAdSelectionResult.
  *
  * @hide
  */
-public final class ProcessAdSelectionResultResponse implements Parcelable {
+public final class PersistAdSelectionResultResponse implements Parcelable {
     private final long mAdSelectionId;
     @NonNull private final Uri mAdRenderUri;
 
-    public static final Creator<ProcessAdSelectionResultResponse> CREATOR =
+    public static final Creator<PersistAdSelectionResultResponse> CREATOR =
             new Creator<>() {
                 @Override
-                public ProcessAdSelectionResultResponse createFromParcel(Parcel in) {
+                public PersistAdSelectionResultResponse createFromParcel(Parcel in) {
                     Objects.requireNonNull(in);
 
-                    return new ProcessAdSelectionResultResponse(in);
+                    return new PersistAdSelectionResultResponse(in);
                 }
 
                 @Override
-                public ProcessAdSelectionResultResponse[] newArray(int size) {
-                    return new ProcessAdSelectionResultResponse[size];
+                public PersistAdSelectionResultResponse[] newArray(int size) {
+                    return new PersistAdSelectionResultResponse[size];
                 }
             };
 
-    private ProcessAdSelectionResultResponse(long adSelectionId, @NonNull Uri adRenderUri) {
+    private PersistAdSelectionResultResponse(long adSelectionId, @NonNull Uri adRenderUri) {
         Objects.requireNonNull(adRenderUri);
 
         this.mAdSelectionId = adSelectionId;
         this.mAdRenderUri = adRenderUri;
     }
 
-    private ProcessAdSelectionResultResponse(@NonNull Parcel in) {
+    private PersistAdSelectionResultResponse(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
         this.mAdSelectionId = in.readLong();
@@ -92,7 +92,7 @@ public final class ProcessAdSelectionResultResponse implements Parcelable {
     }
 
     /**
-     * Builder for {@link ProcessAdSelectionResultResponse} objects.
+     * Builder for {@link PersistAdSelectionResultResponse} objects.
      *
      * @hide
      */
@@ -104,14 +104,14 @@ public final class ProcessAdSelectionResultResponse implements Parcelable {
 
         /** Sets the adSelectionId. */
         @NonNull
-        public ProcessAdSelectionResultResponse.Builder setAdSelectionId(long adSelectionId) {
+        public PersistAdSelectionResultResponse.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }
 
-        /** Sets the adSelectionData. */
+        /** Sets the adRenderUri. */
         @NonNull
-        public ProcessAdSelectionResultResponse.Builder setAdRenderUri(Uri adRenderUri) {
+        public PersistAdSelectionResultResponse.Builder setAdRenderUri(Uri adRenderUri) {
             Objects.requireNonNull(adRenderUri);
 
             this.mAdRenderUri = adRenderUri;
@@ -119,18 +119,18 @@ public final class ProcessAdSelectionResultResponse implements Parcelable {
         }
 
         /**
-         * Builds a {@link ProcessAdSelectionResultResponse} instance.
+         * Builds a {@link PersistAdSelectionResultResponse} instance.
          *
-         * @throws IllegalArgumentException if the adSelectionIid is not set
+         * @throws IllegalArgumentException if the adSelectionId is not set
          * @throws NullPointerException if the RenderUri is null
          */
         @NonNull
-        public ProcessAdSelectionResultResponse build() {
+        public PersistAdSelectionResultResponse build() {
             Objects.requireNonNull(mAdRenderUri);
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-            return new ProcessAdSelectionResultResponse(mAdSelectionId, mAdRenderUri);
+            return new PersistAdSelectionResultResponse(mAdSelectionId, mAdRenderUri);
         }
     }
 }
