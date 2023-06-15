@@ -53,10 +53,14 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -184,7 +188,9 @@ public class FrequencyCapFilteringE2ETest {
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDaoSpy;
-
+    private EncryptionKeyDao mEncryptionKeyDao;
+    private EncryptionContextDao mEncryptionContextDao;
+    private ReportingUrisDao mReportingUrisDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -222,7 +228,11 @@ public class FrequencyCapFilteringE2ETest {
                         Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class)
                                 .build()
                                 .frequencyCapDao());
-
+        AdSelectionServerDatabase serverDb =
+                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
+        mEncryptionContextDao = serverDb.encryptionContextDao();
+        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mReportingUrisDao = serverDb.reportingUrisDao();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -248,6 +258,9 @@ public class FrequencyCapFilteringE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDaoSpy,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -386,6 +399,9 @@ public class FrequencyCapFilteringE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDaoSpy,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -439,6 +455,9 @@ public class FrequencyCapFilteringE2ETest {
                             mAppInstallDao,
                             mCustomAudienceDao,
                             mFrequencyCapDaoSpy,
+                            mEncryptionContextDao,
+                            mEncryptionKeyDao,
+                            mReportingUrisDao,
                             mAdServicesHttpsClientMock,
                             mDevContextFilterMock,
                             mLightweightExecutorService,
@@ -685,6 +704,9 @@ public class FrequencyCapFilteringE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDaoSpy,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -792,6 +814,9 @@ public class FrequencyCapFilteringE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDaoSpy,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,

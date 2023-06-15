@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f6f308c8bcae1fc25d7969f327fd304b",
+    "identityHash": "3fefe0ad4ab3f693d2dfeadaaf6943c1",
     "entities": [
       {
         "tableName": "encryption_key",
@@ -110,12 +110,54 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "reporting_uris",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ad_selection_id` INTEGER NOT NULL, `seller_reporting_uri` TEXT NOT NULL, `buyer_reporting_uri` TEXT NOT NULL, PRIMARY KEY(`ad_selection_id`))",
+        "fields": [
+          {
+            "fieldPath": "adSelectionId",
+            "columnName": "ad_selection_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sellerReportingUri",
+            "columnName": "seller_reporting_uri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "buyerReportingUri",
+            "columnName": "buyer_reporting_uri",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ad_selection_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_reporting_uris_ad_selection_id",
+            "unique": false,
+            "columnNames": [
+              "ad_selection_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reporting_uris_ad_selection_id` ON `${TABLE_NAME}` (`ad_selection_id`)"
+          }
+        ],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f6f308c8bcae1fc25d7969f327fd304b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3fefe0ad4ab3f693d2dfeadaaf6943c1')"
     ]
   }
 }
