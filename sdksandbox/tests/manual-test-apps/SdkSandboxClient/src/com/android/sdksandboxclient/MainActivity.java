@@ -507,7 +507,7 @@ public class MainActivity extends AppCompatActivity {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Set the value for FileDescriptor");
         final EditText inputValue = new EditText(this);
-        inputValue.setText("default");
+        inputValue.setHint("default");
         builder.setView(inputValue);
 
         builder.setPositiveButton(
@@ -760,9 +760,9 @@ public class MainActivity extends AppCompatActivity {
                     LinearLayout linearLayout = new LinearLayout(this);
                     linearLayout.setOrientation(1); // 1 is for vertical orientation
                     final EditText inputKey = new EditText(this);
-                    inputKey.setText("key");
+                    inputKey.setHint("key");
                     final EditText inputValue = new EditText(this);
-                    inputValue.setText("value");
+                    inputValue.setHint("value");
                     linearLayout.addView(inputKey);
                     linearLayout.addView(inputValue);
                     alert.setView(linearLayout);
