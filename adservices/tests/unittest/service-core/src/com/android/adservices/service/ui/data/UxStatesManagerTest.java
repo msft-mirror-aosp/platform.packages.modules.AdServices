@@ -18,9 +18,12 @@ package com.android.adservices.service.ui.data;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
+import android.adservices.common.AdServicesStates;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -86,6 +89,16 @@ public class UxStatesManagerTest {
         testMap.put("TRUE_FLAG_KEY", true);
         testMap.put("FALSE_FLAG_KEY", false);
         doReturn(testMap).when(mMockFlags).getUxFlags();
+    }
+
+    @Test
+    public void persistAdServicesStatesTest() {
+        mUxStatesManager.persistAdServicesStates(new AdServicesStates.Builder().build());
+
+        verify(mMockConsentManager).setAdIdEnabled(anyBoolean());
+        verify(mMockConsentManager).setU18Account(anyBoolean());
+        verify(mMockConsentManager).setAdultAccount(anyBoolean());
+        verify(mMockConsentManager).setEntryPointEnabled(anyBoolean());
     }
 
     @Test
