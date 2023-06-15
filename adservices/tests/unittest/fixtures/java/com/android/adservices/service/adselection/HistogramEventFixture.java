@@ -55,6 +55,12 @@ public class HistogramEventFixture {
     public static final HistogramEvent VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER =
             getValidHistogramEventBuilder().setBuyer(CommonFixture.VALID_BUYER_2).build();
 
+    public static final HistogramEvent VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER_EARLIER_TIME =
+            getValidHistogramEventBuilder()
+                    .setBuyer(CommonFixture.VALID_BUYER_2)
+                    .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(1))
+                    .build();
+
     public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER =
             getValidHistogramEventBuilder()
                     .setBuyer(CommonFixture.VALID_BUYER_2)

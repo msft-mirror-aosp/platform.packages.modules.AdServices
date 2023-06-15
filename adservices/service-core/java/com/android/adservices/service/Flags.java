@@ -639,20 +639,37 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
-    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10000;
-    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9500;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT = 900;
 
-    /** Returns the maximum allowed number of events in the frequency cap histogram table. */
+    /** Returns the maximum allowed number of events in the entire frequency cap histogram table. */
     default int getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount() {
         return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT;
     }
 
     /**
-     * Returns the number of events that the frequency cap histogram table should be trimmed to, if
-     * there are too many entries.
+     * Returns the number of events that the entire frequency cap histogram table should be trimmed
+     * to, if there are too many entries.
      */
     default int getFledgeAdCounterHistogramLowerMaxTotalEventCount() {
         return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the maximum allowed number of events per buyer in the frequency cap histogram table.
+     */
+    default int getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the number of events for a single buyer that the frequency cap histogram table should
+     * be trimmed to, if there are too many entries for that buyer.
+     */
+    default int getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT;
     }
 
     int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
