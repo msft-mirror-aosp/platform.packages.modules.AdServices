@@ -1019,7 +1019,6 @@ public class ConsentManager {
     }
 
     private PrivacySandboxFeatureType getPrivacySandboxFeatureFromApp() throws IOException {
-        android.util.Log.i("test", "getPrivacySandboxFeatureFromApp()");
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (Boolean.TRUE.equals(mDatastore.get(featureType.name()))) {
                 return featureType;
@@ -1029,7 +1028,6 @@ public class ConsentManager {
     }
 
     private PrivacySandboxFeatureType getPrivacySandboxFeatureFromSystemService() {
-        android.util.Log.i("test", "getPrivacySandboxFeatureFromSystemService()");
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (mAdServicesManager.getCurrentPrivacySandboxFeature().equals(featureType.name())) {
                 return featureType;
@@ -1045,7 +1043,6 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
-        android.util.Log.i("test", "getCurrentPrivacySandboxFeature()");
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED,
                 this::getPrivacySandboxFeatureFromApp,
