@@ -28,8 +28,11 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.util.Random;
+
 @SmallTest
 public class UpdateAdCounterHistogramRequestTest {
+    private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;
 
     @Test
@@ -178,7 +181,7 @@ public class UpdateAdCounterHistogramRequestTest {
                 IllegalArgumentException.class,
                 () ->
                         new UpdateAdCounterHistogramRequest.Builder(
-                                0,
+                                /* adSelectionId= */ 0,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
                                 CommonFixture.VALID_BUYER_1));
     }
@@ -219,6 +222,69 @@ public class UpdateAdCounterHistogramRequestTest {
     }
 
     @Test
+    public void testBuildInvalidType_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_INVALID,
+                                CommonFixture.VALID_BUYER_1));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_MIN - 1 - RANDOM.nextInt(10),
+                                CommonFixture.VALID_BUYER_1));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_MAX + 1 + RANDOM.nextInt(10),
+                                CommonFixture.VALID_BUYER_1));
+    }
+
+    @Test
+    public void testSetInvalidType_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1)
+                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_INVALID));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1)
+                                .setAdEventType(
+                                        FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                                                - 1
+                                                - RANDOM.nextInt(10)));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1)
+                                .setAdEventType(
+                                        FrequencyCapFilters.AD_EVENT_TYPE_MAX
+                                                + 1
+                                                + RANDOM.nextInt(10)));
+    }
+
+    @Test
     public void testBuildNullCaller_throws() {
         assertThrows(
                 NullPointerException.class,
@@ -226,7 +292,7 @@ public class UpdateAdCounterHistogramRequestTest {
                         new UpdateAdCounterHistogramRequest.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
-                                null));
+                                /* callerAdTech= */ null));
     }
 
     @Test
