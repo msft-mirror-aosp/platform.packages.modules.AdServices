@@ -19,6 +19,7 @@ package android.adservices.adselection;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 import static android.adservices.adselection.UpdateAdCounterHistogramRequest.DISALLOW_AD_EVENT_TYPE_WIN_MESSAGE;
+import static android.adservices.adselection.UpdateAdCounterHistogramRequest.INVALID_AD_EVENT_TYPE_MESSAGE;
 import static android.adservices.adselection.UpdateAdCounterHistogramRequest.UNSET_CALLER_ADTECH_MESSAGE;
 import static android.adservices.common.FrequencyCapFilters.AD_EVENT_TYPE_WIN;
 
@@ -200,6 +201,10 @@ public final class UpdateAdCounterHistogramInput implements Parcelable {
                     adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
             Preconditions.checkArgument(
                     adEventType != AD_EVENT_TYPE_WIN, DISALLOW_AD_EVENT_TYPE_WIN_MESSAGE);
+            Preconditions.checkArgument(
+                    adEventType >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                            && adEventType <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                    INVALID_AD_EVENT_TYPE_MESSAGE);
             Objects.requireNonNull(callerAdTech, UNSET_CALLER_ADTECH_MESSAGE);
             Objects.requireNonNull(callerPackageName, UNSET_CALLER_PACKAGE_NAME_MESSAGE);
 
@@ -232,6 +237,10 @@ public final class UpdateAdCounterHistogramInput implements Parcelable {
         public Builder setAdEventType(@FrequencyCapFilters.AdEventType int adEventType) {
             Preconditions.checkArgument(
                     adEventType != AD_EVENT_TYPE_WIN, DISALLOW_AD_EVENT_TYPE_WIN_MESSAGE);
+            Preconditions.checkArgument(
+                    adEventType >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                            && adEventType <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                    INVALID_AD_EVENT_TYPE_MESSAGE);
             mAdEventType = adEventType;
             return this;
         }

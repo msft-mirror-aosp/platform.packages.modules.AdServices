@@ -67,7 +67,9 @@ public final class FrequencyCapFilters implements Parcelable {
                 AD_EVENT_TYPE_WIN,
                 AD_EVENT_TYPE_IMPRESSION,
                 AD_EVENT_TYPE_VIEW,
-                AD_EVENT_TYPE_CLICK
+                AD_EVENT_TYPE_CLICK,
+                AD_EVENT_TYPE_MIN,
+                AD_EVENT_TYPE_MAX
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface AdEventType {}
@@ -86,6 +88,12 @@ public final class FrequencyCapFilters implements Parcelable {
     public static final int AD_EVENT_TYPE_IMPRESSION = 1;
     public static final int AD_EVENT_TYPE_VIEW = 2;
     public static final int AD_EVENT_TYPE_CLICK = 3;
+
+    /** @hide */
+    public static final int AD_EVENT_TYPE_MIN = AD_EVENT_TYPE_WIN;
+    /** @hide */
+    public static final int AD_EVENT_TYPE_MAX = AD_EVENT_TYPE_CLICK;
+
     /** @hide */
     @VisibleForTesting public static final String WIN_EVENTS_FIELD_NAME = "win";
     /** @hide */

@@ -46,6 +46,11 @@ public class UpdateAdCounterHistogramRequest {
             "Win event types cannot be manually updated";
 
     /** @hide */
+    public static final String INVALID_AD_EVENT_TYPE_MESSAGE =
+            "Ad event type must be one of AD_EVENT_TYPE_IMPRESSION, AD_EVENT_TYPE_VIEW, or"
+                    + " AD_EVENT_TYPE_CLICK";
+
+    /** @hide */
     public static final String UNSET_CALLER_ADTECH_MESSAGE = "Caller ad tech must not be null";
 
     private final long mAdSelectionId;
@@ -146,6 +151,10 @@ public class UpdateAdCounterHistogramRequest {
                     adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
             Preconditions.checkArgument(
                     adEventType != AD_EVENT_TYPE_WIN, DISALLOW_AD_EVENT_TYPE_WIN_MESSAGE);
+            Preconditions.checkArgument(
+                    adEventType >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                            && adEventType <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                    INVALID_AD_EVENT_TYPE_MESSAGE);
             Objects.requireNonNull(callerAdTech, UNSET_CALLER_ADTECH_MESSAGE);
 
             mAdSelectionId = adSelectionId;
@@ -176,6 +185,10 @@ public class UpdateAdCounterHistogramRequest {
         public Builder setAdEventType(@FrequencyCapFilters.AdEventType int adEventType) {
             Preconditions.checkArgument(
                     adEventType != AD_EVENT_TYPE_WIN, DISALLOW_AD_EVENT_TYPE_WIN_MESSAGE);
+            Preconditions.checkArgument(
+                    adEventType >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                            && adEventType <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                    INVALID_AD_EVENT_TYPE_MESSAGE);
             mAdEventType = adEventType;
             return this;
         }

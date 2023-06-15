@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -26,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -35,6 +37,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
+import android.os.Parcel;
 import android.os.RemoteException;
 
 import com.android.adservices.service.Flags;
@@ -119,6 +122,39 @@ public class UpdateAdCounterHistogramWorkerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(LOGGING_API_NAME), eq(AdServicesStatusUtils.STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testWorkerValidatesInvalidAdEventTypeAndNotifiesFailure() throws Exception {
+        Parcel sourceParcel = Parcel.obtain();
+        sourceParcel.writeLong(AD_SELECTION_ID);
+        sourceParcel.writeInt(FrequencyCapFilters.AD_EVENT_TYPE_MAX + 10);
+        CommonFixture.VALID_BUYER_1.writeToParcel(sourceParcel, 0);
+        sourceParcel.writeString(CommonFixture.TEST_PACKAGE_NAME);
+        sourceParcel.setDataPosition(0);
+
+        UpdateAdCounterHistogramInput invalidInputParams =
+                UpdateAdCounterHistogramInput.CREATOR.createFromParcel(sourceParcel);
+
+        CountDownLatch callbackLatch = new CountDownLatch(1);
+        UpdateAdCounterHistogramTestCallback callback =
+                new UpdateAdCounterHistogramTestCallback(callbackLatch);
+
+        mUpdateWorker.updateAdCounterHistogram(invalidInputParams, callback);
+
+        assertWithMessage("Callback latch wait")
+                .that(callbackLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+        assertWithMessage("Callback success").that(callback.mIsSuccess).isFalse();
+
+        verify(mHistogramUpdaterMock, never())
+                .updateNonWinHistogram(anyLong(), any(), anyInt(), any());
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(LOGGING_API_NAME),
+                        eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT),
+                        anyInt());
     }
 
     @Test

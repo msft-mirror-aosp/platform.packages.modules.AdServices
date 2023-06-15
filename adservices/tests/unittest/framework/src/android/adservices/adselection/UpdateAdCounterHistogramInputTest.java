@@ -28,8 +28,11 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.util.Random;
+
 @SmallTest
 public class UpdateAdCounterHistogramInputTest {
+    private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;
     private static final String VALID_PACKAGE_NAME = "test.package";
 
@@ -219,7 +222,7 @@ public class UpdateAdCounterHistogramInputTest {
                 IllegalArgumentException.class,
                 () ->
                         new UpdateAdCounterHistogramInput.Builder(
-                                0,
+                                /* adSelectionId= */ 0,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
                                 CommonFixture.VALID_BUYER_1,
                                 VALID_PACKAGE_NAME));
@@ -264,6 +267,75 @@ public class UpdateAdCounterHistogramInputTest {
     }
 
     @Test
+    public void testBuildInvalidType_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramInput.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_INVALID,
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_PACKAGE_NAME));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramInput.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_MIN - 1 - RANDOM.nextInt(10),
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_PACKAGE_NAME));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramInput.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_MAX + 1 + RANDOM.nextInt(10),
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_PACKAGE_NAME));
+    }
+
+    @Test
+    public void testSetInvalidType_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramInput.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1,
+                                        VALID_PACKAGE_NAME)
+                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_INVALID));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramInput.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1,
+                                        VALID_PACKAGE_NAME)
+                                .setAdEventType(
+                                        FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                                                - 1
+                                                - RANDOM.nextInt(10)));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramInput.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1,
+                                        VALID_PACKAGE_NAME)
+                                .setAdEventType(
+                                        FrequencyCapFilters.AD_EVENT_TYPE_MAX
+                                                + 1
+                                                + RANDOM.nextInt(10)));
+    }
+
+    @Test
     public void testBuildUnsetType_throws() {
         assertThrows(
                 NullPointerException.class,
@@ -271,7 +343,7 @@ public class UpdateAdCounterHistogramInputTest {
                         new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
-                                null,
+                                /* callerAdTech= */ null,
                                 VALID_PACKAGE_NAME));
     }
 
@@ -297,7 +369,7 @@ public class UpdateAdCounterHistogramInputTest {
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
                                 CommonFixture.VALID_BUYER_1,
-                                null));
+                                /* callerPackageName */ null));
     }
 
     @Test
