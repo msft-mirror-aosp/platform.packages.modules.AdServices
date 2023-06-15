@@ -135,7 +135,6 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             EditText editText = new EditText(windowContext);
             editText.setWidth(width);
             editText.setHeight(height);
-            editText.setOnClickListener(getOnClickListener(getContext()));
             editText.setBackgroundColor(Color.BLUE);
             editText.setTextColor(Color.WHITE);
             editText.setText("Enter text: ");

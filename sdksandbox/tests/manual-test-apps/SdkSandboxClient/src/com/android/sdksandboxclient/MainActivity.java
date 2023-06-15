@@ -415,6 +415,9 @@ public class MainActivity extends AppCompatActivity {
                                     break;
                                 }
                         }
+                        if (options.getViewType().equals(BannerOptions.ViewType.WEBVIEW)) {
+                            adSize = 400;
+                        }
                         ViewGroup.LayoutParams svParams = surfaceView.getLayoutParams();
                         float factor =
                                 getApplicationContext().getResources().getDisplayMetrics().density;
