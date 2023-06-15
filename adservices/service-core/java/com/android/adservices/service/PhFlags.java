@@ -487,6 +487,9 @@ public final class PhFlags implements Flags {
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
+    static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_KILL_SWITCH =
+            "adservices_consent_migration_logging_kill_switch";
+
     static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
     static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
@@ -3424,6 +3427,11 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_ENABLE_APPSEARCH_CONSENT_DATA + " = " + getEnableAppsearchConsentData());
         writer.println(
                 "\t"
+                        + ADSERVICES_CONSENT_MIGRATION_LOGGING_KILL_SWITCH
+                        + " = "
+                        + getAdservicesConsentMigrationLoggingKillSwitch());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
@@ -3639,5 +3647,13 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+    }
+
+    @Override
+    public boolean getAdservicesConsentMigrationLoggingKillSwitch() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ ADSERVICES_CONSENT_MIGRATION_LOGGING_KILL_SWITCH,
+                /* defaultValue */ DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_KILL_SWITCH);
     }
 }

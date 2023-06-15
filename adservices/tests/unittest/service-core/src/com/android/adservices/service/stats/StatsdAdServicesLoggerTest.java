@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
@@ -557,5 +558,79 @@ public class StatsdAdServicesLoggerTest {
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logConsentMigrationStats_success() {
+        when(mFlags.getAdservicesConsentMigrationLoggingKillSwitch()).thenReturn(false);
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        // Invoke logging call
+        mLogger.logConsentMigrationStats(consentMigrationStats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_CONSENT_MIGRATED),
+                                eq(true),
+                                eq(true),
+                                eq(true),
+                                eq(true),
+                                eq(2),
+                                eq(2),
+                                eq(2));
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logConsentMigrationStats_disabled() {
+        when(mFlags.getAdservicesConsentMigrationLoggingKillSwitch()).thenReturn(true);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        // Invoke logging call
+        mLogger.logConsentMigrationStats(consentMigrationStats);
+
+        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }

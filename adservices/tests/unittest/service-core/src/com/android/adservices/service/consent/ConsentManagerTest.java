@@ -23,6 +23,7 @@ import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTI
 import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
 import static com.android.adservices.service.consent.ConsentConstants.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_CONSENT;
+import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
@@ -122,6 +123,8 @@ import com.android.adservices.service.measurement.reporting.AggregateReportingJo
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ConsentMigrationStats;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
@@ -142,6 +145,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -182,6 +186,7 @@ public class ConsentManagerTest {
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
     @Mock private UserProfileIdManager mUserProfileIdManager;
     @Mock private UxStatesDao mUxStatesDao;
+    @Mock private StatsdAdServicesLogger mStatsdAdServicesLogger;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -208,6 +213,7 @@ public class ConsentManagerTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(UiStatsLogger.class)
+                        .spyStatic(StatsdAdServicesLogger.class)
                         .mockStatic(PackageManagerCompatUtils.class)
                         .mockStatic(SdkLevel.class)
                         .strictness(Strictness.WARN)
@@ -233,6 +239,7 @@ public class ConsentManagerTest {
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        doReturn(false).when(mMockFlags).getAdservicesConsentMigrationLoggingKillSwitch();
         ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doReturn(true)
                 .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -2536,16 +2543,131 @@ public class ConsentManagerTest {
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager);
+                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
 
         verify(mMockIAdServicesManager).setConsent(any());
         verify(mMockIAdServicesManager).recordNotificationDisplayed();
 
         // Verify this should only happen once
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager);
+                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
         verify(mMockIAdServicesManager).setConsent(any());
         verify(mMockIAdServicesManager).recordNotificationDisplayed();
+
+        // Clear shared preference
+        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+    }
+
+    @Test
+    public void testMigratePpApiConsentToSystemServiceWithSuccessfulConsentMigrationLogging()
+            throws RemoteException, IOException {
+        // Disable IPC calls
+        doNothing().when(mMockIAdServicesManager).setConsent(any());
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        mConsentDatastore.put(CONSENT_KEY, true);
+        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+
+        SharedPreferences sharedPreferences =
+                mContextSpy.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, false);
+        editor.putBoolean(SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED, false);
+        editor.commit();
+
+        ConsentManager.migratePpApiConsentToSystemService(
+                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        verify(mStatsdAdServicesLogger, times(1)).logConsentMigrationStats(consentMigrationStats);
+
+        // Clear shared preference
+        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED);
+    }
+
+    @Test
+    public void testMigratePpApiConsentToSystemServiceWithUnSuccessfulConsentMigrationLogging()
+            throws RemoteException, IOException {
+        // Disable IPC calls
+        doNothing().when(mMockIAdServicesManager).setConsent(any());
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        mConsentDatastore.put(CONSENT_KEY, true);
+        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+
+        SharedPreferences sharedPreferences = mock(SharedPreferences.class);
+        SharedPreferences.Editor editor = mock(SharedPreferences.Editor.class);
+        doReturn(editor).when(sharedPreferences).edit();
+        doReturn(false).when(editor).commit();
+        doReturn(sharedPreferences).when(mContextSpy).getSharedPreferences(anyString(), anyInt());
+
+        ExtendedMockito.doNothing()
+                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(mStatsdAdServicesLogger).logConsentMigrationStats(any());
+
+        ConsentManager.migratePpApiConsentToSystemService(
+                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        verify(mStatsdAdServicesLogger, times(1)).logConsentMigrationStats(consentMigrationStats);
+
+        doReturn(true).when(editor).commit();
+        // Clear shared preference
+        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+    }
+
+    @Test
+    public void testMigratePpApiConsentToSystemServiceThrowsException() throws RemoteException {
+        doThrow(RemoteException.class).when(mMockIAdServicesManager).recordNotificationDisplayed();
+
+        ExtendedMockito.doNothing()
+                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        doNothing().when(mStatsdAdServicesLogger).logConsentMigrationStats(any());
+
+        ConsentManager.migratePpApiConsentToSystemService(
+                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        verify(mStatsdAdServicesLogger, times(1)).logConsentMigrationStats(consentMigrationStats);
 
         // Clear shared preference
         ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
@@ -2558,7 +2680,7 @@ public class ConsentManagerTest {
                 .getPackageName();
 
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy, mConsentDatastore, mAdServicesManager, 2);
+                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger, 2);
 
         verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
         verify(mMockIAdServicesManager, never()).setConsent(any());
@@ -2579,7 +2701,8 @@ public class ConsentManagerTest {
                 mDatastore,
                 mAppConsentDao,
                 mAppSearchConsentManager,
-                mAdServicesManager);
+                mAdServicesManager,
+                mStatsdAdServicesLogger);
 
         verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
         verify(mAppSearchConsentManager, never())
@@ -2637,13 +2760,20 @@ public class ConsentManagerTest {
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy, mConsentDatastore, mAdServicesManager));
+                                        mContextSpy,
+                                        mConsentDatastore,
+                                        mAdServicesManager,
+                                        mStatsdAdServicesLogger));
         ExtendedMockito.doNothing()
                 .when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy, mConsentDatastore, mAdServicesManager, consentSourceOfTruth);
+                mContextSpy,
+                mConsentDatastore,
+                mAdServicesManager,
+                mStatsdAdServicesLogger,
+                consentSourceOfTruth);
 
         ExtendedMockito.verify(
                 () ->
@@ -2652,7 +2782,10 @@ public class ConsentManagerTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy, mConsentDatastore, mAdServicesManager),
+                                mContextSpy,
+                                mConsentDatastore,
+                                mAdServicesManager,
+                                mStatsdAdServicesLogger),
                 never());
         ExtendedMockito.verify(
                 () -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore), never());
@@ -2670,13 +2803,20 @@ public class ConsentManagerTest {
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy, mConsentDatastore, mAdServicesManager));
+                                        mContextSpy,
+                                        mConsentDatastore,
+                                        mAdServicesManager,
+                                        mStatsdAdServicesLogger));
         ExtendedMockito.doNothing()
                 .when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy, mConsentDatastore, mAdServicesManager, consentSourceOfTruth);
+                mContextSpy,
+                mConsentDatastore,
+                mAdServicesManager,
+                mStatsdAdServicesLogger,
+                consentSourceOfTruth);
 
         ExtendedMockito.verify(
                 () ->
@@ -2686,7 +2826,10 @@ public class ConsentManagerTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy, mConsentDatastore, mAdServicesManager));
+                                mContextSpy,
+                                mConsentDatastore,
+                                mAdServicesManager,
+                                mStatsdAdServicesLogger));
         ExtendedMockito.verify(
                 () -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
     }
@@ -2703,13 +2846,20 @@ public class ConsentManagerTest {
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy, mConsentDatastore, mAdServicesManager));
+                                        mContextSpy,
+                                        mConsentDatastore,
+                                        mAdServicesManager,
+                                        mStatsdAdServicesLogger));
         ExtendedMockito.doNothing()
                 .when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy, mConsentDatastore, mAdServicesManager, consentSourceOfTruth);
+                mContextSpy,
+                mConsentDatastore,
+                mAdServicesManager,
+                mStatsdAdServicesLogger,
+                consentSourceOfTruth);
 
         ExtendedMockito.verify(
                 () ->
@@ -2719,7 +2869,10 @@ public class ConsentManagerTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy, mConsentDatastore, mAdServicesManager));
+                                mContextSpy,
+                                mConsentDatastore,
+                                mAdServicesManager,
+                                mStatsdAdServicesLogger));
         ExtendedMockito.verify(
                 () -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore), never());
     }
@@ -2736,13 +2889,20 @@ public class ConsentManagerTest {
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy, mConsentDatastore, mAdServicesManager));
+                                        mContextSpy,
+                                        mConsentDatastore,
+                                        mAdServicesManager,
+                                        mStatsdAdServicesLogger));
         ExtendedMockito.doNothing()
                 .when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy, mConsentDatastore, mAdServicesManager, consentSourceOfTruth);
+                mContextSpy,
+                mConsentDatastore,
+                mAdServicesManager,
+                mStatsdAdServicesLogger,
+                consentSourceOfTruth);
 
         ExtendedMockito.verify(
                 () ->
@@ -2752,7 +2912,10 @@ public class ConsentManagerTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy, mConsentDatastore, mAdServicesManager),
+                                mContextSpy,
+                                mConsentDatastore,
+                                mAdServicesManager,
+                                mStatsdAdServicesLogger),
                 never());
         ExtendedMockito.verify(
                 () -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore), never());
@@ -2775,7 +2938,8 @@ public class ConsentManagerTest {
                 mockDatastore,
                 mAppConsentDao,
                 mAppSearchConsentManager,
-                mockAdServicesManager);
+                mockAdServicesManager,
+                mStatsdAdServicesLogger);
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
         verify(mAppSearchConsentManager)
                 .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
@@ -2806,13 +2970,15 @@ public class ConsentManagerTest {
                 .thenReturn(mockSharedPrefs);
         when(mAppSearchConsentManager.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
+        when(mockEditor.commit()).thenReturn(true);
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
                 mContextSpy,
                 mConsentDatastore,
                 mAppConsentDao,
                 mAppSearchConsentManager,
-                mockAdServicesManager);
+                mockAdServicesManager,
+                mStatsdAdServicesLogger);
         verify(mAppSearchConsentManager)
                 .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
 
@@ -2842,6 +3008,102 @@ public class ConsentManagerTest {
         assertThat(mConsentDatastore.get(AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey()))
                 .isTrue();
         verify(mockAdServicesManager, atLeast(4)).setConsent(any());
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        verify(mStatsdAdServicesLogger, times(1)).logConsentMigrationStats(consentMigrationStats);
+    }
+
+    @Test
+    public void testHandleConsentMigrationFromAppSearchIfNeededSharedPrefsEditorUnsuccessful()
+            throws Exception {
+        when(mAppSearchConsentManager.migrateConsentDataIfNeeded(any(), any(), any(), any(), any()))
+                .thenReturn(true);
+        when(mAppSearchConsentManager.getConsent(any())).thenReturn(true);
+        mConsentDatastore.put(CONSENT_KEY, true);
+        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+
+        AdServicesManager mockAdServicesManager = mock(AdServicesManager.class);
+        SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
+        SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
+        when(mockSharedPrefs.edit()).thenReturn(mockEditor);
+        when(mContextSpy.getSharedPreferences(any(String.class), anyInt()))
+                .thenReturn(mockSharedPrefs);
+        when(mAppSearchConsentManager.getUserManualInteractionWithConsent())
+                .thenReturn(MANUAL_INTERACTIONS_RECORDED);
+        when(mockEditor.commit()).thenReturn(false);
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+
+        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
+                mContextSpy,
+                mConsentDatastore,
+                mAppConsentDao,
+                mAppSearchConsentManager,
+                mockAdServicesManager,
+                mStatsdAdServicesLogger);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        verify(mStatsdAdServicesLogger, times(1)).logConsentMigrationStats(consentMigrationStats);
+    }
+
+    @Test
+    public void testHandleConsentMigrationFromAppSearchIfNeededThrowsException() throws Exception {
+        when(mAppSearchConsentManager.migrateConsentDataIfNeeded(any(), any(), any(), any(), any()))
+                .thenThrow(IOException.class);
+
+        AdServicesManager mockAdServicesManager = mock(AdServicesManager.class);
+
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        doNothing().when(mStatsdAdServicesLogger).logConsentMigrationStats(any());
+
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
+
+        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
+                mContextSpy,
+                mConsentDatastore,
+                mAppConsentDao,
+                mAppSearchConsentManager,
+                mockAdServicesManager,
+                mStatsdAdServicesLogger);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+        Mockito.verify(mStatsdAdServicesLogger, times(1))
+                .logConsentMigrationStats(consentMigrationStats);
     }
 
     @Test
