@@ -20,7 +20,6 @@ import static com.android.adservices.data.adselection.EncryptionKeyConstants.Enc
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
@@ -36,11 +35,11 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
+import java.security.spec.InvalidKeySpecException;
 
 public class EncryptionContextDaoTest {
     private static final long CONTEXT_ID_1 = 1L;
@@ -63,19 +62,15 @@ public class EncryptionContextDaoTest {
 
     @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
-    // TODO(b/286277223): Create an actual object once the serialize method is implemented.
-    @SuppressWarnings("DoNotMockAutoValue")
-    @Mock
-    ObliviousHttpKeyConfig mObliviousHttpKeyConfig;
+    private ObliviousHttpKeyConfig mObliviousHttpKeyConfig;
 
     @Before
-    public void setup() {
+    public void setup() throws InvalidKeySpecException {
         mEncryptionContextDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionEncryptionDatabase.class)
                         .build()
                         .encryptionContextDao();
-        // TODO(b/286277223): Create an actual object once the serialize method is implemented.
-        when(mObliviousHttpKeyConfig.serializeKeyConfigToBytes()).thenReturn(KEY_CONFIG_BYTES);
+        mObliviousHttpKeyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(KEY_CONFIG_BYTES);
     }
 
     @Test
