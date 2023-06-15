@@ -27,6 +27,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -60,7 +62,9 @@ import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ConsentMigrationStats;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
@@ -128,6 +132,8 @@ public class ConsentManager {
 
     private static final Object LOCK = new Object();
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
+
+
 
     ConsentManager(
             @NonNull TopicsWorker topicsWorker,
@@ -203,9 +209,10 @@ public class ConsentManager {
                         consentSourceOfTruth = Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
                     }
                     AppSearchConsentManager appSearchConsentManager = null;
+                    StatsdAdServicesLogger statsdAdServicesLogger =
+                            StatsdAdServicesLogger.getInstance();
                     // Flag enable_appsearch_consent_data is true on S- and T+ only when we want to
-                    // use
-                    // AppSearch to write to or read from.
+                    // use AppSearch to write to or read from.
                     if (FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
                         appSearchConsentManager = AppSearchConsentManager.getInstance(context);
                         handleConsentMigrationFromAppSearchIfNeeded(
@@ -213,12 +220,17 @@ public class ConsentManager {
                                 datastore,
                                 appConsentDao,
                                 appSearchConsentManager,
-                                adServicesManager);
+                                adServicesManager,
+                                statsdAdServicesLogger);
                     }
 
                     // Attempt to migrate consent data from PPAPI to System server if needed.
                     handleConsentMigrationIfNeeded(
-                            context, datastore, adServicesManager, consentSourceOfTruth);
+                            context,
+                            datastore,
+                            adServicesManager,
+                            statsdAdServicesLogger,
+                            consentSourceOfTruth);
 
                     sConsentManager =
                             new ConsentManager(
@@ -1141,6 +1153,7 @@ public class ConsentManager {
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
             AdServicesManager adServicesManager,
+            @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
         // On R/S, handleConsentMigrationIfNeeded should never be executed.
@@ -1171,10 +1184,12 @@ public class ConsentManager {
                 resetSharedPreference(context, ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED);
                 break;
             case Flags.PPAPI_AND_SYSTEM_SERVER:
-                migratePpApiConsentToSystemService(context, datastore, adServicesManager);
+                migratePpApiConsentToSystemService(
+                        context, datastore, adServicesManager, statsdAdServicesLogger);
                 break;
             case Flags.SYSTEM_SERVER_ONLY:
-                migratePpApiConsentToSystemService(context, datastore, adServicesManager);
+                migratePpApiConsentToSystemService(
+                        context, datastore, adServicesManager, statsdAdServicesLogger);
                 clearPpApiConsent(context, datastore);
                 break;
             case Flags.APPSEARCH_ONLY:
@@ -1268,67 +1283,99 @@ public class ConsentManager {
     static void migratePpApiConsentToSystemService(
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
-            @NonNull AdServicesManager adServicesManager) {
+            @NonNull AdServicesManager adServicesManager,
+            @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(adServicesManager);
 
-        // Exit if migration has happened.
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(
-                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
-        // If we migrated data to system server either from PPAPI or from AppSearch, do not
-        // attempt another migration of data to system server.
-        boolean shouldSkipMigration =
-                sharedPreferences.getBoolean(
-                                ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED,
-                                /* default= */ false)
-                        || sharedPreferences.getBoolean(
-                                ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED,
-                                /* default= */ false);
-        if (shouldSkipMigration) {
-            LogUtil.v(
-                    "Consent migration has happened to user %d, skip...",
-                    context.getUser().getIdentifier());
-            return;
-        }
-        LogUtil.d("Started migrating Consent from PPAPI to System Service");
+        AppConsents appConsents = null;
+        try {
+            // Exit if migration has happened.
+            SharedPreferences sharedPreferences =
+                    context.getSharedPreferences(
+                            ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+            // If we migrated data to system server either from PPAPI or from AppSearch, do not
+            // attempt another migration of data to system server.
+            boolean shouldSkipMigration =
+                    sharedPreferences.getBoolean(
+                                    ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED,
+                                    /* default= */ false)
+                            || sharedPreferences.getBoolean(
+                                    ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED,
+                                    /* default= */ false);
+            if (shouldSkipMigration) {
+                LogUtil.v(
+                        "Consent migration has happened to user %d, skip...",
+                        context.getUser().getIdentifier());
+                return;
+            }
+            LogUtil.d("Started migrating Consent from PPAPI to System Service");
 
-        // Migrate Consent and Notification Displayed to System Service.
-        // Set consent enabled only when value is TRUE. FALSE and null are regarded as disabled.
-        setConsentToSystemServer(
-                adServicesManager,
-                Boolean.TRUE.equals(datastore.get(ConsentConstants.CONSENT_KEY)));
+            boolean consentKey = datastore.get(ConsentConstants.CONSENT_KEY);
 
-        // Set notification displayed only when value is TRUE. FALSE and null are regarded as
-        // not displayed.
-        if (Boolean.TRUE.equals(datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))) {
-            adServicesManager.recordNotificationDisplayed();
-        }
+            // Migrate Consent and Notification Displayed to System Service.
+            // Set consent enabled only when value is TRUE. FALSE and null are regarded as disabled.
+            setConsentToSystemServer(adServicesManager, Boolean.TRUE.equals(consentKey));
 
-        Boolean manualInteractionRecorded =
-                datastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
-        if (manualInteractionRecorded != null) {
-            adServicesManager.recordUserManualInteractionWithConsent(
-                    manualInteractionRecorded ? 1 : -1);
-        }
+            // Set notification displayed only when value is TRUE. FALSE and null are regarded as
+            // not displayed.
+            if (Boolean.TRUE.equals(datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))) {
+                adServicesManager.recordNotificationDisplayed();
+            }
 
-        // Save migration has happened into shared preferences.
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
+            Boolean manualInteractionRecorded =
+                    datastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+            if (manualInteractionRecorded != null) {
+                adServicesManager.recordUserManualInteractionWithConsent(
+                        manualInteractionRecorded ? 1 : -1);
+            }
 
-        if (editor.commit()) {
-            LogUtil.d("Finished migrating Consent from PPAPI to System Service");
-        } else {
-            LogUtil.e(
-                    "Finished migrating Consent from PPAPI to System Service but shared preference"
-                            + " is not updated.");
-            ErrorLogUtil.e(
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    ConsentManager.class.getSimpleName(),
-                    new Object() {
-                    }.getClass().getEnclosingMethod().getName());
+            // Save migration has happened into shared preferences.
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
+            appConsents =
+                    AppConsents.builder()
+                            .setDefaultConsent(consentKey)
+                            .setMsmtConsent(consentKey)
+                            .setFledgeConsent(consentKey)
+                            .setTopicsConsent(consentKey)
+                            .build();
+
+            if (editor.commit()) {
+                LogUtil.d("Finished migrating Consent from PPAPI to System Service");
+                statsdAdServicesLogger.logConsentMigrationStats(
+                        getConsentManagerStatsForLogging(
+                                appConsents,
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED,
+                                ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE,
+                                context));
+            } else {
+                LogUtil.e(
+                        "Finished migrating Consent from PPAPI to System Service but shared"
+                                + " preference is not updated.");
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
+                        ConsentManager.class.getSimpleName(),
+                        new Object() {}.getClass().getEnclosingMethod().getName());
+                statsdAdServicesLogger.logConsentMigrationStats(
+                        getConsentManagerStatsForLogging(
+                                appConsents,
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED,
+                                ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE,
+                                context));
+            }
+        } catch (Exception e) {
+            LogUtil.e("PPAPI consent data migration failed: ", e);
+            statsdAdServicesLogger.logConsentMigrationStats(
+                    getConsentManagerStatsForLogging(
+                            appConsents,
+                            ConsentMigrationStats.MigrationStatus.FAILURE,
+                            ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE,
+                            context));
         }
     }
 
@@ -1433,7 +1480,8 @@ public class ConsentManager {
             @NonNull BooleanFileDatastore datastore,
             @NonNull AppConsentDao appConsentDao,
             @NonNull AppSearchConsentManager appSearchConsentManager,
-            @NonNull AdServicesManager adServicesManager) {
+            @NonNull AdServicesManager adServicesManager,
+            @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appSearchConsentManager);
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
@@ -1450,6 +1498,7 @@ public class ConsentManager {
             return;
         }
 
+        AppConsents appConsents = null;
         try {
             // This should be called only once after OTA (if flag is enabled). If we did not record
             // showing the notification on T+ yet and we have shown the notification on S- (as
@@ -1468,7 +1517,8 @@ public class ConsentManager {
             }
 
             // Migrate Consent for all APIs and per API to PP API and System Service.
-            migrateAppSearchConsents(appSearchConsentManager, adServicesManager, datastore);
+            appConsents =
+                    migrateAppSearchConsents(appSearchConsentManager, adServicesManager, datastore);
 
             // Record interactions data only if we recorded an interaction in AppSearch.
             int manualInteractionRecorded =
@@ -1487,10 +1537,24 @@ public class ConsentManager {
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED, true);
             if (editor.commit()) {
                 LogUtil.d("Finished migrating Consent from AppSearch to PPAPI + System Service");
+                statsdAdServicesLogger.logConsentMigrationStats(
+                        getConsentManagerStatsForLogging(
+                                appConsents,
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED,
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE,
+                                context));
             } else {
                 LogUtil.e(
                         "Finished migrating Consent from AppSearch to PPAPI + System Service "
                                 + "but shared preference is not updated.");
+                statsdAdServicesLogger.logConsentMigrationStats(
+                        getConsentManagerStatsForLogging(
+                                appConsents,
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED,
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE,
+                                context));
             }
         } catch (IOException e) {
             LogUtil.e("AppSearch consent data migration failed: ", e);
@@ -1498,15 +1562,21 @@ public class ConsentManager {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
+            statsdAdServicesLogger.logConsentMigrationStats(
+                    getConsentManagerStatsForLogging(
+                            appConsents,
+                            ConsentMigrationStats.MigrationStatus.FAILURE,
+                            ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE,
+                            context));
         }
     }
 
     /**
-     * This method migrates the consent states (opt in/out) for all PPAPIs, each API and their
-     * default consent values.
+     * This method returns and migrates the consent states (opt in/out) for all PPAPIs, each API and
+     * their default consent values.
      */
     @VisibleForTesting
-    static void migrateAppSearchConsents(
+    static AppConsents migrateAppSearchConsents(
             AppSearchConsentManager appSearchConsentManager,
             AdServicesManager adServicesManager,
             BooleanFileDatastore datastore)
@@ -1552,6 +1622,12 @@ public class ConsentManager {
                 adServicesManager,
                 AdServicesApiType.MEASUREMENTS.toConsentApiType(),
                 measurementConsented);
+        return AppConsents.builder()
+                .setMsmtConsent(measurementConsented)
+                .setTopicsConsent(topicsConsented)
+                .setFledgeConsent(fledgeConsented)
+                .setDefaultConsent(defaultConsent)
+                .build();
     }
 
     @NonNull
@@ -1858,5 +1934,36 @@ public class ConsentManager {
         }
 
         return defaultReturn;
+    }
+
+    /* Returns the region od the device */
+    private static int getConsentRegion(@NonNull Context context) {
+        return DeviceRegionProvider.isEuDevice(context)
+                ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+    }
+
+    /* Returns an object of ConsentMigrationStats */
+    private static ConsentMigrationStats getConsentManagerStatsForLogging(
+            AppConsents appConsents,
+            ConsentMigrationStats.MigrationStatus migrationStatus,
+            ConsentMigrationStats.MigrationType migrationType,
+            Context context) {
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setMigrationType(migrationType)
+                        .setMigrationStatus(migrationStatus)
+                        // When appConsents is null we log it as a failure
+                        .setMigrationStatus(
+                                appConsents != null
+                                        ? migrationStatus
+                                        : ConsentMigrationStats.MigrationStatus.FAILURE)
+                        .setMsmtConsent(appConsents == null || appConsents.getMsmtConsent())
+                        .setTopicsConsent(appConsents == null || appConsents.getTopicsConsent())
+                        .setFledgeConsent(appConsents == null || appConsents.getFledgeConsent())
+                        .setDefaultConsent(appConsents == null || appConsents.getDefaultConsent())
+                        .setRegion(getConsentRegion(context))
+                        .build();
+        return consentMigrationStats;
     }
 }
