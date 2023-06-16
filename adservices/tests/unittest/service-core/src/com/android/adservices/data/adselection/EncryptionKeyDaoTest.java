@@ -91,7 +91,7 @@ public class EncryptionKeyDaoTest {
     @Before
     public void setup() {
         mEncryptionKeyDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionEncryptionDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
     }

@@ -71,7 +71,7 @@ public class EncryptionContextDaoTest {
     @Before
     public void setup() {
         mEncryptionContextDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionEncryptionDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionContextDao();
         // TODO(b/286277223): Create an actual object once the serialize method is implemented.

@@ -33,7 +33,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.AdSelectionEncryptionDatabase;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -78,7 +78,7 @@ public class AdSelectionEncryptionKeyManagerTest {
         mEncryptionKeyDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
-                                AdSelectionEncryptionDatabase.class)
+                                AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
         mKeyManager =

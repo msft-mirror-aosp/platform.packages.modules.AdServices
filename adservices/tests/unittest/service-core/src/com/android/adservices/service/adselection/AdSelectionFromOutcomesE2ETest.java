@@ -64,10 +64,14 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -184,6 +188,10 @@ public class AdSelectionFromOutcomesE2ETest {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
+    private FrequencyCapDao mFrequencyCapDao;
+    private EncryptionKeyDao mEncryptionKeyDao;
+    private EncryptionContextDao mEncryptionContextDao;
+    private ReportingUrisDao mReportingUrisDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
@@ -224,9 +232,14 @@ public class AdSelectionFromOutcomesE2ETest {
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
-        FrequencyCapDao frequencyCapDao = sharedDb.frequencyCapDao();
+        mFrequencyCapDao = sharedDb.frequencyCapDao();
+        AdSelectionServerDatabase serverDb =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
+        mEncryptionContextDao = serverDb.encryptionContextDao();
+        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mReportingUrisDao = serverDb.reportingUrisDao();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, frequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -242,7 +255,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
-                        frequencyCapDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
