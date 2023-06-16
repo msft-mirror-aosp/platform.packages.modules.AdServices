@@ -2261,4 +2261,14 @@ public interface Flags {
     default boolean getMeasurementEnableCoarseEventReportDestinations() {
         return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
     }
+
+    /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
+    boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
+
+    /***
+     * Returns true when logging consent migration metrics is enabled when OTA from S to T+.
+     */
+    default boolean getAdservicesConsentMigrationLoggingEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
+    }
 }
