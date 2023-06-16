@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -1309,7 +1310,10 @@ public final class MeasurementServiceImplTest {
     private void updateAttributionPermissionDenied(boolean denied) {
         final boolean allowed = !denied;
         ExtendedMockito.doReturn(allowed)
-                .when(() -> PermissionHelper.hasAttributionPermission(any(Context.class)));
+                .when(
+                        () ->
+                                PermissionHelper.hasAttributionPermission(
+                                        any(Context.class), anyString()));
     }
 
     private void updateConsentDenied(boolean denied) {
