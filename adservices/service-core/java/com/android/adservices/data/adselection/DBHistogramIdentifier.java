@@ -87,6 +87,12 @@ public abstract class DBHistogramIdentifier {
     @Nullable
     public abstract String getCustomAudienceName();
 
+    /** Returns the package name of the app the histogram is updated from. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "source_app", index = true, defaultValue = "")
+    @Nullable
+    public abstract String getSourceApp();
+
     /** Returns an AutoValue builder for a {@link DBHistogramIdentifier} object. */
     @NonNull
     public static Builder builder() {
@@ -108,13 +114,15 @@ public abstract class DBHistogramIdentifier {
             @NonNull String adCounterKey,
             @NonNull AdTechIdentifier buyer,
             @Nullable String customAudienceOwner,
-            @Nullable String customAudienceName) {
+            @Nullable String customAudienceName,
+            @NonNull String sourceApp) {
         return builder()
                 .setHistogramIdentifierForeignKey(histogramIdentifierForeignKey)
                 .setAdCounterKey(adCounterKey)
                 .setBuyer(buyer)
                 .setCustomAudienceOwner(customAudienceOwner)
                 .setCustomAudienceName(customAudienceName)
+                .setSourceApp(sourceApp)
                 .build();
     }
 
@@ -129,8 +137,13 @@ public abstract class DBHistogramIdentifier {
     public static DBHistogramIdentifier fromHistogramEvent(@NonNull HistogramEvent event) {
         Objects.requireNonNull(event);
 
-        // The string ad counter key has been deprecated and moved to DBHistogramEventData
-        Builder tempBuilder = builder().setAdCounterKey("").setBuyer(event.getBuyer());
+        Builder tempBuilder =
+                builder()
+                        // The string ad counter key has been deprecated and moved
+                        //  to DBHistogramEventData
+                        .setAdCounterKey("")
+                        .setBuyer(event.getBuyer())
+                        .setSourceApp(event.getSourceApp());
 
         // Only win-typed events must be scoped to a custom audience, so leave them null otherwise
         if (event.getAdEventType() == FrequencyCapFilters.AD_EVENT_TYPE_WIN) {
@@ -177,6 +190,10 @@ public abstract class DBHistogramIdentifier {
         /** Sets the name of the custom audience the histogram is associated with. */
         @NonNull
         public abstract Builder setCustomAudienceName(@Nullable String value);
+
+        /** Sets the package name of the app the histogram is updated from. */
+        @NonNull
+        public abstract Builder setSourceApp(@NonNull String value);
 
         /**
          * Builds and returns the {@link DBHistogramIdentifier} object.

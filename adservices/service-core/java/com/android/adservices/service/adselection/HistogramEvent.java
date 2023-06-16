@@ -62,6 +62,10 @@ public abstract class HistogramEvent {
     @NonNull
     public abstract Instant getTimestamp();
 
+    /** Returns the package name of the source app the histogram is being updated from. */
+    @NonNull
+    public abstract String getSourceApp();
+
     /** Returns an AutoValue builder for a {@link HistogramEvent} object. */
     @NonNull
     public static Builder builder() {
@@ -97,6 +101,10 @@ public abstract class HistogramEvent {
         /** Sets the timestamp for the event. */
         @NonNull
         public abstract Builder setTimestamp(@NonNull Instant timestamp);
+
+        /** Sets the package name of the source app the histogram is being updated from. */
+        @NonNull
+        public abstract Builder setSourceApp(@NonNull String sourceApp);
 
         /**
          * Builds and returns the {@link HistogramEvent} object.
