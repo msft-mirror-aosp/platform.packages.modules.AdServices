@@ -135,6 +135,7 @@ import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFES
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
@@ -145,6 +146,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLB
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
@@ -329,6 +331,7 @@ import static com.android.adservices.service.PhFlags.KEY_MDD_TOPICS_CLASSIFIER_M
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
@@ -344,6 +347,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
@@ -3856,6 +3860,43 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementEnableConfigurableAggregateReportDelay() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementEnableConfigurableAggregateReportDelay())
+                .isEqualTo(MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY);
+
+        final boolean phOverridingValue = true;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementEnableConfigurableAggregateReportDelay()).isTrue();
+    }
+
+    @Test
+    public void testGetMeasurementAggregateReportDelay() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementAggregateReportDelayConfig())
+                .isEqualTo(MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG);
+
+        final String phOverridingValue = "1000,1000";
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementAggregateReportDelayConfig())
                 .isEqualTo(phOverridingValue);
     }
 

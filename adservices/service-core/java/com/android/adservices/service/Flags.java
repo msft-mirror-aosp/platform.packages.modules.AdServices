@@ -2331,6 +2331,33 @@ public interface Flags {
         return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
+    /** Disable aggregate report delay by default. */
+    boolean MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY = false;
+
+    /** Returns true if aggregate report delay configurability is enabled, false otherwise. */
+    default boolean getMeasurementEnableConfigurableAggregateReportDelay() {
+        return MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
+    }
+
+    /**
+     * Default aggregate report delay. Derived from {@link
+     * PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and {@link
+     * PrivacyParams#AGGREGATE_REPORT_DELAY_SPAN}.
+     */
+    String MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
+            String.join(
+                    ",",
+                    Long.toString(TimeUnit.MINUTES.toMillis(10L)),
+                    Long.toString(TimeUnit.MINUTES.toMillis(50L)));
+
+    /**
+     * Returns configured comma separated aggregate report min delay and aggregate report delay
+     * span.
+     */
+    default String getMeasurementAggregateReportDelayConfig() {
+        return MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
+    }
+
     /** Disable conversions configurability by default. */
     boolean DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS = false;
 
