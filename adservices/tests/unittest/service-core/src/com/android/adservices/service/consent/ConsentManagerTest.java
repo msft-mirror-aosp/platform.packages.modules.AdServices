@@ -239,7 +239,7 @@ public class ConsentManagerTest {
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
-        doReturn(false).when(mMockFlags).getAdservicesConsentMigrationLoggingKillSwitch();
+        doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
         ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doReturn(true)
                 .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -2645,7 +2645,9 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testMigratePpApiConsentToSystemServiceThrowsException() throws RemoteException {
+    public void testMigratePpApiConsentToSystemServiceThrowsException()
+            throws RemoteException, IOException {
+        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
         doThrow(RemoteException.class).when(mMockIAdServicesManager).recordNotificationDisplayed();
 
         ExtendedMockito.doNothing()
