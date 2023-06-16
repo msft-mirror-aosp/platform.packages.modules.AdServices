@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
@@ -29,10 +30,12 @@ public class WebTest {
 
     private static final String COM_PUBLIC_SUFFIX = "com";
     private static final String BLOGSPOT_COM_PUBLIC_SUFFIX = "blogspot.com";
+    private static final String INVALID_TLD = "invalid_tld";
     private static final String TOP_PRIVATE_DOMAIN = "private-domain";
     private static final String SUBDOMAIN = "subdomain";
     private static final String HTTPS_SCHEME = "https";
     private static final String HTTP_SCHEME = "http";
+    private static final String INVALID_URL = "invalid url";
     private static final String PORT = "443";
 
     private static final Uri HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX =
@@ -158,5 +161,57 @@ public class WebTest {
         Optional<Uri> output = Web.originAndScheme(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX_PORT);
         assertTrue(output.isPresent());
         assertEquals(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX_PORT, output.get());
+    }
+
+    @Test
+    public void testTopPrivateDomainAndPath_ForInvalidUri_ReturnsEmptyOptional() {
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(Uri.parse(INVALID_URL));
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void testOriginAndScheme_ForInvalidUri_ReturnsEmptyOptional() {
+        Optional<Uri> output = Web.originAndScheme(Uri.parse(INVALID_URL));
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void testTopPrivateDomainAndScheme_InvalidTldAndHttpScheme_ReturnsEmptyOptional() {
+        String inputUrl = String.format("%s://%s.%s", HTTP_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
+        Optional<Uri> output = Web.topPrivateDomainAndScheme(Uri.parse(inputUrl));
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void testOriginAndScheme_InvalidTldAndHttpScheme_ReturnsEmptyOptional() {
+        String inputUrl = String.format("%s://%s.%s", HTTP_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
+        Optional<Uri> output = Web.originAndScheme(Uri.parse(inputUrl));
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void testOriginAndScheme_InvalidTldAndHttpsScheme_ReturnsEmptyOptional() {
+        String inputUrl =
+                String.format("%s://%s.%s", HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
+        Optional<Uri> output = Web.originAndScheme(Uri.parse(inputUrl));
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void testOriginAndScheme_InvalidTldAndHttpSchemeAndSubdomain_ReturnsEmptyOptional() {
+        String inputUrl =
+                String.format(
+                        "%s://%s.%s.%s", HTTP_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, INVALID_TLD);
+        Optional<Uri> output = Web.originAndScheme(Uri.parse(inputUrl));
+        assertFalse(output.isPresent());
+    }
+
+    @Test
+    public void testOriginAndScheme_InvalidTldAndHttpsSchemeAndSubdomain_ReturnsEmptyOptional() {
+        String inputUrl =
+                String.format(
+                        "%s://%s.%s.%s", HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, INVALID_TLD);
+        Optional<Uri> output = Web.originAndScheme(Uri.parse(inputUrl));
+        assertFalse(output.isPresent());
     }
 }
