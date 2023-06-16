@@ -108,7 +108,8 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
                 HistogramEvent.builder()
                         .setAdEventType(adEventType)
                         .setBuyer(histogramInfo.getBuyer())
-                        .setTimestamp(eventTimestamp);
+                        .setTimestamp(eventTimestamp)
+                        .setSourceApp(callerPackageName);
 
         sLogger.v("Inserting %d histogram events", adCounterKeys.size());
         for (Integer key : adCounterKeys) {

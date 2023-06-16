@@ -43,6 +43,7 @@ public class DBHistogramIdentifierTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
                         .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
@@ -52,6 +53,7 @@ public class DBHistogramIdentifierTest {
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -61,6 +63,7 @@ public class DBHistogramIdentifierTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
                         .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey()).isNull();
@@ -69,6 +72,7 @@ public class DBHistogramIdentifierTest {
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -80,6 +84,7 @@ public class DBHistogramIdentifierTest {
                                 .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                                 .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
                                 .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                                .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                                 .build());
     }
 
@@ -90,6 +95,7 @@ public class DBHistogramIdentifierTest {
                         .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
@@ -98,6 +104,7 @@ public class DBHistogramIdentifierTest {
         assertThat(originalIdentifier.getCustomAudienceOwner()).isNull();
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -107,6 +114,7 @@ public class DBHistogramIdentifierTest {
                         .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
@@ -115,6 +123,27 @@ public class DBHistogramIdentifierTest {
         assertThat(originalIdentifier.getCustomAudienceOwner())
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName()).isNull();
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
+    }
+
+    @Test
+    public void testBuildUnsetSourceApp_success() {
+        DBHistogramIdentifier originalIdentifier =
+                DBHistogramIdentifier.builder()
+                        .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .build();
+
+        assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
+                .isEqualTo(VALID_FOREIGN_KEY);
+        assertThat(originalIdentifier.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(originalIdentifier.getCustomAudienceOwner())
+                .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(originalIdentifier.getCustomAudienceName())
+                .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isNull();
     }
 
     @Test
@@ -125,6 +154,7 @@ public class DBHistogramIdentifierTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
                         .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey()).isNull();
@@ -133,6 +163,7 @@ public class DBHistogramIdentifierTest {
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -149,6 +180,7 @@ public class DBHistogramIdentifierTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceOwner(null)
                         .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
@@ -157,6 +189,7 @@ public class DBHistogramIdentifierTest {
         assertThat(originalIdentifier.getCustomAudienceOwner()).isNull();
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -167,6 +200,7 @@ public class DBHistogramIdentifierTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
                         .setCustomAudienceName(null)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
@@ -175,6 +209,28 @@ public class DBHistogramIdentifierTest {
         assertThat(originalIdentifier.getCustomAudienceOwner())
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName()).isNull();
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
+    }
+
+    @Test
+    public void testSetNullSourceApp_success() {
+        DBHistogramIdentifier originalIdentifier =
+                DBHistogramIdentifier.builder()
+                        .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setSourceApp(null)
+                        .build();
+
+        assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
+                .isEqualTo(VALID_FOREIGN_KEY);
+        assertThat(originalIdentifier.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(originalIdentifier.getCustomAudienceOwner())
+                .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(originalIdentifier.getCustomAudienceName())
+                .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isNull();
     }
 
     @Test
@@ -185,7 +241,8 @@ public class DBHistogramIdentifierTest {
                         DEPRECATED_KEY,
                         CommonFixture.VALID_BUYER_1,
                         CommonFixture.TEST_PACKAGE_NAME,
-                        CustomAudienceFixture.VALID_NAME);
+                        CustomAudienceFixture.VALID_NAME,
+                        CommonFixture.TEST_PACKAGE_NAME_1);
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
                 .isEqualTo(VALID_FOREIGN_KEY);
@@ -194,6 +251,7 @@ public class DBHistogramIdentifierTest {
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -206,7 +264,8 @@ public class DBHistogramIdentifierTest {
                                 null,
                                 CommonFixture.VALID_BUYER_1,
                                 CommonFixture.TEST_PACKAGE_NAME,
-                                CustomAudienceFixture.VALID_NAME));
+                                CustomAudienceFixture.VALID_NAME,
+                                CommonFixture.TEST_PACKAGE_NAME_1));
     }
 
     @Test
@@ -219,7 +278,8 @@ public class DBHistogramIdentifierTest {
                                 DEPRECATED_KEY,
                                 null,
                                 CommonFixture.TEST_PACKAGE_NAME,
-                                CustomAudienceFixture.VALID_NAME));
+                                CustomAudienceFixture.VALID_NAME,
+                                CommonFixture.TEST_PACKAGE_NAME_1));
     }
 
     @Test
@@ -230,7 +290,8 @@ public class DBHistogramIdentifierTest {
                         DEPRECATED_KEY,
                         CommonFixture.VALID_BUYER_1,
                         null,
-                        CustomAudienceFixture.VALID_NAME);
+                        CustomAudienceFixture.VALID_NAME,
+                        CommonFixture.TEST_PACKAGE_NAME_1);
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
                 .isEqualTo(VALID_FOREIGN_KEY);
@@ -238,6 +299,7 @@ public class DBHistogramIdentifierTest {
         assertThat(originalIdentifier.getCustomAudienceOwner()).isNull();
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -248,7 +310,8 @@ public class DBHistogramIdentifierTest {
                         DEPRECATED_KEY,
                         CommonFixture.VALID_BUYER_1,
                         CommonFixture.TEST_PACKAGE_NAME,
-                        null);
+                        null,
+                        CommonFixture.TEST_PACKAGE_NAME_1);
 
         assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
                 .isEqualTo(VALID_FOREIGN_KEY);
@@ -256,6 +319,28 @@ public class DBHistogramIdentifierTest {
         assertThat(originalIdentifier.getCustomAudienceOwner())
                 .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
         assertThat(originalIdentifier.getCustomAudienceName()).isNull();
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
+    }
+
+    @Test
+    public void testCreateNullSourceApp_success() {
+        DBHistogramIdentifier originalIdentifier =
+                DBHistogramIdentifier.create(
+                        VALID_FOREIGN_KEY,
+                        DEPRECATED_KEY,
+                        CommonFixture.VALID_BUYER_1,
+                        CommonFixture.TEST_PACKAGE_NAME,
+                        CustomAudienceFixture.VALID_NAME,
+                        /* sourceApp= */ null);
+
+        assertThat(originalIdentifier.getHistogramIdentifierForeignKey())
+                .isEqualTo(VALID_FOREIGN_KEY);
+        assertThat(originalIdentifier.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(originalIdentifier.getCustomAudienceOwner())
+                .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(originalIdentifier.getCustomAudienceName())
+                .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(originalIdentifier.getSourceApp()).isNull();
     }
 
     @Test
@@ -269,6 +354,7 @@ public class DBHistogramIdentifierTest {
                 .isEqualTo(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer());
         assertThat(originalIdentifier.getCustomAudienceOwner()).isNull();
         assertThat(originalIdentifier.getCustomAudienceName()).isNull();
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
@@ -284,6 +370,7 @@ public class DBHistogramIdentifierTest {
                 .isEqualTo(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getCustomAudienceOwner());
         assertThat(originalIdentifier.getCustomAudienceName())
                 .isEqualTo(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getCustomAudienceName());
+        assertThat(originalIdentifier.getSourceApp()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
     @Test
