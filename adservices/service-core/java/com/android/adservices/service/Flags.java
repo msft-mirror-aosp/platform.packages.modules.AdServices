@@ -1689,13 +1689,25 @@ public interface Flags {
      * PP API Rate Limit for measurement register source. This is the max allowed QPS for one API
      * client to one PP API. Negative Value means skipping the rate limiting checking.
      */
-    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for measurement register web source. This is the max allowed QPS for one
      * API client to one PP API. Negative Value means skipping the rate limiting checking.
      */
-    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
+     * PP API Rate Limit for measurement register trigger. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
+     * PP API Rate Limit for measurement register web trigger. This is the max allowed QPS for one
+     * API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for Topics API based on App Package name. This is the max allowed QPS for
@@ -1748,6 +1760,16 @@ public interface Flags {
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
     default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Trigger Request Permits Per Second. */
+    default float getMeasurementRegisterTriggerRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Web Trigger Request Permits Per Second. */
+    default float getMeasurementRegisterWebTriggerRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Fledge Report Interaction API Request Permits Per Second. */
