@@ -82,11 +82,15 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
-    private static final int DEFAULT_REQUEST_PER_SECOND = 5;
+    private static final int DEFAULT_REQUEST_PER_SECOND = 25;
     private static final String FLAG_REGISTER_SOURCE =
             "measurement_register_source_request_permits_per_second";
     private static final String FLAG_REGISTER_WEB_SOURCE =
             "measurement_register_web_source_request_permits_per_second";
+    private static final String FLAG_REGISTER_TRIGGER =
+            "measurement_register_trigger_request_permits_per_second";
+    private static final String FLAG_REGISTER_WEB_TRIGGER =
+            "measurement_register_web_trigger_request_permits_per_second";
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -126,13 +130,11 @@ public class MeasurementManagerCtsTest {
         }
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
-        resetOverrideDisableMeasurementEnrollmentCheck();
         overrideMeasurementKillSwitches(false);
     }
 
     @Test
     public void testRegisterSource_withCallbackButNoServerSetup_NoErrors() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerSource(
                 SOURCE_REGISTRATION_URI,
@@ -140,13 +142,10 @@ public class MeasurementManagerCtsTest {
                 CALLBACK_EXECUTOR,
                 result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
-
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
@@ -167,23 +166,42 @@ public class MeasurementManagerCtsTest {
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
         }
-
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerTrigger(
                 TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
+    }
+
+    @Test
+    public void testRegisterTrigger_verifyRateLimitReached() throws Exception {
+        // Rate limit hasn't reached yet
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerTriggerAndVerifyRateLimitReached(mMeasurementManager));
+        }
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerTriggerAndVerifyRateLimitReached(mMeasurementManager);
+
+        // Verify limit reached
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = registerTriggerAndVerifyRateLimitReached(mMeasurementManager);
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
     }
 
     @Test
     public void registerWebSource_withCallback_NoErrors() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
                         .setDebugKeyAllowed(false)
@@ -204,14 +222,10 @@ public class MeasurementManagerCtsTest {
                 CALLBACK_EXECUTOR,
                 result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
-
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
@@ -233,13 +247,10 @@ public class MeasurementManagerCtsTest {
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
         }
-
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void registerWebTrigger_withCallback_NoErrors() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -253,27 +264,48 @@ public class MeasurementManagerCtsTest {
                 CALLBACK_EXECUTOR,
                 result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
+    }
+
+    @Test
+    public void testRegisterWebTrigger_verifyRateLimitReached() throws Exception {
+        // Rate limit hasn't reached yet
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager));
+        }
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager);
+
+        // Verify limit reached
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit =
+                registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager);
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
     }
 
     @Test
     public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
             throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void
             testDeleteRegistrations_multiple_withRequest_noOrigin_noRange_withCallback_NoErrors()
                     throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
         final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
@@ -285,13 +317,11 @@ public class MeasurementManagerCtsTest {
         mMeasurementManager.deleteRegistrations(
                 deletionRequest, CALLBACK_EXECUTOR, result -> secondCountDownLatch.countDown());
         assertThat(secondCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -301,13 +331,11 @@ public class MeasurementManagerCtsTest {
         mMeasurementManager.deleteRegistrations(
                 deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testDeleteRegistrations_withRequest_withEmptyLists_withRange_withCallback_NoErrors()
             throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.emptyList())
@@ -319,13 +347,11 @@ public class MeasurementManagerCtsTest {
         mMeasurementManager.deleteRegistrations(
                 deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testDeleteRegistrations_withRequest_withUris_withRange_withCallback_NoErrors()
             throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -337,13 +363,11 @@ public class MeasurementManagerCtsTest {
         mMeasurementManager.deleteRegistrations(
                 deletionRequest, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
         final MeasurementManager manager = MeasurementManager.get(sContext);
         Objects.requireNonNull(manager);
 
@@ -372,7 +396,6 @@ public class MeasurementManagerCtsTest {
         manager.deleteRegistrations(request, mExecutorService, callback);
 
         Assert.assertNull(future.get());
-        overrideDisableMeasurementEnrollmentCheck("0");
     }
 
     @Test
@@ -451,12 +474,6 @@ public class MeasurementManagerCtsTest {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
-    // Override the flag to disable Measurement enrollment check. Setting to 1 disables enforcement.
-    private void overrideDisableMeasurementEnrollmentCheck(String val) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_measurement_enrollment_check " + val);
-    }
-
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
         ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
         ShellUtils.runShellCommand(
@@ -465,11 +482,6 @@ public class MeasurementManagerCtsTest {
 
     private void resetOverrideConsentManagerDebugMode() {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
-    }
-
-    private void resetOverrideDisableMeasurementEnrollmentCheck() {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_measurement_enrollment_check null");
     }
 
     // Override measurement related kill switch to ignore the effect of actual PH values.
@@ -545,6 +557,41 @@ public class MeasurementManagerCtsTest {
 
         manager.registerWebSource(
                 webSourceRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private boolean registerTriggerAndVerifyRateLimitReached(MeasurementManager manager)
+            throws InterruptedException {
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        manager.registerTrigger(
+                TRIGGER_REGISTRATION_URI,
+                CALLBACK_EXECUTOR,
+                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private boolean registerWebTriggerAndVerifyRateLimitReached(MeasurementManager manager)
+            throws InterruptedException {
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        WebTriggerParams webTriggerParams =
+                new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
+        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(webTriggerParams), DESTINATION)
+                        .build();
+
+        manager.registerWebTrigger(
+                webTriggerRegistrationRequest,
                 CALLBACK_EXECUTOR,
                 createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
 
