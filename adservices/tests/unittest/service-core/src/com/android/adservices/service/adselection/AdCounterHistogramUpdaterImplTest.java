@@ -314,7 +314,8 @@ public class AdCounterHistogramUpdaterImplTest {
                 HistogramEvent.builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
                         .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setTimestamp(CommonFixture.FIXED_NOW);
+                        .setTimestamp(CommonFixture.FIXED_NOW)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME);
 
         for (Integer key : AdDataFixture.getAdCounterKeys()) {
             verify(mFrequencyCapDaoMock)

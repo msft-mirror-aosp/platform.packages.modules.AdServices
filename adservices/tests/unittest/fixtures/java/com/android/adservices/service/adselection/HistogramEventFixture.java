@@ -96,6 +96,7 @@ public class HistogramEventFixture {
                 .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
                 .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
                 .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+                .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "c9c44390e9e19c10f2302831bc47537b",
+    "identityHash": "2b97f2fea0de21f8d9c3c8ec4b986546",
     "entities": [
       {
         "tableName": "app_install",
@@ -125,7 +125,7 @@
       },
       {
         "tableName": "fcap_histogram_ids",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`foreign_key_id` INTEGER PRIMARY KEY AUTOINCREMENT, `ad_counter_key` TEXT NOT NULL, `buyer` TEXT NOT NULL, `custom_audience_owner` TEXT, `custom_audience_name` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`foreign_key_id` INTEGER PRIMARY KEY AUTOINCREMENT, `ad_counter_key` TEXT NOT NULL, `buyer` TEXT NOT NULL, `custom_audience_owner` TEXT, `custom_audience_name` TEXT, `source_app` TEXT DEFAULT '')",
         "fields": [
           {
             "fieldPath": "histogramIdentifierForeignKey",
@@ -156,6 +156,13 @@
             "columnName": "custom_audience_name",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "sourceApp",
+            "columnName": "source_app",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "''"
           }
         ],
         "primaryKey": {
@@ -200,6 +207,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_fcap_histogram_ids_custom_audience_name` ON `${TABLE_NAME}` (`custom_audience_name`)"
+          },
+          {
+            "name": "index_fcap_histogram_ids_source_app",
+            "unique": false,
+            "columnNames": [
+              "source_app"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_fcap_histogram_ids_source_app` ON `${TABLE_NAME}` (`source_app`)"
           }
         ],
         "foreignKeys": []
@@ -208,7 +224,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c9c44390e9e19c10f2302831bc47537b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2b97f2fea0de21f8d9c3c8ec4b986546')"
     ]
   }
 }
