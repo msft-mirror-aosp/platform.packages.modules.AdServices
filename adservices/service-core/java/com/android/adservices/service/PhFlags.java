@@ -399,6 +399,10 @@ public final class PhFlags implements Flags {
             "measurement_register_source_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_web_source_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_trigger_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_web_trigger_request_permits_per_second";
     static final String KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND =
             "topics_api_app_request_permits_per_second";
     static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
@@ -1971,6 +1975,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementRegisterTriggerRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterWebTriggerRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
     public float getTopicsApiAppRequestPermitsPerSecond() {
         return getPermitsPerSecond(
                 KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND,
@@ -2697,7 +2715,26 @@ public final class PhFlags implements Flags {
                         + KEY_SDK_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getSdkRequestPermitsPerSecond());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getMeasurementRegisterSourceRequestPermitsPerSecond());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getMeasurementRegisterWebSourceRequestPermitsPerSecond());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getMeasurementRegisterTriggerRequestPermitsPerSecond());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getMeasurementRegisterWebTriggerRequestPermitsPerSecond());
         writer.println(
                 "\t"
                         + KEY_MDD_BACKGROUND_TASK_KILL_SWITCH
