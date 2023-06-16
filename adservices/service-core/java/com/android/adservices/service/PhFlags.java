@@ -155,6 +155,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
+    static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
+            "adservices_consent_migration_logging_enabled";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -3198,6 +3201,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
+        writer.println(
+                "\t"
+                        + ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
+                        + " = "
+                        + getAdservicesConsentMigrationLoggingEnabled());
     }
 
     @VisibleForTesting
@@ -3410,5 +3418,13 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+    }
+
+    @Override
+    public boolean getAdservicesConsentMigrationLoggingEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
+                /* defaultValue */ DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
     }
 }
