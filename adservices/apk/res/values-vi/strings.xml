@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Đặt lại quảng cáo do ứng dụng đề xuất?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Dữ liệu đề xuất quảng cáo của các ứng dụng có trong danh sách của bạn sẽ bị xoá và các ứng dụng sẽ đề xuất quảng cáo mới từ giờ trở đi. Có thể bạn vẫn sẽ thấy một số quảng cáo có liên quan."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Đã đặt lại dữ liệu ứng dụng"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Tính năng Chủ đề quảng cáo đang bật"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android sẽ bắt đầu ghi nhớ những chủ đề bạn quan tâm, nhưng có thể mất một lúc để chủ đề đầu tiên xuất hiện."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Tắt tính năng chủ đề quảng cáo?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Danh sách chủ đề này sẽ bị xoá. Android sẽ không ghi nhớ những chủ đề bạn quan tâm nữa, nhưng bạn vẫn có thể nhìn thấy quảng cáo phù hợp."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Tính năng Quảng cáo do ứng dụng gợi ý đang bật"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Các ứng dụng có thể bắt đầu gợi ý quảng cáo. Bạn sẽ nhìn thấy danh sách ứng dụng khi các ứng dụng này bắt đầu gợi ý quảng cáo."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Tắt quảng cáo do ứng dụng gợi ý?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Tất cả dữ liệu gợi ý quảng cáo sẽ bị xoá. Các ứng dụng sẽ không thể tiếp tục gợi ý quảng cáo, nhưng bạn vẫn có thể nhìn thấy quảng cáo phù hợp."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Tính năng Đo lường quảng cáo đang bật"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android chỉ có thể chia sẻ rất ít thông tin với các ứng dụng để giúp các ứng dụng đo lường hiệu suất quảng cáo."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Tắt tính năng đo lường quảng cáo?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Tất cả báo cáo đang chờ xử lý của tính năng đo lường quảng cáo sẽ bị xoá và sẽ không có báo cáo mới nào được tạo hoặc chia sẻ."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Quyền riêng tư trong quảng cáo"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Chủ đề quảng cáo"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Quảng cáo do ứng dụng đề xuất"</string>
