@@ -58,6 +58,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
 
         private EditTextPreference mPackageToOpen;
         private ListPreference mOnClickPreference;
+        private ListPreference mSizePreference;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -82,6 +83,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
             mVideoUrlPreference = (EditTextPreference) findPreferenceOrFail("banner_video_url");
             mOnClickPreference = (ListPreference) findPreferenceOrFail("banner_on_click");
             mPackageToOpen = (EditTextPreference) findPreferenceOrFail("package_to_open");
+            mSizePreference = (ListPreference) findPreferenceOrFail("banner_ad_size");
             final ListPreference viewTypePreference =
                     (ListPreference) findPreferenceOrFail("banner_view_type");
 
@@ -90,12 +92,14 @@ public class BannerOptionsActivity extends AppCompatActivity {
                         final String selection = (String) object;
                         refreshVideoPreferenceVisibility(selection);
                         refreshOnClickEnabled(selection);
+                        refreshAdSize((selection));
                         return true;
                     });
 
             final String viewTypeSelection = viewTypePreference.getValue();
             refreshVideoPreferenceVisibility(viewTypeSelection);
             refreshOnClickEnabled(viewTypeSelection);
+            refreshAdSize(viewTypeSelection);
         }
 
         private void refreshVideoPreferenceVisibility(String viewTypeSelection) {
@@ -120,10 +124,37 @@ public class BannerOptionsActivity extends AppCompatActivity {
                     mOnClickPreference.setSummary("WebView receives clicks");
                     break;
                 }
+                case EDITTEXT:
+                {
+                    mOnClickPreference.setEnabled(false);
+                    mOnClickPreference.setSummaryProvider(null);
+                    mOnClickPreference.setSummary("EditText doesn't need to be clicked");
+                    break;
+                }
                 default:
                 {
                     mOnClickPreference.setEnabled(true);
                     mOnClickPreference.setSummaryProvider(
+                            ListPreference.SimpleSummaryProvider.getInstance());
+                    break;
+                }
+            }
+        }
+
+        private void refreshAdSize(String viewTypeSelection) {
+            BannerOptions.ViewType viewType = BannerOptions.ViewType.valueOf(viewTypeSelection);
+            switch (viewType) {
+                case WEBVIEW:
+                {
+                    mSizePreference.setEnabled(false);
+                    mSizePreference.setSummaryProvider(null);
+                    mSizePreference.setSummary("WebView must be large");
+                    break;
+                }
+                default:
+                {
+                    mSizePreference.setEnabled(true);
+                    mSizePreference.setSummaryProvider(
                             ListPreference.SimpleSummaryProvider.getInstance());
                     break;
                 }
