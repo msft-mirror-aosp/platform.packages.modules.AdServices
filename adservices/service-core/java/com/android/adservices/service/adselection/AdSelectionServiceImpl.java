@@ -65,8 +65,12 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -112,6 +116,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
+    @NonNull private final EncryptionContextDao mEncryptionContextDao;
+    @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
+    @NonNull private final ReportingUrisDao mReportingUrisDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mLightweightExecutor;
     @NonNull private final ExecutorService mBackgroundExecutor;
@@ -136,6 +143,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AppInstallDao appInstallDao,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull FrequencyCapDao frequencyCapDao,
+            @NonNull EncryptionContextDao encryptionContextDao,
+            @NonNull EncryptionKeyDao encryptionKeyDao,
+            @NonNull ReportingUrisDao reportingUrisDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService lightweightExecutorService,
@@ -154,6 +164,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(frequencyCapDao);
+        Objects.requireNonNull(encryptionContextDao);
+        Objects.requireNonNull(encryptionKeyDao);
+        Objects.requireNonNull(reportingUrisDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContextFilter);
         Objects.requireNonNull(lightweightExecutorService);
@@ -168,6 +181,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAppInstallDao = appInstallDao;
         mCustomAudienceDao = customAudienceDao;
         mFrequencyCapDao = frequencyCapDao;
+        mEncryptionContextDao = encryptionContextDao;
+        mEncryptionKeyDao = encryptionKeyDao;
+        mReportingUrisDao = reportingUrisDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mLightweightExecutor = lightweightExecutorService;
@@ -195,6 +211,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 SharedStorageDatabase.getInstance(context).appInstallDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
+                AdSelectionServerDatabase.getInstance(context).reportingUrisDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.create(context, FlagsFactory.getFlags())),

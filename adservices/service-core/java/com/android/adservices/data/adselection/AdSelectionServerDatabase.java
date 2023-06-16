@@ -29,30 +29,28 @@ import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
 
-/** Room based database for ad selection encryption keys. */
+/** Room based database for ad selection on servers. */
 @Database(
-        entities = {DBEncryptionKey.class, DBEncryptionContext.class},
-        version = AdSelectionEncryptionDatabase.ENCRYPTION_DATABASE_VERSION)
+        entities = {DBEncryptionKey.class, DBEncryptionContext.class, DBReportingUris.class},
+        version = AdSelectionServerDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
-public abstract class AdSelectionEncryptionDatabase extends RoomDatabase {
-    public static final int ENCRYPTION_DATABASE_VERSION = 1;
-    public static final String ENCRYPTION_DATABASE_NAME = "adselectionencryption.db";
+public abstract class AdSelectionServerDatabase extends RoomDatabase {
+    public static final int DATABASE_VERSION = 1;
+    public static final String DATABASE_NAME = "adselectionserver.db";
 
     private static final Object SINGLETON_LOCK = new Object();
 
     @GuardedBy("SINGLETON_LOCK")
-    private static AdSelectionEncryptionDatabase sSingleton = null;
+    private static AdSelectionServerDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionEncryptionDatabase given a context. */
-    public static AdSelectionEncryptionDatabase getInstance(@NonNull Context context) {
+    public static AdSelectionServerDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be present.");
         synchronized (SINGLETON_LOCK) {
             if (Objects.isNull(sSingleton)) {
                 sSingleton =
                         Room.databaseBuilder(
-                                        context,
-                                        AdSelectionEncryptionDatabase.class,
-                                        ENCRYPTION_DATABASE_NAME)
+                                        context, AdSelectionServerDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }
@@ -60,11 +58,18 @@ public abstract class AdSelectionEncryptionDatabase extends RoomDatabase {
         }
     }
 
-    /** @return a Dao to access entities in EncryptionKey database. */
+    /**
+     * @return a Dao to access entities in {@link DBEncryptionKey} database.
+     */
     public abstract EncryptionKeyDao encryptionKeyDao();
 
     /**
-     * @return a Dao to access entities in EncryptionContext database.
+     * @return a Dao to access entities in {@link DBEncryptionContext} database.
      */
     public abstract EncryptionContextDao encryptionContextDao();
+
+    /**
+     * @return a Dao to access entities in {@link DBReportingUris} database.
+     */
+    public abstract ReportingUrisDao reportingUrisDao();
 }
