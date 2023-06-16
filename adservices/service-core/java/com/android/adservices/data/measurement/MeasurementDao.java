@@ -1963,7 +1963,7 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertDebugReport(DebugReport debugReport) throws DatastoreException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
@@ -1971,6 +1971,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
                 debugReport.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.DebugReportContract.REFERENCE_ID, debugReport.getReferenceId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

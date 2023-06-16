@@ -248,6 +248,7 @@ public final class MeasurementTables {
         String BODY = "body";
         String ENROLLMENT_ID = "enrollment_id";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String REFERENCE_ID = "reference_id";
     }
 
     /** Contract for xna ignored sources. */
@@ -901,6 +902,8 @@ public final class MeasurementTables {
                     + DebugReportContract.ENROLLMENT_ID
                     + " TEXT, "
                     + DebugReportContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + DebugReportContract.REFERENCE_ID
                     + " TEXT "
                     + ")";
 

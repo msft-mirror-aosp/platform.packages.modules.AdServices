@@ -272,6 +272,7 @@ public class ContentValueFixtures {
         public static final String BODY = "{\"source_event_id\":\"123\"}";
         public static final String ENROLLMENT_ID = "enrollment_id";
         public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+        public static final String REFERENCE_ID = "reference_id";
     }
 
     public static class XnaIgnoredSourcesValues {
@@ -1086,6 +1087,10 @@ public class ContentValueFixtures {
                 DebugReportValues.REGISTRATION_ORIGIN.toString());
 
         return debugReport;
+    }
+
+    public static ContentValues generateDebugReportContentValuesV16() {
+        return generateDebugReportContentValuesV15();
     }
 
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {
