@@ -24,10 +24,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-
-import java.util.stream.Stream;
 
 /* UxEngine for coordinating UX components such as UXs, enrollment channels, and modes. */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -56,29 +52,5 @@ public class UxEngine {
      */
     public void start(AdServicesStates adServicesStates) {
         mUxStatesManager.persistAdServicesStates(adServicesStates);
-    }
-
-    /* Select the first eligible UX based on UX states, falls back to UNSUPPORTED_UX. */
-    PrivacySandboxUxCollection getEligibleUxCollection() {
-        return Stream.of(PrivacySandboxUxCollection.values())
-                .filter(
-                        collection ->
-                                collection.getUx().isEligible(mConsentManager, mUxStatesManager))
-                .findFirst()
-                .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-    }
-
-    /* Select the first eligible enrollment channel for the selected UX. */
-    PrivacySandboxEnrollmentChannelCollection getEligibleEnrollmentChannelCollection(
-            PrivacySandboxUxCollection uxCollection) {
-        return Stream.of(uxCollection.getEnrollmentChannelCollection())
-                .filter(
-                        collection ->
-                                collection
-                                        .getEnrollmentChannel()
-                                        .isEligible(
-                                                uxCollection, mConsentManager, mUxStatesManager))
-                .findFirst()
-                .orElse(null);
     }
 }
