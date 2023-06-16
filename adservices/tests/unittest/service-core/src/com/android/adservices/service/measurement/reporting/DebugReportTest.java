@@ -96,6 +96,7 @@ public final class DebugReportTest {
                         .setBody(mBodyJson)
                         .setEnrollmentId("2")
                         .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
+                        .setReferenceId("6")
                         .build());
     }
 
@@ -111,6 +112,7 @@ public final class DebugReportTest {
                 .setBody(mBodyJson)
                 .setEnrollmentId("2")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
+                .setReferenceId("6")
                 .build();
     }
 
@@ -121,6 +123,7 @@ public final class DebugReportTest {
                 .setBody(mBodyJson)
                 .setEnrollmentId("4")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN_2)
+                .setReferenceId("5")
                 .build();
     }
 }
