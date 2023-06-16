@@ -31,7 +31,12 @@ import static org.mockito.Mockito.verify;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.ConsentNotificationJobService;
+import com.android.adservices.service.common.PackageChangedReceiver;
+import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.util.UxEngineUtil;
@@ -49,9 +54,14 @@ import java.io.IOException;
 
 public class UxEngineTest {
 
-    @Mock private UxStatesManager mUxStatesManager;
-    @Mock private ConsentManager mConsentManager;
-    @Mock private Context mContext;
+    @Mock
+    private UxStatesManager mUxStatesManager;
+    @Mock
+    private ConsentManager mConsentManager;
+    @Mock
+    private Context mContext;
+    @Mock
+    private Flags mFlags;
 
     private UxEngine mUxEngine;
 
@@ -63,21 +73,40 @@ public class UxEngineTest {
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(UxStatesManager.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(FlagsFactory.class)
                         .spyStatic(ConsentNotificationJobService.class)
+                        .spyStatic(PackageChangedReceiver.class)
+                        .spyStatic(BackgroundJobsManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
 
-        doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        ExtendedMockito.doReturn(mConsentManager).when(
+                () -> ConsentManager.getInstance(any())
+        );
+
+        ExtendedMockito.doReturn(mFlags)
+                .when(FlagsFactory::getFlags);
 
         // Do not trigger real notifications.
         ExtendedMockito.doNothing()
                 .when(
                         () ->
                                 ConsentNotificationJobService.schedule(
-                                        any(Context.class), anyBoolean(), anyBoolean()));
+                                        any(), anyBoolean(), anyBoolean()));
+
+        // No real background task invocations.
+        ExtendedMockito.doReturn(true).when(
+                () ->
+                        PackageChangedReceiver.enableReceiver(any(), any()));
+        ExtendedMockito.doNothing().when(
+                () ->
+                        BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
+
+
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
 
         mUxEngine =
                 new UxEngine(
@@ -261,8 +290,13 @@ public class UxEngineTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(adIdEnabled), eq(false)),
-                times(1));
+                                any(Context.class), eq(adIdEnabled), eq(false)));
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags));
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext)
+        );
     }
 
     // GA UX not selected due to feature flag being disabled, which results in no GA UX
@@ -388,8 +422,13 @@ public class UxEngineTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(adIdEnabled), eq(false)),
-                times(1));
+                                any(Context.class), eq(adIdEnabled), eq(false)));
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags));
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext)
+        );
     }
 
     // GA UX not selected due to not being an adult account, which results in no GA UX
@@ -481,7 +520,12 @@ public class UxEngineTest {
         ExtendedMockito.verify(
                 () ->
                         ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(adIdEnabled), eq(false)),
-                times(1));
+                                any(Context.class), eq(adIdEnabled), eq(false)));
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags));
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext)
+        );
     }
 }
