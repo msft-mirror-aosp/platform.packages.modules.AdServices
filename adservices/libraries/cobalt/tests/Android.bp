@@ -29,6 +29,7 @@ android_test {
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "adservices-cobalt",
+        "apache-commons-math",
         "truth-prebuilt",
     ],
     libs: [
