@@ -31,6 +31,18 @@ import java.util.stream.Stream;
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxEngineUtil {
 
+    private UxEngineUtil() {
+    }
+
+    private static class LazyInstanceHolder {
+        static final UxEngineUtil INSTANCE = new UxEngineUtil();
+    }
+
+    /** Returns an instance of the UxEngineUtil. */
+    public static UxEngineUtil getInstance() {
+        return LazyInstanceHolder.INSTANCE;
+    }
+
     /* Select the first eligible UX based on UX states, falls back to UNSUPPORTED_UX. */
     PrivacySandboxUxCollection getEligibleUxCollection(
             ConsentManager consentManager, UxStatesManager uxStatesManager) {
