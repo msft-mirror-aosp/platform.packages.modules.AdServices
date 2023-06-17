@@ -24,17 +24,28 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.util.UxEngineUtil;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /* UxEngine for coordinating UX components such as UXs, enrollment channels, and modes. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxEngine {
     private final ConsentManager mConsentManager;
     private final UxStatesManager mUxStatesManager;
+    private final UxEngineUtil mUxEngineUtil;
+    private final Context mContext;
 
     // TO-DO(b/287060615): Clean up dependencies between UX classes.
-    UxEngine(ConsentManager consentManager, UxStatesManager uxStatesManager) {
+    UxEngine(
+            Context context,
+            ConsentManager consentManager,
+            UxStatesManager uxStatesManager,
+            UxEngineUtil uxEngineUtil) {
+        mContext = context;
         mConsentManager = consentManager;
         mUxStatesManager = uxStatesManager;
+        mUxEngineUtil = uxEngineUtil;
     }
 
     /**
@@ -43,7 +54,10 @@ public class UxEngine {
      */
     public static UxEngine getInstance(Context context) {
         return new UxEngine(
-                ConsentManager.getInstance(context), UxStatesManager.getInstance(context));
+                context,
+                ConsentManager.getInstance(context),
+                UxStatesManager.getInstance(context),
+                UxEngineUtil.getInstance());
     }
 
     /**
@@ -52,5 +66,16 @@ public class UxEngine {
      */
     public void start(AdServicesStates adServicesStates) {
         mUxStatesManager.persistAdServicesStates(adServicesStates);
+
+        PrivacySandboxUxCollection eligibleUx =
+                mUxEngineUtil.getEligibleUxCollection(mConsentManager, mUxStatesManager);
+
+        PrivacySandboxEnrollmentChannelCollection eligibleEnrollmentChannel =
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        eligibleUx, mConsentManager, mUxStatesManager);
+
+        if (eligibleEnrollmentChannel != null) {
+            eligibleEnrollmentChannel.getEnrollmentChannel().enroll(mContext, mConsentManager);
+        }
     }
 }

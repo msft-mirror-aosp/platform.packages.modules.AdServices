@@ -16,17 +16,34 @@
 
 package com.android.adservices.service.ui;
 
+import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
+
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import android.adservices.common.AdServicesStates;
+import android.content.Context;
+
+import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.util.UxEngineUtil;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
@@ -34,21 +51,437 @@ public class UxEngineTest {
 
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
+    @Mock private Context mContext;
+
     private UxEngine mUxEngine;
+
+    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
 
-        mUxEngine = new UxEngine(mConsentManager, mUxStatesManager);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(UxStatesManager.class)
+                        .spyStatic(ConsentManager.class)
+                        .spyStatic(ConsentNotificationJobService.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+
+        // Do not trigger real notifications.
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                ConsentNotificationJobService.schedule(
+                                        any(Context.class), anyBoolean(), anyBoolean()));
+
+        mUxEngine =
+                new UxEngine(
+                        mContext, mConsentManager, mUxStatesManager, UxEngineUtil.getInstance());
     }
 
-    @Test
-    public void startTest_statesPersisted() {
-        doNothing().when(mUxStatesManager).persistAdServicesStates(any());
+    @After
+    public void teardown() throws IOException {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
+    }
 
-        mUxEngine.start(any());
+    // Unsupported UX selected due to top level UX flag disabled, which results in no enrollment
+    // actions and no more UX checks.
+    @Test
+    public void startTest_uxDisabled() {
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+
+        mUxEngine.start(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .setPrivacySandboxUiRequest(true)
+                        .build());
 
         verify(mUxStatesManager).persistAdServicesStates(any());
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager, never()).isEntryPointEnabled();
+
+        ExtendedMockito.verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), anyBoolean(), anyBoolean()),
+                times(0));
+    }
+
+    // Unsupported UX selected due to entry point disabled, which results in no enrollment
+    // actions and no more UX checks.
+    @Test
+    public void startTest_entryPointDisabled() {
+        boolean entryPointEnabled = false;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(false).when(mConsentManager).isEntryPointEnabled();
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager, never()).getFlag(KEY_U18_UX_ENABLED);
+
+        ExtendedMockito.verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(adIdEnabled), eq(false)),
+                times(0));
+    }
+
+    // U18 UX not selected due to feature flag disabled, which results in no U18 enrollment
+    // action and failed U18 UX check.
+    @Test
+    public void startTest_u18FeatureDisabled() {
+        boolean entryPointEnabled = true;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager, never()).isU18Account();
+
+        // GA UX logic.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+    }
+
+    // U18 UX not selected due to ineligible account type, which results in no U18 enrollment
+    // action and failed U18 UX check.
+    @Test
+    public void startTest_isNotU18Account() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+    }
+
+    // U18 UX selected, which results in U18 enrollment action and no more UX checks.
+    @Test
+    public void startTest_u18UxEligible() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = true;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(true)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic.
+        verify(mUxStatesManager, never()).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        ExtendedMockito.verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(adIdEnabled), eq(false)),
+                times(1));
+    }
+
+    // GA UX not selected due to feature flag being disabled, which results in no GA UX
+    // enrollment action and failed GA UX check.
+    @Test
+    public void startTest_gaUxFeatureDisabled() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = true;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic, twice since Beta UX was also checked.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+    }
+
+    // GA UX not selected due to not being an adult account, which results in no GA UX
+    // enrollment action and failed GA UX check.
+    @Test
+    public void startTest_gaUxNotAdultAccount() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = false;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic, twice since Beta UX was also checked.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        verify(mConsentManager).isAdultAccount();
+    }
+
+    // GA UX selected, which results in GA UX enrollment action and no more UX checks.
+    @Test
+    public void startTest_gaUxEligible() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = true;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic.
+        verify(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        verify(mConsentManager).isAdultAccount();
+
+        ExtendedMockito.verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(adIdEnabled), eq(false)),
+                times(1));
+    }
+
+    // GA UX not selected due to not being an adult account, which results in no GA UX
+    // enrollment action and failed GA UX check.
+    @Test
+    public void startTest_betaUxNotAdultAccount() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = false;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic, twice since Beta UX was also checked.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        // Only called once since GA feature has to be off so the account check in GA UX can't
+        // take place.
+        verify(mConsentManager).isAdultAccount();
+
+        ExtendedMockito.verify(
+                () -> ConsentNotificationJobService.schedule(any(), anyBoolean(), anyBoolean()),
+                never());
+    }
+
+    // Beta UX selected, which results in Beta UX enrollment action and no more UX checks.
+    @Test
+    public void startTest_betaUxEligible() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = true;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        verify(mConsentManager).isAdultAccount();
+
+        ExtendedMockito.verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(adIdEnabled), eq(false)),
+                times(1));
     }
 }

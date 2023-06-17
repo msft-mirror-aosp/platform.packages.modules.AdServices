@@ -43,8 +43,8 @@ public class UxEngineUtil {
         return LazyInstanceHolder.INSTANCE;
     }
 
-    /* Select the first eligible UX based on UX states, falls back to UNSUPPORTED_UX. */
-    PrivacySandboxUxCollection getEligibleUxCollection(
+    /** Select the first eligible UX based on UX states, falls back to UNSUPPORTED_UX. */
+    public PrivacySandboxUxCollection getEligibleUxCollection(
             ConsentManager consentManager, UxStatesManager uxStatesManager) {
         return Stream.of(PrivacySandboxUxCollection.values())
                 .filter(
@@ -54,8 +54,8 @@ public class UxEngineUtil {
                 .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
     }
 
-    /* Select the first eligible enrollment channel for the selected UX. */
-    PrivacySandboxEnrollmentChannelCollection getEligibleEnrollmentChannelCollection(
+    /** Select the first eligible enrollment channel for the selected UX. */
+    public PrivacySandboxEnrollmentChannelCollection getEligibleEnrollmentChannelCollection(
             PrivacySandboxUxCollection uxCollection,
             ConsentManager consentManager,
             UxStatesManager uxStatesManager) {
