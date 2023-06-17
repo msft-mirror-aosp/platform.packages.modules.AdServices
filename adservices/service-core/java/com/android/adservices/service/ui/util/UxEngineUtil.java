@@ -16,10 +16,14 @@
 
 package com.android.adservices.service.ui.util;
 
+import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
@@ -67,5 +71,13 @@ public class UxEngineUtil {
                                         .isEligible(uxCollection, consentManager, uxStatesManager))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /** Start running background tasks when user consent is given. */
+    public void startBackgroundTasksUponConsent(Context context, Flags flags) {
+        if (ConsentManager.getInstance(context).getConsent().isGiven()) {
+            PackageChangedReceiver.enableReceiver(context, flags);
+            BackgroundJobsManager.scheduleAllBackgroundJobs(context);
+        }
     }
 }

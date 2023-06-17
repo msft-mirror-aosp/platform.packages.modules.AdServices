@@ -22,6 +22,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
@@ -76,6 +77,8 @@ public class UxEngine {
 
         if (eligibleEnrollmentChannel != null) {
             eligibleEnrollmentChannel.getEnrollmentChannel().enroll(mContext, mConsentManager);
+
+            mUxEngineUtil.startBackgroundTasksUponConsent(mContext, FlagsFactory.getFlags());
         }
     }
 }
