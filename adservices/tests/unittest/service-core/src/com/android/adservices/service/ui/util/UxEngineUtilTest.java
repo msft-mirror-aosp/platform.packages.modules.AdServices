@@ -26,8 +26,16 @@ import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
+import android.content.Context;
+
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -54,6 +62,11 @@ public class UxEngineUtilTest {
     private ConsentManager mConsentManager;
     @Mock
     private AdServicesApiConsent mAdServicesApiConsent;
+    @Mock
+    private Context mContext;
+    @Mock
+    private Flags mFlags;
+
     private MockitoSession mStaticMockSession;
     private UxEngineUtil mUxEngineUtil;
 
@@ -66,6 +79,8 @@ public class UxEngineUtilTest {
                         .spyStatic(UxStatesManager.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(AdServicesApiConsent.class)
+                        .spyStatic(PackageChangedReceiver.class)
+                        .spyStatic(BackgroundJobsManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -75,6 +90,18 @@ public class UxEngineUtilTest {
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
 
         mUxEngineUtil = UxEngineUtil.getInstance();
+
+        ExtendedMockito.doReturn(mConsentManager).when(
+                () -> ConsentManager.getInstance(any())
+        );
+
+        // No real background task invocations.
+        ExtendedMockito.doReturn(true).when(
+                () ->
+                        PackageChangedReceiver.enableReceiver(any(), any()));
+        ExtendedMockito.doNothing().when(
+                () ->
+                        BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
     }
 
     @After
@@ -468,5 +495,38 @@ public class UxEngineUtilTest {
                         mConsentManager,
                         mUxStatesManager))
                 .isNull();
+    }
+
+    // =============================================================================================
+    // startBackgroundTasksUponConsent
+    // =============================================================================================
+    @Test
+    public void startBackgroundTasksUponConsentTest_consentNotGiven() {
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
+
+        mUxEngineUtil.startBackgroundTasksUponConsent(mContext, mFlags);
+
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), never()
+        );
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never()
+        );
+    }
+
+    @Test
+    public void startBackgroundTasksUponConsentTest_consentGiven() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+
+        mUxEngineUtil.startBackgroundTasksUponConsent(mContext, mFlags);
+
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), times(1)
+        );
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), times(1)
+        );
     }
 }
