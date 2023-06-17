@@ -24,6 +24,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableCollection;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -83,16 +84,23 @@ public class AdTechUriValidator implements Validator<Uri> {
         Objects.requireNonNull(violations);
 
         if (Objects.isNull(uri)) {
-            violations.add(String.format(URI_SHOULD_BE_SPECIFIED, mClassName, mUriFieldName));
+            violations.add(
+                    String.format(
+                            Locale.ENGLISH, URI_SHOULD_BE_SPECIFIED, mClassName, mUriFieldName));
         } else {
             String uriHost = uri.getHost();
             if (ValidatorUtil.isStringNullOrEmpty(uriHost)) {
                 violations.add(
-                        String.format(URI_SHOULD_HAVE_PRESENT_HOST, mClassName, mUriFieldName));
+                        String.format(
+                                Locale.ENGLISH,
+                                URI_SHOULD_HAVE_PRESENT_HOST,
+                                mClassName,
+                                mUriFieldName));
             } else if (!ValidatorUtil.isStringNullOrEmpty(mAdTechIdentifier)
-                    && !mAdTechIdentifier.equalsIgnoreCase(uriHost)) {
+                    && !matchesEtldPlus1(uriHost)) {
                 violations.add(
                         String.format(
+                                Locale.ENGLISH,
                                 IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                                 mAdTechRole,
                                 mAdTechIdentifier,
@@ -103,5 +111,16 @@ public class AdTechUriValidator implements Validator<Uri> {
                 violations.add(String.format(URI_SHOULD_USE_HTTPS, mClassName, mUriFieldName));
             }
         }
+    }
+
+    private boolean matchesEtldPlus1(@Nullable String uriHost) {
+        if (ValidatorUtil.isStringNullOrEmpty(uriHost)) {
+            return false;
+        }
+
+        // Positive match if exact match or valid suffix with separating '.' (all case-insensitive)
+        return mAdTechIdentifier.equalsIgnoreCase(uriHost)
+                || uriHost.toLowerCase(Locale.ENGLISH)
+                        .endsWith("." + mAdTechIdentifier.toLowerCase(Locale.ENGLISH));
     }
 }
