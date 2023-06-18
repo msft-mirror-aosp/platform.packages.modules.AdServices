@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Želite da resetujete oglase koje predlažu aplikacije?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Podaci predloga za oglas iz aplikacija na listi će biti izbrisani i aplikacije će ubuduće predlagati nove oglase. I dalje mogu da vam se prikazuju neki srodni oglasi."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Podaci aplikacija su resetovani"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Teme oglasa su uključene"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android će početi da beleži teme koje vas zanimaju, ali može da prođe neko vreme dok se prve teme pojave."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Želite da isključite teme oglasa?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Lista tema će se izbrisati. Android više neće beležiti teme koje vas zanimaju, ali i dalje mogu da vam se prikazuju relevantni oglasi."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Oglasi koje predlažu aplikacije su uključeni"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplikacije mogu da počnu sa predlaganjem oglasa. Videćete listu aplikacija kada počnu da predlažu oglase."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Želite da isključite oglase koje predlažu aplikacije?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Svi podaci o predlozima će se izbrisati. Aplikacije više neće moći da predlažu oglase, ali i dalje mogu da vam se prikazuju relevantni oglasi."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Merenje oglasa je uključeno"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android može da deli samo veoma ograničene informacije sa aplikacijama da bi pomogao aplikacijama da mere učinak oglasa."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Želite da isključite merenje oglasa?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Svi izveštaji o merenju oglasa na čekanju će biti izbrisani i novi izveštaji neće biti generisani ili deljeni."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privatnost sa oglasima"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Teme oglasa"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Oglasi koje predlažu aplikacije"</string>

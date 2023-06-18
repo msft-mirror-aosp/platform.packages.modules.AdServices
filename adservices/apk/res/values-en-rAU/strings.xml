@@ -144,7 +144,7 @@
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interests that you’ve blocked"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Reset all interests"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"No interests to show right now."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"No topics to show right now.\nLearn more about "<a href="https://support.google.com/android?p=ad_privacy">"ad topics"</a></string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"No topics to show at the moment.\nLearn more about "<a href="https://support.google.com/android?p=ad_privacy">"ad topics"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android’s ads privacy beta provides new features that apps can use to show you ads that you might like. These technologies don’t use device identifiers.\n\nAndroid can estimate the kind of ads that you might be interested in and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"You have no blocked interests"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"View blocked apps"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Reset interests estimated by apps"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"No apps are generating interests for you at the moment"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"No apps to show right now. \nLearn more about "<a href="https://support.google.com/android?p=ad_privacy">"app-suggested ads"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"No apps to show at the moment. \nLearn more about "<a href="https://support.google.com/android?p=ad_privacy">"app-suggested ads"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android’s ads privacy beta provides new features that apps can use to show you ads that you might like. These technologies don’t use device identifiers.\n\nApps can estimate the kind of ads that you might be interested in and save these interests temporarily on your device. This allows apps to show you relevant ads, without tracking your activity across websites and apps from other developers."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"You have no blocked apps"</string>
@@ -187,30 +187,18 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Reset ads suggested by apps?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Ad-suggestion data from the apps on your list will be deleted and the apps will suggest new ads in the future. You may still see some related ads."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"App data was reset"</string>
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
-    <skip />
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Ad topics is on"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android will start noting topics of interest, but it may take a while for your first topics to appear."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Turn off ad topics?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"This list of topics will be deleted. Android won’t note topics of interest anymore, but you may still see relevant ads."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"App-suggested ads is on"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Apps may start suggesting ads. You’ll see a list of apps once they start suggesting ads."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Turn off app-suggested ads?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"All ad suggestion data will be deleted. Apps won’t be able to suggest ads anymore, but you may still see relevant ads."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Ad measurement is on"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android can share only very limited information with apps to help apps measure the performance of their ads."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Turn off ad measurement?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"All pending ad measurement reports will be deleted and no new reports will be generated or shared."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Ads privacy"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Ad topics"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"App-suggested ads"</string>
