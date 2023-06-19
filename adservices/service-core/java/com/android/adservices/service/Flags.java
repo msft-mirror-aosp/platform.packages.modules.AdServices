@@ -857,8 +857,8 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
     }
 
-    // TODO(b/278054645): Configure key fetch URI for auction.
-    String AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI = "https://";
+    String AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI =
+            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
 
     /**
      * @return Uri to fetch auction encryption key for fledge ad selection.
