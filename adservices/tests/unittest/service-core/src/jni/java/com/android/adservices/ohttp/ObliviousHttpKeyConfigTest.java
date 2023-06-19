@@ -137,4 +137,61 @@ public class ObliviousHttpKeyConfigTest {
                 BaseEncoding.base16().lowerCase().encode(response.getBytes()),
                 "6d6573736167652f626874747020726571756573740001002000010001");
     }
+
+    @Test
+    public void serializeKeyConfigToBytes_fromBuilder_getCorrectSerialization() throws Exception {
+        ObliviousHttpKeyConfig keyConfig =
+                ObliviousHttpKeyConfig.builder()
+                        .setKeyId(1)
+                        .setKemId(32)
+                        .setPublicKey(
+                                BaseEncoding.base16()
+                                        .lowerCase()
+                                        .decode(
+                                                "31e1f05a740102115220e9af918"
+                                                        + "f738674aec95f54db6e04eb705aae8e798155"))
+                        .setKdfId(1)
+                        .setAeadId(1)
+                        .build();
+
+        byte[] serializedBytes = keyConfig.serializeKeyConfigToBytes();
+
+        String keyConfigHex =
+                "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
+                        + "000400010001";
+        Assert.assertEquals(
+                BaseEncoding.base16().lowerCase().encode(serializedBytes), keyConfigHex);
+    }
+
+    @Test
+    public void serializeKeyConfigToBytes_fromSerializedKeyConfig_getSameKey() throws Exception {
+        String keyConfigHex =
+                "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
+                        + "000400010001";
+        byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
+        ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
+
+        byte[] serializedBytes = keyConfig.serializeKeyConfigToBytes();
+
+        Assert.assertEquals(
+                BaseEncoding.base16().lowerCase().encode(serializedBytes), keyConfigHex);
+    }
+
+    @Test
+    public void serializeKeyConfigToBytes_multipleAlgorithms_returnsSerializationWithOneSet()
+            throws Exception {
+        String keyConfigHex =
+                "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
+                        + "00080001000100110001";
+        byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
+        ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
+
+        byte[] serializedBytes = keyConfig.serializeKeyConfigToBytes();
+
+        String expectedKeyConfigHex =
+                "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
+                        + "000400010001";
+        Assert.assertEquals(
+                BaseEncoding.base16().lowerCase().encode(serializedBytes), expectedKeyConfigHex);
+    }
 }
