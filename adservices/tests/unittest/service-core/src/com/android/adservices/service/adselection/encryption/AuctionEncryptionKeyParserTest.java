@@ -37,10 +37,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
 import org.json.JSONException;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.List;
 
@@ -136,22 +138,7 @@ public class AuctionEncryptionKeyParserTest {
     }
 
     @Test
-    public void getObliviousHttpKeyConfig_keyIdNotInteger_throwsException() {
-        assertThrows(
-                NumberFormatException.class,
-                () ->
-                        mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(
-                                AdSelectionEncryptionKey.builder()
-                                        .setKeyType(
-                                                AdSelectionEncryptionKey
-                                                        .AdSelectionEncryptionKeyType.AUCTION)
-                                        .setKeyIdentifier("key_id")
-                                        .setPublicKey("public_key".getBytes(StandardCharsets.UTF_8))
-                                        .build()));
-    }
-
-    @Test
-    public void getObliviousHttpKeyConfig_returnsKeyConfig() throws Exception {
+    public void getObliviousHttpKeyConfig_insufficientKeyLength_throwsError() {
         byte[] keyContent =
                 "7tabvCt19oMF5Quu4cAQetS6xlLFkjIbcY6330+cjlo=".getBytes(StandardCharsets.UTF_8);
         AdSelectionEncryptionKey key =
@@ -161,9 +148,41 @@ public class AuctionEncryptionKeyParserTest {
                         .setPublicKey(keyContent)
                         .build();
 
+        Assert.assertThrows(
+                InvalidKeySpecException.class,
+                () -> mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(key));
+    }
+
+    @Test
+    public void getObliviousHttpKeyConfig_keyNotHexadecimal_throwsError() {
+        byte[] keyContent =
+                "7tabvCt19oMF5Quu4cAQetS6xlLFkjIbcY6330+cjlo=".getBytes(StandardCharsets.UTF_8);
+        AdSelectionEncryptionKey key =
+                AdSelectionEncryptionKey.builder()
+                        .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
+                        .setKeyIdentifier("@12231")
+                        .setPublicKey(keyContent)
+                        .build();
+
+        Assert.assertThrows(
+                InvalidKeySpecException.class,
+                () -> mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(key));
+    }
+
+    @Test
+    public void getObliviousHttpKeyConfig_convertsKmsKeyIdToOhttpKeyIdCorrectly() throws Exception {
+        byte[] keyContent =
+                "7tabvCt19oMF5Quu4cAQetS6xlLFkjIbcY6330+cjlo=".getBytes(StandardCharsets.UTF_8);
+        AdSelectionEncryptionKey key =
+                AdSelectionEncryptionKey.builder()
+                        .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION)
+                        .setKeyIdentifier("3480000000000000")
+                        .setPublicKey(keyContent)
+                        .build();
+
         ObliviousHttpKeyConfig keyConfig =
                 mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(key);
-        assertThat(keyConfig.keyId()).isEqualTo(1);
+        assertThat(keyConfig.keyId()).isEqualTo(52);
         assertThat(keyConfig.getPublicKey()).isEqualTo(keyContent);
         assertThat(keyConfig.kemId()).isEqualTo(0x0005);
         assertThat(keyConfig.kdfId()).isEqualTo(0x0002);
