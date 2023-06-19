@@ -41,6 +41,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
 import static com.android.adservices.service.adselection.AdSelectionRunner.JS_SANDBOX_IS_NOT_AVAILABLE;
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
@@ -421,6 +422,133 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getBuyerDecisionLogicJs())
                         // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setBuyerContextualSignals("{}")
+                        .setCreationTimestamp(adSelectionCreationTs)
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_2,
+                        ImmutableList.of(mDBCustomAudienceForBuyer2),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        assertEquals(
+                expectedAdSelectionResult.getAdSelectionId(),
+                resultsCallback.mAdSelectionResponse.getAdSelectionId());
+        assertEquals(
+                expectedAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+        assertEquals(
+                expectedAdSelectionResult,
+                mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
+        verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
+        verifyLogForSuccessfulAdSelectionProcess();
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccessWithAdCost() throws AdServicesException {
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        AdCost adCost1 = new AdCost(1.5, NUM_BITS_STOCHASTIC_ROUNDING);
+        BuyerContextualSignals buyerContextualSignals1 =
+                BuyerContextualSignals.builder().setAdCost(adCost1).build();
+
+        AdCost adCost2 = new AdCost(3.0, NUM_BITS_STOCHASTIC_ROUNDING);
+        BuyerContextualSignals buyerContextualSignals2 =
+                BuyerContextualSignals.builder().setAdCost(adCost2).build();
+
+        mAdBiddingOutcomeForBuyer1 =
+                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilderWithBuyerContextualSignals(
+                                BUYER_1, 1.0, buyerContextualSignals1)
+                        .build();
+        mAdBiddingOutcomeForBuyer2 =
+                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilderWithBuyerContextualSignals(
+                                BUYER_2, 2.0, buyerContextualSignals2)
+                        .build();
+        mAdBiddingOutcomeList =
+                Arrays.asList(mAdBiddingOutcomeForBuyer1, mAdBiddingOutcomeForBuyer2);
+
+        mAdScoringOutcomeForBuyer1 =
+                AdScoringOutcomeFixture.anAdScoringBuilderWithBuyerContextualSignals(
+                                BUYER_1, 2.0, buyerContextualSignals1)
+                        .build();
+        mAdScoringOutcomeForBuyer2 =
+                AdScoringOutcomeFixture.anAdScoringBuilderWithBuyerContextualSignals(
+                                BUYER_2, 3.0, buyerContextualSignals2)
+                        .build();
+        mAdScoringOutcomeList =
+                Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
+
+        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mAdFilterer,
+                        mAdCounterKeyCopier,
+                        mFrequencyCapAdDataValidator);
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+        Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
+        when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
+        DBAdSelectionEntry expectedAdSelectionResult =
+                new DBAdSelectionEntry.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setBiddingLogicUri(mDBCustomAudienceForBuyer2.getBiddingLogicUri())
+                        .setWinningAdBid(
+                                mAdScoringOutcomeForBuyer2.getAdWithScore().getAdWithBid().getBid())
+                        .setCustomAudienceSignals(
+                                mAdScoringOutcomeForBuyer2.getCustomAudienceSignals())
+                        .setWinningAdRenderUri(
+                                mAdScoringOutcomeForBuyer2
+                                        .getAdWithScore()
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri())
+                        .setBuyerDecisionLogicJs(
+                                mAdBiddingOutcomeForBuyer1
+                                        .getCustomAudienceBiddingInfo()
+                                        .getBuyerDecisionLogicJs())
+                        // TODO(b/230569187) add contextual signals once supported in the main logic
+                        .setBuyerContextualSignals(buyerContextualSignals2.toString())
                         .setCreationTimestamp(adSelectionCreationTs)
                         .build();
 

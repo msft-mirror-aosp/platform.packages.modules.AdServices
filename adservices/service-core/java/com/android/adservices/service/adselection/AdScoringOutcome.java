@@ -65,13 +65,20 @@ public abstract class AdScoringOutcome {
     public abstract AdTechIdentifier getBuyer();
 
     /**
+     * @return Buyer contextual signals that are used for reporting
+     */
+    @Nullable
+    public abstract BuyerContextualSignals getBuyerContextualSignals();
+
+    /**
      * @return generic builder
      */
     static Builder builder() {
         return new AutoValue_AdScoringOutcome.Builder()
                 .setCustomAudienceSignals(null)
                 .setBiddingLogicJs("")
-                .setBiddingLogicJsDownloaded(false);
+                .setBiddingLogicJsDownloaded(false)
+                .setBuyerContextualSignals(null);
     }
 
     @AutoValue.Builder
@@ -89,6 +96,8 @@ public abstract class AdScoringOutcome {
         abstract Builder setBiddingLogicJsDownloaded(boolean decisionLogicJsDownloaded);
 
         abstract Builder setBuyer(AdTechIdentifier buyer);
+
+        abstract Builder setBuyerContextualSignals(BuyerContextualSignals buyerContextualSignals);
 
         abstract AdScoringOutcome build();
     }

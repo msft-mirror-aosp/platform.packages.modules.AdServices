@@ -51,6 +51,35 @@ public class AdScoringOutcomeFixture {
                                 .getBuyer());
     }
 
+    public static AdScoringOutcome.Builder anAdScoringBuilderWithBuyerContextualSignals(
+            AdTechIdentifier buyerName,
+            Double score,
+            BuyerContextualSignals buyerContextualSignals) {
+
+        AdBiddingOutcome adBiddingOutcome =
+                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(buyerName, 1.0).build();
+
+        return AdScoringOutcome.builder()
+                .setAdWithScore(
+                        AdWithScore.builder()
+                                .setAdWithBid(adBiddingOutcome.getAdWithBid())
+                                .setScore(score)
+                                .build())
+                .setBiddingLogicUri(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBiddingLogicUri())
+                .setCustomAudienceSignals(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
+                .setBiddingLogicJs(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs())
+                .setBiddingLogicJsDownloaded(true)
+                .setBuyerContextualSignals(buyerContextualSignals)
+                .setBuyer(
+                        adBiddingOutcome
+                                .getCustomAudienceBiddingInfo()
+                                .getCustomAudienceSignals()
+                                .getBuyer());
+    }
+
     public static AdScoringOutcome.Builder anAdScoringBuilderWithAdCounterKeys(
             AdTechIdentifier buyer, Double score) {
         return AdScoringOutcome.builder()

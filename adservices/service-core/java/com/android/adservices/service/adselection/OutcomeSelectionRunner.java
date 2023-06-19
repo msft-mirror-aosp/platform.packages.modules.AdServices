@@ -40,6 +40,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -151,6 +152,7 @@ public class OutcomeSelectionRunner {
         mFlags = flags;
         mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
 
+        boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
         mAdOutcomeSelector =
                 new AdOutcomeSelectorImpl(
                         new AdSelectionScriptEngine(
@@ -158,7 +160,8 @@ public class OutcomeSelectionRunner {
                                 flags::getEnforceIsolateMaxHeapSize,
                                 flags::getIsolateMaxHeapSizeBytes,
                                 adCounterKeyCopier,
-                                mDebugReportingScriptStrategy),
+                                mDebugReportingScriptStrategy,
+                                cpcBillingEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,

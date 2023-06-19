@@ -53,6 +53,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -61,9 +64,6 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * This class implements the ad bid generator. A new instance is assumed to be created for every
@@ -107,7 +107,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdCounterKeyCopier adCounterKeyCopier,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            boolean cpcBillingEnabled) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -133,7 +134,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         () -> mFlags.getEnforceIsolateMaxHeapSize(),
                         () -> mFlags.getIsolateMaxHeapSizeBytes(),
                         mAdCounterKeyCopier,
-                        mDebugReportingScriptStrategy);
+                        mDebugReportingScriptStrategy,
+                        cpcBillingEnabled);
         mJsFetcher =
                 new JsFetcher(
                         backgroundExecutorService,
@@ -260,12 +262,15 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     }
                                     CustomAudienceBiddingInfo customAudienceInfo =
                                             CustomAudienceBiddingInfo.create(
-                                                    customAudience, candidate.second);
+                                                    customAudience,
+                                                    candidate.second,
+                                                    candidate.first.getBuyerContextualSignals());
                                     sLogger.v(
                                             "Creating Ad Bidding Outcome for CA: %s",
                                             customAudience.getName());
                                     DebugReport debugReport =
-                                            makeDebugReport(candidate.first,
+                                            makeDebugReport(
+                                                    candidate.first,
                                                     customAudienceInfo.getCustomAudienceSignals());
                                     AdBiddingOutcome result =
                                             AdBiddingOutcome.builder()
@@ -273,7 +278,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                                     .setCustomAudienceBiddingInfo(
                                                             customAudienceInfo)
                                                     .setDebugReport(
-                                                            mDebugReportingEnabled ? debugReport
+                                                            mDebugReportingEnabled
+                                                                    ? debugReport
                                                                     : null)
                                                     .build();
                                     sLogger.d(
