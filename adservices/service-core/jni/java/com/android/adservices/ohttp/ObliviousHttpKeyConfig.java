@@ -152,17 +152,11 @@ public abstract class ObliviousHttpKeyConfig {
         // read one byte from integer keyId
         header[0] = (byte) (keyId() & 0xFF);
 
-        // read two bytes from integer kemId
-        header[1] = (byte) ((kemId() >> 8) & 0xFF);
-        header[2] = (byte) (kemId() & 0xFF);
+        copyTwoBytesFromInteger(kemId(), header, 1);
 
-        // read two bytes from integer kdfId
-        header[3] = (byte) ((kdfId() >> 8) & 0xFF);
-        header[4] = (byte) (kdfId() & 0xFF);
+        copyTwoBytesFromInteger(kdfId(), header, 3);
 
-        // read two bytes from integer aeadId
-        header[5] = (byte) ((aeadId() >> 8) & 0xFF);
-        header[6] = (byte) (aeadId() & 0xFF);
+        copyTwoBytesFromInteger(aeadId(), header, 5);
 
         return header;
     }
@@ -192,11 +186,58 @@ public abstract class ObliviousHttpKeyConfig {
         return Arrays.copyOf(publicKey(), publicKey().length);
     }
 
-
-    /** Serialize the ObliviousHttpKeyConfig to bytes. */
+    /**
+     * Serialize the current keyConfig object into a byte array
+     *
+     * <p>This method is not a strict inverse of {@link #fromSerializedKeyConfig(byte[])}. While
+     * {@link #fromSerializedKeyConfig(byte[])} might receive a byte array with multiple AEAD and
+     * KDF algorithms, we eventually only store the first set of algorithms in
+     * ObliviousHttpKeyConfig, and thus we can only serialize the first set.
+     *
+     * <p>https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#section-3.1-2
+     *
+     * <pre>
+     * HPKE Symmetric Algorithms {
+     *   HPKE KDF ID (16),
+     *   HPKE AEAD ID (16),
+     * }
+     *
+     * OHTTP Key Config {
+     *   Key Identifier (8),
+     *   HPKE KEM ID (16),
+     *   HPKE Public Key (Npk * 8),
+     *   HPKE Symmetric Algorithms Length (16),
+     *   HPKE Symmetric Algorithms (32..262140),
+     * }
+     * </pre>
+     */
     public byte[] serializeKeyConfigToBytes() {
-        // TODO(b/286277223): Replace the placeholder implementation with serialize implementation.
-        return new byte[1];
+        int byteArraySize = getSerializedByteArraySize();
+        byte[] serializedArray = new byte[byteArraySize];
+        int currentIndex = 0;
+
+        // read one byte from integer keyId
+        serializedArray[currentIndex++] = (byte) (keyId() & 0xFF);
+
+        copyTwoBytesFromInteger(kemId(), serializedArray, currentIndex);
+        currentIndex += 2;
+
+        // Copy the public key bytes
+        System.arraycopy(publicKey(), 0, serializedArray, currentIndex, publicKey().length);
+        currentIndex += publicKey().length;
+
+        // Since we only store one set of algorithms, the algorithm length is the sum of KDF ID
+        // and AEAD id.
+        int algorithmsLength = sKdfIdSizeInBytes + sAeadIdSizeInBytes;
+        copyTwoBytesFromInteger(algorithmsLength, serializedArray, currentIndex);
+        currentIndex += 2;
+
+        copyTwoBytesFromInteger(kdfId(), serializedArray, currentIndex);
+        currentIndex += 2;
+
+        copyTwoBytesFromInteger(aeadId(), serializedArray, currentIndex);
+
+        return serializedArray;
     }
 
     /** Builder for ObliviousHttpKeyConfig. */
@@ -251,6 +292,12 @@ public abstract class ObliviousHttpKeyConfig {
         return ((input[startingIndex] & 0xff) << 8) | (input[startingIndex + 1] & 0xff);
     }
 
+    private static void copyTwoBytesFromInteger(
+            int sourceInteger, byte[] targetArray, int targetArrayStartPosition) {
+        targetArray[targetArrayStartPosition] = (byte) ((sourceInteger >> 8) & 0xFF);
+        targetArray[targetArrayStartPosition + 1] = (byte) (sourceInteger & 0xFF);
+    }
+
     private static int getPublicKeyLengthInBytes(int kemIdentifier) throws InvalidKeySpecException {
         try {
             int length = KemAlgorithmSpec.get(kemIdentifier).publicKeyLength();
@@ -258,5 +305,14 @@ public abstract class ObliviousHttpKeyConfig {
         } catch (UnsupportedHpkeAlgorithmException e) {
             throw new InvalidKeySpecException("Unsupported Kem identifier");
         }
+    }
+
+    private int getSerializedByteArraySize() {
+        return sKeyIdSizeInBytes
+                + sKemIdSizeInBytes
+                + publicKey().length
+                + sSymmetricAlgorithmsLengthInBytes
+                + sKdfIdSizeInBytes
+                + sAeadIdSizeInBytes;
     }
 }
