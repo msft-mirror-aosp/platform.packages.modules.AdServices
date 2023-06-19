@@ -134,6 +134,46 @@ public class ObliviousHttpClientTest {
         }
     }
 
+    @Test
+    public void decryptObliviousHttpResponse_withAuctionResult() throws Exception {
+        String keyConfigString =
+                "0400206d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f"
+                        + "012e76fcdcef62000400010002";
+        ObliviousHttpKeyConfig keyConfig =
+                ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                        BaseEncoding.base16().lowerCase().decode(keyConfigString));
+        ObliviousHttpClient client = ObliviousHttpClient.create(keyConfig);
+
+        String plainText = "doesnt matter";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+        String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
+        byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
+        ObliviousHttpRequest request = client.createObliviousHttpRequest(plainTextBytes, seedBytes);
+
+        String cipherText =
+                "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
+                    + "f964b13dc827c6e6b50c6f3ad47c9e75f4fa938531478fcaf95c500b694ce422e083d94cde6a"
+                    + "5995d7f656868da9777fb32823f83652626ce837efc4a962069ab968e14206e83036a740767a"
+                    + "a83e0572c44dd6b9d5cf7f9e895d641f3c0c85626fb8ff253c692a3ba76bc900e1da038216e1"
+                    + "8ffabffc1d933683dd9621e29dab19173e261a6b16f73277448d43c814b2532515729ed89eca"
+                    + "7af797a80d3dd4c3965ee25f8b98c3e423e2ad12b27029c80358bb9f9d55b357ba88ec6e2aa"
+                    + "8eabaf004b0c6fcff364388e72f3bcadd39923f2f3d2bfe8e15beb474d53f78f7a74295e13e8"
+                    + "37256c756df";
+        byte[] decryptedResponse =
+                client.decryptObliviousHttpResponse(
+                        BaseEncoding.base16().lowerCase().decode(cipherText),
+                        request.requestContext());
+
+        String expectedJsonString =
+                "{\"adRenderUrl\":\"test-376003777.com\","
+                        + "\"adComponentRenderUrls\":[],\"interestGroupName\":\"shoe\","
+                        + "\"interestGroupOwner\":\"https://bid1.com\",\"score\":233,"
+                        + "\"bid\":3,\"isChaff\":false,\"biddingGroups\":"
+                        + "{\"https://bid1.com\":{\"index\":[0]}}}";
+
+        Assert.assertEquals(new String(decryptedResponse, "UTF-8"), expectedJsonString);
+    }
+
     private ObliviousHttpKeyConfig getKeyConfig(int keyIdentifier) throws InvalidKeySpecException {
         byte[] keyId = new byte[1];
         keyId[0] = (byte) (keyIdentifier & 0xFF);
