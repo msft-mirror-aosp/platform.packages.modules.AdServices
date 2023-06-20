@@ -96,6 +96,7 @@ import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
+import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
@@ -183,6 +184,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private static final String PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
             "enforce_content_provider_restrictions";
+
+    private static final String PROPERTY_SERVICES_ALLOWLIST =
+            "services_allowlist_per_targetSdkVersion";
 
     @Before
     public void setup() {
@@ -2906,6 +2910,89 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES, Map.of("other_property", "true")));
         assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
+    }
+
+    @Test
+    public void testServiceAllowlist_DeviceConfigNotAvailable() {
+        /** Save the initial value to reset the property to original configuration */
+        final String initialServiceAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+
+        /**
+         * Explicitly calling the onPropertiesChanged method to ensure that the value is propagated
+         * and the updated value is read
+         */
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_SERVICES_ALLOWLIST, "")));
+
+        assertThat(sSdkSandboxSettingsListener.getServiceAllowlistPerTargetSdkVersion()).isEmpty();
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_SERVICES_ALLOWLIST,
+                initialServiceAllowlistValue,
+                /*makeDefault=*/ false);
+    }
+
+    @Test
+    public void testServiceAllowlist_DeviceConfigAllowlistApplied() {
+        /** Save the initial value to reset the property to original configuration */
+        String initialServiceAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+        /**
+         * Base64 encoded Service allowlist allowlist_per_target_sdk { key: 33 value: {
+         * allowed_services: { intentAction : "android.test" componentPackageName :
+         * "packageName.test" componentClassName : "className.test" } } }
+         */
+        final String encodedServiceAllowlist =
+                "CjYIIRIyCjAKDGFuZHJvaWQudGVzdBIQcGFja2FnZU5hbWUudGVzdBoOY2xhc3NOYW1lLnRlc3Q=";
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_SERVICES_ALLOWLIST,
+                encodedServiceAllowlist,
+                /*makeDefault=*/ false);
+        /**
+         * Explicitly calling the onPropertiesChanged method to ensure that the value is propagated
+         * and the updated value is read
+         */
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist)));
+        assertThat(sSdkSandboxSettingsListener.getServiceAllowlistPerTargetSdkVersion())
+                .isNotEmpty();
+
+        final Map<Integer, AllowedServices> allowedServicesMap =
+                sSdkSandboxSettingsListener.getServiceAllowlistPerTargetSdkVersion();
+
+        final int targetSdkVersion = 33;
+        assertThat(allowedServicesMap.size()).isEqualTo(1);
+        assertThat(allowedServicesMap.get(targetSdkVersion).getAllowedServices(0).getIntentAction())
+                .isEqualTo("android.test");
+        assertThat(
+                        allowedServicesMap
+                                .get(targetSdkVersion)
+                                .getAllowedServices(0)
+                                .getComponentPackageName())
+                .isEqualTo("packageName.test");
+        assertThat(
+                        allowedServicesMap
+                                .get(targetSdkVersion)
+                                .getAllowedServices(0)
+                                .getComponentClassName())
+                .isEqualTo("className.test");
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_SERVICES_ALLOWLIST,
+                initialServiceAllowlistValue,
+                /*makeDefault=*/ false);
     }
 
     @Test
