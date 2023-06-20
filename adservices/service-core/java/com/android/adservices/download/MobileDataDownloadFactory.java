@@ -33,6 +33,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
@@ -272,9 +274,15 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
-                // topics resources should not be downloaded pre-consent
                 .setEnabledSupplier(
                         () -> {
+                            // Topics is permanently disabled for U18 UX.
+                            if (UxStatesManager.getInstance(context).getUx()
+                                    == PrivacySandboxUxCollection.U18_UX) {
+                                return false;
+                            }
+
+                            // Topics resources should not be downloaded pre-consent.
                             if (flags.getGaUxFeatureEnabled()) {
                                 return ConsentManager.getInstance(context)
                                         .getConsent(AdServicesApiType.TOPICS)
