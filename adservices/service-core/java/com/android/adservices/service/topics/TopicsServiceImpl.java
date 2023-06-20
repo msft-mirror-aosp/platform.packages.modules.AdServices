@@ -121,7 +121,6 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         if (isThrottled(topicsParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
-        // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
         final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
         final String sdkPackageName = topicsParam.getSdkPackageName();
