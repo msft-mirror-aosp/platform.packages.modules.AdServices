@@ -198,10 +198,12 @@ public class OnDeviceAdSelectionRunnerTest {
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
+    private static final String DECISION_LOGIC_PATH = "/test/decisions_logic_uris";
     private static final Uri DECISION_LOGIC_URI =
-            Uri.parse("https://developer.android.com/test/decisions_logic_uris");
+            CommonFixture.getUri(SELLER_VALID, DECISION_LOGIC_PATH);
+    private static final String TRUSTED_SIGNALS_PATH = "/test/trusted_signals_uri";
     private static final Uri TRUSTED_SIGNALS_URI =
-            Uri.parse("https://developer.android.com/test/trusted_signals_uri");
+            CommonFixture.getUri(SELLER_VALID, TRUSTED_SIGNALS_PATH);
     private static final int PERSIST_AD_SELECTION_LATENCY_MS =
             (int) (PERSIST_AD_SELECTION_END_TIMESTAMP - PERSIST_AD_SELECTION_START_TIMESTAMP);
     private static final String BUYER_DECISION_LOGIC_JS =
@@ -1128,6 +1130,114 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_INTERNAL_ERROR),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionWithValidSubdomainsSuccess() throws AdServicesException {
+        AdSelectionConfig adSelectionConfigWithValidSubdomains =
+                mAdSelectionConfigBuilder
+                        .setDecisionLogicUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        SELLER_VALID.toString(), DECISION_LOGIC_PATH))
+                        .setTrustedScoringSignalsUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        SELLER_VALID.toString(), TRUSTED_SIGNALS_PATH))
+                        .build();
+
+        verifyAndSetupCommonSuccessScenario(adSelectionConfigWithValidSubdomains);
+        AdSelectionRunner runner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mAdFilterer,
+                        mAdCounterKeyCopier,
+                        mFrequencyCapAdDataValidator);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
+        when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
+        DBAdSelectionEntry expectedAdSelectionResult =
+                new DBAdSelectionEntry.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setBiddingLogicUri(mDBCustomAudienceForBuyer2.getBiddingLogicUri())
+                        .setWinningAdBid(
+                                mAdScoringOutcomeForBuyer2.getAdWithScore().getAdWithBid().getBid())
+                        .setCustomAudienceSignals(
+                                mAdScoringOutcomeForBuyer2.getCustomAudienceSignals())
+                        .setWinningAdRenderUri(
+                                mAdScoringOutcomeForBuyer2
+                                        .getAdWithScore()
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri())
+                        .setBuyerDecisionLogicJs(
+                                mAdBiddingOutcomeForBuyer1
+                                        .getCustomAudienceBiddingInfo()
+                                        .getBuyerDecisionLogicJs())
+                        // TODO(b/230569187) add contextual signals once supported in the main logic
+                        .setBuyerContextualSignals("{}")
+                        .setCreationTimestamp(adSelectionCreationTs)
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        runner, adSelectionConfigWithValidSubdomains, MY_APP_PACKAGE_NAME);
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfigWithValidSubdomains);
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_2,
+                        ImmutableList.of(mDBCustomAudienceForBuyer2),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfigWithValidSubdomains);
+
+        verify(mMockAdsScoreGenerator)
+                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfigWithValidSubdomains);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        assertEquals(
+                expectedAdSelectionResult.getAdSelectionId(),
+                resultsCallback.mAdSelectionResponse.getAdSelectionId());
+        assertEquals(
+                expectedAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+        assertEquals(
+                expectedAdSelectionResult,
+                mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
+        verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
+        verifyLogForSuccessfulAdSelectionProcess();
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
