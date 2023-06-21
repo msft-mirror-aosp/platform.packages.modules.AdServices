@@ -45,6 +45,8 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
@@ -138,6 +140,7 @@ public class MobileDataDownloadTest {
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
+    @Mock UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws Exception {
@@ -157,6 +160,7 @@ public class MobileDataDownloadTest {
                         .spyStatic(MddLogger.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MobileDataDownloadFactory.class)
+                        .spyStatic(UxStatesManager.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(CommonClassifierHelper.class)
@@ -177,6 +181,8 @@ public class MobileDataDownloadTest {
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mUxStatesManager)
+                .when(() -> UxStatesManager.getInstance(any(Context.class)));
 
         overridingMddLoggingLevel("VERBOSE");
     }
@@ -487,6 +493,24 @@ public class MobileDataDownloadTest {
                 mMdd.getFileGroup(
                                 GetFileGroupRequest.newBuilder()
                                         .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    // Topics MFGP should be disabled for U18 UX.
+    @Test
+    public void topicsDownloadTest_U18UxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(PrivacySandboxUxCollection.U18_UX).when(mUxStatesManager).getUx();
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
                                         .build())
                         .get();
 
