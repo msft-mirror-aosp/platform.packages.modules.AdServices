@@ -226,10 +226,13 @@ public final class PrivacyParams {
         return PRIVACY_EPSILON;
     }
 
-    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
 
-    // place holder for future change
-    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE =
+            1.5849266D;
+
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE =
+            11.4617280D;
 
     /**
      * Maximum early reporting windows configured through {@link
@@ -238,8 +241,12 @@ public final class PrivacyParams {
      */
     public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
 
-    public static double getMaxFlexibleEventInformationGain() {
-        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
+    public static double getMaxFlexibleEventInformationGainEventSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE;
+    }
+
+    public static double getMaxFlexibleEventInformationGainNavigationSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE;
     }
 
     private PrivacyParams() {

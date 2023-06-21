@@ -161,8 +161,22 @@ public final class SourceFixture {
                 new JSONArray(new long[] {TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)}));
         json.put("event_report_windows", windows);
         json.put("summary_window_operator", TriggerSpec.SummaryOperatorType.COUNT);
-        json.put("summary_buckets", new JSONArray(new int[] {1}));
+        json.put("summary_buckets", new JSONArray(new int[] {1, 2}));
 
+        return new JSONArray(new JSONObject[] {json});
+    }
+
+    public static JSONArray getValidTriggerSpecValueSum() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("trigger_data", new JSONArray(new int[] {1, 2}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 0);
+        windows.put(
+                "end_times",
+                new JSONArray(new long[] {TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)}));
+        json.put("event_report_windows", windows);
+        json.put("summary_window_operator", TriggerSpec.SummaryOperatorType.VALUE_SUM);
+        json.put("summary_buckets", new JSONArray(new int[] {10, 100}));
         return new JSONArray(new JSONObject[] {json});
     }
 
@@ -170,7 +184,104 @@ public final class SourceFixture {
         return new ReportSpec(getValidTriggerSpec(), 3, true);
     }
 
-    public static Source getValidSourceWithFlexEventReport() throws JSONException {
-        return getValidSourceBuilder().setFlexEventReportSpec(getValidReportSpec()).build();
+    public static ReportSpec getValidReportSpecValueSum() throws JSONException {
+        return new ReportSpec(getValidTriggerSpecValueSum(), 3, true);
+    }
+
+    public static Source getValidSourceWithFlexEventReport() {
+        try {
+            return getValidSourceBuilder()
+                    .setId(UUID.randomUUID().toString())
+                    .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
+                    .setPublisher(ValidSourceParams.PUBLISHER)
+                    .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                    .setWebDestinations(ValidSourceParams.WEB_DESTINATIONS)
+                    .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
+                    .setRegistrant(ValidSourceParams.REGISTRANT)
+                    .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
+                    .setExpiryTime(ValidSourceParams.EXPIRY_TIME)
+                    .setEventReportWindow(ValidSourceParams.EXPIRY_TIME)
+                    .setAggregatableReportWindow(ValidSourceParams.EXPIRY_TIME)
+                    .setPriority(ValidSourceParams.PRIORITY)
+                    .setSourceType(ValidSourceParams.SOURCE_TYPE)
+                    .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
+                    .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                    // .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
+                    .setAggregateSource(ValidSourceParams.buildAggregateSource())
+                    //                    .setFilterData(ValidSourceParams.buildFilterData())
+                    .setIsDebugReporting(true)
+                    .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
+                    .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
+                    .setInstallTime(ValidSourceParams.INSTALL_TIME)
+                    .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
+                    .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
+                    .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
+                    .setFlexEventReportSpec(getValidReportSpec())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public static Source.Builder getValidFullSourceBuilderWithFlexEventReportValueSum() {
+        try {
+            return getValidSourceBuilder()
+                    .setId(UUID.randomUUID().toString())
+                    .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
+                    .setPublisher(ValidSourceParams.PUBLISHER)
+                    .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                    .setWebDestinations(ValidSourceParams.WEB_DESTINATIONS)
+                    .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
+                    .setRegistrant(ValidSourceParams.REGISTRANT)
+                    .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
+                    .setExpiryTime(ValidSourceParams.EXPIRY_TIME)
+                    .setEventReportWindow(ValidSourceParams.EXPIRY_TIME)
+                    .setAggregatableReportWindow(ValidSourceParams.EXPIRY_TIME)
+                    .setPriority(ValidSourceParams.PRIORITY)
+                    .setSourceType(ValidSourceParams.SOURCE_TYPE)
+                    .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
+                    .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                    // .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
+                    .setAggregateSource(ValidSourceParams.buildAggregateSource())
+                    //                    .setFilterData(ValidSourceParams.buildFilterData())
+                    .setIsDebugReporting(true)
+                    .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
+                    .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
+                    .setInstallTime(ValidSourceParams.INSTALL_TIME)
+                    .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
+                    .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
+                    .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
+                    .setFlexEventReportSpec(getValidReportSpecValueSum());
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public static Source getValidSourceWithFlexEventReportValueSum() throws JSONException {
+        return getValidSourceBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setFlexEventReportSpec(getValidReportSpecValueSum())
+                .build();
+    }
+
+    public static Source.Builder getValidSourceBuilderWithFlexEventReportValueSum()
+            throws JSONException {
+        ReportSpec reportSpec = getValidReportSpecValueSum();
+        return getValidSourceBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON().toString())
+                .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
+    }
+
+    public static Source.Builder getValidSourceBuilderWithFlexEventReport() throws JSONException {
+        ReportSpec reportSpec = getValidReportSpec();
+        return getValidSourceBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON().toString())
+                .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
 }

@@ -2277,7 +2277,7 @@ public interface Flags {
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
     /** Returns whether to enable flexible event reporting API */
-    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+    default boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
     }
 

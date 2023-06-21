@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,15 +30,16 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /** Unit tests for {@link TriggerSpec} */
 public class TriggerSpecTest {
     public static JSONObject getJson(
             int[] triggerData,
-            int eventReportWindowsStart,
+            long eventReportWindowsStart,
             long[] eventReportWindowsEnd,
             String summaryWindowOperator,
-            int[] summaryBucket)
+            long[] summaryBucket)
             throws JSONException {
         JSONObject json = new JSONObject();
         if (triggerData != null) {
@@ -66,7 +69,7 @@ public class TriggerSpecTest {
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
         };
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1, 2, 3, 4};
+        long[] summaryBucket = {1, 2, 3, 4};
         return getJson(
                 triggerData,
                 eventReportWindowsStart,
@@ -119,7 +122,6 @@ public class TriggerSpecTest {
     @Test
     public void testJSONEncodingDecoding() throws JSONException {
         // Setup
-
         JSONObject JSONInput = getValidBaselineTestCase();
 
         // Execution
@@ -142,7 +144,7 @@ public class TriggerSpecTest {
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
         };
         String summaryWindowOperator = "count_typo";
-        int[] summaryBucket = {1, 2, 3, 4};
+        long[] summaryBucket = {1, 2, 3, 4};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -164,7 +166,7 @@ public class TriggerSpecTest {
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
         };
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1, 2, 3, 4};
+        long[] summaryBucket = {1, 2, 3, 4};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -187,7 +189,7 @@ public class TriggerSpecTest {
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
         };
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1, 2, 3, 4};
+        long[] summaryBucket = {1, 2, 3, 4};
         JSONObject json =
                 getJson(
                         triggerData,
@@ -200,9 +202,9 @@ public class TriggerSpecTest {
         TriggerSpec testObject = new TriggerSpec.Builder(json).build();
 
         // Assertion
-        List<Integer> expectedTriggerData = Arrays.asList(1, 2, 3);
+        List<UnsignedLong> expectedTriggerData = toUnsignedLong(Arrays.asList(1, 2, 3));
         assertEquals(expectedTriggerData, testObject.getTriggerData());
-        assertEquals(eventReportWindowsStart, testObject.getEventReportWindowsStart());
+        assertEquals(eventReportWindowsStart, (long) testObject.getEventReportWindowsStart());
         List<Long> expectedEventReportWindowsEnd =
                 Arrays.asList(
                         TimeUnit.DAYS.toMillis(2),
@@ -211,7 +213,7 @@ public class TriggerSpecTest {
         assertEquals(expectedEventReportWindowsEnd, testObject.getEventReportWindowsEnd());
         assertEquals(
                 testObject.getSummaryWindowOperator().name().toLowerCase(), summaryWindowOperator);
-        List<Integer> expectedSummaryBuckets = Arrays.asList(1, 2, 3, 4);
+        List<Long> expectedSummaryBuckets = Arrays.asList(1L, 2L, 3L, 4L);
         assertEquals(expectedSummaryBuckets, testObject.getSummaryBucket());
     }
 
@@ -224,7 +226,7 @@ public class TriggerSpecTest {
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
         };
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1, 2, 2, 4};
+        long[] summaryBucket = {1, 2, 2, 4};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -247,7 +249,7 @@ public class TriggerSpecTest {
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(30)
         };
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1, 2, 2, 4};
+        long[] summaryBucket = {1, 2, 2, 4};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -272,7 +274,7 @@ public class TriggerSpecTest {
         int eventReportWindowsStart = 0;
         long[] eventReportWindowsEnd = {TimeUnit.DAYS.toMillis(2)};
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1};
+        long[] summaryBucket = {1};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -297,7 +299,7 @@ public class TriggerSpecTest {
             eventReportWindowsEnd[i] = TimeUnit.DAYS.toMillis(i + 1);
         }
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1};
+        long[] summaryBucket = {1};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -318,7 +320,7 @@ public class TriggerSpecTest {
         int eventReportWindowsStart = -1;
         long[] eventReportWindowsEnd = {TimeUnit.DAYS.toMillis(2)};
         String summaryWindowOperator = "count";
-        int[] summaryBucket = {1};
+        long[] summaryBucket = {1};
         JSONObject JSONInput =
                 getJson(
                         triggerData,
@@ -328,6 +330,13 @@ public class TriggerSpecTest {
                         summaryBucket);
 
         // Assertion
-        assertEquals(0, new TriggerSpec.Builder(JSONInput).build().getEventReportWindowsStart());
+        assertEquals(
+                0L, (long) new TriggerSpec.Builder(JSONInput).build().getEventReportWindowsStart());
+    }
+
+    private List<UnsignedLong> toUnsignedLong(List<Integer> list) {
+        return list.stream()
+                .map(element -> new UnsignedLong((long) element))
+                .collect(Collectors.toList());
     }
 }

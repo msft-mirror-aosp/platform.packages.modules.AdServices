@@ -57,6 +57,8 @@ public class DebugReportApi {
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
+        String SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR =
+                "source-flexible-event-report-value-error";
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
         String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
         String TRIGGER_AGGREGATE_NO_CONTRIBUTIONS = "trigger-aggregate-no-contributions";
@@ -215,6 +217,29 @@ public class DebugReportApi {
         scheduleReport(
                 Type.SOURCE_STORAGE_LIMIT,
                 generateSourceDebugReportBody(source, limit),
+                source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
+                dao);
+    }
+
+    /** Schedules Source Flexible Event API Debug Report */
+    public void scheduleSourceFlexibleEventReportApiDebugReport(
+            Source source, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+            return;
+        }
+        if (isAdTechNotOptIn(
+                source.isDebugReporting(), Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+            return;
+        }
+        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
+                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping debug report %s", Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
+            return;
+        }
+        scheduleReport(
+                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
+                generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 dao);

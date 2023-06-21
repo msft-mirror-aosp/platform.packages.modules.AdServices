@@ -439,7 +439,7 @@ public class Trigger {
      * @return list of {@link EventTrigger}s
      * @throws JSONException if JSON parsing fails
      */
-    public List<EventTrigger> parseEventTriggers() throws JSONException {
+    public List<EventTrigger> parseEventTriggers(boolean readValue) throws JSONException {
         JSONArray jsonArray = new JSONArray(this.mEventTriggers);
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
@@ -455,6 +455,13 @@ public class Trigger {
             if (!eventTrigger.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
                         eventTrigger.getLong(EventTriggerContract.PRIORITY));
+            }
+
+            if (readValue && !eventTrigger.isNull(EventTriggerContract.VALUE)) {
+                eventTriggerBuilder.setTriggerValue(
+                        eventTrigger.getLong(EventTriggerContract.VALUE));
+            } else {
+                eventTriggerBuilder.setTriggerValue(1L);
             }
 
             if (!eventTrigger.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
@@ -714,6 +721,7 @@ public class Trigger {
     public interface EventTriggerContract {
         String TRIGGER_DATA = "trigger_data";
         String PRIORITY = "priority";
+        String VALUE = "value";
         String DEDUPLICATION_KEY = "deduplication_key";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";
