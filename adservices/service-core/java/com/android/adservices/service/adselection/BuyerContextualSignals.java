@@ -40,4 +40,10 @@ public abstract class BuyerContextualSignals {
         /** Builds a {@link BuyerContextualSignals} object. */
         public abstract BuyerContextualSignals build();
     }
+
+    /** Returns {@link BuyerContextualSignals} in a JSON format */
+    @Override
+    public final String toString() {
+        return "{" + "\"adCost\":" + getAdCost() + "}";
+    }
 }
