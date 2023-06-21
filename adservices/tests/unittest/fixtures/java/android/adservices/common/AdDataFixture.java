@@ -112,6 +112,14 @@ public class AdDataFixture {
                 .setMetadata(metadata);
     }
 
+    public static AdData.Builder getValidAdDataWithSubdomainBuilderByBuyer(
+            AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidAdDataBuilderByBuyer(buyer, sequenceNumber)
+                .setRenderUri(
+                        CommonFixture.getUriWithValidSubdomain(
+                                buyer.toString(), "/testing/hello" + sequenceNumber));
+    }
+
     // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
     public static AdData.Builder getValidFilterAdDataBuilderByBuyer(
             AdTechIdentifier buyer, int sequenceNumber) {

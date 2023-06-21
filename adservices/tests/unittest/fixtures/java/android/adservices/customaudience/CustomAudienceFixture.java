@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
@@ -99,6 +100,29 @@ public final class CustomAudienceFixture {
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
+    }
+
+    public static CustomAudience.Builder getValidBuilderWithSubdomainsForBuyer(
+            AdTechIdentifier buyer) {
+        return getValidBuilderForBuyer(buyer)
+                .setBiddingLogicUri(
+                        CommonFixture.getUriWithValidSubdomain(buyer.toString(), "/bidding/logic"))
+                .setDailyUpdateUri(
+                        CommonFixture.getUriWithValidSubdomain(buyer.toString(), "/dailyupdate"))
+                .setTrustedBiddingData(
+                        new TrustedBiddingData.Builder()
+                                .setTrustedBiddingUri(
+                                        CommonFixture.getUriWithValidSubdomain(
+                                                buyer.toString(), "/trustedbidding"))
+                                .setTrustedBiddingKeys(
+                                        TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                .build())
+                .setAds(
+                        Arrays.asList(
+                                AdDataFixture.getValidAdDataWithSubdomainBuilderByBuyer(buyer, 0)
+                                        .build(),
+                                AdDataFixture.getValidAdDataWithSubdomainBuilderByBuyer(buyer, 1)
+                                        .build()));
     }
 
     // TODO(b/266837113) Merge with getValidBuilderForBuyer once filters are unhidden

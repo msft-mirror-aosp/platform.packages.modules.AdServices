@@ -159,12 +159,16 @@ public class MockWebServerRule implements TestRule {
         return mMockWebServer;
     }
 
+    public String getServerHostname() {
+        return String.format(Locale.ENGLISH, "localhost:%d", mPort);
+    }
+
     /**
      * @return the base address the mock web server will be listening to when started.
      */
     public String getServerBaseAddress() {
         return String.format(
-                Locale.ENGLISH, "%s://localhost:%d", useHttps() ? "https" : "http", mPort);
+                Locale.ENGLISH, "%s://%s", useHttps() ? "https" : "http", getServerHostname());
     }
 
     /**
@@ -180,6 +184,24 @@ public class MockWebServerRule implements TestRule {
                         Locale.ENGLISH,
                         "%s%s%s",
                         getServerBaseAddress(),
+                        path.startsWith("/") ? "" : "/",
+                        path));
+    }
+
+    /**
+     * This method is equivalent to {@link #uriForPath(String)} but it adds a valid (but
+     * unreachable) subdomain.
+     *
+     * @return a {@link Uri} to use for DB persistence with the given {@code @path}, which cannot be
+     *     reached on the mock web server
+     */
+    public Uri unreachableUriWithSubdomainForPath(String path) {
+        return Uri.parse(
+                String.format(
+                        Locale.ENGLISH,
+                        "%s://%s%s%s",
+                        useHttps() ? "https" : "http",
+                        getServerHostname(),
                         path.startsWith("/") ? "" : "/",
                         path));
     }
