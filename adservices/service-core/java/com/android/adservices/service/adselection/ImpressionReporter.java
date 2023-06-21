@@ -398,7 +398,7 @@ public class ImpressionReporter {
             sellerFuture =
                     mAdServicesHttpsClient.getAndReadNothing(reportingUris.sellerReportingUri);
         } catch (IllegalArgumentException e) {
-            sLogger.v("Seller reporting URI validation failed!");
+            sLogger.d(e, "Seller reporting URI validation failed!");
             sellerFuture = Futures.immediateFuture(null);
         }
 
@@ -427,7 +427,7 @@ public class ImpressionReporter {
                         mAdServicesHttpsClient.getAndReadNothing(reportingUris.buyerReportingUri);
             } catch (IllegalArgumentException
                     | FledgeAuthorizationFilter.AdTechNotAllowedException e) {
-                sLogger.v("Buyer reporting URI validation failed!");
+                sLogger.d(e, "Buyer reporting URI validation failed!");
                 buyerFuture = Futures.immediateFuture(null);
             }
         } else {
