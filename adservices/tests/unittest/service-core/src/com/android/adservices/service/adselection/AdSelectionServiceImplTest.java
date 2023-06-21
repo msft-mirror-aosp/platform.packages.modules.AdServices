@@ -252,7 +252,7 @@ public class AdSelectionServiceImplTest {
     private final int mBytesPerPeriod = 1;
 
     @Spy
-    private final AdServicesHttpsClient mClient =
+    private final AdServicesHttpsClient mClientSpy =
             new AdServicesHttpsClient(
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
@@ -261,7 +261,7 @@ public class AdSelectionServiceImplTest {
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // This object access some system APIs
-    @Mock public DevContextFilter mDevContextFilter;
+    @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
 
     private Flags mFlags;
@@ -284,7 +284,7 @@ public class AdSelectionServiceImplTest {
     private AdTechIdentifier mSeller;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
-    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
 
     @Before
     public void setUp() {
@@ -362,7 +362,7 @@ public class AdSelectionServiceImplTest {
                         .setPerBuyerSignals(perBuyerSignals);
 
         doNothing()
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -371,7 +371,6 @@ public class AdSelectionServiceImplTest {
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
-
 
         when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
@@ -452,7 +451,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -464,8 +463,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -474,7 +473,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -561,7 +560,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -573,8 +572,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -583,7 +582,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -674,7 +673,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setPerBuyerSignals(emptyPerBuyerSignals).build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -686,8 +685,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -696,7 +695,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -741,7 +740,7 @@ public class AdSelectionServiceImplTest {
                         },
                         mLightweightExecutorService);
 
-        doReturn(failedFuture).when(mClient).getAndReadNothing(sellerReportingUri);
+        doReturn(failedFuture).when(mClientSpy).getAndReadNothing(sellerReportingUri);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -793,7 +792,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -805,8 +804,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -815,7 +814,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -857,7 +856,7 @@ public class AdSelectionServiceImplTest {
                         },
                         mLightweightExecutorService);
 
-        doReturn(failedFuture).when(mClient).getAndReadNothing(buyerReportingUri);
+        doReturn(failedFuture).when(mClientSpy).getAndReadNothing(buyerReportingUri);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -909,7 +908,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -921,8 +920,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -931,7 +930,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1031,7 +1030,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1043,8 +1042,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1053,7 +1052,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1201,7 +1200,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1213,8 +1212,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1223,7 +1222,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1341,7 +1340,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1353,8 +1352,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1363,7 +1362,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1499,7 +1498,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1511,8 +1510,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1521,7 +1520,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1654,7 +1653,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1666,8 +1665,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1676,7 +1675,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1798,7 +1797,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -1810,8 +1809,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1820,7 +1819,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -1934,7 +1933,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         long maxRegisteredAdBeacons = 3;
@@ -1958,8 +1957,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1968,7 +1967,7 @@ public class AdSelectionServiceImplTest {
                         flagsWithSmallerMaxEventUris,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2109,7 +2108,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -2121,8 +2120,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2131,7 +2130,7 @@ public class AdSelectionServiceImplTest {
                         flagsWithSmallerMaxInteractionKeySize,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2201,7 +2200,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -2250,7 +2249,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -2262,8 +2261,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2272,7 +2271,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2353,7 +2352,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -2365,8 +2364,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2375,7 +2374,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2455,7 +2454,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -2467,8 +2466,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2477,7 +2476,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2563,7 +2562,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -2575,8 +2574,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2585,7 +2584,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2666,7 +2665,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -2678,8 +2677,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2688,7 +2687,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2762,7 +2761,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -2776,8 +2775,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2786,7 +2785,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2860,7 +2859,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -2873,8 +2872,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2883,7 +2882,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -2957,7 +2956,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -2971,8 +2970,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2981,7 +2980,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3057,7 +3056,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         // Set dev override for this AdSelection
@@ -3073,7 +3072,7 @@ public class AdSelectionServiceImplTest {
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3089,8 +3088,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3099,7 +3098,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
         ReportImpressionInput input =
@@ -3198,7 +3197,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         // Set dev override for this AdSelection
@@ -3214,7 +3213,7 @@ public class AdSelectionServiceImplTest {
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3230,8 +3229,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3240,7 +3239,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
         ReportImpressionInput input =
@@ -3305,7 +3304,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3321,8 +3320,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3331,7 +3330,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3361,7 +3360,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3377,8 +3376,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3387,7 +3386,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3416,7 +3415,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -3428,8 +3427,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3438,7 +3437,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3468,7 +3467,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3484,8 +3483,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3494,7 +3493,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3535,7 +3534,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3551,8 +3550,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3561,7 +3560,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3602,7 +3601,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -3614,8 +3613,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3624,7 +3623,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3665,7 +3664,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3681,8 +3680,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3691,7 +3690,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3733,7 +3732,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3749,8 +3748,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3759,7 +3758,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3842,7 +3841,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3858,8 +3857,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3868,7 +3867,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -3953,7 +3952,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -3969,8 +3968,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -3979,7 +3978,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4064,7 +4063,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -4076,8 +4075,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4086,7 +4085,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4180,8 +4179,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4190,7 +4189,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4213,8 +4212,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4223,7 +4222,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4234,13 +4233,13 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doThrow(new FilterException(new WrongCallingApplicationStateException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -4259,8 +4258,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4269,7 +4268,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4297,7 +4296,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -4320,8 +4319,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4330,7 +4329,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4359,7 +4358,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -4382,8 +4381,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4392,7 +4391,7 @@ public class AdSelectionServiceImplTest {
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4413,7 +4412,7 @@ public class AdSelectionServiceImplTest {
     public void testRemoveOverrideForegroundCheckEnabledFails_throwsException() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -4435,8 +4434,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4445,7 +4444,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4468,7 +4467,7 @@ public class AdSelectionServiceImplTest {
     public void testRemoveOverrideForegroundCheckDisabled_acceptBackgroundApp() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -4490,8 +4489,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4500,7 +4499,7 @@ public class AdSelectionServiceImplTest {
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4517,7 +4516,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -4539,8 +4538,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4549,7 +4548,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4570,7 +4569,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -4592,8 +4591,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4602,7 +4601,7 @@ public class AdSelectionServiceImplTest {
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4621,7 +4620,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         otherPackageName,
@@ -4675,7 +4674,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -4687,8 +4686,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4697,7 +4696,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4726,7 +4725,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -4784,7 +4783,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -4796,8 +4795,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4806,7 +4805,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -4840,7 +4839,7 @@ public class AdSelectionServiceImplTest {
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -4897,7 +4896,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -4909,8 +4908,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -4919,7 +4918,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5005,7 +5004,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doNothing()
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -5015,7 +5014,7 @@ public class AdSelectionServiceImplTest {
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5027,8 +5026,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5037,7 +5036,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5116,7 +5115,7 @@ public class AdSelectionServiceImplTest {
                         .setSeller(SELLER_VALID)
                         .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5128,8 +5127,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5138,7 +5137,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
         ReportImpressionInput request =
@@ -5216,7 +5215,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         Throttler.destroyExistingThrottler();
@@ -5229,8 +5228,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5239,7 +5238,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5256,7 +5255,7 @@ public class AdSelectionServiceImplTest {
                 callReportImpression(adSelectionService, input, true);
 
         doThrow(new FilterException(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE)))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -5345,7 +5344,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5357,8 +5356,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5367,7 +5366,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5455,7 +5454,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5467,8 +5466,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5477,7 +5476,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5567,7 +5566,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5579,8 +5578,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5589,7 +5588,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5694,7 +5693,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5706,8 +5705,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5716,7 +5715,7 @@ public class AdSelectionServiceImplTest {
                         flagsWithEnrollment,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5806,7 +5805,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5818,8 +5817,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5828,7 +5827,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5862,7 +5861,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testAddOverrideAdSelectionFromOutcomesConfigRemoteInfoSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -5878,8 +5877,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5888,7 +5887,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5921,7 +5920,7 @@ public class AdSelectionServiceImplTest {
             throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -5937,8 +5936,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -5947,7 +5946,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -5978,7 +5977,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionFromOutcomesConfigRemoteInfoFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -5990,8 +5989,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6000,7 +5999,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6033,7 +6032,7 @@ public class AdSelectionServiceImplTest {
     public void testRemoveAdSelectionFromOutcomesConfigRemoteInfoOverrideSuccess()
             throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6049,8 +6048,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6059,7 +6058,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6104,7 +6103,7 @@ public class AdSelectionServiceImplTest {
                     throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6120,8 +6119,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6130,7 +6129,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6173,7 +6172,7 @@ public class AdSelectionServiceImplTest {
     public void
             testRemoveAdSelectionFromOutcomesConfigRemoteInfoOverrideFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -6185,8 +6184,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6195,7 +6194,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6238,7 +6237,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6254,8 +6253,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6264,7 +6263,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6306,7 +6305,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionFromOutcomesConfigRemoteOverridesSuccess() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6322,8 +6321,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6332,7 +6331,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6423,7 +6422,7 @@ public class AdSelectionServiceImplTest {
                     throws Exception {
         doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6439,8 +6438,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6449,7 +6448,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6538,7 +6537,7 @@ public class AdSelectionServiceImplTest {
     public void
             testResetAllAdSelectionFromOutcomesConfigRemoteOverridesFailsWithDevOptionsDisabled() {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
@@ -6550,8 +6549,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6560,7 +6559,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6650,7 +6649,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6666,8 +6665,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6676,7 +6675,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -6765,7 +6764,7 @@ public class AdSelectionServiceImplTest {
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -6800,8 +6799,8 @@ public class AdSelectionServiceImplTest {
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
                         mReportingUrisDao,
-                        mClient,
-                        mDevContextFilter,
+                        mClientSpy,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -6810,7 +6809,7 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
@@ -7375,8 +7374,8 @@ public class AdSelectionServiceImplTest {
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
                 mReportingUrisDao,
-                mClient,
-                mDevContextFilter,
+                mClientSpy,
+                mDevContextFilterMock,
                 mLightweightExecutorService,
                 mBackgroundExecutorService,
                 mScheduledExecutor,
@@ -7385,7 +7384,7 @@ public class AdSelectionServiceImplTest {
                 mFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
-                mAdSelectionServiceFilter,
+                mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock);
     }

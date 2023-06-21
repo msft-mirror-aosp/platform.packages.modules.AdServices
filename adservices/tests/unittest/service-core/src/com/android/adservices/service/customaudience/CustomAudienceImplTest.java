@@ -47,11 +47,10 @@ public class CustomAudienceImplTest {
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
 
-    @Mock
-    private CustomAudienceDao mCustomAudienceDao;
-    @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
-    @Mock private Validator<CustomAudience> mCustomAudienceValidator;
-    @Mock private Clock mClock;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
+    @Mock private Validator<CustomAudience> mCustomAudienceValidatorMock;
+    @Mock private Clock mClockMock;
 
     public CustomAudienceImpl mImpl;
 
@@ -59,30 +58,30 @@ public class CustomAudienceImplTest {
     public void setup() {
         mImpl =
                 new CustomAudienceImpl(
-                        mCustomAudienceDao,
-                        mCustomAudienceQuantityChecker,
-                        mCustomAudienceValidator,
-                        mClock,
+                        mCustomAudienceDaoMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mCustomAudienceValidatorMock,
+                        mClockMock,
                         CommonFixture.FLAGS_FOR_TEST);
     }
 
     @Test
     public void testJoinCustomAudience_runNormally() {
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
 
-        verify(mCustomAudienceDao)
+        verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         VALID_DB_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        verify(mClock).instant();
-        verify(mCustomAudienceQuantityChecker)
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
-        verify(mCustomAudienceValidator).validate(VALID_CUSTOM_AUDIENCE);
-        verifyNoMoreInteractions(mClock, mCustomAudienceDao, mCustomAudienceValidator);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
     }
 
     @Test
@@ -92,16 +91,16 @@ public class CustomAudienceImplTest {
                 CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME);
 
-        verify(mCustomAudienceDao)
+        verify(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceDataByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
 
         verifyNoMoreInteractions(
-                mClock,
-                mCustomAudienceDao,
-                mCustomAudienceQuantityChecker,
-                mCustomAudienceValidator);
+                mClockMock,
+                mCustomAudienceDaoMock,
+                mCustomAudienceQuantityCheckerMock,
+                mCustomAudienceValidatorMock);
     }
 }
