@@ -133,6 +133,8 @@ public final class MeasurementTables {
         String DEBUG_AD_ID = "debug_ad_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
+        String EVENT_ATTRIBUTION_STATUS = "event_attribution_status";
+        String PRIVACY_PARAMETERS = "privacy_parameters";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -487,7 +489,11 @@ public final class MeasurementTables {
                     + SourceContract.REGISTRATION_ORIGIN
                     + " TEXT, "
                     + SourceContract.COARSE_EVENT_REPORT_DESTINATIONS
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.EVENT_ATTRIBUTION_STATUS
+                    + " TEXT, "
+                    + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =

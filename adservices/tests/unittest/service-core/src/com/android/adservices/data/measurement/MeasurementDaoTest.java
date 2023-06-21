@@ -54,10 +54,12 @@ import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture.ValidAsyncRegistrationParams;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -220,6 +222,74 @@ public class MeasurementDaoTest {
 
         Pair<List<Uri>, List<Uri>> destinations = dm.runInTransactionWithResult(
                 measurementDao -> measurementDao.getSourceDestinations(source.getId())).get();
+        assertTrue(
+                ImmutableMultiset.copyOf(validSource.getAppDestinations())
+                        .equals(ImmutableMultiset.copyOf(destinations.first)));
+        assertTrue(
+                ImmutableMultiset.copyOf(validSource.getWebDestinations())
+                        .equals(ImmutableMultiset.copyOf(destinations.second)));
+    }
+
+    @Test
+    public void testInsertSource_flexibleEventReport_equal() throws JSONException {
+        Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertSource(validSource));
+
+        String sourceId = getFirstSourceIdFromDatastore();
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        Source source =
+                dm.runInTransactionWithResult(measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+        source.buildFlexibleEventReportApi();
+
+        assertNotNull(source);
+        assertNotNull(source.getId());
+        assertNull(source.getAppDestinations());
+        assertNull(source.getWebDestinations());
+        assertEquals(validSource.getEnrollmentId(), source.getEnrollmentId());
+        assertEquals(validSource.getRegistrant(), source.getRegistrant());
+        assertEquals(validSource.getEventTime(), source.getEventTime());
+        assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
+        assertEquals(validSource.getEventReportWindow(), source.getEventReportWindow());
+        assertEquals(
+                validSource.getAggregatableReportWindow(), source.getAggregatableReportWindow());
+        assertEquals(validSource.getPriority(), source.getPriority());
+        assertEquals(validSource.getSourceType(), source.getSourceType());
+        assertEquals(
+                validSource.getInstallAttributionWindow(), source.getInstallAttributionWindow());
+        assertEquals(validSource.getInstallCooldownWindow(), source.getInstallCooldownWindow());
+        assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
+        assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
+        assertEquals(validSource.getFilterDataString(), source.getFilterDataString());
+        assertEquals(validSource.getAggregateContributions(), source.getAggregateContributions());
+        assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
+        assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
+        assertEquals(validSource.getRegistrationId(), source.getRegistrationId());
+        assertEquals(validSource.getInstallTime(), source.getInstallTime());
+        assertEquals(validSource.getPlatformAdId(), source.getPlatformAdId());
+        assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
+        assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
+        assertEquals(
+                Integer.toString(validSource.getFlexEventReportSpec().getMaxReports()),
+                source.getMaxBucketIncrements());
+        assertEquals(
+                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
+                source.getTriggerSpecs());
+        assertEquals(
+                validSource.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString(),
+                source.getEventAttributionStatus());
+        assertEquals(
+                validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
+                source.getPrivacyParameters());
+        assertEquals(validSource.getFlexEventReportSpec(), source.getFlexEventReportSpec());
+
+        // Assert destinations were inserted into the source destination table.
+        Pair<List<Uri>, List<Uri>> destinations =
+                dm.runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getSourceDestinations(source.getId()))
+                        .get();
         assertTrue(
                 ImmutableMultiset.copyOf(validSource.getAppDestinations())
                         .equals(ImmutableMultiset.copyOf(destinations.first)));
@@ -2892,6 +2962,7 @@ public class MeasurementDaoTest {
                         .setSourceId("16")
                         .setTriggerId("1001")
                         .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setTriggerValue(100L)
                         .build());
         reportList3.add(
                 new EventReport.Builder()
@@ -2903,6 +2974,7 @@ public class MeasurementDaoTest {
                         .setSourceId("15")
                         .setTriggerId("1001")
                         .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setTriggerValue(120L)
                         .build());
         reportList3.add(
                 new EventReport.Builder()
@@ -2914,6 +2986,7 @@ public class MeasurementDaoTest {
                         .setSourceId("20")
                         .setTriggerId("1001")
                         .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setTriggerValue(200L)
                         .build());
 
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -3127,6 +3200,68 @@ public class MeasurementDaoTest {
                                 measurementDao ->
                                         measurementDao.updateSourceStatus(
                                                 List.of("1", "2"), Source.Status.IGNORED)));
+    }
+
+    @Test
+    public void updateSourceAttributedTriggers_baseline_equal() throws JSONException {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        List<Source> sourceList = new ArrayList<>();
+        sourceList.add(
+                SourceFixture.getValidFullSourceBuilderWithFlexEventReportValueSum()
+                        .setId("1")
+                        .build());
+        sourceList.add(
+                SourceFixture.getValidFullSourceBuilderWithFlexEventReportValueSum()
+                        .setId("2")
+                        .build());
+        sourceList.add(
+                SourceFixture.getValidFullSourceBuilderWithFlexEventReportValueSum()
+                        .setId("3")
+                        .build());
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            for (Source source : sourceList) {
+                                dao.insertSource(source);
+                            }
+                        });
+        List<EventReport> eventReportList = new ArrayList<>();
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerData(new UnsignedLong(1L))
+                        .setTriggerPriority(3L)
+                        .setTriggerValue(5L)
+                        .setReportTime(10000L)
+                        .build());
+        Source originalSource = sourceList.get(0);
+        originalSource.getFlexEventReportSpec().insertAttributedTrigger(eventReportList.get(0));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            Source newSource = measurementDao.getSource(originalSource.getId());
+                            assertNotEquals(originalSource, newSource);
+                            assertEquals(
+                                    0,
+                                    newSource
+                                            .getFlexEventReportSpec()
+                                            .getAttributedTriggers()
+                                            .size());
+                        });
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao ->
+                                measurementDao.updateSourceAttributedTriggers(
+                                        originalSource.getId(),
+                                        originalSource.getFlexEventReportSpec()));
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            Source newSource = measurementDao.getSource(originalSource.getId());
+                            assertEquals(originalSource, newSource);
+                        });
     }
 
     @Test
@@ -3607,7 +3742,11 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-
+        values.put(
+                SourceContract.EVENT_ATTRIBUTION_STATUS,
+                source.getFlexEventReportSpec() == null
+                        ? ""
+                        : source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
         db.insert(SourceContract.TABLE, null, values);
 
         // Insert source destinations
@@ -6352,6 +6491,232 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void fetchMatchingSourcesFlexibleEventApi_bringsMatchingSources_expectedSourceReturned()
+            throws JSONException {
+        // Setup
+        ReportSpec testReportSpec = SourceFixture.getValidReportSpec();
+        testReportSpec.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+        testReportSpec.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("234567")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+        testReportSpec.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("345678")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(5000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source1")
+                        .setFlexEventReportSpec(testReportSpec)
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source2")
+                        .setFlexEventReportSpec(testReportSpec)
+                        .build();
+
+        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpec();
+        testReportSpecWithTriggers.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+
+        Source source3 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source3")
+                        .setFlexEventReportSpec(testReportSpecWithTriggers)
+                        .build();
+
+        List<Source> sources = List.of(source1, source2, source3);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertInDb(db, source));
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(
+                                            new ArrayList<>(Collections.singletonList("123456")));
+                            Collections.sort(actualSources);
+                            List<String> expected =
+                                    new ArrayList<>(Arrays.asList("source1", "source2", "source3"));
+                            assertEquals(3, actualSources.size());
+                            assertEquals(expected, actualSources);
+                        });
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(
+                                            new ArrayList<>(Collections.singletonList("234567")));
+                            Collections.sort(actualSources);
+                            List<String> expected =
+                                    new ArrayList<>(Arrays.asList("source1", "source2"));
+                            assertEquals(2, actualSources.size());
+                            assertEquals(expected, actualSources);
+                        });
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(
+                                            new ArrayList<>(Collections.singletonList("23456")));
+                            Collections.sort(actualSources);
+                            assertEquals(0, actualSources.size());
+                        });
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(new ArrayList<>());
+                            Collections.sort(actualSources);
+                            assertEquals(0, actualSources.size());
+                            assertEquals(new ArrayList<>(), actualSources);
+                        });
+    }
+
+    @Test
+    public void fetchMatchingSourcesFlexibleEventApi_emptyInputSourceId_noSourceReturned()
+            throws JSONException {
+        // Setup
+        ReportSpec testReportSpec = SourceFixture.getValidReportSpec();
+        testReportSpec.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+        testReportSpec.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("234567")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+        testReportSpec.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("345678")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(5000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source1")
+                        .setFlexEventReportSpec(testReportSpec)
+                        .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source2")
+                        .setFlexEventReportSpec(testReportSpec)
+                        .build();
+
+        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpec();
+        testReportSpecWithTriggers.insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+
+        Source source3 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source3")
+                        .setFlexEventReportSpec(testReportSpecWithTriggers)
+                        .build();
+
+        List<Source> sources = List.of(source1, source2, source3);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertInDb(db, source));
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(
+                                            new ArrayList<>(Collections.singletonList("123456")));
+                            Collections.sort(actualSources);
+                            List<String> expected =
+                                    new ArrayList<>(Arrays.asList("source1", "source2", "source3"));
+                            assertEquals(3, actualSources.size());
+                            assertEquals(expected, actualSources);
+                        });
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(
+                                            new ArrayList<>(Collections.singletonList("234567")));
+                            Collections.sort(actualSources);
+                            List<String> expected =
+                                    new ArrayList<>(Arrays.asList("source1", "source2"));
+                            assertEquals(2, actualSources.size());
+                            assertEquals(expected, actualSources);
+                        });
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            List<String> actualSources =
+                                    dao.fetchMatchingSourcesFlexibleEventApi(
+                                            new ArrayList<>(Collections.singletonList("23456")));
+                            Collections.sort(actualSources);
+                            assertEquals(0, actualSources.size());
+                        });
+    }
+
+    @Test
     public void fetchMatchingTriggers_bringsMatchingTriggers() {
         // Setup
         Trigger trigger1 =
@@ -7207,6 +7572,19 @@ public class MeasurementDaoTest {
                                                 "enrollment-id-2"))));
     }
 
+    @Test
+    public void generateUnionQueryFromTriggerIds_equal() {
+        List<String> triggerIds = new ArrayList<>(Arrays.asList("123", "234", "345"));
+        String query =
+                MeasurementDao.generateUnionQueryFromTriggerIds(
+                        triggerIds, "source_table", "trigger_ids");
+        String expected =
+                "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"123\"%' UNION\n"
+                        + "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"234\"%' UNION\n"
+                        + "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"345\"%'";
+        assertEquals(expected.replaceAll("\\s+", " "), query.replaceAll("\\s+", " "));
+    }
+
     private void queryAndAssertSourceEntries(
             SQLiteDatabase db, String enrollmentId, List<String> expectedSourceIds) {
         try (Cursor cursor =
@@ -7278,11 +7656,15 @@ public class MeasurementDaoTest {
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
-                        trigger.parseEventTriggers().get(0),
+                        trigger.parseEventTriggers(
+                                        FlagsFactory.getFlagsForTest()
+                                                .getMeasurementFlexibleEventReportingApiEnabled())
+                                .get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
-                        source.getAttributionDestinations(trigger.getDestinationType()))
+                        source.getAttributionDestinations(trigger.getDestinationType()),
+                        mFlags.getMeasurementFlexibleEventReportingApiEnabled())
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())

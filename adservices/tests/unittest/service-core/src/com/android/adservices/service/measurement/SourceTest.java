@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
@@ -41,7 +43,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -735,6 +739,30 @@ public class SourceTest {
         assertEquals(fromSource, Source.Builder.from(fromSource).build());
     }
 
+    @Test
+    public void reportSpecs_encodingDecoding_equal() throws JSONException {
+        // Setup
+        Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
+
+        ReportSpec originalReportSpec = validSource.getFlexEventReportSpec();
+        String encodedTriggerSpecs = originalReportSpec.encodeTriggerSpecsToJSON();
+        String encodeddMaxReports = Integer.toString(originalReportSpec.getMaxReports());
+        String encodedExistingTriggerStatus =
+                originalReportSpec.encodeTriggerStatusToJSON().toString();
+        String encodedPrivacyParameters = originalReportSpec.encodePrivacyParametersToJSONString();
+
+        ReportSpec reportSpec =
+                new ReportSpec(
+                        encodedTriggerSpecs,
+                        encodeddMaxReports,
+                        encodedExistingTriggerStatus,
+                        encodedPrivacyParameters);
+        // Assertion
+        assertEquals(originalReportSpec.getMaxReports(), reportSpec.getMaxReports());
+        assertArrayEquals(originalReportSpec.getTriggerSpecs(), reportSpec.getTriggerSpecs());
+        assertEquals(originalReportSpec, reportSpec);
+    }
+
     private void assertInvalidSourceArguments(
             UnsignedLong sourceEventId,
             Uri publisher,
@@ -781,5 +809,218 @@ public class SourceTest {
                                 .setInstallTime(installTime)
                                 .setRegistrationOrigin(registrationOrigin)
                                 .build());
+    }
+
+    @Test
+    public void getTriggerDataCardinality_flexEventApi_equals() {
+        Source eventSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        assertEquals(
+                PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY,
+                eventSource.getTriggerDataCardinality());
+        Source navigationSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        assertEquals(
+                PrivacyParams.getNavigationTriggerDataCardinality(),
+                navigationSource.getTriggerDataCardinality());
+    }
+
+    @Test
+    public void isFlexEventApiValueValid_eventSource_true() throws JSONException {
+        // setup
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]\n";
+        Source testSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("1")
+                        .buildInitialFlexEventReportSpec()
+                        .build();
+        assertTrue(testSource.isFlexEventApiValueValid());
+    }
+
+    @Test
+    public void isFlexEventApiValueValid_eventSource_false() throws JSONException {
+        // setup
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+        Source testSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("1")
+                        .buildInitialFlexEventReportSpec()
+                        .build();
+        assertFalse(testSource.isFlexEventApiValueValid());
+    }
+
+    @Test
+    public void isFlexEventApiValueValid_navigationSource_true() throws JSONException {
+        // setup
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+        Source testSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("1")
+                        .buildInitialFlexEventReportSpec()
+                        .build();
+        assertTrue(testSource.isFlexEventApiValueValid());
+    }
+
+    @Test
+    public void buildFlexibleEventReportApi_validParams_pass() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}]";
+        Source testSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("3")
+                        .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                        .build();
+        testSource.buildFlexibleEventReportApi();
+        // Assertion
+        assertEquals(
+                testSource.getFlexEventReportSpec(),
+                new ReportSpec(triggerSpecsString, "3", "", "{\"flip_probability\" :0.0024}"));
+    }
+
+    @Test
+    public void buildFlexibleEventReportApi_invalidParamsSyntaxError_throws() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3,"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}]";
+        Source testSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("3")
+                        .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                        .build();
+
+        // Assertion
+        assertThrows(JSONException.class, () -> testSource.buildFlexibleEventReportApi());
+    }
+
+    @Test
+    public void buildInitialFlexEventReportSpec_validParams_pass() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}]";
+        Source testSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("3")
+                        .buildInitialFlexEventReportSpec()
+                        .build();
+        // Assertion
+        assertEquals(testSource.getFlexEventReportSpec(), new ReportSpec(triggerSpecsString, "3"));
+    }
+
+    @Test
+    public void buildInitialFlexEventReportSpec_invalidParamsSyntaxError_throws() {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3,"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}]";
+        Source.Builder testSourceBuilder =
+                SourceFixture.getValidSourceBuilder()
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxBucketIncrements("3")
+                        .setPrivacyParameters("{\"flip_probability\" :0.0024}");
+
+        // Assertion
+        assertThrows(
+                JSONException.class, () -> testSourceBuilder.buildInitialFlexEventReportSpec());
     }
 }
