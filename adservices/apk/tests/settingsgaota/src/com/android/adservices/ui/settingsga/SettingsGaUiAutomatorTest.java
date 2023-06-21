@@ -420,8 +420,8 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialog_fragment_enabled true");
-        sDevice.unfreezeRotation();
 
+        sDevice.setOrientationNatural();
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
@@ -439,6 +439,7 @@ public class SettingsGaUiAutomatorTest {
 
         sDevice.setOrientationRight();
         assertThat(dialogTitle.exists()).isTrue();
+        sDevice.setOrientationNatural();
     }
 
     private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)
