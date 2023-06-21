@@ -18,8 +18,6 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.adselection.AdSelectionConfigValidator.TRUSTED_SCORING_SIGNALS_URI_TYPE;
-import static com.android.adservices.service.adselection.AdSelectionConfigValidator.URI_IS_NOT_ABSOLUTE;
-import static com.android.adservices.service.adselection.AdSelectionConfigValidator.URI_IS_NOT_HTTPS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -82,10 +80,24 @@ public class AdSelectionConfigValidatorTest {
     private static final Uri TRUSTED_SIGNALS_URI_INCONSISTENT =
             Uri.parse("https://developer.invalid.com/test/trusted_signals_uri");
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
+
     private static final String AD_SELECTION_VIOLATION_PREFIX =
             String.format(
+                    Locale.ENGLISH,
                     "Invalid object of type %s. The violations are:",
                     AdSelectionConfig.class.getName());
+    private static final String SELLER_IS_AN_INVALID_DOMAIN_NAME =
+            "The AdSelectionConfig's seller is an invalid domain name.";
+    private static final String SELLER_HAS_MISSING_DOMAIN_NAME =
+            "The AdSelectionConfig's seller has missing domain name.";
+    private static final String SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY =
+            "The AdSelectionConfig's seller should not be null nor empty.";
+    private static final String URI_SHOULD_HAVE_PRESENT_HOST =
+            "The AdSelectionConfig's %s should have present host.";
+    private static final String SELLER_AND_URI_HOST_ARE_INCONSISTENT =
+            "The seller host name %s and the seller-provided %s's host name %s are not consistent.";
+    private static final String URI_IS_NOT_HTTPS = "The AdSelectionConfig's %s should use HTTPS.";
+
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
             new FrequencyCapAdDataValidatorNoOpImpl();
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
@@ -108,10 +120,11 @@ public class AdSelectionConfigValidatorTest {
     private String generateInconsistentSellerAndDecisionLogicUriMessage(
             String uriType, AdTechIdentifier seller, Uri decisionLogicUri) {
         return String.format(
-                AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
-                Uri.parse("https://" + seller.toString()).getHost(),
-                decisionLogicUri.getHost(),
-                uriType);
+                Locale.ENGLISH,
+                SELLER_AND_URI_HOST_ARE_INCONSISTENT,
+                seller.toString(),
+                uriType,
+                decisionLogicUri.getHost());
     }
 
     @Test
@@ -151,7 +164,7 @@ public class AdSelectionConfigValidatorTest {
         ValidatorTestUtil.assertValidationFailuresMatch(
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
-                ImmutableList.of(AdSelectionConfigValidator.SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY));
+                ImmutableList.of(SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY));
     }
 
     @Test
@@ -169,7 +182,7 @@ public class AdSelectionConfigValidatorTest {
         ValidatorTestUtil.assertValidationFailuresMatch(
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
-                ImmutableList.of(AdSelectionConfigValidator.SELLER_IS_AN_INVALID_DOMAIN_NAME));
+                ImmutableList.of(SELLER_IS_AN_INVALID_DOMAIN_NAME));
     }
 
     @Test
@@ -187,7 +200,7 @@ public class AdSelectionConfigValidatorTest {
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
                 ImmutableList.of(
-                        AdSelectionConfigValidator.SELLER_IS_AN_INVALID_DOMAIN_NAME,
+                        SELLER_IS_AN_INVALID_DOMAIN_NAME,
                         generateInconsistentSellerAndDecisionLogicUriMessage(
                                 DECISION_LOGIC_URI_TYPE,
                                 SELLER_INVALID,
@@ -208,7 +221,7 @@ public class AdSelectionConfigValidatorTest {
         ValidatorTestUtil.assertValidationFailuresMatch(
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
-                ImmutableList.of(AdSelectionConfigValidator.SELLER_HAS_MISSING_DOMAIN_NAME));
+                ImmutableList.of(SELLER_HAS_MISSING_DOMAIN_NAME));
     }
 
     @Test
@@ -227,7 +240,8 @@ public class AdSelectionConfigValidatorTest {
                 AD_SELECTION_VIOLATION_PREFIX,
                 ImmutableList.of(
                         String.format(
-                                AdSelectionConfigValidator.URI_SHOULD_HAVE_PRESENT_HOST,
+                                Locale.ENGLISH,
+                                URI_SHOULD_HAVE_PRESENT_HOST,
                                 DECISION_LOGIC_URI_TYPE)));
     }
 
@@ -271,12 +285,15 @@ public class AdSelectionConfigValidatorTest {
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
                 ImmutableList.of(
-                        String.format(URI_IS_NOT_ABSOLUTE, TRUSTED_SCORING_SIGNALS_URI_TYPE)));
+                        String.format(
+                                Locale.ENGLISH,
+                                URI_SHOULD_HAVE_PRESENT_HOST,
+                                TRUSTED_SCORING_SIGNALS_URI_TYPE)));
     }
 
     @Test
     public void testVerifyTrustedScoringSignalsUriIsNotHTTPS() {
-        Uri trustedScoringSignal = Uri.parse("http://google.com");
+        Uri trustedScoringSignal = Uri.parse("http://" + SELLER_VALID);
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setTrustedScoringSignalsUri(trustedScoringSignal).build();
         AdSelectionConfigValidator adSelectionConfigValidator =
@@ -291,9 +308,9 @@ public class AdSelectionConfigValidatorTest {
                 AD_SELECTION_VIOLATION_PREFIX,
                 ImmutableList.of(
                         String.format(
+                                Locale.ENGLISH,
                                 URI_IS_NOT_HTTPS,
-                                TRUSTED_SCORING_SIGNALS_URI_TYPE,
-                                trustedScoringSignal)));
+                                TRUSTED_SCORING_SIGNALS_URI_TYPE)));
     }
 
     @Test
@@ -385,6 +402,7 @@ public class AdSelectionConfigValidatorTest {
                         .map(
                                 bid -> {
                                     return String.format(
+                                            Locale.ENGLISH,
                                             AdDataValidator.VIOLATION_FORMAT,
                                             new AdWithBid(
                                                             AdDataFixture.getValidAdDataByBuyer(
@@ -393,6 +411,7 @@ public class AdSelectionConfigValidatorTest {
                                                             bid)
                                                     .getAdData(),
                                             String.format(
+                                                    Locale.ENGLISH,
                                                     AdTechUriValidator
                                                             .IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                                                     ValidatorUtil.AD_TECH_ROLE_BUYER,
