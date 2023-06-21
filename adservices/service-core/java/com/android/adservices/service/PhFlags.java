@@ -316,6 +316,9 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION =
             "fledge_auction_server_payload_format_version";
 
+    static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING =
+            "fledge_auction_server_enable_debug_reporting";
+
     // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -2307,6 +2310,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerEnableDebugReporting() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING);
+    }
+
+    @Override
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -3561,6 +3572,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION
                         + " = "
                         + getFledgeAuctionServerPayloadFormatVersion());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING
+                        + " = "
+                        + getFledgeAuctionServerEnableDebugReporting());
 
         writer.println(
                 "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());

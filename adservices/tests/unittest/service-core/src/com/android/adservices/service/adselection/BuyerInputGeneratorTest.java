@@ -146,7 +146,7 @@ public class BuyerInputGeneratorTest {
                 dbCustomAudience.getTrustedBiddingData().getKeys());
         Assert.assertNotNull(dbCustomAudience.getUserBiddingSignals());
         Assert.assertEquals(
-                buyerInputCA.getUserBiddingSignals().getValues(0).getStringValue(),
+                buyerInputCA.getUserBiddingSignals(),
                 dbCustomAudience.getUserBiddingSignals().toString());
     }
 

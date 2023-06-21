@@ -1021,6 +1021,12 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING = true;
+
+    default boolean getFledgeAuctionServerEnableDebugReporting() {
+        return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {

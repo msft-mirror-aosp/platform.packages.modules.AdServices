@@ -53,6 +53,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -220,7 +221,7 @@ public class GetAdSelectionDataRunner {
                 .transform(
                         compressedBuyerInputBytes ->
                                 composeProtectedAudienceInputBytes(
-                                        compressedBuyerInputBytes, seller),
+                                        compressedBuyerInputBytes, seller, adSelectionId),
                         mLightweightExecutorService)
                 .transform(this::applyPayloadFormatter, mLightweightExecutorService)
                 .transform(
@@ -247,9 +248,11 @@ public class GetAdSelectionDataRunner {
                                 }));
     }
 
-    private ProtectedAudienceInput composeProtectedAudienceInputBytes(
+    @VisibleForTesting
+    ProtectedAudienceInput composeProtectedAudienceInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
-            AdTechIdentifier seller) {
+            AdTechIdentifier seller,
+            long adSelectionId) {
         sLogger.v("Composing ProtectedAudienceInput with buyer inputs and publisher");
         return ProtectedAudienceInput.newBuilder()
                 .putAllBuyerInput(
@@ -259,6 +262,10 @@ public class GetAdSelectionDataRunner {
                                                 e -> e.getKey().toString(),
                                                 e -> ByteString.copyFrom(e.getValue().getData()))))
                 .setPublisherName(seller.toString())
+                .setEnableDebugReporting(mFlags.getFledgeAuctionServerEnableDebugReporting())
+                // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
+                // accessible in plaintext.
+                .setGenerationId(String.valueOf(adSelectionId))
                 .build();
     }
 
