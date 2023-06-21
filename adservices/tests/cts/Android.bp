@@ -136,6 +136,7 @@ android_test {
         "adservices-clients",
         "adservices-test-fixtures",
         "adservices-test-utility",
+        "mockwebserver",
         "testng",
     ],
     sdk_version: "module_current",
