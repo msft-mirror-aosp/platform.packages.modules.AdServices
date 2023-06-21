@@ -111,9 +111,7 @@ public class ObliviousHttpClient {
 
         ObliviousHttpRequestContext requestContext =
                 ObliviousHttpRequestContext.create(
-                        mObliviousHttpKeyConfig,
-                        encryptResponse.encapsulatedSharedSecret(),
-                        hpkeContextNativeRef);
+                        mObliviousHttpKeyConfig, encryptResponse.encapsulatedSharedSecret(), seed);
         return ObliviousHttpRequest.create(plainText, encryptResponse.cipherText(), requestContext);
     }
 
@@ -203,13 +201,28 @@ public class ObliviousHttpClient {
     }
 
     private byte[] export(
-            OhttpJniWrapper ohttpJniWrapper, ObliviousHttpRequestContext requestContext) {
+            OhttpJniWrapper ohttpJniWrapper, ObliviousHttpRequestContext requestContext)
+            throws IOException {
         byte[] labelBytes = sResponseLabel.getBytes(StandardCharsets.US_ASCII);
+
+        // Regenerate HPKE context
+        KemNativeRef kemNativeRef = mHpkeAlgorithmSpec.kem().kemNativeRefSupplier().get();
+        KdfNativeRef kdfAlgorithmSpec = mHpkeAlgorithmSpec.kdf().kdfNativeRefSupplier().get();
+        AeadNativeRef aeadNativeRef = mHpkeAlgorithmSpec.aead().aeadNativeRefSupplier().get();
+        RecipientKeyInfo recipientKeyInfo = mObliviousHttpKeyConfig.createRecipientKeyInfo();
+        HpkeContextNativeRef hpkectx = HpkeContextNativeRef.createHpkeContextReference();
+        ohttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                hpkectx,
+                kemNativeRef,
+                kdfAlgorithmSpec,
+                aeadNativeRef,
+                mObliviousHttpKeyConfig.publicKey(),
+                recipientKeyInfo.getBytes(),
+                requestContext.seed());
+
         HpkeExportResponse exportResponse =
                 ohttpJniWrapper.hpkeExport(
-                        requestContext.hpkeContext(),
-                        labelBytes,
-                        mHpkeAlgorithmSpec.aead().keyLength());
+                        hpkectx, labelBytes, mHpkeAlgorithmSpec.aead().keyLength());
         return exportResponse.getBytes();
     }
 
