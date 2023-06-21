@@ -82,7 +82,7 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
-    private static final int DEFAULT_REQUEST_PER_SECOND = 25;
+    private static final float DEFAULT_REQUEST_PER_SECOND = 25f;
     private static final String FLAG_REGISTER_SOURCE =
             "measurement_register_source_request_permits_per_second";
     private static final String FLAG_REGISTER_WEB_SOURCE =
@@ -148,7 +148,7 @@ public class MeasurementManagerCtsTest {
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerSourceAndVerifyRateLimitReached(mMeasurementManager));
         }
@@ -180,7 +180,7 @@ public class MeasurementManagerCtsTest {
     public void testRegisterTrigger_verifyRateLimitReached() throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerTriggerAndVerifyRateLimitReached(mMeasurementManager));
         }
@@ -228,7 +228,7 @@ public class MeasurementManagerCtsTest {
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerWebSourceAndVerifyRateLimitReached(mMeasurementManager));
         }
@@ -270,7 +270,7 @@ public class MeasurementManagerCtsTest {
     public void testRegisterWebTrigger_verifyRateLimitReached() throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager));
         }
@@ -617,16 +617,16 @@ public class MeasurementManagerCtsTest {
         };
     }
 
-    private int getRequestPerSecond(String flagName) {
+    private float getRequestPerSecond(String flagName) {
         try {
             String permitString = SystemProperties.get("debug.adservices." + flagName);
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
 
             permitString = ShellUtils.runShellCommand("device_config get adservices " + flagName);
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
             return DEFAULT_REQUEST_PER_SECOND;
         } catch (Exception e) {
