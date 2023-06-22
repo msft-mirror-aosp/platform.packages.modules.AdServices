@@ -24,13 +24,16 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.common.AdServicesStates;
+import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -52,6 +55,7 @@ import java.util.stream.Stream;
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxStatesManagerTest {
 
+    private Context mContext;
     private UxStatesManager mUxStatesManager;
     private MockitoSession mStaticMockSession;
 
@@ -67,14 +71,20 @@ public class UxStatesManagerTest {
                         .spyStatic(UxStatesManager.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(DeviceRegionProvider.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
 
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance(any()));
+
+        mContext = ApplicationProvider.getApplicationContext();
+
         // Set up the test map before calling the UxStatesManager c-tor.
         setUpTestMap();
 
-        mUxStatesManager = new UxStatesManager(mMockFlags, mMockConsentManager);
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
     }
 
     @After
@@ -122,6 +132,23 @@ public class UxStatesManagerTest {
     }
 
     @Test
+    public void isEeaDeviceTest_rowDevice() {
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
+
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+
+        assertThat(mUxStatesManager.isEeaDevice()).isFalse();
+    }
+
+    @Test
+    public void isEeaDeviceTest_eeaDevice() {
+        ExtendedMockito.doReturn(true).when(() -> DeviceRegionProvider.isEuDevice(any()));
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+
+        assertThat(mUxStatesManager.isEeaDevice()).isTrue();
+    }
+
+    @Test
     public void getUxTest_processStable() {
         assertThat(mUxStatesManager.getUx()).isNull();
 
@@ -130,7 +157,8 @@ public class UxStatesManagerTest {
                         ux -> {
                             doReturn(ux).when(mMockConsentManager).getUx();
 
-                            mUxStatesManager = new UxStatesManager(mMockFlags, mMockConsentManager);
+                            mUxStatesManager =
+                                    new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
                             assertThat(mUxStatesManager.getUx()).isEqualTo(ux);
 
                             // Changing the UX before the process dies does not affect the result.
@@ -154,7 +182,8 @@ public class UxStatesManagerTest {
                                         .getEnrollmentChannel(any());
 
                                 mUxStatesManager =
-                                        new UxStatesManager(mMockFlags, mMockConsentManager);
+                                        new UxStatesManager(
+                                                mContext, mMockFlags, mMockConsentManager);
                                 assertThat(mUxStatesManager.getEnrollmentChannel())
                                         .isEqualTo(channel);
 

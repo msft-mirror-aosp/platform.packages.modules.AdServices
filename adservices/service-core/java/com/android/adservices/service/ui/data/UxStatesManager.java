@@ -25,6 +25,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
@@ -33,9 +34,9 @@ import java.util.Map;
 /**
  * Manager that deals with all UX related states. All other UX code should use this class to read ux
  * component states. Specifically, this class:
- * <li>Reads sessionized UX flags from {@code Flags}, and provide these flags through the getFlags
- *     API.
- * <li>Reads sessionized consent manager bits such as UX and enrollment channel, so that these
+ * <li>Reads process statble UX flags from {@code Flags}, and provide these flags through the
+ *     getFlags API.
+ * <li>Reads process statble consent manager bits such as UX and enrollment channel, so that these
  *     values are process stable.
  */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -47,10 +48,16 @@ public class UxStatesManager {
     private final ConsentManager mConsentManager;
     private PrivacySandboxUxCollection mUx;
     private PrivacySandboxEnrollmentChannelCollection mEnrollmentChannel;
+    // Default to EEA devices.
+    private boolean sIsEeaDevice = true;
 
-    UxStatesManager(@NonNull Flags flags, @NonNull ConsentManager consentManager) {
+    UxStatesManager(
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull ConsentManager consentManager) {
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
+        sIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
     }
 
     /** Returns an instance of the UxStatesManager. */
@@ -61,7 +68,9 @@ public class UxStatesManager {
                 if (sUxStatesManager == null) {
                     sUxStatesManager =
                             new UxStatesManager(
-                                    FlagsFactory.getFlags(), ConsentManager.getInstance(context));
+                                    context,
+                                    FlagsFactory.getFlags(),
+                                    ConsentManager.getInstance(context));
                 }
             }
         }
@@ -77,13 +86,13 @@ public class UxStatesManager {
         mConsentManager.setEntryPointEnabled(adServicesStates.isPrivacySandboxUiEnabled());
     }
 
-    /** Return the sessionized UX flags. */
+    /** Returns process statble UX flags. */
     public boolean getFlag(String uxFlagKey) {
         Boolean value = mUxFlags.get(uxFlagKey);
         return value != null ? value : false;
     }
 
-    /** Return the current UX. */
+    /** Returns process statble UX. */
     public PrivacySandboxUxCollection getUx() {
         // Lazy read.
         if (mUx == null) {
@@ -92,12 +101,17 @@ public class UxStatesManager {
         return mUx;
     }
 
-    /** Return the current enrollment channel. */
+    /** Returns process statble enrollment channel. */
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel() {
         // Lazy read.
         if (mEnrollmentChannel == null) {
             mEnrollmentChannel = mConsentManager.getEnrollmentChannel(mUx);
         }
         return mEnrollmentChannel;
+    }
+
+    /** Returns process statble devicce region. */
+    public boolean isEeaDevice() {
+        return sIsEeaDevice;
     }
 }
