@@ -2480,6 +2480,14 @@ public interface Flags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
+    /** Default minimum event report delay in milliseconds */
+    long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
+
+    /** Returns minimum event report delay in milliseconds */
+    default long getMeasurementMinEventReportDelayMillis() {
+        return MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+    }
+
     /** Disable early reporting windows configurability by default. */
     boolean MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS = false;
 

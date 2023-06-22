@@ -16,19 +16,29 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.Source.ONE_HOUR_IN_MILLIS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doReturn;
 
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +47,25 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ReportSpecUtilTest {
-    public static final long BASE_TIME = System.currentTimeMillis();
+    private static final long BASE_TIME = System.currentTimeMillis();
+    private MockitoSession mStaticMockSession;
+    @Mock Flags mFlags;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+    }
+
+    @After
+    public void cleanup() throws InterruptedException {
+        mStaticMockSession.finishMocking();
+    }
 
     @Test
     public void processIncomingReport_higherPriority_lowerPriorityReportDeleted()
@@ -808,41 +836,68 @@ public class ReportSpecUtilTest {
 
         // Assertion
         assertEquals(
-                110000 + ONE_HOUR_IN_MILLIS,
+                110000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 109999, new UnsignedLong(1L)));
         assertEquals(
-                120000 + ONE_HOUR_IN_MILLIS,
+                120000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 119999, new UnsignedLong(1L)));
         assertEquals(
-                130000 + ONE_HOUR_IN_MILLIS,
+                130000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 129999, new UnsignedLong(1L)));
         assertEquals(
-                140000 + ONE_HOUR_IN_MILLIS,
+                140000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 139999, new UnsignedLong(1L)));
         assertEquals(
-                110000 + ONE_HOUR_IN_MILLIS,
+                110000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 109999, new UnsignedLong(2L)));
         assertEquals(
-                120000 + ONE_HOUR_IN_MILLIS,
+                120000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 119999, new UnsignedLong(2L)));
         assertEquals(
-                130000 + ONE_HOUR_IN_MILLIS,
+                130000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 129999, new UnsignedLong(3L)));
         assertEquals(
-                140000 + ONE_HOUR_IN_MILLIS,
+                140000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 139999, new UnsignedLong(4L)));
         assertEquals(
                 -1,
                 ReportSpecUtil.getFlexEventReportingTime(
                         testReportSpec, 100000, 149999, new UnsignedLong(1L)));
+    }
+
+    @Test
+    public void getFlexEventReportingTime_overridesMinEventReportDelay() throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        ReportSpec testReportSpec =
+                new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString(), "3");
+
+        long minReportDelay = 23000L;
+        doReturn(minReportDelay).when(mFlags).getMeasurementMinEventReportDelayMillis();
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        long expectedReportTimeWithoutDelay = 110000L;
+        long sourceRegistrationTime = 100000L;
+        long triggerTime = 109999L;
+
+        // Assertion
+        assertEquals(
+                expectedReportTimeWithoutDelay + minReportDelay,
+                ReportSpecUtil.getFlexEventReportingTime(
+                        testReportSpec, sourceRegistrationTime, triggerTime, new UnsignedLong(1L)));
     }
 
     @Test
