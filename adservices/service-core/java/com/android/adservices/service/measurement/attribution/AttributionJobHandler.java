@@ -39,6 +39,7 @@ import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
+import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
@@ -625,7 +626,7 @@ class AttributionJobHandler {
         }
 
         // for flexible event API.
-        int bucketIncrements = reportSpec.countBucketIncrements(newEventReport);
+        int bucketIncrements = ReportSpecUtil.countBucketIncrements(reportSpec, newEventReport);
         if (bucketIncrements == 0) {
             // the new proposed report doesn't cause bucket increments so no new report
             // generated
@@ -645,8 +646,8 @@ class AttributionJobHandler {
             } else {
                 // competing condition: more event report candidate than allowed quota
                 Pair<List<EventReport>, Integer> tmp =
-                        reportSpec.processIncomingReport(
-                                bucketIncrements, newEventReport, sourceEventReports);
+                        ReportSpecUtil.processIncomingReport(
+                                reportSpec, bucketIncrements, newEventReport, sourceEventReports);
                 List<EventReport> toBeDeletedReports = tmp.first;
                 int numOfNewReportGenerated = tmp.second;
                 for (EventReport report : toBeDeletedReports) {

@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpec;
 
 import com.google.common.collect.ImmutableList;
 
@@ -136,9 +137,15 @@ public class EventReportWindowCalcDelegate {
      * @param triggerDataIndex trigger data state index
      * @param reportSpec flex event report spec
      */
-    public long getReportingTimeForNoisingFlexEventAPI(
+    public long getReportingTimeForNoisingFlexEventApi(
             int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
-        return reportSpec.getWindowEndTime(triggerDataIndex, windowIndex) + ONE_HOUR_IN_MILLIS;
+        for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
+            triggerDataIndex -= triggerSpec.getTriggerData().size();
+            if (triggerDataIndex < 0) {
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex) + ONE_HOUR_IN_MILLIS;
+            }
+        }
+        return 0;
     }
 
     private boolean isAppInstalled(Source source, int destinationType) {

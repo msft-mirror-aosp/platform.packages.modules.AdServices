@@ -227,7 +227,7 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventReportDedupKeys(
                                 Arrays.asList(new UnsignedLong(1L), new UnsignedLong(2L)))
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -263,13 +263,14 @@ public class AttributionJobHandlerTest {
                                         + "}]")
                         .setTriggerTime(triggerTime)
                         .build();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setId("source1")
-                .setEventId(new UnsignedLong(1L))
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setEventTime(eventTime)
-                .setEventReportWindow(triggerTime - 1)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("source1")
+                        .setEventId(new UnsignedLong(1L))
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(triggerTime - 1)
+                        .build();
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getPendingTriggerIds())
@@ -310,7 +311,7 @@ public class AttributionJobHandlerTest {
         triggers.add(trigger2);
         List<Source> matchingSourceList = new ArrayList<>();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
                         .setEventReportWindow(triggerTime)
@@ -363,7 +364,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(triggerTime)
                         .build();
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setPriority(100L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -372,7 +373,7 @@ public class AttributionJobHandlerTest {
                         .build();
         // Second source has higher priority but the event report window ends before trigger time
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source2")
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -403,9 +404,10 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldNotAddIfRateLimitExceeded() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -426,9 +428,10 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldNotAddIfAdTechPrivacyBoundExceeded() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -456,7 +459,7 @@ public class AttributionJobHandlerTest {
         doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
         doReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()))
@@ -489,9 +492,10 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldIgnoreForMaxReportsPerSource() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -541,9 +545,10 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(eventTriggers)
                         .setStatus(Trigger.Status.PENDING)
                         .build();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -583,9 +588,10 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldDoSimpleAttribution() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -641,14 +647,14 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(eventTriggers)
                         .build();
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setPriority(100L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(1L)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source2")
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -713,7 +719,7 @@ public class AttributionJobHandlerTest {
                         .setStatus(Trigger.Status.PENDING)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventReportDedupKeys(new ArrayList<>())
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAppDestinations(List.of(APP_DESTINATION))
@@ -784,9 +790,10 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(anyString())).thenReturn(trigger);
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
@@ -843,13 +850,14 @@ public class AttributionJobHandlerTest {
         triggers.add(trigger1);
         triggers.add(trigger2);
         List<Source> matchingSourceList1 = new ArrayList<>();
-        Source source1 = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         matchingSourceList1.add(source1);
         List<Source> matchingSourceList2 = new ArrayList<>();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .build();
@@ -921,7 +929,7 @@ public class AttributionJobHandlerTest {
                         .build();
         // Lower priority and older priority source.
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setEventId(new UnsignedLong(1L))
                         .setPriority(100L)
@@ -933,7 +941,7 @@ public class AttributionJobHandlerTest {
                         .setAggregatableReportWindow(triggerTime)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source2")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(200L)
@@ -1000,7 +1008,7 @@ public class AttributionJobHandlerTest {
                         .build();
         // Lower Priority. Install cooldown Window passed.
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setEventId(new UnsignedLong(1L))
                         .setPriority(100L)
@@ -1012,7 +1020,7 @@ public class AttributionJobHandlerTest {
                         .setAggregatableReportWindow(triggerTime)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source2")
                         .setEventId(new UnsignedLong(2L))
                         .setPriority(200L)
@@ -1078,9 +1086,10 @@ public class AttributionJobHandlerTest {
                                         + "}"
                                         + "]\n")
                         .build();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.FALSELY)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.FALSELY)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -1114,9 +1123,10 @@ public class AttributionJobHandlerTest {
                                         + "}"
                                         + "]\n")
                         .build();
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.NEVER)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.NEVER)
+                        .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -1154,7 +1164,7 @@ public class AttributionJobHandlerTest {
                         .build();
         List<Source> matchingSourceList1 = new ArrayList<>();
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
                         .build();
@@ -1198,7 +1208,7 @@ public class AttributionJobHandlerTest {
                         .build();
         List<Source> matchingSourceList1 = new ArrayList<>();
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
                         .setAppDestinations(Collections.singletonList(APP_DESTINATION))
@@ -1446,7 +1456,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
@@ -1536,7 +1546,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
@@ -1621,7 +1631,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
@@ -1708,7 +1718,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -1754,7 +1764,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -1807,7 +1817,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -1860,7 +1870,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -1913,7 +1923,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -1966,7 +1976,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2033,7 +2043,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2099,7 +2109,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2165,7 +2175,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2232,7 +2242,7 @@ public class AttributionJobHandlerTest {
                         .setDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2301,7 +2311,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2371,7 +2381,7 @@ public class AttributionJobHandlerTest {
                         .setDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2438,7 +2448,7 @@ public class AttributionJobHandlerTest {
                                         + "}]\n")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2514,7 +2524,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2604,7 +2614,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2696,7 +2706,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2786,7 +2796,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2878,7 +2888,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setFilterData(
                                 "{\n"
@@ -2973,7 +2983,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3043,7 +3053,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3103,7 +3113,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3176,7 +3186,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3245,7 +3255,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3313,7 +3323,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3677,7 +3687,7 @@ public class AttributionJobHandlerTest {
                         .build();
         ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3767,7 +3777,7 @@ public class AttributionJobHandlerTest {
                         .build();
         ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -3876,13 +3886,7 @@ public class AttributionJobHandlerTest {
 
         ReportSpec templateReportSpec = SourceFixture.getValidReportSpecValueSum();
         JSONArray existingAttributes = new JSONArray();
-        JSONObject triggerRecord1 = new JSONObject();
-        triggerRecord1.put("trigger_id", currentEventReport1.getId());
-        triggerRecord1.put("value", currentEventReport1.getTriggerValue());
-        triggerRecord1.put("priority", currentEventReport1.getTriggerPriority());
-        triggerRecord1.put("trigger_time", currentEventReport1.getTriggerTime());
-        triggerRecord1.put("trigger_data", currentEventReport1.getTriggerData());
-        triggerRecord1.put("dedup_key", currentEventReport1.getTriggerDedupKey());
+        JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
 
         existingAttributes.put(triggerRecord1);
         ReportSpec reportSpec =
@@ -3893,7 +3897,7 @@ public class AttributionJobHandlerTest {
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -4011,13 +4015,7 @@ public class AttributionJobHandlerTest {
 
         ReportSpec templateReportSpec = SourceFixture.getValidReportSpecValueSum();
         JSONArray existingAttributes = new JSONArray();
-        JSONObject triggerRecord1 = new JSONObject();
-        triggerRecord1.put("trigger_id", currentEventReport1.getId());
-        triggerRecord1.put("value", currentEventReport1.getTriggerValue());
-        triggerRecord1.put("priority", currentEventReport1.getTriggerPriority());
-        triggerRecord1.put("trigger_time", currentEventReport1.getTriggerTime());
-        triggerRecord1.put("trigger_data", currentEventReport1.getTriggerData());
-        triggerRecord1.put("dedup_key", currentEventReport1.getTriggerDedupKey());
+        JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
 
         existingAttributes.put(triggerRecord1);
         ReportSpec reportSpec =
@@ -4028,7 +4026,7 @@ public class AttributionJobHandlerTest {
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -4182,13 +4180,7 @@ public class AttributionJobHandlerTest {
 
         ReportSpec templateReportSpec = SourceFixture.getValidReportSpecValueSum();
         JSONArray existingAttributes = new JSONArray();
-        JSONObject triggerRecord1 = new JSONObject();
-        triggerRecord1.put("trigger_id", currentEventReport1.getId());
-        triggerRecord1.put("value", currentEventReport1.getTriggerValue());
-        triggerRecord1.put("priority", currentEventReport1.getTriggerPriority());
-        triggerRecord1.put("trigger_time", currentEventReport1.getTriggerTime());
-        triggerRecord1.put("trigger_data", currentEventReport1.getTriggerData());
-        triggerRecord1.put("dedup_key", currentEventReport1.getTriggerDedupKey());
+        JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
 
         existingAttributes.put(triggerRecord1);
         ReportSpec reportSpec =
@@ -4199,7 +4191,7 @@ public class AttributionJobHandlerTest {
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -4357,22 +4349,10 @@ public class AttributionJobHandlerTest {
                         .build();
 
         ReportSpec templateReportSpec =
-                new ReportSpec(SourceFixture.getValidTriggerSpecValueSum(), 2, true);
+                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
         JSONArray existingAttributes = new JSONArray();
-        JSONObject triggerRecord1 = new JSONObject();
-        triggerRecord1.put("trigger_id", currentEventReport1.getTriggerId());
-        triggerRecord1.put("value", currentEventReport1.getTriggerValue());
-        triggerRecord1.put("priority", currentEventReport1.getTriggerPriority());
-        triggerRecord1.put("trigger_time", currentEventReport1.getTriggerTime());
-        triggerRecord1.put("trigger_data", currentEventReport1.getTriggerData());
-        triggerRecord1.put("dedup_key", currentEventReport1.getTriggerDedupKey());
-        JSONObject triggerRecord2 = new JSONObject();
-        triggerRecord2.put("trigger_id", currentEventReport2.getTriggerId());
-        triggerRecord2.put("value", currentEventReport2.getTriggerValue());
-        triggerRecord2.put("priority", currentEventReport2.getTriggerPriority());
-        triggerRecord2.put("trigger_time", currentEventReport2.getTriggerTime());
-        triggerRecord2.put("trigger_data", currentEventReport2.getTriggerData());
-        triggerRecord2.put("dedup_key", currentEventReport2.getTriggerDedupKey());
+        JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
+        JSONObject triggerRecord2 = generateTriggerJSONFromEventReport(currentEventReport2);
 
         existingAttributes.put(triggerRecord1);
         existingAttributes.put(triggerRecord2);
@@ -4384,7 +4364,7 @@ public class AttributionJobHandlerTest {
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
@@ -4612,12 +4592,23 @@ public class AttributionJobHandlerTest {
     }
 
     private static Source getAggregateSource() {
-        return SourceFixture.getValidSourceBuilder()
+        return SourceFixture.getMinimalValidSourceBuilder()
                 .setId("sourceId1")
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .setAggregateSource(
-                        "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                .setAggregateSource("{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                 .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
                 .build();
+    }
+
+    private static JSONObject generateTriggerJSONFromEventReport(EventReport eventReport)
+            throws JSONException {
+        JSONObject triggerRecord = new JSONObject();
+        triggerRecord.put("trigger_id", eventReport.getId());
+        triggerRecord.put("value", eventReport.getTriggerValue());
+        triggerRecord.put("priority", eventReport.getTriggerPriority());
+        triggerRecord.put("trigger_time", eventReport.getTriggerTime());
+        triggerRecord.put("trigger_data", eventReport.getTriggerData());
+        triggerRecord.put("dedup_key", eventReport.getTriggerDedupKey());
+        return triggerRecord;
     }
 }

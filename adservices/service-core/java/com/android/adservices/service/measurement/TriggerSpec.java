@@ -150,10 +150,13 @@ public class TriggerSpec {
 
     private void validateParameters() {
         if (!isStrictIncreasing(mEventReportWindowsEnd)) {
-            throw new IllegalArgumentException(FieldsKey.EVENT_REPORT_WINDOWS + " not increasing");
+            throw new IllegalArgumentException(
+                    ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS
+                            + " not increasing");
         }
         if (!isStrictIncreasing(mSummaryBucket)) {
-            throw new IllegalArgumentException(FieldsKey.SUMMARY_BUCKETS + " not increasing");
+            throw new IllegalArgumentException(
+                    ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS + " not increasing");
         }
         if (mEventReportWindowsStart < 0) {
             mEventReportWindowsStart = 0L;
@@ -171,40 +174,53 @@ public class TriggerSpec {
             mBuilding.mSummaryBucket = new ArrayList<>();
             mBuilding.mEventReportWindowsEnd = new ArrayList<>();
 
-            this.setTriggerData(getTriggerDataArrayFromJSON(jsonObject, FieldsKey.TRIGGER_DATA));
+            this.setTriggerData(
+                    getTriggerDataArrayFromJSON(
+                            jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
             if (mBuilding.mTriggerData.size()
                     > PrivacyParams.getMaxFlexibleEventTriggerDataCardinality()) {
                 throw new IllegalArgumentException(
                         "Trigger Data Cardinality Exceeds "
                                 + PrivacyParams.getMaxFlexibleEventTriggerDataCardinality());
             }
-            JSONObject jsonReportWindows = jsonObject.getJSONObject(FieldsKey.EVENT_REPORT_WINDOWS);
-            if (!jsonReportWindows.isNull(FieldsKey.START_TIME)) {
-                this.setEventReportWindowsStart(jsonReportWindows.getLong(FieldsKey.START_TIME));
+            JSONObject jsonReportWindows =
+                    jsonObject.getJSONObject(
+                            ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
+            if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
+                this.setEventReportWindowsStart(
+                        jsonReportWindows.getLong(
+                                ReportSpecUtil.FlexEventReportJsonKeys.START_TIME));
             }
             this.setEventReportWindowsEnd(
-                    getLongArrayFromJSON(jsonReportWindows, FieldsKey.END_TIME));
+                    getLongArrayFromJSON(
+                            jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIME));
             if (mBuilding.mEventReportWindowsEnd.size()
                     > PrivacyParams.getMaxFlexibleEventReportingWindows()) {
                 throw new IllegalArgumentException("Number of Reporting Windows Exceeds Limit");
             }
 
-            if (!jsonObject.isNull(FieldsKey.SUMMARY_WINDOW_OPERATOR)) {
+            if (!jsonObject.isNull(
+                    ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
                 try {
                     SummaryOperatorType op =
                             SummaryOperatorType.valueOf(
                                     jsonObject
-                                            .getString(FieldsKey.SUMMARY_WINDOW_OPERATOR)
+                                            .getString(
+                                                    ReportSpecUtil.FlexEventReportJsonKeys
+                                                            .SUMMARY_WINDOW_OPERATOR)
                                             .toUpperCase());
                     this.setSummaryWindowOperator(op);
                 } catch (IllegalArgumentException e) {
                     // if a summary window operator is defined, but not in the pre-defined list, it
                     // will throw to exception.
                     throw new IllegalArgumentException(
-                            FieldsKey.SUMMARY_WINDOW_OPERATOR + " invalid");
+                            ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR
+                                    + " invalid");
                 }
             }
-            this.setSummaryBucket(getLongArrayFromJSON(jsonObject, FieldsKey.SUMMARY_BUCKETS));
+            this.setSummaryBucket(
+                    getLongArrayFromJSON(
+                            jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
             mBuilding.validateParameters();
         }
 
@@ -242,14 +258,5 @@ public class TriggerSpec {
         public TriggerSpec build() {
             return mBuilding;
         }
-    }
-
-    private interface FieldsKey {
-        String END_TIME = "end_times";
-        String START_TIME = "start_time";
-        String SUMMARY_WINDOW_OPERATOR = "summary_window_operator";
-        String EVENT_REPORT_WINDOWS = "event_report_windows";
-        String TRIGGER_DATA = "trigger_data";
-        String SUMMARY_BUCKETS = "summary_buckets";
     }
 }

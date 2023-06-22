@@ -453,11 +453,11 @@ public class EventReport {
                                         eventTrigger.getTriggerPriority());
                 mBuilding.mTriggerData = eventTrigger.getTriggerData();
                 mBuilding.mReportTime =
-                        source.getFlexEventReportSpec()
-                                .getFlexEventReportingTime(
-                                        source.getEventTime(),
-                                        trigger.getTriggerTime(),
-                                        eventTrigger.getTriggerData());
+                        ReportSpecUtil.getFlexEventReportingTime(
+                                source.getFlexEventReportSpec(),
+                                source.getEventTime(),
+                                trigger.getTriggerTime(),
+                                eventTrigger.getTriggerData());
                 mBuilding.mRandomizedTriggerRate =
                         source.getFlexEventReportSpec().getFlipProbability();
                 mBuilding.mTriggerValue = eventTrigger.getTriggerValue();

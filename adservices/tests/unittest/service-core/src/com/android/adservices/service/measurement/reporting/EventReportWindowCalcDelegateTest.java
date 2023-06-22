@@ -17,14 +17,18 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doReturn;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +64,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -77,7 +81,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -97,7 +101,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -115,7 +119,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -133,7 +137,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -151,7 +155,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -168,7 +172,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -187,7 +191,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -206,7 +210,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -223,7 +227,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(20);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -237,7 +241,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void testMaxReportCount() {
         Source eventSourceInstallNotAttributed =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(false)
                         .build();
@@ -251,7 +255,7 @@ public class EventReportWindowCalcDelegateTest {
                         eventSourceInstallNotAttributed, false));
 
         Source navigationSourceInstallNotAttributed =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallAttributed(false)
                         .build();
@@ -265,7 +269,7 @@ public class EventReportWindowCalcDelegateTest {
                         navigationSourceInstallNotAttributed, false));
 
         Source eventSourceInstallAttributed =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(true)
                         .build();
@@ -280,7 +284,7 @@ public class EventReportWindowCalcDelegateTest {
                         eventSourceInstallAttributed, false));
 
         Source navigationSourceInstallAttributed =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallAttributed(true)
                         .build();
@@ -300,7 +304,7 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source nonInstallEventSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(false)
                         .build();
@@ -316,7 +320,7 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source installEventSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(true)
                         .build();
@@ -332,7 +336,7 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(1).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source installEventSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(true)
                         .build();
@@ -348,7 +352,7 @@ public class EventReportWindowCalcDelegateTest {
         doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source navigationSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallAttributed(false)
                         .build();
@@ -364,7 +368,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at expiry
         Source eventSource10d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
@@ -380,7 +384,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at expiry
         Source eventSource7d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
@@ -396,7 +400,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at expiry
         Source eventSource2d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
@@ -424,7 +428,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at expiry
         Source eventSource10d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
@@ -459,7 +463,7 @@ public class EventReportWindowCalcDelegateTest {
         // Expected: 1 window at expiry
         long expiry = eventTime + TimeUnit.DAYS.toMillis(10);
         Source eventSource10d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(expiry)
@@ -494,7 +498,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at expiry
         Source eventSource10d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
@@ -529,7 +533,7 @@ public class EventReportWindowCalcDelegateTest {
         // Expected: 1 window at expiry
         long expiry = eventTime + TimeUnit.DAYS.toMillis(10);
         Source eventSource10d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(expiry)
@@ -555,7 +559,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 2 windows at 2d, expiry(10d)
         Source eventSource10d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
@@ -576,7 +580,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at 2d(expiry)
         Source eventSource2d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
@@ -597,7 +601,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 3 windows at 2d, 7d & expiry(20d)
         Source navigationSource20d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
@@ -617,7 +621,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 2 windows at 2d & expiry(7d)
         Source navigationSource7d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
@@ -637,7 +641,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at 2d(expiry)
         Source navigationSource2d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
@@ -658,7 +662,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 3 windows at 2d, 7d & expiry(20d)
         Source navigationSource20d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
@@ -679,7 +683,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 2 windows at 2d & expiry(7d)
         Source navigationSource7d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
@@ -700,7 +704,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Expected: 1 window at 2d(expiry)
         Source navigationSource2d =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
@@ -725,7 +729,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -745,7 +749,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -768,7 +772,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -789,7 +793,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -810,7 +814,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -831,7 +835,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -851,7 +855,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -873,7 +877,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -893,7 +897,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
@@ -915,7 +919,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
@@ -938,7 +942,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -961,7 +965,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -983,7 +987,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -1003,7 +1007,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(20);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -1027,7 +1031,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1051,7 +1055,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1078,7 +1082,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1103,7 +1107,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1128,7 +1132,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1153,7 +1157,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1177,7 +1181,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -1203,7 +1207,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -1229,7 +1233,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -1253,7 +1257,7 @@ public class EventReportWindowCalcDelegateTest {
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(20);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
@@ -1277,7 +1281,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.MINUTES.toMillis(30);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1301,7 +1305,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(2);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1325,7 +1329,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(20);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(2);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1350,7 +1354,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.MINUTES.toMillis(30);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1374,7 +1378,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(20);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1398,7 +1402,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(20);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(5);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1423,7 +1427,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(10);
         long sourceEventTime = triggerTime - TimeUnit.MINUTES.toMillis(30);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1447,7 +1451,7 @@ public class EventReportWindowCalcDelegateTest {
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(10);
         long sourceEventTime = triggerTime - TimeUnit.MINUTES.toMillis(30);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
@@ -1456,5 +1460,41 @@ public class EventReportWindowCalcDelegateTest {
                 sourceEventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
+    }
+
+    @Test
+    public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
+        ReportSpec testObject1 =
+                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3");
+        // Assertion
+        assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataValue(0));
+        assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataValue(2));
+        assertEquals(new UnsignedLong(5L), testObject1.getTriggerDataValue(4));
+        assertEquals(new UnsignedLong(7L), testObject1.getTriggerDataValue(6));
+        assertEquals(
+                TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
+                        0, 0, testObject1));
+        assertEquals(
+                TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
+                        0, 1, testObject1));
+        assertEquals(
+                TimeUnit.DAYS.toMillis(3) + ONE_HOUR_IN_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
+                        0, 4, testObject1));
+        assertEquals(
+                TimeUnit.DAYS.toMillis(30) + ONE_HOUR_IN_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
+                        2, 0, testObject1));
+        assertEquals(
+                TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
+                        1, 0, testObject1));
+        assertThrows(
+                IndexOutOfBoundsException.class,
+                () ->
+                        mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
+                                1, 5, testObject1));
     }
 }

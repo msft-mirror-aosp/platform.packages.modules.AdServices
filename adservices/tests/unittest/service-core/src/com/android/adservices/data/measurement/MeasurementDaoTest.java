@@ -2397,7 +2397,7 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         Source s1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setId("S1")
                         .setEnrollmentId("1")
@@ -2493,22 +2493,22 @@ public class MeasurementDaoTest {
     private void prepareDataForSourceAndTriggerDeletion() throws JSONException {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Source s1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setId("S1")
                         .build(); // deleted
         Source s2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
                         .setId("S2")
                         .build(); // deleted
         Source s3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(3L))
                         .setId("S3")
                         .build();
         Source s4 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(4L))
                         .setId("S4")
                         .build();
@@ -2640,7 +2640,7 @@ public class MeasurementDaoTest {
                         Uri.parse("https://third-place.test"));
         List<Uri> appDestinations1 = List.of(Uri.parse("android-app://test.first-place"));
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("1")
                         .setAppDestinations(appDestinations1)
                         .setWebDestinations(webDestinations1)
@@ -2655,7 +2655,7 @@ public class MeasurementDaoTest {
                         Uri.parse("https://third-place.test"));
         List<Uri> appDestinations2 = List.of(Uri.parse("android-app://test.not-first-place"));
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("2")
                         .setAppDestinations(appDestinations2)
                         .setWebDestinations(webDestinations2)
@@ -2834,33 +2834,33 @@ public class MeasurementDaoTest {
     public void testGetSourceEventReports() {
         List<Source> sourceList =
                 Arrays.asList(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("1")
                                 .setEventId(new UnsignedLong(3L))
                                 .setEnrollmentId("1")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("2")
                                 .setEventId(new UnsignedLong(4L))
                                 .setEnrollmentId("1")
                                 .build(),
                         // Should always be ignored
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("3")
                                 .setEventId(new UnsignedLong(4L))
                                 .setEnrollmentId("2")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("15")
                                 .setEventId(new UnsignedLong(15L))
                                 .setEnrollmentId("2")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("16")
                                 .setEventId(new UnsignedLong(16L))
                                 .setEnrollmentId("2")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("20")
                                 .setEventId(new UnsignedLong(20L))
                                 .setEnrollmentId("2")
@@ -3023,22 +3023,22 @@ public class MeasurementDaoTest {
     public void getSourceEventReports_sourcesWithSameEventId_haveSeparateEventReportsMatch() {
         List<Source> sourceList =
                 Arrays.asList(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("1")
                                 .setEventId(new UnsignedLong(1L))
                                 .setEnrollmentId("1")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("2")
                                 .setEventId(new UnsignedLong(1L))
                                 .setEnrollmentId("1")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("3")
                                 .setEventId(new UnsignedLong(2L))
                                 .setEnrollmentId("2")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setId("4")
                                 .setEventId(new UnsignedLong(2L))
                                 .setEnrollmentId("2")
@@ -3174,9 +3174,9 @@ public class MeasurementDaoTest {
         Objects.requireNonNull(db);
 
         List<Source> sourceList = new ArrayList<>();
-        sourceList.add(SourceFixture.getValidSourceBuilder().setId("1").build());
-        sourceList.add(SourceFixture.getValidSourceBuilder().setId("2").build());
-        sourceList.add(SourceFixture.getValidSourceBuilder().setId("3").build());
+        sourceList.add(SourceFixture.getMinimalValidSourceBuilder().setId("1").build());
+        sourceList.add(SourceFixture.getMinimalValidSourceBuilder().setId("2").build());
+        sourceList.add(SourceFixture.getMinimalValidSourceBuilder().setId("3").build());
         sourceList.forEach(
                 source -> {
                     ContentValues values = new ContentValues();
@@ -3273,7 +3273,7 @@ public class MeasurementDaoTest {
         Uri webDestination = WebUtil.validUri("https://example.test");
         Uri webDestinationWithSubdomain = WebUtil.validUri("https://xyz.example.test");
         Source sApp1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("1")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3281,7 +3281,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("2")
                         .setEventTime(10)
                         .setExpiryTime(50)
@@ -3289,7 +3289,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("3")
                         .setEventTime(20)
                         .setExpiryTime(50)
@@ -3297,7 +3297,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp4 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("4")
                         .setEventTime(30)
                         .setExpiryTime(50)
@@ -3305,7 +3305,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb5 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("5")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3313,7 +3313,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb6 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("6")
                         .setEventTime(10)
                         .setExpiryTime(50)
@@ -3321,7 +3321,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sAppWeb7 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("7")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3532,7 +3532,7 @@ public class MeasurementDaoTest {
         Uri webDestination1WithSubdomain = WebUtil.validUri("https://xyz.example.test");
         Uri webDestination2 = WebUtil.validUri("https://example2.test");
         Source sWeb1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("1")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3540,7 +3540,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("2")
                         .setEventTime(10)
                         .setExpiryTime(50)
@@ -3548,7 +3548,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sAppWeb3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("3")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3593,7 +3593,7 @@ public class MeasurementDaoTest {
         Uri appDestination = Uri.parse("android-app://com.example.abc");
         Uri webDestination = WebUtil.validUri("https://example.test");
         Source sApp1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("1")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3601,7 +3601,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("2")
                         .setEventTime(140)
                         .setExpiryTime(200)
@@ -3609,7 +3609,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("3")
                         .setEventTime(20)
                         .setExpiryTime(50)
@@ -3617,7 +3617,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sApp4 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("4")
                         .setEventTime(16)
                         .setExpiryTime(50)
@@ -3625,7 +3625,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb5 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("5")
                         .setEventTime(13)
                         .setExpiryTime(20)
@@ -3633,7 +3633,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sWeb6 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("6")
                         .setEventTime(14)
                         .setExpiryTime(50)
@@ -3641,7 +3641,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sAppWeb7 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("7")
                         .setEventTime(10)
                         .setExpiryTime(20)
@@ -3650,7 +3650,7 @@ public class MeasurementDaoTest {
                         .setEnrollmentId(enrollmentId)
                         .build();
         Source sAppWeb8 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("8")
                         .setEventTime(15)
                         .setExpiryTime(25)
@@ -3844,7 +3844,7 @@ public class MeasurementDaoTest {
     public void testDeleteAllMeasurementDataWithEmptyList() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
-        Source source = SourceFixture.getValidSourceBuilder().setId("S1").build();
+        Source source = SourceFixture.getMinimalValidSourceBuilder().setId("S1").build();
         ContentValues sourceValue = new ContentValues();
         sourceValue.put("_id", source.getId());
         db.insert(SourceContract.TABLE, null, sourceValue);
@@ -3907,7 +3907,7 @@ public class MeasurementDaoTest {
     public void testDeleteAllMeasurementDataWithNonEmptyList() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
-        Source source = SourceFixture.getValidSourceBuilder().setId("S1").build();
+        Source source = SourceFixture.getMinimalValidSourceBuilder().setId("S1").build();
         ContentValues sourceValue = new ContentValues();
         sourceValue.put("_id", source.getId());
         db.insert(SourceContract.TABLE, null, sourceValue);
@@ -6092,13 +6092,13 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         String sourceId1 = "source1";
         Source source1WithoutDestinations =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId(sourceId1)
                         .setAppDestinations(null)
                         .setWebDestinations(null)
                         .build();
         Source source1WithDestinations =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId(sourceId1)
                         .setAppDestinations(null)
                         .setWebDestinations(null)
@@ -6106,13 +6106,13 @@ public class MeasurementDaoTest {
         insertInDb(db, source1WithDestinations);
         String sourceId2 = "source2";
         Source source2WithoutDestinations =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId(sourceId2)
                         .setAppDestinations(null)
                         .setWebDestinations(null)
                         .build();
         Source source2WithDestinations =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId(sourceId2)
                         .setAppDestinations(null)
                         .setWebDestinations(null)
@@ -6133,15 +6133,15 @@ public class MeasurementDaoTest {
         // setup - create reports for 3*3 combinations of source and trigger
         List<Source> sources =
                 Arrays.asList(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setEventId(new UnsignedLong(1L))
                                 .setId("source1")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setEventId(new UnsignedLong(2L))
                                 .setId("source2")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setEventId(new UnsignedLong(3L))
                                 .setId("source3")
                                 .build());
@@ -6216,15 +6216,15 @@ public class MeasurementDaoTest {
         // setup - create reports for 3*3 combinations of source and trigger
         List<Source> sources =
                 Arrays.asList(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setEventId(new UnsignedLong(1L))
                                 .setId("source1")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setEventId(new UnsignedLong(2L))
                                 .setId("source2")
                                 .build(),
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setEventId(new UnsignedLong(3L))
                                 .setId("source3")
                                 .build());
@@ -6307,7 +6307,7 @@ public class MeasurementDaoTest {
     public void fetchMatchingSources_bringsMatchingSources() {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(5000)
@@ -6315,7 +6315,7 @@ public class MeasurementDaoTest {
                         .setId("source1")
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(10000)
@@ -6323,7 +6323,7 @@ public class MeasurementDaoTest {
                         .setId("source2")
                         .build();
         Source source3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(3L))
                         .setPublisher(WebUtil.validUri("https://subdomain2.site1.test"))
                         .setEventTime(15000)
@@ -6331,7 +6331,7 @@ public class MeasurementDaoTest {
                         .setId("source3")
                         .build();
         Source source4 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(4L))
                         .setPublisher(WebUtil.validUri("https://subdomain2.site2.test"))
                         .setEventTime(15000)
@@ -6339,7 +6339,7 @@ public class MeasurementDaoTest {
                         .setId("source4")
                         .build();
         Source source5 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(5L))
                         .setPublisher(WebUtil.validUri("https://subdomain2.site1.test"))
                         .setEventTime(20000)
@@ -6494,7 +6494,7 @@ public class MeasurementDaoTest {
     public void fetchMatchingSourcesFlexibleEventApi_bringsMatchingSources_expectedSourceReturned()
             throws JSONException {
         // Setup
-        ReportSpec testReportSpec = SourceFixture.getValidReportSpec();
+        ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
         testReportSpec.insertAttributedTrigger(
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("123456")
@@ -6518,7 +6518,7 @@ public class MeasurementDaoTest {
                         .build());
 
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(5000)
@@ -6527,7 +6527,7 @@ public class MeasurementDaoTest {
                         .setFlexEventReportSpec(testReportSpec)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(10000)
@@ -6536,7 +6536,7 @@ public class MeasurementDaoTest {
                         .setFlexEventReportSpec(testReportSpec)
                         .build();
 
-        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpec();
+        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpecCountBased();
         testReportSpecWithTriggers.insertAttributedTrigger(
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("123456")
@@ -6546,7 +6546,7 @@ public class MeasurementDaoTest {
                         .build());
 
         Source source3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(10000)
@@ -6612,7 +6612,7 @@ public class MeasurementDaoTest {
     public void fetchMatchingSourcesFlexibleEventApi_emptyInputSourceId_noSourceReturned()
             throws JSONException {
         // Setup
-        ReportSpec testReportSpec = SourceFixture.getValidReportSpec();
+        ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
         testReportSpec.insertAttributedTrigger(
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("123456")
@@ -6636,7 +6636,7 @@ public class MeasurementDaoTest {
                         .build());
 
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(5000)
@@ -6645,7 +6645,7 @@ public class MeasurementDaoTest {
                         .setFlexEventReportSpec(testReportSpec)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(10000)
@@ -6654,7 +6654,7 @@ public class MeasurementDaoTest {
                         .setFlexEventReportSpec(testReportSpec)
                         .build();
 
-        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpec();
+        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpecCountBased();
         testReportSpecWithTriggers.insertAttributedTrigger(
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("123456")
@@ -6664,7 +6664,7 @@ public class MeasurementDaoTest {
                         .build());
 
         Source source3 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
                         .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
                         .setEventTime(10000)
@@ -7690,21 +7690,21 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("S1")
                         .setRegistrant(APP_TWO_SOURCES)
                         .setPublisher(APP_TWO_PUBLISHER)
                         .setPublisherType(EventSurfaceType.APP)
                         .build());
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("S2")
                         .setRegistrant(APP_TWO_SOURCES)
                         .setPublisher(APP_TWO_PUBLISHER)
                         .setPublisherType(EventSurfaceType.APP)
                         .build());
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("S3")
                         .setRegistrant(APP_ONE_SOURCE)
                         .setPublisher(APP_ONE_PUBLISHER)
@@ -7812,25 +7812,25 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("W1")
                         .setPublisher(WEB_PUBLISHER_ONE)
                         .setPublisherType(EventSurfaceType.WEB)
                         .build());
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("W21")
                         .setPublisher(WEB_PUBLISHER_TWO)
                         .setPublisherType(EventSurfaceType.WEB)
                         .build());
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("W22")
                         .setPublisher(WEB_PUBLISHER_TWO)
                         .setPublisherType(EventSurfaceType.WEB)
                         .build());
         sourcesList.add(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("S3")
                         .setPublisher(WEB_PUBLISHER_THREE)
                         .setPublisherType(EventSurfaceType.WEB)
