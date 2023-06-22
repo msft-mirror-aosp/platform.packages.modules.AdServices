@@ -212,10 +212,22 @@
       "name": "CtsAdServicesMddTests"
     },
     {
-      "name": "CtsAdServicesDeviceTestCases"
+      "name": "CtsAdServicesDeviceTestCases",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "CtsAdServicesDebuggableDeviceTestCases"
+      "name": "CtsAdServicesDebuggableDeviceTestCases",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "AdServicesApkUINotificationTests",
