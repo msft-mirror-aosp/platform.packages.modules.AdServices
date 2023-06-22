@@ -89,6 +89,7 @@ android_library {
         "mobile_data_downloader_lib",
         "androidx.webkit_webkit",
         "androidx.javascriptengine_javascriptengine",
+        "adservices-cobalt",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
         "modules-utils-build",
