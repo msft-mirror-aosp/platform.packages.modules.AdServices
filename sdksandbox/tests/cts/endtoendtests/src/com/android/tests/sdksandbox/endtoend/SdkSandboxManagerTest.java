@@ -22,6 +22,8 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
+import static androidx.lifecycle.Lifecycle.State;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -68,6 +70,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -616,6 +619,7 @@ public class SdkSandboxManagerTest {
 
         assertThat(exception.getMessage())
                 .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
     }
 
     @Test
@@ -631,6 +635,7 @@ public class SdkSandboxManagerTest {
 
         assertThat(exception.getMessage())
                 .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
     }
 
     @Test
@@ -649,6 +654,7 @@ public class SdkSandboxManagerTest {
                             assertThat(exception.getMessage())
                                     .contains("There is no sandbox process running");
                         });
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
     }
 
     @Test
@@ -664,6 +670,8 @@ public class SdkSandboxManagerTest {
                             startSandboxActivity(sdk, activityStarter);
                             assertThat(activityStarter.isActivityVisible()).isTrue();
                         });
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
     }
 
     @Test
@@ -684,6 +692,8 @@ public class SdkSandboxManagerTest {
                             assertThat(activityStarter1.isActivityVisible()).isFalse();
                             assertThat(activityStarter2.isActivityVisible()).isTrue();
                         });
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
     }
 
     @Test
@@ -706,6 +716,7 @@ public class SdkSandboxManagerTest {
                                 fail("Got exception while starting activity: " + e.getMessage());
                             }
                         });
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
     }
 
     // Helper method to load SDK_NAME_1
