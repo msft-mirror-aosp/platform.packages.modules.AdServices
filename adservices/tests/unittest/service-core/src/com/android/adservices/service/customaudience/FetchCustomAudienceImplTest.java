@@ -28,7 +28,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -91,6 +91,8 @@ import java.util.concurrent.ExecutorService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FetchCustomAudienceImplTest {
+    private static final int API_NAME =
+            AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private final Clock mClock = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
     private final AdServicesLogger mAdServicesLoggerMock =
@@ -185,10 +187,7 @@ public class FetchCustomAudienceImplTest {
         assertEquals(0, mockWebServer.getRequestCount());
         assertFalse(callback.mIsSuccess);
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test
@@ -212,10 +211,7 @@ public class FetchCustomAudienceImplTest {
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER));
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -230,7 +226,7 @@ public class FetchCustomAudienceImplTest {
                         true,
                         true,
                         Process.myUid(),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
 
         FetchCustomAudienceTestCallback callback =
@@ -246,10 +242,7 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_UNAUTHORIZED),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_UNAUTHORIZED), anyInt());
     }
 
     @Test
@@ -262,7 +255,7 @@ public class FetchCustomAudienceImplTest {
                         true,
                         true,
                         Process.myUid(),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -275,10 +268,7 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_RATE_LIMIT_REACHED),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_RATE_LIMIT_REACHED), anyInt());
     }
 
     @Test
@@ -291,7 +281,7 @@ public class FetchCustomAudienceImplTest {
                         true,
                         true,
                         Process.myUid(),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -305,10 +295,7 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_BACKGROUND_CALLER),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_BACKGROUND_CALLER), anyInt());
     }
 
     @Test
@@ -321,7 +308,7 @@ public class FetchCustomAudienceImplTest {
                         true,
                         true,
                         Process.myUid(),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -335,10 +322,7 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
     }
 
     @Test
@@ -351,7 +335,7 @@ public class FetchCustomAudienceImplTest {
                         true,
                         true,
                         Process.myUid(),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -365,10 +349,7 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
     }
 
     @Test
@@ -381,7 +362,7 @@ public class FetchCustomAudienceImplTest {
                         true,
                         true,
                         Process.myUid(),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -391,10 +372,7 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
     }
 
     private FetchCustomAudienceTestCallback callFetchCustomAudience(
