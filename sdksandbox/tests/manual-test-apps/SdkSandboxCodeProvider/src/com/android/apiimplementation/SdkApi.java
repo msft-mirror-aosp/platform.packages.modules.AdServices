@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,9 +68,7 @@ public class SdkApi extends ISdkApi.Stub {
             final String fileName = "testParcelFileDescriptor";
             FileOutputStream fout = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
             // Writing inputValue String to a file
-            for (int i = 0; i < inputValue.length(); i++) {
-                fout.write((int) inputValue.charAt(i));
-            }
+            fout.write(inputValue.getBytes(StandardCharsets.UTF_16));
             fout.close();
             File file = new File(mContext.getFilesDir(), fileName);
             ParcelFileDescriptor pFd =
@@ -82,14 +81,12 @@ public class SdkApi extends ISdkApi.Stub {
 
     @Override
     public String parseFileDescriptor(ParcelFileDescriptor pFd) {
-        String value = "";
+        String value;
 
         try {
             FileInputStream fis = new FileInputStream(pFd.getFileDescriptor());
             // Reading fileInputStream and adding its value to a string
-            while (fis.available() != 0) {
-                value += (char) fis.read();
-            }
+            value = new String(fis.readAllBytes(), StandardCharsets.UTF_16);
             fis.close();
             pFd.close();
         } catch (Exception e) {
