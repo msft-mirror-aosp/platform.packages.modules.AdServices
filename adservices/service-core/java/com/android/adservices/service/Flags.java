@@ -1780,7 +1780,7 @@ public interface Flags {
      * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
      * Negative Value means skipping the rate limiting checking.
      */
-    float ADID_REQUEST_PERMITS_PER_SECOND = 5;
+    float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
