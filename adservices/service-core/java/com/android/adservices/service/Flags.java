@@ -2335,10 +2335,16 @@ public interface Flags {
 
     // New Feature Flags
     boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
+    boolean FLEDGE_CPC_BILLING_ENABLED = false;
 
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
         return FLEDGE_REGISTER_AD_BEACON_ENABLED;
+    }
+
+    /** Returns whether the CPC billing feature is enabled. */
+    default boolean getFledgeCpcBillingEnabled() {
+        return FLEDGE_CPC_BILLING_ENABLED;
     }
 
     /**

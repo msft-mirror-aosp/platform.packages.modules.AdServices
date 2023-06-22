@@ -539,6 +539,7 @@ public final class PhFlags implements Flags {
 
     // New Feature Flags
     static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
+    static final String KEY_FLEDGE_CPC_BILLING_ENABLED = "fledge_cpc_billing_enabled";
 
     static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
@@ -2457,6 +2458,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeCpcBillingEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CPC_BILLING_ENABLED,
+                /* defaultValue */ FLEDGE_CPC_BILLING_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -3644,6 +3653,8 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED
                         + " = "
                         + getFledgeRegisterAdBeaconEnabled());
+        writer.println(
+                "\t" + KEY_FLEDGE_CPC_BILLING_ENABLED + " = " + getFledgeCpcBillingEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(
