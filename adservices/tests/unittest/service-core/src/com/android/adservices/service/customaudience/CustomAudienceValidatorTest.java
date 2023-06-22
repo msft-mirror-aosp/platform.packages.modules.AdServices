@@ -28,6 +28,7 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
@@ -50,7 +51,8 @@ public class CustomAudienceValidatorTest {
             new CustomAudienceValidator(
                     CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                     FlagsFactory.getFlagsForTest(),
-                    new FrequencyCapAdDataValidatorNoOpImpl());
+                    new FrequencyCapAdDataValidatorNoOpImpl(),
+                    AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP);
 
     @Test
     public void testValidCustomAudience() {
@@ -314,10 +316,10 @@ public class CustomAudienceValidatorTest {
     @Test
     public void testNameTooLong() {
         String tooLongName =
-                "This is a super long name.This is a super long name.This is a super long"
+                "This is a super long name.This is a super long name.This is a super long name.This"
+                    + " is a super long name.This is a super long name.This is a super long"
                     + " name.This is a super long name.This is a super long name.This is a super"
-                    + " long name.This is a super long name.This is a super long name.This is a"
-                    + " super long name.This is a super long name.";
+                    + " long name.This is a super long name.";
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
@@ -340,7 +342,8 @@ public class CustomAudienceValidatorTest {
                 new CustomAudienceValidator(
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         FlagsFactory.getFlagsForTest(),
-                        new FrequencyCapAdDataValidatorImpl());
+                        new FrequencyCapAdDataValidatorImpl(),
+                        AdRenderIdValidator.createEnabledInstance(100));
 
         List<String> expectedViolations =
                 List.of(
@@ -360,5 +363,28 @@ public class CustomAudienceValidatorTest {
                                         .setAds(List.of(adDataWithExceededFrequencyCapLimits))
                                         .build()))
                 .containsExactlyElementsIn(expectedViolations);
+    }
+
+    @Test
+    public void testInvalidRenderId() {
+        AdData adDataWithInvalidRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdRenderId("0123456789")
+                        .build();
+
+        CustomAudienceValidator validator =
+                new CustomAudienceValidator(
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        FlagsFactory.getFlagsForTest(),
+                        new FrequencyCapAdDataValidatorImpl(),
+                        AdRenderIdValidator.createEnabledInstance(5));
+
+        assertThat(
+                        validator.getValidationViolations(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .setAds(List.of(adDataWithInvalidRenderId))
+                                        .build()))
+                .isNotEmpty();
     }
 }

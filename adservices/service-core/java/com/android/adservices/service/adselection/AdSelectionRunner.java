@@ -161,7 +161,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            @NonNull final int callerUid) {
+            final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);

@@ -49,6 +49,7 @@ public final class AdDataTest {
                         .setMetadata(AdDataFixture.VALID_METADATA)
                         .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
+                        .setAdRenderId(AdDataFixture.VALID_RENDER_ID)
                         .build();
 
         assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
@@ -57,6 +58,7 @@ public final class AdDataTest {
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
         assertThat(validAdData.getAdFilters())
                 .isEqualTo(AdFiltersFixture.getValidUnhiddenFilters());
+        assertThat(validAdData.getAdRenderId()).isEqualTo(AdDataFixture.VALID_RENDER_ID);
     }
 
     @Test
@@ -77,6 +79,22 @@ public final class AdDataTest {
         assertThat(fromParcel.getAdCounterKeys()).isNotNull();
         assertThat(fromParcel.getAdCounterKeys()).isEmpty();
         assertThat(fromParcel.getAdFilters()).isNull();
+    }
+
+    @Test
+    public void testParcelValidAdDataWithUnsetRenderIdSuccess() {
+        AdData validAdData =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setMetadata(AdDataFixture.VALID_METADATA)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        validAdData.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        AdData fromParcel = AdData.CREATOR.createFromParcel(p);
+
+        assertThat(fromParcel.getAdRenderId()).isNull();
     }
 
     @Test
@@ -152,6 +170,7 @@ public final class AdDataTest {
                         .setMetadata(AdDataFixture.VALID_METADATA)
                         .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
+                        .setAdRenderId(AdDataFixture.VALID_RENDER_ID)
                         .build();
         String expectedToString =
                 "AdData{mRenderUri="
@@ -162,7 +181,9 @@ public final class AdDataTest {
                         + AdDataFixture.getAdCounterKeys()
                         + ", mAdFilters="
                         + AdFiltersFixture.getValidUnhiddenFilters()
-                        + "}";
+                        + ", mAdRenderId='"
+                        + AdDataFixture.VALID_RENDER_ID
+                        + "'}";
         assertThat(validAdData.toString()).isEqualTo(expectedToString);
     }
 

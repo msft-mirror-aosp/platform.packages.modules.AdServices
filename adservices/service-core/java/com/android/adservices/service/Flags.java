@@ -831,6 +831,19 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
+    boolean FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED = false;
+    long FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH = 12L;
+
+    /** Returns whether ad render id is enabled. */
+    default boolean getFledgeAdSelectionAdRenderIdEnabled() {
+        return FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED;
+    }
+
+    /** Returns the max length of Ad Render Id. */
+    default long getFledgeAdSelectionAdRenderIdMaxLength() {
+        return FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH;
+    }
+
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
 
     /**

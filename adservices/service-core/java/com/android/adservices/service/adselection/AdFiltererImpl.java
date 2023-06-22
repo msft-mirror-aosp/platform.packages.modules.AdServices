@@ -117,12 +117,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     "Applying filters to %d contextual ads with current time %s.",
                     contextualAds.getAdsWithBid().size(), currentTime);
             for (AdWithBid ad : contextualAds.getAdsWithBid()) {
-                DBAdData dbAdData =
-                        new DBAdData(
-                                ad.getAdData().getRenderUri(),
-                                ad.getAdData().getMetadata(),
-                                ad.getAdData().getAdCounterKeys(),
-                                ad.getAdData().getAdFilters());
+                DBAdData dbAdData = new DBAdData.Builder(ad.getAdData()).build();
                 if (doesAdPassFilters(
                         dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
                     adsList.add(ad);

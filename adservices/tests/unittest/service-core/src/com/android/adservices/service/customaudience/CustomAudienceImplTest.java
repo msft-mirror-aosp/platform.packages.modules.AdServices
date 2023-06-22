@@ -28,9 +28,12 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
 
@@ -51,6 +54,9 @@ public class CustomAudienceImplTest {
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+
+    private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
@@ -118,7 +124,8 @@ public class CustomAudienceImplTest {
                         new CustomAudienceValidator(
                                 mClockMock,
                                 CommonFixture.FLAGS_FOR_TEST,
-                                new FrequencyCapAdDataValidatorImpl()),
+                                new FrequencyCapAdDataValidatorImpl(),
+                                AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP),
                         mClockMock,
                         CommonFixture.FLAGS_FOR_TEST);
 
@@ -133,7 +140,7 @@ public class CustomAudienceImplTest {
                         Duration.ofMillis(
                                 CommonFixture.FLAGS_FOR_TEST
                                         .getFledgeCustomAudienceDefaultExpireInMs()),
-                        CommonFixture.FLAGS_FOR_TEST);
+                        AD_DATA_CONVERSION_STRATEGY);
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(

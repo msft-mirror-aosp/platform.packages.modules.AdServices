@@ -86,7 +86,11 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAdSelectionFilteringEnabled()));
+                                                        .getFledgeAdSelectionFilteringEnabled()),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAdSelectionAdRenderIdEnabled()));
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()

@@ -607,7 +607,6 @@ public class ImpressionReporter {
         }
     }
 
-
     /**
      * Validates the {@code adSelectionConfig} from the request.
      *

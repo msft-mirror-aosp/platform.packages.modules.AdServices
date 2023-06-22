@@ -329,6 +329,11 @@ public final class PhFlags implements Flags {
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    static final String KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH =
+            "fledge_ad_selection_ad_render_id_max_length";
+    static final String KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED =
+            "fledge_ad_selection_ad_render_id_enabled";
+
     // Topics invoking app status key.
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
 
@@ -2365,6 +2370,23 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAdSelectionAdRenderIdEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED,
+                /* defaultValue */ FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED);
+    }
+
+    /** Returns the max length of Ad Render Id. */
+    @Override
+    public long getFledgeAdSelectionAdRenderIdMaxLength() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH,
+                /* defaultValue */ FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForAppSetId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
@@ -3511,6 +3533,16 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B
                         + " = "
                         + getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionAdRenderIdEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH
+                        + " = "
+                        + getFledgeAdSelectionAdRenderIdMaxLength());
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
