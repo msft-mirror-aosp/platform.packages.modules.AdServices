@@ -562,7 +562,7 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logConsentMigrationStats_success() {
-        when(mFlags.getAdservicesConsentMigrationLoggingKillSwitch()).thenReturn(false);
+        when(mFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(true);
         ExtendedMockito.doNothing()
                 .when(
                         () ->
@@ -612,7 +612,7 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logConsentMigrationStats_disabled() {
-        when(mFlags.getAdservicesConsentMigrationLoggingKillSwitch()).thenReturn(true);
+        when(mFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(false);
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()

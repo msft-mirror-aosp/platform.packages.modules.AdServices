@@ -1312,7 +1312,7 @@ public class ConsentManager {
             }
             LogUtil.d("Started migrating Consent from PPAPI to System Service");
 
-            boolean consentKey = datastore.get(ConsentConstants.CONSENT_KEY);
+            Boolean consentKey = Boolean.TRUE.equals(datastore.get(ConsentConstants.CONSENT_KEY));
 
             // Migrate Consent and Notification Displayed to System Service.
             // Set consent enabled only when value is TRUE. FALSE and null are regarded as disabled.

@@ -2438,13 +2438,13 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
     }
 
-    /** Enable pushing of consent migration logs when OTA from S to T+ by default. */
-    boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_KILL_SWITCH = false;
+    /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
+    boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
     /***
-     * Returns true if we want to log consent migration metrics when OTA from S to T+.
+     * Returns true when logging consent migration metrics is enabled when OTA from S to T+.
      */
-    default boolean getAdservicesConsentMigrationLoggingKillSwitch() {
-        return DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_KILL_SWITCH;
+    default boolean getAdservicesConsentMigrationLoggingEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
     }
 }
