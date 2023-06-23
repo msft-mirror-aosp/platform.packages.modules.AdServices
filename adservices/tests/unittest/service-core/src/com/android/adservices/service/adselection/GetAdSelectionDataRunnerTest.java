@@ -59,8 +59,12 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.ByteString;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -206,6 +210,37 @@ public class GetAdSelectionDataRunnerTest {
         Mockito.verify(mEncryptionContextDaoSpy, times(0)).insertEncryptionContext(any());
     }
 
+    @Test
+    public void test_composeProtectedAudienceInput_generatesProto() {
+        byte[] buyer1data = new byte[] {2, 3};
+        byte[] buyer2data = new byte[] {1};
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerInputs =
+                ImmutableMap.of(
+                        BUYER_1,
+                        AuctionServerDataCompressor.CompressedData.create(buyer1data),
+                        BUYER_2,
+                        AuctionServerDataCompressor.CompressedData.create(buyer2data));
+
+        long adSelectionId = 234L;
+
+        ProtectedAudienceInput result =
+                mGetAdSelectionDataRunner.composeProtectedAudienceInputBytes(
+                        buyerInputs, SELLER, adSelectionId);
+
+        Map<String, ByteString> expectedBuyerInput =
+                ImmutableMap.of(
+                        BUYER_1.toString(),
+                        ByteString.copyFrom(buyer1data),
+                        BUYER_2.toString(),
+                        ByteString.copyFrom(buyer2data));
+        Assert.assertEquals(result.getBuyerInput(), expectedBuyerInput);
+        Assert.assertEquals(result.getPublisherName(), SELLER.toString());
+        Assert.assertEquals(
+                result.getEnableDebugReporting(),
+                mFlags.getFledgeAuctionServerEnableDebugReporting());
+        Assert.assertEquals(result.getGenerationId(), String.valueOf(adSelectionId));
+    }
+
     private void createAndPersistDBCustomAudiences() {
         Map<String, AdTechIdentifier> nameAndBuyers =
                 Map.of(
@@ -244,6 +279,11 @@ public class GetAdSelectionDataRunnerTest {
         @Override
         public boolean getDisableFledgeEnrollmentCheck() {
             return true;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnableDebugReporting() {
+            return false;
         }
     }
 
