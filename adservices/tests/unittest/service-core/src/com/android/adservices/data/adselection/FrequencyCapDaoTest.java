@@ -17,6 +17,7 @@
 package com.android.adservices.data.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
@@ -2012,6 +2013,159 @@ public class FrequencyCapDaoTest {
     }
 
     @Test
+    public void testDeleteAllHistogramEventDataFromEmptyTables() {
+        assertWithMessage("Number of deleted events")
+                .that(mFrequencyCapDao.deleteAllHistogramEventData())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteAllHistogramEventData() {
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_LATER_TIME,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_OWNER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of persisted events before deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramEvents())
+                .isEqualTo(5);
+
+        assertWithMessage("Number of deleted events")
+                .that(mFrequencyCapDao.deleteAllHistogramEventData())
+                .isEqualTo(5);
+
+        assertWithMessage("Number of persisted events after deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramEvents())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteAllHistogramIdentifiersFromEmptyTables() {
+        assertWithMessage("Number of deleted identifiers")
+                .that(mFrequencyCapDao.deleteAllHistogramIdentifiers())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteAllHistogramIdentifiers() {
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of persisted identifiers before deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(3);
+
+        assertWithMessage("Number of deleted identifiers")
+                .that(mFrequencyCapDao.deleteAllHistogramIdentifiers())
+                .isEqualTo(3);
+
+        assertWithMessage("Number of persisted identifiers after deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteAllHistogramDataFromEmptyTables() {
+        assertWithMessage("Number of deleted events")
+                .that(mFrequencyCapDao.deleteAllHistogramData())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteAllHistogramData() {
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_LATER_TIME,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_OWNER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of persisted events before deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramEvents())
+                .isEqualTo(5);
+        assertWithMessage("Number of persisted identifiers before deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(3);
+
+        assertWithMessage("Number of deleted events")
+                .that(mFrequencyCapDao.deleteAllHistogramData())
+                .isEqualTo(5);
+
+        assertWithMessage("Number of persisted events after deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramEvents())
+                .isEqualTo(0);
+        assertWithMessage("Number of persisted identifiers after deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(0);
+    }
+
+    @Test
     public void testGetTotalNumHistogramEvents() {
         assertThat(mFrequencyCapDao.getTotalNumHistogramEvents()).isEqualTo(0);
 
@@ -2050,6 +2204,41 @@ public class FrequencyCapDaoTest {
                 LOWER_MAX_PER_BUYER_EVENT_COUNT);
 
         assertThat(mFrequencyCapDao.getTotalNumHistogramEvents()).isEqualTo(5);
+    }
+
+    @Test
+    public void testGetTotalNumHistogramIdentifiers() {
+        assertThat(mFrequencyCapDao.getTotalNumHistogramIdentifiers()).isEqualTo(0);
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertThat(mFrequencyCapDao.getTotalNumHistogramIdentifiers()).isEqualTo(2);
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertThat(mFrequencyCapDao.getTotalNumHistogramIdentifiers()).isEqualTo(4);
     }
 
     @Test
