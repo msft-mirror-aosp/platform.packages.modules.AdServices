@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+// TODO(b/283857101): Delete and use CustomAudienceBlob instead.
 /**
  * A parser and validator for a JSON response that is fetched during the Custom Audience background
  * fetch process.

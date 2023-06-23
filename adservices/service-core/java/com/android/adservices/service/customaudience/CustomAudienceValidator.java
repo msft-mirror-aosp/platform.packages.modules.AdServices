@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdData;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -166,8 +167,11 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                     customAudience.getUserBiddingSignals().toString(), violations);
         }
         if (customAudience.getTrustedBiddingData() != null) {
-            new TrustedBiddingDataValidator(buyer, mCustomAudienceMaxTrustedBiddingDataSizeB)
-                    .addValidation(customAudience.getTrustedBiddingData(), violations);
+            new TrustedBiddingDataValidator(mCustomAudienceMaxTrustedBiddingDataSizeB)
+                    .addValidation(
+                            customAudience.getTrustedBiddingData(),
+                            AdTechIdentifier.fromString(buyer),
+                            violations);
         }
         AdDataValidator adDataValidator =
                 new AdDataValidator(

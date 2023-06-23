@@ -177,7 +177,8 @@ public class FetchCustomAudienceImplTest {
                                 new MockResponse()
                                         .setBody(
                                                 FetchCustomAudienceFixture
-                                                        .getFullSuccessfulJsonResponseString())));
+                                                        .getFullSuccessfulJsonResponseString(
+                                                                BUYER))));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
@@ -198,7 +199,9 @@ public class FetchCustomAudienceImplTest {
                                 new MockResponse()
                                         .setBody(
                                                 FetchCustomAudienceFixture
-                                                        .getFullSuccessfulJsonResponseString())));
+                                                        .getFullSuccessfulJsonResponseString(
+                                                                AdTechIdentifier.fromString(
+                                                                        "localhost")))));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
