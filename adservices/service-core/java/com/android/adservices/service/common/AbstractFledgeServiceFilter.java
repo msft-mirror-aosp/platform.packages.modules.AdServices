@@ -22,6 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.LimitExceededException;
 
@@ -129,6 +130,22 @@ public abstract class AbstractFledgeServiceFilter {
     protected void assertCallerPackageName(String callerPackageName, int callerUid, int apiName)
             throws FledgeAuthorizationFilter.CallerMismatchException {
         mFledgeAuthorizationFilter.assertCallingPackageName(callerPackageName, callerUid, apiName);
+    }
+
+    /**
+     * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
+     * the ad tech is enrolled and authorized to perform the operation for the package.
+     *
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param callerPackageName the package name to check against
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     */
+    protected AdTechIdentifier getAndAssertAdTechFromUriAllowed(
+            String callerPackageName, Uri uriForAdTech, int apiName)
+            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        return mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
+                mContext, callerPackageName, uriForAdTech, apiName);
     }
 
     /**

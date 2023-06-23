@@ -55,6 +55,10 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -62,6 +66,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -134,6 +139,8 @@ public class CustomAudienceServiceEndToEndTest {
             AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
 
     private CustomAudienceDao mCustomAudienceDao;
+    private AppInstallDao mAppInstallDao;
+    private FrequencyCapDao mFrequencyCapDao;
 
     private CustomAudienceServiceImpl mService;
 
@@ -167,6 +174,13 @@ public class CustomAudienceServiceEndToEndTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+
+        SharedStorageDatabase sharedDb =
+                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class).build();
+        mAppInstallDao = sharedDb.appInstallDao();
+        mFrequencyCapDao = sharedDb.frequencyCapDao();
+        AdSelectionServerDatabase serverDb =
+                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
 
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
@@ -209,7 +223,9 @@ public class CustomAudienceServiceEndToEndTest {
                                         mAdServicesLogger),
                                 new FledgeAllowListsFilter(
                                         CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                mThrottlerSupplier));
+                                mThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
 
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
@@ -267,7 +283,9 @@ public class CustomAudienceServiceEndToEndTest {
                                         mAdServicesLogger),
                                 new FledgeAllowListsFilter(
                                         CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                mThrottlerSupplier));
+                                mThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -418,7 +436,9 @@ public class CustomAudienceServiceEndToEndTest {
                                         mAdServicesLogger),
                                 new FledgeAllowListsFilter(
                                         CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                mThrottlerSupplier));
+                                mThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         assertThrows(
@@ -1073,7 +1093,11 @@ public class CustomAudienceServiceEndToEndTest {
                                                 mAdServicesLogger),
                                         new FledgeAllowListsFilter(
                                                 CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                        () -> Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST)));
+                                        () -> Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST)),
+                                new AdFilteringFeatureFactory(
+                                        mAppInstallDao,
+                                        mFrequencyCapDao,
+                                        CommonFixture.FLAGS_FOR_TEST));
 
         // The first call should succeed
         ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
