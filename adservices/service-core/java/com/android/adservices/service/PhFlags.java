@@ -469,6 +469,11 @@ public final class PhFlags implements Flags {
 
     static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
 
+    // Enrollment Mdd Deletion Feature Enabled check
+
+    static final String KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED =
+            "enable_enrollment_mdd_record_deletion";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -2447,6 +2452,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnrollmentMddRecordDeletionEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED,
+                /* defaultValue */ ENROLLMENT_MDD_RECORD_DELETION_ENABLED);
+    }
+
+    @Override
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
@@ -3033,6 +3046,12 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t" + KEY_ENABLE_ENROLLMENT_TEST_SEED + " = " + isEnableEnrollmentTestSeed());
+
+        writer.println(
+                "\t"
+                        + KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED
+                        + " = "
+                        + getEnrollmentMddRecordDeletionEnabled());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());

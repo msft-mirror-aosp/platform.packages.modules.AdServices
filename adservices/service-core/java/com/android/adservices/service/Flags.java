@@ -2694,4 +2694,12 @@ public interface Flags {
     default String getConsentNotificationResetToken() {
         return CONSENT_NOTIFICATION_RESET_TOKEN;
     }
+
+    /** Default whether Enrollment Mdd Record Deletion feature is enabled. */
+    boolean ENROLLMENT_MDD_RECORD_DELETION_ENABLED = false;
+
+    /** Returns whether the {@code enrollmentMddRecordDeletion} feature is enabled. */
+    default boolean getEnrollmentMddRecordDeletionEnabled() {
+        return ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
+    }
 }
