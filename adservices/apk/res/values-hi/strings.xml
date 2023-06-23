@@ -188,17 +188,17 @@
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"आपकी सूची में मौजूद ऐप्लिकेशन से, विज्ञापन के सुझाव दिखाने के लिए इस्तेमाल होने वाला डेटा हटा दिया जाएगा. साथ ही, आने वाले समय में ऐप्लिकेशन आपको नए विज्ञापन दिखाएगा. हालांकि, आपको अब भी अपनी पसंद से मिलते-जुलते कुछ विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ऐप्लिकेशन का डेटा रीसेट कर दिया गया है"</string>
     <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"विज्ञापन के विषय दिखाने की सुविधा चालू है"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android, आपकी पसंद के विषयों की जानकारी सेव करना शुरू करेगा. हालांकि, इन विषयों के हिसाब से विज्ञापन दिखने में कुछ समय लग सकता है."</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android, पसंद के विषयों की जानकारी को सेव करना शुरू करेगा. हालांकि, दिलचस्प विषयों के आधार पर विज्ञापन दिखने में कुछ समय लग सकता है."</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"क्या विज्ञापन के विषय दिखाने की सुविधा को बंद करना है?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"विषयों वाली इस सूची को मिटा दिया जाएगा. Android अब आपकी पसंद के विषयों की जानकारी सेव नहीं करेगा. हालांकि, आपको अब भी अपने काम के विज्ञापन दिख सकते हैं."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ऐप्लिकेशन के सुझाए गए विज्ञापन दिखाने की सुविधा चालू है"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ऐप्लिकेशन, विज्ञापनों के सुझाव देना शुरू कर सकते हैं. जब ऐप्लिकेशन, विज्ञापनों के सुझाव देना शुरू करेंगे, तब आपको उन ऐप्लिकेशन की एक सूची दिखेगी."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"क्या ऐप्लिकेशन के सुझाए गए विज्ञापन दिखाने की सुविधा को बंद करना है?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"विज्ञापन के सुझाव दिखाने के लिए इस्तेमाल होने वाला पूरा डेटा मिटा दिया जाएगा. अब ऐप्लिकेशन, विज्ञापनों के सुझाव नहीं दिखा पाएंगे. हालांकि, आपको अब भी अपने काम के विज्ञापन दिख सकते हैं."</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"विषयों वाली इस सूची को मिटा दिया जाएगा. Android, आपकी पसंद के विषयों की जानकारी को अब सेव नहीं करेगा. हालांकि, आपको अब भी काम के विज्ञापन दिख सकते हैं."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ऐप्लिकेशन की ओर से सुझाए गए विज्ञापन दिखाने की सुविधा चालू है"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ऐप्लिकेशन, विज्ञापन के सुझाव देना शुरू कर सकते हैं. विज्ञापनों का सुझाव देना शुरू करने के बाद, आपको ऐप्लिकेशन की एक सूची दिखेगी."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"क्या ऐप्लिकेशन की ओर से सुझाए गए विज्ञापन दिखाने की सुविधा को बंद करना है?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"विज्ञापन के सुझाव दिखाने के लिए इस्तेमाल होने वाला पूरा डेटा मिटा दिया जाएगा. अब ऐप्लिकेशन, विज्ञापन के सुझाव नहीं दिखा पाएंगे. हालांकि, आपको अब भी काम के विज्ञापन दिख सकते हैं."</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"विज्ञापन की परफ़ॉर्मेंस का आकलन करने की सुविधा चालू है"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android, ऐप्लिकेशन के साथ सीमित जानकारी शेयर करता है, ताकि उन्हें विज्ञापनों की परफ़ॉर्मेंस का आकलन करने में मदद मिले."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android, ऐप्लिकेशन के साथ सीमित जानकारी शेयर करता है, ताकि विज्ञापनों की परफ़ॉर्मेंस का आकलन करने में, ऐप्लिकेशन की मदद की जा सके."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"क्या विज्ञापन की परफ़ॉर्मेंस का आकलन करने की सुविधा को बंद करना है?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"विज्ञापन की परफ़ॉर्मेंस का आकलन करने वाली उन सभी रिपोर्ट को मिटा दिया जाएगा जिन्हें अब तक मंज़ूरी नहीं मिली है. साथ ही, किसी भी नई रिपोर्ट को जनरेट या शेयर नहीं किया जाएगा."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"विज्ञापन की परफ़ॉर्मेंस का आकलन करने से जुड़ी सभी पेंडिंग रिपोर्ट मिटा दी जाएंगी. साथ ही, किसी नई रिपोर्ट को जनरेट या शेयर नहीं किया जाएगा."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"विज्ञापन देखने वालों की निजता बनाए रखने की सुविधा"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"विज्ञापन के विषय"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ऐप्लिकेशन के सुझाए गए विज्ञापन"</string>
