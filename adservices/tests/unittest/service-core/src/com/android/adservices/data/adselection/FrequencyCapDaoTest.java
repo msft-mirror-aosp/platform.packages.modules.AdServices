@@ -28,6 +28,7 @@ import android.database.sqlite.SQLiteConstraintException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.service.adselection.HistogramEvent;
 import com.android.adservices.service.adselection.HistogramEventFixture;
 
 import org.junit.Before;
@@ -67,7 +68,8 @@ public class FrequencyCapDaoTest {
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 CommonFixture.VALID_BUYER_1,
                                 CommonFixture.TEST_PACKAGE_NAME,
-                                "not found CA"))
+                                "not found CA",
+                                CommonFixture.TEST_PACKAGE_NAME_1))
                 .isNull();
     }
 
@@ -84,7 +86,9 @@ public class FrequencyCapDaoTest {
                                 DBHistogramIdentifierFixture.VALID_DB_HISTOGRAM_IDENTIFIER
                                         .getCustomAudienceOwner(),
                                 DBHistogramIdentifierFixture.VALID_DB_HISTOGRAM_IDENTIFIER
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                DBHistogramIdentifierFixture.VALID_DB_HISTOGRAM_IDENTIFIER
+                                        .getSourceApp()))
                 .isEqualTo(rowId);
     }
 
@@ -99,7 +103,8 @@ public class FrequencyCapDaoTest {
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 originalIdentifier.getBuyer(),
                                 originalIdentifier.getCustomAudienceOwner(),
-                                originalIdentifier.getCustomAudienceName()))
+                                originalIdentifier.getCustomAudienceName(),
+                                originalIdentifier.getSourceApp()))
                 .isEqualTo(rowId);
 
         // Add a different identifier with the same primary key (foreign key ID)
@@ -117,13 +122,15 @@ public class FrequencyCapDaoTest {
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 originalIdentifier.getBuyer(),
                                 originalIdentifier.getCustomAudienceOwner(),
-                                originalIdentifier.getCustomAudienceName()))
+                                originalIdentifier.getCustomAudienceName(),
+                                originalIdentifier.getSourceApp()))
                 .isEqualTo(rowId);
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 conflictingIdentifier.getBuyer(),
                                 conflictingIdentifier.getCustomAudienceOwner(),
-                                conflictingIdentifier.getCustomAudienceName()))
+                                conflictingIdentifier.getCustomAudienceName(),
+                                conflictingIdentifier.getSourceApp()))
                 .isNull();
     }
 
@@ -306,7 +313,10 @@ public class FrequencyCapDaoTest {
         // Verify that the histogram identifier was successfully added
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
-                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(), null, null))
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(),
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
 
         // Verify that the event was successfully added with counts
@@ -337,7 +347,8 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
 
         // Verify that the event was successfully added with counts
@@ -397,22 +408,25 @@ public class FrequencyCapDaoTest {
         Long foreignKeyId =
                 mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                         HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(),
-                        null,
-                        null);
+                        /* customAudienceOwner= */ null,
+                        /* customAudienceName= */ null,
+                        HistogramEventFixture.VALID_HISTOGRAM_EVENT.getSourceApp());
         assertThat(foreignKeyId).isNotNull();
 
         Long foreignKeyIdWin =
                 mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                         HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getBuyer(),
                         HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getCustomAudienceOwner(),
-                        HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getCustomAudienceName());
+                        HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getCustomAudienceName(),
+                        HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getSourceApp());
         assertThat(foreignKeyIdWin).isNotNull();
 
         Long foreignKeyIdDifferentBuyer =
                 mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                         HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER.getBuyer(),
-                        null,
-                        null);
+                        /* customAudienceOwner= */ null,
+                        /* customAudienceName= */ null,
+                        HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER.getSourceApp());
         assertThat(foreignKeyIdDifferentBuyer).isNotNull();
 
         assertThat(foreignKeyId).isNotEqualTo(foreignKeyIdDifferentBuyer);
@@ -455,6 +469,72 @@ public class FrequencyCapDaoTest {
                                         .getAdEventType(),
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(1)))
                 .isEqualTo(1);
+    }
+
+    @Test
+    public void testInsertSameHistogramEventDifferentSourceAppAddsNewIdentifier() {
+        HistogramEvent eventForPackage1 =
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build();
+        HistogramEvent eventForPackage2 =
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build();
+
+        mFrequencyCapDao.insertHistogramEvent(
+                eventForPackage1,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of persisted identifiers before adding new app")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(1);
+
+        Long foreignKeyId1 =
+                mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
+                        eventForPackage1.getBuyer(),
+                        /* customAudienceOwner= */ null,
+                        /* customAudienceName= */ null,
+                        eventForPackage1.getSourceApp());
+        Long foreignKeyId2 =
+                mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
+                        eventForPackage2.getBuyer(),
+                        /* customAudienceOwner= */ null,
+                        /* customAudienceName= */ null,
+                        eventForPackage2.getSourceApp());
+        assertWithMessage("Foreign key ID for first source app identifier")
+                .that(foreignKeyId1)
+                .isNotNull();
+        assertWithMessage("Foreign key ID for second source app identifier")
+                .that(foreignKeyId2)
+                .isNull();
+
+        mFrequencyCapDao.insertHistogramEvent(
+                eventForPackage2,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of persisted identifiers after adding new app")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(2);
+
+        foreignKeyId2 =
+                mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
+                        eventForPackage2.getBuyer(),
+                        /* customAudienceOwner= */ null,
+                        /* customAudienceName= */ null,
+                        eventForPackage2.getSourceApp());
+        assertWithMessage("Foreign key ID for second source app identifier")
+                .that(foreignKeyId2)
+                .isNotNull();
+        assertWithMessage("Foreign key IDs for different source apps")
+                .that(foreignKeyId2)
+                .isNotEqualTo(foreignKeyId1);
     }
 
     @Test
@@ -1635,7 +1715,10 @@ public class FrequencyCapDaoTest {
         // Verify that the identifiers are still there
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
-                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(), null, null))
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(),
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
@@ -1643,14 +1726,17 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER
                                         .getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER
+                                        .getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
@@ -1659,7 +1745,9 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER
+                                        .getSourceApp()))
                 .isNotNull();
     }
 
@@ -1686,8 +1774,9 @@ public class FrequencyCapDaoTest {
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
@@ -1696,7 +1785,9 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER
+                                        .getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
@@ -1704,7 +1795,8 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
     }
 
@@ -1763,7 +1855,9 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_LATER_TIME
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_LATER_TIME
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_LATER_TIME
+                                        .getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForBuyerAfterTime(
@@ -1795,22 +1889,28 @@ public class FrequencyCapDaoTest {
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME.getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME
+                                        .getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER
                                         .getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER
+                                        .getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_OWNER
                                         .getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_OWNER
+                                        .getSourceApp()))
                 .isNull();
     }
 
@@ -1858,8 +1958,10 @@ public class FrequencyCapDaoTest {
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME.getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_EARLIER_TIME
+                                        .getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForBuyerAfterTime(
@@ -1879,7 +1981,8 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForBuyerAfterTime(
@@ -1911,7 +2014,9 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER
+                                        .getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
@@ -1941,8 +2046,9 @@ public class FrequencyCapDaoTest {
         assertThat(
                         mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
                                 HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer(),
-                                null,
-                                null))
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT.getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForBuyerAfterTime(
@@ -1960,7 +2066,8 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT.getSourceApp()))
                 .isNotNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForBuyerAfterTime(
@@ -1992,7 +2099,9 @@ public class FrequencyCapDaoTest {
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER
                                         .getCustomAudienceOwner(),
                                 HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER
-                                        .getCustomAudienceName()))
+                                        .getCustomAudienceName(),
+                                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER
+                                        .getSourceApp()))
                 .isNull();
         assertThat(
                         mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(

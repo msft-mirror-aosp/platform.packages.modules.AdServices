@@ -76,13 +76,15 @@ public abstract class FrequencyCapDao {
                     // matching except that it also matches NULL
                     + "AND custom_audience_owner IS :customAudienceOwner "
                     + "AND custom_audience_name IS :customAudienceName "
+                    + "AND source_app IS :sourceApp "
                     + "ORDER BY foreign_key_id ASC "
                     + "LIMIT 1")
     @Nullable
     protected abstract Long getHistogramIdentifierForeignKeyIfExists(
             @NonNull AdTechIdentifier buyer,
             @Nullable String customAudienceOwner,
-            @Nullable String customAudienceName);
+            @Nullable String customAudienceName,
+            @Nullable String sourceApp);
 
     /**
      * Attempts to persist a new {@link DBHistogramEventData} to the event data table.
@@ -157,7 +159,8 @@ public abstract class FrequencyCapDao {
                 getHistogramIdentifierForeignKeyIfExists(
                         identifier.getBuyer(),
                         identifier.getCustomAudienceOwner(),
-                        identifier.getCustomAudienceName());
+                        identifier.getCustomAudienceName(),
+                        identifier.getSourceApp());
 
         if (foreignKeyId == null) {
             try {
