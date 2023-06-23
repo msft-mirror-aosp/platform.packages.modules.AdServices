@@ -563,7 +563,6 @@ public class AdServicesHttpsClient {
 
         @Override
         public void close() throws IOException {
-            LogUtil.d("Closing HTTPS connection and streams");
             maybeClose(mURLConnection.getInputStream());
             maybeClose(mURLConnection.getErrorStream());
             maybeDisconnect(mURLConnection);
