@@ -7150,7 +7150,7 @@ public class MeasurementDaoTest {
         // Insert XNA ignored sources
         ContentValues values = new ContentValues();
         values.put(XnaIgnoredSourcesContract.SOURCE_ID, s9San3XnaIgnored.getId());
-        values.put(XnaIgnoredSourcesContract.ENROLLMENT_ID, san3MatchingEnrollmentId);
+        values.put(XnaIgnoredSourcesContract.ENROLLMENT_ID, mmpMatchingEnrollmentId);
         long row = db.insert(XnaIgnoredSourcesContract.TABLE, null, values);
         assertEquals(1, row);
 
