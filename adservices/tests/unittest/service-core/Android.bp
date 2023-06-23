@@ -222,7 +222,7 @@ android_test {
     ],
     test_config: "AndroidTest.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
-    instrumentation_for: "AdExtServicesApk",
+    instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",
         "libtflite_support_classifiers_native",
@@ -269,7 +269,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
-    instrumentation_for: "AdExtServicesApk",
+    instrumentation_for: "ExtServices-sminus",
 }
 
 android_test {
@@ -308,7 +308,7 @@ android_test {
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
-    instrumentation_for: "AdExtServicesApk",
+    instrumentation_for: "ExtServices-sminus",
 }
 
 java_library {

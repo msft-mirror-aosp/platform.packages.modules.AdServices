@@ -108,5 +108,5 @@ android_test {
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
     data: [":com.example.adservices.samples.ui.consenttestapp"],
-    instrumentation_for: "AdExtServicesApk",
+    instrumentation_for: "ExtServices-sminus",
 }

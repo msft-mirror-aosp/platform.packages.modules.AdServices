@@ -44,7 +44,6 @@ import java.util.Locale;
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
-    public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;

@@ -61,7 +61,7 @@ public class AdExtBootCompletedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Intent sIntent = new Intent();
     private static final String TEST_PACKAGE_NAME = "test";
-    private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices";
+    private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
     private static final int NUM_ACTIVITIES_TO_DISABLE = 7;
     private static final int NUM_SERVICE_CLASSES_TO_DISABLE = 7;
 
