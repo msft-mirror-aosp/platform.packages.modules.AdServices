@@ -274,9 +274,10 @@ public final class PhFlags implements Flags {
             "ad_selection_data_auction_encryption_algorithm_kdf_id";
     static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID =
             "ad_selection_data_auction_encryption_algorithm_aead_id";
+    static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS =
+            "fledge_auction_server_auction_key_fetch_timeout_ms";
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED =
             "fledge_auction_server_background_key_fetch_job_enabled";
-
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED =
             "fledge_auction_server_background_auction_key_fetch_enabled";
 
@@ -2202,6 +2203,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS,
+                FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerBackgroundKeyFetchJobEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -3427,6 +3436,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionContextualAdsEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS
+                        + " = "
+                        + getFledgeAuctionServerAuctionKeyFetchTimeoutMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED

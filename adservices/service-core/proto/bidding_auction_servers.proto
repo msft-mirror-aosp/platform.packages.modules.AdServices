@@ -29,15 +29,11 @@ message ProtectedAudienceInput {
   // is the Buyer / DSP. This  string that can identify a
   // buyer participating in the auction. The value corresponds to plaintext BuyerInput
   // ingested by the buyer for bidding.
-  map<string, BuyerInput> buyer_input = 1;
+  map<string, bytes> buyer_input = 1;
 
   // This is required for scoring. It is used to construct a device (browser) signal per ad.
   // It will also be passed via GetBids to buyers for their Buyer KV lookup.
   string publisher_name = 2;
-
-  // This is encrypted nonce passed by the client, that will be decrypted and sent back
-  // to the client.
-  string encrypted_nonce = 3;
 }
 
 // A BuyerInput includes data that a buyer (DSP) requires to generate bids.

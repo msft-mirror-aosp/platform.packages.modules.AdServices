@@ -932,6 +932,12 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION;
     }
 
+    long FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS = 3000;
+
+    default long getFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
 
     /** Returns whether to run periodic job to fetch encryption keys. */

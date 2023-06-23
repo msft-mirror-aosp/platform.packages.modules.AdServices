@@ -250,10 +250,43 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @Override
     public void getAdSelectionData(
-            GetAdSelectionDataInput getAdSelectionDataInput,
+            GetAdSelectionDataInput inputParams,
             CallerMetadata callerMetadata,
-            GetAdSelectionDataCallback getAdSelectionDataCallback)
-            throws RemoteException {}
+            GetAdSelectionDataCallback callback)
+            throws RemoteException {
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException e) {
+            sLogger.v("The getAdSelectionData() arguments should not be null!");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw e;
+        }
+
+        int callingUid = getCallingUid(apiName);
+        mLightweightExecutor.execute(
+                () -> {
+                    GetAdSelectionDataRunner runner =
+                            new GetAdSelectionDataRunner(
+                                    mAdServicesHttpsClient,
+                                    mCustomAudienceDao,
+                                    mEncryptionKeyDao,
+                                    mEncryptionContextDao,
+                                    mAdSelectionServiceFilter,
+                                    mBackgroundExecutor,
+                                    mLightweightExecutor,
+                                    mFlags,
+                                    callingUid);
+                    runner.run(inputParams, callback);
+                });
+    }
 
     @Override
     public void persistAdSelectionResult(
@@ -381,7 +414,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void selectAdsFromOutcomes(
             @NonNull AdSelectionFromOutcomesInput inputParams,
             @NonNull CallerMetadata callerMetadata,
-            @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionCallback callback)
+            throws RemoteException {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
         // Caller permissions must be checked in the binder thread, before anything else
