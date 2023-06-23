@@ -22,7 +22,6 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
-import com.android.adservices.ohttp.HpkeContextNativeRef;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 
 import com.google.auto.value.AutoValue;
@@ -57,10 +56,10 @@ public abstract class DBEncryptionContext {
     @ColumnInfo(name = "shared_secret")
     public abstract EncapsulatedSharedSecret getSharedSecret();
 
-    /** The HpkeContextNativeRef generated for this context. */
+    /** The seed bytes that will be used to regenerate HPKE context. */
     @AutoValue.CopyAnnotations
-    @ColumnInfo(name = "context_ref")
-    public abstract HpkeContextNativeRef getHpkeContextNativeRef();
+    @ColumnInfo(name = "seed")
+    public abstract String getSeed();
 
     /**
      * Returns an AutoValue builder for a {@link
@@ -76,13 +75,13 @@ public abstract class DBEncryptionContext {
             @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType,
             ObliviousHttpKeyConfig keyConfig,
             EncapsulatedSharedSecret sharedSecret,
-            HpkeContextNativeRef hpkeContextNativeRef) {
+            String seed) {
         return builder()
                 .setContextId(contextId)
                 .setEncryptionKeyType(encryptionKeyType)
                 .setKeyConfig(keyConfig)
                 .setSharedSecret(sharedSecret)
-                .setHpkeContextNativeRef(hpkeContextNativeRef)
+                .setSeed(seed)
                 .build();
     }
 
@@ -103,8 +102,8 @@ public abstract class DBEncryptionContext {
         /** Encapsulated shared secret for this encryption context. */
         public abstract Builder setSharedSecret(EncapsulatedSharedSecret sharedSecret);
 
-        /** Hpke context native ref for this encryption context. */
-        public abstract Builder setHpkeContextNativeRef(HpkeContextNativeRef nativeRef);
+        /** The seed required to regenerate HPKE context. */
+        public abstract Builder setSeed(String seed);
 
         /** Builds the DBEncryptionContext. */
         public abstract DBEncryptionContext build();

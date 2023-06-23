@@ -27,7 +27,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
-import com.android.adservices.ohttp.HpkeContextNativeRef;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 
 import com.google.common.io.BaseEncoding;
@@ -55,8 +54,9 @@ public class EncryptionContextDaoTest {
             EncapsulatedSharedSecret.create(SHARED_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
 
     private static final long HPKE_REF_ADDRESS = 100L;
-    private static final HpkeContextNativeRef HPKE_REF =
-            HpkeContextNativeRef.fromNativeRefAddress(HPKE_REF_ADDRESS);
+    private static final String SEED =
+            "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c";
+
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private EncryptionContextDao mEncryptionContextDao;
 
@@ -125,7 +125,7 @@ public class EncryptionContextDaoTest {
                 .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
                 .setKeyConfig(mObliviousHttpKeyConfig)
                 .setSharedSecret(SHARED_SECRET)
-                .setHpkeContextNativeRef(HPKE_REF)
+                .setSeed(SEED)
                 .build();
     }
 
@@ -136,7 +136,7 @@ public class EncryptionContextDaoTest {
                 .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
                 .setKeyConfig(ObliviousHttpKeyConfig.fromSerializedKeyConfig(KEY_CONFIG_BYTES))
                 .setSharedSecret(insertedContext.getSharedSecret())
-                .setHpkeContextNativeRef(insertedContext.getHpkeContextNativeRef())
+                .setSeed(insertedContext.getSeed())
                 .build();
     }
 }

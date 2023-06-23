@@ -25,7 +25,6 @@ import androidx.room.TypeConverter;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
-import com.android.adservices.ohttp.HpkeContextNativeRef;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 
 import com.google.common.base.Preconditions;
@@ -118,19 +117,6 @@ public class FledgeRoomConverters {
     public static EncapsulatedSharedSecret deserializeEncapsulatedSharedSecret(String secret) {
         Preconditions.checkNotNull(secret, "Serialized secret is null.");
         return EncapsulatedSharedSecret.create(secret.getBytes(StandardCharsets.UTF_8));
-    }
-
-    /** Serialize a {@link com.android.adservices.ohttp.HpkeContextNativeRef}. */
-    @TypeConverter
-    public static long serializeHpkeContextNativeRef(HpkeContextNativeRef hpkeContextNativeRef) {
-        Preconditions.checkNotNull(hpkeContextNativeRef, "HpkeContextNativeRef is null.");
-        return hpkeContextNativeRef.serialize();
-    }
-
-    /** Deserialize a {@link HpkeContextNativeRef}. */
-    @TypeConverter
-    public static HpkeContextNativeRef deserializeHpkeContextNativeRef(long nativeRef) {
-        return HpkeContextNativeRef.fromNativeRefAddress(nativeRef);
     }
 
     /** Serialize a {@link ObliviousHttpKeyConfig}. */

@@ -30,33 +30,6 @@ public class HpkeContextNativeRef extends NativeRef {
         return createHpkeContextReference(OhttpJniWrapper.getInstance());
     }
 
-    /**
-     * Returns reference to a EVP_HPKE_CTX BoringSSL object previously allocated at the given
-     * address.
-     */
-    public static HpkeContextNativeRef fromNativeRefAddress(long nativeRefAddress) {
-        IOhttpJniWrapper ohttpJniWrapper = OhttpJniWrapper.getInstance();
-        ReferenceManager referenceManager =
-                new ReferenceManager() {
-                    @Override
-                    public long getOrCreate() {
-                        return nativeRefAddress;
-                    }
-
-                    @Override
-                    public void doRelease(long address) {
-                        ohttpJniWrapper.hpkeCtxFree(address);
-                    }
-                };
-
-        return new HpkeContextNativeRef(referenceManager);
-    }
-
-    /** Serialized the HPKE Context Native Ref. */
-    public long serialize() {
-        return getAddress();
-    }
-
     @VisibleForTesting
     static HpkeContextNativeRef createHpkeContextReference(IOhttpJniWrapper ohttpJniWrapper) {
         ReferenceManager referenceManager =
