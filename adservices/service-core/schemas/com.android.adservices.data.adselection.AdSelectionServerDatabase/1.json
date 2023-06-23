@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3fefe0ad4ab3f693d2dfeadaaf6943c1",
+    "identityHash": "a59fc89cb3b56ff149fc9a25bae24ae7",
     "entities": [
       {
         "tableName": "encryption_key",
@@ -68,7 +68,7 @@
       },
       {
         "tableName": "encryption_context",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`context_id` INTEGER NOT NULL, `encryption_key_type` INTEGER NOT NULL, `key_config` TEXT, `shared_secret` TEXT, `context_ref` INTEGER, PRIMARY KEY(`context_id`, `encryption_key_type`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`context_id` INTEGER NOT NULL, `encryption_key_type` INTEGER NOT NULL, `key_config` TEXT, `shared_secret` TEXT, `seed` TEXT, PRIMARY KEY(`context_id`, `encryption_key_type`))",
         "fields": [
           {
             "fieldPath": "contextId",
@@ -95,9 +95,9 @@
             "notNull": false
           },
           {
-            "fieldPath": "hpkeContextNativeRef",
-            "columnName": "context_ref",
-            "affinity": "INTEGER",
+            "fieldPath": "seed",
+            "columnName": "seed",
+            "affinity": "TEXT",
             "notNull": false
           }
         ],
@@ -157,7 +157,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3fefe0ad4ab3f693d2dfeadaaf6943c1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a59fc89cb3b56ff149fc9a25bae24ae7')"
     ]
   }
 }
