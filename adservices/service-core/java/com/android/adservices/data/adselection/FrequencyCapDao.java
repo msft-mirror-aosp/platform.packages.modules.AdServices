@@ -304,6 +304,41 @@ public abstract class FrequencyCapDao {
     }
 
     /**
+     * Deletes all histogram event data persisted by the given {@code sourceApp}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteHistogramDataBySourceApp} instead.
+     *
+     * @return the number of deleted events
+     */
+    @Query(
+            "DELETE FROM fcap_histogram_data "
+                    + "WHERE row_id IN "
+                    + "(SELECT data.row_id FROM fcap_histogram_data AS data "
+                    + "INNER JOIN fcap_histogram_ids AS ids "
+                    + "ON data.foreign_key_id = ids.foreign_key_id "
+                    + "WHERE ids.source_app = :sourceApp)")
+    protected abstract int deleteHistogramEventDataBySourceApp(@NonNull String sourceApp);
+
+    /**
+     * Deletes all histogram event data persisted by the given {@code sourceApp} in a single
+     * database transaction.
+     *
+     * <p>Also cleans up any histogram identifiers which are no longer associated with any event
+     * data.
+     *
+     * @return the number of deleted events
+     */
+    @Transaction
+    public int deleteHistogramDataBySourceApp(@NonNull String sourceApp) {
+        Objects.requireNonNull(sourceApp);
+
+        int numDeletedEvents = deleteHistogramEventDataBySourceApp(sourceApp);
+        deleteUnpairedHistogramIdentifiers();
+        return numDeletedEvents;
+    }
+
+    /**
      * Deletes all histogram event data.
      *
      * <p>This method is not meant to be called on its own. Please use {@link
@@ -354,4 +389,15 @@ public abstract class FrequencyCapDao {
                     + "ON data.foreign_key_id = ids.foreign_key_id "
                     + "WHERE ids.buyer = :buyer ")
     public abstract int getNumHistogramEventsByBuyer(@NonNull AdTechIdentifier buyer);
+
+    /**
+     * Returns the current number of histogram events in the data table for the given {@code
+     * sourceApp}.
+     */
+    @Query(
+            "SELECT COUNT(DISTINCT data.row_id) FROM fcap_histogram_data AS data "
+                    + "INNER JOIN fcap_histogram_ids AS ids "
+                    + "ON data.foreign_key_id = ids.foreign_key_id "
+                    + "WHERE ids.source_app = :sourceApp ")
+    public abstract int getNumHistogramEventsBySourceApp(@NonNull String sourceApp);
 }

@@ -1765,6 +1765,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
+        verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(app.getPackageName());
     }
 
     @Test
@@ -1806,6 +1807,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
+        verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(app.getPackageName());
 
         // restore consent for first app
         mConsentManager.restoreConsentForApp(app);
