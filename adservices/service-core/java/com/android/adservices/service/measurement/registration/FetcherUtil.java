@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Common handling for Response Based Registration
@@ -51,6 +52,7 @@ import java.util.Map;
 class FetcherUtil {
     static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
     static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
+    static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
      * Determine all redirects.
@@ -103,15 +105,30 @@ class FetcherUtil {
     /**
      * Validate aggregate key-piece.
      */
-    static boolean isValidAggregateKeyPiece(String keyPiece) {
+    static boolean isValidAggregateKeyPiece(String keyPiece, Flags flags) {
         if (keyPiece == null) {
             return false;
         }
         int length = keyPiece.getBytes().length;
-        // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have at
-        // most 32 digits.
-        return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
-                && 2 < length && length < 35;
+        if (flags.getMeasurementEnableAraParsingAlignmentV1()) {
+            if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
+                return false;
+            }
+            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+            // at most 32 digits.
+            if (length < 3 || length > 34) {
+                return false;
+            }
+            if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
+                return false;
+            }
+            return true;
+        } else {
+            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+            // at most 32 digits.
+            return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
+                    && 2 < length && length < 35;
+        }
     }
 
     /**
@@ -323,6 +340,7 @@ class FetcherUtil {
             return RegistrationEnumsValues.FAILURE_TYPE_UNKNOWN;
         }
     }
+
     /** AdservicesMeasurementRegistrations atom enum values. */
     public interface RegistrationEnumsValues {
         int TYPE_UNKNOWN = 0;
