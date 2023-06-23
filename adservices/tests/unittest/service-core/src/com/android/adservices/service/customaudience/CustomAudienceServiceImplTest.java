@@ -32,7 +32,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -485,9 +485,10 @@ public class CustomAudienceServiceImplTest {
 
         verify(mFledgeAuthorizationFilterMock)
                 .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -500,9 +501,10 @@ public class CustomAudienceServiceImplTest {
 
         verify(mFledgeAuthorizationFilterMock)
                 .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -1281,7 +1283,7 @@ public class CustomAudienceServiceImplTest {
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
                 .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
 
         assertThrows(
                 SecurityException.class,
