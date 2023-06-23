@@ -52,8 +52,26 @@ public final class EncryptionKeyConstants {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
                 return EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN;
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
+                // Intentional fallthrough
             default:
                 return EncryptionKeyType.ENCRYPTION_KEY_TYPE_INVALID;
+        }
+    }
+
+    /** Convert DBEncryptionKeyType to AdSelectionEncryptionType. */
+    @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+    public static int toAdSelectionEncryptionKeyType(@EncryptionKeyType int dbEncryptionKeyType) {
+        switch (dbEncryptionKeyType) {
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION:
+                return AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN:
+                return AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN;
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_QUERY:
+                // Intentional fallthrough
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_INVALID:
+                // Intentional fallthrough
+            default:
+                return AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED;
         }
     }
 }

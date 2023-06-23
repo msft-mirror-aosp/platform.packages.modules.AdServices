@@ -274,11 +274,35 @@ public final class PhFlags implements Flags {
             "ad_selection_data_auction_encryption_algorithm_kdf_id";
     static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID =
             "ad_selection_data_auction_encryption_algorithm_aead_id";
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED =
+            "fledge_auction_server_background_key_fetch_job_enabled";
+
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED =
+            "fledge_auction_server_background_auction_key_fetch_enabled";
+
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED =
+            "fledge_auction_server_background_join_key_fetch_enabled";
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
+            "fledge_auction_server_background_key_fetch_network_connect_timeout_ms";
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS =
+            "fledge_auction_server_background_key_fetch_network_read_timeout_ms";
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B =
+            "fledge_auction_server_background_key_fetch_max_response_size_b";
+
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS =
+            "fledge_auction_server_background_key_fetch_max_runtime_ms";
+
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS =
+            "fledge_auction_server_background_key_fetch_job_period_ms";
+
+    static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS =
+            "fledge_auction_server_background_key_fetch_job_flex_ms";
 
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
             "fledge_ad_selection_off_device_request_compression_enabled";
+
     // Event-level debug reporting for Protected Audience.
     static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED =
             "fledge_event_level_debug_reporting_enabled";
@@ -379,7 +403,8 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH =
             "fledge_custom_audience_service_kill_switch";
-
+    static final String KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH =
+            "fledge_auction_server_kill_switch";
     static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
             "background_jobs_logging_kill_switch";
 
@@ -1915,6 +1940,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerKillSwitch() {
+        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
+                        /* defaultValue */ FLEDGE_AUCTION_SERVER_KILL_SWITCH));
+    }
+    @Override
     public String getPpapiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
@@ -2161,6 +2199,78 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID,
                 AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerBackgroundKeyFetchJobEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerBackgroundJoinKeyFetchEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED);
+    }
+
+    @Override
+    public int getFledgeAuctionServerBackgroundKeyFetchNetworkConnectTimeoutMs() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B);
+    }
+
+    @Override
+    public long getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS);
+    }
+
+    @Override
+    public long getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getFledgeAuctionServerBackgroundKeyFetchJobFlexMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS,
+                FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS);
     }
 
     @Override
@@ -3086,6 +3196,11 @@ public final class PhFlags implements Flags {
                         + getFledgeCustomAudienceServiceKillSwitch());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH
+                        + " = "
+                        + getFledgeAuctionServerKillSwitch());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
                         + " = "
                         + getFledgeCustomAudienceMaxCount());
@@ -3314,9 +3429,49 @@ public final class PhFlags implements Flags {
                         + getFledgeAdSelectionContextualAdsEnabled());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED
                         + " = "
-                        + getFledgeFetchCustomAudienceEnabled());
+                        + getFledgeAuctionServerBackgroundKeyFetchJobEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerBackgroundJoinKeyFetchEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getFledgeAuctionServerBackgroundKeyFetchNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B
+                        + " = "
+                        + getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS
+                        + " = "
+                        + getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS
+                        + " = "
+                        + getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS
+                        + " = "
+                        + getFledgeAuctionServerBackgroundKeyFetchJobFlexMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
