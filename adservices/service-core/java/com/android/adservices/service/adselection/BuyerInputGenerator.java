@@ -30,8 +30,6 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.protobuf.ListValue;
-import com.google.protobuf.Value;
 
 import java.time.Clock;
 import java.util.HashMap;
@@ -147,13 +145,9 @@ public class BuyerInputGenerator {
         return biddingSignalKeys;
     }
 
-    private ListValue getUserBiddingSignals(DBCustomAudience customAudience) {
+    private String getUserBiddingSignals(DBCustomAudience customAudience) {
         Objects.requireNonNull(customAudience.getUserBiddingSignals());
 
-        return ListValue.newBuilder()
-                .addValues(
-                        Value.newBuilder()
-                                .setStringValue(customAudience.getUserBiddingSignals().toString()))
-                .build();
+        return customAudience.getUserBiddingSignals().toString();
     }
 }
