@@ -21,19 +21,25 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -59,6 +65,8 @@ public class FledgeAuthorizationFilterTest {
     private static final String PACKAGE_NAME = "pkg_name";
     private static final String PACKAGE_NAME_OTHER = "other_pkg_name";
     private static final String ENROLLMENT_ID = "enroll_id";
+    private static final Uri URI_FOR_AD_TECH =
+            CommonFixture.getUriWithValidSubdomain(CommonFixture.VALID_BUYER_1.toString(), "/path");
     private static final EnrollmentData ENROLLMENT_DATA =
             new EnrollmentData.Builder().setEnrollmentId(ENROLLMENT_ID).build();
 
@@ -350,5 +358,160 @@ public class FledgeAuthorizationFilterTest {
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testGetAndAssertAdTechFromUriAllowed_nullContext_throwsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mChecker.getAndAssertAdTechFromUriAllowed(
+                                /* context= */ null,
+                                PACKAGE_NAME,
+                                URI_FOR_AD_TECH,
+                                API_NAME_LOGGING_ID));
+
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void
+            testGetAndAssertAdTechFromUriAllowed_nullAppPackageName_throwsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mChecker.getAndAssertAdTechFromUriAllowed(
+                                CONTEXT,
+                                /* appPackageName= */ null,
+                                URI_FOR_AD_TECH,
+                                API_NAME_LOGGING_ID));
+
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testGetAndAssertAdTechFromUriAllowed_nullUriForAdTech_throwsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mChecker.getAndAssertAdTechFromUriAllowed(
+                                CONTEXT,
+                                PACKAGE_NAME,
+                                /* uriForAdTech= */ null,
+                                API_NAME_LOGGING_ID));
+
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testGetAndAssertAdTechFromUriAllowed_notEnrolled_throwsNotAllowedException() {
+        doReturn(null)
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.getAndAssertAdTechFromUriAllowed(
+                                CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
+
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testGetAndAssertAdTechFromUriAllowed_notAllowedByApp_throwsNotAllowedException() {
+        doReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA))
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        doReturn(false)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.getAndAssertAdTechFromUriAllowed(
+                                CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
+
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        verify(
+                () ->
+                        AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testGetAndAssertAdTechFromUriAllowed_adTechBlocklisted_throwsNotAllowedException() {
+        doReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA))
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        doReturn(true)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        doReturn(mPhFlagsMock).when(PhFlags::getInstance);
+        doReturn(true).when(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.getAndAssertAdTechFromUriAllowed(
+                                CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
+
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        verify(
+                () ->
+                        AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        verify(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testGetAndAssertAdTechFromUriAllowed_enrolled_returnsAdTechIdentifier() {
+        doReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA))
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        doReturn(true)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        doReturn(mPhFlagsMock).when(PhFlags::getInstance);
+        doReturn(false).when(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
+
+        AdTechIdentifier returnedAdTechIdentifier =
+                mChecker.getAndAssertAdTechFromUriAllowed(
+                        CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID);
+
+        assertWithMessage("Returned AdTechIdentifier")
+                .that(returnedAdTechIdentifier)
+                .isEqualTo(CommonFixture.VALID_BUYER_1);
+
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        verify(
+                () ->
+                        AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        verify(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 }
