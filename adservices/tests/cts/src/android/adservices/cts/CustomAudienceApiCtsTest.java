@@ -36,7 +36,6 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.os.Process;
 
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -165,8 +164,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         testJoinCustomAudience_withMissingEnrollment_fail();
     }
 
-    // TODO(b/288421652): Remove @FlakyTest after stabilizing test
-    @FlakyTest(bugId = 288421652)
     @Test
     public void testJoinCustomAudience_withValidSubdomains_success() throws Exception {
         joinCustomAudience(
@@ -175,8 +172,6 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         .build());
     }
 
-    // TODO(b/288421652): Remove @FlakyTest after stabilizing test
-    @FlakyTest(bugId = 288421652)
     @Test
     public void testJoinCustomAudience_withValidSubdomains_success_usingGetMethodToCreateManager()
             throws Exception {
