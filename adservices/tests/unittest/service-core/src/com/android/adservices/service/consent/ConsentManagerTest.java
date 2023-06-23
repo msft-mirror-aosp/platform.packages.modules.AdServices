@@ -96,6 +96,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
@@ -175,6 +176,7 @@ public class ConsentManagerTest {
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
+    @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private UiStatsLogger mUiStatsLoggerMock;
     @Mock private AppUpdateManager mAppUpdateManagerMock;
     @Mock private CacheManager mCacheManagerMock;
@@ -590,6 +592,7 @@ public class ConsentManagerTest {
         verify(mMeasurementImplMock, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -607,7 +610,7 @@ public class ConsentManagerTest {
         verify(mEnrollmentDaoSpy, times(1)).deleteAll();
         verify(mMeasurementImplMock, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
-        verifyZeroInteractions(mAppInstallDaoMock);
+        verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -624,6 +627,7 @@ public class ConsentManagerTest {
         verify(mMeasurementImplMock, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -641,7 +645,7 @@ public class ConsentManagerTest {
         verify(mAppConsentDaoSpy, times(1)).clearAllConsentData();
         verify(mMeasurementImplMock, times(1)).deleteAllMeasurementData(any());
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
-        verifyZeroInteractions(mAppInstallDaoMock);
+        verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -2075,6 +2079,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
 
     @Test
@@ -2091,6 +2096,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
 
     @Test
@@ -2146,6 +2152,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
 
     @Test
@@ -2210,6 +2217,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
 
     @Test
@@ -2226,6 +2234,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
 
     @Test
@@ -2283,6 +2292,7 @@ public class ConsentManagerTest {
         SystemClock.sleep(1000);
         verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
+        verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
 
     @Test
@@ -3104,6 +3114,7 @@ public class ConsentManagerTest {
                         mMeasurementImplMock,
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
+                        mFrequencyCapDaoMock,
                         mAdServicesManager,
                         mConsentDatastore,
                         mAppSearchConsentManagerMock,
@@ -3599,6 +3610,7 @@ public class ConsentManagerTest {
                 mMeasurementImplMock,
                 mCustomAudienceDaoMock,
                 mAppInstallDaoMock,
+                mFrequencyCapDaoMock,
                 mAdServicesManager,
                 mConsentDatastore,
                 mAppSearchConsentManagerMock,

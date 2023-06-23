@@ -300,9 +300,47 @@ public abstract class FrequencyCapDao {
         return numDeletedEvents;
     }
 
+    /**
+     * Deletes all histogram event data.
+     *
+     * <p>This method is not meant to be called on its own. Please use {@link
+     * #deleteAllHistogramData()} to delete all histogram data (including all identifiers).
+     *
+     * @return the number of deleted events
+     */
+    @Query("DELETE FROM fcap_histogram_data")
+    protected abstract int deleteAllHistogramEventData();
+
+    /**
+     * Deletes all histogram identifiers.
+     *
+     * <p>This method is not meant to be called on its own. Please use {@link
+     * #deleteAllHistogramData()} to delete all histogram data (including all identifiers).
+     *
+     * @return the number of deleted identifiers
+     */
+    @Query("DELETE FROM fcap_histogram_ids")
+    protected abstract int deleteAllHistogramIdentifiers();
+
+    /**
+     * Deletes all histogram data and identifiers in a single database transaction.
+     *
+     * @return the number of deleted events
+     */
+    @Transaction
+    public int deleteAllHistogramData() {
+        int numDeletedEvents = deleteAllHistogramEventData();
+        deleteAllHistogramIdentifiers();
+        return numDeletedEvents;
+    }
+
     /** Returns the current total number of histogram events in the data table. */
     @Query("SELECT COUNT(DISTINCT row_id) FROM fcap_histogram_data")
     public abstract int getTotalNumHistogramEvents();
+
+    /** Returns the current total number of histogram identifiers in the identifier table. */
+    @Query("SELECT COUNT(DISTINCT foreign_key_id) FROM fcap_histogram_ids")
+    public abstract int getTotalNumHistogramIdentifiers();
 
     /**
      * Returns the current number of histogram events in the data table for the given {@code buyer}.
