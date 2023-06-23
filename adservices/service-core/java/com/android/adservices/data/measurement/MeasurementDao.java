@@ -2261,9 +2261,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + MeasurementTables.XnaIgnoredSourcesContract.TABLE
                                 + " where "
                                 + MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID
-                                + " IN ("
-                                + delimitedXnaEnrollmentIds
-                                + ")"
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(triggerEnrollmentId)
                                 + ")",
                         MeasurementTables.SourceContract.REGISTRATION_ID
                                 + " NOT IN "
