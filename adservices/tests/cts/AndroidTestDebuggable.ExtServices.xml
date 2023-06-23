@@ -83,6 +83,10 @@
         <!-- Disable Register Ad Beacon Feature -->
         <option name="run-command"
                 value="setprop debug.adservices.fledge_register_ad_beacon_enabled false"/>
+
+        <!-- Disable CPC Billing Feature -->
+        <option name="run-command"
+                value="setprop debug.adservices.fledge_cpc_billing_enabled false"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
