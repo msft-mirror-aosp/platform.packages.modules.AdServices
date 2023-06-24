@@ -576,6 +576,8 @@ public class ConsentManager {
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+            asyncExecute(
+                    () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
         }
     }
 
