@@ -101,6 +101,8 @@ import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.proto.ContentProvider.AllowedContentProviders;
 import com.android.server.sdksandbox.proto.ContentProvider.ContentProviderAllowlists;
+import com.android.server.sdksandbox.proto.Services.AllowedServices;
+import com.android.server.sdksandbox.proto.Services.ServiceAllowlists;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
@@ -215,6 +217,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "sdksandbox_customized_sdk_context_enabled";
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
             "contentprovider_allowlist_per_targetSdkVersion";
+
+    private static final String PROPERTY_SERVICES_ALLOWLIST =
+            "services_allowlist_per_targetSdkVersion";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
@@ -1720,6 +1725,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
 
         @GuardedBy("mLock")
+        private Map<Integer, AllowedServices> mServiceAllowlistPerTargetSdkVersion =
+                getServicesAllowlist();
+
+        @GuardedBy("mLock")
         private Map<Integer, AllowedContentProviders> mContentProviderAllowlistPerTargetSdkVersion =
                 getContentProviderDeviceConfigAllowlist();
 
@@ -1786,6 +1795,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        Map<Integer, AllowedServices> getServiceAllowlistPerTargetSdkVersion() {
+            synchronized (mLock) {
+                return mServiceAllowlistPerTargetSdkVersion;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1827,10 +1842,37 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             mContentProviderAllowlistPerTargetSdkVersion =
                                     getContentProviderDeviceConfigAllowlist();
                             break;
+                        case PROPERTY_SERVICES_ALLOWLIST:
+                            mServiceAllowlistPerTargetSdkVersion = getServicesAllowlist();
+                            break;
                         default:
                     }
                 }
             }
+        }
+
+        // TODO(b/288435894): Extract out common logic for parsing a proto DeviceConfg
+        private static Map<Integer, AllowedServices> getServicesAllowlist() {
+            final String base64 =
+                    DeviceConfig.getProperty(
+                            DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+
+            if (TextUtils.isEmpty(base64)) {
+                Log.d(TAG, PROPERTY_SERVICES_ALLOWLIST + " property is empty");
+                return new ArrayMap<>();
+            }
+
+            final byte[] decode = Base64.decode(base64, Base64.NO_PADDING | Base64.NO_WRAP);
+            try {
+                final ServiceAllowlists allowedServicesProto = ServiceAllowlists.parseFrom(decode);
+
+                if (allowedServicesProto != null) {
+                    return allowedServicesProto.getAllowlistPerTargetSdkMap();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error while parsing " + PROPERTY_SERVICES_ALLOWLIST + ". Error: ", e);
+            }
+            return new ArrayMap<>();
         }
 
         private static Map<Integer, AllowedContentProviders>
