@@ -43,8 +43,24 @@ public final class KeyedFrequencyCap implements Parcelable {
     /** @hide */
     @VisibleForTesting public static final String INTERVAL_FIELD_NAME = "interval_in_seconds";
 
+    /** @hide */
+    public static final String MAX_COUNT_NOT_POSITIVE_ERROR_MESSAGE =
+            "KeyedFrequencyCap max count %d must be strictly positive";
+    /** @hide */
+    public static final String INTERVAL_NULL_ERROR_MESSAGE =
+            "KeyedFrequencyCap interval must not be null";
+    /** @hide */
+    public static final String INTERVAL_NOT_POSITIVE_FORMAT =
+            "KeyedFrequencyCap interval %s must be strictly positive";
+    /** @hide */
+    public static final String MAX_INTERVAL_EXCEEDED_FORMAT =
+            "KeyedFrequencyCap interval %s must be no greater than %s";
+    /** @hide */
+    public static final Duration MAX_INTERVAL = Duration.ofDays(100);
+
     // 4 bytes for the key, 12 bytes for the duration, and 4 for the maxCount
     private static final int SIZE_OF_FIXED_FIELDS = 20;
+
     private final int mAdCounterKey;
     private final int mMaxCount;
     @NonNull private final Duration mInterval;
@@ -210,10 +226,16 @@ public final class KeyedFrequencyCap implements Parcelable {
         @NonNull private Duration mInterval;
 
         public Builder(int adCounterKey, int maxCount, @NonNull Duration interval) {
-            Preconditions.checkArgument(maxCount > 0, "Max count must be strictly positive");
-            Objects.requireNonNull(interval, "Interval must not be null");
             Preconditions.checkArgument(
-                    interval.getSeconds() > 0, "Interval in seconds must be strictly positive");
+                    maxCount > 0, MAX_COUNT_NOT_POSITIVE_ERROR_MESSAGE, maxCount);
+            Objects.requireNonNull(interval, INTERVAL_NULL_ERROR_MESSAGE);
+            Preconditions.checkArgument(
+                    interval.toSeconds() > 0, INTERVAL_NOT_POSITIVE_FORMAT, interval);
+            Preconditions.checkArgument(
+                    interval.toSeconds() <= MAX_INTERVAL.toSeconds(),
+                    MAX_INTERVAL_EXCEEDED_FORMAT,
+                    interval,
+                    MAX_INTERVAL);
 
             mAdCounterKey = adCounterKey;
             mMaxCount = maxCount;
@@ -238,7 +260,8 @@ public final class KeyedFrequencyCap implements Parcelable {
          */
         @NonNull
         public Builder setMaxCount(int maxCount) {
-            Preconditions.checkArgument(maxCount > 0, "Max count must be strictly positive");
+            Preconditions.checkArgument(
+                    maxCount > 0, MAX_COUNT_NOT_POSITIVE_ERROR_MESSAGE, maxCount);
             mMaxCount = maxCount;
             return this;
         }
@@ -251,9 +274,14 @@ public final class KeyedFrequencyCap implements Parcelable {
          */
         @NonNull
         public Builder setInterval(@NonNull Duration interval) {
-            Objects.requireNonNull(interval, "Interval must not be null");
+            Objects.requireNonNull(interval, INTERVAL_NULL_ERROR_MESSAGE);
             Preconditions.checkArgument(
-                    interval.getSeconds() > 0, "Interval in seconds must be strictly positive");
+                    interval.toSeconds() > 0, INTERVAL_NOT_POSITIVE_FORMAT, interval);
+            Preconditions.checkArgument(
+                    interval.toSeconds() <= MAX_INTERVAL.toSeconds(),
+                    MAX_INTERVAL_EXCEEDED_FORMAT,
+                    interval,
+                    MAX_INTERVAL);
             mInterval = interval;
             return this;
         }

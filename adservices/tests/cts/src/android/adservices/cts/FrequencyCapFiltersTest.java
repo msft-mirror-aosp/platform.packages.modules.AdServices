@@ -171,12 +171,34 @@ public class FrequencyCapFiltersTest {
     }
 
     @Test
+    public void testBuildWinCapsContainingNull_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForWinEvents(
+                                        KeyedFrequencyCapFixture
+                                                .KEYED_FREQUENCY_CAP_LIST_CONTAINING_NULL));
+    }
+
+    @Test
     public void testBuildNullImpressionCaps_throws() {
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new FrequencyCapFilters.Builder()
                                 .setKeyedFrequencyCapsForImpressionEvents(null));
+    }
+
+    @Test
+    public void testBuildImpressionCapsContainingNull_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForImpressionEvents(
+                                        KeyedFrequencyCapFixture
+                                                .KEYED_FREQUENCY_CAP_LIST_CONTAINING_NULL));
     }
 
     @Test
@@ -187,10 +209,32 @@ public class FrequencyCapFiltersTest {
     }
 
     @Test
+    public void testBuildViewCapsContainingNull_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForViewEvents(
+                                        KeyedFrequencyCapFixture
+                                                .KEYED_FREQUENCY_CAP_LIST_CONTAINING_NULL));
+    }
+
+    @Test
     public void testBuildNullClickCaps_throws() {
         assertThrows(
                 NullPointerException.class,
                 () -> new FrequencyCapFilters.Builder().setKeyedFrequencyCapsForClickEvents(null));
+    }
+
+    @Test
+    public void testBuildClickCapsContainingNull_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForClickEvents(
+                                        KeyedFrequencyCapFixture
+                                                .KEYED_FREQUENCY_CAP_LIST_CONTAINING_NULL));
     }
 
     @Test

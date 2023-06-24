@@ -292,6 +292,29 @@ public class KeyedFrequencyCapTest {
     }
 
     @Test
+    public void testBuildIntervalMoreThanLimit_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                Duration.ofDays(9999)));
+    }
+
+    @Test
+    public void testSetIntervalMoreThanLimit_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                        KeyedFrequencyCapFixture.KEY1,
+                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                .setInterval(Duration.ofDays(9999)));
+    }
+
+    @Test
     public void testGetSizeInBytes() {
         assertEquals(
                 20,

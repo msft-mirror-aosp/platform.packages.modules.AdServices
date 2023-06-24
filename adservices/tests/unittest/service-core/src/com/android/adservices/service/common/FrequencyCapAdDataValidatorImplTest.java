@@ -17,18 +17,27 @@
 package com.android.adservices.service.common;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdFilters;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.FrequencyCapFiltersFixture;
+import android.adservices.common.KeyedFrequencyCap;
+import android.adservices.common.KeyedFrequencyCapFixture;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Locale;
 
 public class FrequencyCapAdDataValidatorImplTest {
     private FrequencyCapAdDataValidatorImpl mFrequencyCapAdDataValidator;
@@ -109,6 +118,140 @@ public class FrequencyCapAdDataValidatorImplTest {
                 .containsExactly(
                         "AdData should have no more than 10 ad counter keys",
                         "FrequencyCapFilters should have no more than 20 filters");
+    }
+
+    @Test
+    public void testAddValidation_nullKeyedFrequencyCapReturnsViolations() {
+        ImmutableList.Builder<String> violationsBuilder = ImmutableList.builder();
+
+        mFrequencyCapAdDataValidator.addValidation(
+                AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(
+                                                FrequencyCapFiltersFixture
+                                                        .getFrequencyCapFiltersWithNullCaps())
+                                        .build())
+                        .build(),
+                violationsBuilder);
+
+        String expectedErrorMessagePerNull =
+                "FrequencyCapFilters should not contain null KeyedFrequencyCaps";
+        assertWithMessage("List of violations")
+                .that(violationsBuilder.build())
+                .containsExactly(
+                        expectedErrorMessagePerNull,
+                        expectedErrorMessagePerNull,
+                        expectedErrorMessagePerNull,
+                        expectedErrorMessagePerNull);
+    }
+
+    @Test
+    public void testAddValidation_KeyedFrequencyCapsWithNegativeFieldsReturnsViolations() {
+        ImmutableList.Builder<String> violationsBuilder = ImmutableList.builder();
+
+        Duration negativeDuration = Duration.ofSeconds(-1);
+
+        KeyedFrequencyCap capWithNegativeFields =
+                KeyedFrequencyCapFixture.getKeyedFrequencyCapWithFields(
+                        /* adCounterKey= */ -1, /* maxCount= */ -1, negativeDuration);
+
+        mFrequencyCapAdDataValidator.addValidation(
+                AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(
+                                                new FrequencyCapFilters.Builder()
+                                                        .setKeyedFrequencyCapsForWinEvents(
+                                                                Arrays.asList(
+                                                                        capWithNegativeFields))
+                                                        .build())
+                                        .build())
+                        .build(),
+                violationsBuilder);
+
+        assertWithMessage("List of violations")
+                .that(violationsBuilder.build())
+                .containsExactly(
+                        String.format(
+                                Locale.ENGLISH,
+                                "KeyedFrequencyCap max count %d must be strictly positive",
+                                -1),
+                        String.format(
+                                Locale.ENGLISH,
+                                "KeyedFrequencyCap interval %s must be strictly positive",
+                                negativeDuration));
+    }
+
+    @Test
+    public void testAddValidation_KeyedFrequencyCapsWithZeroFieldsReturnsViolations() {
+        ImmutableList.Builder<String> violationsBuilder = ImmutableList.builder();
+
+        Duration zeroDuration = Duration.ofSeconds(0);
+
+        KeyedFrequencyCap capWithNegativeFields =
+                KeyedFrequencyCapFixture.getKeyedFrequencyCapWithFields(
+                        /* adCounterKey= */ 0, /* maxCount= */ 0, zeroDuration);
+
+        mFrequencyCapAdDataValidator.addValidation(
+                AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(
+                                                new FrequencyCapFilters.Builder()
+                                                        .setKeyedFrequencyCapsForImpressionEvents(
+                                                                Arrays.asList(
+                                                                        capWithNegativeFields))
+                                                        .build())
+                                        .build())
+                        .build(),
+                violationsBuilder);
+
+        assertWithMessage("List of violations")
+                .that(violationsBuilder.build())
+                .containsExactly(
+                        String.format(
+                                Locale.ENGLISH,
+                                "KeyedFrequencyCap max count %d must be strictly positive",
+                                0),
+                        String.format(
+                                Locale.ENGLISH,
+                                "KeyedFrequencyCap interval %s must be strictly positive",
+                                zeroDuration));
+    }
+
+    @Test
+    public void testAddValidation_KeyedFrequencyCapsWithExcessiveIntervalReturnsViolations() {
+        ImmutableList.Builder<String> violationsBuilder = ImmutableList.builder();
+
+        Duration excessiveDuration = Duration.ofDays(100000);
+
+        KeyedFrequencyCap capWithExcessiveInterval =
+                KeyedFrequencyCapFixture.getKeyedFrequencyCapWithFields(
+                        /* adCounterKey= */ 10, /* maxCount= */ 10, excessiveDuration);
+
+        mFrequencyCapAdDataValidator.addValidation(
+                AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(
+                                new AdFilters.Builder()
+                                        .setFrequencyCapFilters(
+                                                new FrequencyCapFilters.Builder()
+                                                        .setKeyedFrequencyCapsForViewEvents(
+                                                                Arrays.asList(
+                                                                        capWithExcessiveInterval))
+                                                        .build())
+                                        .build())
+                        .build(),
+                violationsBuilder);
+
+        assertWithMessage("List of violations")
+                .that(violationsBuilder.build())
+                .containsExactly(
+                        String.format(
+                                Locale.ENGLISH,
+                                "KeyedFrequencyCap interval %s must be no greater than %s",
+                                excessiveDuration,
+                                KeyedFrequencyCap.MAX_INTERVAL));
     }
 
     @Test
