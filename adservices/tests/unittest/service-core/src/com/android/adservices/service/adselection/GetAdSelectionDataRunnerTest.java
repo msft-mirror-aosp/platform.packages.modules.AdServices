@@ -21,9 +21,11 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.GetAdSelectionDataCallback;
@@ -43,20 +45,16 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
@@ -72,12 +70,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
-import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
+import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -89,13 +86,14 @@ public class GetAdSelectionDataRunnerTest {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private static final byte[] CIPHER_TEXT_BYTES =
+            "encrypted-cipher-for-auction-result".getBytes(StandardCharsets.UTF_8);
     private Flags mFlags;
     private Context mContext;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
-    private EncryptionKeyDao mEncryptionKeyDao;
-    @Spy private EncryptionContextDao mEncryptionContextDaoSpy;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
     private MockitoSession mStaticMockSession = null;
@@ -111,13 +109,6 @@ public class GetAdSelectionDataRunnerTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionServerDatabase.class)
-                        .build();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mEncryptionContextDaoSpy = serverDb.encryptionContextDao();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -142,12 +133,8 @@ public class GetAdSelectionDataRunnerTest {
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
         mGetAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
-                        new AdServicesHttpsClient(
-                                AdServicesExecutors.getBlockingExecutor(),
-                                CacheProviderFactory.createNoOpCache()),
+                        mObliviousHttpEncryptorMock,
                         mCustomAudienceDao,
-                        mEncryptionKeyDao,
-                        mEncryptionContextDaoSpy,
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -167,6 +154,10 @@ public class GetAdSelectionDataRunnerTest {
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
+        doReturn(CIPHER_TEXT_BYTES)
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong());
+
         createAndPersistDBCustomAudiences();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
@@ -174,6 +165,7 @@ public class GetAdSelectionDataRunnerTest {
                                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build())
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
+
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
 
@@ -181,8 +173,10 @@ public class GetAdSelectionDataRunnerTest {
                 "Call failed with response " + callback.mFledgeErrorResponse, callback.mIsSuccess);
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertArrayEquals(
+                CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
-        Mockito.verify(mEncryptionContextDaoSpy, times(1)).insertEncryptionContext(any());
+        verify(mObliviousHttpEncryptorMock, times(1)).encryptBytes(any(), anyLong(), anyLong());
     }
 
     @Test
@@ -193,7 +187,7 @@ public class GetAdSelectionDataRunnerTest {
                 .filterRequest(
                         eq(SELLER),
                         eq(CALLER_PACKAGE_NAME),
-                        anyBoolean(),
+                        eq(false),
                         eq(true),
                         eq(CALLER_UID),
                         eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -210,7 +204,7 @@ public class GetAdSelectionDataRunnerTest {
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNull(callback.mGetAdSelectionDataResponse);
-        Mockito.verify(mEncryptionContextDaoSpy, times(0)).insertEncryptionContext(any());
+        verifyZeroInteractions(mObliviousHttpEncryptorMock);
     }
 
     @Test
