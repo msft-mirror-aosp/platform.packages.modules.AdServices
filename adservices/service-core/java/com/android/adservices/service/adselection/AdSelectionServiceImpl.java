@@ -290,10 +290,41 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @Override
     public void persistAdSelectionResult(
-            PersistAdSelectionResultInput persistAdSelectionResultInput,
+            PersistAdSelectionResultInput inputParams,
             CallerMetadata callerMetadata,
-            PersistAdSelectionResultCallback persistAdSelectionResultCallback)
-            throws RemoteException {}
+            PersistAdSelectionResultCallback callback)
+            throws RemoteException {
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        try {
+            Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException e) {
+            sLogger.v("The processAdSelectionResult() arguments should not be null!");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw e;
+        }
+
+        int callingUid = getCallingUid(apiName);
+        mLightweightExecutor.execute(
+                () -> {
+                    PersistAdSelectionResultRunner runner =
+                            new PersistAdSelectionResultRunner(
+                                    mEncryptionContextDao,
+                                    mReportingUrisDao,
+                                    mAdSelectionServiceFilter,
+                                    mBackgroundExecutor,
+                                    mLightweightExecutor,
+                                    mFlags,
+                                    callingUid);
+                    runner.run(inputParams, callback);
+                });
+    }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override

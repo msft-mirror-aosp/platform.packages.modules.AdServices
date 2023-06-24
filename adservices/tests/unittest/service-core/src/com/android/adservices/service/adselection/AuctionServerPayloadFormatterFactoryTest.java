@@ -29,17 +29,14 @@ public class AuctionServerPayloadFormatterFactoryTest {
     @Test
     public void testFactory_validVersion_returnImplementationSuccess() {
         AuctionServerPayloadFormatter formatter =
-                AuctionServerPayloadFormatterFactory.getAuctionServerPayloadFormatter(
-                        VALID_VERSION);
+                AuctionServerPayloadFormatterFactory.getPayloadFormatter(VALID_VERSION);
         Assert.assertTrue(formatter instanceof AuctionServerPayloadFormatterV0);
     }
 
     @Test
     public void testFactory_invalidVersion_throwsExceptionFailure() {
         ThrowingRunnable runnable =
-                () ->
-                        AuctionServerPayloadFormatterFactory.getAuctionServerPayloadFormatter(
-                                INVALID_VERSION);
+                () -> AuctionServerPayloadFormatterFactory.getPayloadFormatter(INVALID_VERSION);
         Assert.assertThrows(
                 String.format(NO_IMPLEMENTATION_FOUND, INVALID_VERSION),
                 IllegalArgumentException.class,
