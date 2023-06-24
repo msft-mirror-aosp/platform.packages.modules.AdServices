@@ -299,6 +299,8 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     private void startActivity(boolean isEUActivity) {
+        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
+
         Intent intent = new Intent(NOTIFICATION_TEST_PACKAGE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
