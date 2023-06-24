@@ -28,7 +28,7 @@ public class AuctionServerPayloadFormatterFactory {
             "No payload formatter implementation found for version %s";
 
     /** Returns an implementation for the {@link AuctionServerPayloadFormatter} */
-    public static AuctionServerPayloadFormatter getAuctionServerPayloadFormatter(int version) {
+    public static AuctionServerPayloadFormatter getPayloadFormatter(int version) {
         if (version == AuctionServerPayloadFormatterV0.VERSION) {
             return new AuctionServerPayloadFormatterV0();
         }
