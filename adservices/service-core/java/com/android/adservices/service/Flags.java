@@ -530,6 +530,7 @@ public interface Flags {
 
     int FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 8 * 1024; // 8 KiB
     int FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B = 8 * 1024; // 8 KiB
+    int FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B = 8 * 1024; // 8 KiB
 
     /**
      * Returns the maximum size in bytes allowed for user bidding signals in each
@@ -545,6 +546,14 @@ public interface Flags {
      */
     default int getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB() {
         return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes for the fused custom audience allowed to be persisted by
+     * the fetchAndJoinCustomAudience API.
+     */
+    default int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
     }
 
     boolean FLEDGE_BACKGROUND_FETCH_ENABLED = true;

@@ -189,6 +189,8 @@ public final class PhFlags implements Flags {
             "fledge_fetch_custom_audience_max_user_bidding_signals_size_b";
     static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B =
             "fledge_fetch_custom_audience_max_custom_header_size_b";
+    static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B =
+            "fledge_fetch_custom_audience_max_custom_audience_size_b";
 
     // FLEDGE Background Fetch keys
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED = "fledge_background_fetch_enabled";
@@ -1191,6 +1193,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B,
                 /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B);
     }
 
     @Override
@@ -3389,6 +3400,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B
                         + " = "
                         + getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B
+                        + " = "
+                        + getFledgeFetchCustomAudienceMaxCustomAudienceSizeB());
         writer.println("\t" + KEY_FLEDGE_HTTP_CACHE_ENABLE + " = " + getFledgeHttpCachingEnabled());
         writer.println(
                 "\t"
