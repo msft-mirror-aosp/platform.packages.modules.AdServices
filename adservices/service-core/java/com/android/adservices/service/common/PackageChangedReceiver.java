@@ -280,6 +280,12 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                             getSharedStorageDatabase(context)
                                     .appInstallDao()
                                     .deleteByPackageName(packageUri.toString()));
+            LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .frequencyCapDao()
+                                    .deleteHistogramDataBySourceApp(packageUri.toString()));
         }
     }
 

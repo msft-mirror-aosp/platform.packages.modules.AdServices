@@ -45,6 +45,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -94,6 +95,7 @@ public class PackageChangedReceiverTest {
     @Mock SharedStorageDatabase mSharedStorageDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
     @Mock AppInstallDao mAppInstallDaoMock;
+    @Mock FrequencyCapDao mFrequencyCapDaoMock;
     @Mock ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
@@ -609,6 +611,7 @@ public class PackageChangedReceiverTest {
             // Mock static database .getInstance() methods executed on a separate thread
             doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
             doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
+            doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
 
             CountDownLatch caCompletionLatch = new CountDownLatch(1);
             Answer<Void> caAnswer =
@@ -624,6 +627,15 @@ public class PackageChangedReceiverTest {
                         return null;
                     };
             doAnswer(appInstallanswer).when(mAppInstallDaoMock).deleteByPackageName(any());
+            CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
+            Answer<Void> frequencyCapAnswer =
+                    unusedInvocation -> {
+                        frequencyCapCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(frequencyCapAnswer)
+                    .when(mFrequencyCapDaoMock)
+                    .deleteHistogramDataBySourceApp(any());
 
             // Initialize package receiver meant for FLEDGE
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
@@ -641,8 +653,10 @@ public class PackageChangedReceiverTest {
             if (filteringEnabled) {
                 assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
                 verify(mAppInstallDaoMock).deleteByPackageName(any());
+                assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+                verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
             } else {
-                verifyZeroInteractions(mAppInstallDaoMock);
+                verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
             }
         } finally {
             session.finishMocking();
@@ -673,7 +687,8 @@ public class PackageChangedReceiverTest {
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
             verify(spyReceiver, never()).getSharedStorageDatabase(any());
-            verifyZeroInteractions(mSharedStorageDatabaseMock, mAppInstallDaoMock);
+            verifyZeroInteractions(
+                    mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
         } finally {
             session.finishMocking();
         }
@@ -963,6 +978,7 @@ public class PackageChangedReceiverTest {
             // Mock static database .getInstance() methods executed on a separate thread
             doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
             doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
+            doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
 
             CountDownLatch caCompletionLatch = new CountDownLatch(1);
             Answer<Void> caAnswer =
@@ -978,6 +994,15 @@ public class PackageChangedReceiverTest {
                         return null;
                     };
             doAnswer(appInstallAnswer).when(mAppInstallDaoMock).deleteByPackageName(any());
+            CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
+            Answer<Void> frequencyCapAnswer =
+                    unusedInvocation -> {
+                        frequencyCapCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(frequencyCapAnswer)
+                    .when(mFrequencyCapDaoMock)
+                    .deleteHistogramDataBySourceApp(any());
 
             // Initialize package receiver meant for FLEDGE
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
@@ -994,6 +1019,7 @@ public class PackageChangedReceiverTest {
             assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
             verify(mAppInstallDaoMock).deleteByPackageName(any());
+            verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
         } finally {
             session.finishMocking();
         }
@@ -1022,7 +1048,8 @@ public class PackageChangedReceiverTest {
             // Verify no executions
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
-            verifyZeroInteractions(mSharedStorageDatabaseMock, mAppInstallDaoMock);
+            verifyZeroInteractions(
+                    mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
         } finally {
             session.finishMocking();
         }
