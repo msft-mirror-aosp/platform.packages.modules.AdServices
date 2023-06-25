@@ -216,10 +216,9 @@ public class ConsentNotificationJobService extends JobService {
             setUxStatesManager(UxStatesManager.getInstance(getApplicationContext()));
         }
 
-        boolean defaultAdIdState = params.getExtras().getBoolean(ADID_ENABLE_STATUS, false);
-        mConsentManager.recordDefaultAdIdState(defaultAdIdState);
+        mConsentManager.recordDefaultAdIdState(mConsentManager.isAdIdEnabled());
         boolean isEeaNotification =
-                !defaultAdIdState || mUxStatesManager.isEeaDevice();
+                !mConsentManager.isAdIdEnabled() || mUxStatesManager.isEeaDevice();
         mConsentManager.recordDefaultConsent(!isEeaNotification);
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 

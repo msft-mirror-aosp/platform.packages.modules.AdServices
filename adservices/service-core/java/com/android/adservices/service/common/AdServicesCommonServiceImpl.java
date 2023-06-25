@@ -161,6 +161,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         LogUtil.d("entry point: " + adServicesEntryPointEnabled);
 
                         ConsentManager consentManager = ConsentManager.getInstance(mContext);
+                        consentManager.setAdIdEnabled(adIdEnabled);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
                             if (reconsentIfNeededForROW()) {
