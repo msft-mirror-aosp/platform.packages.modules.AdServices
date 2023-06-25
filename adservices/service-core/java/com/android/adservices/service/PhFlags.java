@@ -477,6 +477,10 @@ public final class PhFlags implements Flags {
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
+    // Consent notification activity debug mode keys.
+    public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
+            "consent_notification_activity_debug_mode";
+
     // Source of truth to get consent for PPAPI
     static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
     static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH = "blocked_topics_source_of_truth";
@@ -1365,8 +1369,10 @@ public final class PhFlags implements Flags {
     public long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT,
-                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT);
+                /* flagName */
+                KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT,
+                /* defaultValue */
+                FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT);
     }
 
     @Override
@@ -1956,6 +1962,7 @@ public final class PhFlags implements Flags {
                         /* flagName */ KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
                         /* defaultValue */ FLEDGE_AUCTION_SERVER_KILL_SWITCH));
     }
+
     @Override
     public String getPpapiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -2580,6 +2587,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentNotificationActivityDebugMode() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                /* defaultValue */ CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
+    }
+
+    @Override
     public boolean getConsentManagerDebugMode() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_CONSENT_MANAGER_DEBUG_MODE),
@@ -2810,6 +2825,11 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t" + KEY_ENABLE_AD_SERVICES_SYSTEM_API + " = " + getEnableAdServicesSystemApi());
         writer.println("\t" + KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
+        writer.println(
+                "\t"
+                        + KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
+                        + " = "
+                        + getConsentNotificationActivityDebugMode());
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
                 "\t"
@@ -3877,6 +3897,9 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_UI_FEATURE_TYPE_LOGGING_ENABLED, isUiFeatureTypeLoggingEnabled());
         uxMap.put(KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
         uxMap.put(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
+        uxMap.put(
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                getConsentNotificationActivityDebugMode());
         return uxMap;
     }
 

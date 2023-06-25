@@ -1004,6 +1004,7 @@ public interface Flags {
     }
 
     long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
     /**
      * Returns the best effort max time (in milliseconds) between each Background Key Fetch job run.
      */
@@ -1119,6 +1120,14 @@ public interface Flags {
 
     default boolean getConsentNotificationDebugMode() {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
+    }
+
+    /** The consent notification activity debug mode is off by default. */
+    boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
+
+    /** Returns the consent notification activity debug mode. */
+    default boolean getConsentNotificationActivityDebugMode() {
+        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
     }
 
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
@@ -2121,6 +2130,7 @@ public interface Flags {
 
     /** UI Dialog Fragment feature enabled. */
     boolean UI_DIALOG_FRAGMENT = false;
+
     /** Returns if the UI Dialog Fragment is enabled. */
     default boolean getUiDialogFragmentEnabled() {
         return UI_DIALOG_FRAGMENT;
