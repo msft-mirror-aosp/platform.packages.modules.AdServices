@@ -35,6 +35,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_FORCE_USE_BUNDLED_
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
+import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
@@ -258,6 +259,7 @@ import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TO
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.PhFlags.KEY_COMPAT_LOGGING_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.PhFlags.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
@@ -5815,6 +5817,7 @@ public class PhFlagsTest {
         assertThat(phFlags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled())
                 .isEqualTo(phOverridingValue);
     }
+
     @Test
     public void testEnableFledgeAuctionServerAuctionKeyFetch() {
         // Without any overriding, the value is the hard coded constant.
@@ -5831,6 +5834,7 @@ public class PhFlagsTest {
         assertThat(phFlags.getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled())
                 .isEqualTo(phOverridingValue);
     }
+
     @Test
     public void testEnableFledgeAuctionServerJoinKeyFetch() {
         // Without any overriding, the value is the hard coded constant.
@@ -5847,6 +5851,7 @@ public class PhFlagsTest {
         assertThat(phFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled())
                 .isEqualTo(phOverridingValue);
     }
+
     @Test
     public void testFledgeAuctionServerKeyFetchNetworkConnectTimeoutMs() {
         // Without any overriding, the value is the hard coded constant.
@@ -5883,6 +5888,7 @@ public class PhFlagsTest {
         assertThat(phFlags.getFledgeBackgroundFetchNetworkReadTimeoutMs())
                 .isEqualTo(phOverridingValue);
     }
+
     @Test
     public void testFledgeAuctionServerKeyFetchMaxResponseSize() {
         // Without any overriding, the value is the hard coded constant.
@@ -5902,6 +5908,7 @@ public class PhFlagsTest {
         assertThat(phFlags.getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB())
                 .isEqualTo(phOverridingValue);
     }
+
     @Test
     public void testFledgeAuctionServerKeyFetchMaxRuntimeMs() {
         // Without any overriding, the value is the hard coded constant.
@@ -5974,5 +5981,22 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testConsentNotificationActivityDebugMode() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getConsentNotificationActivityDebugMode())
+                .isEqualTo(CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
+
+        boolean phOverridingValue = !CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ !CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getConsentNotificationActivityDebugMode()).isEqualTo(phOverridingValue);
     }
 }
