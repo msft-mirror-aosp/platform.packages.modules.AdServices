@@ -169,9 +169,19 @@ public class UiUtils {
             Context context, UiDevice device, boolean isEuDevice, boolean dialogsOn)
             throws UiObjectNotFoundException, InterruptedException {
         UiObject leftControlButton =
-                getUiElement(device, context, R.string.notificationUI_left_control_button_text_eu);
+                getUiElement(
+                        device,
+                        context,
+                        isEuDevice
+                                ? R.string.notificationUI_left_control_button_text_eu
+                                : R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton =
-                getUiElement(device, context, R.string.notificationUI_right_control_button_text_eu);
+                getUiElement(
+                        device,
+                        context,
+                        isEuDevice
+                                ? R.string.notificationUI_right_control_button_text_eu
+                                : R.string.notificationUI_right_control_button_text);
         UiObject moreButton =
                 getUiElement(device, context, R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
@@ -181,20 +191,6 @@ public class UiUtils {
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(1000);
-        }
-
-        // Because the activity bundle cannot be reset by clean the xml file and
-        // restart adservices, we getting same beta notification display page, will
-        // check content of the button to decide it is EU or ROW, and set the consent.
-        if (rightControlButton.exists()) {
-            isEuDevice = true;
-        } else {
-            leftControlButton =
-                    getUiElement(device, context, R.string.notificationUI_left_control_button_text);
-            rightControlButton =
-                    getUiElement(
-                            device, context, R.string.notificationUI_right_control_button_text);
-            isEuDevice = false;
         }
 
         assertThat(leftControlButton.exists()).isTrue();

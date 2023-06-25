@@ -24,7 +24,6 @@ import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -87,7 +86,6 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -112,7 +110,6 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -137,7 +134,6 @@ public class ReconsentNotificationTriggerTest {
      * should not displayed
      */
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -168,7 +164,6 @@ public class ReconsentNotificationTriggerTest {
      * consent, and GA UX feature enabled, the GA UX notification is not displayed.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -193,14 +188,13 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, false, true);
+        UiUtils.consentConfirmationScreen(sContext, mDevice, true, true);
 
         mDevice.pressHome();
         UiUtils.restartAdservices();
@@ -215,7 +209,6 @@ public class ReconsentNotificationTriggerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testDeleteStatus() {
         UiUtils.clearSavedStatus();
         AdservicesTestHelper.killAdservicesProcess(sContext);
