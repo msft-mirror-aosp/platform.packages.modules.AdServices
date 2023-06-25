@@ -220,6 +220,7 @@ public class MaintenanceJobServiceTest {
 
         // Verifying that FLEDGE job was done
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredFrequencyCapHistogramData();
     }
 
     @Test
@@ -279,6 +280,7 @@ public class MaintenanceJobServiceTest {
         verify(mMockAppUpdateManager)
                 .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredFrequencyCapHistogramData();
     }
 
     @Test
@@ -381,6 +383,7 @@ public class MaintenanceJobServiceTest {
 
         // Verifying that FLEDGE job was done
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredFrequencyCapHistogramData();
     }
 
     @Test
@@ -516,6 +519,7 @@ public class MaintenanceJobServiceTest {
 
         // Ensure Fledge job not was done
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredFrequencyCapHistogramData();
     }
 
     @Test
@@ -732,6 +736,7 @@ public class MaintenanceJobServiceTest {
         verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredFrequencyCapHistogramData();
     }
 
     private void testOnStartJob_killSwitchOff() throws InterruptedException {
@@ -797,6 +802,7 @@ public class MaintenanceJobServiceTest {
 
         // Ensure Fledge job was done
         verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock).clearExpiredFrequencyCapHistogramData();
     }
 
     private void testOnStopJob() {
@@ -848,5 +854,6 @@ public class MaintenanceJobServiceTest {
         verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
         verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredAdSelectionData();
+        verify(mFledgeMaintenanceTasksWorkerMock, never()).clearExpiredFrequencyCapHistogramData();
     }
 }
