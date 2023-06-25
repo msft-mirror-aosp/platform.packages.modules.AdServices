@@ -16,8 +16,6 @@
 
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.ui.notifications.ConsentNotificationFragment.IS_EU_DEVICE_ARGUMENT_KEY;
-
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -159,30 +157,34 @@ public class ConsentNotificationTrigger {
     private static Notification getGaV2ConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
-        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        String bigText =
+                isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_ga_content_eu_v2)
+                        : context.getString(R.string.notificationUI_notification_ga_content_v2);
+
         NotificationCompat.BigTextStyle textStyle =
-                new NotificationCompat.BigTextStyle()
-                        .bigText(
-                                isEuDevice
-                                        ? context.getString(
-                                        R.string.notificationUI_notification_ga_content_eu_v2)
-                                        : context.getString(
-                                        R.string.notificationUI_notification_ga_content_v2));
+                new NotificationCompat.BigTextStyle().bigText(bigText);
+
+        String contentTitle =
+                context.getString(
+                        isEuDevice
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2);
+        String contentText =
+                context.getString(
+                        isEuDevice
+                                ? R.string.notificationUI_notification_ga_content_eu_v2
+                                : R.string.notificationUI_notification_ga_content_v2);
+
         NotificationCompat.Builder notification =
                 new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(R.drawable.ic_info_icon)
-                        .setContentTitle(
-                                context.getString(
-                                        isEuDevice
-                                                ? R.string.notificationUI_notification_ga_title_eu_v2
-                                                : R.string.notificationUI_notification_ga_title_v2))
-                        .setContentText(
-                                context.getString(
-                                        isEuDevice
-                                                ? R.string.notificationUI_notification_ga_content_eu_v2
-                                                : R.string.notificationUI_notification_ga_content_v2))
+                        .setContentTitle(contentTitle)
+                        .setContentText(contentText)
                         .setStyle(textStyle)
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
@@ -199,7 +201,7 @@ public class ConsentNotificationTrigger {
     private static Notification getGaConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
-        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.BigTextStyle textStyle =
@@ -244,7 +246,7 @@ public class ConsentNotificationTrigger {
     private static Notification getConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
-        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
                         context, 1, intent, PendingIntent.FLAG_IMMUTABLE);

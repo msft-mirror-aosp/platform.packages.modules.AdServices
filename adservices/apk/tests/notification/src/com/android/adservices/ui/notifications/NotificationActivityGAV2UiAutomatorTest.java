@@ -208,10 +208,14 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     private void startActivity(boolean isEUActivity) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+
         String notificationPackage = NOTIFICATION_PACKAGE;
         Intent intent = new Intent(notificationPackage);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
+
         ApplicationProvider.getApplicationContext().startActivity(intent);
         sDevice.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
     }
