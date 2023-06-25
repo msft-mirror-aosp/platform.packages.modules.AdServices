@@ -16,28 +16,24 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "CtsRootAdServicesUiTest",
+android_library {
+    name: "adservices-ui-cts-root-test-lib",
     srcs: [
-        "src/**/*.java",
+        "UiConstants.java",
+        "UiUtils.java",
     ],
     static_libs: [
         "adservices-assets",
         "adservices-service-core",
         "compatibility-device-util-axt",
         "truth-prebuilt",
+        "androidx.test.uiautomator_uiautomator",
         "adservices-test-utility",
-        "adservices-ui-cts-root-test-lib",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
     ],
-    test_suites: [
-        "cts_root",
-        "general-tests",
-        "mts-adservices"
-    ],
+    visibility: ["//packages/modules/AdServices/adservices/tests/cts/ui:__subpackages__"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
 }
