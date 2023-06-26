@@ -114,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String SANDBOXED_SDK_BINDER = "com.android.sdksandboxclient.SANDBOXED_SDK";
     private static final String SANDBOXED_SDK_KEY =
             "com.android.sdksandboxclient.SANDBOXED_SDK_KEY";
+    private static final String DEATH_CALLBACKS_COUNT_KEY =
+            "com.android.sdksandboxclient.DEATH_CALLBACKS_COUNT_KEY";
     public static final int SNACKBAR_MAX_LINES = 4;
 
     private Bundle mSavedInstanceState = new Bundle();
@@ -151,10 +153,15 @@ public class MainActivity extends AppCompatActivity {
 
         setAppTitle();
 
+        mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
         if (savedInstanceState != null) {
             mSavedInstanceState.putAll(savedInstanceState);
             mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
             mSandboxedSdk = savedInstanceState.getParcelable(SANDBOXED_SDK_KEY);
+            int numDeathCallbacks = savedInstanceState.getInt(DEATH_CALLBACKS_COUNT_KEY);
+            for (int i = 0; i < numDeathCallbacks; i++) {
+                addDeathCallback(false);
+            }
         }
 
         mExecutor.execute(
@@ -168,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         setContentView(R.layout.activity_main);
-        mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
 
         mRootLayout = findViewById(R.id.root_layout);
 
@@ -290,25 +296,14 @@ public class MainActivity extends AppCompatActivity {
         outState.putAll(mSavedInstanceState);
         outState.putBoolean(SDKS_LOADED_KEY, mSdksLoaded);
         outState.putParcelable(SANDBOXED_SDK_KEY, mSandboxedSdk);
+        outState.putInt(DEATH_CALLBACKS_COUNT_KEY, mDeathCallbacks.size());
     }
 
     private void registerAddDeathCallbackButton() {
         mDeathCallbackAddButton.setOnClickListener(
                 v -> {
                     synchronized (mDeathCallbacks) {
-                        final int queueSize = mDeathCallbacks.size();
-                        SdkSandboxProcessDeathCallback deathCallback =
-                                () ->
-                                        logAndDisplayMessage(
-                                                INFO,
-                                                "Death callback #"
-                                                        + (queueSize + 1)
-                                                        + " notified.");
-                        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                                Runnable::run, deathCallback);
-                        mDeathCallbacks.add(deathCallback);
-                        logAndDisplayMessage(
-                                INFO, "Death callback # " + (queueSize + 1) + " added.");
+                        addDeathCallback(true);
                     }
                 });
     }
@@ -920,6 +915,19 @@ public class MainActivity extends AppCompatActivity {
                     mBottomBannerView.setZOrderOnTop(false);
                     snackbar.show();
                 });
+    }
+
+    private void addDeathCallback(boolean notifyAdded) {
+        final int queueSize = mDeathCallbacks.size();
+        SdkSandboxProcessDeathCallback deathCallback =
+                () ->
+                        logAndDisplayMessage(
+                                INFO, "Death callback #" + (queueSize + 1) + " notified.");
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, deathCallback);
+        mDeathCallbacks.add(deathCallback);
+        if (notifyAdded) {
+            logAndDisplayMessage(INFO, "Death callback # " + (queueSize + 1) + " added.");
+        }
     }
 
     private class RequestSurfacePackageReceiver
