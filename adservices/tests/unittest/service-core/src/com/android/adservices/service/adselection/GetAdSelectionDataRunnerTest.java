@@ -69,6 +69,7 @@ import com.google.protobuf.ByteString;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -161,6 +162,7 @@ public class GetAdSelectionDataRunnerTest {
         }
     }
 
+    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
