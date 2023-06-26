@@ -42,6 +42,7 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
@@ -94,6 +95,7 @@ public class SdkSandboxManagerTest {
     private static final String ASM_RESTRICTIONS_ENABLED =
             "ActivitySecurity__asm_restrictions_enabled";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
+    private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
 
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
@@ -613,10 +615,10 @@ public class SdkSandboxManagerTest {
 
         final ICtsSdkProviderApi sdk = loadSdk();
 
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
         SecurityException exception =
                 assertThrows(
                         SecurityException.class, () -> sdk.startSandboxActivityDirectlyByAction());
-
         assertThat(exception.getMessage())
                 .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
         assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
@@ -628,11 +630,11 @@ public class SdkSandboxManagerTest {
 
         final ICtsSdkProviderApi sdk = loadSdk();
 
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
                         () -> sdk.startSandboxActivityDirectlyByComponent());
-
         assertThat(exception.getMessage())
                 .isEqualTo("Sandbox process is not allowed to start sandbox activities.");
         assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
@@ -642,6 +644,7 @@ public class SdkSandboxManagerTest {
     public void testSandboxProcessShouldBeRunningToHostTheSandboxActivity() {
         assumeTrue(SdkLevel.isAtLeastU());
 
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
         mRule.getScenario()
                 .onActivity(
                         clientActivity -> {
@@ -663,15 +666,18 @@ public class SdkSandboxManagerTest {
 
         ICtsSdkProviderApi sdk = loadSdk();
 
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
+        ActivityStarter activityStarter = new ActivityStarter();
+        assertThat(activityStarter.isActivityResumed()).isFalse();
         mRule.getScenario()
                 .onActivity(
                         clientActivity -> {
-                            ActivityStarter activityStarter = new ActivityStarter(clientActivity);
+                            activityStarter.setFromActivity(clientActivity);
                             startSandboxActivity(sdk, activityStarter);
-                            assertThat(activityStarter.isActivityVisible()).isTrue();
                         });
         assertThat(mRule.getScenario().getState())
                 .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(activityStarter.isActivityResumed()).isTrue();
     }
 
     @Test
@@ -680,20 +686,67 @@ public class SdkSandboxManagerTest {
 
         ICtsSdkProviderApi sdk = loadSdk();
 
+        ActivityStarter sandboxActivity1Starter = new ActivityStarter();
+        ActivityStarter sandboxActivity2Starter = new ActivityStarter();
+        assertThat(sandboxActivity1Starter.isActivityResumed()).isFalse();
+        assertThat(sandboxActivity2Starter.isActivityResumed()).isFalse();
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
         mRule.getScenario()
                 .onActivity(
                         clientActivity -> {
-                            ActivityStarter activityStarter1 = new ActivityStarter(clientActivity);
-                            startSandboxActivity(sdk, activityStarter1);
-                            assertThat(activityStarter1.isActivityVisible()).isTrue();
-
-                            ActivityStarter activityStarter2 = new ActivityStarter(clientActivity);
-                            startSandboxActivity(sdk, activityStarter2);
-                            assertThat(activityStarter1.isActivityVisible()).isFalse();
-                            assertThat(activityStarter2.isActivityVisible()).isTrue();
+                            sandboxActivity1Starter.setFromActivity(clientActivity);
+                            startSandboxActivity(sdk, sandboxActivity1Starter);
                         });
         assertThat(mRule.getScenario().getState())
                 .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivity1Starter.isActivityResumed()).isTrue();
+        assertThat(sandboxActivity2Starter.isActivityResumed()).isFalse();
+
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            sandboxActivity2Starter.setFromActivity(clientActivity);
+                            startSandboxActivity(sdk, sandboxActivity2Starter);
+                        });
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivity1Starter.isActivityResumed()).isFalse();
+        assertThat(sandboxActivity2Starter.isActivityResumed()).isTrue();
+    }
+
+    @Test
+    public void testStartLocalActivityOnTopOfASandboxActivity() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        ActivityStarter otherClientActivityStarter = new ActivityStarter();
+        assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
+        assertThat(otherClientActivityStarter.isActivityResumed()).isFalse();
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            sandboxActivityStarter.setFromActivity(clientActivity);
+                            startSandboxActivity(sdk, sandboxActivityStarter);
+                        });
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(otherClientActivityStarter.isActivityResumed()).isFalse();
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            otherClientActivityStarter.setFromActivity(clientActivity);
+                        });
+        otherClientActivityStarter.startLocalActivity();
+
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
+        assertThat(otherClientActivityStarter.isActivityResumed()).isTrue();
     }
 
     @Test
@@ -703,20 +756,20 @@ public class SdkSandboxManagerTest {
         // Load SDK in sandbox
         ICtsSdkProviderApi sdk = loadSdk();
 
+        ActivityStarter activityStarter = new ActivityStarter();
+        assertThat(activityStarter.isActivityResumed()).isFalse();
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
         mRule.getScenario()
                 .onActivity(
-                        activity -> {
-                            ActivityStarter activityStarter = new ActivityStarter(activity);
-                            try {
-                                Bundle extras = new Bundle();
-                                extras.putBoolean(UNREGISTER_BEFORE_STARTING_KEY, true);
-                                startSandboxActivity(sdk, activityStarter, extras);
-                                assertThat(activityStarter.isActivityVisible()).isFalse();
-                            } catch (Exception e) {
-                                fail("Got exception while starting activity: " + e.getMessage());
-                            }
+                        clientActivity -> {
+                            activityStarter.setFromActivity(clientActivity);
+                            Bundle extras = new Bundle();
+                            extras.putBoolean(UNREGISTER_BEFORE_STARTING_KEY, true);
+                            startSandboxActivity(sdk, activityStarter, extras);
+                            assertThat(activityStarter.isActivityResumed()).isFalse();
                         });
         assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
+        assertThat(activityStarter.isActivityResumed()).isFalse();
     }
 
     // Helper method to load SDK_NAME_1
@@ -751,39 +804,60 @@ public class SdkSandboxManagerTest {
     }
 
     private class ActivityStarter extends IActivityStarter.Stub {
-        private final Activity mFromActivity;
-        private boolean mActivityVisible = false;
+        private Activity mFromActivity;
+        private boolean mActivityResumed = false;
         private final CountDownLatch mWaitingForActivityToStartLatch = new CountDownLatch(1);
 
-        ActivityStarter(Activity fromActivity) {
-            this.mFromActivity = fromActivity;
+        ActivityStarter() {}
+
+        // To be called by SDKs to start sandbox activities.
+        @Override
+        public void startSdkSandboxActivity(IBinder token) throws RemoteException {
+            assertThat(mFromActivity).isNotNull();
+
+            mSdkSandboxManager.startSdkSandboxActivity(mFromActivity, token);
+            waitForActivityToBeResumed();
         }
 
+        // It is called to notify that onResume() is called against the new started Activity.
         @Override
-        public void startActivity(IBinder token) throws RemoteException {
-            mSdkSandboxManager.startSdkSandboxActivity(mFromActivity, token);
+        public void onActivityResumed() {
+            mActivityResumed = true;
+            mWaitingForActivityToStartLatch.countDown();
+        }
+
+        // It is called to notify the new started Activity is no longer in the Resumed state.
+        @Override
+        public void onLeftActivityResumed() {
+            mActivityResumed = false;
+        }
+
+        // To start local test activities (can not be called between processes).
+        public void startLocalActivity() {
+            assertThat(mFromActivity).isNotNull();
+
+            Intent intent = new Intent(mFromActivity, TestActivity.class);
+            Bundle params = new Bundle();
+            params.putBinder(ACTIVITY_STARTER_KEY, this);
+            intent.putExtras(params);
+            mFromActivity.startActivity(intent);
+            waitForActivityToBeResumed();
+        }
+
+        public void setFromActivity(Activity activity) {
+            mFromActivity = activity;
+        }
+
+        public boolean isActivityResumed() {
+            return mActivityResumed;
+        }
+
+        private void waitForActivityToBeResumed() {
             try {
                 mWaitingForActivityToStartLatch.await(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 fail("Exception while waiting for the sandbox activity: " + e.getMessage());
             }
-        }
-
-        // SDK calls this function when onResumed() gets called.
-        @Override
-        public void onActivityResumed() {
-            mActivityVisible = true;
-            mWaitingForActivityToStartLatch.countDown();
-        }
-
-        // SDK calls this function when onPaused() gets called.
-        @Override
-        public void onActivityPaused() {
-            mActivityVisible = false;
-        }
-
-        public boolean isActivityVisible() {
-            return mActivityVisible;
         }
     }
 

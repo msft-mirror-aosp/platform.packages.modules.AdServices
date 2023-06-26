@@ -204,7 +204,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
             controller.unregisterSdkSandboxActivityHandler(activityHandler);
         }
 
-        iActivityStarter.startActivity(token);
+        iActivityStarter.startSdkSandboxActivity(token);
     }
 
     @Override
@@ -246,7 +246,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                     @Override
                     public void onActivityPaused(@NonNull Activity activity) {
                         try {
-                            iActivityStarter.onActivityPaused();
+                            iActivityStarter.onLeftActivityResumed();
                         } catch (RemoteException e) {
                             throw new IllegalStateException("Failed to call ActivityStarter.");
                         }
