@@ -16,34 +16,59 @@
 
 package com.android.adservices.service.common;
 
+import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Objects;
 
 /** Utility class to perform Fledge maintenance tasks */
 public class FledgeMaintenanceTasksWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    @NonNull private AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final FrequencyCapDao mFrequencyCapDao;
+    @NonNull private final Flags mFlags;
+    @NonNull private final Clock mClock;
 
     @VisibleForTesting
-    public FledgeMaintenanceTasksWorker(AdSelectionEntryDao adSelectionEntryDao) {
+    public FledgeMaintenanceTasksWorker(
+            @NonNull Flags flags,
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull FrequencyCapDao frequencyCapDao,
+            @NonNull Clock clock) {
+        Objects.requireNonNull(flags);
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(frequencyCapDao);
+        Objects.requireNonNull(clock);
+
+        mFlags = flags;
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mFrequencyCapDao = frequencyCapDao;
+        mClock = clock;
     }
 
-    private FledgeMaintenanceTasksWorker(Context context) {
+    private FledgeMaintenanceTasksWorker(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        mFlags = FlagsFactory.getFlags();
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
+        mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
+        mClock = Clock.systemUTC();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
     public static FledgeMaintenanceTasksWorker create(@NonNull Context context) {
+        Objects.requireNonNull(context);
         return new FledgeMaintenanceTasksWorker(context);
     }
 
@@ -53,10 +78,11 @@ public class FledgeMaintenanceTasksWorker {
      * as the {@code registered_ad_interactions} table.
      */
     public void clearExpiredAdSelectionData() {
+        // Read from flags directly, since this maintenance task worker is attached to a background
+        //  job with unknown lifetime
         Instant expirationTime =
-                Clock.systemUTC()
-                        .instant()
-                        .minusSeconds(FlagsFactory.getFlags().getAdSelectionExpirationWindowS());
+                mClock.instant().minusSeconds(mFlags.getAdSelectionExpirationWindowS());
+
         sLogger.v("Clearing expired Ad Selection data");
         mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
 
@@ -65,5 +91,26 @@ public class FledgeMaintenanceTasksWorker {
 
         sLogger.v("Clearing expired Registered Ad Interaction data ");
         mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
+    }
+
+    /**
+     * Clears invalid histogram data from the frequency cap database if the ad filtering feature is
+     * enabled.
+     */
+    public void clearExpiredFrequencyCapHistogramData() {
+        // Read from flags directly, since this maintenance task worker is attached to a background
+        //  job with unknown lifetime
+        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
+            sLogger.v("Ad selection filtering disabled; skipping maintenance");
+            return;
+        }
+
+        Instant expirationInstant =
+                mClock.instant().minusSeconds(KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+
+        sLogger.v(
+                "Clearing expired Frequency Cap histogram events older than %s", expirationInstant);
+        int numDeletedEvents = mFrequencyCapDao.deleteAllExpiredHistogramData(expirationInstant);
+        sLogger.v("Cleared %d expired Frequency Cap histogram events", numDeletedEvents);
     }
 }

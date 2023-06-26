@@ -18,10 +18,13 @@ package com.android.adservices.service.common;
 
 import android.adservices.common.AdData;
 import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 
 import com.google.common.collect.ImmutableCollection;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -55,6 +58,15 @@ public class FrequencyCapAdDataValidatorImpl implements FrequencyCapAdDataValida
             int numFrequencyCapFilters = 0;
             FrequencyCapFilters filters = adData.getAdFilters().getFrequencyCapFilters();
 
+            addKeyedFrequencyCapListValidation(
+                    filters.getKeyedFrequencyCapsForWinEvents(), violations);
+            addKeyedFrequencyCapListValidation(
+                    filters.getKeyedFrequencyCapsForImpressionEvents(), violations);
+            addKeyedFrequencyCapListValidation(
+                    filters.getKeyedFrequencyCapsForViewEvents(), violations);
+            addKeyedFrequencyCapListValidation(
+                    filters.getKeyedFrequencyCapsForClickEvents(), violations);
+
             if (filters.getKeyedFrequencyCapsForWinEvents() != null) {
                 numFrequencyCapFilters += filters.getKeyedFrequencyCapsForWinEvents().size();
             }
@@ -74,6 +86,52 @@ public class FrequencyCapAdDataValidatorImpl implements FrequencyCapAdDataValida
                                 Locale.ENGLISH,
                                 FrequencyCapFilters.NUM_FREQUENCY_CAP_FILTERS_EXCEEDED_FORMAT,
                                 FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS));
+            }
+        }
+    }
+
+    private void addKeyedFrequencyCapListValidation(
+            @Nullable List<KeyedFrequencyCap> keyedFrequencyCaps,
+            @NonNull ImmutableCollection.Builder<String> violations) {
+        Objects.requireNonNull(violations);
+
+        if (keyedFrequencyCaps == null) {
+            violations.add(FrequencyCapFilters.FREQUENCY_CAP_FILTERS_NULL_LIST_ERROR_MESSAGE);
+            return;
+        }
+
+        for (KeyedFrequencyCap keyedFrequencyCap : keyedFrequencyCaps) {
+            if (keyedFrequencyCap == null) {
+                violations.add(
+                        FrequencyCapFilters.FREQUENCY_CAP_FILTERS_NULL_ELEMENT_ERROR_MESSAGE);
+            } else {
+                if (keyedFrequencyCap.getMaxCount() <= 0) {
+                    violations.add(
+                            String.format(
+                                    Locale.ENGLISH,
+                                    KeyedFrequencyCap.MAX_COUNT_NOT_POSITIVE_ERROR_MESSAGE,
+                                    keyedFrequencyCap.getMaxCount()));
+                }
+
+                if (keyedFrequencyCap.getInterval() == null) {
+                    violations.add(KeyedFrequencyCap.INTERVAL_NULL_ERROR_MESSAGE);
+                } else {
+                    long intervalSeconds = keyedFrequencyCap.getInterval().toSeconds();
+                    if (intervalSeconds <= 0) {
+                        violations.add(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        KeyedFrequencyCap.INTERVAL_NOT_POSITIVE_FORMAT,
+                                        keyedFrequencyCap.getInterval()));
+                    } else if (intervalSeconds > KeyedFrequencyCap.MAX_INTERVAL.toSeconds()) {
+                        violations.add(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        KeyedFrequencyCap.MAX_INTERVAL_EXCEEDED_FORMAT,
+                                        keyedFrequencyCap.getInterval(),
+                                        KeyedFrequencyCap.MAX_INTERVAL));
+                    }
+                }
             }
         }
     }

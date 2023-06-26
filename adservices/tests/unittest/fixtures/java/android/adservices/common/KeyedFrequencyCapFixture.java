@@ -16,9 +16,13 @@
 
 package android.adservices.common;
 
+import android.os.Parcel;
+
 import com.google.common.collect.ImmutableList;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 /** Utility class for creating and testing {@link KeyedFrequencyCap} objects. */
 public class KeyedFrequencyCapFixture {
@@ -39,6 +43,14 @@ public class KeyedFrequencyCapFixture {
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY3).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY4).build());
 
+    public static final List<KeyedFrequencyCap> KEYED_FREQUENCY_CAP_LIST_CONTAINING_NULL =
+            Arrays.asList(
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY1).build(),
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY2).build(),
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY3).build(),
+                    null,
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY4).build());
+
     public static ImmutableList<KeyedFrequencyCap> getExcessiveNumberOfFrequencyCapsList() {
         ImmutableList.Builder<KeyedFrequencyCap> listBuilder = ImmutableList.builder();
 
@@ -52,5 +64,16 @@ public class KeyedFrequencyCapFixture {
 
     public static KeyedFrequencyCap.Builder getValidKeyedFrequencyCapBuilderOncePerDay(int key) {
         return new KeyedFrequencyCap.Builder(key, FILTER_COUNT, ONE_DAY_DURATION);
+    }
+
+    public static KeyedFrequencyCap getKeyedFrequencyCapWithFields(
+            int adCounterKey, int maxCount, Duration interval) {
+        Parcel sourceParcel = Parcel.obtain();
+        sourceParcel.writeInt(adCounterKey);
+        sourceParcel.writeInt(maxCount);
+        sourceParcel.writeLong(interval.toSeconds());
+        sourceParcel.setDataPosition(0);
+
+        return KeyedFrequencyCap.CREATOR.createFromParcel(sourceParcel);
     }
 }
