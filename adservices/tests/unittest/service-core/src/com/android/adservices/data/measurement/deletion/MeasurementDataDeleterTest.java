@@ -173,13 +173,13 @@ public class MeasurementDataDeleterTest {
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setAggregatableAttributionSource(mAggregatableAttributionSource1)
                         .setAggregateContributions(32666)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source2")
                         .setAggregatableAttributionSource(mAggregatableAttributionSource2)
                         .setAggregateContributions(6235)
@@ -210,7 +210,7 @@ public class MeasurementDataDeleterTest {
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setAggregatableAttributionSource(mAggregatableAttributionSource1)
                         .setAggregateContributions(10)
@@ -235,7 +235,7 @@ public class MeasurementDataDeleterTest {
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setEventReportDedupKeys(
                                 new ArrayList<>(
@@ -245,7 +245,7 @@ public class MeasurementDataDeleterTest {
                                                 new UnsignedLong("3"))))
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId2")
                         .setEventReportDedupKeys(
                                 new ArrayList<>(
@@ -300,7 +300,7 @@ public class MeasurementDataDeleterTest {
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setAggregateReportDedupKeys(
                                 new ArrayList<>(
@@ -310,7 +310,7 @@ public class MeasurementDataDeleterTest {
                                                 new UnsignedLong("3"))))
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId2")
                         .setAggregateReportDedupKeys(
                                 new ArrayList<>(
@@ -383,9 +383,9 @@ public class MeasurementDataDeleterTest {
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
-        Source source1 = SourceFixture.getValidSourceBuilder().setId("sourceId1").build();
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId2")
                         .setAggregateReportDedupKeys(
                                 List.of(new UnsignedLong(1L), new UnsignedLong(2L)))
@@ -465,8 +465,8 @@ public class MeasurementDataDeleterTest {
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
-        Source source1 = SourceFixture.getValidSourceBuilder().setId("sourceId1").build();
-        Source source2 = SourceFixture.getValidSourceBuilder().setId("sourceId2").build();
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
+        Source source2 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId2").build();
         Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("triggerId1").build();
         Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("triggerId2").build();
         when(mEventReport1.getId()).thenReturn("eventReportId1");
@@ -607,7 +607,7 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(1L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpec();
+        ReportSpec reportSpec = SourceFixture.getValidReportSpecCountBased();
         reportSpec.insertAttributedTrigger(eventReport1);
         reportSpec.insertAttributedTrigger(eventReport2);
         Source.Builder sourceBuilder =

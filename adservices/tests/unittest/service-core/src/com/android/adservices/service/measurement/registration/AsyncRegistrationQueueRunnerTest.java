@@ -121,7 +121,7 @@ public class AsyncRegistrationQueueRunnerTest {
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
     private static final Source SOURCE_1 =
-            SourceFixture.getValidSourceBuilder()
+            SourceFixture.getMinimalValidSourceBuilder()
                     .setEventId(new UnsignedLong(1L))
                     .setPublisher(APP_TOP_ORIGIN)
                     .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
@@ -1562,7 +1562,7 @@ public class AsyncRegistrationQueueRunnerTest {
         int fakeReportsCount = 2;
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
@@ -1613,7 +1613,7 @@ public class AsyncRegistrationQueueRunnerTest {
         int fakeReportsCount = 2;
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(null)
                                 .setWebDestinations(
                                         SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
@@ -1662,7 +1662,7 @@ public class AsyncRegistrationQueueRunnerTest {
         int fakeReportsCount = 2;
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
@@ -1727,7 +1727,7 @@ public class AsyncRegistrationQueueRunnerTest {
         // Setup
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
@@ -2217,7 +2217,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
@@ -2283,7 +2283,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
@@ -2349,7 +2349,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 5, 6]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
@@ -2414,7 +2414,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
@@ -2475,7 +2475,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
