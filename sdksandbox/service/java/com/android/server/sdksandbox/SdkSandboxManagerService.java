@@ -247,6 +247,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
 
+    /** We need to keep in sync with the property used in ProcessList */
+    private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
+            "apply_sdk_sandbox_next_restrictions";
+
+    private static final boolean DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS = false;
+
     // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as part of
     // SystemServer.
     // If AdServices register itself as binder service, dump() will ignore the --AdServices option
@@ -1733,6 +1739,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private Map<Integer, AllowedContentProviders> mContentProviderAllowlistPerTargetSdkVersion =
                 getContentProviderDeviceConfigAllowlist();
 
+        @GuardedBy("mLock")
+        private boolean mSdkSandboxApplyRestrictionsNext =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                        DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1802,6 +1815,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        boolean applySdkSandboxRestrictionsNext() {
+            synchronized (mLock) {
+                return mSdkSandboxApplyRestrictionsNext;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1845,6 +1865,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             break;
                         case PROPERTY_SERVICES_ALLOWLIST:
                             mServiceAllowlistPerTargetSdkVersion = getServicesAllowlist();
+                            break;
+                        case PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS:
+                            mSdkSandboxApplyRestrictionsNext =
+                                    properties.getBoolean(
+                                            PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                                            DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
                             break;
                         default:
                     }
