@@ -363,7 +363,7 @@ class DebugReportProcessor {
 
             if (mScoreAdResult != null) {
                 uri = mScoreAdResult.getWinDebugReportUri();
-                if (uri != null && hasValidUriForAdTech(uri, mScoreAdResult.getPublisher())) {
+                if (uri != null && hasValidUriForAdTech(uri, mScoreAdResult.getSeller())) {
                     uris.add(uri);
                 }
             }
@@ -382,7 +382,7 @@ class DebugReportProcessor {
 
             if (mScoreAdResult != null) {
                 uri = mScoreAdResult.getLossDebugReportUri();
-                if (uri != null && hasValidUriForAdTech(uri, mScoreAdResult.getPublisher())) {
+                if (uri != null && hasValidUriForAdTech(uri, mScoreAdResult.getSeller())) {
                     uris.add(uri);
                 }
             }

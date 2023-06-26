@@ -42,6 +42,12 @@ public abstract class AdScoringOutcome {
     @Nullable
     public abstract CustomAudienceSignals getCustomAudienceSignals();
 
+    /**
+     * @return data for event-level debug reporting.
+     */
+    @Nullable
+    public abstract DebugReport getDebugReport();
+
     /** @return uri that corresponds to the logic for Ad bidding, reporting */
     public abstract Uri getBiddingLogicUri();
 
@@ -73,6 +79,8 @@ public abstract class AdScoringOutcome {
         abstract Builder setAdWithScore(AdWithScore adWithScore);
 
         abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
+
+        abstract Builder setDebugReport(DebugReport debugReport);
 
         abstract Builder setBiddingLogicUri(Uri decisionLogicUri);
 
