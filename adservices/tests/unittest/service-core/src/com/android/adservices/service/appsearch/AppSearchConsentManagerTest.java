@@ -267,8 +267,8 @@ public class AppSearchConsentManagerTest {
 
     @Test
     public void testRecordGaUxNotificationDisplayed() {
-        mAppSearchConsentManager.recordGaUxNotificationDisplayed();
-        verify(mAppSearchConsentWorker).recordGaUxNotificationDisplayed();
+        mAppSearchConsentManager.recordGaUxNotificationDisplayed(true);
+        verify(mAppSearchConsentWorker).recordGaUxNotificationDisplayed(true);
     }
 
     @Test
@@ -494,7 +494,7 @@ public class AppSearchConsentManagerTest {
         assertThat(result).isTrue();
 
         verify(mDatastore).put(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
-        verify(mAdServicesManager).recordGaUxNotificationDisplayed();
+        verify(mAdServicesManager).recordGaUxNotificationDisplayed(true);
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME1), eq(false));
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME2), eq(false));
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME3), eq(true));

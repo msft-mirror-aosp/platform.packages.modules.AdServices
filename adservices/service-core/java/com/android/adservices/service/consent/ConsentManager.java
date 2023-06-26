@@ -844,11 +844,14 @@ public class ConsentManager {
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
      */
-    public void recordGaUxNotificationDisplayed() {
+    public void recordGaUxNotificationDisplayed(boolean wasGaUxDisplayed) {
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true),
-                () -> mAdServicesManager.recordGaUxNotificationDisplayed(),
-                () -> mAppSearchConsentManager.recordGaUxNotificationDisplayed(),
+                () ->
+                        mDatastore.put(
+                                ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE,
+                                wasGaUxDisplayed),
+                () -> mAdServicesManager.recordGaUxNotificationDisplayed(wasGaUxDisplayed),
+                () -> mAppSearchConsentManager.recordGaUxNotificationDisplayed(wasGaUxDisplayed),
                 /* errorLogger= */ null);
     }
 

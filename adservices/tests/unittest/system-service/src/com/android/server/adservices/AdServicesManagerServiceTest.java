@@ -581,7 +581,7 @@ public class AdServicesManagerServiceTest {
 
         // First, the notification displayed is false.
         assertThat(service.wasGaUxNotificationDisplayed()).isFalse();
-        service.recordGaUxNotificationDisplayed();
+        service.recordGaUxNotificationDisplayed(true);
         assertThat(service.wasGaUxNotificationDisplayed()).isTrue();
     }
 

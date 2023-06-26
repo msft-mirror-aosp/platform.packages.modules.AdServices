@@ -62,7 +62,7 @@ interface IAdServicesManager {
      * Saves information to the storage that GA UX notification was displayed for the
      * first time to the user.
      */
-    void recordGaUxNotificationDisplayed();
+    void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed);
 
     /**
      * Returns information whether GA UX Consent Notification was displayed or not.

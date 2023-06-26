@@ -87,7 +87,7 @@ public class ConsentNotificationTrigger {
                     ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
         }
         if (gaUxFeatureEnabled) {
-            consentManager.recordGaUxNotificationDisplayed();
+            consentManager.recordGaUxNotificationDisplayed(true);
         }
         consentManager.recordNotificationDisplayed();
     }
