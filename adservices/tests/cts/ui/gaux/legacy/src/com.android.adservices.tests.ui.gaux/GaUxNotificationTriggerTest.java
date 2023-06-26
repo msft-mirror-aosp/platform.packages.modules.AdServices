@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.notification;
+package com.android.adservices.tests.ui.gaux;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
@@ -35,10 +35,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class NotificationTriggerTest {
+public class GaUxNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -130,4 +129,3 @@ public class NotificationTriggerTest {
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
     }
 }
-

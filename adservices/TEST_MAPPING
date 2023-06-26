@@ -281,10 +281,10 @@
       ]
     },
     {
-      "name": "CtsRootAdServicesUiTest"
+      "name": "AdServicesBetaUxCtsRootTest"
     },
     {
-      "name": "AdServicesBetaUxCtsRootTest"
+      "name": "LegacyAdServicesGaUxCtsRootTest"
     },
     {
       "name": "CtsAdServicesHostTests"
