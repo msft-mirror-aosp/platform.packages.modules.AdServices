@@ -161,7 +161,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
-        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
+        final boolean attributionPermission =
+                PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
         sBackgroundExecutor.execute(
                 () -> {
                     performRegistration(
@@ -215,7 +216,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         }
 
         final int callerUid = Binder.getCallingUidOrThrow();
-        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
+        final boolean attributionPermission =
+                PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
         sBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
@@ -274,7 +276,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         }
 
         final int callerUid = Binder.getCallingUidOrThrow();
-        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
+        final boolean attributionPermission =
+                PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
         sBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
