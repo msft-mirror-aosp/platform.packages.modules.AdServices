@@ -50,7 +50,6 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.UxEngine;
@@ -166,33 +165,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             // Check if it is reconsent for ROW.
                             if (reconsentIfNeededForROW()) {
                                 LogUtil.d("Reconsent for ROW.");
-
-                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                    if (mFlags.getEuNotifFlowChangeEnabled()) {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_RECONSENT_FF);
-                                    } else {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_RECONSENT);
-                                    }
-                                }
-
                                 ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
                             } else if (getFirstConsentStatus()) {
-                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                    if (mFlags.getEuNotifFlowChangeEnabled()) {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_FIRST_CONSENT_FF);
-                                    } else {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_FIRST_CONSENT);
-                                    }
-                                }
-
                                 ConsentNotificationJobService.schedule(
                                         mContext, adIdEnabled, false);
                             }
@@ -200,12 +174,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
                                 PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
-                            }
-
-                        } else {
-                            if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                consentManager.setCurrentPrivacySandboxFeature(
-                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
                             }
                         }
                     } catch (Exception e) {
@@ -240,18 +208,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 // Check the setAdServicesEnabled was called before
                 if (preferences.contains(KEY_ADSERVICES_ENTRY_POINT_STATUS)
                         && consentManager.getConsent().isGiven()) {
-                    // AdidEnabled status does not matter here as this is only for EU device, it
-                    // will override by the EU in the scheduler
-                    if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                        if (mFlags.getEuNotifFlowChangeEnabled()) {
-                            consentManager.setCurrentPrivacySandboxFeature(
-                                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT_FF);
-                        } else {
-                            consentManager.setCurrentPrivacySandboxFeature(
-                                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
-                        }
-                    }
-
                     ConsentNotificationJobService.schedule(mContext, false, true);
                 }
             }
