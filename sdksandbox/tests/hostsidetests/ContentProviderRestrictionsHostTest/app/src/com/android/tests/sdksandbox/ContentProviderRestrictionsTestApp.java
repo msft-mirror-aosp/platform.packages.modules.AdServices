@@ -220,7 +220,7 @@ public class ContentProviderRestrictionsTestApp {
                 SecurityException.class,
                 () ->
                         contentProvidersSdkApi.getContentProviderByAuthority(
-                                "com.android.blockednumber"));
+                                "com.android.contacts.dumpfile/a-contacts-db.zip"));
     }
 
     @Test
@@ -276,7 +276,94 @@ public class ContentProviderRestrictionsTestApp {
                 SecurityException.class,
                 () ->
                         contentProvidersSdkApi.getContentProviderByAuthority(
-                                "com.android.blockednumber"));
+                                "com.android.contacts.dumpfile/a-contacts-db.zip"));
+    }
+
+    @Test
+    public void testGetContentProvider_DeviceConfigWildcardAllowlistApplied() throws Exception {
+        mRule.getScenario();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_RESTRICTIONS,
+                "true",
+                /*makeDefault=*/ false);
+
+        /*
+         * Base64 encoded proto ContentProviderAllowlists in the following form:
+         * allowlist_per_target_sdk {
+         *   key: 34
+         *   value {
+         *     authorities: "*"
+         *   }
+         * }
+         */
+        final String encodedAllowlist = "CgcIIhIDCgEq";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_CONTENTPROVIDER_ALLOWLIST,
+                encodedAllowlist,
+                false);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        final IBinder binder = sandboxedSdk.getInterface();
+        final IContentProvidersSdkApi contentProvidersSdkApi =
+                IContentProvidersSdkApi.Stub.asInterface(binder);
+
+        // All kinds of ContentProviders should be accessible.
+        contentProvidersSdkApi.getContentProviderByAuthority("com.android.textclassifier.icons");
+        contentProvidersSdkApi.getContentProvider();
+        contentProvidersSdkApi.getContentProviderByAuthority(
+                "com.android.contacts.dumpfile/a-contacts-db.zip");
+    }
+
+    @Test
+    public void testGetContentProvider_DeviceConfigAllowlistWithWildcardApplied() throws Exception {
+        mRule.getScenario();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_RESTRICTIONS,
+                "true",
+                /*makeDefault=*/ false);
+
+        /*
+         * Base64 encoded proto ContentProviderAllowlists in the following form:
+         * allowlist_per_target_sdk {
+         *   key: 34
+         *   value {
+         *     authorities: "com.android.contacts.*"
+         *   }
+         * }
+         */
+        final String encodedAllowlist = "ChwIIhIYChZjb20uYW5kcm9pZC5jb250YWN0cy4q";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_CONTENTPROVIDER_ALLOWLIST,
+                encodedAllowlist,
+                false);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        final IBinder binder = sandboxedSdk.getInterface();
+        final IContentProvidersSdkApi contentProvidersSdkApi =
+                IContentProvidersSdkApi.Stub.asInterface(binder);
+
+        contentProvidersSdkApi.getContentProviderByAuthority(
+                "com.android.contacts.dumpfile/a-contacts-db.zip");
+        assertThrows(SecurityException.class, () -> contentProvidersSdkApi.getContentProvider());
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        contentProvidersSdkApi.getContentProviderByAuthority(
+                                "com.android.textclassifier.icons"));
     }
 
     @Test(expected = Test.None.class /* no exception expected */)
