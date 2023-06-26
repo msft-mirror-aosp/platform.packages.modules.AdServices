@@ -27,6 +27,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
@@ -60,6 +61,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
     @NonNull private final JsonValidator mUserBiddingSignalsValidator;
     @NonNull private final CustomAudienceFieldSizeValidator mCustomAudienceFieldSizeValidator;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
 
     // Process-stable flag values
     private final int mCustomAudienceMaxTrustedBiddingDataSizeB;
@@ -71,6 +73,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
             @NonNull JsonValidator userBiddingSignalsValidator,
             @NonNull CustomAudienceFieldSizeValidator customAudienceFieldSizeValidator,
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull AdRenderIdValidator adRenderIdValidator,
             int customAudienceMaxTrustedBiddingDataSizeB) {
         Objects.requireNonNull(customAudienceTimestampValidator);
         Objects.requireNonNull(buyerValidator);
@@ -83,14 +86,15 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
         mUserBiddingSignalsValidator = userBiddingSignalsValidator;
         mCustomAudienceFieldSizeValidator = customAudienceFieldSizeValidator;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdRenderIdValidator = adRenderIdValidator;
         mCustomAudienceMaxTrustedBiddingDataSizeB = customAudienceMaxTrustedBiddingDataSizeB;
     }
 
-    @VisibleForTesting
     public CustomAudienceValidator(
             @NonNull Clock clock,
             @NonNull Flags flags,
-            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator) {
+            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull AdRenderIdValidator adRenderIdValidator) {
         this(
                 new CustomAudienceTimestampValidator(clock, flags),
                 new AdTechIdentifierValidator(
@@ -98,6 +102,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                 new JsonValidator(CUSTOM_AUDIENCE_CLASS_NAME, USER_BIDDING_SIGNALS_FIELD_NAME),
                 new CustomAudienceFieldSizeValidator(flags),
                 frequencyCapAdDataValidator,
+                adRenderIdValidator,
                 flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB());
     }
 
@@ -123,7 +128,8 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                                                 SharedStorageDatabase.getInstance(context)
                                                         .frequencyCapDao(),
                                                 flags)
-                                        .getFrequencyCapAdDataValidator());
+                                        .getFrequencyCapAdDataValidator(),
+                                AdRenderIdValidator.createInstance(flags));
             }
             return sSingleton;
         }
@@ -175,7 +181,10 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
         }
         AdDataValidator adDataValidator =
                 new AdDataValidator(
-                        ValidatorUtil.AD_TECH_ROLE_BUYER, buyer, mFrequencyCapAdDataValidator);
+                        ValidatorUtil.AD_TECH_ROLE_BUYER,
+                        buyer,
+                        mFrequencyCapAdDataValidator,
+                        mAdRenderIdValidator);
         for (AdData adData : customAudience.getAds()) {
             adDataValidator.addValidation(adData, violations);
         }

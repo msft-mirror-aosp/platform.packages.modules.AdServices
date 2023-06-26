@@ -42,8 +42,9 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
@@ -56,6 +57,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -70,14 +79,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 @SmallTest
 public class AdSelectionScriptEngineTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -87,6 +88,9 @@ public class AdSelectionScriptEngineTest {
             new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
     private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL_WITH_COPIER =
             new AdDataArgumentUtil(new AdCounterKeyCopierImpl());
+
+    private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
     private static final String BASE_DOMAIN = "https://www.domain.com/adverts/";
     private static final double BID_1 = 1.1;
     private static final double BID_2 = 2.1;
@@ -455,7 +459,7 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                FlagsFactory.getFlagsForTest()),
+                                AD_DATA_CONVERSION_STRATEGY),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -514,7 +518,7 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                FlagsFactory.getFlagsForTest()),
+                                AD_DATA_CONVERSION_STRATEGY),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -557,7 +561,7 @@ public class AdSelectionScriptEngineTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                        FlagsFactory.getFlagsForTest());
+                        AD_DATA_CONVERSION_STRATEGY);
         final List<GenerateBidResult> results =
                 generateBidsV3(
                         "function generateBid(custom_audience, auction_signals,"
@@ -882,7 +886,7 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                FlagsFactory.getFlagsForTest()),
+                                AD_DATA_CONVERSION_STRATEGY),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -935,7 +939,7 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
-                                FlagsFactory.getFlagsForTest()),
+                                AD_DATA_CONVERSION_STRATEGY),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,

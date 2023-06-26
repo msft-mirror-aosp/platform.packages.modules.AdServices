@@ -69,6 +69,7 @@ public class DBAdDataFixture {
                 adData.getRenderUri(),
                 adData.getMetadata(),
                 adData.getAdCounterKeys(),
-                adData.getAdFilters());
+                adData.getAdFilters(),
+                adData.getAdRenderId());
     }
 }

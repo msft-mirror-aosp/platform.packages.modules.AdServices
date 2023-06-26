@@ -76,6 +76,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
@@ -132,6 +133,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @NonNull private final ConsentManager mConsentManager;
+    @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -197,6 +199,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilteringFeatureFactory = adFilteringFeatureFactory;
         mConsentManager = consentManager;
+        // No support for renderId on device
+        mAdRenderIdValidator = AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -430,6 +434,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         adSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }

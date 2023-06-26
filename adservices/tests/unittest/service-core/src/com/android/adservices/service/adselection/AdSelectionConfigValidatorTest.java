@@ -100,6 +100,7 @@ public class AdSelectionConfigValidatorTest {
 
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
             new FrequencyCapAdDataValidatorNoOpImpl();
+
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
     private Flags mFlags;

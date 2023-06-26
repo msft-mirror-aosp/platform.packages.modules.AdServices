@@ -42,6 +42,7 @@ import android.adservices.common.CommonFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 
@@ -59,12 +60,18 @@ public class CustomAudienceAdsValidatorTest {
     private static final int CUSTOM_AUDIENCE_MAX_NUM_ADS =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxNumAds();
 
+    private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
     private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator =
             new FrequencyCapAdDataValidatorImpl();
+
+    private final AdRenderIdValidator mAdRenderIdValidator =
+            AdRenderIdValidator.createEnabledInstance(100);
     private final CustomAudienceAdsValidator mValidator =
             new CustomAudienceAdsValidator(
                     mFrequencyCapAdDataValidator,
-                    true,
+                    mAdRenderIdValidator,
+                    AD_DATA_CONVERSION_STRATEGY,
                     CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
                     CUSTOM_AUDIENCE_MAX_NUM_ADS);
 
@@ -77,7 +84,21 @@ public class CustomAudienceAdsValidatorTest {
                 () ->
                         new CustomAudienceAdsValidator(
                                 null,
-                                true,
+                                mAdRenderIdValidator,
+                                AD_DATA_CONVERSION_STRATEGY,
+                                CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
+                                CUSTOM_AUDIENCE_MAX_NUM_ADS));
+    }
+
+    @Test
+    public void testConstructor_nullAdRenderIdValidator_throws() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new CustomAudienceAdsValidator(
+                                mFrequencyCapAdDataValidator,
+                                null,
+                                AD_DATA_CONVERSION_STRATEGY,
                                 CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
                                 CUSTOM_AUDIENCE_MAX_NUM_ADS));
     }
@@ -200,11 +221,13 @@ public class CustomAudienceAdsValidatorTest {
         // Use a validator with a clearly small size limit.
         CustomAudienceAdsValidator mValidatorWithSmallLimit =
                 new CustomAudienceAdsValidator(
-                        mFrequencyCapAdDataValidator, true, 1, CUSTOM_AUDIENCE_MAX_NUM_ADS);
+                        mFrequencyCapAdDataValidator,
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        1,
+                        CUSTOM_AUDIENCE_MAX_NUM_ADS);
 
         // Constructor valid ads which will now be too big for the validator.
-        AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
         List<AdData> tooBigAds = mValidAds;
 
         // Assert invalid ads throws.
@@ -228,8 +251,11 @@ public class CustomAudienceAdsValidatorTest {
                                                 1,
                                                 tooBigAds.stream()
                                                         .map(
-                                                                adDataConversionStrategy
-                                                                        ::fromServiceObject)
+                                                                obj ->
+                                                                        AD_DATA_CONVERSION_STRATEGY
+                                                                                .fromServiceObject(
+                                                                                        obj)
+                                                                                .build())
                                                         .mapToInt(DBAdData::size)
                                                         .sum()))));
     }
@@ -239,11 +265,13 @@ public class CustomAudienceAdsValidatorTest {
         // Use a validator with a clearly small size limit.
         CustomAudienceAdsValidator mValidatorWithSmallLimit =
                 new CustomAudienceAdsValidator(
-                        mFrequencyCapAdDataValidator, true, CUSTOM_AUDIENCE_MAX_ADS_SIZE_B, 1);
+                        mFrequencyCapAdDataValidator,
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
+                        1);
 
         // Constructor valid ads which will now be too big for the validator.
-        AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
         List<AdData> tooManyAds = mValidAds;
 
         // Assert invalid ads throws.
