@@ -111,6 +111,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -1795,9 +1796,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        Map<Integer, AllowedServices> getServiceAllowlistPerTargetSdkVersion() {
+        AllowedServices getServiceAllowlistForTargetSdkVersion(int targetSdkVersion) {
             synchronized (mLock) {
-                return mServiceAllowlistPerTargetSdkVersion;
+                return mServiceAllowlistPerTargetSdkVersion.get(targetSdkVersion);
             }
         }
 
@@ -1851,18 +1852,36 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        // TODO(b/288435894): Extract out common logic for parsing a proto DeviceConfg
-        private static Map<Integer, AllowedServices> getServicesAllowlist() {
+        /**
+         * Helper function to decode a proto property
+         *
+         * @param property The property which needs to be decoded
+         * @return The decoded value of the property passed as the parameter
+         */
+        private static byte[] getDecodedPropertyValue(@NonNull String property) {
             final String base64 =
-                    DeviceConfig.getProperty(
-                            DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
+                    DeviceConfig.getProperty(DeviceConfig.NAMESPACE_ADSERVICES, property);
 
             if (TextUtils.isEmpty(base64)) {
-                Log.d(TAG, PROPERTY_SERVICES_ALLOWLIST + " property is empty");
+                Log.d(TAG, property + " property is empty");
+                return null;
+            }
+
+            try {
+                return Base64.decode(base64, Base64.NO_PADDING | Base64.NO_WRAP);
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "Error while decoding " + property + " Error: " + e);
+            }
+            return null;
+        }
+
+        private static Map<Integer, AllowedServices> getServicesAllowlist() {
+            final byte[] decode = getDecodedPropertyValue(PROPERTY_SERVICES_ALLOWLIST);
+
+            if (Objects.isNull(decode)) {
                 return new ArrayMap<>();
             }
 
-            final byte[] decode = Base64.decode(base64, Base64.NO_PADDING | Base64.NO_WRAP);
             try {
                 final ServiceAllowlists allowedServicesProto = ServiceAllowlists.parseFrom(decode);
 
@@ -1877,17 +1896,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         private static Map<Integer, AllowedContentProviders>
                 getContentProviderDeviceConfigAllowlist() {
-            final String base64 =
-                    DeviceConfig.getProperty(
-                            DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_CONTENTPROVIDER_ALLOWLIST);
+            final byte[] decode = getDecodedPropertyValue(PROPERTY_CONTENTPROVIDER_ALLOWLIST);
 
             // Content providers are restricted by default. If the property is not set, or it is an
             // empty string, there are no content providers to allowlist.
-            if (TextUtils.isEmpty(base64)) {
+            if (Objects.isNull(decode)) {
                 return new ArrayMap<>();
             }
 
-            final byte[] decode = Base64.decode(base64, Base64.DEFAULT);
             ContentProviderAllowlists contentProviderAllowlistsProto = null;
             try {
                 contentProviderAllowlistsProto = ContentProviderAllowlists.parseFrom(decode);

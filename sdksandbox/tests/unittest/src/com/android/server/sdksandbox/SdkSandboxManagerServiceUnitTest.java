@@ -96,6 +96,7 @@ import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
+import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
@@ -2930,7 +2931,11 @@ public class SdkSandboxManagerServiceUnitTest {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_SERVICES_ALLOWLIST, "")));
 
-        assertThat(sSdkSandboxSettingsListener.getServiceAllowlistPerTargetSdkVersion()).isEmpty();
+        assertThat(
+                        sSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                                /*targetSdkVersion=*/ 34))
+                .isNull();
+
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 PROPERTY_SERVICES_ALLOWLIST,
@@ -2946,11 +2951,17 @@ public class SdkSandboxManagerServiceUnitTest {
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
         /**
          * Base64 encoded Service allowlist allowlist_per_target_sdk { key: 33 value: {
-         * allowed_services: { intentAction : "android.test" componentPackageName :
-         * "packageName.test" componentClassName : "className.test" } } }
+         * allowed_services: { intentAction : "android.test.33" componentPackageName :
+         * "packageName.test.33" componentClassName : "className.test.33" } } }
+         *
+         * <p>allowlist_per_target_sdk { key: 34 value: { allowed_services: { intentAction :
+         * "android.test.34" componentPackageName : "packageName.test.34" componentClassName :
+         * "className.test.34" } } }
          */
         final String encodedServiceAllowlist =
-                "CjYIIRIyCjAKDGFuZHJvaWQudGVzdBIQcGFja2FnZU5hbWUudGVzdBoOY2xhc3NOYW1lLnRlc3Q=";
+                "Cj8IIRI7CjkKD2FuZHJvaWQudGVzdC4zMxITcGFja2FnZU5hbWUudGVzdC4zMxoRY2xhc3NOYW1lLnRl"
+                        + "c3QuMzMKPwgiEjsKOQoPYW5kcm9pZC50ZXN0LjM0EhNwYWNrYWdlTmFtZS50ZXN0LjM0GhFj"
+                        + "bGFzc05hbWUudGVzdC4zNA==";
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -2965,34 +2976,44 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist)));
-        assertThat(sSdkSandboxSettingsListener.getServiceAllowlistPerTargetSdkVersion())
-                .isNotEmpty();
 
-        final Map<Integer, AllowedServices> allowedServicesMap =
-                sSdkSandboxSettingsListener.getServiceAllowlistPerTargetSdkVersion();
+        AllowedServices allowedServices =
+                sSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                        /*targetSdkVersion=*/ 33);
+        assertThat(allowedServices).isNotNull();
 
-        final int targetSdkVersion = 33;
-        assertThat(allowedServicesMap.size()).isEqualTo(1);
-        assertThat(allowedServicesMap.get(targetSdkVersion).getAllowedServices(0).getIntentAction())
-                .isEqualTo("android.test");
-        assertThat(
-                        allowedServicesMap
-                                .get(targetSdkVersion)
-                                .getAllowedServices(0)
-                                .getComponentPackageName())
-                .isEqualTo("packageName.test");
-        assertThat(
-                        allowedServicesMap
-                                .get(targetSdkVersion)
-                                .getAllowedServices(0)
-                                .getComponentClassName())
-                .isEqualTo("className.test");
+        verifyAllowlistEntryContents(
+                allowedServices.getAllowedServices(0),
+                /*intentAction=*/ "android.test.33",
+                /*componentPackageName=*/ "packageName.test.33",
+                /*componentClassName=*/ "className.test.33");
+
+        allowedServices =
+                sSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                        /*targetSdkVersion=*/ 34);
+        assertThat(allowedServices).isNotNull();
+
+        verifyAllowlistEntryContents(
+                allowedServices.getAllowedServices(0),
+                /*intentAction=*/ "android.test.34",
+                /*componentPackageName=*/ "packageName.test.34",
+                /*componentClassName=*/ "className.test.34");
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 PROPERTY_SERVICES_ALLOWLIST,
                 initialServiceAllowlistValue,
                 /*makeDefault=*/ false);
+    }
+
+    private void verifyAllowlistEntryContents(
+            AllowedService allowedService,
+            String intentAction,
+            String componentPackageName,
+            String componentClassName) {
+        assertThat(allowedService.getIntentAction()).isEqualTo(intentAction);
+        assertThat(allowedService.getComponentPackageName()).isEqualTo(componentPackageName);
+        assertThat(allowedService.getComponentClassName()).isEqualTo(componentClassName);
     }
 
     @Test
