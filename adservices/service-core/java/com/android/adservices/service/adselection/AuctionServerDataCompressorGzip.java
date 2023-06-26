@@ -29,9 +29,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /** Wrapper class for data compression and decompression using GZIP */
-public class AuctionServerDataCompressorV0 implements AuctionServerDataCompressor {
+public class AuctionServerDataCompressorGzip implements AuctionServerDataCompressor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    public static final int VERSION = 0;
+    public static final int VERSION = 2;
     private static final String IO_ERROR_DURING_COMPRESSION = "IOException when compressing data.";
     private static final String IO_ERROR_DURING_DECOMPRESSION =
             "IOException when decompressing data.";

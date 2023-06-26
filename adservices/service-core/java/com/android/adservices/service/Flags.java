@@ -918,7 +918,8 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
     }
 
-    int FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION = 0;
+    /** The server uses the following version numbers: 1. Brotli : 1 2. Gzip : 2 */
+    int FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION = 2;
 
     /** Returns the compression algorithm version */
     default int getFledgeAuctionServerCompressionAlgorithmVersion() {
