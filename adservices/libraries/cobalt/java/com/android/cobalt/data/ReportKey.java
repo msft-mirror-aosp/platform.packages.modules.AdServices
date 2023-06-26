@@ -29,30 +29,30 @@ import com.google.auto.value.AutoValue.CopyAnnotations;
  * tables.
  */
 @AutoValue
-abstract class ReportKey {
+public abstract class ReportKey {
     /** The customer id. */
     @CopyAnnotations
     @ColumnInfo(name = "customer_id")
     @NonNull
-    abstract long customerId();
+    public abstract long customerId();
 
     /** The project id. */
     @CopyAnnotations
     @ColumnInfo(name = "project_id")
     @NonNull
-    abstract long projectId();
+    public abstract long projectId();
 
     /** The metric id. */
     @CopyAnnotations
     @ColumnInfo(name = "metric_id")
     @NonNull
-    abstract long metricId();
+    public abstract long metricId();
 
     /** The report id. */
     @CopyAnnotations
     @ColumnInfo(name = "report_id")
     @NonNull
-    abstract long reportId();
+    public abstract long reportId();
 
     /**
      * Creates a {@link ReportKey}.
@@ -60,7 +60,7 @@ abstract class ReportKey {
      * <p>Used by Room to instantiate objects.
      */
     @NonNull
-    static ReportKey create(long customerId, long projectId, long metricId, long reportId) {
+    public static ReportKey create(long customerId, long projectId, long metricId, long reportId) {
         return new AutoValue_ReportKey(customerId, projectId, metricId, reportId);
     }
 }

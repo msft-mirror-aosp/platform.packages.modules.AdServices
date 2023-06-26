@@ -24,6 +24,7 @@ import androidx.room.PrimaryKey;
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
 import com.google.cobalt.SystemProfile;
+import com.google.common.hash.Hashing;
 
 /**
  * Stores the mapping between system profile hashes and the protocol buffers they were generated
@@ -54,5 +55,9 @@ abstract class SystemProfileEntity {
     @NonNull
     static SystemProfileEntity create(long systemProfileHash, SystemProfile systemProfile) {
         return new AutoValue_SystemProfileEntity(systemProfileHash, systemProfile);
+    }
+
+    static long getSystemProfileHash(SystemProfile systemProfile) {
+        return Hashing.farmHashFingerprint64().hashBytes(systemProfile.toByteArray()).asLong();
     }
 }

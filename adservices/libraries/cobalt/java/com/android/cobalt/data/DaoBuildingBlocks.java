@@ -94,6 +94,32 @@ abstract class DaoBuildingBlocks {
     /**
      * Update an aggregate value in the aggregate store.
      *
+     * @param reportKey the report to update the value under
+     * @param dayIndex the day the event occrurred
+     * @param eventVector the event vector the value is being aggregated for
+     * @param systemProfileHash the system profile hash of the event
+     * @param newAggregateValue the new aggregate value
+     */
+    Void updateAggregateValue(
+            ReportKey reportKey,
+            int dayIndex,
+            EventVector eventVector,
+            long systemProfileHash,
+            AggregateValue newAggregateValue) {
+        return updateAggregateValue(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex,
+                eventVector,
+                systemProfileHash,
+                newAggregateValue);
+    }
+
+    /**
+     * Update an aggregate value in the aggregate store.
+     *
      * @param customerId the customer id to update the value under
      * @param projectId the project id to update the value under
      * @param metricId the metric id to update the value under
@@ -207,6 +233,33 @@ abstract class DaoBuildingBlocks {
      * `systemProfileHashHint` if it exists for the report, day, and event vector. Otherwise, a row
      * with a random system profile associated with report, day, and event vector will be returned.
      *
+     * @param reportKey the report selected values are for
+     * @param dayIndex the day selected values are aggregated on
+     * @param eventVector the event codes (if any) selected values match
+     * @param systemProfileHashHint the system profile of the record to return, if it exists
+     * @return the system profile hash and aggregate value, if one is found
+     */
+    Optional<SystemProfileAndAggregateValue> queryOneSystemProfileAndAggregateValue(
+            ReportKey reportKey,
+            int dayIndex,
+            EventVector eventVector,
+            long systemProfileHashHint) {
+        return queryOneSystemProfileAndAggregateValue(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex,
+                eventVector,
+                systemProfileHashHint);
+    }
+
+    /**
+     * Selects one (system profile hash, aggregate value) pair from the DB for the given report,
+     * day, and event vector to update. The returned system profile hash will be
+     * `systemProfileHashHint` if it exists for the report, day, and event vector. Otherwise, a row
+     * with a random system profile associated with report, day, and event vector will be returned.
+     *
      * @param customerId the customer selected values are for
      * @param projectId the project selected values are for
      * @param metricId the metric selected values are for
@@ -235,6 +288,25 @@ abstract class DaoBuildingBlocks {
             int dayIndex,
             EventVector eventVector,
             long systemProfileHashHint);
+
+    /**
+     * Count the number of distinct event vectors saved for a report on a given day and under a
+     * specific system profile.
+     *
+     * @param reportKey the report to search under
+     * @param dayIndex the day to search under
+     * @param systemProfileHash the system profile hash of the event
+     * @return the number of distnct event codes
+     */
+    int queryCountEventVectors(ReportKey reportKey, int dayIndex, long systemProfileHash) {
+        return queryCountEventVectors(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex,
+                systemProfileHash);
+    }
 
     /**
      * Count the number of distinct event vectors saved for a report on a given day and under a
