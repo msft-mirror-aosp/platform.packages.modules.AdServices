@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 
 import com.google.common.io.BaseEncoding;
@@ -37,10 +36,11 @@ public class DBEncryptionContextTest {
     private static final String KEY_CONFIG_HEX =
             "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
                     + "00080001000100010003";
-    private static final String SEED =
-            "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c";
-    private static final EncapsulatedSharedSecret SHARED_SECRET =
-            EncapsulatedSharedSecret.create(SHARED_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+    private static final byte[] SEED_BYTES =
+            "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
+                    .getBytes(StandardCharsets.UTF_8);
+    private static final byte[] SHARED_SECRET_BYTES =
+            SHARED_SECRET_STRING.getBytes(StandardCharsets.UTF_8);
 
     @Test
     public void testBuildEncryptionContext_success() throws Exception {
@@ -51,15 +51,15 @@ public class DBEncryptionContextTest {
                 DBEncryptionContext.builder()
                         .setContextId(CONTEXT_ID_1)
                         .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
-                        .setKeyConfig(keyConfig)
-                        .setSharedSecret(SHARED_SECRET)
-                        .setSeed(SEED)
+                        .setKeyConfig(keyConfig.serializeKeyConfigToBytes())
+                        .setSharedSecret(SHARED_SECRET_BYTES)
+                        .setSeed(SEED_BYTES)
                         .build();
 
         assertThat(dbEncryptionContext.getContextId()).isEqualTo(CONTEXT_ID_1);
         assertThat(dbEncryptionContext.getKeyConfig()).isEqualTo(keyConfig);
-        assertThat(dbEncryptionContext.getSharedSecret()).isEqualTo(SHARED_SECRET);
-        assertThat(dbEncryptionContext.getSeed()).isEqualTo(SEED);
+        assertThat(dbEncryptionContext.getSharedSecret()).isEqualTo(SHARED_SECRET_BYTES);
+        assertThat(dbEncryptionContext.getSeed()).isEqualTo(SEED_BYTES);
     }
 
     @Test
