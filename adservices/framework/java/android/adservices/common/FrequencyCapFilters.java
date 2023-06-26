@@ -53,6 +53,12 @@ public final class FrequencyCapFilters implements Parcelable {
             "FrequencyCapFilters should have no more than %d filters";
     /** @hide */
     public static final int MAX_NUM_FREQUENCY_CAP_FILTERS = 20;
+    /** @hide */
+    public static final String FREQUENCY_CAP_FILTERS_NULL_LIST_ERROR_MESSAGE =
+            "FrequencyCapFilters should not set null list of KeyedFrequencyCaps";
+    /** @hide */
+    public static final String FREQUENCY_CAP_FILTERS_NULL_ELEMENT_ERROR_MESSAGE =
+            "FrequencyCapFilters should not contain null KeyedFrequencyCaps";
 
     /**
      * Event types which are used to update ad counter histograms, which inform frequency cap
@@ -373,7 +379,11 @@ public final class FrequencyCapFilters implements Parcelable {
         @NonNull
         public Builder setKeyedFrequencyCapsForWinEvents(
                 @NonNull List<KeyedFrequencyCap> keyedFrequencyCapsForWinEvents) {
-            Objects.requireNonNull(keyedFrequencyCapsForWinEvents);
+            Objects.requireNonNull(
+                    keyedFrequencyCapsForWinEvents, FREQUENCY_CAP_FILTERS_NULL_LIST_ERROR_MESSAGE);
+            Preconditions.checkArgument(
+                    !keyedFrequencyCapsForWinEvents.contains(null),
+                    FREQUENCY_CAP_FILTERS_NULL_ELEMENT_ERROR_MESSAGE);
             mKeyedFrequencyCapsForWinEvents = keyedFrequencyCapsForWinEvents;
             return this;
         }
@@ -387,7 +397,12 @@ public final class FrequencyCapFilters implements Parcelable {
         @NonNull
         public Builder setKeyedFrequencyCapsForImpressionEvents(
                 @NonNull List<KeyedFrequencyCap> keyedFrequencyCapsForImpressionEvents) {
-            Objects.requireNonNull(keyedFrequencyCapsForImpressionEvents);
+            Objects.requireNonNull(
+                    keyedFrequencyCapsForImpressionEvents,
+                    FREQUENCY_CAP_FILTERS_NULL_LIST_ERROR_MESSAGE);
+            Preconditions.checkArgument(
+                    !keyedFrequencyCapsForImpressionEvents.contains(null),
+                    FREQUENCY_CAP_FILTERS_NULL_ELEMENT_ERROR_MESSAGE);
             mKeyedFrequencyCapsForImpressionEvents = keyedFrequencyCapsForImpressionEvents;
             return this;
         }
@@ -401,7 +416,11 @@ public final class FrequencyCapFilters implements Parcelable {
         @NonNull
         public Builder setKeyedFrequencyCapsForViewEvents(
                 @NonNull List<KeyedFrequencyCap> keyedFrequencyCapsForViewEvents) {
-            Objects.requireNonNull(keyedFrequencyCapsForViewEvents);
+            Objects.requireNonNull(
+                    keyedFrequencyCapsForViewEvents, FREQUENCY_CAP_FILTERS_NULL_LIST_ERROR_MESSAGE);
+            Preconditions.checkArgument(
+                    !keyedFrequencyCapsForViewEvents.contains(null),
+                    FREQUENCY_CAP_FILTERS_NULL_ELEMENT_ERROR_MESSAGE);
             mKeyedFrequencyCapsForViewEvents = keyedFrequencyCapsForViewEvents;
             return this;
         }
@@ -415,7 +434,12 @@ public final class FrequencyCapFilters implements Parcelable {
         @NonNull
         public Builder setKeyedFrequencyCapsForClickEvents(
                 @NonNull List<KeyedFrequencyCap> keyedFrequencyCapsForClickEvents) {
-            Objects.requireNonNull(keyedFrequencyCapsForClickEvents);
+            Objects.requireNonNull(
+                    keyedFrequencyCapsForClickEvents,
+                    FREQUENCY_CAP_FILTERS_NULL_LIST_ERROR_MESSAGE);
+            Preconditions.checkArgument(
+                    !keyedFrequencyCapsForClickEvents.contains(null),
+                    FREQUENCY_CAP_FILTERS_NULL_ELEMENT_ERROR_MESSAGE);
             mKeyedFrequencyCapsForClickEvents = keyedFrequencyCapsForClickEvents;
             return this;
         }
@@ -430,18 +454,10 @@ public final class FrequencyCapFilters implements Parcelable {
         @NonNull
         public FrequencyCapFilters build() {
             int numFrequencyCapFilters = 0;
-            if (mKeyedFrequencyCapsForWinEvents != null) {
-                numFrequencyCapFilters += mKeyedFrequencyCapsForWinEvents.size();
-            }
-            if (mKeyedFrequencyCapsForImpressionEvents != null) {
-                numFrequencyCapFilters += mKeyedFrequencyCapsForImpressionEvents.size();
-            }
-            if (mKeyedFrequencyCapsForViewEvents != null) {
-                numFrequencyCapFilters += mKeyedFrequencyCapsForViewEvents.size();
-            }
-            if (mKeyedFrequencyCapsForClickEvents != null) {
-                numFrequencyCapFilters += mKeyedFrequencyCapsForClickEvents.size();
-            }
+            numFrequencyCapFilters += mKeyedFrequencyCapsForWinEvents.size();
+            numFrequencyCapFilters += mKeyedFrequencyCapsForImpressionEvents.size();
+            numFrequencyCapFilters += mKeyedFrequencyCapsForViewEvents.size();
+            numFrequencyCapFilters += mKeyedFrequencyCapsForClickEvents.size();
 
             Preconditions.checkArgument(
                     numFrequencyCapFilters <= MAX_NUM_FREQUENCY_CAP_FILTERS,

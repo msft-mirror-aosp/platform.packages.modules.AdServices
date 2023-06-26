@@ -20,6 +20,8 @@ import android.os.Parcel;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
+
 /** Utility class for creating and testing {@link FrequencyCapFilters} objects. */
 public class FrequencyCapFiltersFixture {
     public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS =
@@ -86,6 +88,27 @@ public class FrequencyCapFiltersFixture {
         }
 
         sourceParcel.writeTypedList(listBuilder.build());
+        sourceParcel.setDataPosition(0);
+
+        return FrequencyCapFilters.CREATOR.createFromParcel(sourceParcel);
+    }
+
+    public static FrequencyCapFilters getFrequencyCapFiltersWithNullCaps() {
+        ArrayList<KeyedFrequencyCap> capList = new ArrayList<>();
+        for (int key = 0; key < 3; key++) {
+            capList.add(
+                    KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(key)
+                            .build());
+        }
+
+        // Each list ends with null
+        capList.add(null);
+
+        Parcel sourceParcel = Parcel.obtain();
+        sourceParcel.writeTypedList(capList);
+        sourceParcel.writeTypedList(capList);
+        sourceParcel.writeTypedList(capList);
+        sourceParcel.writeTypedList(capList);
         sourceParcel.setDataPosition(0);
 
         return FrequencyCapFilters.CREATOR.createFromParcel(sourceParcel);
