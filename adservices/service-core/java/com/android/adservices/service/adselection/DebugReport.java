@@ -20,24 +20,25 @@ import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.google.auto.value.AutoValue;
 
+/**
+ * Stores debugging information for buy-side, sell-side of a custom audience's outcome in an ad
+ * selection auction.
+ */
 @AutoValue
-abstract class ScoreAdResult {
-    abstract Double getAdScore();
+abstract class DebugReport {
 
-    @Nullable
+    @NonNull
     abstract String getCustomAudienceName();
 
-    @Nullable
-    abstract String getOwnerAppPackage();
+    @NonNull
+    abstract AdTechIdentifier getCustomAudienceBuyer();
 
     @Nullable
     abstract AdTechIdentifier getSeller();
-
-    @Nullable
-    abstract AdTechIdentifier getCustomAudienceBuyer();
 
     @Nullable
     abstract Uri getWinDebugReportUri();
@@ -49,20 +50,17 @@ abstract class ScoreAdResult {
     abstract String getSellerRejectReason();
 
     static Builder builder() {
-        return new AutoValue_ScoreAdResult.Builder();
+        return new AutoValue_DebugReport.Builder();
     }
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setAdScore(Double adScore);
 
         abstract Builder setCustomAudienceName(String customAudienceName);
 
-        abstract Builder setOwnerAppPackage(String ownerAppPackage);
-
-        abstract Builder setSeller(AdTechIdentifier value);
-
         abstract Builder setCustomAudienceBuyer(AdTechIdentifier customAudienceOwner);
+
+        abstract Builder setSeller(AdTechIdentifier seller);
 
         abstract Builder setWinDebugReportUri(Uri winDebugReportUri);
 
@@ -70,6 +68,6 @@ abstract class ScoreAdResult {
 
         abstract Builder setSellerRejectReason(String sellerRejectReason);
 
-        abstract ScoreAdResult build();
+        abstract DebugReport build();
     }
 }

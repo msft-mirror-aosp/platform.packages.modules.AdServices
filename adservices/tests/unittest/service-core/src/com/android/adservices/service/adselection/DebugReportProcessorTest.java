@@ -68,7 +68,7 @@ public class DebugReportProcessorTest {
                                 .setAdScore(WINNING_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_1)
+                                .setSeller(AD_TECH_IDENTIFIER_1)
                                 .build());
 
         List<Uri> uris =
@@ -99,7 +99,7 @@ public class DebugReportProcessorTest {
                                 .setAdScore(LOST_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setLossDebugReportUri(lossUri2)
                                 .build());
 
@@ -129,7 +129,7 @@ public class DebugReportProcessorTest {
                         newDefaultScoreAdResult()
                                 .setAdScore(WINNING_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_1)
+                                .setSeller(AD_TECH_IDENTIFIER_1)
                                 .build());
 
         List<Uri> uris =
@@ -214,7 +214,7 @@ public class DebugReportProcessorTest {
                         newDefaultScoreAdResult()
                                 .setAdScore(WINNING_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_1)
+                                .setSeller(AD_TECH_IDENTIFIER_1)
                                 .build());
 
         List<Uri> uris =
@@ -276,13 +276,13 @@ public class DebugReportProcessorTest {
                         newDefaultScoreAdResult()
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setWinDebugReportUri(winUri)
                                 .build(),
                         newDefaultScoreAdResult()
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setWinDebugReportUri(winUri)
                                 .build());
 
@@ -420,13 +420,13 @@ public class DebugReportProcessorTest {
                                 .setAdScore(LOST_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_1)
+                                .setSeller(AD_TECH_IDENTIFIER_1)
                                 .build(),
                         newDefaultScoreAdResult()
                                 .setAdScore(WINNING_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .build());
 
         List<Uri> uris =
@@ -512,19 +512,19 @@ public class DebugReportProcessorTest {
                         newDefaultScoreAdResult()
                                 .setAdScore(LOST_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_1)
+                                .setSeller(AD_TECH_IDENTIFIER_1)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
                                 .build(),
                         newDefaultScoreAdResult()
                                 .setAdScore(WINNING_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
                                 .build(),
                         newDefaultScoreAdResult()
                                 .setAdScore(0.5)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_3)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
                                 .build());
 
@@ -617,14 +617,14 @@ public class DebugReportProcessorTest {
                                 .setAdScore(WINNING_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setWinDebugReportUri(sellerWinUri)
                                 .build(),
                         newDefaultScoreAdResult()
                                 .setAdScore(LOST_AD_SCORE)
                                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
                                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                                .setPublisher(AD_TECH_IDENTIFIER_2)
+                                .setSeller(AD_TECH_IDENTIFIER_2)
                                 .setLossDebugReportUri(sellerLossUri)
                                 .build());
 
@@ -659,7 +659,7 @@ public class DebugReportProcessorTest {
                         .setAdScore(WINNING_AD_SCORE)
                         .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                         .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
-                        .setPublisher(AD_TECH_IDENTIFIER_1)
+                        .setSeller(AD_TECH_IDENTIFIER_1)
                         .build();
         List<ScoreAdResult> scoreAdResults = List.of(winningAd);
 
@@ -694,7 +694,7 @@ public class DebugReportProcessorTest {
                 .setAdScore(WINNING_AD_SCORE)
                 .setOwnerAppPackage(OWNER_APP_PACKAGE)
                 .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
-                .setPublisher(AD_TECH_IDENTIFIER_1)
+                .setSeller(AD_TECH_IDENTIFIER_1)
                 .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1);
     }
 
