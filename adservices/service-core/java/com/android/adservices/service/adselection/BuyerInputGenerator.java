@@ -25,6 +25,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -41,6 +42,8 @@ import java.util.stream.Collectors;
 
 /** Generates {@link BuyerInput} proto from device custom audience info. */
 public class BuyerInputGenerator {
+
+    private static final String EMPTY_USER_BIDDING_SIGNALS = "{}";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final Clock mClock;
@@ -81,9 +84,13 @@ public class BuyerInputGenerator {
     private Map<AdTechIdentifier, BuyerInput> generateBuyerInputFromDBCustomAudience(
             @NonNull final List<DBCustomAudience> dbCustomAudiences) {
         Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
-
         AdTechIdentifier buyerName;
         for (DBCustomAudience customAudience : dbCustomAudiences) {
+            if (!AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
+                    customAudience)) {
+                continue;
+            }
+
             if (!buyerInputs.containsKey(buyerName = customAudience.getBuyer())) {
                 buyerInputs.put(buyerName, BuyerInput.newBuilder());
             }
@@ -96,6 +103,7 @@ public class BuyerInputGenerator {
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
         return buyerInputs.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
+
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {
@@ -116,23 +124,18 @@ public class BuyerInputGenerator {
 
     private BuyerInput.CustomAudience buildCustomAudienceProtoFrom(
             DBCustomAudience customAudience) {
-        // TODO(b/284185225): Add ad_render_ids and ad_component_render_ids when they are
-        //  available
         BuyerInput.CustomAudience.Builder customAudienceBuilder =
-                BuyerInput.CustomAudience.newBuilder()
-                        .setName(customAudience.getName())
-                        .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience));
+                BuyerInput.CustomAudience.newBuilder();
 
-        if (customAudience.getUserBiddingSignals() != null) {
-            customAudienceBuilder.setUserBiddingSignals(getUserBiddingSignals(customAudience));
-        }
-
-        return customAudienceBuilder.build();
+        return customAudienceBuilder
+                .setName(customAudience.getName())
+                .setUserBiddingSignals(getUserBiddingSignals(customAudience))
+                .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience))
+                .addAllAdRenderIds(getAdRenderIds(customAudience))
+                .build();
     }
 
     private List<String> getTrustedBiddingSignalKeys(@NonNull DBCustomAudience customAudience) {
-        Objects.requireNonNull(customAudience.getTrustedBiddingData());
-
         List<String> biddingSignalKeys = customAudience.getTrustedBiddingData().getKeys();
         // If the bidding signal keys is just the CA name, we don't need to pass it to the server.
         if (biddingSignalKeys.size() == 1
@@ -146,8 +149,15 @@ public class BuyerInputGenerator {
     }
 
     private String getUserBiddingSignals(DBCustomAudience customAudience) {
-        Objects.requireNonNull(customAudience.getUserBiddingSignals());
+        return customAudience.getUserBiddingSignals() == null
+                ? EMPTY_USER_BIDDING_SIGNALS
+                : customAudience.getUserBiddingSignals().toString();
+    }
 
-        return customAudience.getUserBiddingSignals().toString();
+    private List<String> getAdRenderIds(DBCustomAudience dbCustomAudience) {
+        return dbCustomAudience.getAds().stream()
+                .filter(ad -> !Strings.isNullOrEmpty(ad.getAdRenderId()))
+                .map(ad -> ad.getAdRenderId())
+                .collect(Collectors.toList());
     }
 }
