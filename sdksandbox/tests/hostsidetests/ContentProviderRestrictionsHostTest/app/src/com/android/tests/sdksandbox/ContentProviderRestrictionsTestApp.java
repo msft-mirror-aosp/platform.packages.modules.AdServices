@@ -164,10 +164,17 @@ public class ContentProviderRestrictionsTestApp {
                 "true",
                 /*makeDefault=*/ false);
 
-        // Base64 encoded proto ContentProviderAllowlists containing mappings to the string
-        // 'com.android.textclassifier.icons' and 'user_dictionary'.
+        /**
+         * Base64 encoded proto ContentProviderAllowlists containing allowlist_per_target_sdk { key:
+         * 34 value { authorities: "com.android.textclassifier.icons" authorities: "user_dictionary"
+         * } }
+         *
+         * <p>allowlist_per_target_sdk { key: 35 value { authorities:
+         * "com.android.textclassifier.icons" authorities: "user_dictionary" } }
+         */
         final String encodedAllowlist =
-                "CjcIIhIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5";
+                "CjcIIhIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5CjcII"
+                        + "xIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5";
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 PROPERTY_CONTENTPROVIDER_ALLOWLIST,
