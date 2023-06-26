@@ -2566,4 +2566,12 @@ public interface Flags {
     default boolean getAdservicesConsentMigrationLoggingEnabled() {
         return DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
     }
+
+    /** The default token for resetting consent notificatio.. */
+    String CONSENT_NOTIFICATION_RESET_TOKEN = "";
+
+    /** Returns the consent notification reset token. */
+    default String getConsentNotificationResetToken() {
+        return CONSENT_NOTIFICATION_RESET_TOKEN;
+    }
 }

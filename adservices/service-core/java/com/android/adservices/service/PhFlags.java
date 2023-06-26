@@ -495,6 +495,8 @@ public final class PhFlags implements Flags {
     // UI keys
     static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED = "ui_feature_type_logging_enabled";
 
+    static final String KEY_CONSENT_NOTIFICATION_RESET_TOKEN = "consent_notification_reset_token";
+
     static final String KEY_IS_EEA_DEVICE_FEATURE_ENABLED = "is_eea_device_feature_enabled";
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
@@ -2555,6 +2557,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getConsentNotificationResetToken() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_RESET_TOKEN,
+                /* defaultValue */ CONSENT_NOTIFICATION_RESET_TOKEN);
+    }
+
+    @Override
     public long getConsentNotificationIntervalBeginMs() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
@@ -2830,6 +2840,11 @@ public final class PhFlags implements Flags {
                         + KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
                         + " = "
                         + getConsentNotificationActivityDebugMode());
+        writer.println(
+                "\t"
+                        + KEY_CONSENT_NOTIFICATION_RESET_TOKEN
+                        + " = "
+                        + getConsentNotificationResetToken());
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
                 "\t"
