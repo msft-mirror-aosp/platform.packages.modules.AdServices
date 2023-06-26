@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
-import static com.android.adservices.service.measurement.SourceFixture.getValidSourceBuilder;
+import static com.android.adservices.service.measurement.SourceFixture.getMinimalValidSourceBuilder;
 import static com.android.adservices.service.measurement.TriggerFixture.ValidTriggerParams;
 import static com.android.adservices.service.measurement.TriggerFixture.getValidTriggerBuilder;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
@@ -2413,7 +2413,7 @@ public class DebugKeyAccessorTest {
             String debugJoinKey,
             String platformAdId,
             String debugAdId) {
-        return getValidSourceBuilder()
+        return getMinimalValidSourceBuilder()
                 .setArDebugPermission(arDebugPermission)
                 .setAdIdPermission(adIdPermission)
                 .setDebugKey(SOURCE_DEBUG_KEY)

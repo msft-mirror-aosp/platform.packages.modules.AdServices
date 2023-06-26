@@ -102,7 +102,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleAppToAppSourceSuccessDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -132,7 +132,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleWebToWebSourceSuccessDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -162,7 +162,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleAppToWebSourceSuccessDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -193,7 +193,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleWebToAppSourceSuccessDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -225,7 +225,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleAppToAppAndWebSourceSuccessDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -265,7 +265,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleWebToAppAndWebSourceSuccessDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -307,7 +307,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -330,7 +330,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -352,7 +352,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceSuccessDebugReport_without_enrollmentId_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -372,7 +372,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceSuccessDebugReport_adTechNotOptIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(false)
                         .setAdIdPermission(true)
@@ -391,7 +391,7 @@ public final class DebugReportApiTest {
     public void testScheduleAppSourceSuccessDebugReport_without_adidPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -413,7 +413,7 @@ public final class DebugReportApiTest {
     public void testScheduleWebSourceSuccessDebugReport_without_arDebugPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -433,7 +433,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceDestinationLimitDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -495,7 +495,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceDestinationLimitDebugReport_without_enrollmentId_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setEnrollmentId("")
@@ -515,7 +515,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceDestinationLimitDebugReport_adTechNotOptIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(false)
                         .build();
@@ -533,7 +533,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceNoisedDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -560,7 +560,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleWebSourceNoisedDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -601,7 +601,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -621,7 +621,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -640,7 +640,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceNoisedDebugReport_without_enrollmentId_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -660,7 +660,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceNoisedDebugReport_noAdIdPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(false)
@@ -678,7 +678,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceNoisedDebugReport_adTechNotOpIn_dontSchedule() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(false)
                         .setAdIdPermission(true)
@@ -696,7 +696,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceStorageLimitDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -724,7 +724,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -744,7 +744,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -763,7 +763,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceStorageLimitDebugReport_adTechNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(false)
                         .setAdIdPermission(true)
@@ -782,7 +782,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceStorageLimitDebugReport_without_enrollmentId_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(false)
                         .setAdIdPermission(true)
@@ -801,7 +801,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleAppSourceUnknownErrorDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -830,7 +830,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleWebSourceUnknownErrorDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -871,7 +871,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -894,7 +894,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -916,7 +916,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceUnknownErrorDebugReport_without_enrollmentId_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -936,7 +936,7 @@ public final class DebugReportApiTest {
     public void testScheduleSourceUnknownErrorDebugReport_adTechNotOptIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(false)
                         .setAdIdPermission(true)
@@ -955,7 +955,7 @@ public final class DebugReportApiTest {
     public void testScheduleAppSourceUnknownErrorDebugReport_without_adidPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.APP)
@@ -978,7 +978,7 @@ public final class DebugReportApiTest {
             testScheduleWebSourceUnknownErrorDebugReport_without_arDebugPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setPublisherType(EventSurfaceType.WEB)
@@ -1191,7 +1191,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerNoMatchingFilterDataDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1219,7 +1219,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerNoMatchingFilterDataDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1256,7 +1256,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1287,7 +1287,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1317,7 +1317,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerNoMatchingFilterDataDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1343,7 +1343,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerEventNoMatchingConfigurationDebugReport_triggerNotOpIn_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1372,7 +1372,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventNoMatchingConfigurationDebugReport_success()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1409,7 +1409,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1440,7 +1440,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1470,7 +1470,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerEventNoMatchingConfigDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1495,7 +1495,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventLowPriorityDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1523,7 +1523,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventLowPriorityDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1561,7 +1561,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1591,7 +1591,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1620,7 +1620,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventLowPriorityDebugReport_noTriggerPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1647,7 +1647,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventExcessiveReportsDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1675,7 +1675,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventExcessiveReportsDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1712,7 +1712,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1743,7 +1743,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1773,7 +1773,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerEventExcessiveReportsDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1800,7 +1800,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerAttriPerSourceDesLimitDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1828,7 +1828,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAttriPerSourceDesLimitDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1866,7 +1866,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1897,7 +1897,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1927,7 +1927,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerAttriPerSourceDesLimitDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1952,7 +1952,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventWindowPassedDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -1980,7 +1980,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventWindowPassedDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2017,7 +2017,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2047,7 +2047,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2076,7 +2076,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventWindowPassedDebugReport_noTriggerPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2101,7 +2101,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerReportingOriginLimitDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2129,7 +2129,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerReportingOriginLimitDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2166,7 +2166,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2197,7 +2197,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2227,7 +2227,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerReportingOriginLimitDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2252,7 +2252,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventNoiseDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2280,7 +2280,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventNoiseDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2317,7 +2317,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2347,7 +2347,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2376,7 +2376,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventNoiseDebugReport_noTriggerPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2401,7 +2401,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventStorageLimitDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2429,7 +2429,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventStorageLimitDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2466,7 +2466,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2496,7 +2496,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2525,7 +2525,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerEventStorageLimitDebugReport_noTriggerPermission_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2550,7 +2550,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerAggregateWindowPassedDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2578,7 +2578,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAggregateWindowPassedDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2616,7 +2616,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2647,7 +2647,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2677,7 +2677,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerAggregateWindowPassedDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2702,7 +2702,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerAggreInsufficientBudgetDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2730,7 +2730,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAggreInsufficientBudgetDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2761,7 +2761,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2792,7 +2792,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2822,7 +2822,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerAggreInsufficientBudgetDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2847,7 +2847,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerAggregateNoContributionDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2875,7 +2875,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAggregateNoContributionDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2906,7 +2906,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2937,7 +2937,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2967,7 +2967,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerAggregateNoContributionDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -2992,7 +2992,7 @@ public final class DebugReportApiTest {
     public void testScheduleTriggerAggregateStorageLimitDebugReport_triggerNotOpIn_dontSchedule()
             throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -3020,7 +3020,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAggregateStorageLimitDebugReport_success() throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -3050,7 +3050,7 @@ public final class DebugReportApiTest {
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -3081,7 +3081,7 @@ public final class DebugReportApiTest {
                     throws Exception {
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
@@ -3111,7 +3111,7 @@ public final class DebugReportApiTest {
             testScheduleTriggerAggregateStorageLimitDebugReport_noTriggerPermission_dontSchedule()
                     throws Exception {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)

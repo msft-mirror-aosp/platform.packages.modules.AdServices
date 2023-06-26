@@ -22,7 +22,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_A
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
-import static com.android.adservices.service.measurement.SourceFixture.getValidSourceBuilder;
+import static com.android.adservices.service.measurement.SourceFixture.getMinimalValidSourceBuilder;
 import static com.android.adservices.service.measurement.TriggerFixture.getValidTriggerBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -667,7 +667,7 @@ public final class EventReportTest {
     public void populate_eventSourceWebAndAppDest_coarseDestination() throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source =
-                getValidSourceBuilder()
+                getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
                         .setEventId(new UnsignedLong(10L))
                         .setSourceType(Source.SourceType.EVENT)
@@ -764,7 +764,7 @@ public final class EventReportTest {
             throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source =
-                getValidSourceBuilder()
+                getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
                         .setEventId(new UnsignedLong(10L))
                         .setSourceType(Source.SourceType.EVENT)
@@ -814,8 +814,12 @@ public final class EventReportTest {
             throws JSONException {
         // Setup
         Source source =
-                getValidSourceBuilder()
-                        .setFlexEventReportSpec(new ReportSpec(getBaseReportSpec(), 3, true))
+                getMinimalValidSourceBuilder()
+                        .setFlexEventReportSpec(
+                                new ReportSpec(
+                                        SourceFixture
+                                                .getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                                        "3"))
                         .build();
         String eventTriggers1 =
                 "[\n"
@@ -895,12 +899,12 @@ public final class EventReportTest {
 
         ReportSpec reportSpec =
                 new ReportSpec(
-                        getBaseReportSpec().toString(),
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
                         "3",
                         existingAttributes.toString(),
                         "{\"flip_probability\" :0.0024}");
         Source source =
-                getValidSourceBuilder()
+                getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
                         .setEventAttributionStatus(
@@ -977,7 +981,7 @@ public final class EventReportTest {
         ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
         long baseTime = System.currentTimeMillis();
         Source source =
-                getValidSourceBuilder()
+                getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
                         .setEventAttributionStatus(
@@ -1036,7 +1040,7 @@ public final class EventReportTest {
         ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
         long baseTime = System.currentTimeMillis();
         Source source =
-                getValidSourceBuilder()
+                getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
                         .setEventAttributionStatus(
@@ -1094,7 +1098,7 @@ public final class EventReportTest {
         ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
         long baseTime = System.currentTimeMillis();
         Source source =
-                getValidSourceBuilder()
+                getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxBucketIncrements("a")
                         .setEventAttributionStatus(
@@ -1151,7 +1155,7 @@ public final class EventReportTest {
             boolean isInstallAttributable,
             Uri appDestination,
             Uri webDestination) {
-        return getValidSourceBuilder()
+        return getMinimalValidSourceBuilder()
                 .setId(SOURCE_ID)
                 .setEventId(new UnsignedLong(10L))
                 .setSourceType(sourceType)
@@ -1162,26 +1166,6 @@ public final class EventReportTest {
                 .setWebDestinations(getNullableUriList(webDestination))
                 .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                 .build();
-    }
-
-    private JSONArray getBaseReportSpec() throws JSONException {
-        JSONObject jsonTriggerSpec = new JSONObject();
-        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
-        JSONObject windows = new JSONObject();
-        windows.put("start_time", 0);
-        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
-        jsonTriggerSpec.put("event_report_windows", windows);
-        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
-
-        JSONObject jsonTriggerSpec2 = new JSONObject();
-        jsonTriggerSpec2.put("trigger_data", new JSONArray(new int[] {5, 6, 7, 8}));
-        JSONObject windows2 = new JSONObject();
-        windows2.put("start_time", 0);
-        windows2.put("end_times", new JSONArray(new int[] {10000, 30000}));
-        jsonTriggerSpec2.put("event_report_windows", windows2);
-        jsonTriggerSpec2.put("summary_buckets", new JSONArray(new int[] {1, 2, 3}));
-
-        return new JSONArray(new JSONObject[] {jsonTriggerSpec, jsonTriggerSpec2});
     }
 
     private Trigger createTriggerForTest(
@@ -1287,7 +1271,7 @@ public final class EventReportTest {
             boolean arDebugPermission,
             Uri registrant,
             String debugJoinKey) {
-        return getValidSourceBuilder()
+        return getMinimalValidSourceBuilder()
                 .setId(SOURCE_ID)
                 .setArDebugPermission(arDebugPermission)
                 .setAdIdPermission(adIdPermission)
@@ -1305,7 +1289,7 @@ public final class EventReportTest {
             Uri registrant,
             String platformAdId,
             String debugAdId) {
-        return getValidSourceBuilder()
+        return getMinimalValidSourceBuilder()
                 .setId(SOURCE_ID)
                 .setArDebugPermission(arDebugPermission)
                 .setAdIdPermission(adIdPermission)

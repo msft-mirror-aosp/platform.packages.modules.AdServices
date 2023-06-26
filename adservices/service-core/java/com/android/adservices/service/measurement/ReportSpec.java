@@ -16,15 +16,11 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.Source.ONE_HOUR_IN_MILLIS;
-
 import android.annotation.NonNull;
-import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.stats.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -33,13 +29,11 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A class wrapper for the trigger specification from the input argument during source registration
@@ -47,31 +41,8 @@ import java.util.stream.Collectors;
 public class ReportSpec {
     private final TriggerSpec[] mTriggerSpecs;
     private final int mMaxBucketIncrements;
-    private PrivacyComputationParams mPrivacyParams = null;
+    private final PrivacyComputationParams mPrivacyParams;
     private List<AttributedTrigger> mAttributedTriggers;
-
-    /**
-     * This constructor is called in source registration and when no attribution to this source.
-     *
-     * @param inputParams input trigger specs from ad tech
-     * @param maxBucketIncrements max bucket increments from ad tech
-     * @param shouldValidateAndCompute whether the parameters (e.g. number of state) will be
-     *     computed.
-     */
-    @VisibleForTesting
-    public ReportSpec(
-            JSONArray inputParams, int maxBucketIncrements, boolean shouldValidateAndCompute)
-            throws JSONException {
-        mMaxBucketIncrements = maxBucketIncrements;
-        mTriggerSpecs = new TriggerSpec[inputParams.length()];
-        for (int i = 0; i < inputParams.length(); i++) {
-            mTriggerSpecs[i] = new TriggerSpec.Builder(inputParams.getJSONObject(i)).build();
-        }
-        if (shouldValidateAndCompute) {
-            mPrivacyParams = new PrivacyComputationParams();
-        }
-        mAttributedTriggers = new ArrayList<>();
-    }
 
     /**
      * This constructor is called during the attribution process. Current trigger status will be
@@ -93,12 +64,13 @@ public class ReportSpec {
             throw new JSONException("the source is not registered as flexible event report API");
         }
         JSONArray triggerSpecs = new JSONArray(triggerSpecsString);
-        mMaxBucketIncrements = Integer.parseInt(maxBucketIncrementsString);
-
         mTriggerSpecs = new TriggerSpec[triggerSpecs.length()];
         for (int i = 0; i < triggerSpecs.length(); i++) {
             mTriggerSpecs[i] = new TriggerSpec.Builder(triggerSpecs.getJSONObject(i)).build();
         }
+
+        mMaxBucketIncrements = Integer.parseInt(maxBucketIncrementsString);
+
         if (eventAttributionStatusString != null && !eventAttributionStatusString.isEmpty()) {
             JSONArray eventAttributionStatus = new JSONArray(eventAttributionStatusString);
             mAttributedTriggers = new ArrayList<>();
@@ -128,7 +100,7 @@ public class ReportSpec {
         for (int i = 0; i < triggerSpecs.length(); i++) {
             mTriggerSpecs[i] = new TriggerSpec.Builder(triggerSpecs.getJSONObject(i)).build();
         }
-        if (maxBucketIncrementsString.isEmpty() || maxBucketIncrementsString.equals("")) {
+        if (maxBucketIncrementsString.isEmpty()) {
             mMaxBucketIncrements = Integer.MAX_VALUE;
         } else {
             mMaxBucketIncrements = Integer.parseInt(maxBucketIncrementsString);
@@ -208,24 +180,6 @@ public class ReportSpec {
         }
         // will not reach here
         return null;
-    }
-
-    /**
-     * Get the reporting window end time given a trigger data and window index
-     *
-     * @param triggerDataIndex The index of the triggerData
-     * @param windowIndex the window index, not the actual window end time
-     * @return the report window end time
-     */
-    public long getWindowEndTime(int triggerDataIndex, int windowIndex) {
-        for (TriggerSpec triggerSpec : mTriggerSpecs) {
-            triggerDataIndex -= triggerSpec.getTriggerData().size();
-            if (triggerDataIndex < 0) {
-                return triggerSpec.getEventReportWindowsEnd().get(windowIndex);
-            }
-        }
-        // will not reach here
-        return -1;
     }
 
     /**
@@ -315,7 +269,9 @@ public class ReportSpec {
     public String encodePrivacyParametersToJSONString() {
         JSONObject json = new JSONObject();
         try {
-            json.put(FieldsKey.FLIP_PROBABILITY, mPrivacyParams.mFlipProbability);
+            json.put(
+                    ReportSpecUtil.FlexEventReportJsonKeys.FLIP_PROBABILITY,
+                    mPrivacyParams.mFlipProbability);
         } catch (JSONException e) {
             LogUtil.e(
                     "ReportSpec::encodePrivacyParametersToJSONString is unable to encode"
@@ -334,161 +290,6 @@ public class ReportSpec {
             jsonArray.put(trigger.encodeToJSON());
         }
         return jsonArray;
-    }
-
-    /**
-     * Process incoming report, including updating the current attributed value and generate the
-     * report should be deleted and number of new report to be generated
-     *
-     * @param bucketIncrements number of the bucket increments
-     * @param proposedEventReport incoming event report
-     * @param currentReports existing reports retrieved from DB
-     * @return The pair consist 1) The event reports should be deleted. Return empty list if no
-     *     deletion is needed. 2) number of reports need to be created
-     */
-    public Pair<List<EventReport>, Integer> processIncomingReport(
-            int bucketIncrements,
-            EventReport proposedEventReport,
-            List<EventReport> currentReports) {
-        if (bucketIncrements == 0
-                || bucketIncrements + currentReports.size() <= mMaxBucketIncrements) {
-            // No competing condition.
-            return new Pair<>(new ArrayList<>(), bucketIncrements);
-        }
-        long currentTime = Clock.SYSTEM_CLOCK.elapsedRealtime();
-        insertAttributedTrigger(proposedEventReport);
-        List<EventReport> pendingEventReports =
-                currentReports.stream()
-                        .filter((r) -> r.getReportTime() > currentTime)
-                        .collect(Collectors.toList());
-        int numDeliveredReport =
-                (int)
-                        currentReports.stream()
-                                .filter((r) -> r.getReportTime() <= currentTime)
-                                .count();
-
-        for (EventReport report : currentReports) {
-            if (Objects.equals(report.getTriggerData(), proposedEventReport.getTriggerData())
-                    && report.getTriggerPriority() < proposedEventReport.getTriggerPriority()) {
-                report.setTriggerPriority(proposedEventReport.getTriggerPriority());
-            }
-        }
-
-        for (int i = 0; i < bucketIncrements; i++) {
-            pendingEventReports.add(proposedEventReport);
-        }
-
-        List<EventReport> sortedEventReports =
-                pendingEventReports.stream()
-                        .sorted(
-                                Comparator.comparing(
-                                                EventReport::getReportTime,
-                                                Comparator.reverseOrder())
-                                        .thenComparingLong(EventReport::getTriggerPriority)
-                                        .thenComparing(
-                                                EventReport::getTriggerTime,
-                                                Comparator.reverseOrder()))
-                        .collect(Collectors.toList());
-
-        int numOfNewReportGenerated = bucketIncrements;
-        List<EventReport> result = new ArrayList<>();
-        while (sortedEventReports.size() > mMaxBucketIncrements - numDeliveredReport
-                && sortedEventReports.size() > 0) {
-            EventReport lowestPriorityEventReport = sortedEventReports.remove(0);
-            if (lowestPriorityEventReport.equals(proposedEventReport)) {
-                // the new report fall into deletion set. New report count reduce 1 and no need to
-                // add to the report to be deleted.
-                numOfNewReportGenerated--;
-            } else {
-                result.add(lowestPriorityEventReport);
-            }
-        }
-        return new Pair<>(result, numOfNewReportGenerated);
-    }
-
-    /**
-     * Calculates the reporting time based on the {@link Trigger} time for flexible event report API
-     *
-     * @return the reporting time
-     */
-    public long getFlexEventReportingTime(
-            long sourceRegistrationTime, long triggerTime, UnsignedLong triggerData) {
-        if (triggerTime < sourceRegistrationTime) {
-            return -1;
-        }
-        if (triggerTime
-                < findReportingStartTimeForTriggerData(triggerData) + sourceRegistrationTime) {
-            return -1;
-        }
-
-        List<Long> reportingWindows = findReportingEndTimesForTriggerData(triggerData);
-        for (Long window : reportingWindows) {
-            if (triggerTime <= window + sourceRegistrationTime) {
-                return sourceRegistrationTime + window + ONE_HOUR_IN_MILLIS;
-            }
-        }
-        // If trigger time is larger than all window end time, it means the trigger has expired.
-        return -1;
-    }
-
-    /**
-     * @param proposedEventReport the incoming event report
-     * @return number of bucket generated
-     */
-    public int countBucketIncrements(EventReport proposedEventReport) {
-        UnsignedLong proposedTriggerData = proposedEventReport.getTriggerData();
-        List<Long> summaryWindows = findSummaryBucketForTriggerData(proposedTriggerData);
-        if (summaryWindows == null) {
-            return 0;
-        }
-        long currentValue = findCurrentAttributedValue(proposedTriggerData);
-        long incomingValue = proposedEventReport.getTriggerValue();
-        // current value has already reached to the top of the bucket
-        if (currentValue >= summaryWindows.get(summaryWindows.size() - 1)) {
-            return 0;
-        }
-
-        int currentBucket = -1;
-        int newBucket = -1;
-        for (int i = 0; i < summaryWindows.size(); i++) {
-            if (currentValue >= summaryWindows.get(i)) {
-                currentBucket = i;
-            }
-            if (currentValue + incomingValue >= summaryWindows.get(i)) {
-                newBucket = i;
-            }
-        }
-        return newBucket - currentBucket;
-    }
-
-    /**
-     * @param deletingEventReport the report proposed to be deleted
-     * @return number of bucket eliminated
-     */
-    public int numDecrementingBucket(EventReport deletingEventReport) {
-        UnsignedLong proposedEventReportDataType = deletingEventReport.getTriggerData();
-        List<Long> summaryWindows = findSummaryBucketForTriggerData(proposedEventReportDataType);
-        if (summaryWindows == null) {
-            return 0;
-        }
-        long currentValue = findCurrentAttributedValue(proposedEventReportDataType);
-        long incomingValue = getTriggerValue(deletingEventReport.getTriggerId());
-        // current value doesn't reach the 1st bucket
-        if (currentValue < summaryWindows.get(0)) {
-            return 0;
-        }
-
-        int currentBucket = -1;
-        int newBucket = -1;
-        for (int i = 0; i < summaryWindows.size(); i++) {
-            if (currentValue >= summaryWindows.get(i)) {
-                currentBucket = i;
-            }
-            if (currentValue - incomingValue >= summaryWindows.get(i)) {
-                newBucket = i;
-            }
-        }
-        return currentBucket - newBucket;
     }
 
     /**
@@ -540,7 +341,6 @@ public class ReportSpec {
         return false;
     }
 
-    @VisibleForTesting
     long findCurrentAttributedValue(UnsignedLong triggerData) {
         long result = 0;
         for (AttributedTrigger trigger : mAttributedTriggers) {
@@ -580,33 +380,6 @@ public class ReportSpec {
             result.add(trigger.mTriggerId);
         }
         return result;
-    }
-
-    private List<Long> findSummaryBucketForTriggerData(UnsignedLong triggerData) {
-        for (TriggerSpec triggerSpec : mTriggerSpecs) {
-            if (triggerSpec.getTriggerData().contains(triggerData)) {
-                return triggerSpec.getSummaryBucket();
-            }
-        }
-        return null;
-    }
-
-    private List<Long> findReportingEndTimesForTriggerData(UnsignedLong triggerData) {
-        for (TriggerSpec triggerSpec : mTriggerSpecs) {
-            if (triggerSpec.getTriggerData().contains(triggerData)) {
-                return triggerSpec.getEventReportWindowsEnd();
-            }
-        }
-        return new ArrayList<>();
-    }
-
-    private Long findReportingStartTimeForTriggerData(UnsignedLong triggerData) {
-        for (TriggerSpec triggerSpec : mTriggerSpecs) {
-            if (triggerSpec.getTriggerData().contains(triggerData)) {
-                return triggerSpec.getEventReportWindowsStart();
-            }
-        }
-        return 0L;
     }
 
     private class PrivacyComputationParams {
@@ -653,7 +426,8 @@ public class ReportSpec {
 
         PrivacyComputationParams(String inputLine) throws JSONException {
             JSONObject json = new JSONObject(inputLine);
-            mFlipProbability = json.getDouble(FieldsKey.FLIP_PROBABILITY);
+            mFlipProbability =
+                    json.getDouble(ReportSpecUtil.FlexEventReportJsonKeys.FLIP_PROBABILITY);
             mPerTypeNumWindowList = null;
             mPerTypeCapList = null;
             mNumStates = -1;
@@ -706,12 +480,16 @@ public class ReportSpec {
         }
 
         private AttributedTrigger(JSONObject json) throws JSONException {
-            mTriggerId = json.getString(FieldsKey.TRIGGER_ID);
-            mPriority = json.getLong(FieldsKey.PRIORITY);
-            mTriggerData = new UnsignedLong(json.getString(FieldsKey.TRIGGER_DATA));
-            mValue = json.getLong(FieldsKey.VALUE);
-            mTriggerTime = json.getLong(FieldsKey.TRIGGER_TIME);
-            mDedupKey = new UnsignedLong(json.getString(FieldsKey.DEDUP_KEY));
+            mTriggerId = json.getString(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_ID);
+            mPriority = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.PRIORITY);
+            mTriggerData =
+                    new UnsignedLong(
+                            json.getString(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
+            mValue = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.VALUE);
+            mTriggerTime = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_TIME);
+            mDedupKey =
+                    new UnsignedLong(
+                            json.getString(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY));
         }
 
         private AttributedTrigger(
@@ -752,27 +530,19 @@ public class ReportSpec {
         private JSONObject encodeToJSON() {
             JSONObject json = new JSONObject();
             try {
-                json.put(FieldsKey.TRIGGER_ID, mTriggerId);
-                json.put(FieldsKey.TRIGGER_DATA, mTriggerData.toString());
-                json.put(FieldsKey.TRIGGER_TIME, mTriggerTime);
-                json.put(FieldsKey.VALUE, mValue);
-                json.put(FieldsKey.DEDUP_KEY, mDedupKey.toString());
-                json.put(FieldsKey.PRIORITY, mPriority);
+                json.put(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_ID, mTriggerId);
+                json.put(
+                        ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA,
+                        mTriggerData.toString());
+                json.put(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_TIME, mTriggerTime);
+                json.put(ReportSpecUtil.FlexEventReportJsonKeys.VALUE, mValue);
+                json.put(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY, mDedupKey.toString());
+                json.put(ReportSpecUtil.FlexEventReportJsonKeys.PRIORITY, mPriority);
             } catch (JSONException e) {
                 LogUtil.e("ReportSpec::encodeToJSON cannot encode AttributedTrigger to JSON");
                 return null;
             }
             return json;
         }
-    }
-
-    private interface FieldsKey {
-        String TRIGGER_ID = "trigger_id";
-        String VALUE = "value";
-        String PRIORITY = "priority";
-        String TRIGGER_TIME = "trigger_time";
-        String DEDUP_KEY = "dedup_key";
-        String TRIGGER_DATA = "trigger_data";
-        String FLIP_PROBABILITY = "flip_probability";
     }
 }

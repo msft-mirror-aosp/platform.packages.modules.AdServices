@@ -62,22 +62,6 @@ public class TriggerSpecTest {
         return json;
     }
 
-    public static JSONObject getValidBaselineTestCase() throws JSONException {
-        int[] triggerData = {1, 2, 3};
-        int eventReportWindowsStart = 0;
-        long[] eventReportWindowsEnd = {
-            TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
-        };
-        String summaryWindowOperator = "count";
-        long[] summaryBucket = {1, 2, 3, 4};
-        return getJson(
-                triggerData,
-                eventReportWindowsStart,
-                eventReportWindowsEnd,
-                summaryWindowOperator,
-                summaryBucket);
-    }
-
     @Test
     public void testEqualsPass() throws JSONException {
         // Assertion
@@ -338,5 +322,10 @@ public class TriggerSpecTest {
         return list.stream()
                 .map(element -> new UnsignedLong((long) element))
                 .collect(Collectors.toList());
+    }
+
+    private static JSONObject getValidBaselineTestCase() throws JSONException {
+        return new JSONArray(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline())
+                .getJSONObject(0);
     }
 }

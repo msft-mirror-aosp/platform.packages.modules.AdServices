@@ -29,6 +29,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WipeoutStatus;
@@ -96,7 +97,7 @@ public class MeasurementDataDeleter {
                             dao.fetchMatchingAggregateReports(sourceIds, triggerIds);
                     resetAggregateContributions(dao, aggregateReports);
                     resetAggregateReportDedupKeys(dao, aggregateReports);
-                    List<EventReport> eventReports = new ArrayList<>();
+                    List<EventReport> eventReports;
                     if (getFlexibleEventAPIFlag()) {
                         /*
                          Because some triggers may not be stored in the event report table in
@@ -278,7 +279,8 @@ public class MeasurementDataDeleter {
                     eventReportsToDelete.add(eventReport);
                 } else {
                     int numDecrementalBucket =
-                            source.getFlexEventReportSpec().numDecrementingBucket(eventReport);
+                            ReportSpecUtil.numDecrementingBucket(
+                                    source.getFlexEventReportSpec(), eventReport);
                     if (!source.getFlexEventReportSpec().deleteFromAttributedValue(eventReport)) {
                         /*
                         This indicates the case where the trigger record in the source table has

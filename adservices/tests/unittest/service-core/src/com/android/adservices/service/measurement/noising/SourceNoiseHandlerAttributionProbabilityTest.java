@@ -919,7 +919,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
         mDescription = description;
         mIsEnableConfigurableEventReportingWindows = isEnableConfigurableEventReportingWindows;
         mSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(sourceType)
                         .setEventTime(CURRENT_TIME)
                         .setEventReportWindow(CURRENT_TIME + sourceEventReportWindow)

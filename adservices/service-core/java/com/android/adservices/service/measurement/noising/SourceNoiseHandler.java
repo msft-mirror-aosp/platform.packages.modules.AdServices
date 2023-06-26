@@ -125,7 +125,7 @@ public class SourceNoiseHandler {
                                                     flexEventReportSpec.getTriggerDataValue(
                                                             reportConfig[0]),
                                                     mEventReportWindowCalcDelegate
-                                                            .getReportingTimeForNoisingFlexEventAPI(
+                                                            .getReportingTimeForNoisingFlexEventApi(
                                                                     reportConfig[1],
                                                                     reportConfig[0],
                                                                     flexEventReportSpec),

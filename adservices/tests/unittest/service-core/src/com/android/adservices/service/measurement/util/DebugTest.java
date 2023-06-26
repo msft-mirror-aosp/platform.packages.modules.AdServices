@@ -31,7 +31,7 @@ public class DebugTest {
     @Test
     public void isAttributionDebugReportPermitted_webWebKeysNotNull_permitted() {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.WEB)
                         .build();
 
@@ -47,7 +47,7 @@ public class DebugTest {
     @Test
     public void isAttributionDebugReportPermitted_webWebKeysNullKey_disallowed() {
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.WEB)
                         .build();
 
@@ -66,12 +66,12 @@ public class DebugTest {
     @Test
     public void isAttributionDebugReportPermitted_nonWebWebBothKeysNull_disallowed() {
         Source sourceWeb =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.WEB)
                         .build();
 
         Source sourceApp =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setPublisherType(EventSurfaceType.APP)
                         .build();
 
@@ -107,7 +107,7 @@ public class DebugTest {
         for (int i = 0; i < keys.length; i++) {
             for (int j = 0; j < surfaceTypes.length; j++) {
                 Source source =
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setPublisherType(surfaceTypes[j])
                                 .build();
 

@@ -56,7 +56,7 @@ public class SourceTest {
 
     @Test
     public void testDefaults() {
-        Source source = SourceFixture.getValidSourceBuilder().build();
+        Source source = SourceFixture.getMinimalValidSourceBuilder().build();
         assertEquals(0, source.getEventReportDedupKeys().size());
         assertEquals(0, source.getAggregateReportDedupKeys().size());
         assertEquals(Source.Status.ACTIVE, source.getStatus());
@@ -66,8 +66,9 @@ public class SourceTest {
 
     @Test
     public void testEqualsPass() throws JSONException {
-        assertEquals(SourceFixture.getValidSourceBuilder().build(),
-                SourceFixture.getValidSourceBuilder().build());
+        assertEquals(
+                SourceFixture.getMinimalValidSourceBuilder().build(),
+                SourceFixture.getMinimalValidSourceBuilder().build());
         JSONObject aggregateSource = new JSONObject();
         aggregateSource.put("campaignCounts", "0x159");
         aggregateSource.put("geoValue", "0x5");
@@ -170,76 +171,92 @@ public class SourceTest {
     @Test
     public void testEqualsFail() throws JSONException {
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(1L)).build(),
-                SourceFixture.getValidSourceBuilder().setEventId(new UnsignedLong(2L)).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAppDestinations(List.of(Uri.parse("android-app://1.test")))
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAppDestinations(List.of(Uri.parse("android-app://2.test")))
                         .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setWebDestinations(List.of(Uri.parse("https://1.test")))
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setWebDestinations(List.of(Uri.parse("https://2.test")))
                         .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEnrollmentId("enrollment-id-1")
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEnrollmentId("enrollment-id-2")
                         .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://1.test")).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setPublisher(Uri.parse("https://2.test")).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPublisher(Uri.parse("https://1.test"))
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPublisher(Uri.parse("https://2.test"))
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setParentId("parent-id-1").build(),
-                SourceFixture.getValidSourceBuilder().setParentId("parent-id-2").build());
+                SourceFixture.getMinimalValidSourceBuilder().setParentId("parent-id-1").build(),
+                SourceFixture.getMinimalValidSourceBuilder().setParentId("parent-id-2").build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setPublisherType(EventSurfaceType.APP).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setPublisherType(EventSurfaceType.WEB).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPublisherType(EventSurfaceType.APP)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setPriority(1L).build(),
-                SourceFixture.getValidSourceBuilder().setPriority(2L).build());
+                SourceFixture.getMinimalValidSourceBuilder().setPriority(1L).build(),
+                SourceFixture.getMinimalValidSourceBuilder().setPriority(2L).build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setEventTime(1L).build(),
-                SourceFixture.getValidSourceBuilder().setEventTime(2L).build());
+                SourceFixture.getMinimalValidSourceBuilder().setEventTime(1L).build(),
+                SourceFixture.getMinimalValidSourceBuilder().setEventTime(2L).build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setExpiryTime(1L).build(),
-                SourceFixture.getValidSourceBuilder().setExpiryTime(2L).build());
+                SourceFixture.getMinimalValidSourceBuilder().setExpiryTime(1L).build(),
+                SourceFixture.getMinimalValidSourceBuilder().setExpiryTime(2L).build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setEventReportWindow(1L).build(),
-                SourceFixture.getValidSourceBuilder().setEventReportWindow(2L).build());
+                SourceFixture.getMinimalValidSourceBuilder().setEventReportWindow(1L).build(),
+                SourceFixture.getMinimalValidSourceBuilder().setEventReportWindow(2L).build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setAggregatableReportWindow(1L).build(),
-                SourceFixture.getValidSourceBuilder().setAggregatableReportWindow(2L).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableReportWindow(1L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableReportWindow(2L)
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setStatus(Source.Status.ACTIVE).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setStatus(Source.Status.IGNORED).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setStatus(Source.Status.ACTIVE)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setStatus(Source.Status.IGNORED)
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventReportDedupKeys(
                                 LongStream.range(0, 2)
                                         .boxed()
                                         .map(UnsignedLong::new)
                                         .collect(Collectors.toList()))
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventReportDedupKeys(
                                 LongStream.range(1, 3)
                                         .boxed()
@@ -247,14 +264,14 @@ public class SourceTest {
                                         .collect(Collectors.toList()))
                         .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregateReportDedupKeys(
                                 LongStream.range(0, 2)
                                         .boxed()
                                         .map(UnsignedLong::new)
                                         .collect(Collectors.toList()))
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregateReportDedupKeys(
                                 LongStream.range(1, 3)
                                         .boxed()
@@ -262,15 +279,15 @@ public class SourceTest {
                                         .collect(Collectors.toList()))
                         .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setRegistrant(Uri.parse("android-app://com.example.xyz"))
                         .build());
         assertNotEquals(
                 SourceFixture.ValidSourceParams.buildAggregatableAttributionSource(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(
                                 new AggregatableAttributionSource.Builder().build())
                         .build());
@@ -281,58 +298,72 @@ public class SourceTest {
         aggregateSource2.put("geoValue", "0x5");
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateSource(aggregateSource1.toString()).build(),
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateSource(aggregateSource2.toString()).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateSource(aggregateSource1.toString())
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateSource(aggregateSource2.toString())
+                        .build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setAggregateContributions(4000).build(),
-                SourceFixture.getValidSourceBuilder().setAggregateContributions(4055).build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateContributions(4000)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateContributions(4055)
+                        .build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
-                SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_2).build());
+                SourceFixture.getMinimalValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
+                SourceFixture.getMinimalValidSourceBuilder().setDebugKey(DEBUG_KEY_2).build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setRegistrationId("R1").build(),
-                SourceFixture.getValidSourceBuilder().setRegistrationId("R2").build());
+                SourceFixture.getMinimalValidSourceBuilder().setRegistrationId("R1").build(),
+                SourceFixture.getMinimalValidSourceBuilder().setRegistrationId("R2").build());
 
         String sharedAggregationKeys1 = "[\"key1\"]";
         String sharedAggregationKeys2 = "[\"key2\"]";
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSharedAggregationKeys(sharedAggregationKeys1)
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSharedAggregationKeys(sharedAggregationKeys2)
                         .build());
 
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
-                SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
+                SourceFixture.getMinimalValidSourceBuilder().setInstallTime(100L).build(),
+                SourceFixture.getMinimalValidSourceBuilder().setInstallTime(101L).build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey1").build(),
-                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey2").build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setDebugJoinKey("debugJoinKey1")
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setDebugJoinKey("debugJoinKey2")
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId1").build(),
-                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId2").build());
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPlatformAdId("debugAppAdId1")
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setPlatformAdId("debugAppAdId2")
+                        .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId1").build(),
-                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId2").build());
+                SourceFixture.getMinimalValidSourceBuilder().setDebugAdId("debugWebAdId1").build(),
+                SourceFixture.getMinimalValidSourceBuilder().setDebugAdId("debugWebAdId2").build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain1.example.test"))
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .build());
         assertNotEquals(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setCoarseEventReportDestinations(false)
                         .build(),
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setCoarseEventReportDestinations(true)
                         .build());
     }
@@ -616,7 +647,7 @@ public class SourceTest {
                         .build();
 
         final Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
 
@@ -637,15 +668,17 @@ public class SourceTest {
 
     @Test
     public void testTriggerDataCardinality() {
-        Source eventSource = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .build();
+        Source eventSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
         assertEquals(
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY,
                 eventSource.getTriggerDataCardinality());
-        Source navigationSource = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .build();
+        Source navigationSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
         assertEquals(
                 PrivacyParams.getNavigationTriggerDataCardinality(),
                 navigationSource.getTriggerDataCardinality());
@@ -667,10 +700,11 @@ public class SourceTest {
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
         filterMapJson.put("product", new JSONArray(Arrays.asList("1234", "2345")));
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setFilterData(filterMapJson.toString())
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setFilterData(filterMapJson.toString())
+                        .build();
         FilterMap filterMap = source.getFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 3);
         assertEquals(Collections.singletonList("electronics"),
@@ -683,9 +717,10 @@ public class SourceTest {
 
     @Test
     public void testParseFilterData_nullFilterData() throws JSONException {
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
         FilterMap filterMap = source.getFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
@@ -694,10 +729,11 @@ public class SourceTest {
 
     @Test
     public void testParseFilterData_emptyFilterData() throws JSONException {
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setFilterData("")
-                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setFilterData("")
+                        .build();
         FilterMap filterMap = source.getFilterData();
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
@@ -715,10 +751,12 @@ public class SourceTest {
                 new JSONArray(Collections.singletonList("electronics.megastore")));
         filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
 
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setAggregateSource(aggregatableSource.toString())
-                .setFilterData(filterMap.toString()).build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAggregateSource(aggregatableSource.toString())
+                        .setFilterData(filterMap.toString())
+                        .build();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
                 source.getAggregatableAttributionSource();
         assertTrue(aggregatableAttributionSource.isPresent());
@@ -814,14 +852,14 @@ public class SourceTest {
     @Test
     public void getTriggerDataCardinality_flexEventApi_equals() {
         Source eventSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .build();
         assertEquals(
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY,
                 eventSource.getTriggerDataCardinality());
         Source navigationSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .build();
         assertEquals(
@@ -840,7 +878,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
                         .setWebDestinations(
@@ -874,7 +912,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
                         .setWebDestinations(
@@ -908,7 +946,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
                         .setWebDestinations(
@@ -941,7 +979,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
                         .setMaxBucketIncrements("3")
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
@@ -967,7 +1005,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
                         .setMaxBucketIncrements("3")
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
@@ -991,7 +1029,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source testSource =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
                         .setMaxBucketIncrements("3")
                         .buildInitialFlexEventReportSpec()
@@ -1014,7 +1052,7 @@ public class SourceTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source.Builder testSourceBuilder =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
                         .setMaxBucketIncrements("3")
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}");
