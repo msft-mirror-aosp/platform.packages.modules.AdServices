@@ -172,7 +172,6 @@ public class FrequencyCapFilteringE2ETest {
                                                     .build())
                                     .build())
                     .build();
-
     private MockitoSession mStaticMockSession;
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
@@ -216,7 +215,7 @@ public class FrequencyCapFilteringE2ETest {
                         .adSelectionEntryDao();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         mAppInstallDao =

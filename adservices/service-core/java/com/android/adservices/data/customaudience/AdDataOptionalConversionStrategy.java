@@ -25,30 +25,29 @@ import com.android.adservices.data.common.DBAdData;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/** Strategy for converting to and from an AdData object in different parts of the code */
-public interface AdDataConversionStrategy {
+/** Strategy for doing optional feature-flagged parts of the ADData conversion */
+public interface AdDataOptionalConversionStrategy {
     /**
-     * Serialize {@link DBAdData} to {@link JSONObject}.
+     * Fills a part of the given {@link JSONObject} with the data from {@link DBAdData}.
      *
      * @param adData the {@link DBAdData} object to serialize
-     * @return the json serialization of the AdData object
+     * @param jsonObject the target json serialization of the AdData object
      */
-    JSONObject toJson(DBAdData adData) throws JSONException;
+    void toJson(DBAdData adData, JSONObject jsonObject) throws JSONException;
 
     /**
-     * Deserialize {@link DBAdData} to {@link JSONObject}.
+     * Deserialize {@link DBAdData} from {@link JSONObject}.
      *
      * @param json the {@link JSONObject} object to dwserialize
-     * @return the {@link DBAdData} deserialized from the json
+     * @param adDataBuilder the {@link DBAdData.Builder} to be filled from the json
      */
-    DBAdData.Builder fromJson(JSONObject json) throws JSONException;
+    void fromJson(JSONObject json, DBAdData.Builder adDataBuilder) throws JSONException;
 
     /**
      * Parse parcelable {@link AdData} to storage model {@link DBAdData}.
      *
      * @param parcelable the service model.
-     * @return storage model
+     * @param adDataBuilder the target storage model to be filled
      */
-    @NonNull
-    DBAdData.Builder fromServiceObject(@NonNull AdData parcelable);
+    void fromServiceObject(@NonNull AdData parcelable, @NonNull DBAdData.Builder adDataBuilder);
 }

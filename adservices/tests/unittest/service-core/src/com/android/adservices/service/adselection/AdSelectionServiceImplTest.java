@@ -289,6 +289,8 @@ public class AdSelectionServiceImplTest {
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
 
+    public AdSelectionServiceImplTest() {}
+
     @Before
     public void setUp() {
         mFlags = new AdSelectionServicesTestsFlags(false);
@@ -304,7 +306,7 @@ public class AdSelectionServiceImplTest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
 
@@ -7900,7 +7902,9 @@ public class AdSelectionServiceImplTest {
         return callReportImpression(adSelectionService, requestParams, false);
     }
 
-    /** @param shouldCountLog if true, adds a latch to the log interaction as well. */
+    /**
+     * @param shouldCountLog if true, adds a latch to the log interaction as well.
+     */
     private ReportImpressionTestCallback callReportImpression(
             AdSelectionServiceImpl adSelectionService,
             ReportImpressionInput requestParams,
@@ -8050,7 +8054,9 @@ public class AdSelectionServiceImplTest {
         return callReportInteraction(adSelectionService, inputParams, false);
     }
 
-    /** @param shouldCountLog if true, adds a latch to the log interaction as well. */
+    /**
+     * @param shouldCountLog if true, adds a latch to the log interaction as well.
+     */
     private ReportInteractionTestCallback callReportInteraction(
             AdSelectionServiceImpl adSelectionService,
             ReportInteractionInput inputParams,

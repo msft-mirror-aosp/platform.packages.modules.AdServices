@@ -27,8 +27,8 @@ import android.annotation.NonNull;
 
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
-import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.ValidatorUtil;
 
@@ -44,20 +44,23 @@ import java.util.Objects;
 public class CustomAudienceAdsValidator {
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final AdDataConversionStrategy mAdDataConversionStrategy;
+    @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
     private final int mCustomAudienceMaxAdsSizeB;
     private final int mCustomAudienceMaxNumAds;
 
     public CustomAudienceAdsValidator(
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            boolean adSelectionFilteringEnabled,
+            @NonNull AdRenderIdValidator adRenderIdValidator,
+            @NonNull AdDataConversionStrategy adDataConversionStrategy,
             int customAudienceMaxAdsSizeB,
             int customAudienceMaxNumAds) {
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adRenderIdValidator);
+        Objects.requireNonNull(adDataConversionStrategy);
 
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
-        mAdDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        adSelectionFilteringEnabled);
+        mAdRenderIdValidator = adRenderIdValidator;
+        mAdDataConversionStrategy = adDataConversionStrategy;
         mCustomAudienceMaxAdsSizeB = customAudienceMaxAdsSizeB;
         mCustomAudienceMaxNumAds = customAudienceMaxNumAds;
     }
@@ -130,7 +133,8 @@ public class CustomAudienceAdsValidator {
                 new AdDataValidator(
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         buyer.toString(),
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mAdRenderIdValidator);
         for (AdData ad : ads) {
             adDataValidator.addValidation(ad, violations);
         }
@@ -138,7 +142,7 @@ public class CustomAudienceAdsValidator {
         // Validate total size of ads are within limits.
         int adsSizeB =
                 ads.stream()
-                        .map(mAdDataConversionStrategy::fromServiceObject)
+                        .map(obj -> mAdDataConversionStrategy.fromServiceObject(obj).build())
                         .mapToInt(DBAdData::size)
                         .sum();
         if (adsSizeB > mCustomAudienceMaxAdsSizeB) {

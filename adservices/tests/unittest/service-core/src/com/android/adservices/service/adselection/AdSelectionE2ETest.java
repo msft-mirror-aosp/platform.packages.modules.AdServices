@@ -570,7 +570,7 @@ public class AdSelectionE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         mAdServicesHttpsClient =
@@ -1598,8 +1598,7 @@ public class AdSelectionE2ETest {
                 server,
                 2,
                 ImmutableList.of(
-                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH),
+                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1, BUYER_TRUSTED_SIGNAL_URI_PATH),
                 REQUEST_PREFIX_MATCHER);
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
@@ -5821,6 +5820,7 @@ public class AdSelectionE2ETest {
                             Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)),
                             "{\"result\":" + bids.get(i) + "}",
                             Collections.EMPTY_SET,
+                            null,
                             null));
         }
 

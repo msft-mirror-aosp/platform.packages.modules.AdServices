@@ -307,7 +307,7 @@ public class FledgeE2ETest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
 
@@ -2599,7 +2599,8 @@ public class FledgeE2ETest {
                                         flags,
                                         flags.getFledgeAdSelectionFilteringEnabled()
                                                 ? new FrequencyCapAdDataValidatorImpl()
-                                                : new FrequencyCapAdDataValidatorNoOpImpl()),
+                                                : new FrequencyCapAdDataValidatorNoOpImpl(),
+                                        AdRenderIdValidator.createInstance(flags)),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flags),
                         mFledgeAuthorizationFilterMock,

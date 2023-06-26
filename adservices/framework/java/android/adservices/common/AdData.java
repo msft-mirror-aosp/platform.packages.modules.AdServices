@@ -41,6 +41,7 @@ public final class AdData implements Parcelable {
     @NonNull private final String mMetadata;
     @NonNull private final Set<Integer> mAdCounterKeys;
     @Nullable private final AdFilters mAdFilters;
+    @Nullable private final String mAdRenderId;
 
     @NonNull
     public static final Creator<AdData> CREATOR =
@@ -65,6 +66,7 @@ public final class AdData implements Parcelable {
         mMetadata = builder.mMetadata;
         mAdCounterKeys = builder.mAdCounterKeys;
         mAdFilters = builder.mAdFilters;
+        mAdRenderId = builder.mAdRenderId;
     }
 
     private AdData(@NonNull Parcel in) {
@@ -78,6 +80,7 @@ public final class AdData implements Parcelable {
         mAdFilters =
                 AdServicesParcelableUtil.readNullableFromParcel(
                         in, AdFilters.CREATOR::createFromParcel);
+        mAdRenderId = in.readString();
     }
 
     @Override
@@ -92,6 +95,7 @@ public final class AdData implements Parcelable {
                 dest,
                 mAdFilters,
                 (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, flags));
+        dest.writeString(mAdRenderId);
     }
 
     /** @hide */
@@ -149,6 +153,12 @@ public final class AdData implements Parcelable {
         return mAdFilters;
     }
 
+    /** @hide */
+    @Nullable
+    public String getAdRenderId() {
+        return mAdRenderId;
+    }
+
     /** Checks whether two {@link AdData} objects contain the same information. */
     @Override
     public boolean equals(Object o) {
@@ -158,7 +168,8 @@ public final class AdData implements Parcelable {
         return mRenderUri.equals(adData.mRenderUri)
                 && mMetadata.equals(adData.mMetadata)
                 && mAdCounterKeys.equals(adData.mAdCounterKeys)
-                && Objects.equals(mAdFilters, adData.mAdFilters);
+                && Objects.equals(mAdFilters, adData.mAdFilters)
+                && Objects.equals(mAdRenderId, adData.mAdRenderId);
     }
 
     /** Returns the hash of the {@link AdData} object's data. */
@@ -174,10 +185,14 @@ public final class AdData implements Parcelable {
                 + mRenderUri
                 + ", mMetadata='"
                 + mMetadata
-                + "', mAdCounterKeys="
+                + '\''
+                + ", mAdCounterKeys="
                 + mAdCounterKeys
                 + ", mAdFilters="
                 + mAdFilters
+                + ", mAdRenderId='"
+                + mAdRenderId
+                + '\''
                 + '}';
     }
 
@@ -187,6 +202,7 @@ public final class AdData implements Parcelable {
         @Nullable private String mMetadata;
         @NonNull private Set<Integer> mAdCounterKeys = new HashSet<>();
         @Nullable private AdFilters mAdFilters;
+        @Nullable private String mAdRenderId;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {}
@@ -251,6 +267,13 @@ public final class AdData implements Parcelable {
         @NonNull
         public AdData.Builder setAdFilters(@Nullable AdFilters adFilters) {
             mAdFilters = adFilters;
+            return this;
+        }
+
+        /** @hide */
+        @NonNull
+        public AdData.Builder setAdRenderId(@Nullable String adRenderId) {
+            mAdRenderId = adRenderId;
             return this;
         }
 

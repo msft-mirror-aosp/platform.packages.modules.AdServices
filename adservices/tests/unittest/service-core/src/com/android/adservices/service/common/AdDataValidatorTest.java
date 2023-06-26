@@ -33,11 +33,15 @@ public class AdDataValidatorTest {
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR =
             new FrequencyCapAdDataValidatorImpl();
 
+    private static final AdRenderIdValidator AD_RENDER_ID_VALIDATOR =
+            AdRenderIdValidator.createEnabledInstance(100);
+
     AdDataValidator mValidator =
             new AdDataValidator(
                     ValidatorUtil.AD_TECH_ROLE_BUYER,
                     CommonFixture.VALID_BUYER_1.toString(),
-                    FREQUENCY_CAP_AD_DATA_VALIDATOR);
+                    FREQUENCY_CAP_AD_DATA_VALIDATOR,
+                    AD_RENDER_ID_VALIDATOR);
 
     @Test
     public void testValidAdData() {
@@ -108,5 +112,22 @@ public class AdDataValidatorTest {
 
         assertThat(mValidator.getValidationViolations(adDataWithExceededFrequencyCapLimits))
                 .containsExactlyElementsIn(expectedViolations);
+    }
+
+    @Test
+    public void testInvalidRenderId() {
+        AdData adDataWithInvalidRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdRenderId("0123456789")
+                        .build();
+
+        AdDataValidator validator =
+                new AdDataValidator(
+                        ValidatorUtil.AD_TECH_ROLE_BUYER,
+                        CommonFixture.VALID_BUYER_1.toString(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR,
+                        AdRenderIdValidator.createEnabledInstance(5));
+
+        assertThat(validator.getValidationViolations(adDataWithInvalidRenderId)).isNotEmpty();
     }
 }

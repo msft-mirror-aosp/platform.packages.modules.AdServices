@@ -25,6 +25,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
@@ -56,6 +57,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final AdTechIdentifierValidator mAdTechIdentifierValidator;
+    // AdRenderId is ignored in contextual ads
+    @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
 
     public AdSelectionConfigValidator(
             @NonNull PrebuiltLogicGenerator prebuiltLogicGenerator,
@@ -68,6 +71,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         mAdTechIdentifierValidator =
                 new AdTechIdentifierValidator(
                         AD_SELECTION_CONFIG_CLASS_NAME, ValidatorUtil.AD_TECH_ROLE_SELLER);
+        mAdRenderIdValidator = AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
     }
 
     @Override
@@ -128,7 +132,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
                     new AdDataValidator(
                             ValidatorUtil.AD_TECH_ROLE_BUYER,
                             entry.getValue().getBuyer().toString(),
-                            mFrequencyCapAdDataValidator);
+                            mFrequencyCapAdDataValidator,
+                            mAdRenderIdValidator);
             for (AdWithBid ad : entry.getValue().getAdsWithBid()) {
                 adDataValidator.addValidation(ad.getAdData(), violations);
             }
