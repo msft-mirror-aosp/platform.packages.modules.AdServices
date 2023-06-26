@@ -33,7 +33,8 @@ import com.android.internal.annotations.VisibleForTesting;
         },
         version = CobaltDatabase.VERSION)
 @TypeConverters({Converters.class})
-abstract class CobaltDatabase extends RoomDatabase {
+@VisibleForTesting
+public abstract class CobaltDatabase extends RoomDatabase {
     static final int VERSION = 1;
 
     /** Get the DAO building blocks. */
@@ -41,5 +42,5 @@ abstract class CobaltDatabase extends RoomDatabase {
 
     /** Get the DAO for test-only operations. */
     @VisibleForTesting
-    abstract TestOnlyDao testOnlyDao();
+    public abstract TestOnlyDao testOnlyDao();
 }
