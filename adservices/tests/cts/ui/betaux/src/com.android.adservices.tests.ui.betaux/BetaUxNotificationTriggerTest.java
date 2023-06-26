@@ -17,6 +17,7 @@ package com.android.adservices.tests.ui.notification;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
+import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
 
 import android.adservices.common.AdServicesCommonManager;
@@ -35,10 +36,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class NotificationTriggerTest {
+public class BetaUxNotificationTriggerTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -75,59 +75,75 @@ public class NotificationTriggerTest {
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    /**
-     * Verify that for GA, ROW devices with non zeroed-out AdId, the GA ROW notification is
-     * displayed.
-     */
+    /** Verify no notification is displayed when the entry point is disabled for EU devices. */
     @Test
-    public void testGaRowAdIdEnabled() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
+    public void testBetaEuEntryPointDisabled() throws Exception {
+        UiUtils.setAsEuDevice();
+        UiUtils.enableBeta();
 
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
+        mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ false);
     }
 
-    /**
-     * Verify that for GA, ROW devices with zeroed-out AdId, the GA EU notification is displayed.
-     */
+    /** Verify no notification is displayed when the entry point is disabled for ROW devices. */
     @Test
-    public void testGaRowAdIdDisabled() throws Exception {
+    public void testBetaRowEntryPointDisabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
+        UiUtils.enableBeta();
+
+        mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ false);
+    }
+
+    /** Verify that for EU devices with zeroed-out AdId, the EU notification is displayed. */
+    @Test
+    public void testBetaEuAdIdDisabled() throws Exception {
+        UiUtils.setAsEuDevice();
+        UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
     }
 
-    /**
-     * Verify that for GA, EU devices with non zeroed-out AdId, the GA EU notification is displayed.
-     */
+    /** Verify that for ROW devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
-    public void testGaEuAdIdEnabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
-    }
-
-    /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
-    @Test
-    public void testGaEuAdIdDisabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
+    public void testBetaRowAdIdDisabled() throws Exception {
+        UiUtils.setAsRowDevice();
+        UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
+    }
+
+    /** Verify that for EU devices with non zeroed-out AdId, the EU notification is displayed. */
+    @Test
+    public void testBetaEuAdIdEnabled() throws Exception {
+        UiUtils.setAsEuDevice();
+        UiUtils.enableBeta();
+
+        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
+    }
+
+    /** Verify that for ROW devices with non zeroed-out AdId, the ROW notification is displayed. */
+    @Test
+    public void testBetaRowAdIdEnabled() throws Exception {
+        UiUtils.setAsRowDevice();
+        UiUtils.enableBeta();
+
+        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
     }
 }
-
