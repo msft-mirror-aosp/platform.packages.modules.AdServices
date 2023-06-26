@@ -23,6 +23,7 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
 import static androidx.lifecycle.Lifecycle.State;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -57,8 +58,10 @@ import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 
 import com.android.compatibility.common.util.DeviceConfigStateHelper;
+import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
@@ -96,6 +99,7 @@ public class SdkSandboxManagerTest {
             "ActivitySecurity__asm_restrictions_enabled";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
+    private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
@@ -785,6 +789,50 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void testBackNavigation() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        ActivityExecutorContainer activityExecutorContainer = new ActivityExecutorContainer();
+        ActivityStarter sandboxActivityStarter = new ActivityStarter();
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            sandboxActivityStarter.setFromActivity(clientActivity);
+                            IActivityActionExecutor actionExecutor =
+                                    (IActivityActionExecutor)
+                                            startSandboxActivity(sdk, sandboxActivityStarter);
+                            activityExecutorContainer.setExecutor(actionExecutor);
+                        });
+        IActivityActionExecutor actionExecutor = activityExecutorContainer.getExecutor();
+        assertThat(actionExecutor).isNotNull();
+
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        try {
+            actionExecutor.disableBackButton();
+        } catch (RemoteException e) {
+            fail("Error while disabling back button: " + e.getMessage());
+        }
+        sUiDevice.pressBack();
+        assertThat(mRule.getScenario().getState())
+                .isIn(Arrays.asList(State.CREATED, State.STARTED));
+        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
+
+        try {
+            actionExecutor.enableBackButton();
+        } catch (RemoteException e) {
+            fail("Error while enabling back button: " + e.getMessage());
+        }
+        sUiDevice.pressBack();
+        assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
+        assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
+    }
+
+    @Test
     public void testStartSdkSandboxedActivityFailIfTheHandlerUnregistered() {
         assumeTrue(SdkLevel.isAtLeastU());
 
@@ -825,16 +873,31 @@ public class SdkSandboxManagerTest {
         return processInfo.importance;
     }
 
-    private void startSandboxActivity(ICtsSdkProviderApi sdk, ActivityStarter activityStarter) {
-        startSandboxActivity(sdk, activityStarter, new Bundle());
+    private IActivityActionExecutor startSandboxActivity(
+            ICtsSdkProviderApi sdk, ActivityStarter activityStarter) {
+        return startSandboxActivity(sdk, activityStarter, new Bundle());
     }
 
-    private void startSandboxActivity(
+    private IActivityActionExecutor startSandboxActivity(
             ICtsSdkProviderApi sdk, ActivityStarter activityStarter, Bundle extras) {
         try {
-            sdk.startActivity(activityStarter, extras);
+            return sdk.startActivity(activityStarter, extras);
         } catch (RemoteException e) {
             fail("Got exception while starting activity: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Separate class to store IActivityActionExecutor which is returned in a lambda expression.
+    private static class ActivityExecutorContainer {
+        private IActivityActionExecutor mExecutor;
+
+        public void setExecutor(IActivityActionExecutor executor) {
+            mExecutor = executor;
+        }
+
+        public IActivityActionExecutor getExecutor() {
+            return mExecutor;
         }
     }
 

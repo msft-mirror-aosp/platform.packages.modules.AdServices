@@ -36,6 +36,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import com.android.sdksandbox.SdkSandboxServiceImpl;
 
@@ -192,11 +194,15 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
-    public void startActivity(IActivityStarter iActivityStarter, Bundle extras)
+    public IActivityActionExecutor startActivity(IActivityStarter iActivityStarter, Bundle extras)
             throws RemoteException {
         SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+        ActivityActionExecutor actionExecutor = new ActivityActionExecutor();
         SdkSandboxActivityHandler activityHandler =
-                activity -> registerLifecycleEvents(iActivityStarter, activity);
+                activity -> {
+                    actionExecutor.setActivity(activity);
+                    registerLifecycleEvents(iActivityStarter, activity, actionExecutor);
+                };
         assert controller != null;
         IBinder token = controller.registerSdkSandboxActivityHandler(activityHandler);
 
@@ -205,6 +211,8 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
 
         iActivityStarter.startSdkSandboxActivity(token);
+
+        return actionExecutor;
     }
 
     @Override
@@ -224,7 +232,9 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     private void registerLifecycleEvents(
-            IActivityStarter iActivityStarter, Activity sandboxActivity) {
+            IActivityStarter iActivityStarter,
+            Activity sandboxActivity,
+            ActivityActionExecutor actionExecutor) {
         sandboxActivity.registerActivityLifecycleCallbacks(
                 new Application.ActivityLifecycleCallbacks() {
                     @Override
@@ -260,8 +270,58 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                             @NonNull Activity activity, @NonNull Bundle outState) {}
 
                     @Override
-                    public void onActivityDestroyed(@NonNull Activity activity) {}
+                    public void onActivityDestroyed(@NonNull Activity activity) {
+                        actionExecutor.onActivityDestroyed();
+                    }
                 });
+    }
+
+    private static class ActivityActionExecutor extends IActivityActionExecutor.Stub {
+        private final OnBackInvokedCallback mBackNavigationDisablingCallback;
+        private OnBackInvokedDispatcher mDispatcher;
+        private boolean mBackNavigationDisabled; // default is back enabled.
+
+        ActivityActionExecutor() {
+            mBackNavigationDisablingCallback = () -> {};
+        }
+
+        private Activity mActivity;
+
+        @Override
+        public void disableBackButton() {
+            ensureActivityIsCreated();
+            if (mBackNavigationDisabled) {
+                return;
+            }
+            mDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, mBackNavigationDisablingCallback);
+            mBackNavigationDisabled = true;
+        }
+
+        @Override
+        public void enableBackButton() {
+            ensureActivityIsCreated();
+            if (!mBackNavigationDisabled) {
+                return;
+            }
+            mDispatcher.unregisterOnBackInvokedCallback(mBackNavigationDisablingCallback);
+            mBackNavigationDisabled = false;
+        }
+
+        public void setActivity(Activity activity) {
+            mActivity = activity;
+            mDispatcher = activity.getOnBackInvokedDispatcher();
+        }
+
+        public void onActivityDestroyed() {
+            mActivity = null;
+        }
+
+        private void ensureActivityIsCreated() {
+            if (mActivity == null) {
+                throw new IllegalStateException("Activity is not created yet or destroyed!");
+            }
+        }
     }
 
     /* Sends an error if the expected resource/asset does not match the read value. */
