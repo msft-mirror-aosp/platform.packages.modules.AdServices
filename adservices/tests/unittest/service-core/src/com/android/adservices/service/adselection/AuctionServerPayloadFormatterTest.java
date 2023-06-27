@@ -26,16 +26,14 @@ import org.junit.Test;
 
 public class AuctionServerPayloadFormatterTest {
     @Test
-    public void testMetaInfoByte() {
+    public void testMetaInfoByte_allValidValues_extractedSuccessfully() {
         for (int compressionVersion = 0;
                 compressionVersion < (1 << COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS);
                 compressionVersion++) {
             for (int formatterVersion = 0;
                     formatterVersion < (1 << PAYLOAD_FORMAT_VERSION_LENGTH_BITS);
                     formatterVersion++) {
-                byte metaInfoByte =
-                        AuctionServerPayloadFormatter.getMetaInfoByte(
-                                compressionVersion, formatterVersion);
+                byte metaInfoByte = (byte) (formatterVersion << 5 | compressionVersion);
                 Assert.assertEquals(
                         compressionVersion,
                         AuctionServerPayloadFormatter.extractCompressionVersion(metaInfoByte));
@@ -44,6 +42,28 @@ public class AuctionServerPayloadFormatterTest {
                         AuctionServerPayloadFormatter.extractFormatterVersion(metaInfoByte));
             }
         }
+    }
+
+    @Test
+    public void test_extractCompressionVersion_success() {
+        byte metaInfoByte = 1 << 4;
+        Assert.assertEquals(
+                16, AuctionServerPayloadFormatter.extractCompressionVersion(metaInfoByte));
+    }
+
+    @Test
+    public void test_extractFormatterVersion_success() {
+        byte metaInfoByte = 1 << 5;
+        Assert.assertEquals(1, AuctionServerPayloadFormatter.extractFormatterVersion(metaInfoByte));
+    }
+
+    @Test
+    public void test_parseMetaInfoByte_success() {
+        byte result = AuctionServerPayloadFormatter.getMetaInfoByte(2, 1);
+        int actualCompressionVersion = result & 0x1f;
+        int actualFormatterVersion = (result & 0xff) >>> 5;
+        Assert.assertEquals(actualFormatterVersion, 1);
+        Assert.assertEquals(actualCompressionVersion, 2);
     }
 
     @Test
