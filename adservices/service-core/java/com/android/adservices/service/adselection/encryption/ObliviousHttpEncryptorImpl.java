@@ -19,9 +19,7 @@ package com.android.adservices.service.adselection.encryption;
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpClient;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequest;
@@ -35,7 +33,7 @@ import java.util.Objects;
 public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private AdSelectionEncryptionKeyManager mEncryptionKeyManager;
-    private EncryptionContextDao mEncryptionContextDao;
+    private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
 
     public ObliviousHttpEncryptorImpl(
             AdSelectionEncryptionKeyManager encryptionKeyManager,
@@ -44,7 +42,8 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
         Objects.requireNonNull(encryptionContextDao);
 
         mEncryptionKeyManager = encryptionKeyManager;
-        mEncryptionContextDao = encryptionContextDao;
+        mObliviousHttpRequestContextMarshaller =
+                new ObliviousHttpRequestContextMarshaller(encryptionContextDao);
     }
 
     /** Encrypts the given byte and stores the encryption context data keyed by given contextId */
@@ -62,16 +61,8 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText);
 
             Objects.requireNonNull(request);
-            mEncryptionContextDao.insertEncryptionContext(
-                    DBEncryptionContext.builder()
-                            .setContextId(contextId)
-                            .setEncryptionKeyType(EncryptionKeyConstants.from(AUCTION))
-                            .setSeed(
-                                    ObliviousHttpRequestContext.serializeSeed(
-                                            request.requestContext().seed()))
-                            .setKeyConfig(request.requestContext().keyConfig())
-                            .setSharedSecret(request.requestContext().encapsulatedSharedSecret())
-                            .build());
+            mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(
+                    contextId, request.requestContext());
 
             return request.serialize();
         } catch (UnsupportedHpkeAlgorithmException e) {
@@ -89,23 +80,10 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     public byte[] decryptBytes(byte[] encryptedBytes, long storedContextId) {
         Objects.requireNonNull(encryptedBytes);
         try {
-            DBEncryptionContext dbContext =
-                    mEncryptionContextDao.getEncryptionContext(
-                            storedContextId,
-                            EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION);
-
-            ObliviousHttpKeyConfig config = dbContext.getKeyConfig();
-            Objects.requireNonNull(config);
-
-            ObliviousHttpClient client = ObliviousHttpClient.create(config);
-            Objects.requireNonNull(client);
-
             ObliviousHttpRequestContext context =
-                    ObliviousHttpRequestContext.create(
-                            config,
-                            dbContext.getSharedSecret(),
-                            ObliviousHttpRequestContext.deserializeSeed(dbContext.getSeed()));
-            Objects.requireNonNull(context);
+                    mObliviousHttpRequestContextMarshaller.getAuctionOblivioushttpRequestContext(
+                            storedContextId);
+            ObliviousHttpClient client = ObliviousHttpClient.create(context.keyConfig());
 
             return client.decryptObliviousHttpResponse(encryptedBytes, context);
         } catch (Exception e) {
