@@ -16,56 +16,35 @@
 
 package com.android.adservices.ui;
 
-import com.android.adservices.service.FlagsFactory;
+import android.annotation.RequiresApi;
+import android.content.Context;
+import android.os.Build;
+
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /**
  * Activities and Action Delegates should implement this interface to ensure they implement all
  * existing modes of AdServices.
  */
+@RequiresApi(Build.VERSION_CODES.S)
 public interface UxSelector {
-    /**
-     * Contains all the modes for AdServices module. Each mode should have a corresponding method to
-     * get the layoutResId for that mode.
-     */
-    enum UxEnum {
-        BETA,
-        GA,
-        U18,
-    }
-
-    /**
-     * Temporary Utility class to get the current mode for AdServices module. This will be replace
-     * with UX Engine.
-     */
-    class CurrentUx {
-        private static UxEnum sCurrentUx;
-
-        public static UxEnum get(boolean refresh) {
-            if (refresh || sCurrentUx == null) {
-                sCurrentUx =
-                        FlagsFactory.getFlags().getGaUxFeatureEnabled() ? UxEnum.GA : UxEnum.BETA;
-            }
-            return sCurrentUx;
-        }
-    }
-
     /**
      * This method will be called in during initialization of class to determine which mode to
      * choose.
      *
-     * @param refresh if true, will re-fetch current UI mode. Should only be true at start of UI
-     *     flows (e.g. main view of settings, notification landing page, notification card)
+     * @param context Current context
      */
-    default void initWithUx(boolean refresh) {
-        switch (CurrentUx.get(refresh)) {
-            case BETA:
-                initBeta();
+    default void initWithUx(Context context) {
+        switch (UxStatesManager.getInstance(context).getUx()) {
+            case U18_UX:
+                initU18();
                 break;
-            case GA:
+            case GA_UX:
                 initGA();
                 break;
-            case U18:
-                initU18();
+            case BETA_UX:
+                initBeta();
                 break;
             default:
                 // TODO: log some warning or error
@@ -73,12 +52,21 @@ public interface UxSelector {
         }
     }
 
-    /** This method will be called in {@link #initWithUx} if app is in {@link UxEnum#BETA} mode. */
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#BETA_UX} mode.
+     */
     void initBeta();
 
-    /** This method will be called in {@link #initWithUx} if app is in {@link UxEnum#GA} mode. */
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#GA_UX} mode.
+     */
     void initGA();
 
-    /** This method will be called in {@link #initWithUx} if app is in {@link UxEnum#U18} mode. */
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#U18_UX} mode.
+     */
     void initU18();
 }
