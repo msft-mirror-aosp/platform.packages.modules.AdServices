@@ -48,7 +48,7 @@ public class ContentProviderRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
 
     // Keep the value consistent with SdkSandboxmanagerService.ENFORCE_RESTRICTIONS
-    private static final String ENFORCE_RESTRICTIONS = "enforce_restrictions";
+    private static final String ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
 
     // Keep the value consistent with SdkSandboxmanagerService.PROPERTY_CONTENTPROVIDER_ALLOWLIST.
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
