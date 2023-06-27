@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
@@ -632,5 +633,49 @@ public class StatsdAdServicesLoggerTest {
         mLogger.logConsentMigrationStats(consentMigrationStats);
 
         verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementAdIdMatchForDebugKeys_success() {
+        final String enrollmentId = "EnrollmentId";
+        long uniqueAdIdValue = 1L;
+        long uniqueAdIdLimit = 5L;
+        int attributionType = AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(attributionType)
+                        .setNumUniqueAdIds(uniqueAdIdValue)
+                        .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyLong()));
+
+        // Invoke logging call
+        mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS),
+                                eq(enrollmentId),
+                                eq(attributionType),
+                                eq(true),
+                                eq(uniqueAdIdValue),
+                                eq(uniqueAdIdLimit));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }
