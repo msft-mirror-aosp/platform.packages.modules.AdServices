@@ -44,6 +44,7 @@ import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
@@ -69,6 +70,7 @@ import java.util.List;
 /** Unit test for {@link com.android.adservices.measurement.MeasurementService}. */
 public class MeasurementServiceTest {
     @Mock ConsentManager mMockConsentManager;
+    @Mock DevContextFilter mDevContextFilter;
     @Mock Flags mMockFlags;
     @Mock MeasurementImpl mMockMeasurementImpl;
     @Mock EnrollmentDao mMockEnrollmentDao;
@@ -238,6 +240,7 @@ public class MeasurementServiceTest {
                         .spyStatic(AppImportanceFilter.class)
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(DevContextFilter.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventReportingJobService.class)
                         .spyStatic(PackageChangedReceiver.class)
@@ -258,6 +261,9 @@ public class MeasurementServiceTest {
 
             ExtendedMockito.doReturn(mMockConsentManager)
                     .when(() -> ConsentManager.getInstance(any()));
+
+            ExtendedMockito.doReturn(mDevContextFilter)
+                    .when(() -> DevContextFilter.create(any(Context.class)));
 
             final AdServicesApiConsent mockConsent = mock(AdServicesApiConsent.class);
             doReturn(consentStatus).when(mockConsent).isGiven();
