@@ -28,5 +28,5 @@ interface DebugReportSenderStrategy {
 
     void batchEnqueue(List<Uri> uris);
 
-    ListenableFuture<?> flush();
+    ListenableFuture<Void> flush();
 }

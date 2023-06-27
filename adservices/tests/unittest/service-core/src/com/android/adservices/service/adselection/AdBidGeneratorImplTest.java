@@ -405,7 +405,7 @@ public class AdBidGeneratorImplTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
-        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(false);
+        when(mDebugReporting.isEnabled()).thenReturn(false);
         when(mDebugReporting.getScriptStrategy())
                 .thenReturn(new DebugReportingScriptDisabledStrategy());
     }
@@ -1022,7 +1022,7 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(true);
+        when(mDebugReporting.isEnabled()).thenReturn(true);
         AdBidGeneratorImpl adBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
