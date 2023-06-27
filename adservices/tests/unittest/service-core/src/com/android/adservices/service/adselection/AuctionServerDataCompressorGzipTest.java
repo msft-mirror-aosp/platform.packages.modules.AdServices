@@ -20,14 +20,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AuctionServerDataCompressorV0Test {
+public class AuctionServerDataCompressorGzipTest {
     private static final String COMPRESSIBLE_STRING =
             "repetitive test string repetitive test string repetitive test string";
-    private AuctionServerDataCompressorV0 mDataCompressorV0;
+    private AuctionServerDataCompressorGzip mDataCompressorV0;
 
     @Before
     public void setup() {
-        mDataCompressorV0 = new AuctionServerDataCompressorV0();
+        mDataCompressorV0 = new AuctionServerDataCompressorGzip();
     }
 
     @Test

@@ -117,7 +117,7 @@ public class PersistAdSelectionResultRunnerTest {
         mEncryptionContextDaoMock = serverDb.encryptionContextDao();
         mReportingUrisDaoSpy = serverDb.reportingUrisDao();
         mPayloadFormatter = new AuctionServerPayloadFormatterV0();
-        mDataCompressor = new AuctionServerDataCompressorV0();
+        mDataCompressor = new AuctionServerDataCompressorGzip();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -189,7 +189,7 @@ public class PersistAdSelectionResultRunnerTest {
                 mPayloadFormatter.apply(
                         AuctionServerPayloadFormatter.UnformattedData.create(
                                 compressedData.getData()),
-                        AuctionServerDataCompressorV0.VERSION);
+                        AuctionServerDataCompressorGzip.VERSION);
         return formattedData.getData();
     }
 
