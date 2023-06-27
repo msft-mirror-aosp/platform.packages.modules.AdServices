@@ -194,6 +194,8 @@ public class SdkSandboxManagerServiceUnitTest {
             "apply_sdk_sandbox_next_restrictions";
 
     private String mInitialApplyNextSdkSandboxRestrictions = null;
+    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST = "next_service_allowlist";
+    private String mInitialValueNextServiceAllowlist;
 
     @Before
     public void setup() {
@@ -290,6 +292,12 @@ public class SdkSandboxManagerServiceUnitTest {
                         PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+
+        mInitialServiceAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
     }
 
     @After
@@ -299,29 +307,12 @@ public class SdkSandboxManagerServiceUnitTest {
         }
         mStaticMockSession.finishMocking();
 
-        if (mInitialServiceAllowlistValue != null) {
-            DeviceConfig.setProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_SERVICES_ALLOWLIST,
-                    mInitialServiceAllowlistValue,
-                    /*makeDefault=*/ false);
-        } else {
-            DeviceConfig.deleteProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_SERVICES_ALLOWLIST);
-        }
-
-        if (Objects.isNull(mInitialApplyNextSdkSandboxRestrictions)) {
-            DeviceConfig.deleteProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
-            resetDeviceConfigProperty(
-                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
-                    mInitialApplyNextSdkSandboxRestrictions);
-        } else {
-            DeviceConfig.deleteProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
-        }
+        resetDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, mInitialServiceAllowlistValue);
+        resetDeviceConfigProperty(
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                mInitialApplyNextSdkSandboxRestrictions);
+        resetDeviceConfigProperty(
+                PROPERTY_NEXT_SERVICE_ALLOWLIST, mInitialValueNextServiceAllowlist);
     }
 
     private void resetDeviceConfigProperty(String property, String value) {
@@ -1753,6 +1744,40 @@ public class SdkSandboxManagerServiceUnitTest {
                 /*action=*/ "action.test1",
                 /*packageName=*/ "packageName.test1",
                 /*className=*/ "className.test1");
+    }
+
+    @Test
+    public void testServiceRestrictions_DeviceConfigNextAllowlistApplied() throws Exception {
+        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        /**
+         * Service allowlist allowlist_per_target_sdk { key: 34 value: { allowed_services: {
+         * intentAction : "action.test" componentPackageName : "packageName.test" componentClassName
+         * : "className.test" } } }
+         */
+        final String encodedServiceAllowlist =
+                "CjUIIhIxCi8KC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdA==";
+        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+
+        /**
+         * Service allowlist allowed_services: { intentAction : "action.next" componentPackageName :
+         * "packageName.next" componentClassName : "className.next" }
+         */
+        final String encodedNextServiceAllowlist =
+                "Ci8KC2FjdGlvbi5uZXh0EhBwYWNrYWdlTmFtZS5uZXh0Gg5jbGFzc05hbWUubmV4dA==";
+        setDeviceConfigProperty(PROPERTY_NEXT_SERVICE_ALLOWLIST, encodedNextServiceAllowlist);
+
+        testServiceRestriction(
+                /*action=*/ "action.next",
+                /*packageName=*/ "packageName.next",
+                /*className=*/ "className.next");
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        testServiceRestriction(
+                                /*action=*/ "action.test",
+                                /*packageName=*/ "packageName.test",
+                                /*className=*/ "className.test"));
     }
 
     @Test
