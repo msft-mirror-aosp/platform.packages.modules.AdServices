@@ -72,6 +72,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionE2ETest.AdSelectionTestCallback;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.FlagsOverridingAdFiltering;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -199,6 +200,7 @@ public class FrequencyCapFilteringE2ETest {
 
     private AdSelectionServiceImpl mAdSelectionServiceImpl;
     private UpdateAdCounterHistogramInput mInputParams;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
 
     @Before
     public void setup() {
@@ -272,7 +274,8 @@ public class FrequencyCapFilteringE2ETest {
                         mFledgeAuthorizationFilter,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -413,7 +416,8 @@ public class FrequencyCapFilteringE2ETest {
                         mFledgeAuthorizationFilter,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
@@ -476,7 +480,8 @@ public class FrequencyCapFilteringE2ETest {
                                     Mockito.mock(FledgeAllowListsFilter.class),
                                     () -> Throttler.getInstance(flagsWithLowRateLimit)),
                             mAdFilteringFeatureFactory,
-                            mConsentManagerMock);
+                            mConsentManagerMock,
+                            mObliviousHttpEncryptor);
 
             UpdateAdCounterHistogramTestCallback callback =
                     callUpdateAdCounterHistogram(mInputParams);
@@ -718,7 +723,8 @@ public class FrequencyCapFilteringE2ETest {
                         mFledgeAuthorizationFilter,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -828,7 +834,8 @@ public class FrequencyCapFilteringE2ETest {
                         mFledgeAuthorizationFilter,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Persist ad selections
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);

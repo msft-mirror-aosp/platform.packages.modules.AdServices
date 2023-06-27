@@ -17,9 +17,12 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
@@ -40,16 +43,20 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBReportingUris;
-import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -91,14 +98,14 @@ public class PersistAdSelectionResultRunnerTest {
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
-    //    private static final byte[] CIPHER_TEXT_BYTES =
-    //            "encrypted-chipher-for-auction-result".getBytes();
+    private static final byte[] CIPHER_TEXT_BYTES =
+            "encrypted-cipher-for-auction-result".getBytes();
     private static final long AD_SELECTION_ID = 12345L;
     private Context mContext;
     private Flags mFlags;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
-    @Mock private EncryptionContextDao mEncryptionContextDaoMock;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Spy private ReportingUrisDao mReportingUrisDaoSpy;
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
@@ -112,10 +119,10 @@ public class PersistAdSelectionResultRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDaoMock = serverDb.encryptionContextDao();
-        mReportingUrisDaoSpy = serverDb.reportingUrisDao();
+        mReportingUrisDaoSpy =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+                        .build()
+                        .reportingUrisDao();
         mPayloadFormatter = new AuctionServerPayloadFormatterV0();
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
@@ -132,12 +139,11 @@ public class PersistAdSelectionResultRunnerTest {
 
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
-                        mEncryptionContextDaoMock,
+                        mObliviousHttpEncryptorMock,
                         mReportingUrisDaoSpy,
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mFlags,
                         CALLER_UID);
     }
 
@@ -152,14 +158,17 @@ public class PersistAdSelectionResultRunnerTest {
     public void testRunner_persistAdSelectionResult_returnsSuccess() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
-        // TODO(ag/23781507): Add encryption to the unittest once ag/23781507 is merged
+        doReturn(prepareDecryptedAuctionResult())
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
                         .setPersistAdSelectionResultRequest(
                                 new PersistAdSelectionResultRequest.Builder()
                                         .setSeller(SELLER)
                                         .setAdSelectionId(AD_SELECTION_ID)
-                                        .setAdSelectionResult(prepareDecryptedAuctionResult())
+                                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
                                         .build())
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
@@ -171,6 +180,8 @@ public class PersistAdSelectionResultRunnerTest {
                 AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
         Assert.assertEquals(
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
         verify(mReportingUrisDaoSpy, times(1))
                 .insertReportingUris(
                         DBReportingUris.builder()
@@ -178,6 +189,38 @@ public class PersistAdSelectionResultRunnerTest {
                                 .setBuyerReportingUri(Uri.parse(BUYER_REPORTING_URI))
                                 .setSellerReportingUri(Uri.parse(SELLER_REPORTING_URI))
                                 .build());
+    }
+
+    @Test
+    public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        eq(false),
+                        eq(true),
+                        eq(CALLER_UID),
+                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT));
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setPersistAdSelectionResultRequest(
+                                new PersistAdSelectionResultRequest.Builder()
+                                        .setSeller(SELLER)
+                                        .setAdSelectionId(AD_SELECTION_ID)
+                                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                                        .build())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertNull(callback.mPersistAdSelectionResultResponse);
+        verifyZeroInteractions(mObliviousHttpEncryptorMock);
     }
 
     private byte[] prepareDecryptedAuctionResult() {

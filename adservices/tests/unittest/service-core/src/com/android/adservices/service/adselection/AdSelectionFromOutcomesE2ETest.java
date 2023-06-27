@@ -79,6 +79,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -197,8 +198,8 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
 
     @Before
     public void setUp() throws Exception {
@@ -271,7 +272,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =

@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
-
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataRequest;
@@ -32,21 +30,11 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.adselection.DBEncryptionContext;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyConstants;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.ohttp.ObliviousHttpClient;
-import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.ohttp.ObliviousHttpRequest;
-import com.android.adservices.ohttp.ObliviousHttpRequestContext;
-import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
@@ -63,7 +51,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -73,10 +60,8 @@ import java.util.stream.Collectors;
 @RequiresApi(Build.VERSION_CODES.S)
 public class GetAdSelectionDataRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
+    @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
-    @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
-    @NonNull private final EncryptionContextDao mEncryptionContextDao;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -87,31 +72,24 @@ public class GetAdSelectionDataRunner {
     @NonNull private final BuyerInputGenerator mBuyerInputGenerator;
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
     @NonNull private final AuctionServerPayloadFormatter mPayloadFormatter;
-    @NonNull private final AdSelectionEncryptionKeyManager mEncryptionKeyManager;
 
     public GetAdSelectionDataRunner(
-            @NonNull final AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final CustomAudienceDao customAudienceDao,
-            @NonNull final EncryptionKeyDao encryptionKeyDao,
-            @NonNull final EncryptionContextDao encryptionContextDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final Flags flags,
             final int callerUid) {
-        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(encryptionKeyDao);
-        Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(flags);
 
-        mAdServicesHttpsClient = adServicesHttpsClient;
+        mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mCustomAudienceDao = customAudienceDao;
-        mEncryptionKeyDao = encryptionKeyDao;
-        mEncryptionContextDao = encryptionContextDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -131,12 +109,6 @@ public class GetAdSelectionDataRunner {
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.getPayloadFormatter(
                         mFlags.getFledgeAuctionServerPayloadFormatVersion());
-        mEncryptionKeyManager =
-                new AdSelectionEncryptionKeyManager(
-                        mEncryptionKeyDao,
-                        mFlags,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutorService);
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -182,6 +154,8 @@ public class GetAdSelectionDataRunner {
                     new FutureCallback<>() {
                         @Override
                         public void onSuccess(byte[] result) {
+                            Objects.requireNonNull(result);
+
                             notifySuccessToCaller(result, adSelectionId, callback);
                         }
 
@@ -213,21 +187,38 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            GetAdSelectionDataRequest request, long adSelectionId) {
-        AdTechIdentifier seller = request.getSeller();
+            @NonNull GetAdSelectionDataRequest request, long adSelectionId) {
+        Objects.requireNonNull(request);
+
+        long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
-                .transform(this::compressEachBuyerInput, mLightweightExecutorService)
                 .transform(
-                        compressedBuyerInputBytes ->
-                                composeProtectedAudienceInputBytes(
-                                        compressedBuyerInputBytes, seller, adSelectionId),
+                        buyerInputs -> createPayload(buyerInputs, request, adSelectionId),
                         mLightweightExecutorService)
-                .transform(this::applyPayloadFormatter, mLightweightExecutorService)
                 .transform(
-                        formatted -> createObliviousHttpRequest(formatted, adSelectionId),
-                        mLightweightExecutorService)
-                .transform(this::serializeRequestToBytes, mLightweightExecutorService);
+                        formatted -> {
+                            sLogger.v("Encrypting composed proto bytes");
+                            byte[] encrypted =
+                                    mObliviousHttpEncryptor.encryptBytes(
+                                            formatted.getData(), adSelectionId, keyFetchTimeout);
+                            Objects.requireNonNull(encrypted);
+                            return encrypted;
+                        },
+                        mLightweightExecutorService);
+    }
+
+    private AuctionServerPayloadFormatter.FormattedData createPayload(
+            Map<AdTechIdentifier, BuyerInput> buyerInputs,
+            GetAdSelectionDataRequest request,
+            long adSelectionId) {
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
+                compressEachBuyerInput(buyerInputs);
+        ProtectedAudienceInput protectedAudienceInput =
+                composeProtectedAudienceInputBytes(
+                        compressedBuyerInput, request.getSeller(), adSelectionId);
+        sLogger.v("ProtectedAudienceInput composed");
+        return applyPayloadFormatter(protectedAudienceInput);
     }
 
     private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
@@ -264,7 +255,7 @@ public class GetAdSelectionDataRunner {
                 .setPublisherName(seller.toString())
                 .setEnableDebugReporting(mFlags.getFledgeAuctionServerEnableDebugReporting())
                 // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
-                // accessible in plaintext.
+                //  accessible in plaintext.
                 .setGenerationId(String.valueOf(adSelectionId))
                 .build();
     }
@@ -279,58 +270,10 @@ public class GetAdSelectionDataRunner {
         return mPayloadFormatter.apply(unformattedData, version);
     }
 
-    private ObliviousHttpRequest createObliviousHttpRequest(
-            AuctionServerPayloadFormatter.FormattedData formattedData, long adSelectionId) {
-        ObliviousHttpKeyConfig config;
-        ObliviousHttpClient client;
-        try {
-            config =
-                    mEncryptionKeyManager.getLatestOhttpKeyConfigOfType(
-                            AUCTION, mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs());
-            client = ObliviousHttpClient.create(config);
-        } catch (UnsupportedHpkeAlgorithmException e) {
-            sLogger.e("Unexpected error during Oblivious Http Client creation");
-            throw new RuntimeException(e);
-        }
-
-        Objects.requireNonNull(config);
-        Objects.requireNonNull(client);
-
-        ObliviousHttpRequest request;
-        try {
-            request = client.createObliviousHttpRequest(formattedData.getData());
-        } catch (IOException e) {
-            sLogger.e("Unexpected error during Oblivious HTTP Request creation");
-            throw new RuntimeException(e);
-        }
-
-        Objects.requireNonNull(request);
-
-        mEncryptionContextDao.insertEncryptionContext(
-                DBEncryptionContext.builder()
-                        .setContextId(adSelectionId)
-                        .setEncryptionKeyType(EncryptionKeyConstants.from(AUCTION))
-                        .setSeed(
-                                ObliviousHttpRequestContext.serializeSeed(
-                                        request.requestContext().seed()))
-                        .setKeyConfig(request.requestContext().keyConfig())
-                        .setSharedSecret(request.requestContext().encapsulatedSharedSecret())
-                        .build());
-
-        return request;
-    }
-
-    private byte[] serializeRequestToBytes(ObliviousHttpRequest request) {
-        try {
-            return request.serialize();
-        } catch (IOException e) {
-            sLogger.e("Unexpected error during Oblivious HTTP Request serialization");
-            throw new RuntimeException(e);
-        }
-    }
-
     private void notifySuccessToCaller(
             byte[] result, long adSelectionId, GetAdSelectionDataCallback callback) {
+        Objects.requireNonNull(result);
+
         try {
             callback.onSuccess(
                     new GetAdSelectionDataResponse.Builder()
