@@ -29,8 +29,8 @@ public class AuctionServerDataCompressorFactory {
 
     /** Returns an implementation for the {@link AuctionServerDataCompressor} */
     public static AuctionServerDataCompressor getDataCompressor(int version) {
-        if (version == AuctionServerDataCompressorV0.VERSION) {
-            return new AuctionServerDataCompressorV0();
+        if (version == AuctionServerDataCompressorGzip.VERSION) {
+            return new AuctionServerDataCompressorGzip();
         }
 
         String errMsg = String.format(NO_IMPLEMENTATION_FOUND, version);

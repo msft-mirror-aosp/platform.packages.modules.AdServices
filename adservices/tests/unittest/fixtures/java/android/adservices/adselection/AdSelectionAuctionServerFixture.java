@@ -17,7 +17,7 @@
 package android.adservices.adselection;
 
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
-import com.android.adservices.service.adselection.AuctionServerDataCompressorV0;
+import com.android.adservices.service.adselection.AuctionServerDataCompressorGzip;
 import com.android.adservices.service.adselection.AuctionServerPayloadFormatter;
 import com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -27,7 +27,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 public class AdSelectionAuctionServerFixture {
 
     public static byte[] formattedAuctionResult() {
-        AuctionServerDataCompressorV0 mDataCompressorV0 = new AuctionServerDataCompressorV0();
+        AuctionServerDataCompressorGzip mDataCompressorV0 = new AuctionServerDataCompressorGzip();
         WinReportingUrls urls =
                 WinReportingUrls.newBuilder()
                         .setBuyerReportingUrls(
