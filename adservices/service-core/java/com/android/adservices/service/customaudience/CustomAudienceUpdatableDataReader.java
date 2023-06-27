@@ -55,6 +55,7 @@ public class CustomAudienceUpdatableDataReader {
     public static final String METADATA_KEY = "metadata";
     public static final String AD_COUNTERS_KEY = "ad_counter_keys";
     public static final String AD_FILTERS_KEY = "ad_filters";
+    public static final String AD_RENDER_ID_KEY = "ad_render_id";
     public static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
 
     public static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
@@ -73,6 +74,7 @@ public class CustomAudienceUpdatableDataReader {
     private final int mMaxAdsSizeB;
     private final int mMaxNumAds;
     private final ReadFiltersFromJsonStrategy mGetFiltersFromJsonObjectStrategy;
+    private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
 
     /**
      * Creates a {@link CustomAudienceUpdatableDataReader} that will read updatable data from a
@@ -89,6 +91,8 @@ public class CustomAudienceUpdatableDataReader {
      * @param maxAdsSizeB the configured maximum size in bytes allocated for ads
      * @param maxNumAds the configured maximum number of ads allowed per update
      * @param filteringEnabled whether or not ad selection filtering fields should be read
+     * @param adRenderIdEnabled whether ad render id field should be read
+     * @param adRenderIdMaxLength the max length of the ad render id
      */
     protected CustomAudienceUpdatableDataReader(
             @NonNull JSONObject responseObject,
@@ -98,7 +102,9 @@ public class CustomAudienceUpdatableDataReader {
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds,
-            boolean filteringEnabled) {
+            boolean filteringEnabled,
+            boolean adRenderIdEnabled,
+            long adRenderIdMaxLength) {
         Objects.requireNonNull(responseObject);
         Objects.requireNonNull(responseHash);
         Objects.requireNonNull(buyer);
@@ -112,6 +118,9 @@ public class CustomAudienceUpdatableDataReader {
         mMaxNumAds = maxNumAds;
         mGetFiltersFromJsonObjectStrategy =
                 ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+        mReadAdRenderIdFromJsonStrategy =
+                ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
+                        adRenderIdEnabled, adRenderIdMaxLength);
     }
 
     /**
@@ -266,6 +275,7 @@ public class CustomAudienceUpdatableDataReader {
                             new DBAdData.Builder().setRenderUri(parsedUri).setMetadata(metadata);
 
                     mGetFiltersFromJsonObjectStrategy.readFilters(adDataBuilder, adDataJsonObj);
+                    mReadAdRenderIdFromJsonStrategy.readId(adDataBuilder, adDataJsonObj);
                     DBAdData adData = adDataBuilder.build();
                     adsList.add(adData);
                     adsSize += adData.size();

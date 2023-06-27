@@ -49,7 +49,6 @@ public interface AdRenderIdValidator extends Validator<String> {
      * @return an instance of {@code AdRenderIdValidator} that will enforce the given {@code
      *     maxLength}
      */
-    @VisibleForTesting
     @NonNull
     static AdRenderIdValidator createEnabledInstance(long maxLength) {
         return (object, violations) -> {
