@@ -44,6 +44,8 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        LogUtil.i("AdExtBootCompletedReceiver onReceive invoked");
+
         // TODO(b/269798827): Enable for R.
         // On T+ devices, always disable the AdExtServices activities and services.
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
@@ -61,6 +63,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         if (!FlagsFactory.getFlags().getEnableBackCompat()
                 || !FlagsFactory.getFlags().getAdServicesEnabled()
                 || FlagsFactory.getFlags().getGlobalKillSwitch()) {
+            LogUtil.d("Exiting AdExtBootCompletedReceiver because flags are disabled");
             return;
         }
 
