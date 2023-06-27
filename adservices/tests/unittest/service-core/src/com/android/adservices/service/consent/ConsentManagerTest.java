@@ -2317,12 +2317,12 @@ public class ConsentManagerTest {
 
         verify(mMockIAdServicesManager, never()).wasNotificationDisplayed();
 
-        spyConsentManager.recordNotificationDisplayed();
+        spyConsentManager.recordNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasNotificationDisplayed()).isTrue();
 
         verify(mMockIAdServicesManager, never()).wasNotificationDisplayed();
-        verify(mMockIAdServicesManager, never()).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordNotificationDisplayed(true);
     }
 
     @Test
@@ -2337,12 +2337,12 @@ public class ConsentManagerTest {
         verify(mMockIAdServicesManager).wasNotificationDisplayed();
 
         doReturn(true).when(mMockIAdServicesManager).wasNotificationDisplayed();
-        spyConsentManager.recordNotificationDisplayed();
+        spyConsentManager.recordNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasNotificationDisplayed()).isTrue();
 
         verify(mMockIAdServicesManager, times(2)).wasNotificationDisplayed();
-        verify(mMockIAdServicesManager).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Verify notificationDisplayed is not set in PPAPI
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
@@ -2362,12 +2362,12 @@ public class ConsentManagerTest {
         verify(mMockIAdServicesManager).wasNotificationDisplayed();
 
         doReturn(true).when(mMockIAdServicesManager).wasNotificationDisplayed();
-        spyConsentManager.recordNotificationDisplayed();
+        spyConsentManager.recordNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasNotificationDisplayed()).isTrue();
 
         verify(mMockIAdServicesManager, times(2)).wasNotificationDisplayed();
-        verify(mMockIAdServicesManager).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Verify notificationDisplayed is also set in PPAPI
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
@@ -2386,12 +2386,12 @@ public class ConsentManagerTest {
         verify(mAppSearchConsentManagerMock).wasNotificationDisplayed();
 
         doReturn(true).when(mAppSearchConsentManagerMock).wasNotificationDisplayed();
-        spyConsentManager.recordNotificationDisplayed();
+        spyConsentManager.recordNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasNotificationDisplayed()).isTrue();
 
         verify(mAppSearchConsentManagerMock, times(2)).wasNotificationDisplayed();
-        verify(mAppSearchConsentManagerMock).recordNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).recordNotificationDisplayed(true);
     }
 
     @Test
@@ -2489,7 +2489,7 @@ public class ConsentManagerTest {
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, invalidConsentSourceOfTruth);
 
-        assertThrows(RuntimeException.class, spyConsentManager::recordNotificationDisplayed);
+        assertThrows(RuntimeException.class, () -> spyConsentManager.recordNotificationDisplayed(true));
     }
 
     @Test
@@ -2521,7 +2521,7 @@ public class ConsentManagerTest {
     public void testMigratePpApiConsentToSystemService() throws RemoteException, IOException {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
-        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         mConsentDatastore.put(CONSENT_KEY, true);
         mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
@@ -2532,13 +2532,13 @@ public class ConsentManagerTest {
                 mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
 
         verify(mMockIAdServicesManager).setConsent(any());
-        verify(mMockIAdServicesManager).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Verify this should only happen once
         ConsentManager.migratePpApiConsentToSystemService(
                 mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
         verify(mMockIAdServicesManager).setConsent(any());
-        verify(mMockIAdServicesManager).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Clear shared preference
         ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
@@ -2549,7 +2549,7 @@ public class ConsentManagerTest {
             throws RemoteException, IOException {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
-        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
         mConsentDatastore.put(CONSENT_KEY, true);
         mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
         assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
@@ -2594,7 +2594,7 @@ public class ConsentManagerTest {
             throws RemoteException, IOException {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
-        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
         mConsentDatastore.put(CONSENT_KEY, true);
         mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
 
@@ -2637,7 +2637,9 @@ public class ConsentManagerTest {
     public void testMigratePpApiConsentToSystemServiceThrowsException()
             throws RemoteException, IOException {
         mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-        doThrow(RemoteException.class).when(mMockIAdServicesManager).recordNotificationDisplayed();
+        doThrow(RemoteException.class)
+                .when(mMockIAdServicesManager)
+                .recordNotificationDisplayed(true);
 
         doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
@@ -2700,7 +2702,7 @@ public class ConsentManagerTest {
         verify(mAppSearchConsentManagerMock, never())
                 .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
         verify(mMockIAdServicesManager, never()).setConsent(any());
-        verify(mMockIAdServicesManager, never()).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordNotificationDisplayed(true);
         verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
         verify(mMockIAdServicesManager, never()).recordDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordAdServicesDeletionOccurred(anyInt());
@@ -2928,7 +2930,7 @@ public class ConsentManagerTest {
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
         verify(mAppSearchConsentManagerMock)
                 .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
-        verify(mockAdServicesManager, never()).recordNotificationDisplayed();
+        verify(mockAdServicesManager, never()).recordNotificationDisplayed(true);
         verify(mockAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
         verify(mockAdServicesManager, never()).recordDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordAdServicesDeletionOccurred(anyInt());
@@ -3640,7 +3642,7 @@ public class ConsentManagerTest {
                         : ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API);
         doReturn(consentParcel).when(mMockIAdServicesManager).getConsent(ConsentParcel.ALL_API);
         doReturn(isGiven).when(mMockIAdServicesManager).wasNotificationDisplayed();
-        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
         doReturn(isGiven).when(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
         doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
         doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
@@ -3669,7 +3671,7 @@ public class ConsentManagerTest {
                         : ConsentParcel.createRevokedConsent(consentApiType);
         doReturn(consentParcel).when(mMockIAdServicesManager).getConsent(consentApiType);
         doReturn(isGiven).when(mMockIAdServicesManager).wasNotificationDisplayed();
-        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
         doReturn(isGiven).when(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
         doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
         doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();

@@ -261,8 +261,8 @@ public class AppSearchConsentManagerTest {
 
     @Test
     public void testRecordNotificationDisplayed() {
-        mAppSearchConsentManager.recordNotificationDisplayed();
-        verify(mAppSearchConsentWorker).recordNotificationDisplayed();
+        mAppSearchConsentManager.recordNotificationDisplayed(true);
+        verify(mAppSearchConsentWorker).recordNotificationDisplayed(true);
     }
 
     @Test
@@ -463,7 +463,7 @@ public class AppSearchConsentManagerTest {
                         mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertThat(result).isTrue();
         verify(mDatastore).put(eq(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), eq(true));
-        verify(mAdServicesManager).recordNotificationDisplayed();
+        verify(mAdServicesManager).recordNotificationDisplayed(true);
         verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
         verify(mEditor)
                 .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));

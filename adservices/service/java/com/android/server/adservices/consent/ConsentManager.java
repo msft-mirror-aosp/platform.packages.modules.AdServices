@@ -188,11 +188,11 @@ public final class ConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() throws IOException {
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException {
         mReadWriteLock.writeLock().lock();
         try {
             // TODO(b/229725886): add metrics / logging
-            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, wasNotificationDisplayed);
         } catch (IOException e) {
             LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
         } finally {
