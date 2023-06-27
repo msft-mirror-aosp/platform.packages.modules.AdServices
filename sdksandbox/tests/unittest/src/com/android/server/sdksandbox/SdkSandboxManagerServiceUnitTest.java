@@ -189,6 +189,11 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
 
+    private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
+            "apply_sdk_sandbox_next_restrictions";
+
+    private String mInitialApplyNextSdkSandboxRestrictions = null;
+
     @Before
     public void setup() {
         assumeTrue(
@@ -271,6 +276,13 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(sSdkSandboxSettingsListener).isNotNull();
 
         mClientAppUid = Process.myUid();
+
+        mInitialApplyNextSdkSandboxRestrictions =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
     }
 
     @After
@@ -279,6 +291,18 @@ public class SdkSandboxManagerServiceUnitTest {
             sSdkSandboxSettingsListener.unregisterPropertiesListener();
         }
         mStaticMockSession.finishMocking();
+
+        if (Objects.isNull(mInitialApplyNextSdkSandboxRestrictions)) {
+            DeviceConfig.deleteProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+        } else {
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                    mInitialApplyNextSdkSandboxRestrictions,
+                    /*makeDefault=*/ false);
+        }
     }
 
     /** Mock the ActivityManager::killUid to avoid SecurityException thrown in test. **/
@@ -2890,7 +2914,7 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testSdkSandboxSettings() {
+    public void testSdkSandboxSettings_killSwitch() {
         assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
@@ -2911,6 +2935,21 @@ public class SdkSandboxManagerServiceUnitTest {
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES, Map.of("other_property", "true")));
         assertThat(sSdkSandboxSettingsListener.isKillSwitchEnabled()).isFalse();
+    }
+
+    @Test
+    public void testSdkSandboxSettings_applySdkSandboxRestrictionsNext() {
+        assertThat(sSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()).isFalse();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true")));
+        assertThat(sSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()).isTrue();
+        sSdkSandboxSettingsListener.onPropertiesChanged(
+                new DeviceConfig.Properties(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        Map.of(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "false")));
+        assertThat(sSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()).isFalse();
     }
 
     @Test
