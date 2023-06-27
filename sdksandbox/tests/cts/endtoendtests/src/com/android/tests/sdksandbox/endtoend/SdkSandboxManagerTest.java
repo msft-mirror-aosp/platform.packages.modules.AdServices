@@ -64,7 +64,6 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,11 +116,6 @@ public class SdkSandboxManagerTest {
         killSandboxIfExists();
         mScenario = mRule.getScenario();
         mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        killSandboxIfExists();
     }
 
     @Test
@@ -933,7 +927,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
         killSandbox();
 
-        return callback.getSdkSandboxDeathCount() > 0;
+        return callback.waitForSandboxDeath();
     }
 
     private void killSandbox() throws Exception {
