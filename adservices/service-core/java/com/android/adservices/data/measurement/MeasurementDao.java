@@ -416,15 +416,19 @@ class MeasurementDao implements IMeasurementDao {
                     MeasurementTables.SourceContract.TRIGGER_SPECS,
                     source.getFlexEventReportSpec().encodeTriggerSpecsToJSON());
             values.put(
-                    MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
-                    source.getFlexEventReportSpec().getMaxReports());
-            values.put(
                     MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
                     source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                     source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
         }
+        values.put(
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
+                source.getMaxEventLevelReports());
+        values.put(
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
+                source.getEventReportWindows());
+
         long rowId =
                 mSQLTransaction
                         .getDatabase()

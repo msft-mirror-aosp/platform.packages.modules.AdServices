@@ -22,7 +22,11 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJSON;
+import static com.android.adservices.service.measurement.Source.getOrDefaultEventReportWindows;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
+import static com.android.adservices.service.measurement.TriggerSpec.getLongArrayFromJSON;
+import static com.android.adservices.service.measurement.TriggerSpec.getTriggerDataArrayFromJSON;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
 
@@ -31,6 +35,7 @@ import static java.lang.Math.min;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -39,7 +44,9 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
+import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -64,6 +71,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Download and decode Response Based Registration
@@ -132,22 +140,17 @@ public class AsyncSourceFetcher {
         } else {
             expiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
         }
-        builder.setExpiryTime(
-                asyncRegistration.getRequestTime() + TimeUnit.SECONDS.toMillis(expiry));
-        long eventReportWindow;
+        builder.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
-            eventReportWindow =
+            long eventReportWindow =
                     Math.min(
                             expiry,
                             extractValidNumberInRange(
                                     json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
-                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                    mFlags.getMeasurementMinimumEventReportWindowInSeconds(),
                                     MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
-        } else {
-            eventReportWindow = expiry;
+            builder.setEventReportWindow(TimeUnit.SECONDS.toMillis(eventReportWindow));
         }
-        builder.setEventReportWindow(
-                sourceEventTime + TimeUnit.SECONDS.toMillis(eventReportWindow));
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
             aggregateReportWindow =
@@ -157,14 +160,17 @@ public class AsyncSourceFetcher {
                                     json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
                                     MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                                     MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+
         } else {
             aggregateReportWindow = expiry;
         }
         builder.setAggregatableReportWindow(
                 sourceEventTime + TimeUnit.SECONDS.toMillis(aggregateReportWindow));
+
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             builder.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
+
         if (!json.isNull(SourceHeaderContract.DEBUG_REPORTING)) {
             builder.setIsDebugReporting(json.optBoolean(SourceHeaderContract.DEBUG_REPORTING));
         }
@@ -303,23 +309,210 @@ public class AsyncSourceFetcher {
             LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
         }
-        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
-            if (json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
-                LogUtil.d(
-                        "Flexible event report API parameter is not provided, fall back to previous"
-                                + " version!");
-            } else {
-                builder.setTriggerSpecs(json.getString(SourceHeaderContract.TRIGGER_SPECS));
-                if (!json.isNull(SourceHeaderContract.MAX_BUCKET_INCREMENTS)) {
-                    builder.setMaxBucketIncrements(
-                            json.getString(SourceHeaderContract.MAX_BUCKET_INCREMENTS));
+
+        String eventReportWindows = null;
+        if (mFlags.getMeasurementFlexLiteAPIEnabled()
+                || mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
+            if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
+                int maxEventLevelReports =
+                        json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
+                if (maxEventLevelReports > mFlags.getMeasurementFlexAPIMaxEventReports()) {
+                    return false;
                 }
-                try {
-                    builder.buildInitialFlexEventReportSpec();
-                } catch (JSONException e) {
-                    LogUtil.d("Fail to build the required parameters flex event report API ");
+                builder.setMaxEventLevelReports(maxEventLevelReports);
+            }
+
+            if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOWS)) {
+                if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
+                    LogUtil.d(
+                            "Only one of event_report_window and event_report_windows is expected");
+                    return false;
+                }
+                eventReportWindows = json.getString(SourceHeaderContract.EVENT_REPORT_WINDOWS);
+                if (!isEventReportWindowsValid(new JSONObject(eventReportWindows), expiry)) {
+                    LogUtil.d("Invalid value for event_report_windows");
+                    return false;
+                }
+                eventReportWindows = updateEventReportWindowsToMillis(eventReportWindows);
+                builder.setEventReportWindows(eventReportWindows);
+            }
+        }
+
+        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
+                && !json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
+            String triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
+
+            if (!isTriggerSpecArrayValid(triggerSpecString, expiry)) {
+                LogUtil.d("Invalid Trigger Spec format");
+                return false;
+            }
+            String updatedTriggerSpec =
+                    populateTriggerSpecDefaults(
+                            triggerSpecString,
+                            eventReportWindows,
+                            expiry,
+                            asyncRegistration.getSourceType());
+
+            builder.setTriggerSpecs(updatedTriggerSpec);
+            builder.buildInitialFlexEventReportSpec(mFlags);
+        }
+        return true;
+    }
+
+    private String updateEventReportWindowsToMillis(String eventReportWindow) throws JSONException {
+        List<Pair<Long, Long>> eventReportWindows =
+                Source.parseEventReportWindows(eventReportWindow);
+        if (eventReportWindows == null) {
+            return null;
+        }
+        List<Pair<Long, Long>> converted = new ArrayList<>();
+        for (Pair<Long, Long> window : eventReportWindows) {
+            converted.add(
+                    new Pair<>(
+                            TimeUnit.SECONDS.toMillis(window.first),
+                            TimeUnit.SECONDS.toMillis(window.second)));
+        }
+        JSONObject result = new JSONObject();
+        result.put("start_time", converted.get(0).first);
+        JSONArray endTimes = new JSONArray();
+        for (Pair<Long, Long> window : converted) {
+            endTimes.put(window.second);
+        }
+        result.put("end_times", endTimes);
+        return result.toString();
+    }
+
+    private String populateTriggerSpecDefaults(
+            String triggerSpecString,
+            String eventReportWindows,
+            long expiry,
+            Source.SourceType sourceType)
+            throws JSONException {
+        List<Pair<Long, Long>> parsedEventReportWindows =
+                getOrDefaultEventReportWindows(eventReportWindows, sourceType, expiry, mFlags);
+        long defaultStart = parsedEventReportWindows.get(0).first;
+        List<Long> defaultEnds =
+                parsedEventReportWindows.stream().map((x) -> x.second).collect(Collectors.toList());
+        JSONArray triggerSpecJson = new JSONArray(triggerSpecString);
+        TriggerSpec[] triggerSpecs = new TriggerSpec[triggerSpecJson.length()];
+        for (int i = 0; i < triggerSpecJson.length(); i++) {
+            triggerSpecs[i] =
+                    new TriggerSpec.Builder(
+                                    triggerSpecJson.getJSONObject(i), defaultStart, defaultEnds)
+                            .build();
+        }
+        return encodeTriggerSpecsToJSON(triggerSpecs);
+    }
+
+    private boolean isTriggerSpecArrayValid(String triggerSpecString, long expiry) {
+        try {
+            JSONArray triggerSpecArray = new JSONArray(triggerSpecString);
+            Set<UnsignedLong> triggerDataSet = new HashSet<>();
+            for (int i = 0; i < triggerSpecArray.length(); i++) {
+                if (!isTriggerSpecValid(
+                        triggerSpecArray.getJSONObject(i), expiry, triggerDataSet)) {
+                    return false;
                 }
             }
+            // Check cardinality of trigger_data across the whole trigger spec array
+            if (triggerDataSet.size() > mFlags.getMeasurementFlexAPIMaxTriggerDataCardinality()) {
+                return false;
+            }
+        } catch (JSONException | IllegalArgumentException ex) {
+            LogUtil.d(ex, "Trigger Spec parsing failed");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isTriggerSpecValid(
+            JSONObject triggerSpec, long expiry, Set<UnsignedLong> triggerDataSet)
+            throws JSONException {
+        List<UnsignedLong> triggerDataList =
+                getTriggerDataArrayFromJSON(
+                        triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA);
+        if (triggerDataList.isEmpty()
+                || triggerDataList.size()
+                        > mFlags.getMeasurementFlexAPIMaxTriggerDataCardinality()) {
+            return false;
+        }
+        // Check exclusivity of trigger_data across the whole trigger spec array
+        for (UnsignedLong triggerData : triggerDataList) {
+            if (!triggerDataSet.add(triggerData)) {
+                return false;
+            }
+        }
+
+        if (!triggerSpec.isNull(ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)
+                && !isEventReportWindowsValid(
+                        triggerSpec.getJSONObject(
+                                ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS),
+                        expiry)) {
+            return false;
+        }
+
+        TriggerSpec.SummaryOperatorType summaryWindowOperator =
+                TriggerSpec.SummaryOperatorType.COUNT;
+        if (!triggerSpec.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+            try {
+                summaryWindowOperator =
+                        TriggerSpec.SummaryOperatorType.valueOf(
+                                triggerSpec
+                                        .getString(
+                                                ReportSpecUtil.FlexEventReportJsonKeys
+                                                        .SUMMARY_WINDOW_OPERATOR)
+                                        .toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // If a summary window operator is not in the pre-defined list, it will throw to
+                // exception.
+                LogUtil.d(e, "Summary Operator parsing failed");
+                return false;
+            }
+        }
+        List<Long> summaryBuckets = null;
+        if (!triggerSpec.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+            summaryBuckets =
+                    getLongArrayFromJSON(
+                            triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+        }
+        if ((summaryBuckets == null || summaryBuckets.isEmpty())
+                && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
+            return false;
+        }
+
+        if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isEventReportWindowsValid(JSONObject jsonReportWindows, long expiry)
+            throws JSONException {
+        long startTime = 0;
+        if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
+            startTime =
+                    jsonReportWindows.getLong(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME);
+        }
+        if (startTime < 0 || startTime > expiry) {
+            return false;
+        }
+        List<Long> windowsEnd =
+                getLongArrayFromJSON(
+                        jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES);
+        if (windowsEnd.isEmpty()
+                || windowsEnd.size() > mFlags.getMeasurementFlexAPIMaxEventReportWindows()) {
+            return false;
+        }
+
+        if (startTime > windowsEnd.get(0)
+                || windowsEnd.get(0) < mFlags.getMeasurementMinimumEventReportWindowInSeconds()
+                || windowsEnd.get(windowsEnd.size() - 1) > expiry) {
+            return false;
+        }
+
+        if (!TriggerSpec.isStrictIncreasing(windowsEnd)) {
+            return false;
         }
         return true;
     }
@@ -543,7 +736,8 @@ public class AsyncSourceFetcher {
         String DEBUG_AD_ID = "debug_ad_id";
         String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
         String TRIGGER_SPECS = "trigger_specs";
-        String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
+        String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
+        String EVENT_REPORT_WINDOWS = "event_report_windows";
     }
 
     private interface SourceRequestContract {
