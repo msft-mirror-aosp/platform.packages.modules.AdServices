@@ -37,7 +37,7 @@ import java.util.Objects;
  */
 public final class GetAdSelectionDataResponse implements Parcelable {
     private final long mAdSelectionId;
-    private final byte[] mAdSelectionData;
+    @Nullable private final byte[] mAdSelectionData;
 
     public static final Creator<GetAdSelectionDataResponse> CREATOR =
             new Creator<>() {
@@ -133,7 +133,6 @@ public final class GetAdSelectionDataResponse implements Parcelable {
          */
         @NonNull
         public GetAdSelectionDataResponse build() {
-            Objects.requireNonNull(mAdSelectionData);
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 

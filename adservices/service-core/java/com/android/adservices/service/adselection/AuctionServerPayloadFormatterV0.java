@@ -38,10 +38,10 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
             "Data size extracted from padded bytes is longer than the rest of the data";
 
     private static final int DATA_SIZE_PADDING_LENGTH_BYTE = 4;
-    @NonNull private final ByteBuffer mByteBuffer;
+    @NonNull private final ByteBuffer mDataSizeBytesBuffer;
 
     public AuctionServerPayloadFormatterV0() {
-        mByteBuffer = ByteBuffer.allocate(DATA_SIZE_PADDING_LENGTH_BYTE);
+        mDataSizeBytesBuffer = ByteBuffer.allocate(DATA_SIZE_PADDING_LENGTH_BYTE);
     }
 
     /**
@@ -71,18 +71,24 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
 
         // Fill in
         payload[0] = AuctionServerPayloadFormatter.getMetaInfoByte(compressorVersion, VERSION);
+        sLogger.v("Meta info byte added: " + payload[0]);
+        byte[] dataSizeBytes = mDataSizeBytesBuffer.putInt(data.length).array();
         System.arraycopy(
-                mByteBuffer.putInt(data.length).array(),
-                0,
-                payload,
-                META_INFO_LENGTH_BYTE,
-                DATA_SIZE_PADDING_LENGTH_BYTE);
+                dataSizeBytes, 0, payload, META_INFO_LENGTH_BYTE, DATA_SIZE_PADDING_LENGTH_BYTE);
+        sLogger.v(
+                "Data size bytes are added: "
+                        + Arrays.toString(dataSizeBytes)
+                        + " for size: "
+                        + data.length);
         System.arraycopy(
                 data,
                 0,
                 payload,
                 META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE,
                 data.length);
+
+        // Clear the buffer in-case the formatter is used again.
+        mDataSizeBytesBuffer.clear();
 
         return FormattedData.create(payload);
     }

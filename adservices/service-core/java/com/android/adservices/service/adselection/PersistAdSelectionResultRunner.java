@@ -30,15 +30,9 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.DBReportingUris;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.data.adselection.ReportingUrisDao;
-import com.android.adservices.ohttp.ObliviousHttpClient;
-import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.ohttp.ObliviousHttpRequestContext;
-import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
@@ -63,38 +57,34 @@ import java.util.concurrent.ExecutorService;
 @RequiresApi(Build.VERSION_CODES.S)
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    @NonNull private final EncryptionContextDao mEncryptionContextDao;
+    @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final ReportingUrisDao mReportingUrisDao;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
-    @NonNull private final Flags mFlags;
     @NonNull private final int mCallerUid;
 
     @NonNull private AuctionServerDataCompressor mDataCompressor;
     @NonNull private AuctionServerPayloadFormatter mPayloadFormatter;
 
     public PersistAdSelectionResultRunner(
-            @NonNull final EncryptionContextDao encryptionContextDao,
+            @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final ReportingUrisDao reportingUrisDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
-            @NonNull final Flags flags,
             @NonNull final int callerUid) {
-        Objects.requireNonNull(encryptionContextDao);
+        Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(reportingUrisDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
-        Objects.requireNonNull(flags);
 
-        mEncryptionContextDao = encryptionContextDao;
+        mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mReportingUrisDao = reportingUrisDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
-        mFlags = flags;
         mCallerUid = callerUid;
     }
 
@@ -125,7 +115,8 @@ public class PersistAdSelectionResultRunner {
                                             true,
                                             mCallerUid,
                                             apiName,
-                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                                            Throttler.ApiKey
+                                                    .FLEDGE_API_PERSIST_AD_SELECTION_RESULT);
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
@@ -184,16 +175,25 @@ public class PersistAdSelectionResultRunner {
             @NonNull PersistAdSelectionResultRequest request) {
         long adSelectionId = request.getAdSelectionId();
 
-        return FluentFuture.from(mLightweightExecutorService.submit(request::getAdSelectionResult))
-                // TODO(ag/23781507): Add encryption to the unittest once ag/23781507 is merged
-                //                 .transform((resultBytes) -> decryptBytes(resultBytes,
-                // adSelectionId),
-                //                 mLightweightExecutorService)
+        return decryptBytes(request)
                 .transform(this::parseAdSelectionResult, mLightweightExecutorService)
                 .transformAsync(
                         auctionResult -> persistReportingUris(auctionResult, adSelectionId),
                         mLightweightExecutorService);
         // TODO(b/278087551): Check if ad render uri is present on the device
+    }
+
+    private FluentFuture<byte[]> decryptBytes(PersistAdSelectionResultRequest request) {
+        byte[] encryptedAuctionResult = request.getAdSelectionResult();
+        long adSelectionId = request.getAdSelectionId();
+
+        return FluentFuture.from(
+                mLightweightExecutorService.submit(
+                        () -> {
+                            sLogger.v("Decrypting auction result data for :" + adSelectionId);
+                            return mObliviousHttpEncryptor.decryptBytes(
+                                    encryptedAuctionResult, adSelectionId);
+                        }));
     }
 
     private AuctionResult parseAdSelectionResult(byte[] resultBytes) {
@@ -214,34 +214,7 @@ public class PersistAdSelectionResultRunner {
         return composeAuctionResult(uncompressedResult);
     }
 
-    private byte[] decryptBytes(byte[] encryptedAuctionResult, long adSelectionId) {
-        try {
-            DBEncryptionContext dbContext =
-                    mEncryptionContextDao.getEncryptionContext(
-                            adSelectionId,
-                            EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION);
-
-            ObliviousHttpKeyConfig config = dbContext.getKeyConfig();
-            Objects.requireNonNull(config);
-
-            ObliviousHttpClient client = ObliviousHttpClient.create(config);
-            Objects.requireNonNull(client);
-
-            ObliviousHttpRequestContext context =
-                    ObliviousHttpRequestContext.create(
-                            config,
-                            dbContext.getSharedSecret(),
-                            ObliviousHttpRequestContext.deserializeSeed(dbContext.getSeed()));
-            Objects.requireNonNull(context);
-
-            return client.decryptObliviousHttpResponse(encryptedAuctionResult, context);
-        } catch (Exception e) {
-            sLogger.e("Unexpected error during decryption");
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void initializeDataCompressor(byte[] resultBytes) {
+    private void initializeDataCompressor(@NonNull byte[] resultBytes) {
         Objects.requireNonNull(resultBytes, "AdSelectionResult bytes cannot be null");
 
         byte metaInfoByte = resultBytes[0];
