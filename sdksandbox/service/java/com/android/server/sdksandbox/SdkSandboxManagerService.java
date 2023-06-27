@@ -225,22 +225,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
     /**
-     * Property to enforce broadcast receiver restrictions for SDK sandbox processes. If the value
-     * of this property is {@code true}, the restrictions will be enforced.
-     */
-    private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
-            "enforce_broadcast_receiver_restrictions";
-
-    private static final boolean DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS = false;
-
-    /**
      * Property to enforce content provider restrictions for SDK sandbox processes. If the value of
      * this property is {@code true}, the restrictions will be enforced.
      */
-    private static final String PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
-            "enforce_content_provider_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_restrictions";
 
-    private static final boolean DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS = false;
+    private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = false;
 
     private static final String WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER =
             "DeveloperModeContentProvider";
@@ -1718,18 +1708,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         DEFAULT_VALUE_DISABLE_SDK_SANDBOX);
 
         @GuardedBy("mLock")
-        private boolean mEnforceBroadcastReceiverRestrictions =
+        private boolean mEnforceRestrictions =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                        DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
-
-        @GuardedBy("mLock")
-        private boolean mEnforceContentProviderRestrictions =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                        DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+                        PROPERTY_ENFORCE_RESTRICTIONS,
+                        DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
 
         @GuardedBy("mLock")
         private Map<Integer, AllowedServices> mServiceAllowlistPerTargetSdkVersion =
@@ -1791,15 +1774,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED);
         }
 
-        boolean isBroadcastReceiverRestrictionsEnforced() {
+        boolean areRestrictionsEnforced() {
             synchronized (mLock) {
-                return mEnforceBroadcastReceiverRestrictions;
-            }
-        }
-
-        boolean areContentProviderRestrictionsEnforced() {
-            synchronized (mLock) {
-                return mEnforceContentProviderRestrictions;
+                return mEnforceRestrictions;
             }
         }
 
@@ -1847,17 +1824,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 }
                             }
                             break;
-                        case PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS:
-                            mEnforceBroadcastReceiverRestrictions =
+                        case PROPERTY_ENFORCE_RESTRICTIONS:
+                            mEnforceRestrictions =
                                     properties.getBoolean(
-                                            PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                                            DEFAULT_VALUE_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
-                            break;
-                        case PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS:
-                            mEnforceContentProviderRestrictions =
-                                    properties.getBoolean(
-                                            PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                                            DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+                                            PROPERTY_ENFORCE_RESTRICTIONS,
+                                            DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
                             break;
                         case PROPERTY_CONTENTPROVIDER_ALLOWLIST:
                             mContentProviderAllowlistPerTargetSdkVersion =
@@ -2514,7 +2485,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long token = Binder.clearCallingIdentity();
 
             try {
-                return !mSdkSandboxSettingsListener.areContentProviderRestrictionsEnforced()
+                return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
                         || getContentProviderAllowlist().contains(providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
@@ -2590,7 +2561,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             try {
                 final boolean enforceRestrictions =
-                        mSdkSandboxSettingsListener.isBroadcastReceiverRestrictionsEnforced();
+                        mSdkSandboxSettingsListener.areRestrictionsEnforced();
                 final boolean exported = (flags & Context.RECEIVER_NOT_EXPORTED) == 0;
                 return !enforceRestrictions || !exported;
             } finally {
