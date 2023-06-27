@@ -48,14 +48,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class BroadcastRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
-    private static final String ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
+    private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
             "enforce_broadcast_receiver_restrictions";
-
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_restrictions";
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.broadcasts";
 
-    private Boolean mEnforceBroadcastRestrictionsSandboxNamespace = null;
-    private Boolean mEnforceBroadcastRestrictionsAdServicesNamespace = null;
+    private String mEnforceBroadcastRestrictionsSandboxNamespace;
+    private String mEnforceBroadcastRestrictionsAdServicesNamespace;
 
     /** This rule is defined to start an activity in the foreground to call the sandbox APIs */
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
@@ -73,24 +73,21 @@ public class BroadcastRestrictionsTestApp {
         DeviceConfig.Properties propertiesSdkSandboxNamespace =
                 DeviceConfig.getProperties(
                         DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                        ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
-        if (propertiesSdkSandboxNamespace
-                .getKeyset()
-                .contains(ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS)) {
-            mEnforceBroadcastRestrictionsSandboxNamespace =
-                    propertiesSdkSandboxNamespace.getBoolean(
-                            ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, /*defaultValue=*/ false);
-        }
-        DeviceConfig.Properties propertiesAdServicesNamespace =
-                DeviceConfig.getProperties(
-                        DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
-        if (propertiesAdServicesNamespace
-                .getKeyset()
-                .contains(ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS)) {
-            mEnforceBroadcastRestrictionsAdServicesNamespace =
-                    propertiesSdkSandboxNamespace.getBoolean(
-                            ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, /*defaultValue=*/ false);
-        }
+                        PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+
+        mEnforceBroadcastRestrictionsSandboxNamespace =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                        PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+        mEnforceBroadcastRestrictionsAdServicesNamespace =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
+
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
         mRule.getScenario();
 
         // Greedily unload SDK to reduce flakiness
@@ -106,23 +103,28 @@ public class BroadcastRestrictionsTestApp {
         if (mEnforceBroadcastRestrictionsSandboxNamespace != null) {
             DeviceConfig.setProperty(
                     DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                    ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                    PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                     String.valueOf(mEnforceBroadcastRestrictionsSandboxNamespace),
                     /*makeDefault=*/ false);
         } else {
             DeviceConfig.deleteProperty(
-                    DeviceConfig.NAMESPACE_SDK_SANDBOX, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                    DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                    PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
         }
 
+        /**
+         * We check if the properties contain enforce_restrictions key, and update the property to
+         * the pre-test value
+         */
         if (mEnforceBroadcastRestrictionsAdServicesNamespace != null) {
             DeviceConfig.setProperty(
                     DeviceConfig.NAMESPACE_ADSERVICES,
-                    ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                    PROPERTY_ENFORCE_RESTRICTIONS,
                     String.valueOf(mEnforceBroadcastRestrictionsAdServicesNamespace),
                     /*makeDefault=*/ false);
         } else {
             DeviceConfig.deleteProperty(
-                    DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                    DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
         }
 
         InstrumentationRegistry.getInstrumentation()
@@ -144,7 +146,7 @@ public class BroadcastRestrictionsTestApp {
 
         /** Ensuring that the property is not present in DeviceConfig */
         DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
@@ -165,10 +167,7 @@ public class BroadcastRestrictionsTestApp {
         assumeTrue(SdkLevel.isAtLeastU());
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                "true",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS, "true", false);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -199,10 +198,7 @@ public class BroadcastRestrictionsTestApp {
         assumeTrue(SdkLevel.isAtLeastU());
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
-                "false",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS, "false", false);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -224,7 +220,8 @@ public class BroadcastRestrictionsTestApp {
 
         /** Ensuring that the property is not present in DeviceConfig */
         DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_SDK_SANDBOX, ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
+                DeviceConfig.NAMESPACE_SDK_SANDBOX,
+                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
@@ -244,7 +241,7 @@ public class BroadcastRestrictionsTestApp {
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                 "true",
                 false);
 
@@ -277,7 +274,7 @@ public class BroadcastRestrictionsTestApp {
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
+                PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS,
                 "false",
                 false);
 

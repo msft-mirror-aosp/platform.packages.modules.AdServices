@@ -47,9 +47,8 @@ import org.junit.runners.JUnit4;
 public class ContentProviderRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
 
-    // Keep the value consistent with SdkSandboxmanagerService.ENFORCE_CONTENT_PROVIDER_RESTRICTIONS
-    private static final String ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
-            "enforce_content_provider_restrictions";
+    // Keep the value consistent with SdkSandboxmanagerService.ENFORCE_RESTRICTIONS
+    private static final String ENFORCE_RESTRICTIONS = "enforce_restrictions";
 
     // Keep the value consistent with SdkSandboxmanagerService.PROPERTY_CONTENTPROVIDER_ALLOWLIST.
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
@@ -77,8 +76,7 @@ public class ContentProviderRestrictionsTestApp {
                         Manifest.permission.WRITE_DEVICE_CONFIG,
                         Manifest.permission.READ_DEVICE_CONFIG);
         mInitialContentProviderRestrictionValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+                DeviceConfig.getProperty(DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS);
         mInitialContentProviderAllowlistValue =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_CONTENTPROVIDER_ALLOWLIST);
@@ -91,7 +89,7 @@ public class ContentProviderRestrictionsTestApp {
     public void teardown() {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                ENFORCE_RESTRICTIONS,
                 mInitialContentProviderRestrictionValue,
                 /*makeDefault=*/ false);
 
@@ -114,10 +112,7 @@ public class ContentProviderRestrictionsTestApp {
         mRule.getScenario();
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                "true",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS, "true", false);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -136,10 +131,7 @@ public class ContentProviderRestrictionsTestApp {
         mRule.getScenario();
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                "true",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS, "true", false);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -160,7 +152,7 @@ public class ContentProviderRestrictionsTestApp {
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                ENFORCE_RESTRICTIONS,
                 "true",
                 /*makeDefault=*/ false);
 
@@ -205,10 +197,7 @@ public class ContentProviderRestrictionsTestApp {
         mRule.getScenario();
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                "true",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS, "true", false);
 
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -231,10 +220,7 @@ public class ContentProviderRestrictionsTestApp {
         mRule.getScenario();
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                "false",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS, "false", false);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -253,10 +239,7 @@ public class ContentProviderRestrictionsTestApp {
         mRule.getScenario();
 
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                "false",
-                false);
+                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS, "false", false);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -273,8 +256,7 @@ public class ContentProviderRestrictionsTestApp {
     @Test(expected = Test.None.class /* no exception expected */)
     public void testGetContentProvider_defaultValueRestrictionsNotApplied() throws Exception {
         /** Ensuring that the property is not present in DeviceConfig */
-        DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
@@ -291,8 +273,7 @@ public class ContentProviderRestrictionsTestApp {
     @Test(expected = Test.None.class /* no exception expected */)
     public void testRegisterContentObserver_defaultValueRestrictionsNotApplied() throws Exception {
         /** Ensuring that the property is not present in DeviceConfig */
-        DeviceConfig.deleteProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+        DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS);
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
