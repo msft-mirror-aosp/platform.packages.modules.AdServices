@@ -52,6 +52,12 @@ public class DBAdDataFixture {
                 .collect(Collectors.toList());
     }
 
+    public static List<DBAdData> getValidDbAdDataListByBuyerWithAdRenderId(AdTechIdentifier buyer) {
+        return AdDataFixture.getValidFilterAdsWithAdRenderIdByBuyer(buyer).stream()
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
+                .collect(Collectors.toList());
+    }
+
     public static List<DBAdData> getValidDbAdDataListByBuyerNoFilters(AdTechIdentifier buyer) {
         return AdDataFixture.getValidAdsByBuyer(buyer).stream()
                 .map(DBAdDataFixture::convertAdDataToDBAdData)
