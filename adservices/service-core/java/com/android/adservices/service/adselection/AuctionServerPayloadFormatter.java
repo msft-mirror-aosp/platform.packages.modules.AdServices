@@ -78,20 +78,27 @@ public interface AuctionServerPayloadFormatter {
         // Left-shift the compressionVersion by the length of formatter bits, then bitwise OR with
         // formatterVersion.
         return (byte)
-                ((compressionVersion << PAYLOAD_FORMAT_VERSION_LENGTH_BITS) | formatterVersion);
+                ((formatterVersion << COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS)
+                        | compressionVersion);
     }
 
-    /** Extracts compression version from a byte */
+    /**
+     * Extracts compression version from a byte. The compression version is the last 5 bits in the
+     * meta info byte.
+     */
     static int extractCompressionVersion(byte metaInfoByte) {
-        // 0xFF is used to make sure the shift fills with 0s instead of sign-extending
-        return (metaInfoByte & 0xFF) >>> PAYLOAD_FORMAT_VERSION_LENGTH_BITS;
+        // 0x1f (which is 31 in decimal or 11111 in binary) is used to make sure we only
+        // keep the lower 5 bits of the byte (which is the compression version)
+        return metaInfoByte & ((1 << COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS) - 1);
     }
 
-    /** Extracts formatter version from a byte */
+    /**
+     * Extracts formatter version from a byte. The formatter version is the first 3 bits in the meta
+     * info byte.
+     */
     static int extractFormatterVersion(byte metaInfoByte) {
-        // 0x07 (which is 7 in decimal or 111 in binary) is used to make sure we only
-        // keep the lower 3 bits of the byte (which is the formatter version)
-        return metaInfoByte & ((1 << PAYLOAD_FORMAT_VERSION_LENGTH_BITS) - 1);
+        // 0xFF is used to make sure the shift fills with 0s instead of sign-extending
+        return (metaInfoByte & 0xFF) >>> COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS;
     }
 
     /**
