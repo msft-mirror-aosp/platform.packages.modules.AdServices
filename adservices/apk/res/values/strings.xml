@@ -652,13 +652,13 @@
 
     <!-- U18 Notification Card *************************************************************-->
     <!-- Text for the title of the U18 notification card in notification center. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_u18_notification_title">New ads privacy feature available</string>
+    <string name="notificationUI_u18_notification_title">New ads privacy feature now available</string>
     <!-- Text for the content of the U18 notification card in notification center. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_u18_notification_content">Only very limited info is shared between apps to help measure ad performance</string>
 
     <!-- U18 Notification Activity *********************************************************-->
     <!-- Text for the title of the explainer for the ad measurement section of the U18 notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_u18_header_title" translatable="false">@string/notificationUI_header_ga_title_v2</string>
+    <string name="notificationUI_u18_header_title" translatable="false">@string/notificationUI_u18_notification_title</string>
     <!-- Text for the body of the explainer for the ad measurement section of the U18 notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_u18_body1">We’re launching a new ad privacy feature called ad measurement. Android shares only very limited information between apps, such as when an ad was shown to you, to help apps measure the performance of ads.</string>
     <!-- Text for the body of the explainer for the ad measurement section of the U18 notification landing page. This also includes a link to a privacy policy page [CHAR LIMIT=NONE] -->
