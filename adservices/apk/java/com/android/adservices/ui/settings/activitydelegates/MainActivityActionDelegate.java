@@ -60,7 +60,7 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
         super(mainSettingsActivity);
         mMainViewModel = mainViewModel;
-        initWithUx(false);
+        initWithUx(mActivity);
         listenToMainViewModelUiEvents();
     }
 
