@@ -51,6 +51,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class BuyerInputGeneratorTest {
     private static final long API_RESPONSE_TIMEOUT_SECONDS = 10_000L;
@@ -148,6 +149,13 @@ public class BuyerInputGeneratorTest {
         Assert.assertEquals(
                 buyerInputCA.getUserBiddingSignals(),
                 dbCustomAudience.getUserBiddingSignals().toString());
+        Assert.assertNotNull(dbCustomAudience.getAds());
+        Assert.assertEquals(
+                buyerInputCA.getAdRenderIdsList(),
+                dbCustomAudience.getAds().stream()
+                        .filter(ad -> ad.getAdRenderId() != null && !ad.getAdRenderId().isEmpty())
+                        .map(ad -> ad.getAdRenderId())
+                        .collect(Collectors.toList()));
     }
 
     private Map<String, DBCustomAudience> createAndPersistDBCustomAudiences(
@@ -157,7 +165,8 @@ public class BuyerInputGeneratorTest {
             AdTechIdentifier buyer = entry.getValue();
             String name = entry.getKey();
             DBCustomAudience thisCustomAudience =
-                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+                    DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
+                            .build();
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
         }
@@ -168,6 +177,11 @@ public class BuyerInputGeneratorTest {
         @Override
         public long getFledgeCustomAudienceActiveTimeWindowInMs() {
             return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
+        }
+
+        @Override
+        public long getFledgeBackgroundFetchEligibleUpdateBaseIntervalS() {
+            return 86400L;
         }
     }
 }
