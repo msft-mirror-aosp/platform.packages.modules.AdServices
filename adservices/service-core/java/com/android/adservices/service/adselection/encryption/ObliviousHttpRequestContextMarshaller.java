@@ -43,7 +43,6 @@ public class ObliviousHttpRequestContextMarshaller {
                 mEncryptionContextDao.getEncryptionContext(
                         contextId,
                         EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION);
-
         return ObliviousHttpRequestContext.create(
                 ObliviousHttpKeyConfig.fromSerializedKeyConfig(dbEncryptionContext.getKeyConfig()),
                 EncapsulatedSharedSecret.create(dbEncryptionContext.getSharedSecret()),

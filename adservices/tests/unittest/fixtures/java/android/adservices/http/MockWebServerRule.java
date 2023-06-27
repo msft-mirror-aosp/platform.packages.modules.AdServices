@@ -151,6 +151,11 @@ public class MockWebServerRule implements TestRule {
                     mockWebServer.setDispatcher(dispatcher);
                 });
     }
+
+    public void shutdownMockServer() throws IOException {
+        mMockWebServer.shutdown();
+    }
+
     /**
      * @return the mock web server for this rull and {@code null} if it hasn't been started yet by
      *     calling {@link #startMockWebServer(List)}.
