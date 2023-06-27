@@ -1135,6 +1135,92 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testScoreAdsReturnsDebugReportingSellerRejectReason() throws Exception {
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                unusedInvocation -> {
+                    loggerLatch.countDown();
+                    return null;
+                })
+                .when(mAdSelectionExecutionLoggerMock)
+                .endScoreAds();
+        final List<ScoreAdResult> results =
+                scoreAds(
+                        "function scoreAd(ad, bid, auction_config, seller_signals, "
+                                + "trusted_scoring_signals, contextual_signal, user_signal, "
+                                + "custom_audience_signal) { \n"
+                                + "  let url = 'http://example.com/1';"
+                                + "  let rejectReason = 'hello';"
+                                + "  if (bid == 1.1) {\n"
+                                + "    url = 'http://example.com/2';\n"
+                                + "    rejectReason = 'world';\n"
+                                + "  }\n"
+                                + "  return {"
+                                + "    'status': 0,"
+                                + "    'score': bid,"
+                                + "    'rejectReason': rejectReason"
+                                + "  };\n"
+                                + "}",
+                        AD_WITH_BID_LIST,
+                        anAdSelectionConfig(),
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
+        loggerLatch.await();
+        assertThat(
+                results.stream()
+                        .map(ScoreAdResult::getSellerRejectReason)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()))
+                .containsExactly("hello", "world");
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock).endScoreAds();
+    }
+
+    @Test
+    public void testScoreAdsReturnsDebugReportingEmptySellerRejectReason() throws Exception {
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                unusedInvocation -> {
+                    loggerLatch.countDown();
+                    return null;
+                })
+                .when(mAdSelectionExecutionLoggerMock)
+                .endScoreAds();
+        final List<ScoreAdResult> results =
+                scoreAds(
+                        "function scoreAd(ad, bid, auction_config, seller_signals, "
+                                + "trusted_scoring_signals, contextual_signal, user_signal, "
+                                + "custom_audience_signal) { \n"
+                                + "  let url = 'http://example.com/1';"
+                                + "  if (bid == 1.1) {\n"
+                                + "    url = 'http://example.com/2';\n"
+                                + "  }\n"
+                                + "  return {'status': 0, 'score': bid };\n"
+                                + "}",
+                        AD_WITH_BID_LIST,
+                        anAdSelectionConfig(),
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
+        loggerLatch.await();
+        assertThat(
+                results.stream()
+                        .map(ScoreAdResult::getSellerRejectReason)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()))
+                .containsExactly("", "");
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock).endScoreAds();
+    }
+
+    @Test
     public void testSelectOutcomeWaterfallMediationLogicReturnAdJsSuccess() throws Exception {
         final Long result =
                 selectOutcome(

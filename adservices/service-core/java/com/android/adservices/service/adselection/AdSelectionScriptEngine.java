@@ -107,6 +107,7 @@ public class AdSelectionScriptEngine {
     public static final String AD_SCORE_FIELD_NAME = "score";
     public static final String DEBUG_REPORTING_WIN_URI_FIELD_NAME = "debug_reporting_win_uri";
     public static final String DEBUG_REPORTING_LOSS_URI_FIELD_NAME = "debug_reporting_loss_uri";
+    public static final String DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME = "rejectReason";
     /**
      * Template for the iterative invocation function. The two tokens to expand are the list of
      * parameters and the invocation of the actual per-ad function.
@@ -540,9 +541,12 @@ public class AdSelectionScriptEngine {
                         extractValidUri(json.optString(DEBUG_REPORTING_WIN_URI_FIELD_NAME, ""));
                 Uri debugReportingLossUri =
                         extractValidUri(json.optString(DEBUG_REPORTING_LOSS_URI_FIELD_NAME, ""));
+                String sellerRejectReason =
+                        json.optString(DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME, "");
                 result.add(
                         ScoreAdResult.builder()
                                 .setAdScore(score)
+                                .setSellerRejectReason(sellerRejectReason)
                                 .setWinDebugReportUri(debugReportingWinUri)
                                 .setLossDebugReportUri(debugReportingLossUri)
                                 .build());
