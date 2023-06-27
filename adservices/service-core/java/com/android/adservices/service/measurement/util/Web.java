@@ -25,11 +25,15 @@ import java.util.Optional;
 /** Web utilities for measurement. */
 public final class Web {
 
+    private static final String HTTPS_SCHEME = "https";
+    private static final String LOCALHOST = "localhost";
+    private static final String LOCALHOST_IP = "127.0.0.1";
+
     private Web() { }
 
     /**
      * Returns a {@code Uri} of the scheme concatenated with the first subdomain of the provided URL
-     * that is beneath the public suffix.
+     * that is beneath the public suffix or localhost.
      *
      * @param uri the Uri to parse.
      */
@@ -39,7 +43,7 @@ public final class Web {
 
     /**
      * Returns an origin of {@code Uri} that is defined by the concatenation of scheme (protocol),
-     * hostname (domain), and port.
+     * hostname (domain), and port, validating public suffix or localhost.
      *
      * @param uri the Uri to parse.
      * @return
@@ -51,7 +55,7 @@ public final class Web {
     /**
      * Returns an origin of {@code Uri} that is defined by the concatenation of scheme (protocol),
      * hostname (domain), and port if useOrigin is true. If useOrigin is false the method returns
-     * the scheme concatenation of first subdomain that is beneath the public suffix.
+     * the scheme concatenation of first subdomain that is beneath the public suffix or localhost.
      *
      * @param uri the Uri to parse
      * @param useOrigin true if extract origin, false if extract only top domain
@@ -65,19 +69,46 @@ public final class Web {
             return Optional.empty();
         }
 
-        try {
-            InternetDomainName domainName = InternetDomainName.from(host);
-            if (!domainName.hasPublicSuffix()) {
+        String url = scheme + "://";
+
+        if (isLocalhost(uri)) {
+            url += host;
+        } else {
+            try {
+                InternetDomainName domainName = InternetDomainName.from(host);
+                if (!domainName.hasPublicSuffix()) {
+                    return Optional.empty();
+                }
+                url += useOrigin ? domainName.toString() : domainName.topPrivateDomain().toString();
+            } catch (IllegalArgumentException | IllegalStateException e) {
                 return Optional.empty();
             }
-            InternetDomainName domain = useOrigin ? domainName : domainName.topPrivateDomain();
-            String url = scheme + "://" + domain;
-            if (useOrigin && port >= 0) {
-                url += ":" + port;
-            }
-            return Optional.of(Uri.parse(url));
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return Optional.empty();
         }
+
+        if (useOrigin && port >= 0) {
+            url += ":" + port;
+        }
+
+        return Optional.of(Uri.parse(url));
+    }
+
+    /**
+     * Determines if the provided URI is effectively localhost for Measurement CTS testing.
+     *
+     * @param uri the Uri to parse.
+     */
+    public static boolean isLocalhost(Uri uri) {
+        String host = uri.getHost();
+        return HTTPS_SCHEME.equals(uri.getScheme())
+                && (LOCALHOST.equals(host) || LOCALHOST_IP.equals(host));
+    }
+
+    /**
+     * Determines if the provided URI is the localhost IP for Measurement CTS testing.
+     *
+     * @param uri the Uri to parse.
+     */
+    public static boolean isLocalhostIp(Uri uri) {
+        return HTTPS_SCHEME.equals(uri.getScheme()) && LOCALHOST_IP.equals(uri.getHost());
     }
 }
