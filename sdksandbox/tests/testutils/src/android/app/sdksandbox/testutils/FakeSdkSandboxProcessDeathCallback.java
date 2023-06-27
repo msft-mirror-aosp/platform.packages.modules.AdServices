@@ -18,20 +18,28 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.SdkSandboxManager;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FakeSdkSandboxProcessDeathCallback
         implements SdkSandboxManager.SdkSandboxProcessDeathCallback {
     private final AtomicInteger mSandboxDeathCount = new AtomicInteger(0);
+    private final CountDownLatch mLatch = new CountDownLatch(1);
 
     @Override
     public void onSdkSandboxDied() {
         mSandboxDeathCount.incrementAndGet();
+        mLatch.countDown();
     }
 
     public int getSdkSandboxDeathCount() throws InterruptedException {
         // Wait 5 seconds to determine whether sandbox death is ever detected.
         Thread.sleep(5000);
         return mSandboxDeathCount.get();
+    }
+
+    public boolean waitForSandboxDeath() throws InterruptedException {
+        return mLatch.await(5, TimeUnit.SECONDS);
     }
 }
