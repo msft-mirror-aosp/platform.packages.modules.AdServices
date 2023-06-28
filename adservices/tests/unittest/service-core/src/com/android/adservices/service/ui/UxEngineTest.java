@@ -138,7 +138,7 @@ public class UxEngineTest {
                         .setAdultAccount(true)
                         .setU18Account(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         mUxEngine.start(adServicesStates);
@@ -171,7 +171,7 @@ public class UxEngineTest {
                         .setAdultAccount(true)
                         .setU18Account(true)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(false).when(mConsentManager).isEntryPointEnabled();
@@ -208,7 +208,7 @@ public class UxEngineTest {
                         .setAdultAccount(true)
                         .setU18Account(true)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
@@ -245,7 +245,7 @@ public class UxEngineTest {
                         .setAdultAccount(true)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
@@ -284,7 +284,7 @@ public class UxEngineTest {
                         .setAdultAccount(true)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
@@ -339,7 +339,7 @@ public class UxEngineTest {
                         .setAdultAccount(isAdultAccount)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
@@ -385,7 +385,7 @@ public class UxEngineTest {
                         .setAdultAccount(isAdultAccount)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
@@ -428,7 +428,7 @@ public class UxEngineTest {
                         .setAdultAccount(isAdultAccount)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
@@ -485,7 +485,7 @@ public class UxEngineTest {
                         .setAdultAccount(isAdultAccount)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
@@ -534,7 +534,7 @@ public class UxEngineTest {
                         .setAdultAccount(isAdultAccount)
                         .setU18Account(isU18Account)
                         .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(true)
+                        .setPrivacySandboxUiRequest(false)
                         .build();
 
         doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
@@ -576,5 +576,63 @@ public class UxEngineTest {
         ExtendedMockito.verify(
                 () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext)
         );
+    }
+
+    // Beta UX selected, which results in Beta UX enrollment action and no more UX checks. But
+    // the call is the result of an entry point request and no enrollment can happen.
+    @Test
+    public void startTest_betaUxEligible_entryPointDisabled() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = true;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // GA UX logic.
+        verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        verify(mConsentManager).isAdultAccount();
+
+        verify(mConsentManager).setUx(BETA_UX);
+        verify(mConsentManager)
+                .setEnrollmentChannel(
+                        BETA_UX,
+                        BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL);
+
+        ExtendedMockito.verify(
+                () ->
+                        ConsentNotificationJobService.schedule(
+                                any(Context.class), eq(adIdEnabled), eq(false)),
+                never());
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), never());
+
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never());
     }
 }
