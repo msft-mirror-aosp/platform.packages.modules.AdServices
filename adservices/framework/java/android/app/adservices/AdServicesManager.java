@@ -141,9 +141,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordGaUxNotificationDisplayed() {
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordGaUxNotificationDisplayed();
+            mService.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

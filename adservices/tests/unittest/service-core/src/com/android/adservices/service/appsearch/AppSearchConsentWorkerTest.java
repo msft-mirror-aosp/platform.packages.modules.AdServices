@@ -687,7 +687,7 @@ public class AppSearchConsentWorkerTest {
                 RuntimeException e =
                         assertThrows(
                                 RuntimeException.class,
-                                () -> worker.recordGaUxNotificationDisplayed());
+                                () -> worker.recordGaUxNotificationDisplayed(true));
                 assertThat(e.getMessage())
                         .isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
             }
@@ -729,7 +729,7 @@ public class AppSearchConsentWorkerTest {
             } else {
                 when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any()))
                         .thenReturn(false);
-                AppSearchConsentWorker.getInstance(mContext).recordGaUxNotificationDisplayed();
+                AppSearchConsentWorker.getInstance(mContext).recordGaUxNotificationDisplayed(true);
             }
         } finally {
             if (staticMockSessionLocal != null) {
