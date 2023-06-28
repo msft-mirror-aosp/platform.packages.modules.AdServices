@@ -16,26 +16,18 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
-import android.util.ArrayMap;
-import android.webkit.URLUtil;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import java.util.ArrayList;
@@ -43,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Event-level debug reporting for ad selection.
@@ -68,95 +59,80 @@ import java.util.stream.Collectors;
 // TODO(b/284451364): Return script strategy based on flag and AdId.
 class DebugReportProcessor {
 
-    private static final ImmutableSet<String> VALID_SELLER_REJECT_REASONS =
-            ImmutableSet.of(
-                    "not-available",
-                    "invalid-bid",
-                    "bid-below-auction-floor",
-                    "pending-approval-by-exchange",
-                    "disapproved-by-exchange",
-                    "blocked-by-publisher",
-                    "language-exclusions",
-                    "category-exclusions");
     // UTF-8 characters are 2 bytes each, so a limit of 2000 is ~4 KB.
     private static final int MAX_URI_CHARACTER_LENGTH = 2048;
 
     // Cap the number of URIs at 75 custom audiences, based on P95 OT results.
     @VisibleForTesting public static final int MAX_NUMBER_OF_URIS_PER_AUCTION_PER_AD_TECH = 75;
 
-    @VisibleForTesting public static final String UNKNOWN_VARIABLE_STRING = "unknown";
+    private static final String WINNING_BID_VARIABLE_TEMPLATE = "${winningBid}";
 
-    @VisibleForTesting public static final String WINNING_BID_VARIABLE_TEMPLATE = "${winningBid}";
+    private static final String WINNING_BID_DEFAULT_VALUE = "0.0";
 
-    @VisibleForTesting
-    public static final String MADE_WINNING_BID_VARIABLE_TEMPLATE = "${madeWinningBid}";
+    private static final String MADE_WINNING_BID_VARIABLE_TEMPLATE = "${madeWinningBid}";
 
-    @VisibleForTesting
-    public static final String HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE =
+    private static final String HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE =
             "${highestScoringOtherBid}";
 
-    @VisibleForTesting
-    public static final String MADE_HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE =
+    private static final String HIGHEST_SCORING_OTHER_BID_DEFAULT_VALUE = "0.0";
+    private static final String MADE_HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE =
             "${madeHighestScoringOtherBid}";
-
-    @VisibleForTesting
-    public static final String REJECT_REASON_VARIABLE_TEMPLATE = "${rejectReason}";
 
     /**
      * Process all debug reporting {@link Uri}s from an ad auction's results.
      *
-     * <p>This method processes every element in the given ad auction results, extracts and filters
-     * for valid debug reporting URLs (such as enforcing the constraint that ad tech domain must
-     * match the debug URL), and finally substituting auction data into the URL templates.
+     * <p>This method processes every element in the given list, extracts and filters for valid
+     * debug reporting URLs (such as enforcing the constraint that ad tech domain must match the
+     * debug URL), and finally substituting auction data into the URL templates.
      *
      * <p>See the explainer on event-level debug reporting for more information.
      *
-     * @param generateBidResults list of bidding results from an auction. Each element of this list
-     *     is expected to correlate with elements in scoreAdResults.
-     * @param scoreAdResults list of scoring results from an auction. Not every bid is required to
-     *     be scored, e.g. if there was a failure in runAdBidding.
+     * @param debugReports list of debug reports generated during the ad selection process.
+     * @param postAuctionSignals signals generated after the ad selection process finished..
      * @return a list of valid {@link Uri} objects. Make network calls to these to deliver
      *     event-level debug reporting information to SSP and DSPs.
      */
     static List<Uri> getUrisFromAdAuction(
-            @NonNull List<GenerateBidResult> generateBidResults,
-            @NonNull List<ScoreAdResult> scoreAdResults,
-            @Nullable ScoreAdResult topScoringAd,
-            @Nullable ScoreAdResult secondHighestAd) {
-        checkNotNull(generateBidResults);
-        checkNotNull(scoreAdResults);
-        List<AuctionResult> results = joinResults(generateBidResults, scoreAdResults);
-        return getUrisFromAdAuctionImpl(
-                results,
-                matchScoreToAuctionResult(topScoringAd, results),
-                matchScoreToAuctionResult(secondHighestAd, results));
+            @NonNull List<DebugReport> debugReports,
+            @NonNull PostAuctionSignals postAuctionSignals) {
+        checkNotNull(debugReports);
+        checkNotNull(postAuctionSignals);
+        List<Uri> debugUrls = new ArrayList<>();
+        for (DebugReport debugReport : debugReports) {
+            Uri debugUri = getDebugUri(debugReport, postAuctionSignals);
+            if (!Objects.isNull(debugUri)) {
+                debugUrls.add(debugUri);
+            }
+        }
+        return applyPerAdTechLimit(debugUrls);
     }
 
-    private static List<Uri> getUrisFromAdAuctionImpl(
-            List<AuctionResult> results,
-            @Nullable AuctionResult winningResult,
-            @Nullable AuctionResult highestScoringOtherResult) {
-        return applyPerAdTechLimit(
-                results.stream()
-                        .map(
-                                result ->
-                                        getFinalizedUrisFromResult(
-                                                result, winningResult, highestScoringOtherResult))
-                        .flatMap(List::stream)
-                        .collect(Collectors.toList()));
+    private static Uri getDebugUri(
+            @NonNull DebugReport debugReport, @NonNull PostAuctionSignals postAuctionSignals) {
+        Uri debugUri;
+        boolean isWinnerCA =
+                isDebugReportForCustomAudience(
+                        debugReport,
+                        postAuctionSignals.getWinningBuyer(),
+                        postAuctionSignals.getWinningCustomAudienceName());
+        if (isWinnerCA && !Objects.isNull(debugReport.getWinDebugReportUri())) {
+            debugUri = debugReport.getWinDebugReportUri();
+        } else if (!Objects.isNull(debugReport.getLossDebugReportUri())) {
+            debugUri = debugReport.getLossDebugReportUri();
+        } else {
+            return null;
+        }
+        // Seller field is only set for seller specific debug reports.
+        AdTechIdentifier adTechIdentifier =
+                Objects.isNull(debugReport.getSeller())
+                        ? debugReport.getCustomAudienceBuyer()
+                        : debugReport.getSeller();
+        if (!hasValidUriForAdTech(debugUri, adTechIdentifier)) {
+            return null;
+        }
+        return applyVariablesToUri(
+                debugUri, collectVariablesFromAdAuction(debugReport, postAuctionSignals));
     }
-
-    @Nullable
-    private static AuctionResult matchScoreToAuctionResult(
-            ScoreAdResult scoreAdResult, List<AuctionResult> auctionResults) {
-        return auctionResults.stream()
-                .filter(
-                        auctionResult ->
-                                Objects.equals(scoreAdResult, auctionResult.mScoreAdResult))
-                .findFirst()
-                .orElse(null);
-    }
-
     private static List<Uri> applyPerAdTechLimit(List<Uri> debugReportingUris) {
         // Processing for the ad tech limit must be done at the final stage, as each AuctionResult
         // can be 0 or more URIs and for both sell-side and buy-side.
@@ -175,122 +151,70 @@ class DebugReportProcessor {
         return new ArrayList<>(hostToUriMap.values());
     }
 
-    private static List<Uri> getFinalizedUrisFromResult(
-            AuctionResult result,
-            @Nullable AuctionResult winningResult,
-            @Nullable AuctionResult highestScoringOtherResult) {
-        // Process every Uri such that it contains debugging data. Also run a final filtering step
-        // to check that the Uri is still considered "callable".
-        Preconditions.checkNotNull(result);
-        ImmutableList<Uri> uris =
-                result.equals(winningResult)
-                        ? result.getAuctionWinUris()
-                        : result.getAuctionLossUris();
-        return uris.stream()
-                .map(
-                        uri ->
-                                applyVariablesToUri(
-                                        uri,
-                                        collectVariablesFromAdAuction(
-                                                result, winningResult, highestScoringOtherResult)))
-                .filter(DebugReportProcessor::isValidUri)
-                .collect(Collectors.toList());
+    private static boolean isDebugReportForCustomAudience(
+            @NonNull final DebugReport debugReport,
+            @Nullable final AdTechIdentifier customAudienceBuyer,
+            @Nullable final String customAudienceName) {
+        if (Objects.isNull(customAudienceBuyer) || Objects.isNull(customAudienceName)) {
+            return false;
+        }
+        return customAudienceBuyer.equals(debugReport.getCustomAudienceBuyer())
+                && customAudienceName.equals(debugReport.getCustomAudienceName());
     }
 
-    private static List<AuctionResult> joinResults(
-            List<GenerateBidResult> generateBidResults, List<ScoreAdResult> scoreAdResults) {
-        checkArgument(generateBidResults.size() >= scoreAdResults.size());
-        List<AuctionResult> results = new ArrayList<>();
-
-        Map<String, GenerateBidResult> mappedBidResults = new ArrayMap<>();
-        Map<String, ScoreAdResult> mappedScoreAdResults = new ArrayMap<>();
-
-        for (GenerateBidResult bidResult : generateBidResults) {
-            mappedBidResults.put(
-                    String.format(
-                            "%s:%s",
-                            bidResult.getCustomAudienceName(), bidResult.getCustomAudienceBuyer()),
-                    bidResult);
+    private static boolean isDebugReportForCustomAudienceBuyer(
+            @NonNull final DebugReport debugReport,
+            @Nullable final AdTechIdentifier customAudienceBuyer) {
+        if (Objects.isNull(customAudienceBuyer)) {
+            return false;
         }
-
-        for (ScoreAdResult scoreAdResult : scoreAdResults) {
-            mappedScoreAdResults.put(
-                    String.format(
-                            "%s:%s",
-                            scoreAdResult.getCustomAudienceName(),
-                            scoreAdResult.getCustomAudienceBuyer()),
-                    scoreAdResult);
-        }
-
-        for (Map.Entry<String, GenerateBidResult> mappedBidResult : mappedBidResults.entrySet()) {
-            String key = mappedBidResult.getKey();
-            GenerateBidResult generateBidResult = mappedBidResult.getValue();
-
-            if (mappedScoreAdResults.containsKey(key)) {
-                ScoreAdResult scoreAdResult = mappedScoreAdResults.get(key);
-                results.add(
-                        AuctionResult.of(generateBidResult, Objects.requireNonNull(scoreAdResult)));
-            } else {
-                // A partial result may be a bid without scoring.
-                results.add(AuctionResult.of(generateBidResult));
-            }
-        }
-
-        return results;
+        return customAudienceBuyer.equals(debugReport.getCustomAudienceBuyer());
     }
 
     private static Map<String, String> collectVariablesFromAdAuction(
-            AuctionResult currentBid,
-            @Nullable AuctionResult winningBid,
-            @Nullable AuctionResult highestScoringOtherBid) {
+            @NonNull DebugReport debugReport, @NonNull PostAuctionSignals signals) {
         Map<String, String> templateToVariableMap = new HashMap<>();
         templateToVariableMap.put(
                 WINNING_BID_VARIABLE_TEMPLATE,
-                Objects.isNull(winningBid)
-                        ? UNKNOWN_VARIABLE_STRING
-                        : String.valueOf(winningBid.getBid()));
+                Objects.isNull(signals.getWinningBid())
+                        ? WINNING_BID_DEFAULT_VALUE
+                        : String.valueOf(signals.getWinningBid()));
         templateToVariableMap.put(
                 MADE_WINNING_BID_VARIABLE_TEMPLATE,
-                String.valueOf(currentBid.hasSameCustomAudienceBuyer(winningBid)));
+                String.valueOf(
+                        isDebugReportForCustomAudienceBuyer(
+                                debugReport, signals.getWinningBuyer())));
         templateToVariableMap.put(
                 HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE,
-                Objects.isNull(highestScoringOtherBid)
-                        ? UNKNOWN_VARIABLE_STRING
-                        : String.valueOf(highestScoringOtherBid.getBid()));
+                Objects.isNull(signals.getSecondHighestScoredBid())
+                        ? HIGHEST_SCORING_OTHER_BID_DEFAULT_VALUE
+                        : String.valueOf(signals.getSecondHighestScoredBid()));
         templateToVariableMap.put(
                 MADE_HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE,
-                String.valueOf(currentBid.hasSameCustomAudienceBuyer(highestScoringOtherBid)));
-        String sellerRejectReason = currentBid.getSellerRejectReason();
-        templateToVariableMap.put(
-                REJECT_REASON_VARIABLE_TEMPLATE,
-                isValidSellerRejectReason(sellerRejectReason)
-                        ? sellerRejectReason
-                        : UNKNOWN_VARIABLE_STRING);
+                String.valueOf(
+                        isDebugReportForCustomAudienceBuyer(
+                                debugReport, signals.getSecondHighestScoredBuyer())));
         return templateToVariableMap;
     }
 
-    private static Uri applyVariablesToUri(Uri input, Map<String, String> templateToVariableMap) {
+    private static Uri applyVariablesToUri(
+            @NonNull Uri input, Map<String, String> templateToVariableMap) {
         // Apply variables to both query parameter and path, as ad techs can choose to use both
         // query parameters or path fragments for variables.
-        return Uri.parse(applyVariablesToString(input.toString(), templateToVariableMap));
-    }
-
-    private static String applyVariablesToString(
-            String input, Map<String, String> templateToVariableMap) {
-        if (Strings.isNullOrEmpty(input)) {
-            return null;
-        }
-
+        String uriString = input.toString();
         for (Map.Entry<String, String> templateToVariable : templateToVariableMap.entrySet()) {
             String template = templateToVariable.getKey();
             String variable = templateToVariable.getValue();
-            input = input.replace(template, variable);
+            uriString = uriString.replace(template, variable);
         }
-        return input;
+        if (uriString.length() > MAX_URI_CHARACTER_LENGTH) {
+            return null;
+        }
+        return Uri.parse(uriString);
     }
 
     private static boolean hasValidUriForAdTech(
-            @Nullable Uri uri, AdTechIdentifier adTechIdentifier) {
+            @Nullable Uri uri, @NonNull AdTechIdentifier adTechIdentifier) {
         // The host for a URL must match the given ad tech identifier. This also tests for
         // subdomains a buyer or seller might have.
         return Objects.nonNull(uri)
@@ -301,100 +225,5 @@ class DebugReportProcessor {
                                 "matching ad tech identifier")
                         .getValidationViolations(uri)
                         .isEmpty();
-    }
-
-    private static boolean isValidUri(@Nullable Uri uri) {
-        return uri.toString().length() < MAX_URI_CHARACTER_LENGTH
-                && uri.getScheme().equals("https")
-                && URLUtil.isNetworkUrl(uri.toString());
-    }
-
-    private static boolean isValidSellerRejectReason(@Nullable String sellerRejectReason) {
-        return !Strings.isNullOrEmpty(sellerRejectReason)
-                && VALID_SELLER_REJECT_REASONS.contains(sellerRejectReason);
-    }
-
-    private static final class AuctionResult {
-        public static final double MISSING_AD_SCORE = -1D;
-        private final GenerateBidResult mGenerateBidResult;
-        private final ScoreAdResult mScoreAdResult;
-
-        AuctionResult(GenerateBidResult generateBidResult, ScoreAdResult scoreAdResult) {
-            this.mGenerateBidResult = generateBidResult;
-            this.mScoreAdResult = scoreAdResult;
-        }
-
-        static AuctionResult of(@NonNull GenerateBidResult generateBidResult) {
-            return new AuctionResult(generateBidResult, null);
-        }
-
-        static AuctionResult of(
-                @NonNull GenerateBidResult generateBidResult, ScoreAdResult scoreAdResult) {
-            checkArgument(
-                    generateBidResult
-                            .getCustomAudienceName()
-                            .equals(scoreAdResult.getCustomAudienceName()));
-            checkArgument(
-                    generateBidResult
-                            .getOwnerAppPackage()
-                            .equals(scoreAdResult.getOwnerAppPackage()));
-            return new AuctionResult(generateBidResult, scoreAdResult);
-        }
-
-        Double getBid() {
-            return mGenerateBidResult.getAdWithBid().getBid();
-        }
-
-        String getSellerRejectReason() {
-            if (Objects.isNull(mScoreAdResult)) {
-                return UNKNOWN_VARIABLE_STRING;
-            }
-            return mScoreAdResult.getSellerRejectReason();
-        }
-
-        public ImmutableList<Uri> getAuctionWinUris() {
-            ImmutableList.Builder<Uri> uris = ImmutableList.builder();
-            Uri uri;
-            uri = mGenerateBidResult.getWinDebugReportUri();
-            if (uri != null
-                    && hasValidUriForAdTech(uri, mGenerateBidResult.getCustomAudienceBuyer())) {
-                uris.add(uri);
-            }
-
-            if (mScoreAdResult != null) {
-                uri = mScoreAdResult.getWinDebugReportUri();
-                if (uri != null && hasValidUriForAdTech(uri, mScoreAdResult.getSeller())) {
-                    uris.add(uri);
-                }
-            }
-
-            return uris.build();
-        }
-
-        public ImmutableList<Uri> getAuctionLossUris() {
-            ImmutableList.Builder<Uri> uris = ImmutableList.builder();
-            Uri uri;
-            uri = mGenerateBidResult.getLossDebugReportUri();
-            if (uri != null
-                    && hasValidUriForAdTech(uri, mGenerateBidResult.getCustomAudienceBuyer())) {
-                uris.add(uri);
-            }
-
-            if (mScoreAdResult != null) {
-                uri = mScoreAdResult.getLossDebugReportUri();
-                if (uri != null && hasValidUriForAdTech(uri, mScoreAdResult.getSeller())) {
-                    uris.add(uri);
-                }
-            }
-
-            return uris.build();
-        }
-
-        boolean hasSameCustomAudienceBuyer(@Nullable AuctionResult otherResult) {
-            return Objects.nonNull(otherResult)
-                    && mGenerateBidResult
-                            .getCustomAudienceBuyer()
-                            .equals(otherResult.mGenerateBidResult.getCustomAudienceBuyer());
-        }
     }
 }
