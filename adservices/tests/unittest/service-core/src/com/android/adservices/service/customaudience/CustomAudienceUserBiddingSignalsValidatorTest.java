@@ -39,7 +39,7 @@ import org.junit.Test;
 import java.util.Locale;
 
 public class CustomAudienceUserBiddingSignalsValidatorTest {
-    private static final int CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
+    public static final int CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB();
 
     private final JsonValidator mJsonValidator =

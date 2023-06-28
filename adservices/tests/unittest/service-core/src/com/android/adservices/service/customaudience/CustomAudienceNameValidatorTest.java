@@ -35,10 +35,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 public class CustomAudienceNameValidatorTest {
-    private static final int CUSTOM_AUDIENCE_MAX_NAME_SIZE_B =
+    public static final int CUSTOM_AUDIENCE_MAX_NAME_SIZE_B =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxNameSizeB();
 
-    private final CustomAudienceNameValidator mValidator =
+    public final CustomAudienceNameValidator mValidator =
             new CustomAudienceNameValidator(CUSTOM_AUDIENCE_MAX_NAME_SIZE_B);
 
     @Test

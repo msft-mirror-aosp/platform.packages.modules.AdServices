@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class TrustedBiddingDataValidatorTest {
-    private static final int CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B =
+    public static final int CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB();
     private TrustedBiddingDataValidator mValidator =
             new TrustedBiddingDataValidator(CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B);

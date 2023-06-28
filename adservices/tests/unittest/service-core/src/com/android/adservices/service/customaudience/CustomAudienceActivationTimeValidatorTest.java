@@ -41,7 +41,7 @@ import java.time.Instant;
 import java.util.Locale;
 
 public class CustomAudienceActivationTimeValidatorTest {
-    private static final Duration CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY =
+    public static final Duration CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY =
             Duration.ofMillis(
                     CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxActivationDelayInMs());
 

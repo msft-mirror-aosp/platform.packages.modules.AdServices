@@ -54,10 +54,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class CustomAudienceAdsValidatorTest {
-    private static final int CUSTOM_AUDIENCE_MAX_ADS_SIZE_B =
+    public static final int CUSTOM_AUDIENCE_MAX_ADS_SIZE_B =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxAdsSizeB();
 
-    private static final int CUSTOM_AUDIENCE_MAX_NUM_ADS =
+    public static final int CUSTOM_AUDIENCE_MAX_NUM_ADS =
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxNumAds();
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =

@@ -45,7 +45,7 @@ import java.time.Duration;
 import java.util.Locale;
 
 public class CustomAudienceExpirationTimeValidatorTest {
-    private static final Duration CUSTOM_AUDIENCE_MAX_EXPIRE_IN =
+    public static final Duration CUSTOM_AUDIENCE_MAX_EXPIRE_IN =
             Duration.ofMillis(CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxExpireInMs());
 
     private final CustomAudienceExpirationTimeValidator mValidator =
