@@ -42,7 +42,8 @@ java_library {
         "framework-adservices.impl",
         "framework-configinfrastructure",
         "adservices-service-core",
-        "auto_value_annotations"
+        "auto_value_annotations",
+        "framework-annotations-lib"
     ],
     static_libs: [
         "adservices-service-core",

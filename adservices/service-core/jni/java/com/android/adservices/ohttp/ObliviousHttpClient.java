@@ -87,7 +87,7 @@ public class ObliviousHttpClient {
      * generated and cryptographically safe.
      */
     @VisibleForTesting
-    ObliviousHttpRequest createObliviousHttpRequest(byte[] plainText, byte[] seed)
+    public ObliviousHttpRequest createObliviousHttpRequest(byte[] plainText, byte[] seed)
             throws IOException {
         HpkeContextNativeRef hpkeContextNativeRef =
                 HpkeContextNativeRef.createHpkeContextReference();
