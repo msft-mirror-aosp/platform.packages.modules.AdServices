@@ -18,6 +18,7 @@ package com.android.adservices.service.ui.data;
 import android.adservices.common.AdServicesStates;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -46,10 +47,10 @@ public class UxStatesManager {
     private static volatile UxStatesManager sUxStatesManager;
     private final Map<String, Boolean> mUxFlags;
     private final ConsentManager mConsentManager;
+    private final SharedPreferences mUxSharedPreferences;
     private PrivacySandboxUxCollection mUx;
     private PrivacySandboxEnrollmentChannelCollection mEnrollmentChannel;
-    // Default to EEA devices.
-    private boolean sIsEeaDevice = true;
+    private final boolean mIsEeaDevice;
 
     UxStatesManager(
             @NonNull Context context,
@@ -57,7 +58,9 @@ public class UxStatesManager {
             @NonNull ConsentManager consentManager) {
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
-        sIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
+        mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
+        mUxSharedPreferences =
+                context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
     }
 
     /** Returns an instance of the UxStatesManager. */
@@ -112,6 +115,11 @@ public class UxStatesManager {
 
     /** Returns process statble devicce region. */
     public boolean isEeaDevice() {
-        return sIsEeaDevice;
+        return mIsEeaDevice;
+    }
+
+    /** Returns a common shared preference for storing temporary UX states. */
+    public SharedPreferences getUxSharedPreferences() {
+        return mUxSharedPreferences;
     }
 }
