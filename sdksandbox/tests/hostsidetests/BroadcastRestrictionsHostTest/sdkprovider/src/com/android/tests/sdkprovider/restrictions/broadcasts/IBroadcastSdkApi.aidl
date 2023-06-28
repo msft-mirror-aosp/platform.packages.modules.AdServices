@@ -14,6 +14,5 @@
 package com.android.tests.sdkprovider.restrictions.broadcasts;
 
 interface IBroadcastSdkApi {
-    void registerBroadcastReceiver();
-    void registerBroadcastReceiverWithoutAction();
+    void registerBroadcastReceiver(in List<String> actions);
 }

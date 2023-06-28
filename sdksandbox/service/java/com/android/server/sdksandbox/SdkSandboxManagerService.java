@@ -2626,7 +2626,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @Override
-        // TODO(b/265647873): Add enforcement around onlyProtectedBroadcasts parameter
         public boolean canRegisterBroadcastReceiver(
                 @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts) {
             if (!Process.isSdkSandboxUid(Binder.getCallingUid())) {
@@ -2646,8 +2645,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 final boolean enforceRestrictions =
                         mSdkSandboxSettingsListener.areRestrictionsEnforced();
-                final boolean exported = (flags & Context.RECEIVER_NOT_EXPORTED) == 0;
-                return !enforceRestrictions || !exported;
+                return !enforceRestrictions || onlyProtectedBroadcasts;
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
