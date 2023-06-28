@@ -1,6 +1,6 @@
 [
   {
-    "name": "1j7245936676",
+    "name": "winningCA",
     "buyer": "performance-fledge-static-5jyy5ulagq-uc.a.run.app",
     "activationTime": "2022-12-20T15:48:08.688Z",
     "expirationTime": "2022-12-20T16:03:08.688Z",
@@ -17,6 +17,7 @@
     },
     "ads": [
       {
+        "ad_render_id" : "1a",
         "render_uri": "https://performance-fledge-static-5jyy5ulagq-uc.a.run.app/1j7245936676/ad?adg_id=123394967410&cr_id=618898865445&cv_id=1",
         "metadata": {
           "metadata": [

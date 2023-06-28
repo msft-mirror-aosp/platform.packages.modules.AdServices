@@ -36,6 +36,7 @@ java_library {
         "androidx.test.runner",
         "app-helpers-handheld-interfaces",
         "guava",
+        "gson",
         "platform-test-rules",
         "health-testing-utils",
         "microbenchmark-device-lib",
