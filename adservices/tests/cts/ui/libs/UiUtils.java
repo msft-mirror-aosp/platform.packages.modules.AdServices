@@ -37,6 +37,16 @@ import com.android.compatibility.common.util.ShellUtils;
 
 public class UiUtils {
 
+    public static void turnOffEnableAdsServicesAPI() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_ad_services_system_api false");
+    }
+
+    public static void turnOnEnableAdsServicesAPI() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_ad_services_system_api true");
+    }
+
     public static void setAsNonWorkingHours() {
         // set the notification interval start time to 9:00 AM
         ShellUtils.runShellCommand(
