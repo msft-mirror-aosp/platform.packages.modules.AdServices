@@ -54,16 +54,6 @@ public class ContentProviderRestrictionsTestApp {
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
             "contentprovider_allowlist_per_targetSdkVersion";
 
-    // Keep the value consistent with
-    // SdkSandboxManagerService.PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS.
-    private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
-            "apply_sdk_sandbox_next_restrictions";
-
-    // Keep the value consistent with
-    // SdkSandboxManagerService.PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST.
-    private static final String PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST =
-            "next_contentprovider_allowlist";
-
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.contentproviders";
 
@@ -74,8 +64,6 @@ public class ContentProviderRestrictionsTestApp {
 
     private String mInitialContentProviderRestrictionValue;
     private String mInitialContentProviderAllowlistValue;
-    private String mInitialApplyNextContentProviderAllowlistValue;
-    private String mInitialNextContentProviderAllowlistValue;
 
     @Before
     public void setup() {
@@ -92,13 +80,6 @@ public class ContentProviderRestrictionsTestApp {
         mInitialContentProviderAllowlistValue =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_CONTENTPROVIDER_ALLOWLIST);
-        mInitialApplyNextContentProviderAllowlistValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
-        mInitialNextContentProviderAllowlistValue =
-                DeviceConfig.getProperty(
-                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
 
         // Greedily unload SDK to reduce flakiness
         mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
@@ -116,18 +97,6 @@ public class ContentProviderRestrictionsTestApp {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 PROPERTY_CONTENTPROVIDER_ALLOWLIST,
                 mInitialContentProviderAllowlistValue,
-                /*makeDefault=*/ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
-                mInitialApplyNextContentProviderAllowlistValue,
-                /*makeDefault=*/ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST,
-                mInitialNextContentProviderAllowlistValue,
                 /*makeDefault=*/ false);
 
         InstrumentationRegistry.getInstrumentation()
@@ -216,62 +185,6 @@ public class ContentProviderRestrictionsTestApp {
         contentProvidersSdkApi.getContentProviderByAuthority("com.android.textclassifier.icons");
         contentProvidersSdkApi.getContentProvider();
 
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        contentProvidersSdkApi.getContentProviderByAuthority(
-                                "com.android.blockednumber"));
-    }
-
-    @Test
-    public void testGetContentProvider_DeviceConfigNextAllowlistApplied() throws Exception {
-        mRule.getScenario();
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
-                "true",
-                /*makeDefault=*/ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
-                "true",
-                /*makeDefault=*/ false);
-
-        // Base64 encoded proto AllowedContentProviders containing the string
-        // 'com.android.textclassifier.icons'
-        final String encodedNextAllowlist = "CiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucw==";
-        // Set the canary set.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST,
-                encodedNextAllowlist,
-                false);
-
-        // Base64 encoded proto ContentProviderAllowlists containing mappings to the string
-        // 'com.android.textclassifier.icons' and 'user_dictionary'.
-        final String encodedAllowlist =
-                "CjcIIhIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5";
-        // Also set the non-canary allowlist to verify that this allowlist is not applied when the
-        // canary flag is set.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                PROPERTY_CONTENTPROVIDER_ALLOWLIST,
-                encodedAllowlist,
-                false);
-
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        callback.assertLoadSdkIsSuccessful();
-        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
-
-        final IBinder binder = sandboxedSdk.getInterface();
-        final IContentProvidersSdkApi contentProvidersSdkApi =
-                IContentProvidersSdkApi.Stub.asInterface(binder);
-
-        contentProvidersSdkApi.getContentProviderByAuthority("com.android.textclassifier.icons");
-        assertThrows(SecurityException.class, () -> contentProvidersSdkApi.getContentProvider());
         assertThrows(
                 SecurityException.class,
                 () ->

@@ -216,6 +216,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
     private static final String PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED =
             "sdksandbox_customized_sdk_context_enabled";
+    private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
+            "contentprovider_allowlist_per_targetSdkVersion";
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
@@ -229,13 +231,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = false;
-
-    private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
-            "contentprovider_allowlist_per_targetSdkVersion";
-
-    // Property indicating the ContentProvider canary allowlist.
-    private static final String PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST =
-            "next_contentprovider_allowlist";
 
     private static final String WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER =
             "DeveloperModeContentProvider";
@@ -1734,10 +1729,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
                         DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
 
-        @GuardedBy("mLock")
-        private AllowedContentProviders mNextContentProviderAllowlist =
-                getNextContentProviderDeviceConfigAllowlist();
-
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1808,12 +1799,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        AllowedContentProviders getNextContentProviderAllowlist() {
-            synchronized (mLock) {
-                return mNextContentProviderAllowlist;
-            }
-        }
-
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1857,10 +1842,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                     properties.getBoolean(
                                             PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
                                             DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
-                            break;
-                        case PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST:
-                            mNextContentProviderAllowlist =
-                                    getNextContentProviderDeviceConfigAllowlist();
                             break;
                         default:
                     }
@@ -1930,25 +1911,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
             }
             return new ArrayMap<>();
-        }
-
-        private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
-
-            // Content providers are restricted by default. If the property is not set, or it is an
-            // empty string, there are no content providers to allowlist.
-            if (Objects.isNull(decode)) {
-                return null;
-            }
-
-            AllowedContentProviders allowedContentProvidersProto = null;
-            try {
-                allowedContentProvidersProto = AllowedContentProviders.parseFrom(decode);
-            } catch (Exception e) {
-                Log.e(TAG, "Could not parse content provider canary allowlist " + e);
-            }
-
-            return allowedContentProvidersProto;
         }
     }
 
@@ -2456,16 +2418,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
-                if (mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {
-                    contentProviderAuthoritiesAllowlist.addAll(
-                            mSdkSandboxSettingsListener
-                                    .getNextContentProviderAllowlist()
-                                    .getAuthoritiesList());
-                }
-                return contentProviderAuthoritiesAllowlist;
-            }
-
             Map<Integer, AllowedContentProviders> contentProviderAllowlistPerTargetSdkVersion =
                     mSdkSandboxSettingsListener.getContentProviderAllowlistPerTargetSdkVersion();
             // TODO: Filter out the allowlist based on targetSdkVersion.
