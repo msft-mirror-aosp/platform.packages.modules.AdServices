@@ -341,7 +341,7 @@ public class ContentProviderRestrictionsTestApp {
     }
 
     @Test(expected = Test.None.class /* no exception expected */)
-    public void testGetContentProvider_defaultValueRestrictionsNotApplied() throws Exception {
+    public void testGetContentProvider_defaultValueRestrictionsApplied() throws Exception {
         /** Ensuring that the property is not present in DeviceConfig */
         DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS);
 
@@ -354,11 +354,11 @@ public class ContentProviderRestrictionsTestApp {
         IContentProvidersSdkApi contentProvidersSdkApi =
                 IContentProvidersSdkApi.Stub.asInterface(binder);
 
-        contentProvidersSdkApi.getContentProvider();
+        assertThrows(SecurityException.class, () -> contentProvidersSdkApi.getContentProvider());
     }
 
     @Test(expected = Test.None.class /* no exception expected */)
-    public void testRegisterContentObserver_defaultValueRestrictionsNotApplied() throws Exception {
+    public void testRegisterContentObserver_defaultValueRestrictionsApplied() throws Exception {
         /** Ensuring that the property is not present in DeviceConfig */
         DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_RESTRICTIONS);
 
@@ -371,6 +371,6 @@ public class ContentProviderRestrictionsTestApp {
         IContentProvidersSdkApi contentProvidersSdkApi =
                 IContentProvidersSdkApi.Stub.asInterface(binder);
 
-        contentProvidersSdkApi.registerContentObserver();
+        assertThrows(SecurityException.class, () -> contentProvidersSdkApi.getContentProvider());
     }
 }
