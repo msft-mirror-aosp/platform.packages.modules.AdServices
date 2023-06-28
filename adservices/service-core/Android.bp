@@ -24,6 +24,13 @@ genrule {
     out: ["com/android/adservices/service/stats/AdServicesStatsLog.java"],
 }
 
+genrule {
+    name: "cobalt_registry.binarypb",
+    defaults: ["gen_cobalt_registry_binarypb"],
+    srcs: [ "resources/cobalt_registry.textpb"],
+    out: ["cobalt_registry.binarypb"],
+}
+
 filegroup {
     name: "adservices-service-core-sources",
     srcs: [
@@ -65,6 +72,9 @@ android_library {
     ],
     javacflags: [
         "-Aroom.schemaLocation=packages/modules/AdServices/adservices/service-core/schemas",
+    ],
+    java_resources: [
+        ":cobalt_registry.binarypb",
     ],
     libs: [
         "androidx.room_room-runtime",
