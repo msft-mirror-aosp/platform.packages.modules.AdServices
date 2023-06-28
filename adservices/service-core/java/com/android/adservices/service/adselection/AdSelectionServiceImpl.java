@@ -115,6 +115,10 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
+    @VisibleForTesting
+    static final String AUCTION_SERVER_API_IS_NOT_AVAILABLE =
+            "Auction Server API is not available!";
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AppInstallDao mAppInstallDao;
@@ -277,6 +281,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
+        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
+            throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
+        }
+
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
@@ -314,6 +322,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             PersistAdSelectionResultCallback callback)
             throws RemoteException {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
+            throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
+        }
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
