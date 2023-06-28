@@ -52,16 +52,16 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Utility class to execute an auction script. Current implementation is thread safe but relies on a
@@ -108,6 +108,8 @@ public class AdSelectionScriptEngine {
     public static final String DEBUG_REPORTING_WIN_URI_FIELD_NAME = "debug_reporting_win_uri";
     public static final String DEBUG_REPORTING_LOSS_URI_FIELD_NAME = "debug_reporting_loss_uri";
     public static final String DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME = "rejectReason";
+    public static final String AD_COST_FIELD_NAME = "adCost";
+    public static final int NUM_BITS_STOCHASTIC_ROUNDING = 8;
     /**
      * Template for the iterative invocation function. The two tokens to expand are the list of
      * parameters and the invocation of the actual per-ad function.
@@ -182,6 +184,7 @@ public class AdSelectionScriptEngine {
                     + "        results = [{"
                     + "           'ad': script_result.ad,\n"
                     + "           'bid': script_result.bid,\n"
+                    + "           'adCost': script_result.adCost,\n"
                     + "           'debug_reporting_win_uri': "
                     + DebugReportingEnabledScriptStrategy.WIN_URI_GLOBAL_VARIABLE
                     + ",\n"
@@ -234,19 +237,22 @@ public class AdSelectionScriptEngine {
     private final AdWithBidArgumentUtil mAdWithBidArgumentUtil;
     private final AdDataArgumentUtil mAdDataArgumentUtil;
     private final DebugReportingScriptStrategy mDebugReportingScript;
+    private final boolean mCpcBillingEnabled;
 
     public AdSelectionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             AdCounterKeyCopier adCounterKeyCopier,
-            DebugReportingScriptStrategy debugReportingScript) {
+            DebugReportingScriptStrategy debugReportingScript,
+            boolean cpcBillingEnabled) {
         mJsEngine = JSScriptEngine.getInstance(context);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;
+        mCpcBillingEnabled = cpcBillingEnabled;
     }
 
     /**
@@ -499,12 +505,24 @@ public class AdSelectionScriptEngine {
                         extractValidUri(json.optString(DEBUG_REPORTING_WIN_URI_FIELD_NAME, ""));
                 Uri debugReportingLossUri =
                         extractValidUri(json.optString(DEBUG_REPORTING_LOSS_URI_FIELD_NAME, ""));
-                results.add(
+
+                GenerateBidResult.Builder generateBidResultBuilder =
                         GenerateBidResult.builder()
                                 .setAdWithBid(adWithBid)
                                 .setWinDebugReportUri(debugReportingWinUri)
-                                .setLossDebugReportUri(debugReportingLossUri)
-                                .build());
+                                .setLossDebugReportUri(debugReportingLossUri);
+
+                if (mCpcBillingEnabled) {
+                    double adCost = json.optDouble(AD_COST_FIELD_NAME);
+                    if (!Double.isNaN(adCost) && !Double.isInfinite(adCost)) {
+                        BuyerContextualSignals buyerContextualSignals =
+                                BuyerContextualSignals.builder()
+                                        .setAdCost(new AdCost(adCost, NUM_BITS_STOCHASTIC_ROUNDING))
+                                        .build();
+                        generateBidResultBuilder.setBuyerContextualSignals(buyerContextualSignals);
+                    }
+                }
+                results.add(generateBidResultBuilder.build());
             }
         } catch (IllegalArgumentException e) {
             sLogger.w(

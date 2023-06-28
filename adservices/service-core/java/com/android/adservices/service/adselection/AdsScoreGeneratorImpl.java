@@ -432,12 +432,15 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             .setBiddingLogicUri(customAudienceBiddingInfo.getBiddingLogicUri())
                             .setCustomAudienceSignals(signals)
                             .setDebugReport(
-                                    mDebugReportingEnabled ? makeDebugReport(adScore, signals,
-                                            adSelectionConfig) : null)
+                                    mDebugReportingEnabled
+                                            ? makeDebugReport(adScore, signals, adSelectionConfig)
+                                            : null)
                             .setBiddingLogicJs(customAudienceBiddingInfo.getBuyerDecisionLogicJs())
                             .setBiddingLogicJsDownloaded(true)
                             .setBuyer(
                                     customAudienceBiddingInfo.getCustomAudienceSignals().getBuyer())
+                            .setBuyerContextualSignals(
+                                    customAudienceBiddingInfo.getBuyerContextualSignals())
                             .build());
         }
 
