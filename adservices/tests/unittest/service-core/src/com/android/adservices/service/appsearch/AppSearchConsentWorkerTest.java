@@ -680,7 +680,8 @@ public class AppSearchConsentWorkerTest {
             if (isBetaUx) {
                 RuntimeException e =
                         assertThrows(
-                                RuntimeException.class, () -> worker.recordNotificationDisplayed());
+                                RuntimeException.class,
+                                () -> worker.recordNotificationDisplayed(true));
                 assertThat(e.getMessage())
                         .isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
             } else {
@@ -725,7 +726,7 @@ public class AppSearchConsentWorkerTest {
             if (isBetaUx) {
                 when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(any(), any(), any()))
                         .thenReturn(false);
-                AppSearchConsentWorker.getInstance(mContext).recordNotificationDisplayed();
+                AppSearchConsentWorker.getInstance(mContext).recordNotificationDisplayed(true);
             } else {
                 when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any()))
                         .thenReturn(false);

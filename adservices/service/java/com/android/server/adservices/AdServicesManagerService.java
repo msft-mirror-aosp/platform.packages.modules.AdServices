@@ -258,7 +258,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
@@ -266,7 +266,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         try {
             mUserInstanceManager
                     .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .recordNotificationDisplayed();
+                    .recordNotificationDisplayed(wasNotificationDisplayed);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to Record Notification Displayed.");
         }
