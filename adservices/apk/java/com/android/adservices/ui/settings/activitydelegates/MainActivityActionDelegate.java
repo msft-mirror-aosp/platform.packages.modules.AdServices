@@ -71,7 +71,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         // show elements
         showElements(BetaOnlyElements);
 
-        // set title
         mActivity.setTitle(R.string.settingsUI_main_view_title);
         // privacy sandbox controls
         configureElement(
@@ -101,7 +100,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         // show elements
         showElements(GaOnlyElements);
 
-        // set title
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
 
         // privacy sandbox controls
@@ -147,7 +145,17 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
+        // measurement button
+        configureElement(
+                R.id.measurement_preference, button -> mMainViewModel.measurementClickHandler());
+        configureElement(
+                R.id.measurement_preference_subtitle,
+                mMainViewModel.getMeasurementConsentFromConsentManager()
+                        ? R.string.settingsUI_subtitle_consent_on
+                        : R.string.settingsUI_subtitle_consent_off);
+    }
 
     private void listenToMainViewModelUiEvents() {
         Observer<MainViewModel.MainViewModelUiEvent> observer =

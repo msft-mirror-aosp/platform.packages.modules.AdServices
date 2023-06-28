@@ -109,7 +109,9 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        setContentView(R.layout.consent_notification_u18_activity);
+    }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outBundle) {
