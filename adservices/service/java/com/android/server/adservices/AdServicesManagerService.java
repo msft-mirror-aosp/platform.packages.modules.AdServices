@@ -344,7 +344,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void recordGaUxNotificationDisplayed() {
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
@@ -352,7 +352,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         try {
             mUserInstanceManager
                     .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .recordGaUxNotificationDisplayed();
+                    .recordGaUxNotificationDisplayed(wasNotificationDisplayed);
         } catch (IOException e) {
             LogUtil.e(e, "Fail to Record GA UX Notification Displayed.");
         }

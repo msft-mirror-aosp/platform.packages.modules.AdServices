@@ -2405,12 +2405,12 @@ public class ConsentManagerTest {
 
         verify(mMockIAdServicesManager, never()).wasGaUxNotificationDisplayed();
 
-        spyConsentManager.recordGaUxNotificationDisplayed();
+        spyConsentManager.recordGaUxNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasGaUxNotificationDisplayed()).isTrue();
 
         verify(mMockIAdServicesManager, never()).wasGaUxNotificationDisplayed();
-        verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
     }
 
     @Test
@@ -2425,12 +2425,12 @@ public class ConsentManagerTest {
         verify(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
 
         doReturn(true).when(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
-        spyConsentManager.recordGaUxNotificationDisplayed();
+        spyConsentManager.recordGaUxNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasGaUxNotificationDisplayed()).isTrue();
 
         verify(mMockIAdServicesManager, times(2)).wasGaUxNotificationDisplayed();
-        verify(mMockIAdServicesManager).recordGaUxNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
 
         // Verify notificationDisplayed is not set in PPAPI
         assertThat(mConsentDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE)).isFalse();
@@ -2451,12 +2451,12 @@ public class ConsentManagerTest {
         verify(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
 
         doReturn(true).when(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
-        spyConsentManager.recordGaUxNotificationDisplayed();
+        spyConsentManager.recordGaUxNotificationDisplayed(true);
 
         assertThat(spyConsentManager.wasGaUxNotificationDisplayed()).isTrue();
 
         verify(mMockIAdServicesManager, times(2)).wasGaUxNotificationDisplayed();
-        verify(mMockIAdServicesManager).recordGaUxNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
 
         // Verify notificationDisplayed is also set in PPAPI
         assertThat(mConsentDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
@@ -2475,11 +2475,11 @@ public class ConsentManagerTest {
         verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
 
         when(mAppSearchConsentManagerMock.wasGaUxNotificationDisplayed()).thenReturn(true);
-        spyConsentManager.recordGaUxNotificationDisplayed();
+        spyConsentManager.recordGaUxNotificationDisplayed(true);
         assertThat(spyConsentManager.wasGaUxNotificationDisplayed()).isTrue();
 
         verify(mAppSearchConsentManagerMock, times(2)).wasGaUxNotificationDisplayed();
-        verify(mAppSearchConsentManagerMock).recordGaUxNotificationDisplayed();
+        verify(mAppSearchConsentManagerMock).recordGaUxNotificationDisplayed(true);
     }
 
     @Test
@@ -2701,7 +2701,7 @@ public class ConsentManagerTest {
                 .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
         verify(mMockIAdServicesManager, never()).setConsent(any());
         verify(mMockIAdServicesManager, never()).recordNotificationDisplayed();
-        verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
         verify(mMockIAdServicesManager, never()).recordDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordAdServicesDeletionOccurred(anyInt());
         verify(mMockIAdServicesManager, never()).recordDefaultAdIdState(anyBoolean());
@@ -2929,7 +2929,7 @@ public class ConsentManagerTest {
         verify(mAppSearchConsentManagerMock)
                 .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
         verify(mockAdServicesManager, never()).recordNotificationDisplayed();
-        verify(mockAdServicesManager, never()).recordGaUxNotificationDisplayed();
+        verify(mockAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
         verify(mockAdServicesManager, never()).recordDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordAdServicesDeletionOccurred(anyInt());
         verify(mockAdServicesManager, never()).recordDefaultAdIdState(anyBoolean());
@@ -3642,7 +3642,7 @@ public class ConsentManagerTest {
         doReturn(isGiven).when(mMockIAdServicesManager).wasNotificationDisplayed();
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
         doReturn(isGiven).when(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
-        doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
         doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
         doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
         doReturn(isGiven).when(mAppSearchConsentManagerMock).getConsent(CONSENT_KEY_FOR_ALL);
@@ -3671,7 +3671,7 @@ public class ConsentManagerTest {
         doReturn(isGiven).when(mMockIAdServicesManager).wasNotificationDisplayed();
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed();
         doReturn(isGiven).when(mMockIAdServicesManager).wasGaUxNotificationDisplayed();
-        doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed();
+        doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
         doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
         doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
         doReturn(isGiven).when(mAppSearchConsentManagerMock).getConsent(any());
