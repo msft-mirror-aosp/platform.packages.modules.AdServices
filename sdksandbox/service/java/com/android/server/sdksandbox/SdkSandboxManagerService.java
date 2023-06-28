@@ -102,6 +102,7 @@ import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.proto.ContentProvider.AllowedContentProviders;
 import com.android.server.sdksandbox.proto.ContentProvider.ContentProviderAllowlists;
+import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.sdksandbox.proto.Services.ServiceAllowlists;
 import com.android.server.wm.ActivityInterceptorCallback;
@@ -2153,6 +2154,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
+        if (requestAllowedPerAllowlist(
+                intent.getAction(), componentPackageName, component.getClassName())) {
+            return;
+        }
+
         // Default disallow.
         failStartOrBindService(intent);
     }
@@ -2457,6 +2463,28 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return contentProviderAuthoritiesAllowlist;
     }
 
+    private boolean requestAllowedPerAllowlist(
+            String intentAction, String packageName, String className) {
+        // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
+        AllowedServices allowedServices =
+                mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                        /*targetSdkVersion=*/ 34);
+
+        if (Objects.isNull(allowedServices)) {
+            return false;
+        }
+
+        for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
+            AllowedService allowedService = allowedServices.getAllowedServices(i);
+            if (doesMatch(allowedService.getIntentAction(), intentAction)
+                    && doesMatch(allowedService.getComponentClassName(), className)
+                    && doesMatch(allowedService.getComponentPackageName(), packageName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Checks if a given input string matches any of the given patterns. Each pattern can contain
      * wildcards in the form of an asterisk. This wildcard should match 0 or more number of
@@ -2473,12 +2501,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return false;
     }
 
+    static boolean doesMatch(String pattern, String input) {
+        // Allow everything if pattern is *
+        if (pattern != null && pattern.equals("*")) {
+            return true;
+        }
+        return doesInputMatchWildcardPattern(pattern, input);
+    }
+
     /**
      * Checks if a given input string matches the given pattern. The pattern can contain wildcards
      * in the form of an asterisk. This wildcard should match 0 or more number of characters in the
      * input string.
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    // TODO(b/289245986): Add matchOnNullInput parameter
     static boolean doesInputMatchWildcardPattern(String pattern, String input) {
         if (pattern == null || input == null) {
             return false;
