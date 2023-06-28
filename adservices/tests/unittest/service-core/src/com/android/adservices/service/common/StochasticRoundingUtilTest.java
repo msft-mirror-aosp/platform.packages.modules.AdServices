@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -104,6 +105,24 @@ public class StochasticRoundingUtilTest {
 
         assertTrue(total > .9 * input * numIters);
         assertTrue(total < 1.1 * input * numIters);
+    }
+
+    @Test
+    public void testRoundStochasticallyNegativeNumBitsThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    StochasticRoundingUtil.roundStochastically(0, -1);
+                });
+    }
+
+    @Test
+    public void testRoundStochasticallyGreaterThanMaxNumBitsThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    StochasticRoundingUtil.roundStochastically(0, 66);
+                });
     }
 
     private static final class RoundingTestCase {

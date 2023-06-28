@@ -18,6 +18,7 @@ package android.adservices.debuggablects;
 
 import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
 
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
@@ -61,6 +62,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -223,6 +225,24 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
+    private static final String BUYER_2_BIDDING_LOGIC_JS_AD_COST =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result, 'adCost':"
+                    + " ad.metadata.adCost };\n"
+                    + "}\n"
+                    + "\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer,\n"
+                    + "    contextual_signals, custom_audience_reporting_signals) {\n"
+                    + "    let reporting_address = '"
+                    + BUYER_2_REPORTING_URI
+                    + "';\n"
+                    + "    return {'status': 0, 'results': {'reporting_uri':\n"
+                    + "                reporting_address + '?adCost=' + contextual_signals.adCost}"
+                    + " };\n"
+                    + "}";
+
     private static final String BUYER_2_BIDDING_LOGIC_JS_REGISTER_AD_BEACON =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals,"
@@ -264,6 +284,24 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
+    private static final String BUYER_1_BIDDING_LOGIC_JS_AD_COST =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result, 'adCost':"
+                    + " ad.metadata.adCost };\n"
+                    + "}\n"
+                    + "\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer,\n"
+                    + "    contextual_signals, custom_audience_reporting_signals) {\n"
+                    + "    let reporting_address = '"
+                    + BUYER_1_REPORTING_URI
+                    + "';\n"
+                    + "    return {'status': 0, 'results': {'reporting_uri':\n"
+                    + "                reporting_address + '?adCost=' + contextual_signals.adCost}"
+                    + " };\n"
+                    + "}";
+
     private static final String BUYER_1_BIDDING_LOGIC_JS_REGISTER_AD_BEACON =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals,"
@@ -282,6 +320,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + BUYER_1_REPORTING_URI
                     + "' } };\n"
                     + "}";
+
+    private static final AdCost AD_COST_1 = new AdCost(1.2, NUM_BITS_STOCHASTIC_ROUNDING);
+    private static final AdCost AD_COST_2 = new AdCost(2.2, NUM_BITS_STOCHASTIC_ROUNDING);
 
     private static final int BUYER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
@@ -362,6 +403,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Disable registerAdBeacon by default
         PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(false);
+
+        // Disable cpc billing by default
+        PhFlagsFixture.overrideFledgeCpcBillingEnabled(false);
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
@@ -450,6 +494,178 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlow_overall_SuccessWithCpcBillingEnabled()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeCpcBillingEnabled(true);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 =
+                createCustomAudienceWithAdCost(BUYER_1, bidsForBuyer1, AD_COST_1.getAdCost());
+
+        CustomAudience customAudience2 =
+                createCustomAudienceWithAdCost(BUYER_2, bidsForBuyer2, AD_COST_2.getAdCost());
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        joinCustomAudience(customAudience1);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        joinCustomAudience(customAudience2);
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_AD_COST)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_AD_COST)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlow_overall_SuccessWithCpcBillingDisabled()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeCpcBillingEnabled(false);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 =
+                createCustomAudienceWithAdCost(BUYER_1, bidsForBuyer1, AD_COST_1.getAdCost());
+
+        CustomAudience customAudience2 =
+                createCustomAudienceWithAdCost(BUYER_2, bidsForBuyer2, AD_COST_2.getAdCost());
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        joinCustomAudience(customAudience1);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        joinCustomAudience(customAudience2);
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_AD_COST)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_AD_COST)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -3067,6 +3283,22 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
     }
 
+    /**
+     * @param buyer The name of the buyer for this Custom Audience
+     * @param bids these bids, are added to its metadata. Our JS logic then picks this value and
+     *     creates ad with the provided value as bid
+     * @return a real Custom Audience object that can be persisted and used in bidding and scoring
+     */
+    private CustomAudience createCustomAudienceWithAdCost(
+            final AdTechIdentifier buyer, List<Double> bids, double adCost) {
+        return createCustomAudienceWithAdCost(
+                buyer,
+                bids,
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                adCost);
+    }
+
     private CustomAudience createCustomAudience(
             final AdTechIdentifier buyer,
             List<Double> bids,
@@ -3083,6 +3315,41 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                             .setRenderUri(
                                     CommonFixture.getUri(buyer, AD_URI_PREFIX + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
+                            .build());
+        }
+
+        return new CustomAudience.Builder()
+                .setBuyer(buyer)
+                .setName(buyer + CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(activationTime)
+                .setExpirationTime(expirationTime)
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUri(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
+                .setAds(ads)
+                .build();
+    }
+
+    private CustomAudience createCustomAudienceWithAdCost(
+            final AdTechIdentifier buyer,
+            List<Double> bids,
+            Instant activationTime,
+            Instant expirationTime,
+            double adCost) {
+        // Generate ads for with bids provided
+        List<AdData> ads = new ArrayList<>();
+
+        // Create ads with the buyer name and bid number as the ad URI
+        // Add the bid value to the metadata
+        for (int i = 0; i < bids.size(); i++) {
+            ads.add(
+                    new AdData.Builder()
+                            .setRenderUri(
+                                    CommonFixture.getUri(buyer, AD_URI_PREFIX + "/ad" + (i + 1)))
+                            .setMetadata(
+                                    "{\"result\":" + bids.get(i) + ",\"adCost\":" + adCost + "}")
                             .build());
         }
 

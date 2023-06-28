@@ -547,14 +547,21 @@ public class ImpressionReporter {
             invokeSellerScript(String decisionLogicJs, ReportingContext ctx) {
         sLogger.v("Invoking seller script");
         try {
+            String sellerContextualSignals;
+
+            if (Objects.isNull(ctx.mDBAdSelectionEntry.getSellerContextualSignals())) {
+                sellerContextualSignals = "{}";
+            } else {
+                sellerContextualSignals = ctx.mDBAdSelectionEntry.getSellerContextualSignals();
+            }
+
             return FluentFuture.from(
                             mJsEngine.reportResult(
                                     decisionLogicJs,
                                     ctx.mAdSelectionConfig,
                                     ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
                                     ctx.mDBAdSelectionEntry.getWinningAdBid(),
-                                    AdSelectionSignals.fromString(
-                                            ctx.mDBAdSelectionEntry.getBuyerContextualSignals())))
+                                    AdSelectionSignals.fromString(sellerContextualSignals)))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);

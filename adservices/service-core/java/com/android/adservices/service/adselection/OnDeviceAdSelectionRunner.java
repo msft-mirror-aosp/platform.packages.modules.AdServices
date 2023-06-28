@@ -37,6 +37,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
@@ -110,11 +111,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
-
         mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
+        boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
@@ -122,7 +123,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
                                 mAdCounterKeyCopier,
-                                mDebugReportingScriptStrategy),
+                                mDebugReportingScriptStrategy,
+                                cpcBillingEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -142,7 +144,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 devContext,
                                 mCustomAudienceDao,
                                 mAdCounterKeyCopier,
-                                flags),
+                                flags,
+                                cpcBillingEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
@@ -354,13 +357,21 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull AdScoringOutcome scoringWinner) {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
         sLogger.v("Creating Ad Selection result from scoring winner");
+        String buyerContextualSignalsString;
+
+        if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
+            buyerContextualSignalsString = "{}";
+        } else {
+            buyerContextualSignalsString = scoringWinner.getBuyerContextualSignals().toString();
+        }
+
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
-                .setBuyerContextualSignals("{}");
+                .setBuyerContextualSignals(buyerContextualSignalsString);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =

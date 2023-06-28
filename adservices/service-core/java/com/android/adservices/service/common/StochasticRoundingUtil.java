@@ -18,10 +18,20 @@ package com.android.adservices.service.common;
 
 import static java.lang.Math.abs;
 
+import com.android.internal.util.Preconditions;
+
 /** Utility class to perform stochastic rounding. */
 public final class StochasticRoundingUtil {
     private static final int MIN_8_BIT_INT_VALUE = -128;
     private static final int MAX_8_BIT_INT_VALUE = 127;
+
+    // Number of bits in a double is 64, we can't round down to less than that.
+    private static final int MAX_POSSIBLE_ROUNDING_BITS = 64;
+
+    private static final String NUM_BITS_MIN_EXCEEDED =
+            "Number of bits to round to must be greater than 0.";
+    private static final String NUM_BITS_MAX_EXCEEDED =
+            "Number of bits to round to must be less than the number of bits in a double.";
 
     private StochasticRoundingUtil() throws IllegalAccessException {
         throw new IllegalAccessException("This class cannot be instantiated!");
@@ -48,6 +58,9 @@ public final class StochasticRoundingUtil {
      * consistency.
      */
     public static double roundStochastically(double value, int numBits) {
+        Preconditions.checkArgument(numBits > 0, NUM_BITS_MIN_EXCEEDED);
+        Preconditions.checkArgument(numBits <= MAX_POSSIBLE_ROUNDING_BITS, NUM_BITS_MAX_EXCEEDED);
+
         if (!Double.isFinite(value)) {
             return value;
         }
