@@ -180,7 +180,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(new ArrayList<>(), getTestBundle());
 
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";

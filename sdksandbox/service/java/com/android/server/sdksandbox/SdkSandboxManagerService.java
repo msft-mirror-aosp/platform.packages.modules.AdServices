@@ -223,10 +223,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
     /**
-     * Property to enforce content provider restrictions for SDK sandbox processes. If the value of
-     * this property is {@code true}, the restrictions will be enforced.
+     * Property to enforce restrictions for SDK sandbox processes. If the value of this property is
+     * {@code true}, the restrictions will be enforced.
      */
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = false;
 

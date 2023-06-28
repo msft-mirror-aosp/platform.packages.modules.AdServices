@@ -50,7 +50,7 @@ public class BroadcastRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
     private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
             "enforce_broadcast_receiver_restrictions";
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.broadcasts";
 
