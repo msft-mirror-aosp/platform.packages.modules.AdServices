@@ -2466,18 +2466,83 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return contentProviderAuthoritiesAllowlist;
             }
 
-            Map<Integer, AllowedContentProviders> contentProviderAllowlistPerTargetSdkVersion =
-                    mSdkSandboxSettingsListener.getContentProviderAllowlistPerTargetSdkVersion();
-            // TODO: Filter out the allowlist based on targetSdkVersion.
-            contentProviderAllowlistPerTargetSdkVersion
-                    .values()
-                    .forEach(
-                            allowedContentProviders ->
-                                    contentProviderAuthoritiesAllowlist.addAll(
-                                            allowedContentProviders.getAuthoritiesList()));
+            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
+            AllowedContentProviders contentProviderAllowlistForTargetSdkVersion =
+                    mSdkSandboxSettingsListener
+                            .getContentProviderAllowlistPerTargetSdkVersion()
+                            .get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+            if (contentProviderAllowlistForTargetSdkVersion != null) {
+                contentProviderAuthoritiesAllowlist.addAll(
+                        contentProviderAllowlistForTargetSdkVersion.getAuthoritiesList());
+            }
         }
 
         return contentProviderAuthoritiesAllowlist;
+    }
+
+    /**
+     * Checks if a given input string matches any of the given patterns. Each pattern can contain
+     * wildcards in the form of an asterisk. This wildcard should match 0 or more number of
+     * characters in the input string.
+     */
+    private static boolean doesInputMatchAnyWildcardPattern(
+            ArraySet<String> patterns, String input) {
+        for (int i = 0; i < patterns.size(); ++i) {
+            if (doesInputMatchWildcardPattern(patterns.valueAt(i), input)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if a given input string matches the given pattern. The pattern can contain wildcards
+     * in the form of an asterisk. This wildcard should match 0 or more number of characters in the
+     * input string.
+     */
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean doesInputMatchWildcardPattern(String pattern, String input) {
+        if (pattern == null || input == null) {
+            return false;
+        }
+
+        /*
+         * We split the pattern by the wildcard. It is split with a non-negative limit, indicating
+         * that the pattern is applied as many times as possible e.g. if pattern = "*a*", the split
+         * would be ["","a",""].
+         */
+        // TODO(b/289197372): Optimize by splitting beforehand.
+        String[] patternSubstrings = pattern.split("\\*", -1);
+        int inputMatchStartIndex = 0;
+        for (int i = 0; i < patternSubstrings.length; ++i) {
+            if (i == 0) {
+                // Verify that the input string starts with the characters present before the first
+                // wildcard.
+                if (!input.startsWith(patternSubstrings[i])) {
+                    return false;
+                }
+                inputMatchStartIndex = patternSubstrings[i].length();
+            } else if (i == patternSubstrings.length - 1) {
+                // Verify that the input string (after the point where it's been matched so far)
+                // matches with the characters after the last wildcard.
+                if (!input.substring(inputMatchStartIndex).endsWith(patternSubstrings[i])) {
+                    return false;
+                }
+                inputMatchStartIndex = input.length();
+            } else {
+                // For patterns between the first and last wildcard, greedily check if the input
+                // (after the point where it's been matched so far) matches properly.
+                int substringIndex = input.indexOf(patternSubstrings[i], inputMatchStartIndex);
+                if (substringIndex == -1) {
+                    return false;
+                }
+                inputMatchStartIndex = substringIndex + patternSubstrings[i].length();
+            }
+        }
+
+        // Verify that the whole input has been matched.
+        return inputMatchStartIndex >= input.length();
     }
 
     private class LocalImpl implements SdkSandboxManagerLocal {
@@ -2570,7 +2635,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
-                        || getContentProviderAllowlist().contains(providerInfo.authority);
+                        || doesInputMatchAnyWildcardPattern(
+                                getContentProviderAllowlist(), providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
             }

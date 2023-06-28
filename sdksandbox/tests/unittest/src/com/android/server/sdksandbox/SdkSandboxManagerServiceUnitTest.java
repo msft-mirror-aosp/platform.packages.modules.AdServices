@@ -3657,6 +3657,67 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(result).isNull();
     }
 
+    @Test
+    public void testWildcardPatternMatch() {
+        String pattern1 = "abcd*";
+        verifyPatternMatch(pattern1, "abcd", true);
+        verifyPatternMatch(pattern1, "abcdef", true);
+        verifyPatternMatch(pattern1, "abcdabcd", true);
+        verifyPatternMatch(pattern1, "efgh", false);
+        verifyPatternMatch(pattern1, "efgabcd", false);
+        verifyPatternMatch(pattern1, "abc", false);
+
+        String pattern2 = "*";
+        verifyPatternMatch(pattern2, "", true);
+        verifyPatternMatch(pattern2, "abcd", true);
+
+        String pattern3 = "abcd*efgh*";
+        verifyPatternMatch(pattern3, "abcdefgh", true);
+        verifyPatternMatch(pattern3, "abcdrefghij", true);
+        verifyPatternMatch(pattern3, "abcd", false);
+        verifyPatternMatch(pattern3, "abcdteffgh", false);
+
+        String pattern4 = "*abcd";
+        verifyPatternMatch(pattern4, "abcdabcd", true);
+        verifyPatternMatch(pattern4, "abcdabcdabcd", true);
+        verifyPatternMatch(pattern4, "efgabcd", true);
+        verifyPatternMatch(pattern4, "abcd", true);
+        verifyPatternMatch(pattern4, "abcde", false);
+
+        String pattern5 = "abcd*e";
+        verifyPatternMatch(pattern5, "abcde", true);
+        verifyPatternMatch(pattern5, "abcdee", true);
+        verifyPatternMatch(pattern5, "abcdef", false);
+
+        String pattern6 = "";
+        verifyPatternMatch(pattern6, "", true);
+        verifyPatternMatch(pattern6, "ab", false);
+
+        String pattern7 = "*abcd*";
+        verifyPatternMatch(pattern7, "abcdabcdabcd", true);
+
+        String pattern8 = "a*a";
+        verifyPatternMatch(pattern8, "aa", true);
+        verifyPatternMatch(pattern8, "a", false);
+
+        String pattern9 = "abcd";
+        verifyPatternMatch(pattern9, "abcd", true);
+        verifyPatternMatch(pattern9, "a", false);
+
+        verifyPatternMatch("*aab", "aaaab", true);
+        verifyPatternMatch("a", "ab", false);
+    }
+
+    private void verifyPatternMatch(String pattern, String input, boolean shouldMatch) {
+        if (shouldMatch) {
+            assertThat(SdkSandboxManagerService.doesInputMatchWildcardPattern(pattern, input))
+                    .isTrue();
+        } else {
+            assertThat(SdkSandboxManagerService.doesInputMatchWildcardPattern(pattern, input))
+                    .isFalse();
+        }
+    }
+
     private ActivityInterceptorCallback.ActivityInterceptResult interceptActivityLunch(
             Intent intent) {
         return interceptActivityLunch(intent, 1000, new ActivityInfo());
