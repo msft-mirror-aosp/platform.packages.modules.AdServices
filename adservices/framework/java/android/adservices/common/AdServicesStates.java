@@ -22,7 +22,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * AdServicesStates exposed to system apps/services through the enableAdServices API.
+ * AdServicesStates exposed to system apps/services through the enableAdServices API. The bits
+ * stored in this parcel can change frequently based on user interaction with the Ads settings page.
  *
  * @hide
  */
@@ -104,13 +105,22 @@ public final class AdServicesStates implements Parcelable {
         return mIsAdIdEnabled;
     }
 
-    /** Returns whether the account is eligible for the under 18 privacy sandbox. */
+    /**
+     * Determines whether the user account is eligible for the U18 (under 18) privacy sandbox, in
+     * which all personalized Ads APIs are * permanently disabled. An account is considered an U18
+     * account if privacy sandbox has received signals that the user is a minor.
+     */
     @NonNull
     public boolean isU18Account() {
         return mIsU18Account;
     }
 
-    /** Returns whether the account is eligible for the adult privacy sandbox. */
+    /**
+     * Determines whether the user account is eligible for the adult or full fledged privacy
+     * sandbox, in which all Ads APIs can be * enabled/disabled based on user consent. An account is
+     * considered an adult account if privacy sandbox has received signals that the user is an
+     * adult.
+     */
     @NonNull
     public boolean isAdultAccount() {
         return mIsAdultAccount;
