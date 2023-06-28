@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
@@ -25,6 +26,7 @@ import android.adservices.common.KeyedFrequencyCap;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -41,6 +43,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
     private MockitoSession mMockitoSession;
 
@@ -53,6 +56,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         TEST_FLAGS,
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
     }
 
@@ -84,6 +88,11 @@ public class FledgeMaintenanceTasksWorkerTests {
             public boolean getFledgeAdSelectionFilteringEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
         }
 
         FledgeMaintenanceTasksWorker worker =
@@ -91,9 +100,45 @@ public class FledgeMaintenanceTasksWorkerTests {
                         new FlagsWithAdFilteringFeatureEnabled(),
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
-        worker.clearExpiredFrequencyCapHistogramData();
+        worker.clearInvalidFrequencyCapHistogramData();
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+
+        verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedBuyerHistogramData(any(EnrollmentDao.class));
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void
+            testClearExpiredFrequencyCapHistogramData_enrollmentDisabled_skipsBuyerMaintenance() {
+        final class FlagsWithAdFilteringFeatureEnabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        worker.clearInvalidFrequencyCapHistogramData();
 
         Instant expectedExpirationTime =
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
@@ -110,6 +155,11 @@ public class FledgeMaintenanceTasksWorkerTests {
             public boolean getFledgeAdSelectionFilteringEnabled() {
                 return false;
             }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
         }
 
         FledgeMaintenanceTasksWorker worker =
@@ -117,9 +167,10 @@ public class FledgeMaintenanceTasksWorkerTests {
                         new FlagsWithAdFilteringFeatureDisabled(),
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
-        worker.clearExpiredFrequencyCapHistogramData();
+        worker.clearInvalidFrequencyCapHistogramData();
 
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
     }

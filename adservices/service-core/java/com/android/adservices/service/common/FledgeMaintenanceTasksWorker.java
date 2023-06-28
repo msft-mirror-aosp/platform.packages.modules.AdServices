@@ -25,6 +25,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
@@ -38,6 +39,7 @@ public class FledgeMaintenanceTasksWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
+    @NonNull private final EnrollmentDao mEnrollmentDao;
     @NonNull private final Flags mFlags;
     @NonNull private final Clock mClock;
 
@@ -46,15 +48,18 @@ public class FledgeMaintenanceTasksWorker {
             @NonNull Flags flags,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull FrequencyCapDao frequencyCapDao,
+            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Clock clock) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
+        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(clock);
 
         mFlags = flags;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mFrequencyCapDao = frequencyCapDao;
+        mEnrollmentDao = enrollmentDao;
         mClock = clock;
     }
 
@@ -63,6 +68,7 @@ public class FledgeMaintenanceTasksWorker {
         mFlags = FlagsFactory.getFlags();
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
         mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
+        mEnrollmentDao = EnrollmentDao.getInstance(context);
         mClock = Clock.systemUTC();
     }
 
@@ -96,12 +102,21 @@ public class FledgeMaintenanceTasksWorker {
     /**
      * Clears invalid histogram data from the frequency cap database if the ad filtering feature is
      * enabled.
+     *
+     * <p>Invalid histogram data includes:
+     *
+     * <ul>
+     *   <li>Expired histogram data
+     *   <li>Disallowed buyer histogram data
+     * </ul>
      */
-    public void clearExpiredFrequencyCapHistogramData() {
+    public void clearInvalidFrequencyCapHistogramData() {
         // Read from flags directly, since this maintenance task worker is attached to a background
         //  job with unknown lifetime
         if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            sLogger.v("Ad selection filtering disabled; skipping maintenance");
+            sLogger.v(
+                    "Ad selection filtering disabled; skipping Frequency Cap histogram"
+                            + " maintenance");
             return;
         }
 
@@ -110,7 +125,22 @@ public class FledgeMaintenanceTasksWorker {
 
         sLogger.v(
                 "Clearing expired Frequency Cap histogram events older than %s", expirationInstant);
-        int numDeletedEvents = mFrequencyCapDao.deleteAllExpiredHistogramData(expirationInstant);
-        sLogger.v("Cleared %d expired Frequency Cap histogram events", numDeletedEvents);
+        int numExpiredEvents = mFrequencyCapDao.deleteAllExpiredHistogramData(expirationInstant);
+        sLogger.v("Cleared %d expired Frequency Cap histogram events", numExpiredEvents);
+
+        // Read from flags directly, since this maintenance task worker is attached to a background
+        //  job with unknown lifetime
+        if (mFlags.getDisableFledgeEnrollmentCheck()) {
+            sLogger.v(
+                    "FLEDGE enrollment check disabled; skipping disallowed buyer Frequency Cap "
+                            + "histogram maintenance");
+        } else {
+            sLogger.v("Clearing Frequency Cap histogram events for disallowed buyer ad techs");
+            int numDisallowedBuyerEvents =
+                    mFrequencyCapDao.deleteAllDisallowedBuyerHistogramData(mEnrollmentDao);
+            sLogger.v(
+                    "Cleared %d Frequency Cap histogram events for disallowed buyer ad techs",
+                    numDisallowedBuyerEvents);
+        }
     }
 }

@@ -27,12 +27,15 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.adselection.HistogramEvent;
 
 import com.google.common.base.Preconditions;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * DAO used to access ad counter histogram data used in frequency cap filtering during ad selection.
@@ -369,6 +372,54 @@ public abstract class FrequencyCapDao {
     public int deleteAllHistogramData() {
         int numDeletedEvents = deleteAllHistogramEventData();
         deleteAllHistogramIdentifiers();
+        return numDeletedEvents;
+    }
+
+    /** Returns the list of all unique buyer ad techs in the histogram ID table. */
+    @Query("SELECT DISTINCT buyer FROM fcap_histogram_ids")
+    @NonNull
+    public abstract List<AdTechIdentifier> getAllHistogramBuyers();
+
+    /**
+     * Deletes all histogram event data belonging to the given buyer ad techs.
+     *
+     * <p>This method is not meant to be called on its own. Please use {@link
+     * #deleteAllDisallowedBuyerHistogramData(EnrollmentDao)} to delete all histogram data
+     * (including all identifiers).
+     *
+     * @return the number of deleted histogram events
+     */
+    @Query(
+            "DELETE FROM fcap_histogram_data WHERE foreign_key_id in (SELECT DISTINCT"
+                    + " foreign_key_id FROM fcap_histogram_ids WHERE buyer in (:buyers))")
+    protected abstract int deleteHistogramEventDataByBuyers(List<AdTechIdentifier> buyers);
+
+    /**
+     * Deletes all histogram data belonging to disallowed buyer ad techs in a single transaction,
+     * where the buyer ad techs cannot be found in the enrollment database.
+     *
+     * @return the number of deleted histogram events
+     */
+    @Transaction
+    public int deleteAllDisallowedBuyerHistogramData(@NonNull EnrollmentDao enrollmentDao) {
+        Objects.requireNonNull(enrollmentDao);
+
+        List<AdTechIdentifier> buyersToRemove = getAllHistogramBuyers();
+        if (buyersToRemove.isEmpty()) {
+            return 0;
+        }
+
+        Set<AdTechIdentifier> allFledgeEnrolledAdTechs =
+                enrollmentDao.getAllFledgeEnrolledAdTechs();
+        buyersToRemove.removeAll(allFledgeEnrolledAdTechs);
+
+        int numDeletedEvents = 0;
+        if (!buyersToRemove.isEmpty()) {
+            numDeletedEvents = deleteHistogramEventDataByBuyers(buyersToRemove);
+            // TODO(b/275581841): Collect and send telemetry on frequency cap deletion
+            deleteUnpairedHistogramIdentifiers();
+        }
+
         return numDeletedEvents;
     }
 
