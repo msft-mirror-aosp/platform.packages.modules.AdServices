@@ -120,7 +120,6 @@ public class BuyerInputGeneratorTest {
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
 
         Assert.assertEquals(buyers, buyerAndBuyerInputs.keySet());
-
         for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
             BuyerInput buyerInput = buyerAndBuyerInputs.get(buyer);
             for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
