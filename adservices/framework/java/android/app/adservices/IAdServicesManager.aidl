@@ -49,7 +49,7 @@ interface IAdServicesManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    void recordNotificationDisplayed();
+    void recordNotificationDisplayed(boolean wasNotificationDisplayed);
 
     /**
      * Returns information whether Consent Notification was displayed or not.

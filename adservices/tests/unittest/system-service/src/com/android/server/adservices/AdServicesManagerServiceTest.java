@@ -559,7 +559,7 @@ public class AdServicesManagerServiceTest {
 
         // First, the notification displayed is false.
         assertThat(service.wasNotificationDisplayed()).isFalse();
-        service.recordNotificationDisplayed();
+        service.recordNotificationDisplayed(true);
         assertThat(service.wasNotificationDisplayed()).isTrue();
     }
 

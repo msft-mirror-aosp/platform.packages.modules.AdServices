@@ -91,7 +91,7 @@ public class ConsentNotificationTrigger {
         if (gaUxFeatureEnabled) {
             consentManager.recordGaUxNotificationDisplayed(true);
         }
-        consentManager.recordNotificationDisplayed();
+        consentManager.recordNotificationDisplayed(true);
     }
 
     @NonNull

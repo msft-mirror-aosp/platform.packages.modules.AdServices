@@ -114,9 +114,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordNotificationDisplayed();
+            mService.recordNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

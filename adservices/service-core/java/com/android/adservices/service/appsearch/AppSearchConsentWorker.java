@@ -347,7 +347,7 @@ class AppSearchConsentWorker {
      * Record having shown the beta UX notification to this user on this device. We cannot reset
      * this, i.e., once a notification is shown, it is forever recorded as shown.
      */
-    void recordNotificationDisplayed() {
+    void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchNotificationDao dao =
@@ -355,7 +355,7 @@ class AppSearchConsentWorker {
                             AppSearchNotificationDao.getRowId(mUid),
                             mUid,
                             AppSearchNotificationDao.NAMESPACE,
-                            /* wasNotificationDisplayed= */ true,
+                            /* wasNotificationDisplayed= */ wasNotificationDisplayed,
                             /* wasGaUxNotificationDisplayed= */ wasGaUxNotificationDisplayed());
             dao.writeData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
