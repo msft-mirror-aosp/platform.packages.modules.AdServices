@@ -27,6 +27,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -180,7 +181,7 @@ public class FetchCustomAudienceImplTest {
                                         .setBody(
                                                 FetchCustomAudienceFixture
                                                         .getFullSuccessfulJsonResponseString(
-                                                                BUYER))));
+                                                                VALID_BUYER_1))));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
 
