@@ -3101,10 +3101,12 @@ public class SdkSandboxManagerServiceUnitTest {
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
         ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        // The default value of the flag enforcing restrictions is true and access should be
+        // restricted.
         assertThat(
                         sSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
                                 new ProviderInfo()))
-                .isTrue();
+                .isFalse();
     }
 
     @Test

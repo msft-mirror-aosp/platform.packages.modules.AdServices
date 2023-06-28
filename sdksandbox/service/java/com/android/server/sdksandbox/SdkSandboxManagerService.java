@@ -76,6 +76,7 @@ import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -228,7 +229,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      */
     private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
 
-    private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = false;
+    private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
 
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
             "contentprovider_allowlist_per_targetSdkVersion";
@@ -2455,6 +2456,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             contentProviderAuthoritiesAllowlist.add(curWebViewPackageName + '.' + webViewAuthority);
         }
 
+        // Required by WebView. Adding temporarily since all restrictions are enabled by default.
+        // TODO(b/274070295): Update the default allowlist value.
+        contentProviderAuthoritiesAllowlist.add(Settings.AUTHORITY);
         synchronized (mLock) {
             if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
                 if (mSdkSandboxSettingsListener.getNextContentProviderAllowlist() != null) {

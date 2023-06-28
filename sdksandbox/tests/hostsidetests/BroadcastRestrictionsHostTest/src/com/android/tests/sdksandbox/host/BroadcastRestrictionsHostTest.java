@@ -58,9 +58,8 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testRegisterBroadcastReceiver_defaultValueRestrictionsNotApplied()
-            throws Exception {
-        runPhase("testRegisterBroadcastReceiver_defaultValueRestrictionsNotApplied");
+    public void testRegisterBroadcastReceiver_defaultValueRestrictionsApplied() throws Exception {
+        runPhase("testRegisterBroadcastReceiver_defaultValueRestrictionsApplied");
     }
 
     @Test
