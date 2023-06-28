@@ -91,12 +91,12 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testGetContentProvider_defaultValueRestrictionsNotApplied() throws Exception {
-        runPhase("testGetContentProvider_defaultValueRestrictionsNotApplied");
+    public void testGetContentProvider_defaultValueRestrictionsApplied() throws Exception {
+        runPhase("testGetContentProvider_defaultValueRestrictionsApplied");
     }
 
     @Test
-    public void testRegisterContentObserver_defaultValueRestrictionsNotApplied() throws Exception {
-        runPhase("testRegisterContentObserver_defaultValueRestrictionsNotApplied");
+    public void testRegisterContentObserver_defaultValueRestrictionsApplied() throws Exception {
+        runPhase("testRegisterContentObserver_defaultValueRestrictionsApplied");
     }
 }

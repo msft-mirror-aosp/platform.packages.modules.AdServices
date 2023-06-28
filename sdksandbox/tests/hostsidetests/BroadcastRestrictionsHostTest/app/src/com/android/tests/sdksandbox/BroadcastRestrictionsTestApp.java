@@ -143,12 +143,11 @@ public class BroadcastRestrictionsTestApp {
     }
 
     /**
-     * Tests that a SecurityException is not thrown when SDK sandbox process tries to register a
-     * broadcast receiver because the default value of false.
+     * Tests that a SecurityException is thrown when SDK sandbox process tries to register a
+     * broadcast receiver because of the default value of true.
      */
     @Test
-    public void testRegisterBroadcastReceiver_defaultValueRestrictionsNotApplied()
-            throws Exception {
+    public void testRegisterBroadcastReceiver_defaultValueRestrictionsApplied() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         /** Ensuring that the property is not present in DeviceConfig */
@@ -162,7 +161,9 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
+        assertThrows(
+                SecurityException.class,
+                () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
     }
 
     /**
