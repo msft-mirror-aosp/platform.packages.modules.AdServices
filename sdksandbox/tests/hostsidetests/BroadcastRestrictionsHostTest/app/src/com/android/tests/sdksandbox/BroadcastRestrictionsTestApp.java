@@ -27,6 +27,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.DeviceConfig;
@@ -45,6 +46,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 @RunWith(JUnit4.class)
 public class BroadcastRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
@@ -56,6 +61,8 @@ public class BroadcastRestrictionsTestApp {
 
     private String mEnforceBroadcastRestrictionsSandboxNamespace;
     private String mEnforceBroadcastRestrictionsAdServicesNamespace;
+    private static final List<String> INTENT_ACTIONS =
+            new ArrayList<>(Arrays.asList(Intent.ACTION_SEND, Intent.ACTION_VIEW));
 
     /** This rule is defined to start an activity in the foreground to call the sandbox APIs */
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
@@ -155,7 +162,7 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        broadcastSdkApi.registerBroadcastReceiver();
+        broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
     }
 
     /**
@@ -179,7 +186,8 @@ public class BroadcastRestrictionsTestApp {
 
         final SecurityException thrown =
                 assertThrows(
-                        SecurityException.class, () -> broadcastSdkApi.registerBroadcastReceiver());
+                        SecurityException.class,
+                        () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
 
         assertThat(thrown).hasMessageThat().contains("android.intent.action.SEND");
         assertThat(thrown).hasMessageThat().contains("android.intent.action.VIEW");
@@ -208,7 +216,7 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        broadcastSdkApi.registerBroadcastReceiver();
+        broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
     }
 
     @Test
@@ -230,7 +238,7 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        broadcastSdkApi.registerBroadcastReceiver();
+        broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
     }
 
     @Test
@@ -255,7 +263,8 @@ public class BroadcastRestrictionsTestApp {
 
         final SecurityException thrown =
                 assertThrows(
-                        SecurityException.class, () -> broadcastSdkApi.registerBroadcastReceiver());
+                        SecurityException.class,
+                        () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
 
         assertThat(thrown)
                 .hasMessageThat()
@@ -286,7 +295,7 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        broadcastSdkApi.registerBroadcastReceiver();
+        broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
     }
 
     /**
@@ -309,7 +318,7 @@ public class BroadcastRestrictionsTestApp {
         final SecurityException thrown =
                 assertThrows(
                         SecurityException.class,
-                        () -> broadcastSdkApi.registerBroadcastReceiverWithoutAction());
+                        () -> broadcastSdkApi.registerBroadcastReceiver(new ArrayList<>()));
 
         assertThat(thrown)
                 .hasMessageThat()
@@ -335,6 +344,25 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        broadcastSdkApi.registerBroadcastReceiverWithoutAction();
+        broadcastSdkApi.registerBroadcastReceiver(new ArrayList<>());
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_protectedBroadcast() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS, "true", false);
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        broadcastSdkApi.registerBroadcastReceiver(
+                new ArrayList<>(Arrays.asList(Intent.ACTION_SCREEN_OFF)));
     }
 }

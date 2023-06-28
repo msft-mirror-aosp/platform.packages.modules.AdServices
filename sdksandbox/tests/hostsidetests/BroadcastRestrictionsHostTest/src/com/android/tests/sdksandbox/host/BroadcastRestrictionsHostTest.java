@@ -98,4 +98,9 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
     public void testRegisterBroadcastReceiver_intentFilterWithoutAction_preU() throws Exception {
         runPhase("testRegisterBroadcastReceiver_intentFilterWithoutAction_preU");
     }
+
+    @Test
+    public void testRegisterBroadcastReceiver_protectedBroadcast() throws Exception {
+        runPhase("testRegisterBroadcastReceiver_protectedBroadcast");
+    }
 }
