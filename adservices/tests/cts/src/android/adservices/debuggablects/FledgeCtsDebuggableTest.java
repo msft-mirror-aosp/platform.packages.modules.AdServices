@@ -33,6 +33,9 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.GetAdSelectionDataOutcome;
+import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
@@ -80,6 +83,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -105,6 +109,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final int API_RESPONSE_LONGER_TIMEOUT_SECONDS = 120;
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -3255,6 +3260,84 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest2)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    // TODO(b/293022107): Remove ignore when overrides are implemented
+    @Ignore("Remove ignore when b/293022107 is resolved")
+    @Test
+    public void testGetAdSelectionData_validInput_success()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        joinCustomAudience(customAudience1);
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+        joinCustomAudience(customAudience2);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataOutcome outcome =
+                mAdSelectionClient
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Assert.assertNotEquals(
+                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
+        Assert.assertNotNull(outcome.getAdSelectionData());
+    }
+
+    // TODO(b/293022107): Remove ignore when overrides are implemented
+    @Ignore("Remove ignore when b/293022107 is resolved")
+    @Test
+    public void testPersistAdSelectionData_contextNotInDb_failure()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception.
+        joinCustomAudience(customAudience1);
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+        joinCustomAudience(customAudience2);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataOutcome outcome =
+                mAdSelectionClient
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Assert.assertNotEquals(
+                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
+        Assert.assertNotNull(outcome.getAdSelectionData());
+
+        PersistAdSelectionResultRequest failingRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setSeller(SELLER)
+                        .build();
+        ThrowingRunnable runnable =
+                () ->
+                        mAdSelectionClient
+                                .persistAdSelectionResult(failingRequest)
+                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
+        Assert.assertTrue(thrown.getCause() instanceof IllegalStateException);
     }
 
     private String insertJsWait(long waitTime) {
