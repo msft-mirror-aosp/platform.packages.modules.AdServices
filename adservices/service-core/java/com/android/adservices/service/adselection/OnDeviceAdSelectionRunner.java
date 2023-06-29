@@ -74,7 +74,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull protected final PerBuyerBiddingRunner mPerBuyerBiddingRunner;
     @NonNull protected final AdFilterer mAdFilterer;
     @NonNull protected final AdCounterKeyCopier mAdCounterKeyCopier;
-    @NonNull private final DebugReportingScriptStrategy mDebugReportingScriptStrategy;
+    @NonNull protected final DebugReporting mDebugReporting;
 
     public OnDeviceAdSelectionRunner(
             @NonNull final Context context,
@@ -111,10 +111,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
-        mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
+        mDebugReporting = new DebugReporting(flags, mAdServicesHttpsClient);
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
@@ -123,7 +123,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
                                 mAdCounterKeyCopier,
-                                mDebugReportingScriptStrategy,
+                                mDebugReporting.getScriptStrategy(),
                                 cpcBillingEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -132,7 +132,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         devContext,
                         mAdSelectionEntryDao,
                         flags,
-                        adSelectionExecutionLogger);
+                        adSelectionExecutionLogger,
+                        mDebugReporting);
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
@@ -145,6 +146,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mCustomAudienceDao,
                                 mAdCounterKeyCopier,
                                 flags,
+                                mDebugReporting,
                                 cpcBillingEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
@@ -204,7 +206,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mPerBuyerBiddingRunner = perBuyerBiddingRunner;
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
-        mDebugReportingScriptStrategy = new DebugReportingScriptDisabledStrategy();
+        mDebugReporting = new DebugReporting(flags, mAdServicesHttpsClient);
     }
 
     /**

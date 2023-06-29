@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -58,20 +57,18 @@ public class DebugReporting {
                 : new DebugReportingScriptDisabledStrategy();
     }
 
+    public boolean isDebugReportingEnabled() {
+        return mEnabled;
+    }
+
     public DebugReportSenderStrategy getSenderStrategy() {
         return mEnabled
                 ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient)
                 : new DebugReportSenderStrategyNoOp();
     }
 
-    @VisibleForTesting
-    public static boolean isEnabled(Flags flags) {
-        return flags.getFledgeEventLevelDebugReportingEnabled()
-                && isAdIdEnabled(flags);
+    private static boolean isEnabled(Flags flags) {
+        return flags.getFledgeEventLevelDebugReportingEnabled();
     }
 
-    private static boolean isAdIdEnabled(Flags flags) {
-        // TODO(b/286839955): Make call to AdIdManager to determine status.
-        return flags.getAdIdKillSwitch();
-    }
 }
