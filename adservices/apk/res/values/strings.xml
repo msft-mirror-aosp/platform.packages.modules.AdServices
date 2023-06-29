@@ -622,7 +622,7 @@
     <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_ga_title" translatable="false">@string/settingsUI_topics_ga_title</string>
     <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.</string>
+    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.\n\nWhile this feature can be turned on, you may not see a list of topics until this feature is fully available and apps start using it.</string>
     <!-- Text for the toggle in the topics page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_switch_title">Allow ad topics</string>
     <!-- Text for the button to open blocked topics view. [CHAR LIMIT=NONE] -->
@@ -638,7 +638,7 @@
     <!-- Text for the toggle in the apps page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_switch_title">Allow app-suggested ads</string>
     <!-- Sub title text of the apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.</string>
+    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
     <!-- Text for the button to open blocked apps fragment  [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_apps_ga_title">Apps you blocked</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
