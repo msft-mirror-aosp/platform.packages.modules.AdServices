@@ -43,14 +43,10 @@ public class NotificationUtil {
     }
 
     /** Returns the current UX. */
-    public static PrivacySandboxUxCollection getUx(
-            FragmentActivity fragmentActivity, Context context) {
+    public static PrivacySandboxUxCollection getUx(Context context) {
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()) {
             return Stream.of(PrivacySandboxUxCollection.values())
-                    .filter(
-                            ux -> {
-                                return ux.toString().equals(FlagsFactory.getFlags().getDebugUx());
-                            })
+                    .filter(ux -> ux.toString().equals(FlagsFactory.getFlags().getDebugUx()))
                     .findFirst()
                     .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
         } else {
