@@ -193,22 +193,22 @@ public class AuctionEncryptionKeyParserTest {
         AuctionEncryptionKeyParserTestFlags() {}
 
         @Override
-        public long getAdSelectionDataEncryptionKeyMaxAgeSeconds() {
+        public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
             return DEFAULT_MAX_AGE_SECONDS;
         }
 
         @Override
-        public int getAdSelectionDataAuctionEncryptionAlgorithmKdfId() {
+        public int getFledgeAuctionServerEncryptionAlgorithmKdfId() {
             return 0x0002;
         }
 
         @Override
-        public int getAdSelectionDataAuctionEncryptionAlgorithmKemId() {
+        public int getFledgeAuctionServerEncryptionAlgorithmKemId() {
             return 0x0005;
         }
 
         @Override
-        public int getAdSelectionDataAuctionEncryptionAlgorithmAeadId() {
+        public int getFledgeAuctionServerEncryptionAlgorithmAeadId() {
             return 0x0022;
         }
     }

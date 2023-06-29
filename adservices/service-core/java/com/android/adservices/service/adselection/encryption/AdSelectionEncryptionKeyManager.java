@@ -252,9 +252,9 @@ public class AdSelectionEncryptionKeyManager {
                     int adSelectionEncryptionKeyType) {
         switch (adSelectionEncryptionKeyType) {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
-                return Uri.parse(mFlags.getAdSelectionDataAuctionKeyFetchUri());
+                return Uri.parse(mFlags.getFledgeAuctionServerAuctionKeyFetchUri());
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
-                return Uri.parse(mFlags.getAdSelectionDataJoinKeyFetchUri());
+                return Uri.parse(mFlags.getFledgeAuctionServerJoinKeyFetchUri());
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
             default:
                 return null;
@@ -293,7 +293,7 @@ public class AdSelectionEncryptionKeyManager {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
                 // For auctions, more than one key is fetched from the DB to mitigate impact
                 // due to key leakage.
-                return mFlags.getAdSelectionDataAuctionKeySharding();
+                return mFlags.getFledgeAuctionServerAuctionKeySharding();
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
                 return 1;
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:

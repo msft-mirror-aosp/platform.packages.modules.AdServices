@@ -270,25 +270,36 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_off_device_enabled";
     static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
-    static final String KEY_AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI =
-            "ad_selection_data_auction_key_fetch_uri";
-    static final String KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING =
-            "ad_selection_data_auction_key_sharding";
-    static final String KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI =
-            "ad_selection_data_join_key_fetch_uri";
-    static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID =
-            "ad_selection_data_auction_encryption_algorithm_kem_id";
-    static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID =
-            "ad_selection_data_auction_encryption_algorithm_kdf_id";
-    static final String KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID =
-            "ad_selection_data_auction_encryption_algorithm_aead_id";
+    // Whether to compress the request object when calling trusted servers for off device ad
+    // selection.
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
+            "fledge_ad_selection_off_device_request_compression_enabled";
+
+    // Event-level debug reporting for Protected Audience.
+    static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED =
+            "fledge_event_level_debug_reporting_enabled";
+    static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS =
+            "fledge_event_level_debug_reporting_batch_delay_seconds";
+    static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
+            "fledge_event_level_debug_reporting_max_items_per_batch";
+    static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
+            "fledge_auction_server_auction_key_fetch_uri";
+    static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING =
+            "fledge_auction_server_auction_key_sharding";
+    static final String KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
+            "fledge_auction_server_join_key_fetch_uri";
+    static final String KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID =
+            "fledge_auction_server_encryption_algorithm_kem_id";
+    static final String KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID =
+            "fledge_auction_server_encryption_algorithm_kdf_id";
+    static final String KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID =
+            "fledge_auction_server_encryption_algorithm_aead_id";
     static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS =
             "fledge_auction_server_auction_key_fetch_timeout_ms";
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED =
             "fledge_auction_server_background_key_fetch_job_enabled";
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED =
             "fledge_auction_server_background_auction_key_fetch_enabled";
-
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED =
             "fledge_auction_server_background_join_key_fetch_enabled";
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
@@ -306,26 +317,16 @@ public final class PhFlags implements Flags {
 
     static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS =
             "fledge_auction_server_background_key_fetch_job_flex_ms";
-
-    // Whether to compress the request object when calling trusted servers for off device ad
-    // selection.
-    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
-            "fledge_ad_selection_off_device_request_compression_enabled";
-
-    // Event-level debug reporting for Protected Audience.
-    static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED =
-            "fledge_event_level_debug_reporting_enabled";
-    static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS =
-            "fledge_event_level_debug_reporting_batch_delay_seconds";
-    static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
-            "fledge_event_level_debug_reporting_max_items_per_batch";
     static final String KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION =
             "fledge_auction_server_compression_algorithm_version";
     static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION =
             "fledge_auction_server_payload_format_version";
-
     static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING =
             "fledge_auction_server_enable_debug_reporting";
+    static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH =
+            "fledge_auction_server_ad_render_id_max_length";
+    static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
+            "fledge_auction_server_ad_render_id_enabled";
 
     // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -339,11 +340,6 @@ public final class PhFlags implements Flags {
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
-
-    static final String KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH =
-            "fledge_ad_selection_ad_render_id_max_length";
-    static final String KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED =
-            "fledge_ad_selection_ad_render_id_enabled";
 
     // Topics invoking app status key.
     static final String KEY_ENFORCE_FOREGROUND_STATUS_TOPICS = "topics_enforce_foreground_status";
@@ -2209,50 +2205,58 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public String getAdSelectionDataAuctionKeyFetchUri() {
+    public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
+                FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
+    }
+
+    @Override
+    public String getFledgeAuctionServerAuctionKeyFetchUri() {
         return DeviceConfig.getString(
                 NAMESPACE_ADSERVICES,
-                KEY_AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI,
-                AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI);
+                KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI);
     }
 
     @Override
-    public String getAdSelectionDataJoinKeyFetchUri() {
+    public String getFledgeAuctionServerJoinKeyFetchUri() {
         return DeviceConfig.getString(
                 NAMESPACE_ADSERVICES,
-                KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI,
-                AD_SELECTION_DATA_JOIN_KEY_FETCH_URI);
+                KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI,
+                FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI);
     }
 
     @Override
-    public int getAdSelectionDataAuctionKeySharding() {
+    public int getFledgeAuctionServerAuctionKeySharding() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
-                KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING,
-                AD_SELECTION_DATA_AUCTION_KEY_SHARDING);
+                KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING,
+                FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING);
     }
 
-    public int getAdSelectionDataAuctionEncryptionAlgorithmKemId() {
+    public int getFledgeAuctionServerEncryptionAlgorithmKemId() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
-                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID,
-                AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID);
-    }
-
-    @Override
-    public int getAdSelectionDataAuctionEncryptionAlgorithmKdfId() {
-        return DeviceConfig.getInt(
-                NAMESPACE_ADSERVICES,
-                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID,
-                AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID);
+                KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID,
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID);
     }
 
     @Override
-    public int getAdSelectionDataAuctionEncryptionAlgorithmAeadId() {
+    public int getFledgeAuctionServerEncryptionAlgorithmKdfId() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
-                KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID,
-                AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID);
+                KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID,
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID);
+    }
+
+    @Override
+    public int getFledgeAuctionServerEncryptionAlgorithmAeadId() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID,
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID);
     }
 
     @Override
@@ -2336,14 +2340,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
-                FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
-    }
-
-    @Override
     public int getFledgeAuctionServerCompressionAlgorithmVersion() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
@@ -2365,6 +2361,23 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
                 FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerAdRenderIdEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED);
+    }
+
+    /** Returns the max length of Ad Render Id. */
+    @Override
+    public long getFledgeAuctionServerAdRenderIdMaxLength() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH);
     }
 
     @Override
@@ -2423,23 +2436,6 @@ public final class PhFlags implements Flags {
                         NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_ADID,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
-    }
-
-    @Override
-    public boolean getFledgeAdSelectionAdRenderIdEnabled() {
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED,
-                /* defaultValue */ FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED);
-    }
-
-    /** Returns the max length of Ad Render Id. */
-    @Override
-    public long getFledgeAdSelectionAdRenderIdMaxLength() {
-        return DeviceConfig.getLong(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH,
-                /* defaultValue */ FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH);
     }
 
     @Override
@@ -3510,34 +3506,34 @@ public final class PhFlags implements Flags {
                         + getAdSelectionSelectingOutcomeTimeoutMs());
         writer.println(
                 "\t"
-                        + KEY_AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI
+                        + KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
                         + " = "
-                        + getAdSelectionDataAuctionKeyFetchUri());
+                        + getFledgeAuctionServerAuctionKeyFetchUri());
         writer.println(
                 "\t"
-                        + KEY_AD_SELECTION_DATA_JOIN_KEY_FETCH_URI
+                        + KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI
                         + " = "
-                        + getAdSelectionDataJoinKeyFetchUri());
+                        + getFledgeAuctionServerJoinKeyFetchUri());
         writer.println(
                 "\t"
-                        + KEY_AD_SELECTION_DATA_AUCTION_KEY_SHARDING
+                        + KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING
                         + " = "
-                        + getAdSelectionDataAuctionKeySharding());
+                        + getFledgeAuctionServerAuctionKeySharding());
         writer.println(
                 "\t"
-                        + KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID
+                        + KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID
                         + " = "
-                        + getAdSelectionDataAuctionEncryptionAlgorithmKemId());
+                        + getFledgeAuctionServerEncryptionAlgorithmKemId());
         writer.println(
                 "\t"
-                        + KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID
+                        + KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID
                         + " = "
-                        + getAdSelectionDataAuctionEncryptionAlgorithmKdfId());
+                        + getFledgeAuctionServerEncryptionAlgorithmKdfId());
         writer.println(
                 "\t"
-                        + KEY_AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID
+                        + KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID
                         + " = "
-                        + getAdSelectionDataAuctionEncryptionAlgorithmAeadId());
+                        + getFledgeAuctionServerEncryptionAlgorithmAeadId());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
@@ -3615,6 +3611,31 @@ public final class PhFlags implements Flags {
                         + getFledgeAuctionServerBackgroundKeyFetchJobFlexMs());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerAdRenderIdEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH
+                        + " = "
+                        + getFledgeAuctionServerAdRenderIdMaxLength());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION
+                        + " = "
+                        + getFledgeAuctionServerCompressionAlgorithmVersion());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION
+                        + " = "
+                        + getFledgeAuctionServerPayloadFormatVersion());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING
+                        + " = "
+                        + getFledgeAuctionServerEnableDebugReporting());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
                         + " = "
                         + getFledgeAdSelectionBiddingLogicJsVersion());
@@ -3638,16 +3659,6 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B
                         + " = "
                         + getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED
-                        + " = "
-                        + getFledgeAdSelectionAdRenderIdEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH
-                        + " = "
-                        + getFledgeAdSelectionAdRenderIdMaxLength());
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
@@ -3688,22 +3699,6 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceRequestCompressionEnabled());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION
-                        + " = "
-                        + getFledgeAuctionServerCompressionAlgorithmVersion());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION
-                        + " = "
-                        + getFledgeAuctionServerPayloadFormatVersion());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING
-                        + " = "
-                        + getFledgeAuctionServerEnableDebugReporting());
-
         writer.println(
                 "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());
 
