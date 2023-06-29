@@ -337,6 +337,8 @@ public class AdBidGeneratorImplTest {
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLogger;
 
+    @Mock private DebugReporting mDebugReporting;
+
     @Captor
     ArgumentCaptor<RunAdBiddingPerCAProcessReportedStats>
             mRunAdBiddingPerCAProcessReportedStatsArgumentCaptor;
@@ -403,6 +405,9 @@ public class AdBidGeneratorImplTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(false);
+        when(mDebugReporting.getScriptStrategy())
+                .thenReturn(new DebugReportingScriptDisabledStrategy());
     }
 
     @Test
@@ -424,7 +429,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(ADS),
@@ -518,7 +524,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(ADS),
@@ -620,7 +627,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(ADS),
@@ -716,7 +724,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(ADS),
@@ -833,7 +842,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(expectedAdsWithCounterKeys),
@@ -927,7 +937,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBidsV3(
                 eq(BUYER_DECISION_LOGIC_JS),
                 eq(mCustomAudienceWithAds),
@@ -1011,12 +1022,7 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        Flags flags = new AdBidGeneratorImplTestFlags() {
-            @Override
-            public boolean getFledgeEventLevelDebugReportingEnabled() {
-                return true;
-            }
-        };
+        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(true);
         AdBidGeneratorImpl adBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1026,9 +1032,10 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        flags,
+                        mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBidsV3(
                 eq(BUYER_DECISION_LOGIC_JS),
                 eq(mCustomAudienceWithAds),
@@ -1158,7 +1165,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         jsVersionV2Flags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(ADS),
@@ -1255,7 +1263,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBidsV3(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(mCustomAudienceWithAds),
@@ -1354,7 +1363,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mAdSelectionScriptEngine.generateBidsV3(
                         eq(BUYER_DECISION_LOGIC_JS),
                         eq(customAudienceWithAdCounterKeys),
@@ -1445,7 +1455,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -1533,7 +1544,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
         when(mAdSelectionScriptEngine.generateBids(
@@ -1659,7 +1671,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
         when(mAdSelectionScriptEngine.generateBidsV3(
@@ -1753,7 +1766,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -1841,7 +1855,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -1935,7 +1950,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         flagsWithSmallerLimits,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -2016,7 +2032,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -2085,7 +2102,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -2188,7 +2206,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -2285,7 +2304,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -2342,7 +2362,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
@@ -2398,7 +2419,8 @@ public class AdBidGeneratorImplTest {
                         AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
-                        mJsFetcher);
+                        mJsFetcher,
+                        mDebugReporting);
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
                 .thenReturn(RUN_AD_BIDDING_PER_CA_START_TIMESTAMP, STOP_ELAPSED_TIMESTAMP);
         // Logger calls come after the callback is returned
