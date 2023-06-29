@@ -43,10 +43,8 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -211,37 +209,6 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
-    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
-        sDevice.pressHome();
-
-        /* isEUActivity false: Rest of World Notification landing page */
-        startActivity(false);
-        /* find the expander and click to expand to get the content */
-        UiObject moreExpander =
-                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
-        moreExpander.click();
-
-        UiObject sentence =
-                ApkTestUtil.scrollTo(
-                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
-        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
-                packageNameOfDefaultBrowser, sentence, 20)) {
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
-            return;
-        }
-
-        ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
-        Assert.fail("Web browser not found after several clicks on the last line");
-    }
-
-    @Test
     public void acceptedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
@@ -350,17 +317,21 @@ public class NotificationActivityUiAutomatorTest {
 
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
             String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
-            throws UiObjectNotFoundException {
+            throws Exception {
         int right = sentence.getBounds().right,
                 bottom = sentence.getBounds().bottom,
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (!sentence.exists()) {
-                sDevice.pressBack();
-                return true;
-            }
+            Thread.sleep(200);
         }
+
+        if (!sentence.exists()) {
+            sDevice.pressBack();
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
+            return true;
+        }
+
         return false;
     }
 }

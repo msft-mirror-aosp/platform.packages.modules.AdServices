@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.measurement;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -162,10 +163,11 @@ public class MeasurementManagerCtsTest {
         registerSourceAndVerifyRateLimitReached(manager);
 
         // Verify limit reached
-        // If the test takes less than 1 second, this test is reliable due to the rate limiter
-        // limits queries per second. If duration is longer than a second, skip it.
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
         final boolean reachedLimit = registerSourceAndVerifyRateLimitReached(manager);
-        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
         }
@@ -222,10 +224,11 @@ public class MeasurementManagerCtsTest {
         registerWebSourceAndVerifyRateLimitReached(manager);
 
         // Verify limit reached
-        // If the test takes less than 1 second, this test is reliable due to the rate limiter
-        // limits queries per second. If duration is longer than a second, skip it.
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
         final boolean reachedLimit = registerWebSourceAndVerifyRateLimitReached(manager);
-        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
         }
@@ -256,6 +259,21 @@ public class MeasurementManagerCtsTest {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
         assertNull(result.get());
+        overrideDisableMeasurementEnrollmentCheck("0");
+    }
+
+    @Test
+    public void
+            testDeleteRegistrations_multiple_withRequest_noOrigin_noRange_withCallback_NoErrors()
+                    throws Exception {
+        overrideDisableMeasurementEnrollmentCheck("1");
+        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertWithMessage("first deleteRegistrations result").that(result.get()).isNull();
+        // Call it once more to ensure that there is no error when recording deletions back-to-back
+        TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
+        result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertWithMessage("second deleteRegistrations result").that(result.get()).isNull();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 

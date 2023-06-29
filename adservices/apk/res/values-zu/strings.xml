@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Vulela"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Ongaba nentshisekelo kukho okuvimbele"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Setha kabusha konke ongaba nentshisekelo kukho"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Azikho izintshisekelo ongazibonisa njengamanje"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Azikho izihloko ezingaboniswa njengamanje"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Azikho izintshisekelo ongazibonisa njengamanje."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Azikho izihloko ezingaboniswa njengamanje.\nFunda kabanzi mayelana "<a href="https://support.google.com/android?p=ad_privacy">"nezihloko zesikhangiso"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"I-Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"I-beta yobumfihlo yezikhangiso ze-Android inikeza izakhi ezintsha ezingasetshenziswa ama-app ukuze akubonise izikhangiso ongase uzithande. Lobu buchwepheshe abuzisebenzisi izinkomba zedivayisi.\n\nI-Android ingalinganisela izinhlobo zezikhangiso ongaba nentshisekelo kuzo, futhi ilondoloze lezi zintshisekelo zakho okwesikhashana kudivayisi yakho. Lokhu kuvumela ama-app ukuthi akubonise izikhangiso ezihambisanayo, ngaphandle kokulandelela umsebenzi wakho kuwo wonke amawebhusayithi nama-app avela kwabanye onjiniyela."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Awunakho ongaba nentshiseklo kukho okuvinjiwe"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Buka ama-app avinjiwe"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Setha kabusha ongaba nentshisekelo kukho okusikiselwe ama-app"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Akekho ama-app akhiqiza izintshisekelo zelungelo lakho manje"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Awekho ama-app angaboniswa njengamanje"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Awekho ama-app angaboniswa njengamanje. \nFunda kabanzi mayelana "<a href="https://support.google.com/android?p=ad_privacy">"nezikhangiso ezisikiselwe yi-app"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"I-Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"I-beta yobumfihlo bezikhangiso ze-Android inikeza izakhi ezintsha ezingasetshenziswa ama-app ukuze akubonise izikhangiso ongase uzithande. Lobu buchwepheshe abuzisebenzisi izinkomba zedivayisi.\n\nAma-app angalinganisela izinhlobo zezikhangiso ongaba nentshisekelo kuzo, futhi alondoloze lezi zintshisekelo zakho okwesikhashana kudivayisi yakho. Lokhu kuvumela ama-app ukuthi akubonise izikhangiso ezihambisanayo, ngaphandle kokulandelela umsebenzi wakho kuwo wonke amawebhusayithi nama-app avela kwabanye onjiniyela."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Awunawo ama-app avinjiwe"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Setha kabusha izikhangiso eziphakanyiswe ama-app?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Idatha yesiphakamiso sesikhangiso kusukela kuma-app asohlwini lwakho izosulwa futhi ama-app azophakamisa izikhangiso ezintsha ukuya phambili. Usengabona ezinye zezikhangiso ezihlobene."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Idatha ye-app isethwe kabusha"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Setha kabusha zonke izihloko?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Setha kabusha izikhangiso eziphakanyiswe i-app?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Izihloko zesikhangiso zivuliwe"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"I-Android izoqala ukuqaphela izihloko onentshisekelo kuzo. kodwa kungase kuthathe isikhashana ukuthi izihloko zakho zokuqala zivele."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vala izihloko zesikhangiso?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Lolu uhlu lwezihloko luzosulwa. I-Android ngeke isakwazi ukuphawula izihloko ozithakaselayo, kodwa usengabona izikhangiso ezifanele."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Izikhangiso zeziphakamiso ze-app zivuliwe"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Ama-app angaqala ukuphakamisa izikhangiso. Uzobona uhlu lwama-app uma sewaqale ukuphakamisa izikhangiso."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vala izikhangiso eziphakanyiswe yi-app?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Yonke idatha yesiphakamiso sesikhangiso izosulwa. Ama-app ngeke esakwazi ukuphakamisa izikhangiso, kodwa usengabona izikhangiso ezihlobene."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Ukulinganisela isikhangiso kuvuliwe"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"I-Android ingabelana ngolwazi olulinganiselwe nama-app kuphela ukuze isize ama-app alinganisele ukusebenza kwezikhangiso zawo."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vala ukulinganisela isikhangiso?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Yonke imibiko elindile yokulinganisa izikhangiso izosulwa futhi ayikho imibiko emisha ezokwenziwa noma kwabelwane ngayo."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Ubumfihlo besikhangiso"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Izihloko zezikhangiso"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Izikhangiso ezisikiselwe yi-app"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"I-Android iphawula izihloko ezithakaselwayo ezisuselwe kuma-app osanda kuwasebenzisa nokuthi uwasebenzisa kaningi kangakanani."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Ama-app owasebenzisayo angase futhi anqume ukuthi yini oyithandayo ngokusekelwe endleleni owasebenzisa ngayo."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Ama-app owasebenzisayo angacela i-Android ulwazi oluzowasiza ukuthi alinganisele ukusebenza kwezikhangiso zawo. I-Android ivumela ama-app ukuthi aqoqe izinhlobo ezikhawulelwe zedatha."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Funda kabanzi mayelana "<a href="https://support.google.com/android?p=ad_privacy">"nobumfihlo bezikhangiso ze-Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Vuliwe / izihloko ezingu-<xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Vuliwe / isihloko esingu-#}one{Vuliwe / izihloko ezingu-#}other{Vuliwe / izihloko ezingu-#}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Vuliwe / ama-app angu-<xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Ama-app owavimbile"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Setha kabusha idatha ephakanyiswe yi-app"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Kuvamile ukuthi ama-app owasebenzisayo akhumbule izinto onentshisekelo kuzo ukuze ziqondanise nomuntu siqu ukuzizwisa kwakho. Ama-app angase futhi agcine ulwazi nge-Android mayelana nezihloko zakho.\n\nNgokwesibonelo, uma usebenzisa i-app emayelana nokuqeqeshwa kwe-marathon, i-app inganquma ukuthi uthanda izicathulo zokugijima. Kamuva, uma usebenzisa i-app ehlukile, leyo app ingakubonisa isikhangiso sezicathulo zokugijima esiphakanyiswe i-app yokuqala.\n\nI-Android isusa ngokuzenzekela idatha ephakanyiswa njalo i-app. I-App oyisebenzisayo futhi ingase ivele ohlwini. Noma ungavimba i-app ukuthi ikuphakamisele izikhangiso.\n\nKuma-app akho, isikhangiso osibonayo singaqondaniswa nomuntu siqu, kuye ngale sethingi, isethingi lezihloko zesikhangiso, amasethingi akho e-ID yokukhangisa, nokuthi i-app oyisebenzisayo iqondanisa nomuntu siqu yini izikhangiso."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Izakhi zobumfihlo bezikhangiso ezintsha ziyatholakala"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Ulwazi olukhawulelwe kakhulu olwabiwayo phakathi kwama-app ukusiza ukulinganisa ukusebenza kwesikhangiso"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Sethula isakhi esisha sobumfihlo besikhangiso esibizwa ngokuthi yisilinganiso sesikhangiso. I-Android yabelana kuphela ngolwazi olukhawulelwe kakhulu phakathi kwama-app, njengokuthi uma isikhangiso siboniswa kuwe, ukusiza ama-app ukulinganisa ukusebenza kwezikhangiso."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Ungenza izinguquko kumasethingi obumfihlo wesikhangiso."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Ama-app owasebenzisayo angacela i-Android ulwazi oluzowasiza ukuthi alinganisele ukusebenza kwezikhangiso zawo. I-Android ivumela ama-app ukuthi aqoqe kuphela izinhlobo ezikhawulelwe zedatha."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Umfanekiso omibalabala wezimpawu ezimele izihloko ozithakaselayo njengomculo, izindaba, nezemidlalo"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Umfanekiso omibalabala wesikhiya esingaphakathi kwendilinga"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Umfanekiso omncane omnyama nomhlophe wamachashazi ayisishiyagalolunye akha isikwele"</string>

@@ -28,7 +28,6 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -179,20 +178,10 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
-            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
-                    aggregateReport.getEnrollmentId(), mEnrollmentDao);
-            if (!reportingOrigin.isPresent()) {
-                // We do not know here what the cause is of the failure to retrieve the reporting
-                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
-                LogUtil.d("Report origin not present");
-                reportingStatus.setFailureStatus(
-                        ReportingStatus.FailureStatus.ENROLLMENT_NOT_FOUND);
-                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            }
-            JSONObject aggregateReportJsonBody = createReportJsonPayload(
-                    aggregateReport, reportingOrigin.get(), key);
-            int returnCode = makeHttpPostRequest(reportingOrigin.get(), aggregateReportJsonBody);
-
+            Uri reportingOrigin = aggregateReport.getRegistrationOrigin();
+            JSONObject aggregateReportJsonBody =
+                    createReportJsonPayload(aggregateReport, reportingOrigin, key);
+            int returnCode = makeHttpPostRequest(reportingOrigin, aggregateReportJsonBody);
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
                 boolean success =

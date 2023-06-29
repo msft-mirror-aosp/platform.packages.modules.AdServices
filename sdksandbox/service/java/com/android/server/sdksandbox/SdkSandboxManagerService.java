@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
@@ -112,6 +113,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String SANDBOX_NOT_AVAILABLE_MSG = "Sandbox is unavailable";
     private static final String SANDBOX_DISABLED_MSG = "SDK sandbox is disabled";
 
+    private static final String DUMP_ARG_AD_SERVICES = "--AdServices";
+
     private final Context mContext;
 
     private final ActivityManager mActivityManager;
@@ -121,6 +124,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @GuardedBy("mLock")
     private IBinder mAdServicesManager;
+
+    // TODO(b/282239822): temporary guard to define if dump() should handle the --AdServices otpion
+    @GuardedBy("mLock")
+    private boolean mAdServicesManagerPublished;
 
     private final Object mLock = new Object();
 
@@ -181,6 +188,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "sdksandbox_customized_sdk_context_enabled";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
+
+    // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as part of
+    // SystemServer.
+    // If AdServices register itself as binder service, dump() will ignore the --AdServices option
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
+            "Don't need to dump AdServices as it's available as " + AD_SERVICES_SYSTEM_SERVICE;
+
+    // On UDC, if AdServices register itself as binder service, dump() will ignore the --AdServices
+    // option because AdServices could be dumped as part of SystemService
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE =
+            "Don't need to dump AdServices on UDC+ - use "
+                    + "'dumpsys system_server_dumper --name AdServices instead'";
 
     static class Injector {
         private final Context mContext;
@@ -519,7 +540,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ILoadSdkCallback callback,
             long timeSystemServerReceivedCallFromApp) {
         LoadSdkSession loadSdkSession =
-                new LoadSdkSession(mContext, mInjector, sdkName, callingInfo, params, callback);
+                new LoadSdkSession(
+                        mContext, this, mInjector, sdkName, callingInfo, params, callback);
 
         // SDK provider was invalid. This load request should fail.
         String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
@@ -915,6 +937,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mContext.enforceCallingPermission(android.Manifest.permission.DUMP,
                 "Can't dump " + TAG);
 
+        if (args != null && args.length > 0 && args[0].equals(DUMP_ARG_AD_SERVICES)) {
+            dumpAdServices(fd, writer, args, /* quiet= */ false);
+            return;
+        }
+
         // TODO(b/211575098): Use IndentingPrintWriter for better formatting
         synchronized (mLock) {
             writer.println("Checked Webview visibility patch exists: " + mCheckedVisibilityPatch);
@@ -939,10 +966,61 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
             writer.println();
+
+            writer.println("AdServicesManager binder published: " + mAdServicesManagerPublished);
         }
 
         writer.println("mServiceProvider:");
         mServiceProvider.dump(writer);
+        writer.println();
+
+        dumpAdServices(fd, writer, args, /* quiet= */ true);
+    }
+
+    private void dumpAdServices(
+            @Nullable FileDescriptor fd, PrintWriter writer, String[] args, boolean quiet) {
+
+        synchronized (mLock) {
+            if (mAdServicesManagerPublished) {
+                // AdServices registered itself as binder service
+                if (quiet) {
+                    Log.d(TAG, DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF);
+                } else {
+                    writer.println(DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF);
+                }
+                return;
+            }
+        }
+
+        if (SdkLevel.isAtLeastU()) {
+            // AdServices didn't register itself as binder service, but
+            // AdServicesManagerService.Lifecycle implements Dumpable so it's dumped as
+            // part of SystemServer
+            if (quiet) {
+                Log.d(TAG, DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
+            } else {
+                writer.println(DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
+            }
+            return;
+        }
+        writer.print("AdServices:");
+        IBinder adServicesManager = getAdServicesManager();
+        if (adServicesManager == null) {
+            // Should not happen on "real life", but it could on unit tests.
+            Log.e(TAG, "dumpAdServices(): mAdServicesManager not set");
+            writer.println(" N/A");
+            return;
+        }
+        writer.println();
+        writer.println();
+        writer.flush(); // must flush, other raw dump on fd below will be printed before it
+        try {
+            adServicesManager.dump(fd, args);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Failed to dump AdServices", e);
+            // Shouldn't happen, but it doesn't hurt to catch
+            writer.printf("Failed to dump Adservices: %s\n", e);
+        }
         writer.println();
     }
 
@@ -1064,12 +1142,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             final ISdkSandboxService mService = ISdkSandboxService.Stub.asInterface(service);
+
             // Perform actions needed after every sandbox restart.
-            LoadSdkException exception = onSandboxConnected(mService);
+            if (!onSandboxConnected(mService)) {
+                // We don't need to call sandboxBindingCallback.onBindingFailed() in this case since
+                // onSdkSandboxDeath() will take care of iterating through LoadSdkSessions and
+                // informing SDKs about load failure.
+                return;
+            }
 
             // Set connected service for app once all initialization has finished. This needs to be
             // set after every sandbox restart as well.
-            // TODO(b/259387335): Maybe kill the sandbox if the connection is not valid?
             mServiceProvider.onServiceConnected(mCallingInfo, mService);
 
             // Once bound service has been set, sync manager is notified.
@@ -1092,13 +1175,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     clearAndGetSandboxBindingCallbacks();
             for (int i = 0; i < sandboxBindingCallbacksForApp.size(); i++) {
                 SandboxBindingCallback callback = sandboxBindingCallbacksForApp.get(i);
-                if (exception == null) {
-                    // Connection is valid - set bound service for app and load SDKs.
-                    callback.onBindingSuccessful(mService, timeToLoadSandbox);
-                } else {
-                    // Connection is not valid
-                    callback.onBindingFailed(exception, mStartTimeForLoadingSandbox);
-                }
+                callback.onBindingSuccessful(mService, timeToLoadSandbox);
             }
         }
 
@@ -1135,12 +1212,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
          * Actions to be performed every time the sandbox connects for a particular app, such as the
          * first time the sandbox is brought up and every time it restarts.
          *
-         * @return null if all actions were performed successfully, otherwise a {@link
-         *     LoadSdkException} specifying the error that need to be sent back to SDKs waiting to
-         *     be loaded.
+         * @return true if all actions were performed successfully, false otherwise.
          */
-        @Nullable
-        private LoadSdkException onSandboxConnected(ISdkSandboxService service) {
+        private boolean onSandboxConnected(ISdkSandboxService service) {
             Log.i(
                     TAG,
                     String.format(
@@ -1151,24 +1225,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             } catch (RemoteException e) {
                 // Sandbox had already died, cleanup sdk links, notify app etc.
                 onSdkSandboxDeath(mCallingInfo);
-                return new LoadSdkException(
-                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG, e);
+                return false;
             }
 
             try {
                 service.initialize(
                         new SdkToServiceLink(),
                         mSdkSandboxSettingsListener.isCustomizedSdkContextEnabled());
-            } catch (RemoteException e) {
-                final String errorMsg = "Failed to initialize sandbox";
-                Log.e(TAG, errorMsg + " for " + mCallingInfo);
-                return new LoadSdkException(
-                        SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
-                        SANDBOX_NOT_AVAILABLE_MSG + " : " + errorMsg,
-                        e);
+            } catch (Throwable e) {
+                handleFailedSandboxInitialization(mCallingInfo);
+                return false;
             }
 
-            return null;
+            return true;
         }
 
         private void logSandboxStart(int timeToLoadSandbox) {
@@ -1193,6 +1262,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
             return sandboxBindingCallbacksForApp;
         }
+    }
+
+    void handleFailedSandboxInitialization(CallingInfo callingInfo) {
+        final String errorMsg = "Failed to initialize sandbox";
+        Log.e(TAG, errorMsg + " for " + callingInfo);
+        // Kill the sandbox if it failed to initialize as it might not be properly usable.
+        stopSdkSandboxService(callingInfo, errorMsg);
     }
 
     private void onSdkSandboxDeath(CallingInfo callingInfo) {
@@ -1258,9 +1334,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private void registerAdServicesManagerService(IBinder iBinder) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    void registerAdServicesManagerService(IBinder iBinder, boolean published) {
+        Log.d(TAG, "registerAdServicesManagerService(): published=" + published);
         synchronized (mLock) {
             mAdServicesManager = iBinder;
+            mAdServicesManagerPublished = published;
         }
     }
 
@@ -1830,8 +1909,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private class LocalImpl implements SdkSandboxManagerLocal {
         @Override
-        public void registerAdServicesManagerService(IBinder iBinder) {
-            SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder);
+        public void registerAdServicesManagerService(IBinder iBinder, boolean published) {
+            SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder, published);
         }
 
         @NonNull

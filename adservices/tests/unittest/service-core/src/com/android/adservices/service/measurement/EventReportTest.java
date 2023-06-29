@@ -23,7 +23,6 @@ import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATIO
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
 import static com.android.adservices.service.measurement.SourceFixture.getValidSourceBuilder;
-import static com.android.adservices.service.measurement.TriggerFixture.ValidTriggerParams;
 import static com.android.adservices.service.measurement.TriggerFixture.getValidTriggerBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -34,17 +33,24 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 import android.provider.DeviceConfig;
+import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.modules.utils.testing.TestableDeviceConfig;
+
+import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -88,6 +94,11 @@ public final class EventReportTest {
                     + "   }]\n"
                     + "}"
                     + "]\n";
+    private static final Pair<UnsignedLong, UnsignedLong> sDebugKeyPair =
+            new Pair<>(SOURCE_DEBUG_KEY, TRIGGER_DEBUG_KEY);
+
+    private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private SourceNoiseHandler mSourceNoiseHandler;
 
     @Before
     public void setup() {
@@ -96,6 +107,16 @@ public final class EventReportTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "measurement_debug_join_key_enrollment_allowlist",
                 phOverridingValue,
+                /* makeDefault */ false);
+        mEventReportWindowCalcDelegate =
+                new EventReportWindowCalcDelegate(FlagsFactory.getFlagsForTest());
+        mSourceNoiseHandler = new SourceNoiseHandler(FlagsFactory.getFlagsForTest());
+
+        final String phOverridingValueAdIdMatching = "";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_debug_key_ad_id_matching_enrollment_blocklist",
+                phOverridingValueAdIdMatching,
                 /* makeDefault */ false);
     }
 
@@ -203,7 +224,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -237,7 +265,14 @@ public final class EventReportTest {
         when(eventTrigger.getTriggerData()).thenReturn(new UnsignedLong(-50003L));
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTrigger,
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -274,7 +309,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -305,7 +347,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -337,7 +386,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -367,7 +423,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -401,7 +464,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -412,7 +482,8 @@ public final class EventReportTest {
         assertEquals(trigger.getAttributionDestination(),
                 report.getAttributionDestinations().get(0));
         assertEquals(
-                source.getReportingTime(trigger.getTriggerTime(), EventSurfaceType.WEB),
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        source, trigger.getTriggerTime(), EventSurfaceType.WEB),
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
@@ -434,7 +505,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -473,7 +551,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -493,6 +578,64 @@ public final class EventReportTest {
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
+    }
+
+    @Test
+    public void populate_eventSourceWebAndAppDest_coarseDestination() throws JSONException {
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                getValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setEventId(new UnsignedLong(10L))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallCooldownWindow(0)
+                        .setEventTime(baseTime)
+                        .setEnrollmentId("enrollment-id")
+                        .setAppDestinations(Collections.singletonList(APP_DESTINATION))
+                        .setWebDestinations(Collections.singletonList(WEB_DESTINATION))
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(10))
+                        .setCoarseEventReportDestinations(true)
+                        .build();
+        Trigger trigger =
+                createTriggerForTest(
+                        baseTime + TimeUnit.SECONDS.toMillis(10),
+                        WEB_DESTINATION,
+                        EventSurfaceType.WEB);
+
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                new ImmutableList.Builder<Uri>()
+                                        .add(APP_DESTINATION)
+                                        .add(WEB_DESTINATION)
+                                        .build())
+                        .build();
+
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
+        // Truncated data 4 % 2 = 0
+        assertEquals(new UnsignedLong(0L), report.getTriggerData());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        assertEquals(source.getEventId(), report.getSourceEventId());
+        assertEquals(source.getEnrollmentId(), report.getEnrollmentId());
+        assertEquals(2, report.getAttributionDestinations().size());
+        assertEquals(
+                source.getAppDestinations().get(0), report.getAttributionDestinations().get(0));
+        assertEquals(
+                source.getWebDestinations().get(0), report.getAttributionDestinations().get(1));
+        assertEquals(source.getEventReportWindow() + ONE_HOUR_IN_MILLIS, report.getReportTime());
+        assertEquals(Source.SourceType.EVENT, report.getSourceType());
+        assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
@@ -536,257 +679,8 @@ public final class EventReportTest {
     }
 
     @Test
-    public void populate_appAppWithAdIdPermission_reportHasDebugKeys() throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.APP, true, false, ValidSourceParams.REGISTRANT, null);
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
-        assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-    }
-
-    @Test
-    public void populate_appWebWithMatchingJoinKeys_reportHasDebugKeys() throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.APP,
-                        false,
-                        false,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
-        assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-    }
-
-    @Test
-    public void populate_appWebNonMatchingJoinKeys_reportDoesntHaveDebugKeys()
-            throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key1");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key2");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertNull(report.getSourceDebugKey());
-        assertNull(report.getTriggerDebugKey());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-    }
-
-    @Test
-    public void populate_webAppMatchingJoinKeys_reportHasDebugKeys() throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.APP,
-                        false,
-                        false,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
-        assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-    }
-
-    @Test
-    public void populate_webAppNonMatchingJoinKeys_reportDoesntHaveDebugKeys()
-            throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key1");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key2");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-        assertNull(report.getSourceDebugKey());
-        assertNull(report.getTriggerDebugKey());
-    }
-
-    @Test
-    public void populate_webWebDifferentRegistrantsMatchingJoinKeys_reportHasDebugKeys()
-            throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        Uri.parse("android-app://com.registrant1"),
-                        "debug-join-key");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        Uri.parse("android-app://com.registrant2"),
-                        "debug-join-key");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
-        assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-    }
-
-    @Test
-    public void populate_webWebSameRegistrantsDiffJoinKeys_reportHasDebugKeys()
-            throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("android-app://com.registrant1"),
-                        "debug-join-key1");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("android-app://com.registrant1"),
-                        "debug-join-key2");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
-        assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-    }
-
-    @Test
-    public void populate_webWebDiffRegistrantsDiffJoinKeys_reportDoesntHaveDebugKeys()
-            throws JSONException {
-        // Setup
-        Source source =
-                createSourceForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("android-app://com.registrant1"),
-                        "debug-join-key1");
-        Trigger trigger =
-                createTriggerForDebugJoinKeyTests(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("android-app://com.registrant2"),
-                        "debug-join-key2");
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-        EventReport report =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
-                        .build();
-
-        assertEquals(SOURCE_ID, report.getSourceId());
-        assertEquals(TRIGGER_ID, report.getTriggerId());
-        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
-        assertNull(report.getSourceDebugKey());
-        assertNull(report.getTriggerDebugKey());
-    }
-
-    @Test
     public void populateFromSourceAndTrigger_setsRegistrationOrigin_FromTrigger()
             throws JSONException {
-        // This test should fail after attribution scope is changed to origin
-        // This is because trigger and source registration origin are not equal
-        // Therefore trigger and source will not be attributed
-        // To fix update source and trigger registration origin to be equal
         long baseTime = System.currentTimeMillis();
         Source source =
                 getValidSourceBuilder()
@@ -817,7 +711,14 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()))
                         .build();
 
         assertEquals(triggerRegistrationUrl, report.getRegistrationOrigin());
@@ -953,6 +854,45 @@ public final class EventReportTest {
                 .setPublisherType(publisherType)
                 .setRegistrant(registrant)
                 .setDebugJoinKey(debugJoinKey)
+                .build();
+    }
+
+    private static Source createSourceForAdIdDebugKeyTests(
+            int publisherType,
+            boolean adIdPermission,
+            boolean arDebugPermission,
+            Uri registrant,
+            String platformAdId,
+            String debugAdId) {
+        return getValidSourceBuilder()
+                .setId(SOURCE_ID)
+                .setArDebugPermission(arDebugPermission)
+                .setAdIdPermission(adIdPermission)
+                .setDebugKey(SOURCE_DEBUG_KEY)
+                .setPublisherType(publisherType)
+                .setRegistrant(registrant)
+                .setPlatformAdId(platformAdId)
+                .setDebugAdId(debugAdId)
+                .build();
+    }
+
+    private static Trigger createTriggerForAdIdDebugKeyTests(
+            int destinationType,
+            boolean adIdPermission,
+            boolean arDebugPermission,
+            Uri registrant,
+            String platformAdId,
+            String debugAdId) {
+        return getValidTriggerBuilder()
+                .setId(TRIGGER_ID)
+                .setEventTriggers(EVENT_TRIGGERS)
+                .setArDebugPermission(arDebugPermission)
+                .setAdIdPermission(adIdPermission)
+                .setRegistrant(registrant)
+                .setDestinationType(destinationType)
+                .setDebugKey(TRIGGER_DEBUG_KEY)
+                .setPlatformAdId(platformAdId)
+                .setDebugAdId(debugAdId)
                 .build();
     }
 

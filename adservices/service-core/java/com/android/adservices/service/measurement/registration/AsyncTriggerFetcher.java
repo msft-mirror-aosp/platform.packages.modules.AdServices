@@ -121,6 +121,10 @@ public class AsyncTriggerFetcher {
             return Optional.empty();
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
+
+        builder.setPlatformAdId(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+
         List<String> field =
                 headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
         if (field == null || field.size() != 1) {
@@ -233,6 +237,16 @@ public class AsyncTriggerFetcher {
                 builder.setAttributionConfig(attributionConfigsString);
             }
 
+            String enrollmentBlockList =
+                    mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
+            Set<String> blockedEnrollmentsString =
+                    new HashSet<>(AllowLists.splitAllowList(enrollmentBlockList));
+            if (!AllowLists.doesAllowListAllowAll(enrollmentBlockList)
+                    && !blockedEnrollmentsString.contains(enrollmentId)
+                    && !json.isNull(TriggerHeaderContract.DEBUG_AD_ID)) {
+                builder.setDebugAdId(json.optString(TriggerHeaderContract.DEBUG_AD_ID));
+            }
+
             Set<String> allowedEnrollmentsString =
                     new HashSet<>(
                             AllowLists.splitAllowList(
@@ -318,12 +332,14 @@ public class AsyncTriggerFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.getValidEnrollmentId(
-                        asyncRegistration.getRegistrationUri(),
-                        asyncRegistration.getRegistrant().getAuthority(),
-                        mEnrollmentDao,
-                        mContext,
-                        mFlags);
+                mFlags.isDisableMeasurementEnrollmentCheck()
+                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        : Enrollment.getValidEnrollmentId(
+                                asyncRegistration.getRegistrationUri(),
+                                asyncRegistration.getRegistrant().getAuthority(),
+                                mEnrollmentDao,
+                                mContext,
+                                mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
                     "fetchTrigger: Valid enrollment id not found. Registration URI: %s",
@@ -566,5 +582,6 @@ public class AsyncTriggerFetcher {
         String DEBUG_REPORTING = "debug_reporting";
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String DEBUG_AD_ID = "debug_ad_id";
     }
 }

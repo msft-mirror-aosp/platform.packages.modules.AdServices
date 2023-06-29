@@ -111,6 +111,7 @@ public class ContentValueFixtures {
         // Added in V12.
         public static final String TRIGGER_SPECS = "sample_trigger_specs";
         public static final int MAX_BUCKET_INCREMENTS = 3;
+        public static final int COARSE_EVENT_REPORT_DESTINATIONS = 1;
 
         // Added in V13.
         public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
@@ -270,6 +271,7 @@ public class ContentValueFixtures {
         public static final String TYPE = "source-noised";
         public static final String BODY = "{\"source_event_id\":\"123\"}";
         public static final String ENROLLMENT_ID = "enrollment_id";
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class XnaIgnoredSourcesValues {
@@ -547,6 +549,18 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 SourceValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV15() {
+        return generateSourceContentValuesV14();
+    }
+
+    public static ContentValues generateSourceContentValuesV16() {
+        ContentValues values = generateSourceContentValuesV15();
+        values.put(
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                SourceValues.COARSE_EVENT_REPORT_DESTINATIONS);
         return values;
     }
 
@@ -1051,6 +1065,27 @@ public class ContentValueFixtures {
 
     public static ContentValues generateDebugReportContentValuesV11() {
         return generateDebugReportContentValuesV10();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV12() {
+        return generateDebugReportContentValuesV11();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV13() {
+        return generateDebugReportContentValuesV12();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV14() {
+        return generateDebugReportContentValuesV13();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV15() {
+        ContentValues debugReport = generateDebugReportContentValuesV14();
+        debugReport.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                DebugReportValues.REGISTRATION_ORIGIN.toString());
+
+        return debugReport;
     }
 
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {

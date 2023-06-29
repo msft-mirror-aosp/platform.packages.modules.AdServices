@@ -16,7 +16,7 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -255,7 +255,7 @@ public class MobileDataDownloadFactory {
                         long dataFileGroupBuildId = entry.getDataFileGroup().getBuildId();
                         long bundledModelBuildId =
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH);
+                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
                         if (dataFileGroupBuildId > bundledModelBuildId) {
                             groups.add(entry.getDataFileGroup());
                             LogUtil.d("Added topics classifier file group to MDD");

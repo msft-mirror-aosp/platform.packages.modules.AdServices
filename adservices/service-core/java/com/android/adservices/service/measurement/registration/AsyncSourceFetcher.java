@@ -224,6 +224,16 @@ public class AsyncSourceFetcher {
             }
         }
 
+        String enrollmentBlockList =
+                mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
+        Set<String> blockedEnrollmentsString =
+                new HashSet<>(AllowLists.splitAllowList(enrollmentBlockList));
+        if (!AllowLists.doesAllowListAllowAll(enrollmentBlockList)
+                && !blockedEnrollmentsString.contains(enrollmentId)
+                && !json.isNull(SourceHeaderContract.DEBUG_AD_ID)) {
+            builder.setDebugAdId(json.optString(SourceHeaderContract.DEBUG_AD_ID));
+        }
+
         Set<String> allowedEnrollmentsString =
                 new HashSet<>(
                         AllowLists.splitAllowList(
@@ -283,6 +293,12 @@ public class AsyncSourceFetcher {
             builder.setWebDestinations(destinationList);
         }
 
+        if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && !json.isNull(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS)) {
+            builder.setCoarseEventReportDestinations(
+                    json.getBoolean(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS));
+        }
+
         if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
             LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
@@ -322,6 +338,10 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
+
+        builder.setPlatformAdId(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+
         List<String> field =
                 headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
         if (field == null || field.size() != 1) {
@@ -432,12 +452,14 @@ public class AsyncSourceFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.getValidEnrollmentId(
-                        asyncRegistration.getRegistrationUri(),
-                        asyncRegistration.getRegistrant().getAuthority(),
-                        mEnrollmentDao,
-                        mContext,
-                        mFlags);
+                mFlags.isDisableMeasurementEnrollmentCheck()
+                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        : Enrollment.getValidEnrollmentId(
+                                asyncRegistration.getRegistrationUri(),
+                                asyncRegistration.getRegistrant().getAuthority(),
+                                mEnrollmentDao,
+                                mContext,
+                                mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
                     "fetchSource: Valid enrollment id not found. Registration URI: %s",
@@ -501,6 +523,8 @@ public class AsyncSourceFetcher {
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String DEBUG_AD_ID = "debug_ad_id";
+        String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
     }
 
     private interface SourceRequestContract {

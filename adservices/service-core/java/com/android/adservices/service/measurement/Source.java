@@ -22,13 +22,9 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
-import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
-import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 
 import org.json.JSONException;
@@ -38,32 +34,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * POJO for Source.
  */
 public class Source {
-
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
-
-    /** Multiplier is 1, when only one destination needs to be considered. */
-    public static final int SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 1;
-
-    /**
-     * Double-folds the number of states in order to allocate half to app destination and half to
-     * web destination for fake reports generation.
-     */
-    public static final int DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 2;
-
     private String mId;
     private UnsignedLong mEventId;
     private Uri mPublisher;
@@ -103,6 +83,7 @@ public class Source {
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     @Nullable private ReportSpec mFlexEventReportSpec;
+    private boolean mCoarseEventReportDestinations;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -194,74 +175,6 @@ public class Source {
     }
 
     /**
-     * Get the destination type multiplier,
-     *
-     * @return number of the destination type
-     */
-    private int getDestinationTypeMultiplier() {
-        return hasAppDestinations() && hasWebDestinations()
-                ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
-                : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
-    }
-
-    ImpressionNoiseParams getImpressionNoiseParams() {
-        int destinationTypeMultiplier = getDestinationTypeMultiplier();
-        return new ImpressionNoiseParams(
-                getMaxReportCountInternal(isInstallDetectionEnabled()),
-                getTriggerDataCardinality(),
-                getReportingWindowCountForNoising(),
-                destinationTypeMultiplier);
-    }
-
-    private ImmutableList<Long> getEarlyReportingWindows(boolean installState) {
-        long[] earlyWindows;
-        if (installState) {
-            earlyWindows = mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-        } else {
-            earlyWindows = mSourceType == SourceType.EVENT
-                    ? PrivacyParams.EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
-                    : PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-        }
-
-        List<Long> windowList = new ArrayList<>();
-
-        for (long windowDelta : earlyWindows) {
-            long window = mEventTime + windowDelta;
-            if (mEventReportWindow <= window) {
-                continue;
-            }
-            windowList.add(window);
-        }
-        return ImmutableList.copyOf(windowList);
-    }
-
-    /**
-     * Return reporting time by index for noising based on the index
-     *
-     * @param windowIndex index of the reporting window for which
-     * @return reporting time in milliseconds
-     */
-    public long getReportingTimeForNoising(int windowIndex) {
-        List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
-        return windowIndex < windowList.size()
-                ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
-                mEventReportWindow + ONE_HOUR_IN_MILLIS;
-    }
-
-    private long getReportingTimeForNoisingFlexEventAPI(
-            int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
-        return reportSpec.getWindowEndTime(triggerDataIndex, windowIndex) + ONE_HOUR_IN_MILLIS;
-    }
-
-    @VisibleForTesting
-    int getReportingWindowCountForNoising() {
-        // Early Count + expiry
-        return getEarlyReportingWindows(isInstallDetectionEnabled()).size() + 1;
-    }
-
-    /**
      * Range of trigger metadata: [0, cardinality).
      * @return Cardinality of {@link Trigger} metadata
      */
@@ -269,62 +182,6 @@ public class Source {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
                 : PrivacyParams.getNavigationTriggerDataCardinality();
-    }
-
-    /**
-     * Max reports count based on conversion destination type and installation state.
-     *
-     * @param destinationType conversion destination type
-     * @return maximum number of reports allowed
-     */
-    public int getMaxReportCount(@NonNull @EventSurfaceType int destinationType) {
-        boolean isInstallCase =
-                destinationType == EventSurfaceType.APP && mIsInstallAttributed;
-        return getMaxReportCountInternal(isInstallCase);
-    }
-
-    private int getMaxReportCountInternal(boolean isInstallCase) {
-        if (isInstallCase) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
-        }
-        return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS
-                : PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
-    }
-
-    /** @return Probability of selecting random state for attribution */
-    public double getRandomAttributionProbability() {
-        // Both destinations are set and install attribution is supported
-        if (hasWebDestinations() && isInstallDetectionEnabled()) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-        }
-
-        // Both destinations are set but install attribution isn't supported
-        if (hasAppDestinations() && hasWebDestinations()) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-        }
-
-        // App destination is set and install attribution is supported
-        if (isInstallDetectionEnabled()) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY :
-                    PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
-        }
-
-        // One of the destinations is available without install attribution support
-        return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_NOISE_PROBABILITY
-                : PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && hasAppDestinations();
     }
 
     @Override
@@ -367,8 +224,8 @@ public class Source {
                 && Objects.equals(mPlatformAdId, source.mPlatformAdId)
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
-                && Objects.equals(mDebugAdId, source.mDebugAdId)
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
+                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations;
     }
 
     @Override
@@ -406,101 +263,12 @@ public class Source {
                 mRegistrationOrigin,
                 mDebugAdId,
                 mDebugJoinKey,
-                mFlexEventReportSpec);
+                mFlexEventReportSpec,
+                mCoarseEventReportDestinations);
     }
 
-    /**
-     * Calculates the reporting time based on the {@link Trigger} time, {@link Source}'s expiry and
-     * trigger destination type.
-     *
-     * @return the reporting time
-     */
-    public long getReportingTime(long triggerTime, @EventSurfaceType int destinationType) {
-        if (triggerTime < mEventTime) {
-            return -1;
-        }
-
-        // Cases where source could have both web and app destinations, there if the trigger
-        // destination is an app and it was installed, then installState should be considered true.
-        boolean isAppInstalled =
-                destinationType == EventSurfaceType.APP && mIsInstallAttributed;
-        List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
-        for (Long window: reportingWindows) {
-            if (triggerTime <= window) {
-                return window + ONE_HOUR_IN_MILLIS;
-            }
-        }
-        return mEventReportWindow + ONE_HOUR_IN_MILLIS;
-    }
-
-    @VisibleForTesting
     public void setAttributionMode(@AttributionMode int attributionMode) {
         mAttributionMode = attributionMode;
-    }
-
-    /**
-     * Assign attribution mode based on random rate and generate fake reports if needed. Should only
-     * be called for a new Source.
-     *
-     * @return fake reports to be stored in the datastore.
-     */
-    public List<FakeReport> assignAttributionModeAndGenerateFakeReports() {
-        Random rand = new Random();
-        double value = rand.nextDouble();
-        if (value > getRandomAttributionProbability()) {
-            mAttributionMode = AttributionMode.TRUTHFULLY;
-            return Collections.emptyList();
-        }
-
-        List<FakeReport> fakeReports;
-        if (mFlexEventReportSpec == null) {
-            if (isVtcDualDestinationModeWithPostInstallEnabled()) {
-                // Source is 'EVENT' type, both app and web destination are set and install
-                // exclusivity
-                // window is provided. Pick one of the static reporting states randomly.
-                fakeReports = generateVtcDualDestinationPostInstallFakeReports();
-            } else {
-                // There will at least be one (app or web) destination available
-                ImpressionNoiseParams noiseParams = getImpressionNoiseParams();
-                fakeReports =
-                        ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
-                                        noiseParams, rand)
-                                .stream()
-                                .map(
-                                        reportConfig ->
-                                                new FakeReport(
-                                                        new UnsignedLong(
-                                                                Long.valueOf(reportConfig[0])),
-                                                        getReportingTimeForNoising(reportConfig[1]),
-                                                        resolveFakeReportDestinations(
-                                                                reportConfig[2])))
-                                .collect(Collectors.toList());
-            }
-        } else {
-            int destinationTypeMultiplier = getDestinationTypeMultiplier();
-            List<int[]> fakeReportConfigs =
-                    ImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
-                            mFlexEventReportSpec, destinationTypeMultiplier, rand);
-            fakeReports =
-                    fakeReportConfigs.stream()
-                            .map(
-                                    reportConfig ->
-                                            new FakeReport(
-                                                    new UnsignedLong(
-                                                            Long.valueOf(
-                                                                    mFlexEventReportSpec
-                                                                            .getTriggerDataValue(
-                                                                                    reportConfig[
-                                                                                            0]))),
-                                                    getReportingTimeForNoisingFlexEventAPI(
-                                                            reportConfig[1],
-                                                            reportConfig[0],
-                                                            mFlexEventReportSpec),
-                                                    resolveFakeReportDestinations(reportConfig[2])))
-                            .collect(Collectors.toList());
-        }
-        mAttributionMode = fakeReports.isEmpty() ? AttributionMode.NEVER : AttributionMode.FALSELY;
-        return fakeReports;
     }
 
     /**
@@ -586,7 +354,8 @@ public class Source {
     }
 
     /** Debug key of {@link Source}. */
-    public @Nullable UnsignedLong getDebugKey() {
+    @Nullable
+    public UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -780,6 +549,15 @@ public class Source {
         return mDebugAdId;
     }
 
+    /**
+     * Indicates whether event report for this source should be generated with the destinations
+     * where the conversion occurred or merge app and web destinations. Set to true of both app and
+     * web destination should be merged into the array of event report.
+     */
+    public boolean getCoarseEventReportDestinations() {
+        return mCoarseEventReportDestinations;
+    }
+
     /** Returns registration origin used to register the source */
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
@@ -852,54 +630,13 @@ public class Source {
         return mFilterData;
     }
 
-    private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
-        int[][][] fakeReportsConfig =
-                ImpressionNoiseUtil.DUAL_DESTINATION_POST_INSTALL_FAKE_REPORT_CONFIG;
-        int randomIndex = new Random().nextInt(fakeReportsConfig.length);
-        int[][] reportsConfig = fakeReportsConfig[randomIndex];
-        return Arrays.stream(reportsConfig)
-                .map(
-                        reportConfig ->
-                                new FakeReport(
-                                        new UnsignedLong(Long.valueOf(reportConfig[0])),
-                                        getReportingTimeForNoising(reportConfig[1]),
-                                        resolveFakeReportDestinations(reportConfig[2])))
-                .collect(Collectors.toList());
-    }
-
-    private boolean isVtcDualDestinationModeWithPostInstallEnabled() {
-        return mSourceType == SourceType.EVENT
-                && hasWebDestinations()
-                && isInstallDetectionEnabled();
-    }
-
-    /**
-     * Either both app and web destinations can be available or one of them will be available. When
-     * both destinations are available, we double the number of states at noise generation to be
-     * able to randomly choose one of them for fake report creation. We don't add the multiplier
-     * when only one of them is available. In that case, choose the one that's non-null.
-     *
-     * @param destinationIdentifier destination identifier, can be 0 (app) or 1 (web)
-     * @return app or web destination {@link Uri}
-     */
-    private List<Uri> resolveFakeReportDestinations(int destinationIdentifier) {
-        if (hasAppDestinations() && hasWebDestinations()) {
-            // It could be a direct destinationIdentifier == 0 check, but
-            return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
-                    ? mAppDestinations
-                    : mWebDestinations;
-        }
-
-        return hasAppDestinations()
-                ? mAppDestinations
-                : mWebDestinations;
-    }
-
-    private boolean hasAppDestinations() {
+    /** Returns true if the source has app destination(s), false otherwise. */
+    public boolean hasAppDestinations() {
         return mAppDestinations != null && mAppDestinations.size() > 0;
     }
 
-    private boolean hasWebDestinations() {
+    /** Returns true if the source has web destination(s), false otherwise. */
+    public boolean hasWebDestinations() {
         return mWebDestinations != null && mWebDestinations.size() > 0;
     }
 
@@ -968,6 +705,7 @@ public class Source {
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             return builder;
         }
 
@@ -1001,7 +739,8 @@ public class Source {
         }
 
         /** See {@link Source#getAppDestinations()}. */
-        public Builder setAppDestinations(List<Uri> appDestinations) {
+        @NonNull
+        public Builder setAppDestinations(@Nullable List<Uri> appDestinations) {
             Optional.ofNullable(appDestinations).ifPresent(uris -> {
                 Validation.validateNotEmpty(uris);
                 if (uris.size() > 1) {
@@ -1248,6 +987,13 @@ public class Source {
         @NonNull
         public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
             mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+            return this;
+        }
+
+        /** See {@link Source#getCoarseEventReportDestinations()} */
+        @NonNull
+        public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
+            mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;
             return this;
         }
 

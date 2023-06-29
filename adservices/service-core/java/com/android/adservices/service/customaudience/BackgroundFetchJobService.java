@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -28,6 +31,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
@@ -35,6 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -51,44 +56,63 @@ import java.util.concurrent.TimeoutException;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundFetchJobService extends JobService {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final int FLEDGE_BACKGROUND_FETCH_JOB_ID =
+            FLEDGE_BACKGROUND_FETCH_JOB.getJobId();
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        sLogger.d("BackgroundFetchJobService.onStartJob");
-
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
-            sLogger.d(
+            LogUtil.d(
                     "Disabling BackgroundFetchJobService job because it's running in ExtServices"
                             + " on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStartJob");
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(FLEDGE_BACKGROUND_FETCH_JOB_ID);
 
         if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
-            sLogger.d("FLEDGE background fetch is disabled; skipping and cancelling job");
-            return skipAndCancelBackgroundJob(params);
+            LoggerFactory.getFledgeLogger()
+                    .d("FLEDGE background fetch is disabled; skipping and cancelling job");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
-                    || !ConsentManager.getInstance(this)
-                            .getConsent(AdServicesApiType.FLEDGE)
-                            .isGiven()) {
-                sLogger.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
-                return skipAndCancelBackgroundJob(params);
-            }
-        } else {
-            if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()
-                    || !ConsentManager.getInstance(this).getConsent().isGiven()) {
-                sLogger.d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
-                return skipAndCancelBackgroundJob(params);
-            }
+        if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()) {
+            LoggerFactory.getFledgeLogger()
+                    .d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+        }
+
+        // Skip the execution and cancel the job if user consent is revoked. Use the aggregated
+        // consent with Beta UX and use the per-API consent with GA UX.
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        && !ConsentManager.getInstance(this)
+                                .getConsent(AdServicesApiType.FLEDGE)
+                                .isGiven()
+                || !FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        && !ConsentManager.getInstance(this).getConsent().isGiven()) {
+            LoggerFactory.getFledgeLogger()
+                    .d("User Consent is revoked ; skipping and cancelling job");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED);
         }
 
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
         //  Java Clock
         Instant jobStartTime = Clock.systemUTC().instant();
-        sLogger.d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
+        LoggerFactory.getFledgeLogger()
+                .d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
         BackgroundFetchWorker.getInstance(this)
                 .runBackgroundFetch()
@@ -99,29 +123,51 @@ public class BackgroundFetchJobService extends JobService {
                             // per day
                             @Override
                             public void onSuccess(Void result) {
-                                jobFinished(params, false);
+                                boolean shouldRetry = false;
+                                AdservicesJobServiceLogger.getInstance(
+                                                BackgroundFetchJobService.this)
+                                        .recordJobFinished(
+                                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                                /* isSuccessful= */ true,
+                                                shouldRetry);
+
+                                jobFinished(params, shouldRetry);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 if (t instanceof InterruptedException) {
-                                    sLogger.e(
-                                            t,
-                                            "FLEDGE background fetch interrupted while waiting for"
-                                                    + " custom audience updates");
+                                    LoggerFactory.getFledgeLogger()
+                                            .e(
+                                                    t,
+                                                    "FLEDGE background fetch interrupted while"
+                                                        + " waiting for custom audience updates");
                                 } else if (t instanceof ExecutionException) {
-                                    sLogger.e(
-                                            t,
-                                            "FLEDGE background fetch failed due to internal error");
+                                    LoggerFactory.getFledgeLogger()
+                                            .e(
+                                                    t,
+                                                    "FLEDGE background fetch failed due to"
+                                                            + " internal error");
                                 } else if (t instanceof TimeoutException) {
-                                    sLogger.e(t, "FLEDGE background fetch timeout exceeded");
+                                    LoggerFactory.getFledgeLogger()
+                                            .e(t, "FLEDGE background fetch timeout exceeded");
                                 } else {
-                                    sLogger.e(
-                                            t,
-                                            "FLEDGE background fetch failed due to unexpected"
-                                                    + " error");
+                                    LoggerFactory.getFledgeLogger()
+                                            .e(
+                                                    t,
+                                                    "FLEDGE background fetch failed due to"
+                                                            + " unexpected error");
                                 }
-                                jobFinished(params, false);
+
+                                boolean shouldRetry = false;
+                                AdservicesJobServiceLogger.getInstance(
+                                                BackgroundFetchJobService.this)
+                                        .recordJobFinished(
+                                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                                /* isSuccessful= */ false,
+                                                shouldRetry);
+
+                                jobFinished(params, shouldRetry);
                             }
                         },
                         AdServicesExecutors.getLightWeightExecutor());
@@ -129,8 +175,11 @@ public class BackgroundFetchJobService extends JobService {
         return true;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(FLEDGE_BACKGROUND_FETCH_JOB_ID, skipReason);
 
         jobFinished(params, false);
         return false;
@@ -138,9 +187,14 @@ public class BackgroundFetchJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        sLogger.d("BackgroundFetchJobService.onStopJob");
+        LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStopJob");
         BackgroundFetchWorker.getInstance(this).stopWork();
-        return true;
+
+        boolean shouldRetry = true;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, FLEDGE_BACKGROUND_FETCH_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /**
@@ -152,7 +206,8 @@ public class BackgroundFetchJobService extends JobService {
      */
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
         if (!flags.getFledgeBackgroundFetchEnabled()) {
-            sLogger.v("FLEDGE background fetch is disabled; skipping schedule");
+            LoggerFactory.getFledgeLogger()
+                    .v("FLEDGE background fetch is disabled; skipping schedule");
             return;
         }
 
@@ -163,9 +218,10 @@ public class BackgroundFetchJobService extends JobService {
         // TODO(b/221837833): Intelligently decide when to overwrite a scheduled job
         if ((jobScheduler.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID) == null) || forceSchedule) {
             schedule(context, flags);
-            sLogger.d("Scheduled FLEDGE Background Fetch job");
+            LoggerFactory.getFledgeLogger().d("Scheduled FLEDGE Background Fetch job");
         } else {
-            sLogger.v("FLEDGE Background Fetch job already scheduled, skipping reschedule");
+            LoggerFactory.getFledgeLogger()
+                    .v("FLEDGE Background Fetch job already scheduled, skipping reschedule");
         }
     }
 
@@ -178,7 +234,8 @@ public class BackgroundFetchJobService extends JobService {
     @VisibleForTesting
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeBackgroundFetchEnabled()) {
-            sLogger.v("FLEDGE background fetch is disabled; skipping schedule");
+            LoggerFactory.getFledgeLogger()
+                    .v("FLEDGE background fetch is disabled; skipping schedule");
             return;
         }
 

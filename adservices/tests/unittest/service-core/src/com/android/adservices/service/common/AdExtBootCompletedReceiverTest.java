@@ -25,8 +25,11 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 
+import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -97,10 +100,15 @@ public class AdExtBootCompletedReceiverTest {
         doReturn(true).when(mMockFlags).getGlobalKillSwitch();
 
         bootCompletedReceiver.onReceive(sContext, sIntent);
+
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
+        verify(bootCompletedReceiver, never()).updateAdExtServicesServices(any(), eq(true));
         verify(bootCompletedReceiver, atLeastOnce())
                 .updateAdExtServicesActivities(any(), eq(false));
-        verify(bootCompletedReceiver, atLeastOnce()).disableAdExtServicesServices(any());
+        verify(bootCompletedReceiver, atLeastOnce()).updateAdExtServicesServices(any(), eq(false));
+        verify(bootCompletedReceiver, atLeastOnce())
+                .unregisterPackageChangedBroadcastReceivers(any());
+        verify(bootCompletedReceiver, atLeastOnce()).disableScheduledBackgroundJobs(any());
     }
 
     @Test
@@ -114,14 +122,20 @@ public class AdExtBootCompletedReceiverTest {
 
         bootCompletedReceiver.onReceive(sContext, sIntent);
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
+        verify(bootCompletedReceiver, never()).updateAdExtServicesServices(any(), eq(true));
         verify(bootCompletedReceiver, atLeastOnce())
                 .updateAdExtServicesActivities(any(), eq(false));
-        verify(bootCompletedReceiver, atLeastOnce()).disableAdExtServicesServices(any());
+        verify(bootCompletedReceiver, atLeastOnce()).updateAdExtServicesServices(any(), eq(false));
+        verify(bootCompletedReceiver, atLeastOnce())
+                .unregisterPackageChangedBroadcastReceivers(any());
+        verify(bootCompletedReceiver, atLeastOnce()).disableScheduledBackgroundJobs(any());
     }
 
     @Test
     public void testOnReceive_s_flagsOff() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT == 31 || Build.VERSION.SDK_INT == 32);
+        Assume.assumeTrue(
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         doReturn(false).when(mMockFlags).getEnableBackCompat();
@@ -129,6 +143,7 @@ public class AdExtBootCompletedReceiverTest {
         bootCompletedReceiver.onReceive(sContext, sIntent);
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver, never()).updateAdExtServicesActivities(any(), eq(true));
+        verify(bootCompletedReceiver, never()).updateAdExtServicesServices(any(), eq(true));
 
         doReturn(true).when(mMockFlags).getEnableBackCompat();
         doReturn(false).when(mMockFlags).getAdServicesEnabled();
@@ -136,6 +151,7 @@ public class AdExtBootCompletedReceiverTest {
         bootCompletedReceiver.onReceive(sContext, sIntent);
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver, never()).updateAdExtServicesActivities(any(), eq(true));
+        verify(bootCompletedReceiver, never()).updateAdExtServicesServices(any(), eq(true));
 
         doReturn(true).when(mMockFlags).getEnableBackCompat();
         doReturn(true).when(mMockFlags).getAdServicesEnabled();
@@ -144,11 +160,15 @@ public class AdExtBootCompletedReceiverTest {
         bootCompletedReceiver.onReceive(sContext, sIntent);
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver, never()).updateAdExtServicesActivities(any(), eq(true));
+        verify(bootCompletedReceiver, never()).updateAdExtServicesServices(any(), eq(true));
+        verify(bootCompletedReceiver, never()).disableScheduledBackgroundJobs(any());
     }
 
     @Test
     public void testOnReceive_SFlagsOn() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT == 31 || Build.VERSION.SDK_INT == 32);
+        Assume.assumeTrue(
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         doReturn(true).when(mMockFlags).getEnableBackCompat();
@@ -158,19 +178,35 @@ public class AdExtBootCompletedReceiverTest {
         bootCompletedReceiver.onReceive(sContext, sIntent);
         verify(bootCompletedReceiver).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver).updateAdExtServicesActivities(any(), eq(true));
+        verify(bootCompletedReceiver).updateAdExtServicesServices(any(), eq(true));
+        verify(bootCompletedReceiver, never()).disableScheduledBackgroundJobs(any());
     }
 
     @Test
     public void testRegisterReceivers() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT == 31 || Build.VERSION.SDK_INT == 32);
+        Assume.assumeTrue(
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
         AdExtBootCompletedReceiver bootCompletedReceiver = new AdExtBootCompletedReceiver();
         bootCompletedReceiver.registerPackagedChangedBroadcastReceivers(sContext);
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)));
     }
 
     @Test
+    public void testUnregisterReceivers() {
+        doReturn(true).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
+
+        AdExtBootCompletedReceiver bootCompletedReceiver = new AdExtBootCompletedReceiver();
+        bootCompletedReceiver.unregisterPackageChangedBroadcastReceivers(sContext);
+
+        verify(() -> PackageChangedReceiver.disableReceiver(any(Context.class), any(Flags.class)));
+    }
+
+    @Test
     public void testEnableActivities_s() throws Exception {
-        Assume.assumeTrue(Build.VERSION.SDK_INT == 31 || Build.VERSION.SDK_INT == 32);
+        Assume.assumeTrue(
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
 
@@ -211,12 +247,31 @@ public class AdExtBootCompletedReceiverTest {
         setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing.
-        bootCompletedReceiver.disableAdExtServicesServices(mContext);
+        bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ false);
 
         verify(mPackageManager, times(NUM_SERVICE_CLASSES_TO_DISABLE))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testUpdateAdExtServicesServices_s() throws Exception {
+        Assume.assumeTrue(
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(TEST_PACKAGE_NAME);
+
+        // Call the method we're testing
+        bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ true);
+
+        verify(mPackageManager, times(NUM_SERVICE_CLASSES_TO_DISABLE))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_ENABLED),
                         eq(PackageManager.DONT_KILL_APP));
     }
 
@@ -245,7 +300,7 @@ public class AdExtBootCompletedReceiverTest {
         setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
 
         // Call the method we're testing.
-        bootCompletedReceiver.disableAdExtServicesServices(mContext);
+        bootCompletedReceiver.updateAdExtServicesServices(mContext, /* shouldEnable= */ false);
 
         verify(mPackageManager, never())
                 .setComponentEnabledSetting(
@@ -261,6 +316,50 @@ public class AdExtBootCompletedReceiverTest {
                 () ->
                         AdExtBootCompletedReceiver.updateComponents(
                                 mContext, ImmutableList.of(), AD_SERVICES_APK_PKG_SUFFIX, false));
+    }
+
+    @Test
+    public void testDisableScheduledBackgroundJobs_contextNull() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new AdExtBootCompletedReceiver().disableScheduledBackgroundJobs(null));
+    }
+
+    @Test
+    public void testDisableScheduledBackgroundJobs_withAdServicesPackageSuffix_doesNotUpdate()
+            throws Exception {
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
+
+        bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
+        verify(mContext, never()).getSystemService(eq(JobScheduler.class));
+    }
+
+    @Test
+    public void testDisableScheduledBackgroundJobs_cancelsAllJobs() throws Exception {
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+
+        JobScheduler mockScheduler = Mockito.mock(JobScheduler.class);
+        when(mContext.getSystemService(JobScheduler.class)).thenReturn(mockScheduler);
+
+        setCommonMocks(TEST_PACKAGE_NAME);
+
+        bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
+        verify(mockScheduler).cancelAll();
+    }
+
+    @Test
+    public void testDisableScheduledBackgroundJobs_handlesException() throws Exception {
+        when(mContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getPackageInfo(anyString(), anyInt()))
+                .thenThrow(PackageManager.NameNotFoundException.class);
+
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
+        verify(mContext, never()).getSystemService(eq(JobScheduler.class));
     }
 
     private void setCommonMocks(String packageName) throws Exception {

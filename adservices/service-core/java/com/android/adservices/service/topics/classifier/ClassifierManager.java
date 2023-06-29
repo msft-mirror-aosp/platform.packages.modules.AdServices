@@ -32,7 +32,6 @@ import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Supplier;
@@ -77,11 +76,10 @@ public class ClassifierManager implements Classifier {
                                 Suppliers.memoize(
                                         () ->
                                                 new OnDeviceClassifier(
-                                                        new Preprocessor(context),
-                                                        new PackageManagerUtil(context),
                                                         new Random(),
                                                         ModelManager.getInstance(context),
                                                         CacheManager.getInstance(context),
+                                                        ClassifierInputManager.getInstance(context),
                                                         AdServicesLoggerImpl.getInstance())),
                                 Suppliers.memoize(
                                         () ->
@@ -111,12 +109,15 @@ public class ClassifierManager implements Classifier {
         }
 
         @ClassifierType int classifierTypeFlag = flags.getClassifierType();
-        sLogger.v("Classifying with ClassifierType: " + classifierTypeFlag);
         if (classifierTypeFlag == Flags.PRECOMPUTED_CLASSIFIER) {
+            sLogger.v("ClassifierTypeFlag: " + classifierTypeFlag + " = PRECOMPUTED_CLASSIFIER");
             return mPrecomputedClassifier.get().classify(apps);
         } else if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
+            sLogger.v("ClassifierTypeFlag: " + classifierTypeFlag + " = ON_DEVICE_CLASSIFIER");
             return mOnDeviceClassifier.get().classify(apps);
         } else {
+            sLogger.v(
+                    "ClassifierTypeFlag: " + classifierTypeFlag + " = PRECOMPUTED_THEN_ON_DEVICE");
             // PRECOMPUTED_THEN_ON_DEVICE
             // Default if classifierTypeFlag value is not set/invalid.
             // precomputedClassifications expects non-empty values.
@@ -169,15 +170,12 @@ public class ClassifierManager implements Classifier {
         @ClassifierType int classifierTypeFlag = flags.getClassifierType();
         // getTopTopics has the same implementation.
         // If the loaded assets are same, the output will be same.
-        // TODO(b/240478024): Unify asset loading for Classifiers to ensure same assets are used.
         if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
             return mOnDeviceClassifier
                     .get()
                     .getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
         } else {
             // Use getTopics from PrecomputedClassifier as default.
-            // TODO(b/240478024): Unify asset loading for Classifiers to ensure same assets are
-            //  used.
             return mPrecomputedClassifier
                     .get()
                     .getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
