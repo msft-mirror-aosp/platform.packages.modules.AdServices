@@ -233,7 +233,9 @@ public class PersistAdSelectionResultRunner {
     private AuctionResult composeAuctionResult(
             AuctionServerDataCompressor.UncompressedData uncompressedData) {
         try {
-            return AuctionResult.parseFrom(uncompressedData.getData());
+            AuctionResult result = AuctionResult.parseFrom(uncompressedData.getData());
+            logAuctionResult(result);
+            return result;
         } catch (InvalidProtocolBufferException ex) {
             sLogger.e("Error during parsing AuctionResult proto from byte[]");
             throw new RuntimeException(ex);
@@ -318,5 +320,29 @@ public class PersistAdSelectionResultRunner {
         } finally {
             sLogger.v("Persist Ad Selection Result failed");
         }
+    }
+
+    private String logAuctionResult(AuctionResult auctionResult) {
+        return String.format(
+                " Decrypted AuctionResult proto: "
+                        + "\nadRenderUrl: %s"
+                        + "\ncustom audience name: %s"
+                        + "\ncustom audience owner: %s"
+                        + "\nscore: %s"
+                        + "\nbid: %s"
+                        + "\nis_chaff: %s"
+                        + "\nbuyer reporting url: %s"
+                        + "\nseller reporting url: %s",
+                auctionResult.getAdRenderUrl(),
+                auctionResult.getCustomAudienceName(),
+                auctionResult.getCustomAudienceOwner(),
+                auctionResult.getScore(),
+                auctionResult.getBid(),
+                auctionResult.getIsChaff(),
+                auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl(),
+                auctionResult
+                        .getWinReportingUrls()
+                        .getComponentSellerReportingUrls()
+                        .getReportingUrl());
     }
 }
