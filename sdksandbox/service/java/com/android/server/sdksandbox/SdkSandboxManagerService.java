@@ -1725,22 +1725,22 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
 
         @GuardedBy("mLock")
-        private Map<Integer, AllowedServices> mServiceAllowlistPerTargetSdkVersion =
-                getServicesAllowlist();
-
-        @GuardedBy("mLock")
-        private Map<Integer, AllowedContentProviders> mContentProviderAllowlistPerTargetSdkVersion =
-                getContentProviderDeviceConfigAllowlist();
-
-        @GuardedBy("mLock")
-        private AllowedServices mNextServiceAllowlist = getNextServiceDeviceConfigAllowlist();
-
-        @GuardedBy("mLock")
         private boolean mSdkSandboxApplyRestrictionsNext =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
                         DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+
+        @GuardedBy("mLock")
+        private Map<Integer, AllowedServices> mServiceAllowlistPerTargetSdkVersion =
+                getServicesAllowlist();
+
+        @GuardedBy("mLock")
+        private AllowedServices mNextServiceAllowlist = getNextServiceDeviceConfigAllowlist();
+
+        @GuardedBy("mLock")
+        private Map<Integer, AllowedContentProviders> mContentProviderAllowlistPerTargetSdkVersion =
+                getContentProviderDeviceConfigAllowlist();
 
         @GuardedBy("mLock")
         private AllowedContentProviders mNextContentProviderAllowlist =
@@ -1797,9 +1797,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        Map<Integer, AllowedContentProviders> getContentProviderAllowlistPerTargetSdkVersion() {
+        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+        boolean applySdkSandboxRestrictionsNext() {
             synchronized (mLock) {
-                return mContentProviderAllowlistPerTargetSdkVersion;
+                return mSdkSandboxApplyRestrictionsNext;
             }
         }
 
@@ -1815,10 +1816,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-        boolean applySdkSandboxRestrictionsNext() {
+        Map<Integer, AllowedContentProviders> getContentProviderAllowlistPerTargetSdkVersion() {
             synchronized (mLock) {
-                return mSdkSandboxApplyRestrictionsNext;
+                return mContentProviderAllowlistPerTargetSdkVersion;
             }
         }
 
@@ -1859,9 +1859,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                             PROPERTY_ENFORCE_RESTRICTIONS,
                                             DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
                             break;
-                        case PROPERTY_CONTENTPROVIDER_ALLOWLIST:
-                            mContentProviderAllowlistPerTargetSdkVersion =
-                                    getContentProviderDeviceConfigAllowlist();
+                        case PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS:
+                            mSdkSandboxApplyRestrictionsNext =
+                                    properties.getBoolean(
+                                            PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                                            DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
                             break;
                         case PROPERTY_SERVICES_ALLOWLIST:
                             mServiceAllowlistPerTargetSdkVersion = getServicesAllowlist();
@@ -1869,11 +1871,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         case PROPERTY_NEXT_SERVICE_ALLOWLIST:
                             mNextServiceAllowlist = getNextServiceDeviceConfigAllowlist();
                             break;
-                        case PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS:
-                            mSdkSandboxApplyRestrictionsNext =
-                                    properties.getBoolean(
-                                            PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
-                                            DEFAULT_VALUE_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+                        case PROPERTY_CONTENTPROVIDER_ALLOWLIST:
+                            mContentProviderAllowlistPerTargetSdkVersion =
+                                    getContentProviderDeviceConfigAllowlist();
                             break;
                         case PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST:
                             mNextContentProviderAllowlist =
@@ -1927,6 +1927,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return new ArrayMap<>();
         }
 
+        private AllowedServices getNextServiceDeviceConfigAllowlist() {
+            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_SERVICE_ALLOWLIST);
+
+            if (Objects.isNull(decode)) {
+                return null;
+            }
+
+            try {
+                AllowedServices allowedServices = AllowedServices.parseFrom(decode);
+                if (allowedServices != null) {
+                    return allowedServices;
+                }
+            } catch (Exception e) {
+                Log.e(
+                        TAG,
+                        "Error while parsing " + PROPERTY_NEXT_SERVICE_ALLOWLIST + ". Error: ",
+                        e);
+            }
+            return null;
+        }
+
         private static Map<Integer, AllowedContentProviders>
                 getContentProviderDeviceConfigAllowlist() {
             final byte[] decode = getDecodedPropertyValue(PROPERTY_CONTENTPROVIDER_ALLOWLIST);
@@ -1947,27 +1968,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
             }
             return new ArrayMap<>();
-        }
-
-        private AllowedServices getNextServiceDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_SERVICE_ALLOWLIST);
-
-            if (Objects.isNull(decode)) {
-                return null;
-            }
-
-            try {
-                AllowedServices allowedServices = AllowedServices.parseFrom(decode);
-                if (allowedServices != null) {
-                    return allowedServices;
-                }
-            } catch (Exception e) {
-                Log.e(
-                        TAG,
-                        "Error while parsing " + PROPERTY_NEXT_SERVICE_ALLOWLIST + ". Error: ",
-                        e);
-            }
-            return null;
         }
 
         private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist() {
@@ -2556,7 +2556,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean doesInputMatchWildcardPattern(
             String pattern, String input, boolean matchOnNullInput) {
-        // Allow everything if pattern is * and matchOnNullInput is true
         if (matchOnNullInput && (pattern != null && pattern.equals("*"))) {
             return true;
         }
