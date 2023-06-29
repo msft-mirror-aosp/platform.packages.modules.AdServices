@@ -95,7 +95,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final AdCounterKeyCopier mAdCounterKeyCopier;
     @NonNull private final Flags mFlags;
     @NonNull private final JsFetcher mJsFetcher;
-    @NonNull private final DebugReportingScriptStrategy mDebugReportingScriptStrategy;
     @NonNull private final boolean mDebugReportingEnabled;
 
     public AdBidGeneratorImpl(
@@ -108,6 +107,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdCounterKeyCopier adCounterKeyCopier,
             @NonNull Flags flags,
+            @NonNull DebugReporting debugReporting,
             boolean cpcBillingEnabled) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -126,7 +126,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
         mAdCounterKeyCopier = adCounterKeyCopier;
-        mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
         mFlags = flags;
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
@@ -134,7 +133,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         () -> mFlags.getEnforceIsolateMaxHeapSize(),
                         () -> mFlags.getIsolateMaxHeapSizeBytes(),
                         mAdCounterKeyCopier,
-                        mDebugReportingScriptStrategy,
+                        debugReporting.getScriptStrategy(),
                         cpcBillingEnabled);
         mJsFetcher =
                 new JsFetcher(
@@ -142,7 +141,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         lightweightExecutorService,
                         adServicesHttpsClient,
                         mFlags);
-        mDebugReportingEnabled = mFlags.getFledgeEventLevelDebugReportingEnabled();
+        mDebugReportingEnabled = debugReporting.isDebugReportingEnabled();
     }
 
     @VisibleForTesting
@@ -156,7 +155,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdCounterKeyCopier adCounterKeyCopier,
             @NonNull Flags flags,
             @NonNull IsolateSettings isolateSettings,
-            @NonNull JsFetcher jsFetcher) {
+            @NonNull JsFetcher jsFetcher,
+            @NonNull DebugReporting debugReporting) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightWeightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
@@ -177,8 +177,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mAdCounterKeyCopier = adCounterKeyCopier;
         mFlags = flags;
         mJsFetcher = jsFetcher;
-        mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
-        mDebugReportingEnabled = flags.getFledgeEventLevelDebugReportingEnabled();
+        mDebugReportingEnabled = debugReporting.isDebugReportingEnabled();
     }
 
     @Override

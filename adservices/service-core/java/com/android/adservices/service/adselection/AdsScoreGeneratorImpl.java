@@ -101,7 +101,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull DevContext devContext,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull Flags flags,
-            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger) {
+            @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull DebugReporting debugReporting) {
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -111,6 +112,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionExecutionLogger);
+        Objects.requireNonNull(debugReporting);
 
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mAdServicesHttpsClient = adServicesHttpsClient;
@@ -127,7 +129,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
                         mFlags);
-        mDebugReportingEnabled = mFlags.getFledgeEventLevelDebugReportingEnabled();
+        mDebugReportingEnabled = debugReporting.isDebugReportingEnabled();
     }
 
     /**

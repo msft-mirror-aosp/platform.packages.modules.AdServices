@@ -163,6 +163,8 @@ public class AdsScoreGeneratorImplTest {
     @Mock Clock mAdSelectionExecutionLoggerClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
+    @Mock private DebugReporting mDebugReporting;
+
     @Captor
     ArgumentCaptor<RunAdScoringProcessReportedStats>
             mRunAdScoringProcessReportedStatsArgumentCaptor;
@@ -266,6 +268,7 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionExecutionLoggerClock,
                         ApplicationProvider.getApplicationContext(),
                         mAdServicesLoggerMock);
+        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(false);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
@@ -276,7 +279,8 @@ public class AdsScoreGeneratorImplTest {
                         mDevContext,
                         mAdSelectionEntryDao,
                         mFlags,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting);
     }
 
     @Test
@@ -393,23 +397,7 @@ public class AdsScoreGeneratorImplTest {
     public void testRunAdScoringSuccess_withDebugReportingEnabled() throws Exception {
         Uri winUri = Uri.parse("http://example.com/reportWin");
         Uri lossUri = Uri.parse("http://example.com/reportLoss");
-        Flags flags = new AdsScoreGeneratorImplTestFlags() {
-            @Override
-            public boolean getFledgeEventLevelDebugReportingEnabled() {
-                return true;
-            }
-        };
-        AdsScoreGeneratorImpl adsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        flags,
-                        mAdSelectionExecutionLogger);
+        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(true);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -484,6 +472,18 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
+        AdsScoreGeneratorImpl adsScoreGenerator =
+                new AdsScoreGeneratorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mSchedulingExecutor,
+                        mWebClient,
+                        mDevContext,
+                        mAdSelectionEntryDao,
+                        mFlags,
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -671,23 +671,8 @@ public class AdsScoreGeneratorImplTest {
                 })
                 .when(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(any());
-        Flags flags = new AdsScoreGeneratorImplTestFlags() {
-            @Override
-            public boolean getFledgeEventLevelDebugReportingEnabled() {
-                return true;
-            }
-        };
-        AdsScoreGeneratorImpl adsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        mMockAdSelectionScriptEngine,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mSchedulingExecutor,
-                        mWebClient,
-                        mDevContext,
-                        mAdSelectionEntryDao,
-                        flags,
-                        mAdSelectionExecutionLogger);
+        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(true);
+
         List<Double> scores = ImmutableList.of(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
@@ -727,12 +712,15 @@ public class AdsScoreGeneratorImplTest {
                                                             .setAdScore(score)
                                                             .setCustomAudienceName("test_ca")
                                                             .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(
-                                                                    CommonFixture.VALID_BUYER_1)
+                                                            .setSeller(CommonFixture.VALID_BUYER_1)
                                                             .setOwnerAppPackage(
                                                                     CommonFixture.TEST_PACKAGE_NAME)
-                                                            .setWinDebugReportUri(Uri.parse("http://example.com/1"))
-                                                            .setLossDebugReportUri(Uri.parse("http://example.com/2"))
+                                                            .setWinDebugReportUri(
+                                                                    Uri.parse(
+                                                                            "http://example.com/1"))
+                                                            .setLossDebugReportUri(
+                                                                    Uri.parse(
+                                                                            "http://example.com/2"))
                                                             .build())
                                     .collect(Collectors.toList()));
                 };
@@ -753,6 +741,18 @@ public class AdsScoreGeneratorImplTest {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
+        AdsScoreGeneratorImpl adsScoreGenerator =
+                new AdsScoreGeneratorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mSchedulingExecutor,
+                        mWebClient,
+                        mDevContext,
+                        mAdSelectionEntryDao,
+                        mFlags,
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -781,10 +781,18 @@ public class AdsScoreGeneratorImplTest {
                         mFetchJavaScriptPath, mTrustedScoringSignalsPath + mTrustedScoringParams),
                 mRequestMatcherExactMatch);
         runAdScoringProcessLoggerLatch.await();
-        assertEquals(Uri.parse("http://example.com/1"), scoringOutcome.get(0).getDebugReport().getWinDebugReportUri());
-        assertEquals(Uri.parse("http://example.com/2"), scoringOutcome.get(0).getDebugReport().getLossDebugReportUri());
-        assertEquals(Uri.parse("http://example.com/1"), scoringOutcome.get(1).getDebugReport().getWinDebugReportUri());
-        assertEquals(Uri.parse("http://example.com/2"), scoringOutcome.get(1).getDebugReport().getLossDebugReportUri());
+        assertEquals(
+                Uri.parse("http://example.com/1"),
+                scoringOutcome.get(0).getDebugReport().getWinDebugReportUri());
+        assertEquals(
+                Uri.parse("http://example.com/2"),
+                scoringOutcome.get(0).getDebugReport().getLossDebugReportUri());
+        assertEquals(
+                Uri.parse("http://example.com/1"),
+                scoringOutcome.get(1).getDebugReport().getWinDebugReportUri());
+        assertEquals(
+                Uri.parse("http://example.com/2"),
+                scoringOutcome.get(1).getDebugReport().getLossDebugReportUri());
 
         verifySuccessAdScoringLogging(
                 mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
@@ -917,7 +925,8 @@ public class AdsScoreGeneratorImplTest {
                         mDevContext,
                         mAdSelectionEntryDao,
                         mFlags,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1202,7 +1211,8 @@ public class AdsScoreGeneratorImplTest {
                         mDevContext,
                         mAdSelectionEntryDao,
                         mFlags,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
@@ -1366,7 +1376,8 @@ public class AdsScoreGeneratorImplTest {
                         mDevContext,
                         mAdSelectionEntryDao,
                         flagsWithSmallerLimits,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting);
 
         List<Double> scores = Arrays.asList(1.0, 2.0);
         mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
