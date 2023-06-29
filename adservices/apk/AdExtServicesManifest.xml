@@ -360,7 +360,7 @@
                   android:enabled="@bool/atLeastS"
                   android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.INIT_EXT_SERVICES"/>
+                <action android:name="android.adservices.action.INIT_EXT_SERVICES"/>
             </intent-filter>
         </receiver>
 
