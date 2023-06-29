@@ -141,6 +141,7 @@ public class CustomAudienceBlobValidator implements Validator<CustomAudienceBlob
 
         // Validating the buyer, if present.
         if (customAudience.hasBuyer()) {
+            sLogger.d("The CustomAudienceBlob has a valid buyer: %s.", customAudience.getBuyer());
             mBuyerValidator.addValidation(customAudience.getBuyer().toString(), violations);
         }
 
@@ -152,24 +153,36 @@ public class CustomAudienceBlobValidator implements Validator<CustomAudienceBlob
 
         // Validating the bidding logic uri, if present.
         if (customAudience.hasBiddingLogicUri()) {
+            sLogger.d(
+                    "Validating the CustomAudienceBlob's bidding logic uri with buyer: %s.",
+                    customAudience.getBuyer());
             mBiddingLogicUriValidator.addValidation(
                     customAudience.getBiddingLogicUri(), buyer, violations);
         }
 
         // Validating the daily update uri, if present.
         if (customAudience.hasDailyUpdateUri()) {
+            sLogger.d(
+                    "Validating the CustomAudienceBlob's daily update uri with buyer: %s.",
+                    customAudience.getBuyer());
             mDailyUpdateUriValidator.addValidation(
                     customAudience.getDailyUpdateUri(), buyer, violations);
         }
 
         // Validating the trusted bidding data, if present.
         if (customAudience.hasTrustedBiddingData()) {
+            sLogger.d(
+                    "Validating the CustomAudienceBlob's trusted bidding data with buyer: %s.",
+                    customAudience.getBuyer());
             mTrustedBiddingDataValidator.addValidation(
                     customAudience.getTrustedBiddingData(), buyer, violations);
         }
 
         // Validating the ads, if present.
         if (customAudience.hasAds()) {
+            sLogger.d(
+                    "Validating the CustomAudienceBlob's ads with buyer: %s.",
+                    customAudience.getBuyer());
             mAdsValidator.addValidation(customAudience.getAds(), buyer, violations);
         }
     }

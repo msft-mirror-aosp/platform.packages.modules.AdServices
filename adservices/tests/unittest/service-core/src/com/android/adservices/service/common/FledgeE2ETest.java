@@ -2928,7 +2928,8 @@ public class FledgeE2ETest {
                                 mAppImportanceFilter,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
-                                mThrottlerSupplier));
+                                mThrottlerSupplier),
+                        new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());

@@ -17,11 +17,17 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import android.adservices.common.AdData;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.annotation.NonNull;
@@ -32,12 +38,18 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.JsonValidator;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -56,8 +68,12 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InvalidObjectException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -69,24 +85,52 @@ public class FetchCustomAudienceImpl {
     private static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
     private static final String CUSTOM_AUDIENCE_HEADER = "X-CUSTOM-AUDIENCE-DATA";
+    public static final String REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE =
+            "Size of custom headers exceeds limit.";
+
+    public static final String FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE =
+            "Fused custom audience is incomplete.";
+    public static final String FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE =
+            "Fused custom audience exceeds size limit.";
+
+    // Placeholder value to be used with the CustomAudienceQuantityChecker
+    private static final CustomAudience PLACEHOLDER_CUSTOM_AUDIENCE =
+            new CustomAudience.Builder()
+                    .setName("placeholder")
+                    .setBuyer(AdTechIdentifier.fromString("buyer.com"))
+                    .setDailyUpdateUri(Uri.parse("https://www.buyer.com/update"))
+                    .setBiddingLogicUri(Uri.parse("https://www.buyer.com/bidding"))
+                    .build();
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final ListeningExecutorService mExecutorService;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
-    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
     @NonNull private final AdServicesHttpsClient mHttpClient;
     @NonNull private final Clock mClock;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
-
+    @NonNull private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
+    @NonNull private final CustomAudienceBlobValidator mCustomAudienceBlobValidator;
     @NonNull private final boolean mFledgeFetchCustomAudienceEnabled;
-    @NonNull private final boolean mEnforceForegroundStatusForFledgeCustomAudience;
+    @NonNull private final boolean mEnforceForegroundStatus;
+    @NonNull private final int mMaxNameSizeB;
     @NonNull private final int mMaxUserBiddingSignalsSizeB;
+    @NonNull private final long mMaxActivationDelayInMs;
+    @NonNull private final long mMaxExpireInMs;
+    @NonNull private final int mMaxBiddingLogicUriSizeB;
+    @NonNull private final int mMaxDailyUpdateUriSizeB;
     @NonNull private final int mMaxTrustedBiddingDataSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxAdsSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxNumAds;
+    @NonNull private final int mFledgeCustomAudienceMaxCustomHeaderSizeB;
+    @NonNull private final int mFledgeCustomAudienceMaxCustomAudienceSizeB;
     @NonNull private final boolean mFledgeAdSelectionFilteringEnabled;
 
+    // TODO(b/289123035): Make these locally scoped, passed down by the orchestrator function.
     @NonNull private AdTechIdentifier mBuyer;
+    @NonNull private Uri mFetchUri;
+    @NonNull private CustomAudienceBlob mRequestCustomAudience;
+    @NonNull private CustomAudienceBlob mResponseCustomAudience;
+    @NonNull private CustomAudienceBlob mFusedCustomAudience;
 
     @VisibleForTesting
     public FetchCustomAudienceImpl(
@@ -96,16 +140,17 @@ public class FetchCustomAudienceImpl {
             @NonNull ExecutorService executor,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
-            @NonNull ConsentManager consentManager,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
-            @NonNull AdServicesHttpsClient httpClient) {
+            @NonNull AdServicesHttpsClient httpClient,
+            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull AdRenderIdValidator adRenderIdValidator,
+            @NonNull AdDataConversionStrategy adDataConversionStrategy) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(callingAppUidSupplier);
-        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(customAudienceServiceFilter);
         Objects.requireNonNull(httpClient);
 
@@ -114,25 +159,66 @@ public class FetchCustomAudienceImpl {
         mExecutorService = MoreExecutors.listeningDecorator(executor);
         mCustomAudienceDao = customAudienceDao;
         mCallingAppUidSupplier = callingAppUidSupplier;
-        mConsentManager = consentManager;
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mHttpClient = httpClient;
+        mCustomAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(customAudienceDao, flags);
 
         // TODO(b/278016820): Revisit handling field limit validation.
         // Ensuring process-stable flag values by assigning to local variables at instantiation.
         mFledgeFetchCustomAudienceEnabled = flags.getFledgeFetchCustomAudienceEnabled();
-        mEnforceForegroundStatusForFledgeCustomAudience =
-                flags.getEnforceForegroundStatusForFledgeCustomAudience();
-        mMaxUserBiddingSignalsSizeB = flags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB();
+        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
+        mMaxNameSizeB = flags.getFledgeCustomAudienceMaxNameSizeB();
+        mMaxActivationDelayInMs = flags.getFledgeCustomAudienceMaxActivationDelayInMs();
+        mMaxExpireInMs = flags.getFledgeCustomAudienceMaxExpireInMs();
+        mMaxUserBiddingSignalsSizeB =
+                flags.getFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB();
+        mMaxBiddingLogicUriSizeB = flags.getFledgeCustomAudienceMaxBiddingLogicUriSizeB();
+        mMaxDailyUpdateUriSizeB = flags.getFledgeCustomAudienceMaxDailyUpdateUriSizeB();
         mMaxTrustedBiddingDataSizeB = flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB();
         mFledgeCustomAudienceMaxAdsSizeB = flags.getFledgeCustomAudienceMaxAdsSizeB();
         mFledgeCustomAudienceMaxNumAds = flags.getFledgeCustomAudienceMaxNumAds();
         mFledgeAdSelectionFilteringEnabled = flags.getFledgeAdSelectionFilteringEnabled();
+        mFledgeCustomAudienceMaxCustomHeaderSizeB =
+                flags.getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB();
+        mFledgeCustomAudienceMaxCustomAudienceSizeB =
+                flags.getFledgeFetchCustomAudienceMaxCustomAudienceSizeB();
+
+        // Instantiate request, response and result CustomAudienceBlobs
+        mRequestCustomAudience = new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
+        mResponseCustomAudience = new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
+        mFusedCustomAudience = new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
+
+        // Instantiate a CustomAudienceBlobValidator
+        mCustomAudienceBlobValidator =
+                new CustomAudienceBlobValidator(
+                        clock,
+                        new CustomAudienceNameValidator(mMaxNameSizeB),
+                        new CustomAudienceUserBiddingSignalsValidator(
+                                new JsonValidator(
+                                        CustomAudienceBlobValidator.CLASS_NAME,
+                                        USER_BIDDING_SIGNALS_KEY),
+                                mMaxUserBiddingSignalsSizeB),
+                        new CustomAudienceActivationTimeValidator(
+                                clock, Duration.ofMillis(mMaxActivationDelayInMs)),
+                        new CustomAudienceExpirationTimeValidator(
+                                clock, Duration.ofMillis(mMaxExpireInMs)),
+                        new AdTechIdentifierValidator(
+                                CustomAudienceBlobValidator.CLASS_NAME, AD_TECH_ROLE_BUYER),
+                        new CustomAudienceBiddingLogicUriValidator(mMaxBiddingLogicUriSizeB),
+                        new CustomAudienceDailyUpdateUriValidator(mMaxDailyUpdateUriSizeB),
+                        new TrustedBiddingDataValidator(mMaxTrustedBiddingDataSizeB),
+                        new CustomAudienceAdsValidator(
+                                frequencyCapAdDataValidator,
+                                adRenderIdValidator,
+                                adDataConversionStrategy,
+                                mFledgeCustomAudienceMaxAdsSizeB,
+                                mFledgeCustomAudienceMaxNumAds));
     }
 
     /** Adds a user to a fetched custom audience. */
     public void doFetchCustomAudience(
-            @NonNull FetchAndJoinCustomAudienceInput input,
+            @NonNull FetchAndJoinCustomAudienceInput request,
             @NonNull FetchAndJoinCustomAudienceCallback callback) {
         try {
             // Failing fast and silently if fetchCustomAudience is disabled.
@@ -142,11 +228,10 @@ public class FetchCustomAudienceImpl {
             } else {
                 sLogger.v("fetchCustomAudience is enabled.");
                 // TODO(b/282017342): Evaluate correctness of futures chain.
-                FluentFuture.from(mExecutorService.submit(() -> filterAndValidateRequest(input)))
-                        .transformAsync(ignoreVoid -> performFetch(input), mExecutorService)
-                        .transformAsync(
-                                httpResponse -> validateResponse(input, httpResponse),
-                                mExecutorService)
+                FluentFuture.from(filterAndValidateRequest(request))
+                        .transformAsync(this::performFetch, mExecutorService)
+                        .transformAsync(this::validateResponse, mExecutorService)
+                        .transformAsync(this::persistResponse, mExecutorService)
                         .addCallback(
                                 new FutureCallback<Void>() {
                                     @Override
@@ -184,163 +269,166 @@ public class FetchCustomAudienceImpl {
         }
     }
 
-    private Void filterAndValidateRequest(@NonNull FetchAndJoinCustomAudienceInput input) {
-        sLogger.v("In fetchCustomAudience filterAndValidateRequest");
+    private ListenableFuture<Void> filterAndValidateRequest(
+            @NonNull FetchAndJoinCustomAudienceInput input) {
+        return FluentFuture.from(
+                mExecutorService.submit(
+                        () -> {
+                            sLogger.v("In fetchCustomAudience filterAndValidateRequest");
+                            try {
+                                // Extract buyer ad tech identifier and filter request
+                                mBuyer =
+                                        mCustomAudienceServiceFilter
+                                                .filterRequestAndExtractIdentifier(
+                                                        input.getFetchUri(),
+                                                        input.getCallerPackageName(),
+                                                        mEnforceForegroundStatus,
+                                                        true,
+                                                        mCallingAppUidSupplier.getCallingAppUid(),
+                                                        API_NAME,
+                                                        FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                            } catch (Throwable t) {
+                                throw new FilterException(t);
+                            }
 
-        // Extract buyer Ad Tech identifier
-        // TODO(b/282017511): Use enrollment data to store host eTLD+1.
-        String host = input.getFetchUri().getHost();
-        AdTechIdentifierValidator adTechIdentifierValidator =
-                new AdTechIdentifierValidator("FetchCustomAudienceImpl", "buyer");
-        adTechIdentifierValidator.validate(host);
-        mBuyer = AdTechIdentifier.fromString(host);
+                            // Check if Custom Audience API quota exists.
+                            mCustomAudienceQuantityChecker.check(
+                                    PLACEHOLDER_CUSTOM_AUDIENCE, input.getCallerPackageName());
 
-        // Filter request
-        try {
-            mCustomAudienceServiceFilter.filterRequest(
-                    mBuyer,
-                    input.getCallerPackageName(),
-                    mEnforceForegroundStatusForFledgeCustomAudience,
-                    true,
-                    mCallingAppUidSupplier.getCallingAppUid(),
-                    API_NAME,
-                    FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
-        } catch (Throwable t) {
-            throw new FilterException(t);
-        }
+                            // Validate request
+                            mRequestCustomAudience =
+                                    new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
+                            mRequestCustomAudience.overrideFromFetchAndJoinCustomAudienceInput(
+                                    input);
+                            mRequestCustomAudience.setBuyer(mBuyer);
+                            mCustomAudienceBlobValidator.validate(mRequestCustomAudience);
 
-        // Validate request
-        // TODO(b/282017511): Add implementation.
-
-        sLogger.v("Completed fetchCustomAudience filterAndValidateRequest");
-
-        return null;
+                            mFetchUri = input.getFetchUri();
+                            sLogger.v("Completed fetchCustomAudience filterAndValidateRequest");
+                            return null;
+                        }));
     }
 
-    private ListenableFuture<AdServicesHttpClientResponse> performFetch(
-            @NonNull FetchAndJoinCustomAudienceInput input) throws JSONException {
+    private ListenableFuture<AdServicesHttpClientResponse> performFetch(Void ignoredVoid) {
         sLogger.v("In fetchCustomAudience performFetch");
 
         // Optional fields as a json string.
-        JSONObject json = new JSONObject();
-        if (input.getName() != null) {
-            json.put(FetchCustomAudienceReader.NAME_KEY, input.getName());
+        String jsonString = mRequestCustomAudience.asJSONObject().toString();
+
+        // Validate size of headers.
+        if (jsonString.getBytes(UTF_8).length > mFledgeCustomAudienceMaxCustomHeaderSizeB) {
+            throw new IllegalArgumentException(REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE);
         }
-        if (input.getActivationTime() != null) {
-            json.put(FetchCustomAudienceReader.ACTIVATION_TIME_KEY, input.getActivationTime());
-        }
-        if (input.getExpirationTime() != null) {
-            json.put(FetchCustomAudienceReader.EXPIRATION_TIME_KEY, input.getExpirationTime());
-        }
-        if (input.getUserBiddingSignals() != null) {
-            json.put(
-                    CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY,
-                    input.getUserBiddingSignals());
-        }
-        String jsonString = json.toString();
 
         // Custom headers under X-CUSTOM-AUDIENCE-DATA
         ImmutableMap<String, String> requestProperties =
                 ImmutableMap.of(CUSTOM_AUDIENCE_HEADER, jsonString);
 
-        // TODO(b/282017511): Validate size of headers.
-
-        sLogger.v("Sending request from fetchCustomAudience performFetch");
-
         // GET request
+        sLogger.v("Sending request from fetchCustomAudience performFetch");
         return mHttpClient.fetchPayload(
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
-                        .setUri(input.getFetchUri())
+                        .setUri(mFetchUri)
                         .build());
     }
 
     private ListenableFuture<Void> validateResponse(
-            @NonNull FetchAndJoinCustomAudienceInput input,
-            @NonNull AdServicesHttpClientResponse fetchResponse) {
+            @NonNull AdServicesHttpClientResponse fetchResponse) throws JSONException {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
-
-                            // Parse + Validate response
+                            // Parse and validate the fetched HTTP response.
+                            // Validate response is a well-formed JSON.
                             String responseJsonString = fetchResponse.getResponseBody();
-                            JSONObject responseJson = new JSONObject(responseJsonString);
-
-                            FetchCustomAudienceReader reader =
-                                    new FetchCustomAudienceReader(
-                                            responseJson,
-                                            String.valueOf(fetchResponse.hashCode()),
-                                            mBuyer,
-                                            mMaxUserBiddingSignalsSizeB,
-                                            mMaxTrustedBiddingDataSizeB,
-                                            mFledgeCustomAudienceMaxAdsSizeB,
-                                            mFledgeCustomAudienceMaxNumAds,
-                                            mFledgeAdSelectionFilteringEnabled);
-
-                            Uri dailyUpdateUri = reader.getDailyUpdateUriFromJsonObject();
-
-                            // TODO(b/282018172): Validate partial input CA + partial response CA =
-                            // full CA
-                            // TODO(b/286146443): Document how fields from the server are used.
-
-                            // Add response from server
-                            DBCustomAudience.Builder customAudienceBuilder =
-                                    new DBCustomAudience.Builder()
-                                            .setName(reader.getNameFromJsonObject())
-                                            .setBuyer(mBuyer)
-                                            .setActivationTime(
-                                                    reader.getActivationTimeFromJsonObject())
-                                            .setExpirationTime(
-                                                    reader.getExpirationTimeFromJsonObject())
-                                            .setBiddingLogicUri(
-                                                    reader.getBiddingLogicUriFromJsonObject())
-                                            .setTrustedBiddingData(
-                                                    reader.getTrustedBiddingDataFromJsonObject())
-                                            .setAds(reader.getAdsFromJsonObject())
-                                            .setUserBiddingSignals(
-                                                    reader.getUserBiddingSignalsFromJsonObject());
-
-                            // Override response from server with input fields
-                            if (input.getName() != null) {
-                                customAudienceBuilder =
-                                        customAudienceBuilder.setName(input.getName());
+                            JSONObject responseJson;
+                            try {
+                                responseJson = new JSONObject(responseJsonString);
+                            } catch (JSONException exception) {
+                                throw new InvalidObjectException(exception.getMessage());
                             }
+                            // Populate the response custom audience from the valid JSON response.
+                            mResponseCustomAudience.overrideFromJSONObject(responseJson);
 
-                            if (input.getActivationTime() != null) {
-                                customAudienceBuilder =
-                                        customAudienceBuilder.setActivationTime(
-                                                input.getActivationTime());
+                            // Construct and validate the fused custom audience.
+                            // If a field has valid values in both the request and the response
+                            // custom audiences, the value from the server response is discarded.
+                            // TODO(b/283857101): Add an overrideFromCustomAudienceBlob() method.
+                            mFusedCustomAudience.overrideFromJSONObject(
+                                    mResponseCustomAudience.asJSONObject());
+                            mFusedCustomAudience.overrideFromJSONObject(
+                                    mRequestCustomAudience.asJSONObject());
+                            // Validate the fused custom audience has values for all fields.
+                            // TODO(b/283857101): Add an isComplete() method.
+                            if (mFusedCustomAudience.mFieldsMap.keySet().size()
+                                    != CustomAudienceBlob.mKeysSet.size()) {
+                                throw new InvalidObjectException(
+                                        FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE);
                             }
-
-                            if (input.getExpirationTime() != null) {
-                                customAudienceBuilder =
-                                        customAudienceBuilder.setExpirationTime(
-                                                input.getExpirationTime());
+                            // Validate the fields of the fused custom audience
+                            mCustomAudienceBlobValidator.validate(mFusedCustomAudience);
+                            // Validate the size of the fused custom audience
+                            // TODO(b/283857101): Add a size() method.
+                            if (mFusedCustomAudience
+                                            .asJSONObject()
+                                            .toString()
+                                            .getBytes(UTF_8)
+                                            .length
+                                    > mFledgeCustomAudienceMaxCustomAudienceSizeB) {
+                                throw new InvalidObjectException(
+                                        FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE);
                             }
-
-                            if (input.getUserBiddingSignals() != null) {
-                                customAudienceBuilder =
-                                        customAudienceBuilder.setUserBiddingSignals(
-                                                input.getUserBiddingSignals());
-                            }
-
-                            customAudienceBuilder.setOwner(input.getCallerPackageName());
-                            Instant currentTime = mClock.instant();
-                            customAudienceBuilder.setCreationTime(currentTime);
-                            customAudienceBuilder.setLastAdsAndBiddingDataUpdatedTime(currentTime);
-
-                            DBCustomAudience customAudience = customAudienceBuilder.build();
-
-                            // Persist response
-                            mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                                    customAudience, dailyUpdateUri);
-
                             return null;
                         }));
     }
 
-    // TODO(b/283857101): Move DB handling to persistResponse using a common CustomAudienceReader.
-    // private Void persistResponse (@NonNull DBCustomAudience customAudience) {}
+    private ListenableFuture<Void> persistResponse(Void ignoredVoid) {
+        return FluentFuture.from(
+                mExecutorService.submit(
+                        () -> {
+                            // TODO(b/283857101): Add a asDBCustomAudience() method.
+                            DBCustomAudience.Builder customAudienceBuilder =
+                                    new DBCustomAudience.Builder()
+                                            .setOwner(mFusedCustomAudience.getOwner())
+                                            .setBuyer(mFusedCustomAudience.getBuyer())
+                                            .setName(mFusedCustomAudience.getName())
+                                            .setActivationTime(
+                                                    mFusedCustomAudience.getActivationTime())
+                                            .setExpirationTime(
+                                                    mFusedCustomAudience.getExpirationTime())
+                                            .setBiddingLogicUri(
+                                                    mFusedCustomAudience.getBiddingLogicUri())
+                                            .setUserBiddingSignals(
+                                                    mFusedCustomAudience.getUserBiddingSignals())
+                                            .setTrustedBiddingData(
+                                                    DBTrustedBiddingData.fromServiceObject(
+                                                            mFusedCustomAudience
+                                                                    .getTrustedBiddingData()));
+
+                            List<DBAdData> ads = new ArrayList<>();
+                            for (AdData ad : mFusedCustomAudience.getAds()) {
+                                ads.add(
+                                        new DBAdData.Builder()
+                                                .setRenderUri(ad.getRenderUri())
+                                                .setMetadata(ad.getMetadata())
+                                                .setAdCounterKeys(ad.getAdCounterKeys())
+                                                .setAdFilters(ad.getAdFilters())
+                                                .build());
+                            }
+
+                            customAudienceBuilder.setAds(ads);
+
+                            Instant currentTime = mClock.instant();
+                            customAudienceBuilder.setCreationTime(currentTime);
+                            customAudienceBuilder.setLastAdsAndBiddingDataUpdatedTime(currentTime);
+                            DBCustomAudience customAudience = customAudienceBuilder.build();
+
+                            // Persist response
+                            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                                    customAudience, mFusedCustomAudience.getDailyUpdateUri());
+                            return null;
+                        }));
+    }
 
     private void notifyFailure(FetchAndJoinCustomAudienceCallback callback, Throwable t) {
         try {
@@ -352,6 +440,8 @@ public class FetchCustomAudienceImpl {
                 resultCode = FilterException.getResultCode(t);
             } else if (t instanceof IllegalArgumentException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            } else if (t instanceof InvalidObjectException) {
+                resultCode = AdServicesStatusUtils.STATUS_INVALID_OBJECT;
             } else {
                 sLogger.d(t, "Unexpected error during operation");
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;

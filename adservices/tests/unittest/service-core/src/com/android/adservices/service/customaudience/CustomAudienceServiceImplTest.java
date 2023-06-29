@@ -72,9 +72,12 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -118,6 +121,8 @@ public class CustomAudienceServiceImplTest {
     @Mock private CustomAudienceOverrideCallback mCustomAudienceOverrideCallbackMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private AppInstallDao mAppInstallDaoMock;
+    @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock DevContextFilter mDevContextFilterMock;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -163,7 +168,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithAllCheckEnabled));
 
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
@@ -293,7 +302,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithAllCheckEnabled));
 
         assertThrows(
                 IllegalStateException.class,
@@ -607,7 +620,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithAllCheckEnabled));
 
         assertThrows(
                 IllegalStateException.class,
@@ -876,7 +893,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithForegroundCheckDisabled));
 
         mService.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
@@ -962,7 +983,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithForegroundCheckDisabled));
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
@@ -1072,7 +1097,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithForegroundCheckDisabled));
 
         mService.overrideCustomAudienceRemoteInfo(
                 CustomAudienceFixture.VALID_OWNER,
@@ -1169,7 +1198,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithForegroundCheckDisabled));
 
         mService.removeCustomAudienceRemoteInfoOverride(
                 CustomAudienceFixture.VALID_OWNER,
@@ -1243,7 +1276,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithForegroundCheckDisabled));
 
         mService.resetAllCustomAudienceOverrides(mCustomAudienceOverrideCallbackMock);
 
@@ -1428,7 +1465,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithEnrollmentCheckDisabled));
 
         mService.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
@@ -1519,7 +1560,11 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier));
+                                mMockThrottlerSupplier),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithEnrollmentCheckDisabled));
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,

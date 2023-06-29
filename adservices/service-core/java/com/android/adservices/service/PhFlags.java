@@ -184,6 +184,14 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS =
             "fledge_custom_audience_active_time_window_ms";
 
+    // FLEDGE fetchAndJoinCustomAudience keys
+    static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
+            "fledge_fetch_custom_audience_max_user_bidding_signals_size_b";
+    static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B =
+            "fledge_fetch_custom_audience_max_custom_header_size_b";
+    static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B =
+            "fledge_fetch_custom_audience_max_custom_audience_size_b";
+
     // FLEDGE Background Fetch keys
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED = "fledge_background_fetch_enabled";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS =
@@ -1167,6 +1175,33 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS);
+    }
+
+    @Override
+    public int getFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B);
     }
 
     @Override
@@ -3355,6 +3390,21 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B
+                        + " = "
+                        + getFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B
+                        + " = "
+                        + getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B
+                        + " = "
+                        + getFledgeFetchCustomAudienceMaxCustomAudienceSizeB());
         writer.println("\t" + KEY_FLEDGE_HTTP_CACHE_ENABLE + " = " + getFledgeHttpCachingEnabled());
         writer.println(
                 "\t"
