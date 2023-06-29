@@ -321,8 +321,9 @@ public class UxEngineTest {
                 () -> PackageChangedReceiver.enableReceiver(mContext, mFlags));
 
         ExtendedMockito.verify(
-                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext)
-        );
+                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never());
+        ExtendedMockito.verify(
+                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext));
     }
 
     // GA UX not selected due to feature flag being disabled, which results in no GA UX

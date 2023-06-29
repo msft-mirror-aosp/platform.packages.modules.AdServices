@@ -87,7 +87,8 @@ public class UxEngine {
                             mContext,
                             mConsentManager);
 
-            mUxEngineUtil.startBackgroundTasksUponConsent(mContext, FlagsFactory.getFlags());
+            mUxEngineUtil.startBackgroundTasksUponConsent(
+                    eligibleUx, mContext, FlagsFactory.getFlags());
         }
     }
 }
