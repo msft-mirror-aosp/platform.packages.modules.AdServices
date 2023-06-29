@@ -1700,10 +1700,10 @@ public interface Flags {
     }
 
     /**
-     * Fledge Auction Server API Kill switch. The default value is false which means that Auction
-     * server APIs is enabled by default.
+     * Fledge Auction Server API Kill switch. The default value is true which means that Auction
+     * server APIs is disabled by default.
      */
-    boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = false;
+    boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = true;
 
     /**
      * @return value of Fledge Auction server API kill switch.
