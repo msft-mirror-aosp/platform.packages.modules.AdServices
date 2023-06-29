@@ -20,6 +20,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.LimitExceededException;
 
@@ -111,5 +112,64 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             sLogger.v("Validating per-app user consent.");
             assertAndPersistCallerHasUserConsentForApp(callerPackageName);
         }
+    }
+
+    /**
+     * Composite filter for FLEDGE's fetchAndJoinCustomAudience requests.
+     *
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param callerPackageName caller package name to be validated
+     * @param enforceForeground whether to enforce a foreground check
+     * @param enforceConsent whether to enforce per-app consent
+     * @param callerUid caller's uid from the Binder thread
+     * @param apiName the id of the api being called
+     * @param apiKey api-specific throttler key
+     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
+     *     not valid
+     * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
+     *     enabled and fails
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
+     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
+     *     limits
+     */
+    public AdTechIdentifier filterRequestAndExtractIdentifier(
+            @NonNull Uri uriForAdTech,
+            @NonNull String callerPackageName,
+            boolean enforceForeground,
+            boolean enforceConsent,
+            int callerUid,
+            int apiName,
+            @NonNull Throttler.ApiKey apiKey) {
+        Objects.requireNonNull(uriForAdTech);
+        Objects.requireNonNull(callerPackageName);
+        Objects.requireNonNull(apiKey);
+
+        sLogger.v("Validating caller package name.");
+        assertCallerPackageName(callerPackageName, callerUid, apiName);
+
+        sLogger.v("Validating API is not throttled.");
+        assertCallerNotThrottled(callerPackageName, apiKey);
+
+        if (enforceForeground) {
+            sLogger.v("Checking caller is in foreground.");
+            assertForegroundCaller(callerUid, apiName);
+        }
+
+        // TODO(b/289109641): Enforce enrollment check flag.
+        sLogger.v("Extracting ad tech's eTLD+1 identifier.");
+        AdTechIdentifier adTech =
+                getAndAssertAdTechFromUriAllowed(callerPackageName, uriForAdTech, apiName);
+
+        sLogger.v("Validating caller package is in allow list.");
+        assertAppInAllowList(callerPackageName, apiName);
+
+        if (enforceConsent) {
+            sLogger.v("Validating per-app user consent.");
+            assertAndPersistCallerHasUserConsentForApp(callerPackageName);
+        }
+
+        return adTech;
     }
 }

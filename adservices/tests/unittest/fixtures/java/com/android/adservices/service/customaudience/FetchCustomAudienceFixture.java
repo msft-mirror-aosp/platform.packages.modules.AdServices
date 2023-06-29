@@ -25,6 +25,7 @@ import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 public class FetchCustomAudienceFixture {
 
@@ -41,6 +42,22 @@ public class FetchCustomAudienceFixture {
                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
                 DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
+    }
+
+    public static JSONObject getFullSuccessfulJsonResponse(AdTechIdentifier buyer)
+            throws JSONException {
+        return CustomAudienceBlobFixture.asJSONObject(
+                CustomAudienceFixture.VALID_OWNER,
+                buyer,
+                CustomAudienceFixture.VALID_NAME,
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer),
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer),
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
+                DBAdDataFixture.getValidDbAdDataListByBuyer(buyer),
+                false);
     }
 
     public static DBCustomAudience getFullSuccessfulDBCustomAudience() throws JSONException {

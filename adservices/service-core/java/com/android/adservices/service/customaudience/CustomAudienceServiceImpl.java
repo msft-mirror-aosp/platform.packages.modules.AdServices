@@ -47,9 +47,13 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.CallingAppUidSupplier;
@@ -89,6 +93,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
 
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
+    @NonNull private final AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -123,7 +128,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        () -> Throttler.getInstance(FlagsFactory.getFlags())));
+                        () -> Throttler.getInstance(FlagsFactory.getFlags())),
+                new AdFilteringFeatureFactory(
+                        SharedStorageDatabase.getInstance(context).appInstallDao(),
+                        SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                        FlagsFactory.getFlags()));
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
@@ -143,7 +152,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
-            @NonNull CustomAudienceServiceFilter customAudienceServiceFilter) {
+            @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
+            @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceImpl);
         Objects.requireNonNull(fledgeAuthorizationFilter);
@@ -152,6 +162,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(customAudienceServiceFilter);
+
         mContext = context;
         mCustomAudienceImpl = customAudienceImpl;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -163,6 +174,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         mFlags = flags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
+        mAdFilteringFeatureFactory = adFilteringFeatureFactory;
     }
 
     /**
@@ -292,11 +304,15 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         mExecutorService,
                         mCustomAudienceImpl.getCustomAudienceDao(),
                         mCallingAppUidSupplier,
-                        mConsentManager,
                         mCustomAudienceServiceFilter,
                         new AdServicesHttpsClient(
                                 AdServicesExecutors.getBlockingExecutor(),
-                                CacheProviderFactory.create(mContext, mFlags)));
+                                CacheProviderFactory.create(mContext, mFlags)),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        AdRenderIdValidator.createInstance(mFlags),
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                mFlags.getFledgeAdSelectionFilteringEnabled(),
+                                mFlags.getFledgeAdSelectionAdRenderIdEnabled()));
 
         mExecutorService.execute(() -> impl.doFetchCustomAudience(input, callback));
     }
