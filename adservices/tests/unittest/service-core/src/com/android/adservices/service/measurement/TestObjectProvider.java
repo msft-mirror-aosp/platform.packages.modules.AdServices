@@ -40,6 +40,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.mockito.stubbing.Answer;
 
@@ -69,7 +70,8 @@ class TestObjectProvider {
                 flags,
                 new DebugReportApi(ApplicationProvider.getApplicationContext(), flags),
                 new EventReportWindowCalcDelegate(flags),
-                new SourceNoiseHandler(flags));
+                new SourceNoiseHandler(flags),
+                AdServicesLoggerImpl.getInstance());
     }
 
     static MeasurementImpl getMeasurementImpl(

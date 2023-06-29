@@ -60,6 +60,7 @@ import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
@@ -92,7 +93,7 @@ class AttributionJobHandler {
     private final DebugReportApi mDebugReportApi;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
-
+    private final AdServicesLogger mLogger;
     private final Flags mFlags;
 
     private enum TriggeringStatus {
@@ -106,7 +107,8 @@ class AttributionJobHandler {
                 FlagsFactory.getFlags(),
                 debugReportApi,
                 new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
-                new SourceNoiseHandler(FlagsFactory.getFlags()));
+                new SourceNoiseHandler(FlagsFactory.getFlags()),
+                AdServicesLoggerImpl.getInstance());
     }
 
     AttributionJobHandler(
@@ -114,12 +116,14 @@ class AttributionJobHandler {
             Flags flags,
             DebugReportApi debugReportApi,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-            SourceNoiseHandler sourceNoiseHandler) {
+            SourceNoiseHandler sourceNoiseHandler,
+            AdServicesLogger logger) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mDebugReportApi = debugReportApi;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
+        mLogger = logger;
     }
 
     /**
@@ -435,7 +439,10 @@ class AttributionJobHandler {
                         .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
 
         Source selectedSource = matchingSources.remove(0);
-        attributionStatus.setSourceDerived(true);
+
+        if (selectedSource.getParentId() != null) {
+            attributionStatus.setSourceDerived(true);
+        }
 
         return Optional.of(Pair.create(selectedSource, matchingSources));
     }
@@ -1050,18 +1057,18 @@ class AttributionJobHandler {
         if (!attributionStatus.getAttributionDelay().isPresent()) {
             attributionStatus.setAttributionDelay(0L);
         }
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementAttributionStats(
-                        new MeasurementAttributionStats.Builder()
-                                .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                                .setSourceType(attributionStatus.getSourceType().ordinal())
-                                .setSurfaceType(attributionStatus.getAttributionSurface().ordinal())
-                                .setResult(attributionStatus.getAttributionResult().ordinal())
-                                .setFailureType(attributionStatus.getFailureType().ordinal())
-                                .setSourceDerived(attributionStatus.isSourceDerived())
-                                .setInstallAttribution(attributionStatus.isInstallAttribution())
-                                .setAttributionDelay(attributionStatus.getAttributionDelay().get())
-                                .build());
+
+        mLogger.logMeasurementAttributionStats(
+                new MeasurementAttributionStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
+                        .setSourceType(attributionStatus.getSourceType().ordinal())
+                        .setSurfaceType(attributionStatus.getAttributionSurface().ordinal())
+                        .setResult(attributionStatus.getAttributionResult().ordinal())
+                        .setFailureType(attributionStatus.getFailureType().ordinal())
+                        .setSourceDerived(attributionStatus.isSourceDerived())
+                        .setInstallAttribution(attributionStatus.isInstallAttribution())
+                        .setAttributionDelay(attributionStatus.getAttributionDelay().get())
+                        .build());
     }
 
     private void logDelayedSourceRegistrationStats(Source source, Trigger trigger) {
@@ -1070,14 +1077,13 @@ class AttributionJobHandler {
         delayedSourceRegistrationStatus.setRegistrationDelay(
                 source.getEventTime() - trigger.getTriggerTime());
 
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementDelayedSourceRegistrationStats(
-                        new MeasurementDelayedSourceRegistrationStats.Builder()
-                                .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
-                                .setRegistrationStatus(delayedSourceRegistrationStatus.UNKNOWN)
-                                .setRegistrationDelay(
-                                        delayedSourceRegistrationStatus.getRegistrationDelay())
-                                .build());
+        mLogger.logMeasurementDelayedSourceRegistrationStats(
+                new MeasurementDelayedSourceRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
+                        .setRegistrationStatus(delayedSourceRegistrationStatus.UNKNOWN)
+                        .setRegistrationDelay(
+                                delayedSourceRegistrationStatus.getRegistrationDelay())
+                        .build());
     }
 
     private long getAggregateReportDelay() {
