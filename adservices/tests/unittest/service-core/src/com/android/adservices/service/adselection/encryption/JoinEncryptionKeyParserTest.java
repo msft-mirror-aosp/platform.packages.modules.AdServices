@@ -160,7 +160,7 @@ public class JoinEncryptionKeyParserTest {
         JoinEncryptionKeyParserTestFlags() {}
 
         @Override
-        public long getAdSelectionDataEncryptionKeyMaxAgeSeconds() {
+        public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
             return DEFAULT_MAX_AGE_SECONDS;
         }
     }

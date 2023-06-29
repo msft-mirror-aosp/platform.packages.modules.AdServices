@@ -312,7 +312,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         AdRenderIdValidator.createInstance(mFlags),
                         AdDataConversionStrategyFactory.getAdDataConversionStrategy(
                                 mFlags.getFledgeAdSelectionFilteringEnabled(),
-                                mFlags.getFledgeAdSelectionAdRenderIdEnabled()));
+                                mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
         mExecutorService.execute(() -> impl.doFetchCustomAudience(input, callback));
     }

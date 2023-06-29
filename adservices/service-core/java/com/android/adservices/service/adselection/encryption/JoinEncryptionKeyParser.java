@@ -91,7 +91,7 @@ public class JoinEncryptionKeyParser implements EncryptionKeyParser {
                         EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN)
                 .setPublicKey(response.getResponseBody())
                 .setKeyIdentifier(new String(keyId, StandardCharsets.UTF_8))
-                .setExpiryTtlSeconds(mFlags.getAdSelectionDataEncryptionKeyMaxAgeSeconds())
+                .setExpiryTtlSeconds(mFlags.getFledgeAuctionServerEncryptionKeyMaxAgeSeconds())
                 .build();
 
         // TODO(b/286839408): Validate that the built key can be parsed into ObliviousHttpKeyConfig.
