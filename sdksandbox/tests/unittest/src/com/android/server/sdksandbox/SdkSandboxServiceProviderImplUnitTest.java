@@ -67,10 +67,12 @@ public class SdkSandboxServiceProviderImplUnitTest {
         ExtendedMockito.doReturn(mAmLocal)
                 .when(() -> LocalManagerRegistry.getManager(ActivityManagerLocal.class));
 
-        // Required for Context#registerReceiverForAllUsers
+        // Required for Context#registerReceiverForAllUsers and reading DeviceConfig.
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.INTERACT_ACROSS_USERS_FULL,
+                        Manifest.permission.READ_DEVICE_CONFIG);
 
         mServiceProvider = new SdkSandboxServiceProviderImpl(mSpyContext);
         mCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
