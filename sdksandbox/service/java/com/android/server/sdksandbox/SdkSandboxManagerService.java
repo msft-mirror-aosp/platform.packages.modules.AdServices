@@ -221,6 +221,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
+
+    // Property for canary set for service restrictions
+    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST = "next_service_allowlist";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
@@ -1730,6 +1733,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 getContentProviderDeviceConfigAllowlist();
 
         @GuardedBy("mLock")
+        private AllowedServices mNextServiceAllowlist = getNextServiceDeviceConfigAllowlist();
+
+        @GuardedBy("mLock")
         private boolean mSdkSandboxApplyRestrictionsNext =
                 DeviceConfig.getBoolean(
                         DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1803,6 +1809,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        AllowedServices getNextServiceAllowlist() {
+            synchronized (mLock) {
+                return mNextServiceAllowlist;
+            }
+        }
+
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
         boolean applySdkSandboxRestrictionsNext() {
             synchronized (mLock) {
@@ -1853,6 +1865,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             break;
                         case PROPERTY_SERVICES_ALLOWLIST:
                             mServiceAllowlistPerTargetSdkVersion = getServicesAllowlist();
+                            break;
+                        case PROPERTY_NEXT_SERVICE_ALLOWLIST:
+                            mNextServiceAllowlist = getNextServiceDeviceConfigAllowlist();
                             break;
                         case PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS:
                             mSdkSandboxApplyRestrictionsNext =
@@ -1932,6 +1947,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
             }
             return new ArrayMap<>();
+        }
+
+        private AllowedServices getNextServiceDeviceConfigAllowlist() {
+            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_SERVICE_ALLOWLIST);
+
+            if (Objects.isNull(decode)) {
+                return null;
+            }
+
+            try {
+                AllowedServices allowedServices = AllowedServices.parseFrom(decode);
+                if (allowedServices != null) {
+                    return allowedServices;
+                }
+            } catch (Exception e) {
+                Log.e(
+                        TAG,
+                        "Error while parsing " + PROPERTY_NEXT_SERVICE_ALLOWLIST + ". Error: ",
+                        e);
+            }
+            return null;
         }
 
         private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist() {
@@ -2467,8 +2503,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String intentAction, String packageName, String className) {
         // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
         AllowedServices allowedServices =
-                mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                        /*targetSdkVersion=*/ 34);
+                mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                        ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
+                        : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                                /*targetSdkVersion=*/ 34);
 
         if (Objects.isNull(allowedServices)) {
             return false;
