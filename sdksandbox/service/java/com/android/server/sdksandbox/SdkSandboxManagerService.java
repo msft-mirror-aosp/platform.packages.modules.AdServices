@@ -2541,9 +2541,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
-            if (doesMatch(allowedService.getIntentAction(), intentAction)
-                    && doesMatch(allowedService.getComponentClassName(), className)
-                    && doesMatch(allowedService.getComponentPackageName(), packageName)) {
+            if (doesInputMatchWildcardPattern(
+                            allowedService.getIntentAction(),
+                            intentAction,
+                            /*matchOnNullInput=*/ true)
+                    && doesInputMatchWildcardPattern(
+                            allowedService.getComponentClassName(),
+                            className,
+                            /*matchOnNullInput=*/ true)
+                    && doesInputMatchWildcardPattern(
+                            allowedService.getComponentPackageName(),
+                            packageName,
+                            /*matchOnNullInput=*/ true)) {
                 return true;
             }
         }
@@ -2558,20 +2567,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static boolean doesInputMatchAnyWildcardPattern(
             ArraySet<String> patterns, String input) {
         for (int i = 0; i < patterns.size(); ++i) {
-            if (doesInputMatchWildcardPattern(patterns.valueAt(i), input)) {
+            if (doesInputMatchWildcardPattern(
+                    patterns.valueAt(i), input, /*matchOnNullInput=*/ false)) {
                 return true;
             }
         }
-
         return false;
-    }
-
-    static boolean doesMatch(String pattern, String input) {
-        // Allow everything if pattern is *
-        if (pattern != null && pattern.equals("*")) {
-            return true;
-        }
-        return doesInputMatchWildcardPattern(pattern, input);
     }
 
     /**
@@ -2580,8 +2581,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * input string.
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    // TODO(b/289245986): Add matchOnNullInput parameter
-    static boolean doesInputMatchWildcardPattern(String pattern, String input) {
+    static boolean doesInputMatchWildcardPattern(
+            String pattern, String input, boolean matchOnNullInput) {
+        // Allow everything if pattern is * and matchOnNullInput is true
+        if (matchOnNullInput && (pattern != null && pattern.equals("*"))) {
+            return true;
+        }
         if (pattern == null || input == null) {
             return false;
         }
