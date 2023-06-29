@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import com.google.common.util.concurrent.FluentFuture;
+
 /** Interface which provides methods to encrypt and decrypt bytes using OHTTP. */
 public interface ObliviousHttpEncryptor {
 
     /** Encrypts the given bytes. */
-    byte[] encryptBytes(byte[] plainText, long contextId, long keyFetchTimeoutMs);
+    FluentFuture<byte[]> encryptBytes(byte[] plainText, long contextId, long keyFetchTimeoutMs);
 
     /** Decrypt given bytes. */
     byte[] decryptBytes(byte[] encryptedBytes, long storedContextId);

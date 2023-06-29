@@ -20,6 +20,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -62,6 +64,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.protobuf.ByteString;
 
 import org.junit.After;
@@ -154,7 +157,7 @@ public class GetAdSelectionDataRunnerTest {
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
-        doReturn(CIPHER_TEXT_BYTES)
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
 
