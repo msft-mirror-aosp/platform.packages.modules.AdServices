@@ -2177,6 +2177,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void enforceAllowedToStartOrBindService(Intent intent) {
+        if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
+            return;
+        }
         ComponentName component = intent.getComponent();
         if (component == null) {
             failStartOrBindService(intent);
@@ -2652,6 +2655,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void enforceAllowedToStartActivity(@NonNull Intent intent) {
+            if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
+                return;
+            }
             if (intent.getAction() != null) {
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     throw new SecurityException(
