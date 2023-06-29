@@ -121,7 +121,7 @@ public class CustomAudienceImpl {
         mCustomAudienceValidator.validate(customAudience);
 
         boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
-        boolean adRenerIdEnabled = mFlags.getFledgeAdSelectionAdRenderIdEnabled();
+        boolean adRenerIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         AdDataConversionStrategy dataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
                         adSelectionFilteringEnabled, adRenerIdEnabled);

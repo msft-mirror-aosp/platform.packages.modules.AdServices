@@ -36,11 +36,11 @@ public interface AdRenderIdValidator extends Validator<String> {
      *     flags}.
      */
     static AdRenderIdValidator createInstance(Flags flags) {
-        boolean adRenderIdEnabled = flags.getFledgeAdSelectionAdRenderIdEnabled();
+        boolean adRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
         if (!adRenderIdEnabled) {
             return AD_RENDER_ID_VALIDATOR_NO_OP;
         } else {
-            final long maxLength = flags.getFledgeAdSelectionAdRenderIdMaxLength();
+            final long maxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
             return createEnabledInstance(maxLength);
         }
     }

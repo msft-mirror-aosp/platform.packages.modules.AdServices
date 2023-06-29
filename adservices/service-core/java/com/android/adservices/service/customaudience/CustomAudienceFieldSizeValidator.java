@@ -82,7 +82,7 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
 
         mFlags = flags;
         mIsFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
-        mIsAdRenderIdEnabled = mFlags.getFledgeAdSelectionAdRenderIdEnabled();
+        mIsAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
     }
 
     /**

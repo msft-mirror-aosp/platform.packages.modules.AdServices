@@ -288,12 +288,12 @@ public class BackgroundKeyFetchWorkerTest {
         }
 
         @Override
-        public String getAdSelectionDataAuctionKeyFetchUri() {
+        public String getFledgeAuctionServerAuctionKeyFetchUri() {
             return AUCTION_KEY_FETCH_URI;
         }
 
         @Override
-        public String getAdSelectionDataJoinKeyFetchUri() {
+        public String getFledgeAuctionServerJoinKeyFetchUri() {
             return JOIN_KEY_FETCH_URI;
         }
     }

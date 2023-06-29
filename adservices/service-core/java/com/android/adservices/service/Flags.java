@@ -859,19 +859,6 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED = false;
-    long FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH = 12L;
-
-    /** Returns whether ad render id is enabled. */
-    default boolean getFledgeAdSelectionAdRenderIdEnabled() {
-        return FLEDGE_AD_SELECTION_AD_RENDER_ID_ENABLED;
-    }
-
-    /** Returns the max length of Ad Render Id. */
-    default long getFledgeAdSelectionAdRenderIdMaxLength() {
-        return FLEDGE_AD_SELECTION_AD_RENDER_ID_MAX_LENGTH;
-    }
-
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
 
     /**
@@ -899,59 +886,6 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
     }
 
-    String AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI =
-            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
-
-    /**
-     * @return Uri to fetch auction encryption key for fledge ad selection.
-     */
-    default String getAdSelectionDataAuctionKeyFetchUri() {
-        return AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI;
-    }
-
-    String AD_SELECTION_DATA_JOIN_KEY_FETCH_URI =
-            "https://chromekanonymity-pa.googleapis.com/v1/proxy/keys";
-
-    /**
-     * @return Uri to fetch join encryption key for fledge ad selection.
-     */
-    default String getAdSelectionDataJoinKeyFetchUri() {
-        return AD_SELECTION_DATA_JOIN_KEY_FETCH_URI;
-    }
-
-    int AD_SELECTION_DATA_AUCTION_KEY_SHARDING = 5;
-
-    /**
-     * @return Shard count for using auction key for fledge ad selection.
-     */
-    default int getAdSelectionDataAuctionKeySharding() {
-        return AD_SELECTION_DATA_AUCTION_KEY_SHARDING;
-    }
-
-    long AD_SELECTION_DATA_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
-
-    default long getAdSelectionDataEncryptionKeyMaxAgeSeconds() {
-        return AD_SELECTION_DATA_ENCRYPTION_KEY_MAX_AGE_SECONDS;
-    }
-
-    int AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID = 0x0001;
-
-    default int getAdSelectionDataAuctionEncryptionAlgorithmKdfId() {
-        return AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KDF_ID;
-    }
-
-    int AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID = 0x0020;
-
-    default int getAdSelectionDataAuctionEncryptionAlgorithmKemId() {
-        return AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_KEM_ID;
-    }
-
-    int AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID = 0x0002;
-
-    default int getAdSelectionDataAuctionEncryptionAlgorithmAeadId() {
-        return AD_SELECTION_DATA_AUCTION_ENCRYPTION_ALGORITHM_AEAD_ID;
-    }
-
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */
@@ -965,6 +899,59 @@ public interface Flags {
     /** Returns the compression algorithm version */
     default int getFledgeAuctionServerCompressionAlgorithmVersion() {
         return FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
+    }
+
+    String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
+            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
+
+    /**
+     * @return Uri to fetch auction encryption key for fledge ad selection.
+     */
+    default String getFledgeAuctionServerAuctionKeyFetchUri() {
+        return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
+    }
+
+    String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
+            "https://chromekanonymity-pa.googleapis.com/v1/proxy/keys";
+
+    /**
+     * @return Uri to fetch join encryption key for fledge ad selection.
+     */
+    default String getFledgeAuctionServerJoinKeyFetchUri() {
+        return FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+    }
+
+    int FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING = 5;
+
+    /**
+     * @return Shard count for using auction key for fledge ad selection.
+     */
+    default int getFledgeAuctionServerAuctionKeySharding() {
+        return FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
+    }
+
+    long FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+
+    default long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+    }
+
+    int FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID = 0x0001;
+
+    default int getFledgeAuctionServerEncryptionAlgorithmKdfId() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID;
+    }
+
+    int FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID = 0x0020;
+
+    default int getFledgeAuctionServerEncryptionAlgorithmKemId() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
+    }
+
+    int FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID = 0x0002;
+
+    default int getFledgeAuctionServerEncryptionAlgorithmAeadId() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID;
     }
 
     int FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION = 0;
@@ -1068,6 +1055,19 @@ public interface Flags {
 
     default boolean getFledgeAuctionServerEnableDebugReporting() {
         return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
+    long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
+
+    /** Returns whether ad render id is enabled. */
+    default boolean getFledgeAuctionServerAdRenderIdEnabled() {
+        return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
+    }
+
+    /** Returns the max length of Ad Render Id. */
+    default long getFledgeAuctionServerAdRenderIdMaxLength() {
+        return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
     boolean ADSERVICES_ENABLED = false;

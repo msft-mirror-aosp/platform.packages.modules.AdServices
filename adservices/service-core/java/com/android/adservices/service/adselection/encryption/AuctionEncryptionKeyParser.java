@@ -87,7 +87,7 @@ public class AuctionEncryptionKeyParser implements EncryptionKeyParser {
         ImmutableMap<String, List<String>> headers = response.getResponseHeaders();
         long maxAge = getMaxAgeInSeconds(headers);
         if (maxAge <= 0) {
-            maxAge = mFlags.getAdSelectionDataEncryptionKeyMaxAgeSeconds();
+            maxAge = mFlags.getFledgeAuctionServerEncryptionKeyMaxAgeSeconds();
         }
         try {
             JSONObject responseObj = new JSONObject(responseBody);
@@ -128,9 +128,9 @@ public class AuctionEncryptionKeyParser implements EncryptionKeyParser {
                 // B&A encryption because Auction KMS does not return encryption algorithms in the
                 // key. If auction server does not accept the flag configured algorithms then server
                 // will throw an error.
-                .setKdfId(mFlags.getAdSelectionDataAuctionEncryptionAlgorithmKdfId())
-                .setKemId(mFlags.getAdSelectionDataAuctionEncryptionAlgorithmKemId())
-                .setAeadId(mFlags.getAdSelectionDataAuctionEncryptionAlgorithmAeadId())
+                .setKdfId(mFlags.getFledgeAuctionServerEncryptionAlgorithmKdfId())
+                .setKemId(mFlags.getFledgeAuctionServerEncryptionAlgorithmKemId())
+                .setAeadId(mFlags.getFledgeAuctionServerEncryptionAlgorithmAeadId())
                 .setPublicKey(key.publicKey())
                 .build();
     }

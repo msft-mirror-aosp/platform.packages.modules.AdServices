@@ -276,22 +276,22 @@ public class AdSelectionEncryptionKeyManagerTest {
         AdSelectionEncryptionKeyManagerTestFlags() {}
 
         @Override
-        public String getAdSelectionDataAuctionKeyFetchUri() {
+        public String getFledgeAuctionServerAuctionKeyFetchUri() {
             return AUCTION_KEY_FETCH_URI;
         }
 
         @Override
-        public String getAdSelectionDataJoinKeyFetchUri() {
+        public String getFledgeAuctionServerJoinKeyFetchUri() {
             return JOIN_KEY_FETCH_URI;
         }
 
         @Override
-        public int getAdSelectionDataAuctionKeySharding() {
+        public int getFledgeAuctionServerAuctionKeySharding() {
             return 5;
         }
 
         @Override
-        public long getAdSelectionDataEncryptionKeyMaxAgeSeconds() {
+        public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
             return EXPIRY_TTL_1SEC;
         }
     }
