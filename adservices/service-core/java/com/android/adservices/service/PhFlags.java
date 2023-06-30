@@ -288,6 +288,8 @@ public final class PhFlags implements Flags {
             "fledge_auction_server_auction_key_sharding";
     static final String KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
             "fledge_auction_server_join_key_fetch_uri";
+    static final String KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS =
+            "fledge_auction_server_encryption_key_max_age_seconds";
     static final String KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID =
             "fledge_auction_server_encryption_algorithm_kem_id";
     static final String KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID =
@@ -2226,6 +2228,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI,
                 FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI);
+    }
+
+    @Override
+    public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS,
+                FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS);
     }
 
     @Override
