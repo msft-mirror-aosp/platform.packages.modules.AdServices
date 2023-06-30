@@ -28,6 +28,7 @@ import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
@@ -306,6 +307,16 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
             }
             mDispatcher.unregisterOnBackInvokedCallback(mBackNavigationDisablingCallback);
             mBackNavigationDisabled = false;
+        }
+
+        @Override
+        public void setOrientationToLandscape() {
+            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
+
+        @Override
+        public void setOrientationToPortrait() {
+            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
 
         public void setActivity(Activity activity) {
