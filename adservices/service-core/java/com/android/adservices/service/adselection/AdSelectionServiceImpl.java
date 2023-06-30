@@ -270,7 +270,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                         CacheProviderFactory.create(
                                                 context, FlagsFactory.getFlags())),
                                 AdServicesExecutors.getLightWeightExecutor()),
-                        AdSelectionServerDatabase.getInstance(context).encryptionContextDao()));
+                        AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                        AdServicesExecutors.getLightWeightExecutor()));
     }
 
     @Override
