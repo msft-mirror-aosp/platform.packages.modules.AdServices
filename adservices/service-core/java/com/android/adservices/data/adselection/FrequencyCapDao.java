@@ -18,6 +18,7 @@ package com.android.adservices.data.adselection;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
+import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +28,9 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
+import com.android.adservices.data.common.CleanupUtils;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.HistogramEvent;
 
 import com.google.common.base.Preconditions;
@@ -392,7 +395,7 @@ public abstract class FrequencyCapDao {
     @Query(
             "DELETE FROM fcap_histogram_data WHERE foreign_key_id in (SELECT DISTINCT"
                     + " foreign_key_id FROM fcap_histogram_ids WHERE buyer in (:buyers))")
-    protected abstract int deleteHistogramEventDataByBuyers(List<AdTechIdentifier> buyers);
+    protected abstract int deleteHistogramEventDataByBuyers(@NonNull List<AdTechIdentifier> buyers);
 
     /**
      * Deletes all histogram data belonging to disallowed buyer ad techs in a single transaction,
@@ -416,6 +419,54 @@ public abstract class FrequencyCapDao {
         int numDeletedEvents = 0;
         if (!buyersToRemove.isEmpty()) {
             numDeletedEvents = deleteHistogramEventDataByBuyers(buyersToRemove);
+            // TODO(b/275581841): Collect and send telemetry on frequency cap deletion
+            deleteUnpairedHistogramIdentifiers();
+        }
+
+        return numDeletedEvents;
+    }
+
+    /** Returns the list of all unique buyer ad techs in the histogram ID table. */
+    @Query("SELECT DISTINCT source_app FROM fcap_histogram_ids")
+    public abstract List<String> getAllHistogramSourceApps();
+
+    /**
+     * Deletes all histogram event data generated in the given source apps.
+     *
+     * <p>This method is not meant to be called on its own. Please use {@link
+     * #deleteAllDisallowedSourceAppHistogramData(PackageManager, Flags)} to delete all histogram
+     * data (including all identifiers).
+     *
+     * @return the number of deleted histogram events
+     */
+    @Query(
+            "DELETE FROM fcap_histogram_data WHERE foreign_key_id in (SELECT DISTINCT"
+                    + " foreign_key_id FROM fcap_histogram_ids WHERE source_app in (:sourceApps))")
+    protected abstract int deleteHistogramEventDataBySourceApps(@NonNull List<String> sourceApps);
+
+    /**
+     * Deletes all histogram data belonging to disallowed source apps in a single transaction, where
+     * the source apps cannot be found in the app package name allowlist or are not installed on the
+     * device.
+     *
+     * @return the number of deleted histogram events
+     */
+    @Transaction
+    public int deleteAllDisallowedSourceAppHistogramData(
+            @NonNull PackageManager packageManager, @NonNull Flags flags) {
+        Objects.requireNonNull(packageManager);
+        Objects.requireNonNull(flags);
+
+        List<String> sourceAppsToRemove = getAllHistogramSourceApps();
+        if (sourceAppsToRemove.isEmpty()) {
+            return 0;
+        }
+
+        CleanupUtils.removeAllowedPackages(sourceAppsToRemove, packageManager, flags);
+
+        int numDeletedEvents = 0;
+        if (!sourceAppsToRemove.isEmpty()) {
+            numDeletedEvents = deleteHistogramEventDataBySourceApps(sourceAppsToRemove);
             // TODO(b/275581841): Collect and send telemetry on frequency cap deletion
             deleteUnpairedHistogramIdentifiers();
         }

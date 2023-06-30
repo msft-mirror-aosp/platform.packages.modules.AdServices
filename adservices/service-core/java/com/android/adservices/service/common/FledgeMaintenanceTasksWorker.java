@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -108,9 +109,13 @@ public class FledgeMaintenanceTasksWorker {
      * <ul>
      *   <li>Expired histogram data
      *   <li>Disallowed buyer histogram data
+     *   <li>Disallowed source app histogram data
+     *   <li>Uninstalled source app histogram data
      * </ul>
      */
-    public void clearInvalidFrequencyCapHistogramData() {
+    public void clearInvalidFrequencyCapHistogramData(@NonNull PackageManager packageManager) {
+        Objects.requireNonNull(packageManager);
+
         // Read from flags directly, since this maintenance task worker is attached to a background
         //  job with unknown lifetime
         if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
@@ -142,5 +147,14 @@ public class FledgeMaintenanceTasksWorker {
                     "Cleared %d Frequency Cap histogram events for disallowed buyer ad techs",
                     numDisallowedBuyerEvents);
         }
+
+        // Read from flags directly, since this maintenance task worker is attached to a background
+        //  job with unknown lifetime
+        sLogger.v("Clearing Frequency Cap histogram events for disallowed source apps");
+        int numDisallowedSourceAppEvents =
+                mFrequencyCapDao.deleteAllDisallowedSourceAppHistogramData(packageManager, mFlags);
+        sLogger.v(
+                "Cleared %d Frequency Cap histogram events for disallowed source apps",
+                numDisallowedSourceAppEvents);
     }
 }
