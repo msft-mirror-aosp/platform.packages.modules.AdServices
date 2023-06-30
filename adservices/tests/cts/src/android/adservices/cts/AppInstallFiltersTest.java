@@ -27,14 +27,12 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Unit tests for {@link AppInstallFilters}. */
 @SmallTest
 public class AppInstallFiltersTest {
 
-    @Ignore
     @Test
     public void testBuildValidAppInstallFilters_success() {
         final AppInstallFilters originalFilters =
@@ -44,7 +42,6 @@ public class AppInstallFiltersTest {
                 .containsExactlyElementsIn(CommonFixture.PACKAGE_SET);
     }
 
-    @Ignore
     @Test
     public void testParcelAppInstallFilters_success() {
         final AppInstallFilters originalFilters =
@@ -60,7 +57,6 @@ public class AppInstallFiltersTest {
                 .containsExactlyElementsIn(CommonFixture.PACKAGE_SET);
     }
 
-    @Ignore
     @Test
     public void testEqualsIdentical_success() {
         final AppInstallFilters originalFilters =
@@ -71,7 +67,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.equals(identicalFilters)).isTrue();
     }
 
-    @Ignore
     @Test
     public void testEqualsDifferent_success() {
         final AppInstallFilters originalFilters =
@@ -81,7 +76,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.equals(differentFilters)).isFalse();
     }
 
-    @Ignore
     @Test
     public void testEqualsNull_success() {
         final AppInstallFilters originalFilters =
@@ -91,7 +85,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.equals(nullFilters)).isFalse();
     }
 
-    @Ignore
     @Test
     public void testHashCodeIdentical_success() {
         final AppInstallFilters originalFilters =
@@ -102,7 +95,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.hashCode()).isEqualTo(identicalFilters.hashCode());
     }
 
-    @Ignore
     @Test
     public void testHashCodeDifferent_success() {
         final AppInstallFilters originalFilters =
@@ -112,7 +104,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.hashCode()).isNotEqualTo(differentFilters.hashCode());
     }
 
-    @Ignore
     @Test
     public void testToString() {
         final AppInstallFilters originalFilters =
@@ -123,7 +114,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.toString()).isEqualTo(expectedString);
     }
 
-    @Ignore
     @Test
     public void testBuildNullPackageNames_throws() {
         assertThrows(
@@ -131,7 +121,6 @@ public class AppInstallFiltersTest {
                 () -> new AppInstallFilters.Builder().setPackageNames(null));
     }
 
-    @Ignore
     @Test
     public void testBuildNoSetters_success() {
         final AppInstallFilters originalFilters = new AppInstallFilters.Builder().build();
@@ -139,7 +128,6 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.getPackageNames()).isEmpty();
     }
 
-    @Ignore
     @Test
     public void testCreatorNewArray_success() {
         AppInstallFilters[] filtersArray = AppInstallFilters.CREATOR.newArray(2);

@@ -31,8 +31,6 @@ import java.util.Objects;
  *
  * <p>Instances of this class are created by SDKs to be injected as part of {@link
  * AdSelectionConfig} and passed to {@link AdSelectionManager#selectAds}
- *
- * @hide
  */
 public final class ContextualAds implements Parcelable {
     @NonNull private final AdTechIdentifier mBuyer;

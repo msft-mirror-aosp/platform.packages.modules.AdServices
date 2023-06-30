@@ -153,7 +153,11 @@ public final class AdData implements Parcelable {
         return mAdFilters;
     }
 
-    /** @hide */
+    /**
+     * Gets the ad render id associated with this AdData object.
+     *
+     * <p>The ad render id is used by the Trusted Bidding and Auction server to run auctions.
+     */
     @Nullable
     public String getAdRenderId() {
         return mAdRenderId;
@@ -270,7 +274,7 @@ public final class AdData implements Parcelable {
             return this;
         }
 
-        /** @hide */
+        /** Sets the ad render id associated with the ad. */
         @NonNull
         public AdData.Builder setAdRenderId(@Nullable String adRenderId) {
             mAdRenderId = adRenderId;

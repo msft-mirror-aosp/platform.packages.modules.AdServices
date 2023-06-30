@@ -30,8 +30,6 @@ import java.util.Objects;
 
 /**
  * Exception thrown by the service when a failed HTTP request is the cause of a failed API call.
- *
- * @hide
  */
 public class AdServicesNetworkException extends IOException {
 
@@ -63,7 +61,11 @@ public class AdServicesNetworkException extends IOException {
     /** Error code indicating another type of error was encountered. */
     public static final int ERROR_OTHER = 999;
 
-    /** Error codes indicating what caused the HTTP request to fail. */
+    /**
+     * Error codes indicating what caused the HTTP request to fail.
+     *
+     * @hide
+     */
     @IntDef(
             prefix = {"ERROR_"},
             value = {

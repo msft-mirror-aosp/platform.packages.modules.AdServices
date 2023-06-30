@@ -19,7 +19,5 @@ package android.adservices.adselection;
 /**
  * This defines the PersistAdSelectionResultRequest class, a request created by SDKs which contains
  * the encrypted data client obtained from the Bidding and Auction server.
- *
- * @hide
  */
 parcelable PersistAdSelectionResultRequest;

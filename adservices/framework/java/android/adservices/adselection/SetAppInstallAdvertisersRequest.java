@@ -24,8 +24,6 @@ import java.util.Set;
 
 /**
  * Represents input parameters to the setAppInstallAdvertiser API.
- *
- * @hide
  */
 public class SetAppInstallAdvertisersRequest {
     @NonNull private final Set<AdTechIdentifier> mAdvertisers;
