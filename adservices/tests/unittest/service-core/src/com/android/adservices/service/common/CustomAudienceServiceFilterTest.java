@@ -28,6 +28,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdTechIdentifier;
@@ -322,6 +324,7 @@ public class CustomAudienceServiceFilterTest {
                                 "invalidPackageName",
                                 false,
                                 false,
+                                false,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -338,6 +341,7 @@ public class CustomAudienceServiceFilterTest {
                         mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
                                 getValidFetchUriByBuyer(SELLER_VALID),
                                 CALLER_PACKAGE_NAME,
+                                false,
                                 false,
                                 false,
                                 MY_UID,
@@ -357,6 +361,7 @@ public class CustomAudienceServiceFilterTest {
                         mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
                                 getValidFetchUriByBuyer(SELLER_VALID),
                                 CALLER_PACKAGE_NAME,
+                                false,
                                 true,
                                 false,
                                 MY_UID,
@@ -384,13 +389,14 @@ public class CustomAudienceServiceFilterTest {
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                false,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN);
     }
 
     @Test
-    public void testFilterRequestAndExtractIdentifier_adTechNotAuthorized_throws() {
+    public void testFilterRequestAndExtractIdentifier_enableEnrollmentCheck_invalidAdTech_throws() {
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
@@ -415,9 +421,36 @@ public class CustomAudienceServiceFilterTest {
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 false,
+                                false,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
+    }
+
+    @Test
+    public void
+            testFilterRequestAndExtractIdentifier_disableEnrollmentCheck_eTLDPlus1NotExtracted() {
+        AdTechIdentifier seller =
+                mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
+                        getValidFetchUriByBuyer(SELLER_VALID),
+                        CALLER_PACKAGE_NAME,
+                        true,
+                        false,
+                        false,
+                        MY_UID,
+                        API_NAME,
+                        Throttler.ApiKey.UNKNOWN);
+
+        // Assert URI host is extracted as the ad tech identifier
+        assertThat(seller).isEqualTo(SELLER_VALID);
+
+        // Assert eTLD+1 extractions and the implied enrollment check is skipped.
+        verify(mFledgeAuthorizationFilterSpy, never())
+                .getAndAssertAdTechFromUriAllowed(
+                        mContext,
+                        CALLER_PACKAGE_NAME,
+                        getValidFetchUriByBuyer(SELLER_VALID),
+                        API_NAME);
     }
 
     @Test
@@ -442,6 +475,7 @@ public class CustomAudienceServiceFilterTest {
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 false,
+                                false,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN));
@@ -464,6 +498,7 @@ public class CustomAudienceServiceFilterTest {
         mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
                 getValidFetchUriByBuyer(SELLER_VALID),
                 CALLER_PACKAGE_NAME,
+                false,
                 false,
                 true,
                 MY_UID,
@@ -492,6 +527,7 @@ public class CustomAudienceServiceFilterTest {
                                 getValidFetchUriByBuyer(SELLER_VALID),
                                 CALLER_PACKAGE_NAME,
                                 false,
+                                false,
                                 true,
                                 MY_UID,
                                 API_NAME,
@@ -515,6 +551,7 @@ public class CustomAudienceServiceFilterTest {
         mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
                 getValidFetchUriByBuyer(SELLER_VALID),
                 CALLER_PACKAGE_NAME,
+                false,
                 false,
                 false,
                 MY_UID,
