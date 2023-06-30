@@ -19,6 +19,7 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.FIELD_FOUND_LOG_FORMAT;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.FIELD_NOT_FOUND_LOG_FORMAT;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
@@ -48,6 +49,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.service.common.JsonUtils;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
 
@@ -140,16 +142,22 @@ public class CustomAudienceBlob {
                             TRUSTED_BIDDING_DATA_KEY,
                             ADS_KEY));
     final LinkedHashMap<String, Field<?>> mFieldsMap = new LinkedHashMap<>();
-    public ReadFiltersFromJsonStrategy mGetFiltersFromJsonObjectStrategy;
+    private final ReadFiltersFromJsonStrategy mReadFiltersFromJsonStrategy;
+    private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
 
-    public CustomAudienceBlob(boolean filteringEnabled) {
-        mGetFiltersFromJsonObjectStrategy =
+    public CustomAudienceBlob(
+            boolean filteringEnabled, boolean adRenderIdEnabled, long adRenderIdMaxLength) {
+        mReadFiltersFromJsonStrategy =
                 ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+        mReadAdRenderIdFromJsonStrategy =
+                ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
+                        adRenderIdEnabled, adRenderIdMaxLength);
     }
 
+    @VisibleForTesting
     public CustomAudienceBlob() {
         // Filtering enabled by default.
-        this(true);
+        this(true, true, 12L);
     }
 
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */
@@ -658,6 +666,9 @@ public class CustomAudienceBlob {
                 if (ad.getAdFilters() != null) {
                     adJson.put(AD_FILTERS_KEY, ad.getAdFilters().toJson());
                 }
+                if (ad.getAdRenderId() != null) {
+                    adJson.put(AD_RENDER_ID_KEY, ad.getAdRenderId());
+                }
                 adsJson.put(adJson);
             }
             return adsJson;
@@ -700,8 +711,11 @@ public class CustomAudienceBlob {
                                                 .setRenderUri(parsedUri)
                                                 .setMetadata(metadata);
 
-                                mGetFiltersFromJsonObjectStrategy.readFilters(
+                                mReadFiltersFromJsonStrategy.readFilters(
                                         adDataBuilder, adDataJsonObj);
+                                mReadAdRenderIdFromJsonStrategy.readId(
+                                        adDataBuilder, adDataJsonObj);
+
                                 DBAdData dbAdData = adDataBuilder.build();
                                 AdData adData =
                                         new AdData.Builder()
@@ -709,6 +723,7 @@ public class CustomAudienceBlob {
                                                 .setRenderUri(dbAdData.getRenderUri())
                                                 .setAdCounterKeys(dbAdData.getAdCounterKeys())
                                                 .setAdFilters(dbAdData.getAdFilters())
+                                                .setAdRenderId(dbAdData.getAdRenderId())
                                                 .build();
 
                                 adsList.add(adData);
