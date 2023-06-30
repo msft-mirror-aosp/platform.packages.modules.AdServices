@@ -31,8 +31,11 @@ import com.android.adservices.service.adselection.encryption.AdSelectionEncrypti
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpRequestContextMarshaller;
 
+import com.google.common.util.concurrent.FluentFuture;
+
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncryptor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -40,46 +43,35 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
     private final ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
     private final byte[] mSeed;
 
+    private final ExecutorService mLightweightExecutor;
+
     public ObliviousHttpEncryptorWithSeedImpl(
             @NonNull AdSelectionEncryptionKeyManager encryptionKeyManager,
             @NonNull EncryptionContextDao encryptionContextDao,
-            @NonNull byte[] seed) {
+            @NonNull byte[] seed,
+            @NonNull ExecutorService lightweightExecutor) {
         Objects.requireNonNull(encryptionKeyManager);
         Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(seed);
+        Objects.requireNonNull(lightweightExecutor);
 
         mEncryptionKeyManager = encryptionKeyManager;
         mObliviousHttpRequestContextMarshaller =
                 new ObliviousHttpRequestContextMarshaller(encryptionContextDao);
         mSeed = seed;
+        mLightweightExecutor = lightweightExecutor;
     }
 
     /** Encrypts the given byte and stores the encryption context data keyed by given contextId */
     @Override
-    public byte[] encryptBytes(byte[] plainText, long contextId, long keyFetchTimeoutMs) {
+    public FluentFuture<byte[]> encryptBytes(
+            byte[] plainText, long contextId, long keyFetchTimeoutMs) {
 
-        try {
-            ObliviousHttpKeyConfig config =
-                    mEncryptionKeyManager.getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs);
-
-            Objects.requireNonNull(config);
-            ObliviousHttpClient client = ObliviousHttpClient.create(config);
-
-            Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText, mSeed);
-
-            Objects.requireNonNull(request);
-            mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(
-                    contextId, request.requestContext());
-
-            return request.serialize();
-        } catch (UnsupportedHpkeAlgorithmException e) {
-            sLogger.e("Unexpected error during Oblivious Http Client creation");
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            sLogger.e("Unexpected error during Oblivious HTTP Request creation");
-            throw new RuntimeException(e);
-        }
+        return mEncryptionKeyManager
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs)
+                .transform(
+                        key -> createAndSerializeRequestWithSeed(key, plainText, contextId),
+                        mLightweightExecutor);
     }
     /**
      * Decrypts the given bytes using context stored in the DB keyed by the given storedContextId.
@@ -98,6 +90,29 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
             return client.decryptObliviousHttpResponse(encryptedBytes, context);
         } catch (Exception e) {
             sLogger.e("Unexpected error during decryption");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private byte[] createAndSerializeRequestWithSeed(
+            ObliviousHttpKeyConfig config, byte[] plainText, long contextId) {
+        try {
+            Objects.requireNonNull(config);
+            ObliviousHttpClient client = ObliviousHttpClient.create(config);
+
+            Objects.requireNonNull(client);
+            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText, mSeed);
+
+            Objects.requireNonNull(request);
+            mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(
+                    contextId, request.requestContext());
+
+            return request.serialize();
+        } catch (UnsupportedHpkeAlgorithmException e) {
+            sLogger.e("Unexpected error during Oblivious Http Client creation");
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            sLogger.e("Unexpected error during Oblivious HTTP Request creation");
             throw new RuntimeException(e);
         }
     }

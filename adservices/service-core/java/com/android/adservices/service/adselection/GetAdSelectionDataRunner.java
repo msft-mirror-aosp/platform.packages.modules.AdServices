@@ -196,14 +196,11 @@ public class GetAdSelectionDataRunner {
                 .transform(
                         buyerInputs -> createPayload(buyerInputs, request, adSelectionId),
                         mLightweightExecutorService)
-                .transform(
+                .transformAsync(
                         formatted -> {
                             sLogger.v("Encrypting composed proto bytes");
-                            byte[] encrypted =
-                                    mObliviousHttpEncryptor.encryptBytes(
-                                            formatted.getData(), adSelectionId, keyFetchTimeout);
-                            Objects.requireNonNull(encrypted);
-                            return encrypted;
+                            return mObliviousHttpEncryptor.encryptBytes(
+                                    formatted.getData(), adSelectionId, keyFetchTimeout);
                         },
                         mLightweightExecutorService);
     }

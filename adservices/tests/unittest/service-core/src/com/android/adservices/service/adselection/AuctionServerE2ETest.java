@@ -25,6 +25,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
+
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.GetAdSelectionDataCallback;
@@ -87,6 +89,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -277,7 +280,9 @@ public class AuctionServerE2ETest {
                 createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(any(byte[].class), anyLong(), anyLong()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
 
         GetAdSelectionDataRequest getAdSelectionDataRequest =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
@@ -360,7 +365,8 @@ public class AuctionServerE2ETest {
                                         mAdServicesHttpsClientMock,
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
-                                seedBytes));
+                                seedBytes,
+                                mLightweightExecutorService));
 
         GetAdSelectionDataRequest getAdSelectionDataRequest =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
@@ -388,7 +394,9 @@ public class AuctionServerE2ETest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(any(byte[].class), anyLong(), anyLong()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
         when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -470,7 +478,8 @@ public class AuctionServerE2ETest {
                                         mAdServicesHttpsClientMock,
                                         mLightweightExecutorService),
                                 mEncryptionContextDao,
-                                seedBytes));
+                                seedBytes,
+                                mLightweightExecutorService));
 
         GetAdSelectionDataRequest getAdSelectionDataRequest =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
