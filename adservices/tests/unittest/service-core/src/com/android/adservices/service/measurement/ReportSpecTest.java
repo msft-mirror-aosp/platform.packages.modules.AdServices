@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ReportSpecTest {
 
-    public static final long BASE_TIME = System.currentTimeMillis();
+    private static final long BASE_TIME = System.currentTimeMillis();
     private static final String PRIVACY_PARAMETERS_JSON = "{\"flip_probability\" :0.0024}";
 
     @Test

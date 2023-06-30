@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doReturn;
@@ -45,7 +47,6 @@ public class EventReportWindowCalcDelegateTest {
     private static final String VALID_2H_2D_WINDOW_CONFIG = "7200,172800";
     /** It's invalid because only 2 early reporting windows are permitted. */
     private static final String INVALID_1H_1D_2D_WINDOW_CONFIG = "3600,86400,172800";
-
     private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     @Mock private Flags mFlags;
@@ -55,6 +56,8 @@ public class EventReportWindowCalcDelegateTest {
     @Before
     public void setup() {
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
+        doReturn(MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                .when(mFlags).getMeasurementMinEventReportDelayMillis();
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
     }
 
@@ -70,7 +73,26 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        source, triggerTime, EventSurfaceType.APP));
+    }
+
+    @Test
+    public void getReportingTime_overridesMinEventReportDelay() {
+        long minDelayMillis = 2300L;
+        doReturn(minDelayMillis).when(mFlags).getMeasurementMinEventReportDelayMillis();
+        long triggerTime = System.currentTimeMillis();
+        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
+        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventReportWindow(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
+        assertEquals(
+                expiryTime + minDelayMillis,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -90,7 +112,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -108,7 +130,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -126,7 +148,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -144,7 +166,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -161,7 +183,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -180,7 +202,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -199,7 +221,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -216,7 +238,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -233,7 +255,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -374,11 +396,11 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
 
@@ -390,11 +412,11 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource7d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource7d, /* windowIndex= */ 1, /* isInstallCase */ false));
 
@@ -406,13 +428,37 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource2d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource2d, /* windowIndex= */ 1, /* isInstallCase */ false));
+    }
+
+    @Test
+    public void getReportingTimeForNoising_overridesMinEventReportDelay() {
+        long minDelayMillis = 2300L;
+        long eventTime = System.currentTimeMillis();
+
+        doReturn(minDelayMillis).when(mFlags).getMeasurementMinEventReportDelayMillis();
+
+        // Expected: 1 window at expiry
+        Source eventSource10d =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
+                        .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(10) + minDelayMillis,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(10) + minDelayMillis,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
     }
 
     @Test
@@ -434,15 +480,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
-                eventTime + ONE_HOUR_IN_MILLIS + ONE_HOUR_IN_MILLIS,
+                eventTime + ONE_HOUR_IN_MILLIS + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(1) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ false));
     }
@@ -470,15 +516,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallCooldownWindow(expiry)
                         .build();
         assertEquals(
-                eventTime + ONE_HOUR_IN_MILLIS + ONE_HOUR_IN_MILLIS,
+                eventTime + ONE_HOUR_IN_MILLIS + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(1) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ true));
     }
@@ -504,15 +550,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.HOURS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.HOURS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ false));
     }
@@ -540,15 +586,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallCooldownWindow(expiry)
                         .build();
         assertEquals(
-                eventTime + TimeUnit.HOURS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.HOURS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ true));
     }
@@ -566,15 +612,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ true));
 
@@ -586,11 +632,11 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource2d, /* windowIndex= */ 0, /* isInstallCase */ true));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource2d, /* windowIndex= */ 1, /* isInstallCase */ true));
     }
@@ -607,15 +653,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource20d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource20d, /* windowIndex= */ 1, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(20) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource20d, /* windowIndex= */ 2, /* isInstallCase */ false));
 
@@ -627,15 +673,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource7d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource7d, /* windowIndex= */ 1, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource7d, /* windowIndex= */ 2, /* isInstallCase */ false));
 
@@ -647,11 +693,11 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource2d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource2d, /* windowIndex= */ 1, /* isInstallCase */ false));
     }
@@ -669,15 +715,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource20d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource20d, /* windowIndex= */ 1, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(20) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource20d, /* windowIndex= */ 2, /* isInstallCase */ false));
 
@@ -690,15 +736,15 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource7d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource7d, /* windowIndex= */ 1, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource7d, /* windowIndex= */ 2, /* isInstallCase */ false));
 
@@ -711,11 +757,11 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource2d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         navigationSource2d, /* windowIndex= */ 1, /* isInstallCase */ false));
     }
@@ -735,7 +781,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -758,7 +804,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -779,7 +825,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -800,7 +846,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -821,7 +867,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -841,7 +887,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -863,7 +909,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -883,7 +929,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -905,7 +951,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -928,7 +974,8 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                sourceEventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                sourceEventTime + TimeUnit.DAYS.toMillis(2)
+                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -951,7 +998,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -973,7 +1020,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -993,7 +1040,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1013,7 +1060,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1037,7 +1084,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1064,7 +1111,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1089,7 +1136,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1114,7 +1161,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -1139,7 +1186,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -1163,7 +1210,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.WEB));
     }
@@ -1189,7 +1236,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1215,7 +1262,7 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
-                        + ONE_HOUR_IN_MILLIS,
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1239,7 +1286,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1263,7 +1310,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceExpiryTime + ONE_HOUR_IN_MILLIS,
+                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1311,7 +1358,8 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceEventTime + TimeUnit.DAYS.toMillis(1) + ONE_HOUR_IN_MILLIS,
+                sourceEventTime + TimeUnit.DAYS.toMillis(1)
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1336,7 +1384,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1384,7 +1432,8 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceEventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                sourceEventTime + TimeUnit.DAYS.toMillis(2)
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1409,7 +1458,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1433,7 +1482,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                expiryTime + ONE_HOUR_IN_MILLIS,
+                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1457,7 +1506,8 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventTime(sourceEventTime)
                         .build();
         assertEquals(
-                sourceEventTime + TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                sourceEventTime + TimeUnit.DAYS.toMillis(2)
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }

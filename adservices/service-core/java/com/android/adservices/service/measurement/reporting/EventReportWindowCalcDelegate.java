@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
     private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
 
     private final Flags mFlags;
@@ -98,10 +97,10 @@ public class EventReportWindowCalcDelegate {
         List<Long> reportingWindows = getEarlyReportingWindows(source, isAppInstalled);
         for (Long window : reportingWindows) {
             if (triggerTime <= window) {
-                return window + ONE_HOUR_IN_MILLIS;
+                return window + mFlags.getMeasurementMinEventReportDelayMillis();
             }
         }
-        return source.getEventReportWindow() + ONE_HOUR_IN_MILLIS;
+        return source.getEventReportWindow() + mFlags.getMeasurementMinEventReportDelayMillis();
     }
 
     /**
@@ -113,9 +112,10 @@ public class EventReportWindowCalcDelegate {
     public long getReportingTimeForNoising(
             @NonNull Source source, int windowIndex, boolean isInstallCase) {
         List<Long> windowList = getEarlyReportingWindows(source, isInstallCase);
-        return windowIndex < windowList.size()
-                ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS
-                : source.getEventReportWindow() + ONE_HOUR_IN_MILLIS;
+        return mFlags.getMeasurementMinEventReportDelayMillis()
+                + (windowIndex < windowList.size()
+                        ? windowList.get(windowIndex)
+                        : source.getEventReportWindow());
     }
 
     /**
@@ -142,7 +142,8 @@ public class EventReportWindowCalcDelegate {
         for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
             triggerDataIndex -= triggerSpec.getTriggerData().size();
             if (triggerDataIndex < 0) {
-                return triggerSpec.getEventReportWindowsEnd().get(windowIndex) + ONE_HOUR_IN_MILLIS;
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
+                        + mFlags.getMeasurementMinEventReportDelayMillis();
             }
         }
         return 0;
