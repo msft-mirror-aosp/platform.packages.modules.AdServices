@@ -295,26 +295,30 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             throw exception;
         }
 
-        FetchCustomAudienceImpl impl =
-                new FetchCustomAudienceImpl(
-                        mFlags,
-                        // TODO(b/235841960): Align on internal Clock usage.
-                        Clock.systemUTC(),
-                        mAdServicesLogger,
-                        mExecutorService,
-                        mCustomAudienceImpl.getCustomAudienceDao(),
-                        mCallingAppUidSupplier,
-                        mCustomAudienceServiceFilter,
-                        new AdServicesHttpsClient(
-                                AdServicesExecutors.getBlockingExecutor(),
-                                CacheProviderFactory.create(mContext, mFlags)),
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        AdRenderIdValidator.createInstance(mFlags),
-                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                                mFlags.getFledgeAdSelectionFilteringEnabled(),
-                                mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
+        final int callerUid = getCallingUid(apiName);
+        mExecutorService.execute(
+                () -> {
+                    FetchCustomAudienceImpl impl =
+                            new FetchCustomAudienceImpl(
+                                    mFlags,
+                                    // TODO(b/235841960): Align on internal Clock usage.
+                                    Clock.systemUTC(),
+                                    mAdServicesLogger,
+                                    mExecutorService,
+                                    mCustomAudienceImpl.getCustomAudienceDao(),
+                                    callerUid,
+                                    mCustomAudienceServiceFilter,
+                                    new AdServicesHttpsClient(
+                                            AdServicesExecutors.getBlockingExecutor(),
+                                            CacheProviderFactory.create(mContext, mFlags)),
+                                    mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                                    AdRenderIdValidator.createInstance(mFlags),
+                                    AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                            mFlags.getFledgeAdSelectionFilteringEnabled(),
+                                            mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
-        mExecutorService.execute(() -> impl.doFetchCustomAudience(input, callback));
+                    impl.doFetchCustomAudience(input, callback);
+                });
     }
 
     private int notifyFailure(ICustomAudienceCallback callback, Exception exception)
