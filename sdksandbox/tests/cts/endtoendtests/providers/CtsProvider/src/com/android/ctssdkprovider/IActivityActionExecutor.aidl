@@ -17,4 +17,6 @@ package com.android.ctssdkprovider;
 interface IActivityActionExecutor {
     void disableBackButton();
     void enableBackButton();
+    void setOrientationToLandscape();
+    void setOrientationToPortrait();
 }
