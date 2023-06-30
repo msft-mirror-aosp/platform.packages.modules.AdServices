@@ -46,7 +46,6 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
-import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.JsonValidator;
@@ -103,7 +102,7 @@ public class FetchCustomAudienceImpl {
                     .build();
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final ListeningExecutorService mExecutorService;
-    @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
+    private final int mCallingAppUid;
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
     @NonNull private final AdServicesHttpsClient mHttpClient;
     @NonNull private final Clock mClock;
@@ -139,7 +138,7 @@ public class FetchCustomAudienceImpl {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull ExecutorService executor,
             @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull CallingAppUidSupplier callingAppUidSupplier,
+            int callingAppUid,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
             @NonNull AdServicesHttpsClient httpClient,
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
@@ -150,7 +149,6 @@ public class FetchCustomAudienceImpl {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(callingAppUidSupplier);
         Objects.requireNonNull(customAudienceServiceFilter);
         Objects.requireNonNull(httpClient);
 
@@ -158,7 +156,7 @@ public class FetchCustomAudienceImpl {
         mAdServicesLogger = adServicesLogger;
         mExecutorService = MoreExecutors.listeningDecorator(executor);
         mCustomAudienceDao = customAudienceDao;
-        mCallingAppUidSupplier = callingAppUidSupplier;
+        mCallingAppUid = callingAppUid;
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mHttpClient = httpClient;
         mCustomAudienceQuantityChecker =
@@ -284,7 +282,7 @@ public class FetchCustomAudienceImpl {
                                                         input.getCallerPackageName(),
                                                         mEnforceForegroundStatus,
                                                         true,
-                                                        mCallingAppUidSupplier.getCallingAppUid(),
+                                                        mCallingAppUid,
                                                         API_NAME,
                                                         FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
                             } catch (Throwable t) {
