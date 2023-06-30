@@ -78,7 +78,7 @@ import java.util.concurrent.ExecutionException;
 public class AppSearchConsentWorkerTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
-    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.adservices.api";
+    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
     private static final String API_TYPE = AdServicesApiType.TOPICS.toPpApiDatastoreKey();
     private static final Boolean CONSENTED = true;
     private static final String TEST = "test";
