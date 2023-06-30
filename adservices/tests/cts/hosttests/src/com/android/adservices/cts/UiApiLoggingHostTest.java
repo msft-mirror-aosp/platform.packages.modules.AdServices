@@ -65,10 +65,8 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
     private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
 
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
-            "com.google.android.ext.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
-            "com.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;
     private int mApiLevel;

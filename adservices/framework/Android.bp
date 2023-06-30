@@ -76,6 +76,8 @@ java_api_contribution {
 java_library {
     name: "android.ext.adservices",
     static_libs: ["framework-adservices.impl"],
+    installable: true,
+    provides_uses_lib: "android.ext.adservices",
     sdk_version: "module_current",
     min_sdk_version: "30",
     max_sdk_version: "32",

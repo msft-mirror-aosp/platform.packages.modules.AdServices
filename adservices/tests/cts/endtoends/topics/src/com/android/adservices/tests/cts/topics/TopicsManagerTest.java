@@ -365,7 +365,7 @@ public class TopicsManagerTest {
         // depending on whether the package name is that for S- or T+.
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
-        if (ADSERVICES_PACKAGE_NAME.contains("android.ext.adservices")) {
+        if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
             expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10276);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);

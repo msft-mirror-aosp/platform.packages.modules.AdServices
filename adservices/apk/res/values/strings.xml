@@ -15,6 +15,8 @@
 -->
 <!-- IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Name of the AdExtServices app that is deployed on S-. -->
+    <string name="app_name" translatable="false">Android Services Library</string>
     <!-- Title of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesTopics">access AdServices Topics API</string>
     <!-- Description of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
