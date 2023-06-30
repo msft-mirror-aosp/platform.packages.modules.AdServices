@@ -503,7 +503,7 @@ public class EpochJobServiceTest {
         assertNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
 
         verify(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
-        verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
+        verify(mSpyLogger, never()).recordOnStartJob(anyInt());
     }
 
     private void testOnStopJob() {
