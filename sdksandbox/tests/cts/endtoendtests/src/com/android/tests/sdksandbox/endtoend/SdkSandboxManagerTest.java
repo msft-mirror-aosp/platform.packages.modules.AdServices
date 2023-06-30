@@ -330,14 +330,15 @@ public class SdkSandboxManagerTest {
 
         FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
-        assertThat(callback.getSdkSandboxDeathCount()).isEqualTo(0);
+        assertThat(callback.waitForSandboxDeath()).isFalse();
 
         // Killing the sandbox and loading the same SDKs again multiple times should work
         for (int i = 1; i <= 3; ++i) {
             // The same SDKs should be able to be loaded again after sandbox death
             loadMultipleSdks();
+            callback.resetLatch();
             killSandbox();
-            assertThat(callback.getSdkSandboxDeathCount()).isEqualTo(i);
+            assertThat(callback.waitForSandboxDeath()).isTrue();
         }
     }
 
@@ -355,7 +356,7 @@ public class SdkSandboxManagerTest {
         loadSdk();
 
         killSandbox();
-        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback.waitForSandboxDeath()).isTrue();
     }
 
     @Test
@@ -369,7 +370,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback);
 
         killSandbox();
-        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback.waitForSandboxDeath()).isTrue();
     }
 
     @Test
@@ -391,8 +392,8 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback2);
 
         killSandbox();
-        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(1);
-        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback1.waitForSandboxDeath()).isTrue();
+        assertThat(lifecycleCallback2.waitForSandboxDeath()).isTrue();
     }
 
     @Test
@@ -412,8 +413,8 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback2);
 
         killSandbox();
-        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(0);
-        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback1.waitForSandboxDeath()).isFalse();
+        assertThat(lifecycleCallback2.waitForSandboxDeath()).isTrue();
     }
 
     @Test
