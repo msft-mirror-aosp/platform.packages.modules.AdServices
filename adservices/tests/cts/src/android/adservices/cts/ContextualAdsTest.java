@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+/** CTS tests to verify the build and parceling logic for {@link ContextualAds} */
 public class ContextualAdsTest {
 
     @Test

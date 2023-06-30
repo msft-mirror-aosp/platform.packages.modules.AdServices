@@ -766,7 +766,7 @@ public interface Flags {
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
-    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 2L;
+    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 3L;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
@@ -869,8 +869,8 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
     }
 
-    // Filtering feature flag disabled by default
-    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
+    // Filtering feature flag enabled by default for DP releases
+    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = true;
 
     /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
     default boolean getFledgeAdSelectionFilteringEnabled() {
@@ -900,14 +900,14 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
-    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
+    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = true;
 
     /**
      * @return whether to call remote URLs for debug reporting.
@@ -1015,7 +1015,7 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
     }
 
-    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = true;
 
     /** Returns whether to run periodic job to fetch encryption keys. */
     default boolean getFledgeAuctionServerBackgroundKeyFetchJobEnabled() {
@@ -1054,7 +1054,7 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED = false;
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED = true;
 
     /** Returns whether to run periodic job to fetch AUCTION keys. */
     default boolean getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled() {
@@ -1105,7 +1105,7 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
     }
 
-    boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
+    boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = true;
     long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
 
     /** Returns whether ad render id is enabled. */
@@ -1748,10 +1748,10 @@ public interface Flags {
     }
 
     /**
-     * Fledge Auction Server API Kill switch. The default value is true which means that Auction
-     * server APIs is disabled by default.
+     * Fledge Auction Server API Kill switch. The default value is false which means that Auction
+     * server APIs is enabled by default.
      */
-    boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = true;
+    boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = false;
 
     /**
      * @return value of Fledge Auction server API kill switch.
@@ -2448,8 +2448,8 @@ public interface Flags {
     }
 
     // New Feature Flags
-    boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
-    boolean FLEDGE_CPC_BILLING_ENABLED = false;
+    boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = true;
+    boolean FLEDGE_CPC_BILLING_ENABLED = true;
 
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {

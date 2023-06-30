@@ -31,8 +31,6 @@ import java.util.Objects;
  * selection. The currency unit for the bid is expected to be the same requested by the seller when
  * initiating the selection process and not specified in this class. The seller can provide the
  * currency via AdSelectionSignals. The currency is opaque to FLEDGE for now.
- *
- * @hide
  */
 public final class AdWithBid implements Parcelable {
     @NonNull
