@@ -16,9 +16,10 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdDataFixture.getValidFilterAdsByBuyer;
+import static android.adservices.common.AdDataFixture.getValidFilterAdsWithAdRenderIdByBuyer;
 import static android.adservices.common.CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
 import static android.adservices.common.CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+import static android.adservices.common.CommonFixture.FLAGS_FOR_TEST;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.common.CommonFixture.VALID_BUYER_2;
 import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN;
@@ -136,7 +137,8 @@ public class CustomAudienceBlobValidatorTest {
     private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator =
             new FrequencyCapAdDataValidatorImpl();
     private final AdRenderIdValidator mAdRenderIdValidator =
-            AdRenderIdValidator.createEnabledInstance(100);
+            AdRenderIdValidator.createEnabledInstance(
+                    FLAGS_FOR_TEST.getFledgeAuctionServerAdRenderIdMaxLength());
     private final CustomAudienceAdsValidator mValidAdsValidator =
             new CustomAudienceAdsValidator(
                     mFrequencyCapAdDataValidator,
@@ -1286,7 +1288,7 @@ public class CustomAudienceBlobValidatorTest {
     @Test
     public void testValidator_validAds() {
         mCustomAudience.setBuyer(VALID_BUYER_1);
-        mCustomAudience.setAds(getValidFilterAdsByBuyer(VALID_BUYER_1));
+        mCustomAudience.setAds(getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1));
 
         // Assert valid ads does not throw.
         mValidator.validate(mCustomAudience);
@@ -1296,7 +1298,7 @@ public class CustomAudienceBlobValidatorTest {
     @Ignore("b/288972063")
     @Test
     public void testValidator_invalidAds_invalidBuyer_unset() {
-        mCustomAudience.setAds(getValidFilterAdsByBuyer(VALID_BUYER_1));
+        mCustomAudience.setAds(getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1));
 
         // Assert invalid buyer causes the validator to throw.
         Exception exception =
@@ -1317,7 +1319,7 @@ public class CustomAudienceBlobValidatorTest {
     public void testValidator_invalidAds_invalidBuyer_emptyIdentifier() {
         AdTechIdentifier emptyBuyer = AdTechIdentifier.fromString("");
         mCustomAudience.setBuyer(emptyBuyer);
-        mCustomAudience.setAds(getValidFilterAdsByBuyer(VALID_BUYER_1));
+        mCustomAudience.setAds(getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1));
 
         // Assert invalid buyer causes the validator to throw.
         Exception exception =
@@ -1338,7 +1340,7 @@ public class CustomAudienceBlobValidatorTest {
     public void testValidator_invalidAds_invalidBuyer_missingHost() {
         AdTechIdentifier buyerWithoutHost = AdTechIdentifier.fromString("test@");
         mCustomAudience.setBuyer(buyerWithoutHost);
-        List<AdData> validAds = getValidFilterAdsByBuyer(VALID_BUYER_1);
+        List<AdData> validAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1);
         mCustomAudience.setAds(validAds);
 
         // Assert invalid buyer causes the validator to throw.
@@ -1393,6 +1395,26 @@ public class CustomAudienceBlobValidatorTest {
                                 buyerWithoutHost,
                                 AD_TECH_ROLE_BUYER,
                                 RENDER_URI_FIELD_NAME,
+                                VALID_BUYER_1)),
+                String.format(
+                        AdDataValidator.VIOLATION_FORMAT,
+                        validAds.get(4),
+                        String.format(
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                AD_TECH_ROLE_BUYER,
+                                buyerWithoutHost,
+                                AD_TECH_ROLE_BUYER,
+                                RENDER_URI_FIELD_NAME,
+                                VALID_BUYER_1)),
+                String.format(
+                        AdDataValidator.VIOLATION_FORMAT,
+                        validAds.get(5),
+                        String.format(
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                AD_TECH_ROLE_BUYER,
+                                buyerWithoutHost,
+                                AD_TECH_ROLE_BUYER,
+                                RENDER_URI_FIELD_NAME,
                                 VALID_BUYER_1)));
     }
 
@@ -1400,7 +1422,7 @@ public class CustomAudienceBlobValidatorTest {
     public void testValidator_invalidAds_invalidBuyer_domainHasPath() {
         AdTechIdentifier buyerWithPath = AdTechIdentifier.fromString(VALID_BUYER_1 + "/path");
         mCustomAudience.setBuyer(buyerWithPath);
-        List<AdData> validAds = getValidFilterAdsByBuyer(VALID_BUYER_1);
+        List<AdData> validAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1);
         mCustomAudience.setAds(validAds);
 
         // Assert invalid buyer causes the validator to throw.
@@ -1449,6 +1471,26 @@ public class CustomAudienceBlobValidatorTest {
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
                         validAds.get(3),
+                        String.format(
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                AD_TECH_ROLE_BUYER,
+                                buyerWithPath,
+                                AD_TECH_ROLE_BUYER,
+                                RENDER_URI_FIELD_NAME,
+                                VALID_BUYER_1)),
+                String.format(
+                        AdDataValidator.VIOLATION_FORMAT,
+                        validAds.get(4),
+                        String.format(
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                AD_TECH_ROLE_BUYER,
+                                buyerWithPath,
+                                AD_TECH_ROLE_BUYER,
+                                RENDER_URI_FIELD_NAME,
+                                VALID_BUYER_1)),
+                String.format(
+                        AdDataValidator.VIOLATION_FORMAT,
+                        validAds.get(5),
                         String.format(
                                 IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                                 AD_TECH_ROLE_BUYER,
@@ -1462,7 +1504,7 @@ public class CustomAudienceBlobValidatorTest {
     public void testValidator_invalidAds_invalidBuyer_domainHasPort() {
         AdTechIdentifier buyerWithPort = AdTechIdentifier.fromString(VALID_BUYER_1 + ":80");
         mCustomAudience.setBuyer(buyerWithPort);
-        List<AdData> validAds = getValidFilterAdsByBuyer(VALID_BUYER_1);
+        List<AdData> validAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1);
         mCustomAudience.setAds(validAds);
 
         // Assert invalid buyer causes the validator to throw.
@@ -1511,6 +1553,26 @@ public class CustomAudienceBlobValidatorTest {
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
                         validAds.get(3),
+                        String.format(
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                AD_TECH_ROLE_BUYER,
+                                buyerWithPort,
+                                AD_TECH_ROLE_BUYER,
+                                RENDER_URI_FIELD_NAME,
+                                VALID_BUYER_1)),
+                String.format(
+                        AdDataValidator.VIOLATION_FORMAT,
+                        validAds.get(4),
+                        String.format(
+                                IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                AD_TECH_ROLE_BUYER,
+                                buyerWithPort,
+                                AD_TECH_ROLE_BUYER,
+                                RENDER_URI_FIELD_NAME,
+                                VALID_BUYER_1)),
+                String.format(
+                        AdDataValidator.VIOLATION_FORMAT,
+                        validAds.get(5),
                         String.format(
                                 IDENTIFIER_AND_URI_ARE_INCONSISTENT,
                                 AD_TECH_ROLE_BUYER,
@@ -1537,11 +1599,18 @@ public class CustomAudienceBlobValidatorTest {
                         .setRenderUri(AdDataFixture.getValidRenderUriByBuyer(VALID_BUYER_1, 3))
                         .setMetadata("{\"a\":1}")
                         .build();
+        String tooLongAdRenderId = "VeryLongLongLongId";
+        AdData tooLongRenderIdAd =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 1)
+                        .setAdRenderId(tooLongAdRenderId)
+                        .build();
+
         mCustomAudience.setBuyer(VALID_BUYER_1);
         mCustomAudience.setAds(
                 List.of(
                         invalidAdDataWithAnotherBuyer,
                         invalidAdDataWithInvalidMetadata,
+                        tooLongRenderIdAd,
                         validAdData));
 
         // Assert invalid ads throws.
@@ -1572,7 +1641,16 @@ public class CustomAudienceBlobValidatorTest {
                                 Locale.ENGLISH,
                                 SHOULD_BE_A_VALID_JSON,
                                 AD_DATA_CLASS_NAME,
-                                METADATA_FIELD_NAME)));
+                                METADATA_FIELD_NAME)),
+                String.format(
+                        Locale.ENGLISH,
+                        VIOLATION_FORMAT,
+                        tooLongRenderIdAd,
+                        String.format(
+                                Locale.ENGLISH,
+                                AdRenderIdValidator.AD_RENDER_ID_TOO_LONG,
+                                FLAGS_FOR_TEST.getFledgeAuctionServerAdRenderIdMaxLength(),
+                                tooLongAdRenderId.getBytes().length)));
     }
 
     @Test
@@ -1599,7 +1677,7 @@ public class CustomAudienceBlobValidatorTest {
                         adsValidatorWithSmallLimit);
 
         // Constructor valid ads which will now be too big for the validator.
-        List<AdData> tooBigAds = getValidFilterAdsByBuyer(VALID_BUYER_1);
+        List<AdData> tooBigAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1);
 
         mCustomAudience.setBuyer(VALID_BUYER_1);
         mCustomAudience.setAds(tooBigAds);
@@ -1651,7 +1729,7 @@ public class CustomAudienceBlobValidatorTest {
                         adsValidatorWithSmallLimit);
 
         // Constructor valid ads which will now be too big for the validator.
-        List<AdData> tooManyAds = getValidFilterAdsByBuyer(VALID_BUYER_1);
+        List<AdData> tooManyAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1);
 
         mCustomAudience.setBuyer(VALID_BUYER_1);
         mCustomAudience.setAds(tooManyAds);

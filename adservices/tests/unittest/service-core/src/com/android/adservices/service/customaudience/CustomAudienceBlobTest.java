@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdDataFixture.getValidFilterAdsByBuyer;
+import static android.adservices.common.AdDataFixture.getValidFilterAdsWithAdRenderIdByBuyer;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.common.CommonFixture.VALID_BUYER_2;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
@@ -89,7 +89,7 @@ public class CustomAudienceBlobTest {
                     getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
                     VALID_USER_BIDDING_SIGNALS.toString(),
                     DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
-                    DBAdDataFixture.getValidDbAdDataListByBuyer(VALID_BUYER_1),
+                    DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
                     false);
 
     private CustomAudienceBlob mCustomAudienceBlob;
@@ -146,7 +146,7 @@ public class CustomAudienceBlobTest {
                 getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
         assertEquals(
                 mCustomAudienceBlob.getAds().toString(),
-                getValidFilterAdsByBuyer(VALID_BUYER_1).toString());
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
     }
 
     @Test
@@ -570,7 +570,7 @@ public class CustomAudienceBlobTest {
 
         assertEquals(
                 mCustomAudienceBlob.getAds().toString(),
-                getValidFilterAdsByBuyer(VALID_BUYER_1).toString());
+                getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
     }
 
     @Test
@@ -580,7 +580,7 @@ public class CustomAudienceBlobTest {
 
     @Test
     public void testSetAds_valid() {
-        List<AdData> validAds = getValidFilterAdsByBuyer(VALID_BUYER_1);
+        List<AdData> validAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1);
         mCustomAudienceBlob.setAds(validAds);
 
         assertEquals(mCustomAudienceBlob.getAds().toString(), validAds.toString());
@@ -590,7 +590,7 @@ public class CustomAudienceBlobTest {
     public void testSetAds_override() throws JSONException {
         mCustomAudienceBlob.overrideFromJSONObject(mJSONObject);
 
-        List<AdData> overriddenAds = getValidFilterAdsByBuyer(VALID_BUYER_2);
+        List<AdData> overriddenAds = getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_2);
         mCustomAudienceBlob.setAds(overriddenAds);
 
         assertEquals(mCustomAudienceBlob.getAds().toString(), overriddenAds.toString());

@@ -55,7 +55,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
@@ -122,7 +121,9 @@ public class FetchCustomAudienceImpl {
     @NonNull private final int mFledgeCustomAudienceMaxNumAds;
     @NonNull private final int mFledgeCustomAudienceMaxCustomHeaderSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxCustomAudienceSizeB;
-    @NonNull private final boolean mFledgeAdSelectionFilteringEnabled;
+    private final boolean mFledgeAdSelectionFilteringEnabled;
+    private final boolean mFledgeAuctionServerAdRenderIdEnabled;
+    private final long mFledgeAuctionServerAdRenderIdMaxLength;
 
     // TODO(b/289123035): Make these locally scoped, passed down by the orchestrator function.
     @NonNull private AdTechIdentifier mBuyer;
@@ -131,7 +132,6 @@ public class FetchCustomAudienceImpl {
     @NonNull private CustomAudienceBlob mResponseCustomAudience;
     @NonNull private CustomAudienceBlob mFusedCustomAudience;
 
-    @VisibleForTesting
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
             @NonNull Clock clock,
@@ -177,15 +177,29 @@ public class FetchCustomAudienceImpl {
         mFledgeCustomAudienceMaxAdsSizeB = flags.getFledgeCustomAudienceMaxAdsSizeB();
         mFledgeCustomAudienceMaxNumAds = flags.getFledgeCustomAudienceMaxNumAds();
         mFledgeAdSelectionFilteringEnabled = flags.getFledgeAdSelectionFilteringEnabled();
+        mFledgeAuctionServerAdRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
+        mFledgeAuctionServerAdRenderIdMaxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
         mFledgeCustomAudienceMaxCustomHeaderSizeB =
                 flags.getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB();
         mFledgeCustomAudienceMaxCustomAudienceSizeB =
                 flags.getFledgeFetchCustomAudienceMaxCustomAudienceSizeB();
 
         // Instantiate request, response and result CustomAudienceBlobs
-        mRequestCustomAudience = new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
-        mResponseCustomAudience = new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
-        mFusedCustomAudience = new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
+        mRequestCustomAudience =
+                new CustomAudienceBlob(
+                        mFledgeAdSelectionFilteringEnabled,
+                        mFledgeAuctionServerAdRenderIdEnabled,
+                        mFledgeAuctionServerAdRenderIdMaxLength);
+        mResponseCustomAudience =
+                new CustomAudienceBlob(
+                        mFledgeAdSelectionFilteringEnabled,
+                        mFledgeAuctionServerAdRenderIdEnabled,
+                        mFledgeAuctionServerAdRenderIdMaxLength);
+        mFusedCustomAudience =
+                new CustomAudienceBlob(
+                        mFledgeAdSelectionFilteringEnabled,
+                        mFledgeAuctionServerAdRenderIdEnabled,
+                        mFledgeAuctionServerAdRenderIdMaxLength);
 
         // Instantiate a CustomAudienceBlobValidator
         mCustomAudienceBlobValidator =
@@ -226,7 +240,7 @@ public class FetchCustomAudienceImpl {
             } else {
                 sLogger.v("fetchCustomAudience is enabled.");
                 // TODO(b/282017342): Evaluate correctness of futures chain.
-                FluentFuture.from(filterAndValidateRequest(request))
+                filterAndValidateRequest(request)
                         .transformAsync(this::performFetch, mExecutorService)
                         .transformAsync(this::validateResponse, mExecutorService)
                         .transformAsync(this::persistResponse, mExecutorService)
@@ -267,7 +281,7 @@ public class FetchCustomAudienceImpl {
         }
     }
 
-    private ListenableFuture<Void> filterAndValidateRequest(
+    private FluentFuture<Void> filterAndValidateRequest(
             @NonNull FetchAndJoinCustomAudienceInput input) {
         return FluentFuture.from(
                 mExecutorService.submit(
@@ -294,8 +308,6 @@ public class FetchCustomAudienceImpl {
                                     PLACEHOLDER_CUSTOM_AUDIENCE, input.getCallerPackageName());
 
                             // Validate request
-                            mRequestCustomAudience =
-                                    new CustomAudienceBlob(mFledgeAdSelectionFilteringEnabled);
                             mRequestCustomAudience.overrideFromFetchAndJoinCustomAudienceInput(
                                     input);
                             mRequestCustomAudience.setBuyer(mBuyer);

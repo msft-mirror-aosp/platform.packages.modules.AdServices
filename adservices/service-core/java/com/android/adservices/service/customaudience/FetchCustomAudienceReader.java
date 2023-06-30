@@ -77,7 +77,9 @@ public class FetchCustomAudienceReader {
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds,
-            boolean filteringEnabled) {
+            boolean filteringEnabled,
+            boolean adRenderIdEnabled,
+            long adRenderIdMaxLength) {
         Objects.requireNonNull(responseObject);
         Objects.requireNonNull(responseHash);
         Objects.requireNonNull(buyer);
@@ -94,7 +96,9 @@ public class FetchCustomAudienceReader {
                         maxTrustedBiddingDataSizeB,
                         maxAdsSizeB,
                         maxNumAds,
-                        filteringEnabled);
+                        filteringEnabled,
+                        adRenderIdEnabled,
+                        adRenderIdMaxLength);
     }
 
     /**
