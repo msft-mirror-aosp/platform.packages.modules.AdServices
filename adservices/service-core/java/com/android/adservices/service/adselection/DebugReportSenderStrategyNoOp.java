@@ -49,7 +49,7 @@ class DebugReportSenderStrategyNoOp implements DebugReportSenderStrategy {
     }
 
     @Override
-    public ListenableFuture<?> flush() {
+    public ListenableFuture<Void> flush() {
         return Futures.submit(() -> {
             List<Uri> uris = mDebugReportQueue.stream().collect(Collectors.toList());
             mDebugReportQueue.clear();

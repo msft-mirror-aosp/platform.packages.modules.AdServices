@@ -141,7 +141,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         lightweightExecutorService,
                         adServicesHttpsClient,
                         mFlags);
-        mDebugReportingEnabled = debugReporting.isDebugReportingEnabled();
+        mDebugReportingEnabled = debugReporting.isEnabled();
     }
 
     @VisibleForTesting
@@ -177,7 +177,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mAdCounterKeyCopier = adCounterKeyCopier;
         mFlags = flags;
         mJsFetcher = jsFetcher;
-        mDebugReportingEnabled = debugReporting.isDebugReportingEnabled();
+        mDebugReportingEnabled = debugReporting.isEnabled();
     }
 
     @Override
