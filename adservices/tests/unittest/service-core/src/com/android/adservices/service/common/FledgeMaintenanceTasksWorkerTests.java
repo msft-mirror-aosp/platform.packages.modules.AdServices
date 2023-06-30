@@ -23,6 +23,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMor
 
 import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
+import android.content.pm.PackageManager;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -44,6 +45,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private PackageManager mPackageManagerMock;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
     private MockitoSession mMockitoSession;
 
@@ -103,7 +105,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEnrollmentDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
-        worker.clearInvalidFrequencyCapHistogramData();
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
 
         Instant expectedExpirationTime =
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
@@ -112,6 +114,9 @@ public class FledgeMaintenanceTasksWorkerTests {
         verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
         verify(mFrequencyCapDaoMock)
                 .deleteAllDisallowedBuyerHistogramData(any(EnrollmentDao.class));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedSourceAppHistogramData(
+                        any(PackageManager.class), any(Flags.class));
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
     }
 
@@ -138,13 +143,16 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEnrollmentDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
-        worker.clearInvalidFrequencyCapHistogramData();
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
 
         Instant expectedExpirationTime =
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
                         KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
 
         verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedSourceAppHistogramData(
+                        any(PackageManager.class), any(Flags.class));
         verifyNoMoreInteractions(mFrequencyCapDaoMock);
     }
 
@@ -170,8 +178,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEnrollmentDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
-        worker.clearInvalidFrequencyCapHistogramData();
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
 
-        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+        verifyNoMoreInteractions(mFrequencyCapDaoMock, mPackageManagerMock);
     }
 }
