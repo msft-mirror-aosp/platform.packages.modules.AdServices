@@ -89,6 +89,9 @@ public class HistogramEventFixture {
                     .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusSeconds(1))
                     .build();
 
+    public static final HistogramEvent VALID_HISTOGRAM_EVENT_DIFFERENT_SOURCE_APP =
+            getValidHistogramEventBuilder().setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2).build();
+
     public static HistogramEvent.Builder getValidHistogramEventBuilder() {
         return HistogramEvent.builder()
                 .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)

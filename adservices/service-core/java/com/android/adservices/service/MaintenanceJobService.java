@@ -252,6 +252,7 @@ public final class MaintenanceJobService extends JobService {
     private void doAdSelectionDataMaintenanceTasks() {
         LogUtil.v("Performing Ad Selection maintenance tasks");
         getFledgeMaintenanceTasksWorker().clearExpiredAdSelectionData();
-        getFledgeMaintenanceTasksWorker().clearInvalidFrequencyCapHistogramData();
+        getFledgeMaintenanceTasksWorker()
+                .clearInvalidFrequencyCapHistogramData(this.getPackageManager());
     }
 }

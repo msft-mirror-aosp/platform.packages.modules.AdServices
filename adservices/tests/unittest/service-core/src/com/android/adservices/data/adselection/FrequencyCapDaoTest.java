@@ -16,29 +16,40 @@
 
 package com.android.adservices.data.adselection;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCapFixture;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteConstraintException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.HistogramEvent;
 import com.android.adservices.service.adselection.HistogramEventFixture;
+import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -51,19 +62,33 @@ public class FrequencyCapDaoTest {
     private static final int LOWER_MAX_PER_BUYER_EVENT_COUNT = 7;
 
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private PackageManager mPackageManagerMock;
 
     private FrequencyCapDao mFrequencyCapDao;
 
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setup() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(PackageManagerCompatUtils.class)
+                        .initMocks(this)
+                        .startMocking();
+
         mFrequencyCapDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
                                 SharedStorageDatabase.class)
                         .build()
                         .frequencyCapDao();
+    }
 
-        MockitoAnnotations.initMocks(this);
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
@@ -2703,6 +2728,390 @@ public class FrequencyCapDaoTest {
     }
 
     @Test
+    public void testGetAllHistogramSourceAppsFromEmptyTables() {
+        assertWithMessage("List of persisted unique source apps")
+                .that(mFrequencyCapDao.getAllHistogramSourceApps())
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetAllHistogramSourceApps() {
+        assertWithMessage("List of persisted unique source apps")
+                .that(mFrequencyCapDao.getAllHistogramSourceApps())
+                .isEmpty();
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("List of persisted unique source apps")
+                .that(mFrequencyCapDao.getAllHistogramSourceApps())
+                .containsExactly(CommonFixture.TEST_PACKAGE_NAME_1);
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("List of persisted unique source apps")
+                .that(mFrequencyCapDao.getAllHistogramSourceApps())
+                .containsExactly(
+                        CommonFixture.TEST_PACKAGE_NAME_1, CommonFixture.TEST_PACKAGE_NAME_2);
+    }
+
+    @Test
+    public void testDeleteHistogramEventDataBySourceAppsFromEmptyTables() {
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteHistogramEventDataBySourceApps(
+                                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1)))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteHistogramEventDataBySourceApps() {
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of events for target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(2);
+        assertWithMessage("Number of events for non-target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteHistogramEventDataBySourceApps(
+                                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1)))
+                .isEqualTo(2);
+
+        assertWithMessage("Number of events for target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(0);
+        assertWithMessage("Number of events for non-target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testDeleteHistogramEventDataBySourceAppsFromMultipleSourceApps() {
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of events for target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(2);
+        assertWithMessage("Number of events for non-target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteHistogramEventDataBySourceApps(
+                                Arrays.asList(
+                                        CommonFixture.TEST_PACKAGE_NAME_1,
+                                        CommonFixture.TEST_PACKAGE_NAME_2)))
+                .isEqualTo(3);
+
+        assertWithMessage("Number of events for target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(0);
+        assertWithMessage("Number of events for non-target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testDeleteAllDisallowedSourceAppHistogramDataFromEmptyTables() {
+        final class FlagsWithEmptyAppAllowList implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return "";
+            }
+        }
+
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteAllDisallowedSourceAppHistogramData(
+                                mPackageManagerMock, new FlagsWithEmptyAppAllowList()))
+                .isEqualTo(0);
+
+        // If the database is empty, the deletion should short circuit
+        verify(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()), never());
+    }
+
+    @Test
+    public void testDeleteAllDisallowedSourceAppHistogramDataForUninstalledApps() {
+        final class FlagsWithAllAppsAllowed implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return AllowLists.ALLOW_ALL;
+            }
+        }
+
+        ApplicationInfo installedApp2 = new ApplicationInfo();
+        installedApp2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
+        doReturn(Arrays.asList(installedApp2))
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of events for target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(2);
+        assertWithMessage("Number of events for non-target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteAllDisallowedSourceAppHistogramData(
+                                mPackageManagerMock, new FlagsWithAllAppsAllowed()))
+                .isEqualTo(2);
+
+        assertWithMessage("Number of events for target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(0);
+        assertWithMessage("Number of events for non-target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testDeleteAllDisallowedSourceAppHistogramDataForAppsNotInAllowList() {
+        final class FlagsWithOneAppAllowed implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return CommonFixture.TEST_PACKAGE_NAME_2;
+            }
+        }
+
+        ApplicationInfo installedApp1 = new ApplicationInfo();
+        installedApp1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
+        ApplicationInfo installedApp2 = new ApplicationInfo();
+        installedApp2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
+        doReturn(Arrays.asList(installedApp1, installedApp2))
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of events for target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(2);
+        assertWithMessage("Number of events for non-target source app before deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteAllDisallowedSourceAppHistogramData(
+                                mPackageManagerMock, new FlagsWithOneAppAllowed()))
+                .isEqualTo(2);
+
+        assertWithMessage("Number of events for target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(0);
+        assertWithMessage("Number of events for non-target source app after deletion")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testDeleteAllDisallowedSourceAppHistogramDataDeletesUnpairedIdentifiers() {
+        final class FlagsWithOneAppAllowed implements Flags {
+            @Override
+            public String getPpapiAppAllowList() {
+                return HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_SOURCE_APP
+                        .getSourceApp();
+            }
+        }
+
+        ApplicationInfo installedApp1 = new ApplicationInfo();
+        installedApp1.packageName = HistogramEventFixture.VALID_HISTOGRAM_EVENT.getSourceApp();
+        ApplicationInfo installedApp2 = new ApplicationInfo();
+        installedApp2.packageName =
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_SOURCE_APP.getSourceApp();
+        doReturn(Arrays.asList(installedApp1, installedApp2))
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_WIN_HISTOGRAM_EVENT,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_SOURCE_APP,
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of persisted histogram identifiers before deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(3);
+
+        assertWithMessage("Number of deleted events")
+                .that(
+                        mFrequencyCapDao.deleteAllDisallowedSourceAppHistogramData(
+                                mPackageManagerMock, new FlagsWithOneAppAllowed()))
+                .isEqualTo(2);
+
+        assertWithMessage("Number of persisted histogram identifiers before deletion")
+                .that(mFrequencyCapDao.getTotalNumHistogramIdentifiers())
+                .isEqualTo(1);
+
+        assertWithMessage("Non-target histogram identifier foreign key after deletion")
+                .that(
+                        mFrequencyCapDao.getHistogramIdentifierForeignKeyIfExists(
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_SOURCE_APP
+                                        .getBuyer(),
+                                /* customAudienceOwner= */ null,
+                                /* customAudienceName= */ null,
+                                HistogramEventFixture.VALID_HISTOGRAM_EVENT_DIFFERENT_SOURCE_APP
+                                        .getSourceApp()))
+                .isNotNull();
+    }
+
+    @Test
     public void testGetTotalNumHistogramEvents() {
         assertThat(mFrequencyCapDao.getTotalNumHistogramEvents()).isEqualTo(0);
 
@@ -2838,5 +3247,67 @@ public class FrequencyCapDaoTest {
                 .isEqualTo(3);
         assertThat(mFrequencyCapDao.getNumHistogramEventsByBuyer(CommonFixture.VALID_BUYER_2))
                 .isEqualTo(2);
+    }
+
+    @Test
+    public void testGetNumHistogramEventsBySourceApp() {
+        assertWithMessage("Number of events for first source app")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(0);
+        assertWithMessage("Number of events for second source app")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(0);
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of events for first source app")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(2);
+        assertWithMessage("Number of events for second source app")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(0);
+
+        mFrequencyCapDao.insertHistogramEvent(
+                HistogramEventFixture.getValidHistogramEventBuilder()
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME_2)
+                        .build(),
+                ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                LOWER_MAX_TOTAL_EVENT_COUNT,
+                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                LOWER_MAX_PER_BUYER_EVENT_COUNT);
+
+        assertWithMessage("Number of events for first source app")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_1))
+                .isEqualTo(2);
+        assertWithMessage("Number of events for second source app")
+                .that(
+                        mFrequencyCapDao.getNumHistogramEventsBySourceApp(
+                                CommonFixture.TEST_PACKAGE_NAME_2))
+                .isEqualTo(1);
     }
 }
