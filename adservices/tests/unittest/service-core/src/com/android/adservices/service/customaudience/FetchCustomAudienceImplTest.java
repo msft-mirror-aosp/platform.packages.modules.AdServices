@@ -154,7 +154,7 @@ public class FetchCustomAudienceImplTest {
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
-    private final Clock mClock = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
+    private static final Clock CLOCK = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;
@@ -173,6 +173,7 @@ public class FetchCustomAudienceImplTest {
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
+    private int mCallingAppUid;
     private Uri mFetchUri;
     private FetchCustomAudienceImpl mFetchCustomAudienceImpl;
     private FetchAndJoinCustomAudienceInput.Builder mInputBuilder;
@@ -186,6 +187,8 @@ public class FetchCustomAudienceImplTest {
                         .initMocks(this)
                         .mockStatic(ConsentManager.class)
                         .startMocking();
+
+        mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
 
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 
@@ -818,11 +821,11 @@ public class FetchCustomAudienceImplTest {
     private FetchCustomAudienceImpl getImplWithFlags(Flags flags) {
         return new FetchCustomAudienceImpl(
                 flags,
-                mClock,
+                CLOCK,
                 mAdServicesLoggerMock,
                 DIRECT_EXECUTOR,
                 mCustomAudienceDaoMock,
-                CallingAppUidSupplierProcessImpl.create(),
+                mCallingAppUid,
                 mCustomAudienceServiceFilterMock,
                 mHttpClientSpy,
                 mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
