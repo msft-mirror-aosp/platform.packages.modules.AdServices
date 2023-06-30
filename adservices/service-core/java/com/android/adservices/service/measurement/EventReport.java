@@ -414,16 +414,12 @@ public class EventReport {
                 @NonNull SourceNoiseHandler sourceNoiseHandler,
                 List<Uri> eventReportDestinations,
                 boolean enableFlexEventApi) {
-            mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestinations = eventReportDestinations;
-            mBuilding.mReportTime =
-                    eventReportWindowCalcDelegate.getReportingTime(
-                            source, trigger.getTriggerTime(), trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;

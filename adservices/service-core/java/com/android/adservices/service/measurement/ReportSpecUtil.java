@@ -16,10 +16,9 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.Source.ONE_HOUR_IN_MILLIS;
-
 import android.util.Pair;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.ArrayList;
@@ -210,7 +209,8 @@ public class ReportSpecUtil {
         List<Long> reportingWindows = findReportingEndTimesForTriggerData(reportSpec, triggerData);
         for (Long window : reportingWindows) {
             if (triggerTime <= window + sourceRegistrationTime) {
-                return sourceRegistrationTime + window + ONE_HOUR_IN_MILLIS;
+                return sourceRegistrationTime + window
+                        + FlagsFactory.getFlags().getMeasurementMinEventReportDelayMillis();
             }
         }
         // If trigger time is larger than all window end time, it means the trigger has expired.

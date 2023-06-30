@@ -39,14 +39,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * POJO for Source.
  */
 public class Source {
 
-    static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
     private String mId;
     private UnsignedLong mEventId;
     private Uri mPublisher;

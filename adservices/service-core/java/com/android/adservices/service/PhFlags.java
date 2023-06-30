@@ -587,6 +587,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
+    static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
+            "measurement_min_event_report_delay_seconds";
+
     static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
             "measurement_enable_configurable_event_reporting_windows";
 
@@ -2853,6 +2856,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMinEventReportDelayMillis() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                /* defaultValue */ MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
+    }
+
+    @Override
     public boolean getMeasurementEnableConfigurableEventReportingWindows() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -3267,6 +3279,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
                         + " = "
                         + getMeasurementMaxEventReportsPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS
+                        + " = "
+                        + getMeasurementMinEventReportDelayMillis());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS
