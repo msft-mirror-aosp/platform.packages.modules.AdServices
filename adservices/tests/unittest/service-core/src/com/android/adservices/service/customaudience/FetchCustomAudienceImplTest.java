@@ -211,6 +211,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
+                        false,
                         true,
                         true,
                         Process.myUid(),
@@ -275,6 +276,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         otherPackageName,
+                        false,
                         true,
                         true,
                         Process.myUid(),
@@ -304,6 +306,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
+                        false,
                         true,
                         true,
                         Process.myUid(),
@@ -330,6 +333,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
+                        false,
                         true,
                         true,
                         Process.myUid(),
@@ -357,6 +361,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
+                        false,
                         true,
                         true,
                         Process.myUid(),
@@ -384,6 +389,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
+                        false,
                         true,
                         true,
                         Process.myUid(),
@@ -411,6 +417,7 @@ public class FetchCustomAudienceImplTest {
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
+                        false,
                         true,
                         true,
                         Process.myUid(),

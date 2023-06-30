@@ -109,6 +109,7 @@ public class FetchCustomAudienceImpl {
     @NonNull private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     @NonNull private final CustomAudienceBlobValidator mCustomAudienceBlobValidator;
     @NonNull private final boolean mFledgeFetchCustomAudienceEnabled;
+    @NonNull private final boolean mDisableFledgeEnrollmentCheck;
     @NonNull private final boolean mEnforceForegroundStatus;
     @NonNull private final int mMaxNameSizeB;
     @NonNull private final int mMaxUserBiddingSignalsSizeB;
@@ -165,6 +166,7 @@ public class FetchCustomAudienceImpl {
         // TODO(b/278016820): Revisit handling field limit validation.
         // Ensuring process-stable flag values by assigning to local variables at instantiation.
         mFledgeFetchCustomAudienceEnabled = flags.getFledgeFetchCustomAudienceEnabled();
+        mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
         mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
         mMaxNameSizeB = flags.getFledgeCustomAudienceMaxNameSizeB();
         mMaxActivationDelayInMs = flags.getFledgeCustomAudienceMaxActivationDelayInMs();
@@ -294,6 +296,7 @@ public class FetchCustomAudienceImpl {
                                                 .filterRequestAndExtractIdentifier(
                                                         input.getFetchUri(),
                                                         input.getCallerPackageName(),
+                                                        mDisableFledgeEnrollmentCheck,
                                                         mEnforceForegroundStatus,
                                                         true,
                                                         mCallingAppUid,

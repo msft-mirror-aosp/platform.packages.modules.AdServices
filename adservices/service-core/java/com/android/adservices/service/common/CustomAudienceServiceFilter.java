@@ -137,6 +137,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
     public AdTechIdentifier filterRequestAndExtractIdentifier(
             @NonNull Uri uriForAdTech,
             @NonNull String callerPackageName,
+            boolean disableEnrollmentCheck,
             boolean enforceForeground,
             boolean enforceConsent,
             int callerUid,
@@ -157,10 +158,14 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             assertForegroundCaller(callerUid, apiName);
         }
 
-        // TODO(b/289109641): Enforce enrollment check flag.
-        sLogger.v("Extracting ad tech's eTLD+1 identifier.");
-        AdTechIdentifier adTech =
-                getAndAssertAdTechFromUriAllowed(callerPackageName, uriForAdTech, apiName);
+        AdTechIdentifier adTech;
+        if (disableEnrollmentCheck) {
+            sLogger.v("Using URI host as ad tech's identifier.");
+            adTech = AdTechIdentifier.fromString(uriForAdTech.getHost());
+        } else {
+            sLogger.v("Extracting ad tech's eTLD+1 identifier.");
+            adTech = getAndAssertAdTechFromUriAllowed(callerPackageName, uriForAdTech, apiName);
+        }
 
         sLogger.v("Validating caller package is in allow list.");
         assertAppInAllowList(callerPackageName, apiName);
