@@ -168,8 +168,8 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
-        ApkTestUtil.launchSettingView(
-                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingViewGivenUx(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT, "BETA_UX");
 
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         setConsentToFalse(dialogsOn);

@@ -25,10 +25,13 @@ import androidx.fragment.app.FragmentActivity;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+
+import java.util.stream.Stream;
 
 /** Utility class for notification related logic. */
-
 @RequiresApi(Build.VERSION_CODES.S)
+// TO-DO: Rename class to settingsUtil.
 public class NotificationUtil {
 
     /** Returns whether the device is an EEA device. */
@@ -37,5 +40,24 @@ public class NotificationUtil {
                 ? fragmentActivity.getIntent().getBooleanExtra("isEUDevice", /* default= */ true)
                 : !ConsentManager.getInstance(context).isAdIdEnabled()
                         || UxStatesManager.getInstance(context).isEeaDevice();
+    }
+
+    /** Returns the current UX. */
+    public static PrivacySandboxUxCollection getUx(
+            FragmentActivity fragmentActivity, Context context) {
+        if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()) {
+            return Stream.of(PrivacySandboxUxCollection.values())
+                    .filter(
+                            ux ->
+                                    ux.toString()
+                                            .equals(
+                                                    fragmentActivity
+                                                            .getIntent()
+                                                            .getStringExtra("ux")))
+                    .findFirst()
+                    .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+        } else {
+            return UxStatesManager.getInstance(context).getUx();
+        }
     }
 }

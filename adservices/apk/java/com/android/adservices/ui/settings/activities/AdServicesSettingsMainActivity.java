@@ -85,7 +85,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     protected void onResume() {
         super.onResume();
         if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithUx(this);
+            initWithUx(this, getApplicationContext());
         }
     }
 

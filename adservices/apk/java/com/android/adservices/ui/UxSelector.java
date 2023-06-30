@@ -20,7 +20,8 @@ import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
 
-import com.android.adservices.service.ui.data.UxStatesManager;
+import androidx.fragment.app.FragmentActivity;
+
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /**
@@ -35,8 +36,8 @@ public interface UxSelector {
      *
      * @param context Current context
      */
-    default void initWithUx(Context context) {
-        switch (UxStatesManager.getInstance(context).getUx()) {
+    default void initWithUx(FragmentActivity fragmentActivity, Context context) {
+        switch (NotificationUtil.getUx(fragmentActivity, context)) {
             case U18_UX:
                 initU18();
                 break;
