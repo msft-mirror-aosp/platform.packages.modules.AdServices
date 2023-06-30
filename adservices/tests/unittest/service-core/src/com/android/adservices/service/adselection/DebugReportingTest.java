@@ -50,7 +50,7 @@ public class DebugReportingTest {
 
         DebugReporting debugReporting = new DebugReporting(mFlagsMock, null);
 
-        assertThat(debugReporting.isDebugReportingEnabled()).isTrue();
+        assertThat(debugReporting.isEnabled()).isTrue();
     }
 
     @Test
@@ -61,7 +61,7 @@ public class DebugReportingTest {
 
         DebugReporting debugReporting = new DebugReporting(mFlagsMock, null);
 
-        assertThat(debugReporting.isDebugReportingEnabled()).isFalse();
+        assertThat(debugReporting.isEnabled()).isFalse();
     }
 
     @Test
@@ -71,7 +71,7 @@ public class DebugReportingTest {
 
         DebugReporting debugReporting = new DebugReporting(mFlagsMock, null);
 
-        assertThat(debugReporting.isDebugReportingEnabled()).isFalse();
+        assertThat(debugReporting.isEnabled()).isFalse();
     }
 
     @Test

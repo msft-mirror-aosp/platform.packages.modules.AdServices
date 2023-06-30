@@ -129,7 +129,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
                         mFlags);
-        mDebugReportingEnabled = debugReporting.isDebugReportingEnabled();
+        mDebugReportingEnabled = debugReporting.isEnabled();
     }
 
     /**

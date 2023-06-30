@@ -79,6 +79,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionCallback;
@@ -224,6 +225,8 @@ public class OnDeviceAdSelectionRunnerTest {
     @Mock private AdServicesHttpsClient mMockHttpClient;
     @Mock private AdCounterKeyCopier mAdCounterKeyCopierMock;
     @Mock private FrequencyCapAdDataValidator mFrequencyCapAdDataValidatorMock;
+    @Mock private DebugReporting mDebugReportingMock;
+    @Mock private DebugReportSenderStrategy mDebugReportSenderMock;
 
     @Captor
     ArgumentCaptor<RunAdSelectionProcessReportedStats>
@@ -337,6 +340,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mContextSpy.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
+        when(mDebugReportingMock.getSenderStrategy()).thenReturn(mDebugReportSenderMock);
 
         doNothing()
                 .when(mAdSelectionServiceFilterMock)
@@ -392,7 +396,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
@@ -456,6 +461,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -519,7 +525,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
@@ -660,7 +667,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         new AdFiltererNoOpImpl(),
                         new AdCounterKeyCopierNoOpImpl(),
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudienceNoFilterBuyer1,
@@ -730,6 +738,7 @@ public class OnDeviceAdSelectionRunnerTest {
         assertThat(histogramInfo.getAdCounterKeys()).isNull();
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -849,7 +858,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(existingAdSelectionId));
@@ -886,6 +896,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -942,7 +953,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1050,7 +1062,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1082,6 +1095,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -1121,7 +1135,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -1183,7 +1198,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -1243,7 +1259,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
         // This ad selection fails because there are no CAs but the foreground status validation
@@ -1294,7 +1311,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -1362,6 +1380,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1435,7 +1454,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1485,6 +1505,7 @@ public class OnDeviceAdSelectionRunnerTest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
         verifyLogForSuccessfulBiddingProcess(partialBiddingOutcome);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -1547,7 +1568,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1639,7 +1661,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1736,7 +1759,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -1836,7 +1860,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1886,6 +1911,7 @@ public class OnDeviceAdSelectionRunnerTest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -1956,7 +1982,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -2067,7 +2094,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -2207,7 +2235,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -2241,6 +2270,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
         verifyLogForSuccessfulBiddingProcess(adBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
@@ -2289,7 +2319,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -2344,7 +2375,8 @@ public class OnDeviceAdSelectionRunnerTest {
                                 mPerBuyerBiddingRunnerMock,
                                 mAdFilterer,
                                 mAdCounterKeyCopier,
-                                mFrequencyCapAdDataValidator);
+                                mFrequencyCapAdDataValidator,
+                                mDebugReportingMock);
         Throwable throwable =
                 assertThrows(IllegalArgumentException.class, initializeAdSelectionRunner);
         verifyErrorMessageIsCorrect(throwable.getMessage(), JS_SANDBOX_IS_NOT_AVAILABLE);
@@ -2374,7 +2406,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mMockAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         List<DBAdData> adsToNotFilter =
                 DBAdDataFixture.getValidDbAdDataListByBuyer(mDBCustomAudienceForBuyer1.getBuyer());
         AppInstallFilters appFilters =
@@ -2452,7 +2485,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mMockAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
         AppInstallFilters appFilters =
                 new AppInstallFilters.Builder()
                         .setPackageNames(Collections.singleton(CommonFixture.TEST_PACKAGE_NAME_1))
@@ -2523,7 +2557,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         assertEquals(
                 mAdScoringOutcomeForBuyer1.getBiddingLogicJs(),
@@ -2574,7 +2609,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         String downloadingDecisionLogic =
                 adSelectionRunner
@@ -2643,7 +2679,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
@@ -2707,7 +2744,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         AdSelectionTestCallback result =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -2774,7 +2812,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mMockAdFilterer,
                         mAdCounterKeyCopier,
-                        mFrequencyCapAdDataValidator);
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
 
         when(mMockAdFilterer.filterContextualAds(contextualAdsMap.get(CommonFixture.VALID_BUYER_1)))
                 .thenReturn(contextualAdsMap.get(CommonFixture.VALID_BUYER_1));
@@ -2834,7 +2873,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopierMock,
-                        mFrequencyCapAdDataValidatorMock);
+                        mFrequencyCapAdDataValidatorMock,
+                        mDebugReportingMock);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -3234,6 +3274,13 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+    }
+
+    private void verifyDebugReportingWasNotCalled() {
+        assertThat(mFlags.getFledgeEventLevelDebugReportingEnabled()).isFalse();
+        verify(mDebugReportingMock, times(0)).getSenderStrategy();
+        verify(mDebugReportSenderMock, times(0)).batchEnqueue(anyList());
+        verify(mDebugReportSenderMock, times(0)).flush();
     }
 
     private static class OnDeviceAdSelectionRunnerTestFlags implements Flags {

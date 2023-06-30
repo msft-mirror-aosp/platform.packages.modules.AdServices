@@ -268,7 +268,7 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionExecutionLoggerClock,
                         ApplicationProvider.getApplicationContext(),
                         mAdServicesLoggerMock);
-        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(false);
+        when(mDebugReporting.isEnabled()).thenReturn(false);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
@@ -397,7 +397,7 @@ public class AdsScoreGeneratorImplTest {
     public void testRunAdScoringSuccess_withDebugReportingEnabled() throws Exception {
         Uri winUri = Uri.parse("http://example.com/reportWin");
         Uri lossUri = Uri.parse("http://example.com/reportLoss");
-        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(true);
+        when(mDebugReporting.isEnabled()).thenReturn(true);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -671,7 +671,7 @@ public class AdsScoreGeneratorImplTest {
                 })
                 .when(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(any());
-        when(mDebugReporting.isDebugReportingEnabled()).thenReturn(true);
+        when(mDebugReporting.isEnabled()).thenReturn(true);
 
         List<Double> scores = ImmutableList.of(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);

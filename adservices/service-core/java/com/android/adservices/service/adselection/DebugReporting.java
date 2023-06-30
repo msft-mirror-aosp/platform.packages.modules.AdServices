@@ -48,7 +48,7 @@ public class DebugReporting {
 
     public DebugReporting(Flags flags, AdServicesHttpsClient adServicesHttpsClient) {
         mAdServicesHttpsClient = adServicesHttpsClient;
-        mEnabled = isEnabled(flags);
+        mEnabled = getEnablementStatus(flags);
     }
 
     public DebugReportingScriptStrategy getScriptStrategy() {
@@ -57,17 +57,17 @@ public class DebugReporting {
                 : new DebugReportingScriptDisabledStrategy();
     }
 
-    public boolean isDebugReportingEnabled() {
-        return mEnabled;
-    }
-
     public DebugReportSenderStrategy getSenderStrategy() {
         return mEnabled
                 ? new DebugReportSenderStrategyHttpImpl(mAdServicesHttpsClient)
                 : new DebugReportSenderStrategyNoOp();
     }
 
-    private static boolean isEnabled(Flags flags) {
+    public boolean isEnabled() {
+        return mEnabled;
+    }
+
+    private static boolean getEnablementStatus(Flags flags) {
         return flags.getFledgeEventLevelDebugReportingEnabled();
     }
 
