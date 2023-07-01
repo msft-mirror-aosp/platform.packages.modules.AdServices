@@ -26,6 +26,7 @@ android_app {
     libs: [
         "android.ext.adservices",
     ],
+    optional_uses_libs: ["android.ext.adservices"],
     static_libs: [
         "adservices-clients",
         "androidx.appcompat_appcompat",
@@ -33,6 +34,10 @@ android_app {
         "com.google.android.material_material",
         "androidx.concurrent_concurrent-futures",
     ],
+    // TODO(b/269145496): Remove dex_preopt: false.
+    dex_preopt: {
+        enabled: false,
+    },
     resource_dirs: ["res"],
     platform_apis: true,
     min_sdk_version: "30",
