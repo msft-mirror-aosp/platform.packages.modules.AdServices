@@ -610,7 +610,7 @@ public final class PhFlags implements Flags {
             "measurement_max_event_reports_per_destination";
 
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_seconds";
+            "measurement_min_event_report_delay_millis";
 
     static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
             "measurement_enable_configurable_event_reporting_windows";
