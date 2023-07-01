@@ -27,7 +27,6 @@ public class UIStats {
     private int mAction;
     private int mDefaultConsent;
     private int mDefaultAdIdState;
-    private int mPrivacySandboxFeatureType;
 
     public UIStats() {}
 
@@ -41,19 +40,12 @@ public class UIStats {
                 && mRegion == uiStats.getRegion()
                 && mAction == uiStats.getAction()
                 && mDefaultConsent == uiStats.getDefaultConsent()
-                && mDefaultAdIdState == uiStats.getDefaultAdIdState()
-                && mPrivacySandboxFeatureType == uiStats.getPrivacySandboxFeatureType();
+                && mDefaultAdIdState == uiStats.getDefaultAdIdState();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                mCode,
-                mRegion,
-                mAction,
-                mDefaultConsent,
-                mDefaultAdIdState,
-                mPrivacySandboxFeatureType);
+        return Objects.hash(mCode, mRegion, mAction, mDefaultConsent, mDefaultAdIdState);
     }
 
     @NonNull
@@ -81,10 +73,6 @@ public class UIStats {
         return mDefaultAdIdState;
     }
 
-    @NonNull
-    public int getPrivacySandboxFeatureType() {
-        return mPrivacySandboxFeatureType;
-    }
 
     public void setRegion(int region) {
         mRegion = region;
@@ -115,8 +103,6 @@ public class UIStats {
                 + mDefaultConsent
                 + ", mDefaultAdIdState="
                 + mDefaultAdIdState
-                + ", mPrivacySandboxFeatureType"
-                + mPrivacySandboxFeatureType
                 + '}';
     }
 
@@ -158,12 +144,6 @@ public class UIStats {
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
-        public @NonNull UIStats.Builder setPrivacySandboxFeatureType(
-                int privacySandboxFeatureType) {
-            mBuilding.mPrivacySandboxFeatureType = privacySandboxFeatureType;
-            return this;
-        }
         /** Build the {@link UIStats}. */
         public @NonNull UIStats build() {
             return mBuilding;
