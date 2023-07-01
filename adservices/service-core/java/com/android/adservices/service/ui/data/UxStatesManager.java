@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
+
 import android.adservices.common.AdServicesStates;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -101,7 +103,7 @@ public class UxStatesManager {
         if (mUx == null) {
             mUx = mConsentManager.getUx();
         }
-        return mUx;
+        return mUx != null ? mUx : UNSUPPORTED_UX;
     }
 
     /** Returns process statble enrollment channel. */

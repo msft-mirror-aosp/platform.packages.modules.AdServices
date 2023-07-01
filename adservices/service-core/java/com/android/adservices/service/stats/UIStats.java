@@ -27,6 +27,7 @@ public class UIStats {
     private int mAction;
     private int mDefaultConsent;
     private int mDefaultAdIdState;
+    private int mUx;
 
     public UIStats() {}
 
@@ -40,12 +41,13 @@ public class UIStats {
                 && mRegion == uiStats.getRegion()
                 && mAction == uiStats.getAction()
                 && mDefaultConsent == uiStats.getDefaultConsent()
-                && mDefaultAdIdState == uiStats.getDefaultAdIdState();
+                && mDefaultAdIdState == uiStats.getDefaultAdIdState()
+                && mUx == uiStats.getUx();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mRegion, mAction, mDefaultConsent, mDefaultAdIdState);
+        return Objects.hash(mCode, mRegion, mAction, mDefaultConsent, mDefaultAdIdState, mUx);
     }
 
     @NonNull
@@ -73,6 +75,10 @@ public class UIStats {
         return mDefaultAdIdState;
     }
 
+    @NonNull
+    public int getUx() {
+        return mUx;
+    }
 
     public void setRegion(int region) {
         mRegion = region;
@@ -90,6 +96,10 @@ public class UIStats {
         mDefaultAdIdState = defaultAdIdState;
     }
 
+    public void setUx(int ux) {
+        mUx = ux;
+    }
+
     @Override
     public String toString() {
         return "UIStats{"
@@ -103,6 +113,8 @@ public class UIStats {
                 + mDefaultConsent
                 + ", mDefaultAdIdState="
                 + mDefaultAdIdState
+                + ", mUx="
+                + mUx
                 + '}';
     }
 
@@ -114,33 +126,39 @@ public class UIStats {
             mBuilding = new UIStats();
         }
 
-        /** See {@link UIStats#getCode()} . */
+        /** See {@link UIStats#getCode()}. */
         public @NonNull UIStats.Builder setCode(int code) {
             mBuilding.mCode = code;
             return this;
         }
 
-        /** See {@link UIStats#getRegion()} . */
+        /** See {@link UIStats#getRegion()}. */
         public @NonNull UIStats.Builder setRegion(int region) {
             mBuilding.mRegion = region;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getAction()}. */
         public @NonNull UIStats.Builder setAction(int action) {
             mBuilding.mAction = action;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getDefaultConsent()}. */
         public @NonNull UIStats.Builder setDefaultConsent(int defaultConsent) {
             mBuilding.mDefaultConsent = defaultConsent;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getDefaultAdIdState()}. */
         public @NonNull UIStats.Builder setDefaultAdIdState(int defaultAdIdState) {
             mBuilding.mDefaultAdIdState = defaultAdIdState;
+            return this;
+        }
+
+        /** See {@link UIStats#getUx()}. */
+        public @NonNull UIStats.Builder setUx(int ux) {
+            mBuilding.mUx = ux;
             return this;
         }
 
