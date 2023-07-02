@@ -2489,7 +2489,8 @@ public class ConsentManagerTest {
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, invalidConsentSourceOfTruth);
 
-        assertThrows(RuntimeException.class, () -> spyConsentManager.recordNotificationDisplayed(true));
+        assertThrows(
+                RuntimeException.class, () -> spyConsentManager.recordNotificationDisplayed(true));
     }
 
     @Test
@@ -4393,8 +4394,8 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mUxStatesDaoMock, times(12)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(12)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(13)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(13)).setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4414,8 +4415,8 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mMockIAdServicesManager, times(12)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(12)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(13)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(13)).setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4435,8 +4436,8 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mMockIAdServicesManager, times(12)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(12)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(13)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(13)).setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4457,7 +4458,7 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mAppSearchConsentManagerMock, times(12)).getEnrollmentChannel(any());
-        verify(mAppSearchConsentManagerMock, times(12)).setEnrollmentChannel(any(), any());
+        verify(mAppSearchConsentManagerMock, times(13)).getEnrollmentChannel(any());
+        verify(mAppSearchConsentManagerMock, times(13)).setEnrollmentChannel(any(), any());
     }
 }
