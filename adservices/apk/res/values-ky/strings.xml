@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Бөгөттөн чыгаруу"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Бөгөттөлгөн кызыккан нерселериңиз"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Бардык кызыккан нерселерди баштапкы абалга келтирүү"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Азырынча эч нерсе жок"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Азырынча эч нерсе жок"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Учурда көрсөтүү үчүн кызыккан нерселер жок."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Учурда көрсөтүлө турган темалар жок.\n"<a href="https://support.google.com/android?p=ad_privacy">"Жарнамалардын темалары"</a>" тууралуу кеңири маалымат алыңыз"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nAndroid сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Бөгөттөлгөн кызыккан нерселериңиз жок"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Бөгөттөлгөн колдонмолорду көрүү"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Колдонмолор аныктаган кызыккан нерселерди өчүрүү"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Учурда бир да колдонмо кызыккан нерселерди сунуштаган жок"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Эч кандай колдонмо жок"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Учурда көрсөтүлө турган колдонмо жок. \n"<a href="https://support.google.com/android?p=ad_privacy">"Колдонмолор сунуштаган жарнамалар"</a>" жөнүндө кеңири маалымат алыңыз"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android\'деги жарнамалардын купуялыгынын бета версиясы колдонмолор сизге кызыктуу жарнамаларды көрсөтүү үчүн пайдалана турган жаңы функцияларды сунуштайт. Бул технологиялар түзмөктүн идентификаторлорун колдонбойт.\n\nКолдонмолор сизге кызыктуу жарнамаларды аныктап, бул кызыккан нерселериңизди түзмөгүңүзгө убактылуу сактай алат. Ал аркылуу колдонмолор сизге ылайыктуу жарнамаларды көрсөтөт, бирок башка иштеп чыгуучулардын колдонмолорунда жана вебсайттарында жасаган аракеттериңизге көз сала албайт."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Бөгөттөлгөн колдонмолоруңуз жок"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Колдонмо сунуштаган жарнамалардын параметрлерин кайра коесузбу?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Тизмеңиздеги колдонмолор сунуштаган жарнаманын маалыматы өчүрүлгөнү менен, окшош жарнамалар көрүнө бериши мүмкүн. Кийинчерээк колдонмолор жаңы жарнамаларды сунуштай баштайт."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Колдонмого байланыштуу нерселер өчүрүлдү"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Бардык темаларды өчүрөсүзбү?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Колдонмо сунуштаган жарнамалардын параметрлерин кайра коесузбу?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Жарнама темалары күйүк"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android сизге кызыктуу темаларды белгилеп баштайт. Алгачкы темалар дароо көрүнбөшү мүмкүн."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Жарнама темаларын өчүрөсүзбү?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Темалардын тизмеси өчүрүлөт. Мындан ары Android сизге кызыктуу темаларды белгилебей калат, бирок ылайыктуу жарнамалар көрүнө бериши мүмкүн."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Колдонмолор сунуштаган жарнамалар күйүк"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Колдонмолор жарнамаларды сунуштап башташы мүмкүн. Андай болгондо, ал колдонмолордун тизмесин көрөсүз."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Колдонмолор сунуштаган жарнамаларды өчүрөсүзбү?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Бардык жарнамалык сунуштар өчүрүлөт. Мындан ары колдонмолор жарнамаларды сунуштай албай калат, бирок ылайыктуу жарнамалар көрүнө бериши мүмкүн."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Жарнамалардын майнаптуулугун баалоо күйүк"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Колдонмолорго жарнамаларынын майнаптуулугун баалоого жардам берүү үчүн Android айрым маалыматты гана бөлүшө алат."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Жарнамалардын майнаптуулугун баалоону өчүрөсүзбү?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Каралып жаткан жарнамалардын майнаптуулугун баалоо тууралуу бардык отчёттор өчүрүлөт. Жаңы отчёттор түзүлүп же бөлүшүлбөйт."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Жарнаманын купуялыгы"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Жарнамалардын темалары"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Колдонмолор сунуштаган жарнамалар"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android жакында ачкан колдонмолоруңуздун жана аларды канчалык көп иштеткениңиздин негизинде кызыккан темаларыңызды билип турат."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Колдонмолор жасаган нерселериңизге жараша кандай нерселерге кызыгарыңызды биле алат."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Сиз пайдаланган колдонмолор Android\'ден жарнамалардын майнаптуулугун талдоо үчүн керек болгон маалыматты сурашы мүмкүн. Колдонмолор Android\'ден белгилүү бир маалыматтарды гана ала алат."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android\'де жарнамалардын купуялыгы"</a>" жөнүндө кеңири маалымат алыңыз"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Күйүк/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> тема"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Күйүк/# тема}other{Күйүк/# тема}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Күйүк/<xliff:g id="APPS_COUNT">%1$d</xliff:g> колдонмо"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Сиз бөгөттөгөн колдонмолор"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Колдонмолор сунуштаган нерселерди өчүрүү"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Адатта сиз пайдаланган колдонмолор кызматтарды жекелештирүү үчүн сизди кызыктырган нерселерди эстеп калат. Ошондой эле, алар Android\'де темаларыңыз тууралуу маалыматты сакташы мүмкүн.\n\nМисалы, эгер марафонго даярдануу тууралуу колдонмону пайдалансаңыз, ал сизди спорттук бут кийимдерге кызыгат деп ойлошу мүмкүн. Кийинчерээк башка колдонмону пайдалансаңыз, ал колдонмо биринчи колдонмо сунуштаган спорттук бут кийим тууралуу жарнаманы көрсөтүшү мүмкүн.\n\nAndroid колдонмолор сунуштаган маалыматты автоматтык түрдө жок кылып турат. Сиз кайра пайдаланган колдонмо тизмеде кайрадан көрүнүшү мүмкүн. Же болбосо, колдонмонун жарнамаларды сунуштоо аракетин бөгөттөсөңүз болот.\n\nКолдонмолоруңузда көрсөтүлгөн жарнама ушул параметр, жарнама темаларынын параметри, жарнама идентификаторуңуздун жана колдонмонун параметрлерине жараша жекелештирилиши мүмкүн."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Жарнамалардын жаңы купуялык функциясы жеткиликтүү"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Жарнамалардын майнаптуулугун баалоо үчүн колдонмолор бири-бири менен белгилүү бир маалымат түрлөрүн гана бөлүшөт"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Жарнамалардын майнаптуулугун баалоо деп аталган жарнамалардын жаңы купуялык функцияларын ишке киргизип жатабыз. Жарнамалардын майнаптуулугун баалоо үчүн Android колдонмолору бири-бири менен жарнама көрсөтүлгөн убакыт сыяктуу белгилүү бир маалымат түрлөрүн гана бөлүшөт."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Жарнамалардын купуялык параметрлерине өтүп, өзгөртүүлөрдү киргизе аласыз."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Сиз пайдаланган колдонмолор жарнамаларынын майнаптуулугун баалоо үчүн Android\'ден маалымат сурашы мүмкүн. Android колдонмолорго белгилүү бир маалымат түрлөрүн гана чогултууга уруксат берет."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Музыка, жаңылыктар жана спорт сыяктуу кызыктуу темаларды чагылдырган символдордун түстүү иллюстрациясы"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Айлананын ичиндеги кулпунун түстүү иллюстрациясы"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Чарчыны түзгөн тогуз чекиттен турган кичинекей ак жана кара иллюстрация"</string>

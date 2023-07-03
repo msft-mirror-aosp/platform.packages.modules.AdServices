@@ -46,6 +46,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
@@ -132,6 +133,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilterer mAdFilterer;
+    @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
@@ -158,7 +160,8 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
-            @NonNull final int callerUid) {
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -168,6 +171,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -186,6 +190,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
@@ -205,6 +210,7 @@ public abstract class AdSelectionRunner {
             int callerUid,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -218,6 +224,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -235,6 +242,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
@@ -585,7 +593,8 @@ public abstract class AdSelectionRunner {
     private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator =
-                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
+                new AdSelectionConfigValidator(
+                        mPrebuiltLogicGenerator, mFrequencyCapAdDataValidator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 

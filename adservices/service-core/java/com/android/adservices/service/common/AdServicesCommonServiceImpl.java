@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
@@ -29,8 +30,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 
+import android.adservices.common.AdServicesStates;
+import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
+import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -46,9 +50,9 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.ui.UxEngine;
 
 import java.util.concurrent.Executor;
 
@@ -61,14 +65,16 @@ import java.util.concurrent.Executor;
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
-    private final Context mContext;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
-    private final Flags mFlags;
     public final String ADSERVICES_STATUS_SHARED_PREFERENCE = "AdserviceStatusSharedPreference";
+    private final Context mContext;
+    private final UxEngine mUxEngine;
+    private final Flags mFlags;
 
-    public AdServicesCommonServiceImpl(Context context, Flags flags) {
+    public AdServicesCommonServiceImpl(Context context, Flags flags, UxEngine uxEngine) {
         mContext = context;
         mFlags = flags;
+        mUxEngine = uxEngine;
     }
 
     @Override
@@ -154,37 +160,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         LogUtil.d("entry point: " + adServicesEntryPointEnabled);
 
                         ConsentManager consentManager = ConsentManager.getInstance(mContext);
+                        consentManager.setAdIdEnabled(adIdEnabled);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
                             if (reconsentIfNeededForROW()) {
                                 LogUtil.d("Reconsent for ROW.");
-
-                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                    if (mFlags.getEuNotifFlowChangeEnabled()) {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_RECONSENT_FF);
-                                    } else {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_RECONSENT);
-                                    }
-                                }
-
                                 ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
                             } else if (getFirstConsentStatus()) {
-                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                    if (mFlags.getEuNotifFlowChangeEnabled()) {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_FIRST_CONSENT_FF);
-                                    } else {
-                                        consentManager.setCurrentPrivacySandboxFeature(
-                                                PrivacySandboxFeatureType
-                                                        .PRIVACY_SANDBOX_FIRST_CONSENT);
-                                    }
-                                }
-
                                 ConsentNotificationJobService.schedule(
                                         mContext, adIdEnabled, false);
                             }
@@ -192,12 +174,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
                                 PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
-                            }
-
-                        } else {
-                            if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                consentManager.setCurrentPrivacySandboxFeature(
-                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
                             }
                         }
                     } catch (Exception e) {
@@ -232,18 +208,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 // Check the setAdServicesEnabled was called before
                 if (preferences.contains(KEY_ADSERVICES_ENTRY_POINT_STATUS)
                         && consentManager.getConsent().isGiven()) {
-                    // AdidEnabled status does not matter here as this is only for EU device, it
-                    // will override by the EU in the scheduler
-                    if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                        if (mFlags.getEuNotifFlowChangeEnabled()) {
-                            consentManager.setCurrentPrivacySandboxFeature(
-                                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT_FF);
-                        } else {
-                            consentManager.setCurrentPrivacySandboxFeature(
-                                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
-                        }
-                    }
-
                     ConsentNotificationJobService.schedule(mContext, false, true);
                 }
             }
@@ -266,5 +230,48 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 && !consentManager.wasGaUxNotificationDisplayed()
                 && consentManager.wasNotificationDisplayed()
                 && consentManager.getConsent().isGiven();
+    }
+
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
+    public void enableAdServices(
+            @NonNull AdServicesStates adServicesStates,
+            @NonNull IEnableAdServicesCallback callback) {
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d("enableAdServices(): Caller is not authorized.");
+                            return;
+                        }
+
+                        // TO-DO (b/286664178): remove the block after API is fully ramped up.
+                        if (!mFlags.getEnableAdServicesSystemApi()) {
+                            callback.onResult(
+                                    new EnableAdServicesResponse.Builder()
+                                            .setStatusCode(STATUS_SUCCESS)
+                                            .setApiEnabled(false)
+                                            .setSuccess(false)
+                                            .build());
+                            LogUtil.d("enableAdServices(): API is disabled.");
+                            return;
+                        }
+
+                        mUxEngine.start(adServicesStates);
+                        LogUtil.d("enableAdServices(): UxEngine started.");
+
+                        callback.onResult(
+                                new EnableAdServicesResponse.Builder()
+                                        .setStatusCode(STATUS_SUCCESS)
+                                        .setApiEnabled(true)
+                                        .setSuccess(true)
+                                        .build());
+                    } catch (Exception e) {
+                        LogUtil.e("enableAdServices() failed to complete: " + e.getMessage());
+                    }
+                });
     }
 }

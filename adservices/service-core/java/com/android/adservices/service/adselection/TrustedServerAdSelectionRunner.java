@@ -35,7 +35,9 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -104,6 +106,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdRenderIdValidator adRenderIdValidator,
             int callerUid) {
         super(
                 context,
@@ -117,6 +121,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
                 adFilterer,
+                frequencyCapAdDataValidator,
                 callerUid);
 
         mCustomAudienceDevOverridesHelper =
@@ -144,6 +149,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             int callerUid,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final JsFetcher jsFetcher,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         super(
@@ -160,6 +166,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 callerUid,
                 adSelectionServiceFilter,
                 adFilterer,
+                frequencyCapAdDataValidator,
                 adSelectionExecutionLogger);
 
         this.mJsFetcher = jsFetcher;
@@ -340,7 +347,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         .setWinningAdRenderUri(winningAdRenderUri)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setBiddingLogicUri(customAudience.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(callerPackageName);
 
         return new Pair<>(builder, customAudience);

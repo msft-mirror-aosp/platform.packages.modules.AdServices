@@ -30,10 +30,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * Test to check that AdExtServicesApk activities are enabled by AdExtBootCompletedReceiver on S
+ * Test to check that ExtServices activities are enabled by AdExtBootCompletedReceiver on S
  *
- * <p>AdExtServicesApk activities are disabled by default so that there are no duplicate activities
- * on T+ devices. AdExtBootCompletedReceiver handles the BootCompleted initialization and changes
+ * <p>ExtServices activities are disabled by default so that there are no duplicate activities on T+
+ * devices. AdExtBootCompletedReceiver handles the BootCompleted initialization and changes
  * activities to enabled on Android S devices
  */
 @RunWith(DeviceJUnit4ClassRunner.class)

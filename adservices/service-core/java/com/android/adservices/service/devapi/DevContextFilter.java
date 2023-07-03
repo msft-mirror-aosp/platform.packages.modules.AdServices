@@ -22,11 +22,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.Build;
 import android.provider.Settings;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -144,7 +144,7 @@ public class DevContextFilter {
     /** Returns true if developer options are enabled. */
     @VisibleForTesting
     public boolean isDeveloperMode() {
-        return Build.isDebuggable()
+        return BuildCompatUtils.isDebuggable()
                 || Settings.Global.getInt(
                                 mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
                         != 0;

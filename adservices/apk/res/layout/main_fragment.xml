@@ -204,6 +204,11 @@
                 <TextView
                     android:text="@string/settingsU_main_view_measurement_info"
                     style="@style/MainStyle.Body2" />
+                <TextView
+                    android:id="@+id/main_view_ga_footer_learn_more"
+                    android:text="@string/settingsU_main_view_learn_more"
+                    style="@style/MainStyle.Body2" />
+
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

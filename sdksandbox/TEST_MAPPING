@@ -1,5 +1,5 @@
 {
-   "mainline-presubmit": [
+  "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
       "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]",
@@ -31,7 +31,7 @@
       "name": "SdkSandboxShellHostTest[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
+      "name": "BroadcastRestrictionsHostTest[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
@@ -40,6 +40,9 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest[com.google.android.adservices.apex]"
     },
     {
       "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]",
@@ -53,7 +56,7 @@
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
-     "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
+      "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
@@ -104,10 +107,10 @@
       "name": "SdkSandboxShellHostTest"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest"
+      "name": "BroadcastRestrictionsHostTest"
     },
     {
-      "name": "BroadcastRestrictionsHostTest"
+      "name": "ContentProviderRestrictionsHostTest"
     },
     {
       "name": "SdkSandboxStorageHostTest",
@@ -116,6 +119,9 @@
           "exclude-annotation": "android.platform.test.annotations.LargeTest"
         }
       ]
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest"
     },
     {
       "name": "SdkSandboxManagerDisabledTests"
@@ -133,6 +139,26 @@
     },
     {
       "name": "CtsSdkSandboxHostSideTests"
+    },
+    {
+      "name": "SdkSandboxUiTests"
+    }
+  ],
+  "sdksandbox-postsubmit": [
+    {
+      "name": "CtsContentTestCases"
+    },
+    {
+      "name": "CtsDisplayTestCases"
+    },
+    {
+      "name": "CtsInputMethodTestCases"
+    },
+    {
+      "name": "CtsMediaAudioTestCases"
+    },
+    {
+      "name": "CtsOsTestCases"
     }
   ]
 }

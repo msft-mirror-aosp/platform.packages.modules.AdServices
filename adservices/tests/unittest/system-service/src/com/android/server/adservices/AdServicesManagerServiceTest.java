@@ -62,7 +62,9 @@ import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.data.topics.TopicsDbHelper;
 import com.android.server.adservices.data.topics.TopicsDbTestUtil;
 import com.android.server.adservices.data.topics.TopicsTables;
+import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Before;
@@ -83,6 +85,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /** Tests for {@link AdServicesManagerService} */
 public class AdServicesManagerServiceTest {
@@ -556,7 +559,7 @@ public class AdServicesManagerServiceTest {
 
         // First, the notification displayed is false.
         assertThat(service.wasNotificationDisplayed()).isFalse();
-        service.recordNotificationDisplayed();
+        service.recordNotificationDisplayed(true);
         assertThat(service.wasNotificationDisplayed()).isTrue();
     }
 
@@ -578,7 +581,7 @@ public class AdServicesManagerServiceTest {
 
         // First, the notification displayed is false.
         assertThat(service.wasGaUxNotificationDisplayed()).isFalse();
-        service.recordGaUxNotificationDisplayed();
+        service.recordGaUxNotificationDisplayed(true);
         assertThat(service.wasGaUxNotificationDisplayed()).isTrue();
     }
 
@@ -960,6 +963,24 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
+    public void uxConformanceTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // The default UX is UNSUPPORTED_UX
+        assertThat(service.getUx()).isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
+
+        Stream.of(PrivacySandboxUxCollection.values())
+                .forEach(
+                        ux -> {
+                            service.setUx(ux.toString());
+                            assertThat(service.getUx()).isEqualTo(ux.toString());
+                        });
+    }
+
+    @Test
     public void testDump_noPermission() throws Exception {
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
@@ -1045,5 +1066,84 @@ public class AdServicesManagerServiceTest {
         packageInfoList.add(packageInfo);
         when(mMockPackageManager.getInstalledPackages(any(PackageManager.PackageInfoFlags.class)))
                 .thenReturn(packageInfoList);
+    }
+
+    @Test
+    public void isAdIdEnabledTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isAdIdEnabled()).isFalse();
+        service.setAdIdEnabled(true);
+        assertThat(service.isAdIdEnabled()).isTrue();
+    }
+
+    @Test
+    public void isU18AccountTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isU18Account()).isFalse();
+        service.setU18Account(true);
+        assertThat(service.isU18Account()).isTrue();
+    }
+
+    @Test
+    public void isEntryPointEnabledTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isEntryPointEnabled()).isFalse();
+        service.setEntryPointEnabled(true);
+        assertThat(service.isEntryPointEnabled()).isTrue();
+    }
+
+    @Test
+    public void isAdultAccountTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isAdultAccount()).isFalse();
+        service.setAdultAccount(true);
+        assertThat(service.isAdultAccount()).isTrue();
+    }
+
+    @Test
+    public void wasU18NotificationDisplayedTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.wasU18NotificationDisplayed()).isFalse();
+        service.setU18NotificationDisplayed(true);
+        assertThat(service.wasU18NotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void enrollmentChannelConformanceTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // The default enrollment channel is null.
+        assertThat(service.getEnrollmentChannel()).isEqualTo(null);
+
+        Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                .forEach(
+                        channel -> {
+                            service.setEnrollmentChannel(channel.toString());
+                            assertThat(service.getEnrollmentChannel())
+                                    .isEqualTo(channel.toString());
+                        });
     }
 }

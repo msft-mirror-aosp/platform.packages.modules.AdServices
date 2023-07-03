@@ -474,7 +474,9 @@ public abstract class E2ETest {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
-        DbTestUtil.getDbHelperForTest().getWritableDatabase().delete("enrollment_data", null, null);
+        DbTestUtil.getSharedDbHelperForTest()
+                .getWritableDatabase()
+                .delete("enrollment_data", null, null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
@@ -974,7 +976,7 @@ public abstract class E2ETest {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
         }
-        SQLiteDatabase enrollmentDb = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase enrollmentDb = DbTestUtil.getSharedDbHelperForTest().getWritableDatabase();
         List<String> enrollmentTables = ImmutableList.of("enrollment_data");
         for (String tableName : enrollmentTables) {
             result.append("\n" + tableName + ":\n");
@@ -1210,11 +1212,13 @@ public abstract class E2ETest {
         } while (t <= lastTriggerTime);
 
         // Account for edge case of t between lastTriggerTime and the latter's max report delay.
-        if (t <= lastTriggerTime + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY) {
+        long aggregateReportMaxDelay = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
+        if (t <= lastTriggerTime + aggregateReportMaxDelay) {
             // t must be greater than lastTriggerTime so adding max report
             // delay should be beyond the report delay for lastTriggerTime.
             aggregateReportingJobActions.add(new AggregateReportingJob(t
-                    + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY));
+                    + aggregateReportMaxDelay));
         }
 
         actions.addAll(aggregateReportingJobActions);

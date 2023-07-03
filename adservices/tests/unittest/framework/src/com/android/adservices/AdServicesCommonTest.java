@@ -33,7 +33,7 @@ public class AdServicesCommonTest {
     private ResolveInfo mResolveInfo1, mResolveInfo2, mResolveInfo3;
     private ServiceInfo mServiceInfo1, mServiceInfo2, mServiceInfo3;
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
-    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.adservices.api";
+    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
 
     @Before
     public void setUp() {

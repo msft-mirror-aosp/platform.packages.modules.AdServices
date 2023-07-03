@@ -28,7 +28,7 @@ public final class WebUtil {
      * Provide a URL with a valid public suffix + 1.
      */
     public static String validUrl(String url) {
-        return url.replaceAll("\\.test(?=$|\\/)", ".com");
+        return url.replaceAll("\\.test(?=$|\\/|:\\d+)", ".com");
     }
 
     /**
