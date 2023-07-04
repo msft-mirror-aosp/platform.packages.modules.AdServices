@@ -2195,7 +2195,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         if (requestAllowedPerAllowlist(
                 intent.getAction(),
                 intent.getPackage(),
-                /*className=*/ (component == null) ? null : component.getClassName())) {
+                /*componentClassName=*/ (component == null) ? null : component.getClassName())) {
             return;
         }
 
@@ -2531,7 +2531,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private boolean requestAllowedPerAllowlist(
-            String intentAction, String packageName, String className) {
+            String action, String packageName, String componentClassName) {
         // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
         AllowedServices allowedServices =
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
@@ -2546,15 +2546,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
             if (doesInputMatchWildcardPattern(
-                            allowedService.getIntentAction(),
-                            intentAction,
-                            /*matchOnNullInput=*/ true)
+                            allowedService.getAction(), action, /*matchOnNullInput=*/ true)
                     && doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
-                            className,
+                            componentClassName,
                             /*matchOnNullInput=*/ true)
                     && doesInputMatchWildcardPattern(
-                            allowedService.getComponentPackageName(),
+                            allowedService.getPackageName(),
                             packageName,
                             /*matchOnNullInput=*/ true)) {
                 return true;
