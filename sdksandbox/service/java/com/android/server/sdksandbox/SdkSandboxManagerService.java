@@ -2181,20 +2181,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
         ComponentName component = intent.getComponent();
-        if (component == null) {
-            failStartOrBindService(intent);
-        }
-        String componentPackageName = component.getPackageName();
-        if (componentPackageName == null) {
-            failStartOrBindService(intent);
-        }
-        if (componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
-                || componentPackageName.equals(getAdServicesPackageName())) {
-            return;
+
+        if (component != null) {
+            String componentPackageName = component.getPackageName();
+            if ((componentPackageName != null)
+                    && (componentPackageName.equals(
+                                    WebViewUpdateService.getCurrentWebViewPackageName())
+                            || componentPackageName.equals(getAdServicesPackageName()))) {
+                return;
+            }
         }
 
         if (requestAllowedPerAllowlist(
-                intent.getAction(), componentPackageName, component.getClassName())) {
+                intent.getAction(),
+                intent.getPackage(),
+                /*className=*/ (component == null) ? null : component.getClassName())) {
             return;
         }
 

@@ -1808,6 +1808,28 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testServiceRestrictions_ComponentNotSet() {
+        /**
+         * Service allowlist
+         * allowlist_per_target_sdk {
+         *   key: 34
+         *   value: {
+         *     allowed_services: {
+         *       intentAction : "action.test"
+         *       componentPackageName : "*"
+         *       componentClassName : "*"
+         *     }
+         *   }
+         * }
+         */
+        final String encodedServiceAllowlist = "ChkIIhIVChMKC2FjdGlvbi50ZXN0EgEqGgEq";
+        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+
+        final Intent intent = new Intent(INTENT_ACTION);
+        sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
+    }
+
+    @Test
     public void testAdServicesPackageIsResolved() {
         assertThat(mService.getAdServicesPackageName()).contains("adservices");
     }
@@ -4003,13 +4025,14 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private void testServiceRestriction(
             @Nullable String action, @Nullable String packageName, @Nullable String className) {
+        final Intent intent = Objects.isNull(action) ? new Intent() : new Intent(action);
+        intent.setPackage(packageName);
         if (Objects.isNull(packageName)) {
             packageName = "nonexistent.package";
         }
         if (Objects.isNull(className)) {
             className = "nonexistent.class";
         }
-        final Intent intent = Objects.isNull(action) ? new Intent() : new Intent(action);
         intent.setComponent(new ComponentName(packageName, className));
 
         sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
