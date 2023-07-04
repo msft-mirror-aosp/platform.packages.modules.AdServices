@@ -59,7 +59,6 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
 import com.android.adservices.service.measurement.access.DevContextAccessResolver;
@@ -170,9 +169,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission =
                 PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
-        // DevContext creation checks that the thread is the Binder thread so we must create it
-        // outside of the background execution.
-        DevContext devContext = mDevContextFilter.createDevContext();
         sBackgroundExecutor.execute(
                 () -> {
                     performRegistration(
@@ -192,7 +188,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
-                                    new DevContextAccessResolver(devContext, request)),
+                                    new DevContextAccessResolver(
+                                            mDevContextFilter.createDevContextFromCallingUid(
+                                                    callerUid),
+                                            request)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -229,9 +228,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission =
                 PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
-        // DevContext creation checks that the thread is the Binder thread so we must create it
-        // outside of the background execution.
-        DevContext devContext = mDevContextFilter.createDevContext();
         sBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
@@ -257,7 +253,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getWebContextClientAppAllowList(),
                                             request.getAppPackageName()),
                                     new DevContextAccessResolver(
-                                            devContext,
+                                            mDevContextFilter.createDevContextFromCallingUid(
+                                                    callerUid),
                                             request.getSourceRegistrationRequest())),
                             callback,
                             apiNameId,
@@ -295,9 +292,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission =
                 PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
-        // DevContext creation checks that the thread is the Binder thread so we must create it
-        // outside of the background execution.
-        DevContext devContext = mDevContextFilter.createDevContext();
         sBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
@@ -320,7 +314,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
                                     new DevContextAccessResolver(
-                                            devContext,
+                                            mDevContextFilter.createDevContextFromCallingUid(
+                                                    callerUid),
                                             request.getTriggerRegistrationRequest())),
                             callback,
                             apiNameId,
