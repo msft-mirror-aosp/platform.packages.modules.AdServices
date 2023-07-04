@@ -2801,13 +2801,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getToggleSpeedBumpEnabled() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_UI_TOGGLE_SPEED_BUMP_ENABLED,
-                        /* defaultValue */ TOGGLE_SPEED_BUMP_ENABLED));
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_TOGGLE_SPEED_BUMP_ENABLED,
+                /* defaultValue */ TOGGLE_SPEED_BUMP_ENABLED);
     }
 
     @Override
