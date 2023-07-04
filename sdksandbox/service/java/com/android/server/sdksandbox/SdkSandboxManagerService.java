@@ -111,6 +111,7 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -2657,14 +2658,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
                 return;
             }
-            if (intent.getAction() != null) {
-                if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
-                    throw new SecurityException(
-                            "Intent "
-                                    + intent.getAction()
-                                    + " may not be started from an SDK sandbox uid.");
-                }
+
+            if (intent.getAction() == null) {
+                return;
             }
+
+            // TODO(b/289991549): Configure allowlist using DeviceConfig
+            final ArrayList<String> allowedActions =
+                    new ArrayList<>(
+                            Arrays.asList(
+                                    Intent.ACTION_VIEW,
+                                    Intent.ACTION_DIAL,
+                                    Intent.ACTION_EDIT,
+                                    Intent.ACTION_INSERT));
+
+            if (allowedActions.contains(intent.getAction())) {
+                return;
+            }
+            throw new SecurityException(
+                    "Intent "
+                            + intent.getAction()
+                            + " may not be started from an SDK sandbox uid.");
         }
 
         @Override

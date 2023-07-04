@@ -122,7 +122,7 @@ public class SdkSandboxRestrictionsTest {
     public void testNoImplicitIntents() {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        Intent sendIntent = new Intent();
+        final Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, "text");
         sendIntent.setType("text/plain");

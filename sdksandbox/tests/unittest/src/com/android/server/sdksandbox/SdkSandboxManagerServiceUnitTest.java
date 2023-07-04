@@ -1122,11 +1122,24 @@ public class SdkSandboxManagerServiceUnitTest {
 
     /** Tests that only allowed activities may be started from the sdk sandbox. */
     @Test
-    public void testEnforceAllowedToStartActivity_defaultValue() {
-        Intent allowedIntent = new Intent(Intent.ACTION_VIEW);
-        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(allowedIntent);
+    public void testEnforceAllowedToStartActivity_allowedValues() {
+        final ArrayList<String> allowedActions =
+                new ArrayList<>(
+                        Arrays.asList(
+                                Intent.ACTION_VIEW,
+                                Intent.ACTION_DIAL,
+                                Intent.ACTION_EDIT,
+                                Intent.ACTION_INSERT));
 
-        Intent disallowedIntent = new Intent(Intent.ACTION_SCREEN_OFF);
+        for (String action : allowedActions) {
+            final Intent allowedIntent = new Intent(action);
+            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(allowedIntent);
+        }
+
+        final Intent intentWithoutAction = new Intent();
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intentWithoutAction);
+
+        final Intent disallowedIntent = new Intent(Intent.ACTION_SCREEN_OFF);
         assertThrows(
                 SecurityException.class,
                 () -> sSdkSandboxManagerLocal.enforceAllowedToStartActivity(disallowedIntent));
