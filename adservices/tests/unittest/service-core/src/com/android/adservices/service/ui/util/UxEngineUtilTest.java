@@ -224,6 +224,22 @@ public class UxEngineUtilTest {
     }
 
     @Test
+    public void getEligibleEnrollmentChannelTest_gaUxConsentResetTokenPresent() {
+        doReturn(UUID.randomUUID().toString()).when(mFlags).getConsentNotificationResetToken();
+        doReturn(mSharedPreferences).when(mUxStatesManager).getUxSharedPreferences();
+        doReturn(mEditor).when(mSharedPreferences).edit();
+        doReturn(mEditor).when(mEditor).putString(anyString(), anyString());
+        doReturn(true).when(mEditor).commit();
+
+        assertThat(
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        PrivacySandboxUxCollection.GA_UX,
+                        mConsentManager,
+                        mUxStatesManager))
+                .isEqualTo(GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL);
+    }
+
+    @Test
     public void getEligibleEnrollmentChannelTest_gaUxNotificationAlreadyDisplayed() {
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
 
