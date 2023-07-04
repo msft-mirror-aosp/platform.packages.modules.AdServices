@@ -26,9 +26,11 @@ message AllowedServices {
 
 message AllowedService {
   // Name of the action.
-  string intentAction = 1;
+  string action = 1;
   // Name of the package.
-  string componentPackageName = 2;
+  string packageName = 2;
   // Name of the component.
   string componentClassName = 3;
+  // Name of the component package.
+  string componentPackageName = 4;
 }
