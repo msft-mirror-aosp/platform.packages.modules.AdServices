@@ -2195,7 +2195,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         if (requestAllowedPerAllowlist(
                 intent.getAction(),
                 intent.getPackage(),
-                /*componentClassName=*/ (component == null) ? null : component.getClassName())) {
+                /*componentClassName=*/ (component == null) ? null : component.getClassName(),
+                /*componentPackageName=*/ (component == null)
+                        ? null
+                        : component.getPackageName())) {
             return;
         }
 
@@ -2531,7 +2534,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private boolean requestAllowedPerAllowlist(
-            String action, String packageName, String componentClassName) {
+            String action,
+            String packageName,
+            String componentClassName,
+            String componentPackageName) {
         // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
         AllowedServices allowedServices =
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
@@ -2548,12 +2554,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (doesInputMatchWildcardPattern(
                             allowedService.getAction(), action, /*matchOnNullInput=*/ true)
                     && doesInputMatchWildcardPattern(
+                            allowedService.getPackageName(),
+                            packageName,
+                            /*matchOnNullInput=*/ true)
+                    && doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
                             componentClassName,
                             /*matchOnNullInput=*/ true)
                     && doesInputMatchWildcardPattern(
-                            allowedService.getPackageName(),
-                            packageName,
+                            allowedService.getComponentPackageName(),
+                            componentPackageName,
                             /*matchOnNullInput=*/ true)) {
                 return true;
             }
