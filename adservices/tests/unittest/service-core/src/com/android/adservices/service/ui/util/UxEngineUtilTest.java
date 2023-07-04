@@ -72,8 +72,10 @@ public class UxEngineUtilTest {
     private Context mContext;
     @Mock
     private Flags mFlags;
-    @Mock private SharedPreferences mSharedPreferences;
-    @Mock private SharedPreferences.Editor mEditor;
+    @Mock
+    private SharedPreferences mSharedPreferences;
+    @Mock
+    private SharedPreferences.Editor mEditor;
 
     private MockitoSession mStaticMockSession;
     private UxEngineUtil mUxEngineUtil;
@@ -218,8 +220,8 @@ public class UxEngineUtilTest {
         doReturn(true).when(mUxStatesManager).getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE);
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL);
     }
 
@@ -244,8 +246,8 @@ public class UxEngineUtilTest {
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL);
     }
 
@@ -254,8 +256,8 @@ public class UxEngineUtilTest {
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL);
     }
 
@@ -270,8 +272,8 @@ public class UxEngineUtilTest {
                 .getUserManualInteractionWithConsent();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL);
     }
 
@@ -286,8 +288,8 @@ public class UxEngineUtilTest {
                 .getUserManualInteractionWithConsent();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL);
     }
 
@@ -300,8 +302,8 @@ public class UxEngineUtilTest {
         doReturn(UNKNOWN).when(mConsentManager).getUserManualInteractionWithConsent();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL);
     }
 
@@ -316,8 +318,8 @@ public class UxEngineUtilTest {
                 .getUserManualInteractionWithConsent();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isNull();
     }
 
@@ -332,8 +334,8 @@ public class UxEngineUtilTest {
                 .getUserManualInteractionWithConsent();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isEqualTo(GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL);
     }
 
@@ -346,8 +348,8 @@ public class UxEngineUtilTest {
         doReturn(UNKNOWN).when(mConsentManager).getUserManualInteractionWithConsent();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isNull();
     }
 
@@ -356,8 +358,8 @@ public class UxEngineUtilTest {
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                GA_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        GA_UX, mConsentManager, mUxStatesManager))
                 .isNull();
     }
 
@@ -385,10 +387,10 @@ public class UxEngineUtilTest {
         doReturn(true).when(mEditor).commit();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                PrivacySandboxUxCollection.BETA_UX,
-                                mConsentManager,
-                                mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        PrivacySandboxUxCollection.BETA_UX,
+                        mConsentManager,
+                        mUxStatesManager))
                 .isEqualTo(BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL);
     }
 
@@ -441,6 +443,22 @@ public class UxEngineUtilTest {
                         mConsentManager,
                         mUxStatesManager))
                 .isEqualTo(U18UxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL);
+    }
+
+    @Test
+    public void getEligibleEnrollmentChannelTest_u18UxConsentResetTokenPresent() {
+        doReturn(UUID.randomUUID().toString()).when(mFlags).getConsentNotificationResetToken();
+        doReturn(mSharedPreferences).when(mUxStatesManager).getUxSharedPreferences();
+        doReturn(mEditor).when(mSharedPreferences).edit();
+        doReturn(mEditor).when(mEditor).putString(anyString(), anyString());
+        doReturn(true).when(mEditor).commit();
+
+        assertThat(
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        PrivacySandboxUxCollection.U18_UX,
+                        mConsentManager,
+                        mUxStatesManager))
+                .isEqualTo(U18UxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL);
     }
 
     @Test
@@ -499,8 +517,8 @@ public class UxEngineUtilTest {
         doReturn(true).when(mUxStatesManager).getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE);
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                UNSUPPORTED_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        UNSUPPORTED_UX, mConsentManager, mUxStatesManager))
                 .isNull();
     }
 
@@ -511,8 +529,8 @@ public class UxEngineUtilTest {
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
 
         assertThat(
-                        mUxEngineUtil.getEligibleEnrollmentChannelCollection(
-                                UNSUPPORTED_UX, mConsentManager, mUxStatesManager))
+                mUxEngineUtil.getEligibleEnrollmentChannelCollection(
+                        UNSUPPORTED_UX, mConsentManager, mUxStatesManager))
                 .isNull();
     }
 

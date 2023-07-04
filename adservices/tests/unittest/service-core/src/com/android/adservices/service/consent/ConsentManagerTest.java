@@ -4414,8 +4414,8 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mUxStatesDaoMock, times(14)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(14)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(15)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(15)).setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4435,8 +4435,8 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mMockIAdServicesManager, times(14)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(14)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(15)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(15)).setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4456,8 +4456,8 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mMockIAdServicesManager, times(14)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(14)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(15)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(15)).setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4478,7 +4478,7 @@ public class ConsentManagerTest {
             }
         }
 
-        verify(mAppSearchConsentManagerMock, times(14)).getEnrollmentChannel(any());
-        verify(mAppSearchConsentManagerMock, times(14)).setEnrollmentChannel(any(), any());
+        verify(mAppSearchConsentManagerMock, times(15)).getEnrollmentChannel(any());
+        verify(mAppSearchConsentManagerMock, times(15)).setEnrollmentChannel(any(), any());
     }
 }
