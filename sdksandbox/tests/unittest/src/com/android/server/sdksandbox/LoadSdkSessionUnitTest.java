@@ -342,7 +342,7 @@ public class LoadSdkSessionUnitTest {
                 new FakeRequestSurfacePackageCallbackBinder();
         sdkSession.requestSurfacePackage(
                 new Binder(), 0, 500, 500, -1, new Bundle(), surfacePackageCallback);
-        mSdkSandboxService.sendSurfacePackageReady(new SandboxLatencyInfo(-1));
+        mSdkSandboxService.sendSurfacePackageReady(new SandboxLatencyInfo());
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
