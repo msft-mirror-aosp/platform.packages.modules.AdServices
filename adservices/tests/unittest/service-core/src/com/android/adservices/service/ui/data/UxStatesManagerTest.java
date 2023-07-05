@@ -150,7 +150,7 @@ public class UxStatesManagerTest {
 
     @Test
     public void getUxTest_processStable() {
-        assertThat(mUxStatesManager.getUx()).isNull();
+        assertThat(mUxStatesManager.getUx()).isNotNull();
 
         Stream.of(PrivacySandboxUxCollection.values())
                 .forEach(
