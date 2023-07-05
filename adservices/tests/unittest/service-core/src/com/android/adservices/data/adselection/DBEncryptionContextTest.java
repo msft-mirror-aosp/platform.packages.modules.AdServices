@@ -35,7 +35,7 @@ public class DBEncryptionContextTest {
     private static final String SHARED_SECRET_STRING = "1";
     private static final String KEY_CONFIG_HEX =
             "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
-                    + "00080001000100010003";
+                    + "000400010001";
     private static final byte[] SEED_BYTES =
             "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
                     .getBytes(StandardCharsets.UTF_8);
@@ -57,7 +57,8 @@ public class DBEncryptionContextTest {
                         .build();
 
         assertThat(dbEncryptionContext.getContextId()).isEqualTo(CONTEXT_ID_1);
-        assertThat(dbEncryptionContext.getKeyConfig()).isEqualTo(keyConfig);
+        assertThat(dbEncryptionContext.getKeyConfig())
+                .isEqualTo(BaseEncoding.base16().lowerCase().decode(KEY_CONFIG_HEX));
         assertThat(dbEncryptionContext.getSharedSecret()).isEqualTo(SHARED_SECRET_BYTES);
         assertThat(dbEncryptionContext.getSeed()).isEqualTo(SEED_BYTES);
     }
