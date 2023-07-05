@@ -119,6 +119,14 @@
                 />
 
                 <Button
+                    android:id="@+id/release_all_scvh_button"
+                    android:layout_gravity="start"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="@string/release_all_scvh"
+                    android:textAllCaps="false" />
+
+                <Button
                     android:id="@+id/add_death_callback_button"
                     android:layout_gravity="start"
                     android:layout_height="wrap_content"
