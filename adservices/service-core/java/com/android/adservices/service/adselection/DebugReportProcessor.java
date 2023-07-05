@@ -100,7 +100,7 @@ class DebugReportProcessor {
         List<Uri> debugUrls = new ArrayList<>();
         for (DebugReport debugReport : debugReports) {
             Uri debugUri = getDebugUri(debugReport, postAuctionSignals);
-            if (!Objects.isNull(debugUri)) {
+            if (Objects.nonNull(debugUri)) {
                 debugUrls.add(debugUri);
             }
         }
@@ -115,9 +115,9 @@ class DebugReportProcessor {
                         debugReport,
                         postAuctionSignals.getWinningBuyer(),
                         postAuctionSignals.getWinningCustomAudienceName());
-        if (isWinnerCA && !Objects.isNull(debugReport.getWinDebugReportUri())) {
+        if (isWinnerCA && Objects.nonNull(debugReport.getWinDebugReportUri())) {
             debugUri = debugReport.getWinDebugReportUri();
-        } else if (!Objects.isNull(debugReport.getLossDebugReportUri())) {
+        } else if (Objects.nonNull(debugReport.getLossDebugReportUri())) {
             debugUri = debugReport.getLossDebugReportUri();
         } else {
             return null;
@@ -131,7 +131,8 @@ class DebugReportProcessor {
             return null;
         }
         return applyVariablesToUri(
-                debugUri, collectVariablesFromAdAuction(debugReport, postAuctionSignals));
+                debugUri,
+                collectVariablesFromAdAuction(debugReport, postAuctionSignals, isWinnerCA));
     }
     private static List<Uri> applyPerAdTechLimit(List<Uri> debugReportingUris) {
         // Processing for the ad tech limit must be done at the final stage, as each AuctionResult
@@ -172,7 +173,9 @@ class DebugReportProcessor {
     }
 
     private static Map<String, String> collectVariablesFromAdAuction(
-            @NonNull DebugReport debugReport, @NonNull PostAuctionSignals signals) {
+            @NonNull DebugReport debugReport,
+            @NonNull PostAuctionSignals signals,
+            boolean isWinningUri) {
         Map<String, String> templateToVariableMap = new HashMap<>();
         templateToVariableMap.put(
                 WINNING_BID_VARIABLE_TEMPLATE,
@@ -184,16 +187,18 @@ class DebugReportProcessor {
                 String.valueOf(
                         isDebugReportForCustomAudienceBuyer(
                                 debugReport, signals.getWinningBuyer())));
+        // Only set the correct value for second highest scored ad for win debug reports.
         templateToVariableMap.put(
                 HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE,
-                Objects.isNull(signals.getSecondHighestScoredBid())
-                        ? HIGHEST_SCORING_OTHER_BID_DEFAULT_VALUE
-                        : String.valueOf(signals.getSecondHighestScoredBid()));
+                isWinningUri && Objects.nonNull(signals.getSecondHighestScoredBid())
+                        ? String.valueOf(signals.getSecondHighestScoredBid())
+                        : HIGHEST_SCORING_OTHER_BID_DEFAULT_VALUE);
         templateToVariableMap.put(
                 MADE_HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE,
                 String.valueOf(
-                        isDebugReportForCustomAudienceBuyer(
-                                debugReport, signals.getSecondHighestScoredBuyer())));
+                        isWinningUri
+                                && isDebugReportForCustomAudienceBuyer(
+                                        debugReport, signals.getSecondHighestScoredBuyer())));
         return templateToVariableMap;
     }
 

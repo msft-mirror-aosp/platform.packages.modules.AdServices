@@ -463,6 +463,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         mAdRenderIdValidator,
+                        new DebugReporting(mFlags, mAdServicesHttpsClient),
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }

@@ -61,12 +61,12 @@ abstract class PostAuctionSignals {
     public static PostAuctionSignals create(
             @Nullable AdScoringOutcome winningAd, @Nullable AdScoringOutcome secondHighestAd) {
         PostAuctionSignals.Builder builder = builder();
-        if (!Objects.isNull(winningAd)) {
+        if (Objects.nonNull(winningAd)) {
             builder.setWinningBid(winningAd.getAdWithScore().getAdWithBid().getBid())
                     .setWinningBuyer(winningAd.getCustomAudienceSignals().getBuyer())
                     .setWinningCustomAudienceName(winningAd.getCustomAudienceSignals().getName());
         }
-        if (!Objects.isNull(secondHighestAd)) {
+        if (Objects.nonNull(secondHighestAd)) {
             builder.setSecondHighestScoredBid(
                             secondHighestAd.getAdWithScore().getAdWithBid().getBid())
                     .setSecondHighestScoredBuyer(
