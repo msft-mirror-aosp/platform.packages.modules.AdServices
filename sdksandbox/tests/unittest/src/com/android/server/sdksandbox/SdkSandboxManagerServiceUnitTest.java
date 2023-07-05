@@ -310,7 +310,6 @@ public class SdkSandboxManagerServiceUnitTest {
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST);
-
     }
 
     @After
@@ -2497,8 +2496,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                         (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
-                                SdkSandboxStatsLog
-                                        .SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
                                 mClientAppUid));
     }
 
