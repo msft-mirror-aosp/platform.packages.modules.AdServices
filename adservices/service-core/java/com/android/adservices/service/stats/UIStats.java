@@ -28,6 +28,7 @@ public class UIStats {
     private int mDefaultConsent;
     private int mDefaultAdIdState;
     private int mUx;
+    private int mEnrollmentChannel;
 
     public UIStats() {}
 
@@ -42,12 +43,20 @@ public class UIStats {
                 && mAction == uiStats.getAction()
                 && mDefaultConsent == uiStats.getDefaultConsent()
                 && mDefaultAdIdState == uiStats.getDefaultAdIdState()
-                && mUx == uiStats.getUx();
+                && mUx == uiStats.getUx()
+                && mEnrollmentChannel == uiStats.getEnrollmentChannel();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mRegion, mAction, mDefaultConsent, mDefaultAdIdState, mUx);
+        return Objects.hash(
+                mCode,
+                mRegion,
+                mAction,
+                mDefaultConsent,
+                mDefaultAdIdState,
+                mUx,
+                mEnrollmentChannel);
     }
 
     @NonNull
@@ -80,6 +89,11 @@ public class UIStats {
         return mUx;
     }
 
+    @NonNull
+    public int getEnrollmentChannel() {
+        return mEnrollmentChannel;
+    }
+
     public void setRegion(int region) {
         mRegion = region;
     }
@@ -100,6 +114,10 @@ public class UIStats {
         mUx = ux;
     }
 
+    public int setEnrollmentChannel() {
+        return mEnrollmentChannel;
+    }
+
     @Override
     public String toString() {
         return "UIStats{"
@@ -115,6 +133,8 @@ public class UIStats {
                 + mDefaultAdIdState
                 + ", mUx="
                 + mUx
+                + mEnrollmentChannel
+                + ", mEnrollmentChannel="
                 + '}';
     }
 
@@ -159,6 +179,12 @@ public class UIStats {
         /** See {@link UIStats#getUx()}. */
         public @NonNull UIStats.Builder setUx(int ux) {
             mBuilding.mUx = ux;
+            return this;
+        }
+
+        /** See {@link UIStats#getEnrollmentChannel()}. */
+        public @NonNull UIStats.Builder setEnrollmentChannel(int enrollmentChannel) {
+            mBuilding.mEnrollmentChannel = enrollmentChannel;
             return this;
         }
 
