@@ -93,6 +93,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
 
 import android.content.Context;
 import android.os.Build;
@@ -104,6 +108,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 /** Logger for UiStats. */
 // TODO(b/269798827): Enable for R.
@@ -593,12 +598,22 @@ public class UiStatsLogger {
         }
     }
 
+    private static int getUx(@NonNull Context context) {
+        return switch (UxStatesManager.getInstance(context).getUx()) {
+            case U18_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+            case GA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+            case BETA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+            default -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
+        };
+    }
+
     private static UIStats getBaseUiStats(@NonNull Context context) {
         return new UIStats.Builder()
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context))
                 .setDefaultAdIdState(getDefaultAdIdState(context))
+                .setUx(getUx(context))
                 .build();
     }
 
@@ -608,6 +623,7 @@ public class UiStatsLogger {
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context, apiType))
                 .setDefaultAdIdState(getDefaultAdIdState(context))
+                .setUx(getUx(context))
                 .build();
     }
 }
