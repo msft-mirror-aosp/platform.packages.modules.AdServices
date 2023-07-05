@@ -2304,6 +2304,14 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    /** Set the debug UX, which should crrespond to the {@link PrivacySandboxUxCollection} enum. */
+    String DEBUG_UX = "UNSUPPORTED_UX";
+
+    /** Returns the debug UX. */
+    default String getDebugUx() {
+        return DEBUG_UX;
+    }
+
     /** add speed bump dialogs when turning on or off the toggle of Topics, apps, measurement */
     boolean TOGGLE_SPEED_BUMP_ENABLED = false;
 
