@@ -44,16 +44,16 @@ public class PrivacySandboxUxCollectionTest {
     @Test
     public void uxCollectionTest_priorityCheck() {
         assertThat(
-                        PrivacySandboxUxCollection.UNSUPPORTED_UX.getPriority()
-                                < PrivacySandboxUxCollection.U18_UX.getPriority())
+                PrivacySandboxUxCollection.UNSUPPORTED_UX.getPriority()
+                        < PrivacySandboxUxCollection.U18_UX.getPriority())
                 .isTrue();
         assertThat(
-                        PrivacySandboxUxCollection.U18_UX.getPriority()
-                                < PrivacySandboxUxCollection.GA_UX.getPriority())
+                PrivacySandboxUxCollection.U18_UX.getPriority()
+                        < PrivacySandboxUxCollection.GA_UX.getPriority())
                 .isTrue();
         assertThat(
-                        PrivacySandboxUxCollection.GA_UX.getPriority()
-                                < PrivacySandboxUxCollection.BETA_UX.getPriority())
+                PrivacySandboxUxCollection.GA_UX.getPriority()
+                        < PrivacySandboxUxCollection.BETA_UX.getPriority())
                 .isTrue();
     }
 
@@ -70,8 +70,8 @@ public class PrivacySandboxUxCollectionTest {
         assertEquals(
                 0,
                 PrivacySandboxUxCollection.UNSUPPORTED_UX.getEnrollmentChannelCollection().length);
-        assertEquals(4, PrivacySandboxUxCollection.U18_UX.getEnrollmentChannelCollection().length);
-        assertEquals(5, PrivacySandboxUxCollection.GA_UX.getEnrollmentChannelCollection().length);
-        assertEquals(3, PrivacySandboxUxCollection.BETA_UX.getEnrollmentChannelCollection().length);
+        assertEquals(5, PrivacySandboxUxCollection.U18_UX.getEnrollmentChannelCollection().length);
+        assertEquals(6, PrivacySandboxUxCollection.GA_UX.getEnrollmentChannelCollection().length);
+        assertEquals(4, PrivacySandboxUxCollection.BETA_UX.getEnrollmentChannelCollection().length);
     }
 }

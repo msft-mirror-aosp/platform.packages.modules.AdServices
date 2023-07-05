@@ -23,6 +23,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 import com.android.adservices.service.ui.enrollment.impl.AlreadyEnrolledChannel;
 import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationDebugChannel;
+import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationResetChannel;
 import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
 
 /* Collection of beta UX enrollment channels. */
@@ -30,9 +31,11 @@ import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificatio
 public enum BetaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentChannelCollection {
     CONSENT_NOTIFICATION_DEBUG_CHANNEL(/* priority= */ 0, new ConsentNotificationDebugChannel()),
 
-    ALREADY_ENROLLED_CHANNEL(/* priority= */ 1, new AlreadyEnrolledChannel()),
+    CONSENT_NOTIFICATION_RESET_CHANNEL(/* priority= */ 1, new ConsentNotificationResetChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel());
+    ALREADY_ENROLLED_CHANNEL(/* priority= */ 2, new AlreadyEnrolledChannel()),
+
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new FirstConsentNotificationChannel());
 
     private final int mPriority;
 

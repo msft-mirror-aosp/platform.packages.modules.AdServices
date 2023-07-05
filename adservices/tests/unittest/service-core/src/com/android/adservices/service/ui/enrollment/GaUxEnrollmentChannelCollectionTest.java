@@ -27,7 +27,7 @@ import org.junit.Test;
 public class GaUxEnrollmentChannelCollectionTest {
     @Test
     public void gaUxEnrollmentChannelCollectionTest_cardinalityCheck() {
-        assertEquals(5, GaUxEnrollmentChannelCollection.values().length);
+        assertEquals(6, GaUxEnrollmentChannelCollection.values().length);
     }
 
     @Test
@@ -39,17 +39,20 @@ public class GaUxEnrollmentChannelCollectionTest {
                 GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL,
                 enrollmentChannelCollection[0]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL,
+                GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL,
                 enrollmentChannelCollection[1]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
+                GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL,
                 enrollmentChannelCollection[2]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL,
+                GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[3]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL,
+                GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[4]);
+        assertEquals(
+                GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL,
+                enrollmentChannelCollection[5]);
     }
 
     @Test
@@ -57,8 +60,14 @@ public class GaUxEnrollmentChannelCollectionTest {
         assertThat(
                         GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                                         .getPriority()
-                                < GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                                < GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL
                                         .getPriority())
+                .isTrue();
+        assertThat(
+                GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL
+                        .getPriority()
+                        < GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                        .getPriority())
                 .isTrue();
         assertThat(
                         GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL.getPriority()
@@ -83,6 +92,10 @@ public class GaUxEnrollmentChannelCollectionTest {
         assertThat(
                         GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                                 .getEnrollmentChannel())
+                .isNotNull();
+        assertThat(
+                GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL
+                        .getEnrollmentChannel())
                 .isNotNull();
         assertThat(GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL.getEnrollmentChannel())
                 .isNotNull();
