@@ -86,7 +86,7 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
-    private static final int DEFAULT_REQUEST_PER_SECOND = 5;
+    private static final float DEFAULT_REQUEST_PER_SECOND = 25f;
     private static final String FLAG_REGISTER_SOURCE =
             "measurement_register_source_request_permits_per_second";
     private static final String FLAG_REGISTER_WEB_SOURCE =
@@ -153,7 +153,7 @@ public class MeasurementManagerCtsTest {
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerSourceAndVerifyRateLimitReached(manager));
         }
@@ -181,6 +181,35 @@ public class MeasurementManagerCtsTest {
                 mMeasurementClient.registerTrigger(TRIGGER_REGISTRATION_URI);
         assertThat(result.get()).isNull();
         overrideDisableMeasurementEnrollmentCheck("0");
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerTrigger(
+                TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterTrigger_verifyRateLimitReached() throws Exception {
+        // Rate limit hasn't reached yet
+        final long nowInMillis = System.currentTimeMillis();
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerTriggerAndVerifyRateLimitReached(mMeasurementManager));
+        }
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerTriggerAndVerifyRateLimitReached(mMeasurementManager);
+
+        // Verify limit reached
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = registerTriggerAndVerifyRateLimitReached(mMeasurementManager);
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
     }
 
     @Test
@@ -213,7 +242,7 @@ public class MeasurementManagerCtsTest {
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
         }
@@ -248,6 +277,38 @@ public class MeasurementManagerCtsTest {
                 mMeasurementClient.registerWebTrigger(webTriggerRegistrationRequest);
         assertThat(result.get()).isNull();
         overrideDisableMeasurementEnrollmentCheck("0");
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerWebTrigger(
+                webTriggerRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterWebTrigger_verifyRateLimitReached() throws Exception {
+        // Rate limit hasn't reached yet
+        final long nowInMillis = System.currentTimeMillis();
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager));
+        }
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager);
+
+        // Verify limit reached
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit =
+                registerWebTriggerAndVerifyRateLimitReached(mMeasurementManager);
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
     }
 
     @Test
@@ -551,16 +612,16 @@ public class MeasurementManagerCtsTest {
         };
     }
 
-    private int getRequestPerSecond(String flagName) {
+    private float getRequestPerSecond(String flagName) {
         try {
             String permitString = SystemProperties.get("debug.adservices." + flagName);
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
 
             permitString = ShellUtils.runShellCommand("device_config get adservices " + flagName);
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
             return DEFAULT_REQUEST_PER_SECOND;
         } catch (Exception e) {
