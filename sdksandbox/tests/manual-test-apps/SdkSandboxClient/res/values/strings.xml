@@ -20,6 +20,7 @@
     <string name="reset_preferences">Reset Preferences</string>
     <string name="sdks" description="SDKs title">SDKs</string>
     <string name="add_death_callback">Add Death Callback</string>
+    <string name="release_all_scvh">Release All SCVH</string>
     <string name="remove_death_callback">Remove Death Callback</string>
     <string name="ads" description="Ads title">Ads</string>
     <string name="new_banner_ad">New Banner Ad</string>
