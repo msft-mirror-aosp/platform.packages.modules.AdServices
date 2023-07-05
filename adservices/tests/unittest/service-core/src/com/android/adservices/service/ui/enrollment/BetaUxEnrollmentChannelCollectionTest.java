@@ -27,7 +27,7 @@ import org.junit.Test;
 public class BetaUxEnrollmentChannelCollectionTest {
     @Test
     public void betaUxEnrollmentChannelCollectionTest_cardinalityCheck() {
-        assertEquals(3, BetaUxEnrollmentChannelCollection.values().length);
+        assertEquals(4, BetaUxEnrollmentChannelCollection.values().length);
     }
 
     @Test
@@ -39,20 +39,30 @@ public class BetaUxEnrollmentChannelCollectionTest {
                 BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL,
                 enrollmentChannelCollection[0]);
         assertEquals(
-                BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL,
+                BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL,
                 enrollmentChannelCollection[1]);
         assertEquals(
-                BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
+                BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL,
                 enrollmentChannelCollection[2]);
+        assertEquals(
+                BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
+                enrollmentChannelCollection[3]);
     }
 
     @Test
     public void betaUxEnrollmentChannelCollectionTest_priorityCheck() {
         assertThat(
-                BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
-                        .getPriority()
-                        < BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
-                        .getPriority())
+                        BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
+                                        .getPriority()
+                                < BetaUxEnrollmentChannelCollection
+                                        .CONSENT_NOTIFICATION_RESET_CHANNEL
+                                        .getPriority())
+                .isTrue();
+        assertThat(
+                        BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL
+                                        .getPriority()
+                                < BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                                        .getPriority())
                 .isTrue();
         assertThat(
                 BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL.getPriority()
@@ -67,6 +77,10 @@ public class BetaUxEnrollmentChannelCollectionTest {
         assertThat(
                 BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                         .getEnrollmentChannel())
+                .isNotNull();
+        assertThat(
+                        BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_RESET_CHANNEL
+                                .getEnrollmentChannel())
                 .isNotNull();
         assertThat(
                 BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL

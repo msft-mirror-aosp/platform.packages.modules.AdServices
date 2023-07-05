@@ -23,6 +23,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 import com.android.adservices.service.ui.enrollment.impl.AlreadyEnrolledChannel;
 import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationDebugChannel;
+import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationResetChannel;
 import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
 import com.android.adservices.service.ui.enrollment.impl.GaGraduationChannel;
 import com.android.adservices.service.ui.enrollment.impl.ReconsentNotificationChannel;
@@ -32,13 +33,15 @@ import com.android.adservices.service.ui.enrollment.impl.ReconsentNotificationCh
 public enum GaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentChannelCollection {
     CONSENT_NOTIFICATION_DEBUG_CHANNEL(/* priority= */ 0, new ConsentNotificationDebugChannel()),
 
-    ALREADY_ENROLLED_CHANNEL(/* priority= */ 1, new AlreadyEnrolledChannel()),
+    CONSENT_NOTIFICATION_RESET_CHANNEL(/* priority= */ 1, new ConsentNotificationResetChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel()),
+    ALREADY_ENROLLED_CHANNEL(/* priority= */ 2, new AlreadyEnrolledChannel()),
 
-    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new ReconsentNotificationChannel()),
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new FirstConsentNotificationChannel()),
 
-    GA_GRADUATION_CHANNEL(/* priority= */ 4, new GaGraduationChannel());
+    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 4, new ReconsentNotificationChannel()),
+
+    GA_GRADUATION_CHANNEL(/* priority= */ 5, new GaGraduationChannel());
 
     private final int mPriority;
 
