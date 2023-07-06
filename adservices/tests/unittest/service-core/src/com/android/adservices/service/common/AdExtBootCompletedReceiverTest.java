@@ -24,6 +24,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -307,12 +309,28 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testUpdateComponents_withAdServicesPackagePrefix_throwsException() {
+    public void testUpdateComponents_withAdServicesPackageSuffix_throwsException() {
         assertThrows(
                 IllegalStateException.class,
                 () ->
                         AdExtBootCompletedReceiver.updateComponents(
                                 mContext, ImmutableList.of(), AD_SERVICES_APK_PKG_SUFFIX, false));
+    }
+
+    @Test
+    public void testUpdateComponents_adServicesPackageNamePresentButNotSuffix_disablesComponent() {
+        when(mContext.getPackageManager()).thenReturn(mPackageManager);
+        AdExtBootCompletedReceiver.updateComponents(
+                mContext,
+                ImmutableList.of("test"),
+                AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME,
+                false);
+
+        verify(mPackageManager)
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
     }
 
     @Test
@@ -330,6 +348,21 @@ public class AdExtBootCompletedReceiverTest {
 
         bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
         verify(mContext, never()).getSystemService(eq(JobScheduler.class));
+    }
+
+    @Test
+    public void
+            testDisableScheduledBackgroundJobs_adServicesPackagePresentButNotSuffix_cancelsAllJobs() {
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+
+        JobScheduler mockScheduler = Mockito.mock(JobScheduler.class);
+        when(mContext.getSystemService(JobScheduler.class)).thenReturn(mockScheduler);
+
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX + TEST_PACKAGE_NAME);
+
+        bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
+        verify(mockScheduler).cancelAll();
     }
 
     @Test
@@ -356,6 +389,16 @@ public class AdExtBootCompletedReceiverTest {
                 Mockito.spy(new AdExtBootCompletedReceiver());
         bootCompletedReceiver.disableScheduledBackgroundJobs(mContext);
         verify(mContext, never()).getSystemService(eq(JobScheduler.class));
+    }
+
+    @Test
+    public void testClassNameMatchesExpectedValue() {
+        assertWithMessage(
+                        "AdExtBootCompletedReceiver class name is hard-coded in ExtServices"
+                            + " BootCompletedReceiver. If the name changes, that class needs to be"
+                            + " modified in unison")
+                .that(AdExtBootCompletedReceiver.class.getName())
+                .isEqualTo("com.android.adservices.service.common.AdExtBootCompletedReceiver");
     }
 
     private void setCommonMocks(String packageName) {
