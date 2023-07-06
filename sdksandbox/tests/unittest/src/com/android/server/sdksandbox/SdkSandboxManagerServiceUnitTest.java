@@ -110,6 +110,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -207,6 +208,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         InstrumentationRegistry.getInstrumentation().getContext()));
         StaticMockitoSessionBuilder mockitoSessionBuilder =
                 ExtendedMockito.mockitoSession()
+                        .strictness(Strictness.LENIENT)
                         .mockStatic(LocalManagerRegistry.class)
                         .mockStatic(SdkSandboxStatsLog.class)
                         .spyStatic(Process.class)
@@ -336,7 +338,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     /** Mock the ActivityManager::killUid to avoid SecurityException thrown in test. **/
     private void disableKillUid() {
-        Mockito.lenient().doNothing().when(mAmSpy).killUid(Mockito.anyInt(), Mockito.anyString());
+        Mockito.doNothing().when(mAmSpy).killUid(Mockito.anyInt(), Mockito.anyString());
     }
 
     private void disableForegroundCheck() {
