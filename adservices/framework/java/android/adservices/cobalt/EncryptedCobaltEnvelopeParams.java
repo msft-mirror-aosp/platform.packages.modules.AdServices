@@ -18,7 +18,6 @@ package android.adservices.cobalt;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -30,7 +29,6 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @hide
  */
-@SystemApi
 public final class EncryptedCobaltEnvelopeParams implements Parcelable {
     /**
      * Whether data is from a development or production device.
