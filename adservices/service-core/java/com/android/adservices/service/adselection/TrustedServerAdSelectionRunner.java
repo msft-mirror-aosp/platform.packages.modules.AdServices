@@ -65,6 +65,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.Clock;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdRenderIdValidator adRenderIdValidator,
+            @NonNull final DebugReporting debugReporting,
             int callerUid) {
         super(
                 context,
@@ -122,6 +124,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                debugReporting,
                 callerUid);
 
         mCustomAudienceDevOverridesHelper =
@@ -151,7 +154,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final JsFetcher jsFetcher,
-            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final DebugReporting debugReporting) {
         super(
                 context,
                 customAudienceDao,
@@ -167,7 +171,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
-                adSelectionExecutionLogger);
+                adSelectionExecutionLogger,
+                debugReporting);
 
         this.mJsFetcher = jsFetcher;
         DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
@@ -374,7 +379,11 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
         try {
             String buyerJsLogic = dbAdSelectionAndBuyerLogicJsPair.second.get();
             return new AdSelectionOrchestrationResult(
-                    dbAdSelectionAndBuyerLogicJsPair.first, buyerJsLogic);
+                    dbAdSelectionAndBuyerLogicJsPair.first,
+                    buyerJsLogic,
+                    /*debugReports*/ Collections.emptyList(),
+                    /*winningOutcome*/ null,
+                    /*secondHighestScoredOutcome*/ null);
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException("Could not fetch buyerJsLogic", e);
         }

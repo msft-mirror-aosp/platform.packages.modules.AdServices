@@ -340,6 +340,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mContextSpy.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
+        when(mDebugReportingMock.isEnabled()).thenReturn(false);
         when(mDebugReportingMock.getSenderStrategy()).thenReturn(mDebugReportSenderMock);
 
         doNothing()
