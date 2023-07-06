@@ -175,6 +175,10 @@
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
       "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesHostTests.
+      "name": "CtsAdExtServicesHostTests[com.google.android.extservices_sminus.apex]"
     }
   ],
   "presubmit": [
