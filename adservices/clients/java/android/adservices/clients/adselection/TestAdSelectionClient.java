@@ -22,7 +22,6 @@ import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.TestAdSelectionManager;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -204,14 +203,7 @@ public class TestAdSelectionClient {
 
         @NonNull
         private AdSelectionManager createAdSelectionManager() {
-            if (mUseGetMethodToCreateManagerInstance) {
-                return AdSelectionManager.get(mContext);
-            }
-
-            // By default, use getSystemService for T+ and get(context) for S-.
-            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    ? mContext.getSystemService(AdSelectionManager.class)
-                    : AdSelectionManager.get(mContext);
+            return mContext.getSystemService(AdSelectionManager.class);
         }
     }
 }

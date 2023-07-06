@@ -102,9 +102,10 @@ public class MeasurementManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link MeasurementManager} instance
+     * @hide
      */
     @NonNull
-     public static MeasurementManager get(@NonNull Context context) {
+    public static MeasurementManager get(@NonNull Context context) {
         // On T+, context.getSystemService() does more than just call constructor.
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 ? context.getSystemService(MeasurementManager.class)
@@ -120,7 +121,7 @@ public class MeasurementManager {
     @NonNull
     public static MeasurementManager get(
             @NonNull Context context, @NonNull AdIdManager adIdManager) {
-        MeasurementManager measurementManager = MeasurementManager.get(context);
+        MeasurementManager measurementManager = context.getSystemService(MeasurementManager.class);
         measurementManager.mAdIdManager = adIdManager;
         return measurementManager;
     }
@@ -157,7 +158,7 @@ public class MeasurementManager {
                 context,
                 AdServicesCommon.ACTION_MEASUREMENT_SERVICE,
                 IMeasurementService.Stub::asInterface);
-        mAdIdManager = AdIdManager.get(context);
+        mAdIdManager = context.getSystemService(AdIdManager.class);
         return this;
     }
 

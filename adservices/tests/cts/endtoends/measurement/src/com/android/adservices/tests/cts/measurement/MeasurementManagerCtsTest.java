@@ -86,7 +86,7 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
-    private static final int DEFAULT_REQUEST_PER_SECOND = 5;
+    private static final float DEFAULT_REQUEST_PER_SECOND = 25f;
     private static final String FLAG_REGISTER_SOURCE =
             "measurement_register_source_request_permits_per_second";
     private static final String FLAG_REGISTER_WEB_SOURCE =
@@ -149,11 +149,11 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerSourceAndVerifyRateLimitReached(manager));
         }
@@ -209,11 +209,11 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
         }
@@ -325,7 +325,7 @@ public class MeasurementManagerCtsTest {
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -395,7 +395,7 @@ public class MeasurementManagerCtsTest {
      */
     private boolean callMeasurementApiStatus() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
         List<Integer> resultCodes = new ArrayList<>();
 
         manager.getMeasurementApiStatus(
@@ -551,16 +551,16 @@ public class MeasurementManagerCtsTest {
         };
     }
 
-    private int getRequestPerSecond(String flagName) {
+    private float getRequestPerSecond(String flagName) {
         try {
             String permitString = SystemProperties.get("debug.adservices." + flagName);
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
 
             permitString = ShellUtils.runShellCommand("device_config get adservices " + flagName);
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
             return DEFAULT_REQUEST_PER_SECOND;
         } catch (Exception e) {

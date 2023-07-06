@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AppSetIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final int DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5;
+    private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
 
     private static String sPreviousAppAllowList;
 
@@ -103,7 +103,7 @@ public class AppSetIdManagerTest {
     public void testAppSetIdManager() throws Exception {
         Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
 
-        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        AppSetIdManager appSetIdManager = sContext.getSystemService(AppSetIdManager.class);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
                 new OutcomeReceiver<AppSetId, Exception>() {
@@ -128,11 +128,11 @@ public class AppSetIdManagerTest {
     public void testAppSetIdManager_verifyRateLimitReached() throws Exception {
         Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
 
-        final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        final AppSetIdManager appSetIdManager = sContext.getSystemService(AppSetIdManager.class);
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getAppSetIdRequestPerSecond();
+        final float requestPerSecond = getAppSetIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
         }
@@ -182,19 +182,19 @@ public class AppSetIdManagerTest {
         };
     }
 
-    private int getAppSetIdRequestPerSecond() {
+    private float getAppSetIdRequestPerSecond() {
         try {
             String permitString =
                     SystemProperties.get("debug.adservices.appsetid_request_permits_per_second");
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
 
             permitString =
                     ShellUtils.runShellCommand(
                             "device_config get adservices appsetid_request_permits_per_second");
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
             return DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND;
         } catch (Exception e) {
