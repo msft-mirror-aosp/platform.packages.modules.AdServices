@@ -90,6 +90,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
+
                         reconsentIfNeededForEU();
                         boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
                         if (mFlags.isBackCompatActivityFeatureEnabled()) {
