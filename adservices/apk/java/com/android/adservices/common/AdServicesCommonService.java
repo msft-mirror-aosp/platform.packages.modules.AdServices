@@ -29,6 +29,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 import com.android.adservices.service.common.AdServicesSyncUtil;
 import com.android.adservices.service.ui.UxEngine;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.notifications.ConsentNotificationTrigger;
 
 import java.util.Objects;
@@ -48,7 +49,10 @@ public class AdServicesCommonService extends Service {
         if (mAdServicesCommonService == null) {
             mAdServicesCommonService =
                     new AdServicesCommonServiceImpl(
-                            this, FlagsFactory.getFlags(), UxEngine.getInstance(this));
+                            this,
+                            FlagsFactory.getFlags(),
+                            UxEngine.getInstance(this),
+                            UxStatesManager.getInstance(this));
         }
         LogUtil.d("created adservices common service");
         try {
