@@ -31,7 +31,7 @@ public class FakeSdkSandboxProcessDeathCallbackBinder extends ISdkSandboxProcess
         mFakeSdkSandboxProcessDeathCallback.onSdkSandboxDied();
     }
 
-    public boolean isSdkSandboxDeathDetected() throws InterruptedException {
-        return mFakeSdkSandboxProcessDeathCallback.isSdkSandboxDeathDetected();
+    public boolean waitForSandboxDeath() throws InterruptedException {
+        return mFakeSdkSandboxProcessDeathCallback.waitForSandboxDeath();
     }
 }

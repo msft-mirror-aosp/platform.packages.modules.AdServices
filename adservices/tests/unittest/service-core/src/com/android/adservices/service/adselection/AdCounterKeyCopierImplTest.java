@@ -232,8 +232,8 @@ public class AdCounterKeyCopierImplTest {
                                         .getAdWithBid()
                                         .getAdData()
                                         .getRenderUri())
-                        .setBiddingLogicUri(sourceOutcome.getDecisionLogicUri())
-                        .setContextualSignals("{}");
+                        .setBiddingLogicUri(sourceOutcome.getBiddingLogicUri())
+                        .setBuyerContextualSignals("{}");
 
         DBAdSelection outputSelection =
                 mAdCounterKeyCopier
@@ -242,7 +242,7 @@ public class AdCounterKeyCopierImplTest {
                         .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-        assertThat(outputSelection.getAdCounterKeys())
+        assertThat(outputSelection.getAdCounterIntKeys())
                 .containsExactlyElementsIn(
                         sourceOutcome
                                 .getAdWithScore()

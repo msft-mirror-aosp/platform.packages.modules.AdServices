@@ -21,9 +21,10 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Test;
 
-import java.util.List;
 
 public class AddAdSelectionOverrideRequestTest {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
@@ -35,10 +36,14 @@ public class AddAdSelectionOverrideRequestTest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
-    private static final List<BuyerDecisionLogic> BUYERS_DECISION_LOGIC =
-            List.of(
-                    new BuyerDecisionLogic(CommonFixture.VALID_BUYER_1, "reportWin()"),
-                    new BuyerDecisionLogic(CommonFixture.VALID_BUYER_2, "reportWin()"));
+    private static final DecisionLogic DECISION_LOGIC = new DecisionLogic(DECISION_LOGIC_JS);
+    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
+            new BuyersDecisionLogic(
+                    ImmutableMap.of(
+                            CommonFixture.VALID_BUYER_1,
+                            DECISION_LOGIC,
+                            CommonFixture.VALID_BUYER_2,
+                            DECISION_LOGIC));
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {

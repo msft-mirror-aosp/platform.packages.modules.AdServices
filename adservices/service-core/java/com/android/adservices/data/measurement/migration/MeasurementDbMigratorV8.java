@@ -22,7 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 /**
- * Migrates Measurement DB to version 9. This upgrade adds columns for debug join keys to source and
+ * Migrates Measurement DB to version 8. This upgrade adds columns for debug join keys to source and
  * trigger tables.
  */
 public class MeasurementDbMigratorV8 extends AbstractMeasurementDbMigrator {

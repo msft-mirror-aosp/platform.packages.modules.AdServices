@@ -26,7 +26,6 @@ public class DBHistogramIdentifierFixture {
 
     public static DBHistogramIdentifier.Builder getValidDBHistogramIdentifierBuilder() {
         return DBHistogramIdentifier.builder()
-                .setAdCounterKey(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getAdCounterKey())
                 .setBuyer(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getBuyer())
                 .setCustomAudienceOwner(
                         HistogramEventFixture.VALID_HISTOGRAM_EVENT.getCustomAudienceOwner())

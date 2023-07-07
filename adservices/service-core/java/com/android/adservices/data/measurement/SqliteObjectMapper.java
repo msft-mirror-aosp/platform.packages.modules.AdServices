@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 /** Helper class for SQLite operations. */
 public class SqliteObjectMapper {
-
     /**
      * Create {@link EventReport} object from SQLite datastore.
      */
@@ -88,6 +87,11 @@ public class SqliteObjectMapper {
                 cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
         setTextColumn(
                 cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -170,6 +174,31 @@ public class SqliteObjectMapper {
                 cursor, MeasurementTables.SourceContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
         setLongColumn(
                 cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.PLATFORM_AD_ID, builder::setPlatformAdId);
+        setTextColumn(cursor, MeasurementTables.SourceContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                builder::setCoarseEventReportDestinations);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
+                builder::setMaxBucketIncrements);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                builder::setEventAttributionStatus);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
+                builder::setPrivacyParameters);
         return builder.build();
     }
 
@@ -229,6 +258,14 @@ public class SqliteObjectMapper {
                 builder::setAdtechBitMapping);
         setTextColumn(
                 cursor, MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
+        setTextColumn(
+                cursor, MeasurementTables.TriggerContract.PLATFORM_AD_ID, builder::setPlatformAdId);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -271,6 +308,11 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
         setUnsignedLongColumn(
                 cursor, MeasurementTables.AggregateReport.DEDUP_KEY, builder::setDedupKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -300,6 +342,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REFERENCE_ID,
+                builder::setReferenceId);
 
         return builder.build();
     }
@@ -308,10 +358,6 @@ public class SqliteObjectMapper {
     public static AsyncRegistration constructAsyncRegistration(Cursor cursor) {
         AsyncRegistration.Builder builder = new AsyncRegistration.Builder();
         setTextColumn(cursor, MeasurementTables.AsyncRegistrationContract.ID, builder::setId);
-        setTextColumn(
-                cursor,
-                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
-                builder::setEnrollmentId);
         setUriColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
@@ -334,14 +380,6 @@ public class SqliteObjectMapper {
                 builder::setTopOrigin);
         setIntColumn(
                 cursor,
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
-                builder::setRedirectType);
-        setIntColumn(
-                cursor,
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
-                builder::setRedirectCount);
-        setIntColumn(
-                cursor,
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
                 (enumValue) ->
                         builder.setSourceType(
@@ -358,11 +396,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
                 builder::setRetryCount);
-        setLongColumn(
+        setIntColumn(
                 cursor,
-                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
-                builder::setLastProcessingTime);
-        setIntColumn(cursor, MeasurementTables.AsyncRegistrationContract.TYPE, builder::setType);
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                (enumValue) ->
+                        builder.setType(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRegistration.RegistrationType.values()[enumValue]));
         setBooleanColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
@@ -375,6 +416,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
                 builder::setRegistrationId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                builder::setPlatformAdId);
         return builder.build();
     }
 

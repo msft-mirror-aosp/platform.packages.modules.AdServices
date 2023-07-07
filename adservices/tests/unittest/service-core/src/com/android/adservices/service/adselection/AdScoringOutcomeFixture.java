@@ -37,13 +37,42 @@ public class AdScoringOutcomeFixture {
                                 .setAdWithBid(adBiddingOutcome.getAdWithBid())
                                 .setScore(score)
                                 .build())
-                .setDecisionLogicUri(
+                .setBiddingLogicUri(
                         adBiddingOutcome.getCustomAudienceBiddingInfo().getBiddingLogicUri())
                 .setCustomAudienceSignals(
                         adBiddingOutcome.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setDecisionLogicJs(
+                .setBiddingLogicJs(
                         adBiddingOutcome.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs())
-                .setDecisionLogicJsDownloaded(true)
+                .setBiddingLogicJsDownloaded(true)
+                .setBuyer(
+                        adBiddingOutcome
+                                .getCustomAudienceBiddingInfo()
+                                .getCustomAudienceSignals()
+                                .getBuyer());
+    }
+
+    public static AdScoringOutcome.Builder anAdScoringBuilderWithBuyerContextualSignals(
+            AdTechIdentifier buyerName,
+            Double score,
+            BuyerContextualSignals buyerContextualSignals) {
+
+        AdBiddingOutcome adBiddingOutcome =
+                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(buyerName, 1.0).build();
+
+        return AdScoringOutcome.builder()
+                .setAdWithScore(
+                        AdWithScore.builder()
+                                .setAdWithBid(adBiddingOutcome.getAdWithBid())
+                                .setScore(score)
+                                .build())
+                .setBiddingLogicUri(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBiddingLogicUri())
+                .setCustomAudienceSignals(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
+                .setBiddingLogicJs(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs())
+                .setBiddingLogicJsDownloaded(true)
+                .setBuyerContextualSignals(buyerContextualSignals)
                 .setBuyer(
                         adBiddingOutcome
                                 .getCustomAudienceBiddingInfo()
@@ -63,12 +92,12 @@ public class AdScoringOutcomeFixture {
                                 .setScore(score)
                                 .build())
                 .setBuyer(buyer)
-                .setDecisionLogicUri(CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URI)
+                .setBiddingLogicUri(CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(buyer))
                 .setCustomAudienceSignals(
                         CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
                                 .setBuyer(buyer)
                                 .build())
-                .setDecisionLogicJs(CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
-                .setDecisionLogicJsDownloaded(true);
+                .setBiddingLogicJs(CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
+                .setBiddingLogicJsDownloaded(true);
     }
 }

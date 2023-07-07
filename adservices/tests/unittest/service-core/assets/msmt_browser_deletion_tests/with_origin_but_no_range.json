@@ -130,6 +130,7 @@
         "destinationOrigin": "android-app://com.site3",
         "enrollmentId": "enrollment-id",
         "triggerTime": 10,
+        "triggerId": "ignored10",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId": "S1",
         "triggerId": "T1"
@@ -142,6 +143,7 @@
         "destinationOrigin": "android-app://com.site.toBeDeleted",
         "enrollmentId": "enrollment-id",
         "triggerTime": 10,
+        "triggerId": "ignored10",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId": "S1",
         "triggerId": "T2"
@@ -154,6 +156,7 @@
         "destinationOrigin": "android-app://com.site2.doNotDelete",
         "enrollmentId": "enrollment-id",
         "triggerTime": 10,
+        "triggerId": "ignored10",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId": "S2",
         "triggerId": "T2"
@@ -227,6 +230,7 @@
         "destinationOrigin": "android-app://com.site2.doNotDelete",
         "enrollmentId": "enrollment-id",
         "triggerTime": 10,
+        "triggerId": "ignored10",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId": "S2",
         "triggerId": "T2"

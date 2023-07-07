@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -146,7 +146,7 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -169,9 +169,11 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
                 + " winning_ad_bid,ad_selection.creation_timestamp as"
                 + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
-                + " buyer_decision_logic_js FROM ad_selection LEFT JOIN buyer_decision_logic ON"
-                + " ad_selection.bidding_logic_uri = buyer_decision_logic.bidding_logic_uri WHERE"
-                + " ad_selection.ad_selection_id = :adSelectionId")
+                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id ="
+                + " :adSelectionId")
     public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
@@ -195,9 +197,11 @@ public abstract class AdSelectionEntryDao {
                 + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
-                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
-                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) ")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
@@ -222,9 +226,11 @@ public abstract class AdSelectionEntryDao {
                 + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
-                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
-                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(
             List<Long> adSelectionIds, String callerPackageName);
@@ -284,7 +290,7 @@ public abstract class AdSelectionEntryDao {
     public abstract Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
@@ -294,7 +300,7 @@ public abstract class AdSelectionEntryDao {
      *     the ad selection, or {@code null} if no match is found
      */
     @Query(
-            "SELECT custom_audience_signals_buyer, ad_counter_keys FROM ad_selection "
+            "SELECT custom_audience_signals_buyer, ad_counter_int_keys FROM ad_selection "
                     + "WHERE ad_selection_id = :adSelectionId "
                     + "AND caller_package_name = :callerPackageName")
     @Nullable
@@ -355,15 +361,15 @@ public abstract class AdSelectionEntryDao {
                     + "WHERE bidding_logic_uri is NOT NULL)")
     public abstract void removeExpiredBuyerDecisionLogic();
 
-    /** Clean up all ad selection override data associated to a package. */
+    /** Clean up all ad selection override data */
     @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
-    public abstract void removeAdSelectionOverridesByPackageName(String appPackageName);
+    public abstract void removeAllAdSelectionOverrides(String appPackageName);
 
-    /** Clean up all buyers' decision logic data associated to a package. */
+    /** Clean up all buyers' decision logic data */
     @Query(
             "DELETE FROM ad_selection_buyer_logic_overrides WHERE  app_package_name ="
                     + " :appPackageName")
-    public abstract void removeBuyerDecisionOverridesByPackageName(String appPackageName);
+    public abstract void removeAllBuyerDecisionOverrides(String appPackageName);
 
     /**
      * Checks if there is a row in the ad selection data with the unique combination of
@@ -481,8 +487,7 @@ public abstract class AdSelectionEntryDao {
             "SELECT COUNT(*) FROM registered_ad_interactions WHERE ad_selection_id ="
                     + " :adSelectionId AND destination = :reportingDestination")
     public abstract long getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
-            long adSelectionId,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+            long adSelectionId, @ReportEventRequest.ReportingDestination int reportingDestination);
 
     /**
      * Inserts a list of {@link DBRegisteredAdInteraction}s into the database, enforcing these
@@ -541,73 +546,5 @@ public abstract class AdSelectionEntryDao {
                 registeredAdInteractions.subList(0, numEntriesToCommit);
 
         persistDBRegisteredAdInteractions(registeredAdInteractionsToCommit);
-    }
-
-    /**
-     * Gets the list of all the bidding logic uris who belong to ad selection entries from a
-     * specific {@code packageName}.
-     */
-    @Query(
-            "SELECT ad_selection.bidding_logic_uri FROM ad_selection WHERE"
-                    + " ad_selection.caller_package_name = :packageName")
-    public abstract List<Uri> getAdSelectionBiddingLogicUrisByPackageName(
-            @NonNull String packageName);
-
-    /** Clears all ad_selection data specific to the {@code packageName}. */
-    @Query("DELETE FROM ad_selection WHERE ad_selection.caller_package_name = :packageName")
-    public abstract void removeAdSelectionEntriesByPackageName(String packageName);
-
-    /**
-     * Clears all buyer_decision_logic data for the list of {@code uris}.
-     *
-     * <p>This method is used in conjunction with {@link
-     * #getAdSelectionBiddingLogicUrisByPackageName} and {@link
-     * #removeAdSelectionEntriesByPackageName} to remove all ad selection associated data specific
-     * to a {@code packageName} of interest.
-     */
-    @Query(
-            "DELETE FROM buyer_decision_logic WHERE buyer_decision_logic.bidding_logic_uri IN"
-                    + " (:uris)")
-    public abstract void removeBuyerDecisionLogicByBiddingLogicUris(List<Uri> uris);
-
-    /** Clears all ad_selection_buyer_logic_overrides data specific to the {@code packageName}. */
-    @Query(
-            "DELETE FROM ad_selection_buyer_logic_overrides WHERE"
-                    + " ad_selection_buyer_logic_overrides.app_package_name = :packageName")
-    public abstract void removeBuyerDecisionLogicOverrideByPackageName(String packageName);
-
-    /** Clears all data associated to Ad Selection APIs specific to the {@code packageName}. */
-    @Transaction
-    public void removeAdSelectionDataByPackageName(@NonNull String packageName) {
-        List<Uri> uris = getAdSelectionBiddingLogicUrisByPackageName(packageName);
-        removeBuyerDecisionLogicByBiddingLogicUris(uris);
-        removeAdSelectionEntriesByPackageName(packageName);
-        removeAdSelectionOverridesByPackageName(packageName);
-        removeBuyerDecisionLogicOverrideByPackageName(packageName);
-    }
-
-    /** Clears all ad_selection data. */
-    @Query("DELETE FROM ad_selection")
-    public abstract void removeAllAdSelectionEntries();
-
-    /** Clears all buyer_decision_logic data. */
-    @Query("DELETE FROM buyer_decision_logic")
-    public abstract void removeAllBuyerDecisionLogic();
-
-    /** Clears all ad_selection_overrides data. */
-    @Query("DELETE FROM ad_selection_overrides")
-    public abstract void removeAllAdSelectionOverrides();
-
-    /** Clears all ad_selection_buyer_logic_overrides data. */
-    @Query("DELETE FROM ad_selection_buyer_logic_overrides")
-    public abstract void removeAllBuyerDecisionLogicOverrides();
-
-    /** Clears all data associated to Ad Selection APIs. */
-    @Transaction
-    public void removeAllAdSelectionData() {
-        removeAllBuyerDecisionLogic();
-        removeAllAdSelectionEntries();
-        removeAllAdSelectionOverrides();
-        removeAllBuyerDecisionLogicOverrides();
     }
 }

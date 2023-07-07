@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.NotificationManager;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -42,6 +43,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +63,13 @@ import java.util.UUID;
  */
 @RunWith(JUnit4.class)
 public class SdkSandboxRestrictionsTest {
+
+    @Before
+    public void setUp() {
+        assumeTrue(
+                DeviceSupportUtils.isSdkSandboxSupported(
+                        InstrumentationRegistry.getInstrumentation().getContext()));
+    }
 
     /** Tests that the SDK sandbox cannot send notifications. */
     @Test
@@ -108,14 +117,12 @@ public class SdkSandboxRestrictionsTest {
         assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
-    /**
-     * Tests that sandbox cannot send implicit broadcast intents.
-     */
+    /** Tests that sandbox cannot send implicit broadcast intents. */
     @Test
     public void testNoImplicitIntents() {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        Intent sendIntent = new Intent();
+        final Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, "text");
         sendIntent.setType("text/plain");
@@ -129,7 +136,7 @@ public class SdkSandboxRestrictionsTest {
 
     /** Tests that the sandbox cannot send broadcasts. */
     @Test
-    public void testNoBroadcasts() {
+    public void testSendBroadcastsRestrictions_withAction() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -268,9 +275,7 @@ public class SdkSandboxRestrictionsTest {
         }
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access Storage Access Framework
-     */
+    /** Tests that Sdk Sandbox cannot access Storage Access Framework */
     @Test
     public void testSanboxCannotAccess_StorageAccessFramework() throws Exception {
         final String[] intentList = {

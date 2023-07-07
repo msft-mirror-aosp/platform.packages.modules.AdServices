@@ -15,7 +15,6 @@
  */
 package com.android.adservices.ui.ganotifications;
 
-import static com.android.adservices.ui.ganotifications.ConsentNotificationGaV2Screen2Fragment.IS_EU_DEVICE_ARGUMENT_KEY;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
@@ -25,6 +24,7 @@ import static com.android.adservices.ui.settings.activities.AdServicesSettingsMa
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +40,7 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -60,8 +61,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = NotificationUtil.isEeaDevice(requireActivity(), getContext());
         if (mIsEUDevice) {
             inflatedView = inflater.inflate(
                     R.layout.consent_notification_screen_1_ga_v2_eu, container, false);
@@ -107,6 +107,11 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
 
                     setInfoViewState(!mIsInfoViewExpanded);
                 });
+        // Row Policy link is on screen 1, Eu on screen 2
+        if (!mIsEUDevice) {
+            ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        }
 
         Button leftControlButton =
                 requireActivity().findViewById(R.id.leftControlButton);
@@ -220,7 +225,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
                         R.string.notificationUI_confirmation_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);
-                mRightControlButton.setText(R.string.notificationUI_next_button_text);
+                mRightControlButton.setText(R.string.notificationUI_more_button_text);
             }
         }
 

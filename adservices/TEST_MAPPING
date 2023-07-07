@@ -1,113 +1,144 @@
 {
   "mainline-presubmit": [
     {
-      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
-      "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
+      // Install com.google.android.adservices.apex and run AdServicesApkUINotificationTests.
+      "name": "AdServicesApkUINotificationTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesApkUINotificationTests.
+      "name": "AdExtServicesApkUINotificationTests[com.google.android.extservices_sminus.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesApkUISettingsTests.
+      "name": "AdServicesApkUISettingsTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesApkUISettingsTests.
+      "name": "AdExtServicesApkUISettingsTests[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUITestsAppConsent.
       "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesApkUITestsAppConsent.
+      "name": "AdExtServicesApkUITestsAppConsent[com.google.android.extservices_sminus.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesApkUISettingsGaOtaTests.
+      "name": "AdServicesApkUISettingsGaOtaTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesApkUISettingsGaOtaTests.
+      "name": "AdExtServicesApkUISettingsGaOtaTests[com.google.android.extservices_sminus.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
       "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run AdExtServicesApkUnitTests.
-      "name": "AdExtServicesApkUnitTests[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesApkUnitTests.
+      "name": "AdExtServicesApkUnitTests[com.google.android.extservices_sminus.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesCobaltUnitTests.
+      "name": "AdServicesCobaltUnitTests[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
       "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run AdExtServicesFrameworkUnitTests.
-      "name": "AdExtServicesFrameworkUnitTests[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesFrameworkUnitTests.
+      "name": "AdExtServicesFrameworkUnitTests[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreUnitTests.
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreUnitTests.
-      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesServiceCoreUnitTests.
+      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
       "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run AdExtServicesJsEngineUnitTests.
-      "name": "AdExtServicesJsEngineUnitTests[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesJsEngineUnitTests.
+      "name": "AdExtServicesJsEngineUnitTests[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsExtAdServicesDeviceTestCases.
-      "name": "CtsExtAdServicesDeviceTestCases[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesDeviceTestCases.
+      "name": "CtsAdExtServicesDeviceTestCases[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsExtAdServicesDebuggableDeviceTestCases.
-      "name": "CtsExtAdServicesDebuggableDeviceTestCases[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesDebuggableDeviceTestCases.
+      "name": "CtsAdExtServicesDebuggableDeviceTestCases[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesEndToEndTests.
       "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsAdExtServicesEndToEndTests.
-      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesEndToEndTests.
+      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "CtsAdExtServicesPermissionsValidEndToEndTests[com.google.android.extservices_sminus.apex]"
+    },
+    {
       "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsExtAdServicesPermissionsAppOptOutEndToEndTests[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesPermissionsAppOptOutEndToEndTests[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesPermissionsNoPermEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsExtAdServicesPermissionsNoPermEndToEndTests[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesPermissionsNoPermEndToEndTests[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesNotInAllowListEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsExtAdServicesNotInAllowListEndToEndTests[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesNotInAllowListEndToEndTests[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsExtAdServicesTopicsAppUpdateTests[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesTopicsAppUpdateTests[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsExtAdServicesTopicsConnectionTests[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesTopicsConnectionTests[com.google.android.extservices_sminus.apex]"
     },
     {
       "name": "CtsAdServicesMddTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "CtsExtAdServicesMddTests[com.google.android.extservices.apex]"
+      "name": "CtsAdExtServicesMddTests[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedAdIdManagerTests.
@@ -130,23 +161,30 @@
       "name": "CtsAdIdEndToEndTest[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsExtAdIdEndToEndTest.
-      "name": "CtsExtAdIdEndToEndTest[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesAdIdEndToEndTest.
+      "name": "CtsAdExtServicesAdIdEndToEndTest[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsExtAppSetIdEndToEndTest.
-      "name": "CtsExtAppSetIdEndToEndTest[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesAppSetIdEndToEndTest.
+      "name": "CtsAdExtServicesAppSetIdEndToEndTest[com.google.android.extservices_sminus.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
       "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesHostTests.
+      "name": "CtsAdExtServicesHostTests[com.google.android.extservices_sminus.apex]"
     }
   ],
   "presubmit": [
+    {
+      "name": "AdServicesCobaltUnitTests"
+    },
     {
       "name": "AdServicesFrameworkUnitTests"
     },
@@ -178,19 +216,49 @@
       "name": "CtsAdServicesMddTests"
     },
     {
-      "name": "CtsAdServicesDeviceTestCases"
-    },
-    {
-      "name": "CtsAdServicesDebuggableDeviceTestCases"
-    },
-    {
-      "name": "AdServicesApkUITests",
+      "name": "CtsAdServicesDeviceTestCases",
       "options": [
-              {
-                // Exclude tests that are marked flaky
-                "exclude-annotation": "androidx.test.filters.FlakyTest"
-              }
-            ]
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesDebuggableDeviceTestCases",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUINotificationTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUISettingsTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUISettingsGaOtaTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "AdServicesApkUITestsAppConsent"
@@ -210,20 +278,17 @@
     {
       "name": "CtsAppSetIdEndToEndTest",
       "options": [
-              {
-                // Exclude tests that are marked flaky
-                "exclude-annotation": "androidx.test.filters.FlakyTest"
-              }
-            ]
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "CtsRootAdServicesUiTest",
-      "options": [
-                    {
-                      // Exclude tests that are marked flaky
-                      "exclude-annotation": "androidx.test.filters.FlakyTest"
-                    }
-                  ]
+      "name": "AdServicesBetaUxCtsRootTest"
+    },
+    {
+      "name": "LegacyAdServicesGaUxCtsRootTest"
     },
     {
       "name": "CtsAdServicesHostTests"

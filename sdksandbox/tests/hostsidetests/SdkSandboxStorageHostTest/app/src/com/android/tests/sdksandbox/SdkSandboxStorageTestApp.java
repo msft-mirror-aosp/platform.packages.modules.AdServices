@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
@@ -30,17 +31,18 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
-import android.support.test.uiautomator.UiDevice;
 import android.view.KeyEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 
 import com.android.tests.codeprovider.storagetest_1.IStorageTestSdk1Api;
 
 import junit.framework.AssertionFailedError;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,7 +66,7 @@ public class SdkSandboxStorageTestApp {
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -78,6 +80,17 @@ public class SdkSandboxStorageTestApp {
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
         mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // unload SDK to fix flakiness
+        mSdkSandboxManager.unloadSdk(SDK_NAME);
+    }
+
+    @After
+    public void tearDown() {
+        // unload SDK to fix flakiness
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_NAME);
+        }
     }
 
     @Test
@@ -136,19 +149,18 @@ public class SdkSandboxStorageTestApp {
         int uid = Process.myUid();
         UserHandle user = Process.myUserHandle();
 
-        // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
+        // Have the sdk use up space
         final int sizeInBytes = 10000000; // 10 MB
-        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ false);
-        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ true);
+        mSdk.createFilesInStorage(sizeInBytes);
 
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        long deltaAppSize = 2 * sizeInBytes;
-        long deltaCacheSize = sizeInBytes;
+        long deltaAppSize = 4 * sizeInBytes;
+        long deltaCacheSize = 2 * sizeInBytes;
 
         // Assert app size is same
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();

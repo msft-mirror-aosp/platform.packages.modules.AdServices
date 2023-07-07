@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -63,7 +64,8 @@ public class PrebuiltLogicGenerator {
 
     @VisibleForTesting
     static final String AD_SELECTION_HIGHEST_BID_WINS_JS =
-            "function scoreAd(ad, bid, auction_config, seller_signals,"
+            "//From prebuilts AD_SELECTION_HIGHEST_BID_WINS_JS\n"
+                    + "function scoreAd(ad, bid, auction_config, seller_signals,"
                     + " trusted_scoring_signals,\n"
                     + "    contextual_signal, user_signal, custom_audience_signal) {\n"
                     + "    return {'status': 0, 'score': bid };\n"
@@ -71,7 +73,7 @@ public class PrebuiltLogicGenerator {
                     + "function reportResult(ad_selection_config, render_uri, bid,"
                     + " contextual_signals) {\n"
                     + "    // Add the address of your reporting server here\n"
-                    + "  let reporting_address = '${reportingUrl}';\n"
+                    + "    let reporting_address = '${reportingUrl}';\n"
                     + "    return {'status': 0, 'results': {'signals_for_buyer':"
                     + " '{\"signals_for_buyer\" : 1}'\n"
                     + "            , 'reporting_uri': reporting_address + '?render_uri='\n"
@@ -97,9 +99,11 @@ public class PrebuiltLogicGenerator {
     @VisibleForTesting static final String NAMED_PARAM_TEMPLATE = "\\$\\{%s\\}";
     private static final Pattern PARAM_IDENTIFIER_REGEX_PATTERN =
             Pattern.compile(String.format(NAMED_PARAM_TEMPLATE, "(.*?)"));
-    private final Flags mFlags;
+    @NonNull private final Flags mFlags;
 
-    public PrebuiltLogicGenerator(Flags flags) {
+    public PrebuiltLogicGenerator(@NonNull Flags flags) {
+        Objects.requireNonNull(flags);
+
         mFlags = flags;
     }
 

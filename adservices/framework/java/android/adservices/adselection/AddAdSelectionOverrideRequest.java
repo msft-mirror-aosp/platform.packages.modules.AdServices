@@ -20,8 +20,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -41,7 +39,7 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final AdSelectionSignals mTrustedScoringSignals;
 
-    @NonNull private final List<BuyerDecisionLogic> mBuyersDecisionLogic;
+    @NonNull private final BuyersDecisionLogic mBuyersDecisionLogic;
 
     /**
      * Builds a {@link AddAdSelectionOverrideRequest} instance.
@@ -52,7 +50,7 @@ public class AddAdSelectionOverrideRequest {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic) {
+            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJs);
         Objects.requireNonNull(trustedScoringSignals);
@@ -68,7 +66,7 @@ public class AddAdSelectionOverrideRequest {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
             @NonNull AdSelectionSignals trustedScoringSignals) {
-        this(adSelectionConfig, decisionLogicJs, trustedScoringSignals, Collections.EMPTY_LIST);
+        this(adSelectionConfig, decisionLogicJs, trustedScoringSignals, BuyersDecisionLogic.EMPTY);
     }
 
     /**
@@ -105,7 +103,7 @@ public class AddAdSelectionOverrideRequest {
      * @hide
      */
     @NonNull
-    public List<BuyerDecisionLogic> getBuyersDecisionLogic() {
+    public BuyersDecisionLogic getBuyersDecisionLogic() {
         return mBuyersDecisionLogic;
     }
 }

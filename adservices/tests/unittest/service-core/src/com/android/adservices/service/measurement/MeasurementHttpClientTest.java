@@ -18,13 +18,18 @@ package com.android.adservices.service.measurement;
 
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 
 import android.adservices.http.MockWebServerRule;
+import android.net.Uri;
 import android.provider.DeviceConfig;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.service.measurement.util.Web;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.mockwebserver.MockResponse;
@@ -34,11 +39,15 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+
+import javax.net.ssl.SSLHandshakeException;
 
 /** Unit tests for {@link MeasurementHttpClient} */
 @SmallTest
@@ -90,6 +99,73 @@ public final class MeasurementHttpClientTest {
     }
 
     @Test
+    public void testSetup_connectLocalhostToUntrustedServer_success() throws Exception {
+        final MockWebServerRule mMockWebServerRule = createUntrustedForHttps();
+        MockWebServer server = null;
+        try {
+            server =
+                    mMockWebServerRule.startMockWebServer(
+                            request -> {
+                                Assert.assertNotNull(request);
+                                final String userAgentHeader = request.getHeader("user-agent");
+                                Assert.assertNotNull(userAgentHeader);
+                                Assert.assertEquals("", userAgentHeader);
+                                return new MockResponse().setResponseCode(200);
+                            });
+
+            final URL url = server.getUrl("/test");
+
+            Assert.assertTrue(Web.isLocalhost(Uri.parse(url.toString())));
+
+            final HttpURLConnection urlConnection =
+                    (HttpURLConnection) mNetworkConnection.setup(url);
+
+            Assert.assertEquals(200, urlConnection.getResponseCode());
+        } finally {
+            if (server != null) {
+                server.shutdown();
+            }
+        }
+    }
+
+    @Test
+    public void testSetup_connectNonLocalhostToUntrustedServer_throws() throws Exception {
+        final MockWebServerRule mMockWebServerRule = createUntrustedForHttps();
+        MockWebServer server = null;
+        final MockitoSession mockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(Web.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(false).when(() -> Web.isLocalhost(any(Uri.class)));
+            server =
+                    mMockWebServerRule.startMockWebServer(
+                            request -> {
+                                Assert.assertNotNull(request);
+                                final String userAgentHeader = request.getHeader("user-agent");
+                                Assert.assertNotNull(userAgentHeader);
+                                Assert.assertEquals("", userAgentHeader);
+                                return new MockResponse().setResponseCode(200);
+                            });
+
+            final URL url = server.getUrl("/test");
+
+            Assert.assertFalse(Web.isLocalhost(Uri.parse(url.toString())));
+
+            final HttpURLConnection urlConnection =
+                    (HttpURLConnection) mNetworkConnection.setup(url);
+
+            Assert.assertThrows(SSLHandshakeException.class, () -> urlConnection.getResponseCode());
+        } finally {
+            if (server != null) {
+                server.shutdown();
+            }
+            mockitoSession.finishMocking();
+        }
+    }
+
+    @Test
     public void testOpenAndSetupConnectionOverrideTimeoutValues_success() throws Exception {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -119,5 +195,12 @@ public final class MeasurementHttpClientTest {
     public void testOpenAndSetupConnectionOInvalidUrl_failure() throws Exception {
         Assert.assertThrows(
                 MalformedURLException.class, () -> mNetworkConnection.setup(new URL("x")));
+    }
+
+    private static MockWebServerRule createUntrustedForHttps() {
+        return MockWebServerRule.forHttps(
+                ApplicationProvider.getApplicationContext(),
+                "adservices_untrusted_test_server.p12",
+                "adservices_test");
     }
 }

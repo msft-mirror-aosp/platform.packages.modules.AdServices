@@ -29,11 +29,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import android.app.Activity;
 import android.app.sdksandbox.testutils.FakeOutcomeReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.util.Log;
@@ -42,6 +46,7 @@ import android.view.SurfaceControlViewHost.SurfacePackage;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -96,6 +101,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         callingTimeArgumentCaptor.capture(),
                         Mockito.eq(params),
@@ -128,6 +134,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -398,6 +405,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -425,6 +433,7 @@ public class SdkSandboxManagerUnitTest {
         Mockito.verify(mBinder)
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
+                        Mockito.nullable(IBinder.class),
                         Mockito.eq(SDK_NAME),
                         Mockito.anyLong(),
                         Mockito.eq(params),
@@ -546,6 +555,27 @@ public class SdkSandboxManagerUnitTest {
         params.putInt(EXTRA_DISPLAY_ID, 0);
         params.putBinder(EXTRA_HOST_TOKEN, null);
         ensureIllegalArgumentExceptionOnRequestSurfacePackage(params, EXTRA_HOST_TOKEN);
+    }
+
+    @Test
+    public void testStartSandboxActivity() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        final Activity fromActivitySpy = Mockito.mock(Activity.class);
+        final IBinder token = new Binder();
+        mSdkSandboxManager.startSdkSandboxActivity(fromActivitySpy, token);
+        ArgumentCaptor<Intent> intentArgumentCaptor = ArgumentCaptor.forClass(Intent.class);
+
+        Mockito.verify(fromActivitySpy).startActivity(intentArgumentCaptor.capture());
+        Intent intent = intentArgumentCaptor.getValue();
+        assertThat(intent.getAction()).isNotNull();
+        assertThat(intent.getAction()).isEqualTo(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY);
+
+        Bundle params = intent.getExtras();
+        assertThat(params.getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER))
+                .isNotNull();
+        assertThat(params.getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER))
+                .isEqualTo(token);
     }
 
     private void ensureIllegalArgumentExceptionOnRequestSurfacePackage(

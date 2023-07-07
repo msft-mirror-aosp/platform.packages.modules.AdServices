@@ -52,6 +52,7 @@ public class GetTopicsApiCall {
         disableGlobalKillSwitch();
         disableTopicsKillSwitch();
         enableUserConsent(true);
+        overrideDisableTopicsEnrollmentCheck("1");
         // Extra flags need to be set when test is executed on S- for service to run (e.g.
         // to avoid invoking system-server related code).
         if (!SdkLevel.isAtLeastT()) {
@@ -62,6 +63,7 @@ public class GetTopicsApiCall {
     @After
     public void teardown() {
         enableUserConsent(false);
+        overrideDisableTopicsEnrollmentCheck("0");
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
@@ -109,5 +111,12 @@ public class GetTopicsApiCall {
     protected void enableUserConsent(boolean isEnabled) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.consent_manager_debug_mode " + isEnabled);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics' enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 }

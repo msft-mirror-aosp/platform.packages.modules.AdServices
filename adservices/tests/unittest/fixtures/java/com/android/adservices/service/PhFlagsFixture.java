@@ -21,6 +21,8 @@ import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_FROM_OUTC
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
@@ -30,7 +32,9 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
@@ -77,6 +81,15 @@ public class PhFlagsFixture {
             FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS + (int) ADDITIONAL_TIMEOUT;
     public static final int EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
             FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS + (int) ADDITIONAL_TIMEOUT;
+
+    public static final int
+            EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS =
+                    FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS
+                            + (int) ADDITIONAL_TIMEOUT;
+    public static final int
+            EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
+                    FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS
+                            + (int) ADDITIONAL_TIMEOUT;
 
     public static void configureFledgeBackgroundFetchEligibleUpdateBaseIntervalS(
             final long phOverridingValue) {
@@ -163,6 +176,19 @@ public class PhFlagsFixture {
     }
 
     /**
+     * Allows tests to override seed enrollment data flag thereby seeding data into enrollment table
+     *
+     * @param enable disable enrollment seed
+     */
+    public static void overrideEnableEnrollmentSeed(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ENABLE_ENROLLMENT_TEST_SEED,
+                Boolean.toString(enable),
+                false);
+    }
+
+    /**
      * Enables test to override the flag enabling the enrollment check for callers of Fledge APIs.
      *
      * @param enable whether enable or disable the check
@@ -172,6 +198,36 @@ public class PhFlagsFixture {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 PhFlags.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
                 Boolean.toString(!enable),
+                false);
+    }
+
+    /**
+     * Enables test to override the flag enabling Protected Audience's event-level debug reporting.
+     *
+     * @param enable whether enable or disable the check
+     */
+    public static void overrideFledgeEventLevelDebugReportingEnabled(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED,
+                Boolean.toString(enable),
+                false);
+    }
+
+    public static void overrideFledgeEventLevelDebugReportingBatchDelay(int batchDelayInSeconds) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS,
+                Integer.toString(batchDelayInSeconds),
+                false);
+    }
+
+    public static void overrideFledgeEventLevelDebugReportingMaxItemsPerBatch(
+            int maxItemsPerBatch) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH,
+                Integer.toString(maxItemsPerBatch),
                 false);
     }
 
@@ -240,6 +296,24 @@ public class PhFlagsFixture {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                Boolean.toString(value),
+                false);
+    }
+
+    /** Overrides whether the CPC billing feature is enabled. */
+    public static void overrideFledgeCpcBillingEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_CPC_BILLING_ENABLED,
+                Boolean.toString(value),
+                false);
+    }
+
+    /** Overrides whether the {@code prebuilt Uri} feature is enabled. */
+    public static void overrideFledgeAdSelectionPrebuiltUriEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
                 Boolean.toString(value),
                 false);
     }

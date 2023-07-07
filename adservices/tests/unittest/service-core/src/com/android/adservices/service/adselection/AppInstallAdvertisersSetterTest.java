@@ -142,17 +142,16 @@ public class AppInstallAdvertisersSetterTest {
     }
 
     @Test
-    public void testSetAppInstallAdvertisersFailsSilentlyWithoutConsent() throws Exception {
-        doThrow(new ConsentManager.RevokedConsentException())
-                .when(mConsentManager)
-                .assertFledgeCallerHasUserConsent(any());
-
+    public void testSetAppInstallAdvertisersRevokedConsent() throws Exception {
+        when(mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
+                .thenReturn(true);
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         verify(mConsentManager)
-                .assertFledgeCallerHasUserConsent(SAMPLE_INPUT.getCallerPackageName());
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        SAMPLE_INPUT.getCallerPackageName());
         assertTrue(callback.mIsSuccess);
-        verifyLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, never());
+        verifyLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
         verifyNoMoreInteractions(mAppInstallDaoMock);
     }
 

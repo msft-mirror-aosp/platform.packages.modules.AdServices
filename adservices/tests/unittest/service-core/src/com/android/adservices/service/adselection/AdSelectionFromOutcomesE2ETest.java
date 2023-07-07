@@ -64,10 +64,14 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -75,6 +79,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -175,7 +180,7 @@ public class AdSelectionFromOutcomesE2ETest {
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
                     mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest(), mFlags),
+                    new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                     mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;
@@ -184,13 +189,17 @@ public class AdSelectionFromOutcomesE2ETest {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
+    private FrequencyCapDao mFrequencyCapDao;
+    private EncryptionKeyDao mEncryptionKeyDao;
+    private EncryptionContextDao mEncryptionContextDao;
+    private ReportingUrisDao mReportingUrisDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
 
     @Before
     public void setUp() throws Exception {
@@ -218,15 +227,20 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
-        FrequencyCapDao frequencyCapDao = sharedDb.frequencyCapDao();
+        mFrequencyCapDao = sharedDb.frequencyCapDao();
+        AdSelectionServerDatabase serverDb =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
+        mEncryptionContextDao = serverDb.encryptionContextDao();
+        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mReportingUrisDao = serverDb.reportingUrisDao();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, frequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -242,7 +256,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
-                        frequencyCapDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -255,7 +272,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -584,7 +602,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(entry.getKey())
                             .setCustomAudienceSignals(customAudienceSignals)
-                            .setContextualSignals(contextualSignals)
+                            .setBuyerContextualSignals(contextualSignals)
                             .setBiddingLogicUri(biddingLogicUri1)
                             .setWinningAdRenderUri(renderUri)
                             .setWinningAdBid(entry.getValue())
@@ -669,6 +687,11 @@ public class AdSelectionFromOutcomesE2ETest {
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
             return false;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+            return true;
         }
     }
 }
