@@ -122,7 +122,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -215,7 +215,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -286,7 +286,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -357,7 +357,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -430,7 +430,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -520,7 +520,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -578,7 +578,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -634,7 +634,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -700,7 +700,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -790,7 +790,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -872,7 +872,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -943,7 +943,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -1016,7 +1016,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())

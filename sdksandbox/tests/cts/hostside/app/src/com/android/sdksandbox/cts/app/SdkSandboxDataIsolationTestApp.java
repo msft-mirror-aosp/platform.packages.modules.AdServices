@@ -27,6 +27,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.sdksandbox.cts.provider.dataisolationtest.IDataIsolationTestSdkApi;
 
@@ -100,6 +101,26 @@ public class SdkSandboxDataIsolationTestApp {
     public void testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory() throws Exception {
         loadSdk();
         mSdk.testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory();
+    }
+
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyAppExistence() throws Exception {
+        loadSdk();
+        mSdk.testSdkSandboxDataIsolation_CannotVerifyAppExistence();
+    }
+
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
+        loadSdk();
+        final Bundle arguments = InstrumentationRegistry.getArguments();
+        mSdk.testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(arguments);
+    }
+
+    @Test
+    public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes() throws Exception {
+        loadSdk();
+        final Bundle arguments = InstrumentationRegistry.getArguments();
+        mSdk.testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes(arguments);
     }
 
     private void loadSdk() {

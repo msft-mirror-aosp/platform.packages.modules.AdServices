@@ -14,11 +14,22 @@
 
 package com.android.ctssdkprovider;
 
+import android.os.Bundle;
+
+import com.android.ctssdkprovider.IActivityActionExecutor;
+import com.android.ctssdkprovider.IActivityStarter;
+
 interface ICtsSdkProviderApi {
     void checkClassloaders();
     void checkResourcesAndAssets();
     boolean isPermissionGranted (String permissionName, boolean useApplicationContext);
     int getContextHashCode(boolean useApplicationContext);
     void testStoragePaths();
+    int getProcessImportance();
+    void startSandboxActivityDirectlyByAction();
+    void startSandboxActivityDirectlyByComponent();
+    IActivityActionExecutor startActivity(IActivityStarter callback, in Bundle extras);
+    String getPackageName();
     String getOpPackageName();
+    String getClientPackageName();
 }

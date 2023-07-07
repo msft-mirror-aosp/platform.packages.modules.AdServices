@@ -16,6 +16,8 @@
 
 package com.android.server.adservices.data.topics;
 
+import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.common.DumpHelper.dump;
 import static com.android.server.adservices.data.topics.TopicsDbTestUtil.doesTableExistAndColumnCountMatch;
 
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +25,10 @@ import static org.junit.Assert.assertTrue;
 
 import android.database.sqlite.SQLiteDatabase;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import org.junit.Test;
+
 
 /** Unit test to test class {@link TopicsDbHelper} */
 public class TopicsDbHelperTest {
@@ -32,5 +37,19 @@ public class TopicsDbHelperTest {
         SQLiteDatabase db = TopicsDbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
         assertNotNull(db);
         assertTrue(doesTableExistAndColumnCountMatch(db, "blocked_topics", 4));
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        String prefix = "fixed, pre is:";
+        TopicsDbHelper dao =
+                TopicsDbHelper.getInstance(
+                        InstrumentationRegistry.getInstrumentation().getTargetContext());
+
+        String dump = dump(pw -> dao.dump(pw, prefix, /* args= */ null));
+
+        // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
+        // by using the wrong %s / %d tokens) and every line dumps the prefix
+        assertDumpHasPrefix(dump, prefix);
     }
 }

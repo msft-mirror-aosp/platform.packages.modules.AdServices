@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings.delegates;
 import android.content.Intent;
 import android.icu.text.MessageFormat;
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
@@ -26,7 +27,6 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
@@ -70,7 +70,7 @@ public class MainActionDelegate {
                                 mMainViewModel.setConsent(true);
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showOptOutDialogFragment(
                                                 mAdServicesSettingsMainActivity, mMainViewModel);
@@ -148,6 +148,14 @@ public class MainActionDelegate {
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
         configureSubtitles(fragment);
+        configureLearnMore(fragment);
+    }
+
+    private void configureLearnMore(AdServicesSettingsMainFragment fragment) {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            ((TextView) fragment.requireView().findViewById(R.id.main_view_ga_footer_learn_more))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        }
     }
 
     private void setLayoutVisibility(int[] layoutList, int visibility) {

@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
@@ -66,7 +66,8 @@ public class AdSelectionEntryDaoTest {
     private static final long AD_SELECTION_ID_2 = 2;
     private static final long AD_SELECTION_ID_3 = 3;
     private static final long AD_SELECTION_ID_4 = 4;
-    private static final String CONTEXTUAL_SIGNALS = "contextual_signals";
+    private static final String BUYER_CONTEXTUAL_SIGNALS = "buyer_contextual_signals";
+    private static final String SELLER_CONTEXTUAL_SIGNALS = "seller_contextual_signals";
 
     private static final double BID = 5;
 
@@ -92,7 +93,7 @@ public class AdSelectionEntryDaoTest {
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                     .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
                     .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
@@ -104,20 +105,20 @@ public class AdSelectionEntryDaoTest {
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                     .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
                     .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
-                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                    .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_2 =
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                     .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
                     .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
@@ -128,12 +129,25 @@ public class AdSelectionEntryDaoTest {
     public static final DBAdSelection DB_AD_CONTEXTUAL_AD_SELECTION =
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                     .setBiddingLogicUri(BIDDING_LOGIC_URI_3)
                     .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .build();
+
+    public static final DBAdSelection DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS =
+            new DBAdSelection.Builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                    .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setWinningAdRenderUri(RENDER_URI)
+                    .setWinningAdBid(BID)
+                    .setCreationTimestamp(ACTIVATION_TIME)
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .setSellerContextualSignals(SELLER_CONTEXTUAL_SIGNALS)
                     .build();
 
     private static final String AD_SELECTION_CONFIG_ID_1 = "1";
@@ -220,9 +234,9 @@ public class AdSelectionEntryDaoTest {
 
     // Event registering constants
     private static final int BUYER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final String CLICK_EVENT = "click";
     private static final String HOVER_EVENT = "hover";
@@ -687,12 +701,45 @@ public class AdSelectionEntryDaoTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID_4)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                         .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME.minusSeconds(10))
                         .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(expiredDBAdSelection);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION_1.getAdSelectionId()));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        expiredDBAdSelection.getAdSelectionId()));
+
+        mAdSelectionEntryDao.removeExpiredAdSelection(ACTIVATION_TIME.minusSeconds(5));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION_1.getAdSelectionId()));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        expiredDBAdSelection.getAdSelectionId()));
+    }
+
+    @Test
+    public void testRemoveExpiredAdSelectionSellerContextualSignals() {
+        DBAdSelection expiredDBAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID_4)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME.minusSeconds(10))
+                        .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                        .setSellerContextualSignals(SELLER_CONTEXTUAL_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
@@ -741,6 +788,24 @@ public class AdSelectionEntryDaoTest {
 
         assertEquals(1, adSelectionEntries.size());
         assertEquals(adSelectionEntries.get(0), expected);
+    }
+
+    @Test
+    public void testGetAdSelectionEntitiesSellerContextualSignalsFilteredByCallerPackageName() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2); // different caller package name
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+
+        List<DBAdSelectionEntry> adSelectionEntries =
+                mAdSelectionEntryDao.getAdSelectionEntities(
+                        Collections.singletonList(AD_SELECTION_ID_1), CALLER_PACKAGE_NAME_1);
+        DBAdSelectionEntry expected =
+                toAdSelectionEntry(
+                        DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS, DB_BUYER_DECISION_LOGIC_1);
+
+        assertEquals(1, adSelectionEntries.size());
+        assertEquals(expected, adSelectionEntries.get(0));
     }
 
     @Test
@@ -1239,7 +1304,28 @@ public class AdSelectionEntryDaoTest {
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCustomAudienceSignals().getBuyer());
         assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
         assertThat(histogramInfo.getAdCounterKeys())
-                .containsExactlyElementsIn(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterKeys());
+                .containsExactlyElementsIn(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterIntKeys());
+    }
+
+    @Test
+    public void testGetAdSelectionEntitySellerContextualSignals() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS.getAdSelectionId()))
+                .isTrue();
+
+        DBAdSelectionEntry adSelectionEntry =
+                mAdSelectionEntryDao.getAdSelectionEntityById(
+                        DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS.getAdSelectionId());
+
+        DBAdSelectionEntry expectedAdSelectionEntry =
+                toAdSelectionEntry(
+                        DB_AD_SELECTION_SELLER_CONTEXTUAL_SIGNALS, DB_BUYER_DECISION_LOGIC_1);
+
+        assertEquals(expectedAdSelectionEntry, adSelectionEntry);
     }
 
     @Test
@@ -1300,11 +1386,12 @@ public class AdSelectionEntryDaoTest {
                 .setAdSelectionId(adSelection.getAdSelectionId())
                 .setBiddingLogicUri(adSelection.getBiddingLogicUri())
                 .setCustomAudienceSignals(adSelection.getCustomAudienceSignals())
-                .setContextualSignals(adSelection.getContextualSignals())
+                .setBuyerContextualSignals(adSelection.getBuyerContextualSignals())
                 .setWinningAdRenderUri(adSelection.getWinningAdRenderUri())
                 .setWinningAdBid(adSelection.getWinningAdBid())
                 .setCreationTimestamp(adSelection.getCreationTimestamp())
                 .setBuyerDecisionLogicJs(buyerDecisionLogic.getBuyerDecisionLogicJs())
+                .setSellerContextualSignals(adSelection.getSellerContextualSignals())
                 .build();
     }
 
@@ -1317,10 +1404,11 @@ public class AdSelectionEntryDaoTest {
                 .setAdSelectionId(adSelection.getAdSelectionId())
                 .setBiddingLogicUri(adSelection.getBiddingLogicUri())
                 .setCustomAudienceSignals(adSelection.getCustomAudienceSignals())
-                .setContextualSignals(adSelection.getContextualSignals())
+                .setBuyerContextualSignals(adSelection.getBuyerContextualSignals())
                 .setWinningAdRenderUri(adSelection.getWinningAdRenderUri())
                 .setWinningAdBid(adSelection.getWinningAdBid())
                 .setCreationTimestamp(adSelection.getCreationTimestamp())
+                .setSellerContextualSignals(adSelection.getSellerContextualSignals())
                 .build();
     }
 }

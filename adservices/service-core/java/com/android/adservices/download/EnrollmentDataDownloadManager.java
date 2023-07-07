@@ -30,12 +30,12 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.android.libraries.mobiledatadownload.file.openers.ReadStreamOpener;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;

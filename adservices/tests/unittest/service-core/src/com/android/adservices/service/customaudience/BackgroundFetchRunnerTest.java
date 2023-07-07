@@ -21,6 +21,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
@@ -43,6 +44,8 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -77,6 +80,8 @@ public class BackgroundFetchRunnerTest {
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private CustomAudienceLoggerFactory mCustomAudienceLoggerFactoryMock;
+    @Mock private UpdateCustomAudienceExecutionLogger mUpdateCustomAudienceExecutionLoggerMock;
 
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -94,6 +99,9 @@ public class BackgroundFetchRunnerTest {
                         .initMocks(this)
                         .startMocking();
 
+        when(mCustomAudienceLoggerFactoryMock.getUpdateCustomAudienceExecutionLogger())
+                .thenReturn(mUpdateCustomAudienceExecutionLoggerMock);
+
         mBackgroundFetchRunnerSpy =
                 ExtendedMockito.spy(
                         new BackgroundFetchRunner(
@@ -101,7 +109,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
 
         mFetchUri = mMockWebServerRule.uriForPath(mFetchPath);
     }
@@ -171,7 +180,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -180,7 +190,8 @@ public class BackgroundFetchRunnerTest {
                                 null,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -189,7 +200,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 null,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -198,7 +210,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 null,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -207,6 +220,17 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
+                                null,
+                                mCustomAudienceLoggerFactoryMock));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock,
+                                mAppInstallDaoMock,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                mFlags,
                                 null));
     }
 
@@ -349,7 +373,8 @@ public class BackgroundFetchRunnerTest {
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithSmallLimits());
+                        new FlagsWithSmallLimits(),
+                        mCustomAudienceLoggerFactoryMock);
 
         CountDownLatch responseLatch = new CountDownLatch(1);
         MockWebServer mockWebServer =
@@ -435,7 +460,8 @@ public class BackgroundFetchRunnerTest {
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithSmallLimits());
+                        new FlagsWithSmallLimits(),
+                        mCustomAudienceLoggerFactoryMock);
 
         MockWebServer mockWebServer =
                 mMockWebServerRule.startMockWebServer(

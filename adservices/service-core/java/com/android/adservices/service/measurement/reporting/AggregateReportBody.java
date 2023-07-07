@@ -23,8 +23,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;

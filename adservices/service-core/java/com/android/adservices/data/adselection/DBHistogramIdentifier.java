@@ -59,11 +59,15 @@ public abstract class DBHistogramIdentifier {
     /**
      * Returns the arbitrary String representing a grouping that a buyer adtech has assigned to an
      * ad or histogram.
+     *
+     * @deprecated This is an old field which should no longer be populated and is only kept for
+     *     Room DB backwards compatibility; please use {@link
+     *     DBHistogramEventData#getAdCounterIntKey()} instead
      */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "ad_counter_key", index = true)
     @NonNull
-    public abstract String getAdCounterKey();
+    abstract String getAdCounterKey();
 
     /** Returns the histogram's buyer adtech's {@link AdTechIdentifier}. */
     @AutoValue.CopyAnnotations
@@ -83,10 +87,18 @@ public abstract class DBHistogramIdentifier {
     @Nullable
     public abstract String getCustomAudienceName();
 
+    /** Returns the package name of the app the histogram is updated from. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "source_app", index = true, defaultValue = "")
+    @Nullable
+    public abstract String getSourceApp();
+
     /** Returns an AutoValue builder for a {@link DBHistogramIdentifier} object. */
     @NonNull
     public static Builder builder() {
         return new AutoValue_DBHistogramIdentifier.Builder()
+                // The string ad counter key has been deprecated and moved to DBHistogramEventData
+                .setAdCounterKey("")
                 .setHistogramIdentifierForeignKey(
                         SharedStorageDatabase.FOREIGN_KEY_AUTOGENERATE_SUBSTITUTE);
     }
@@ -102,13 +114,15 @@ public abstract class DBHistogramIdentifier {
             @NonNull String adCounterKey,
             @NonNull AdTechIdentifier buyer,
             @Nullable String customAudienceOwner,
-            @Nullable String customAudienceName) {
+            @Nullable String customAudienceName,
+            @NonNull String sourceApp) {
         return builder()
                 .setHistogramIdentifierForeignKey(histogramIdentifierForeignKey)
                 .setAdCounterKey(adCounterKey)
                 .setBuyer(buyer)
                 .setCustomAudienceOwner(customAudienceOwner)
                 .setCustomAudienceName(customAudienceName)
+                .setSourceApp(sourceApp)
                 .build();
     }
 
@@ -124,7 +138,12 @@ public abstract class DBHistogramIdentifier {
         Objects.requireNonNull(event);
 
         Builder tempBuilder =
-                builder().setAdCounterKey(event.getAdCounterKey()).setBuyer(event.getBuyer());
+                builder()
+                        // The string ad counter key has been deprecated and moved
+                        //  to DBHistogramEventData
+                        .setAdCounterKey("")
+                        .setBuyer(event.getBuyer())
+                        .setSourceApp(event.getSourceApp());
 
         // Only win-typed events must be scoped to a custom audience, so leave them null otherwise
         if (event.getAdEventType() == FrequencyCapFilters.AD_EVENT_TYPE_WIN) {
@@ -153,9 +172,12 @@ public abstract class DBHistogramIdentifier {
         /**
          * Sets the arbitrary String representing a grouping that a buyer adtech has assigned to an
          * ad or histogram.
+         *
+         * @deprecated This is an old field which should no longer be populated; please use {@link
+         *     DBHistogramEventData.Builder#setAdCounterIntKey(int)} instead
          */
         @NonNull
-        public abstract Builder setAdCounterKey(@NonNull String value);
+        abstract Builder setAdCounterKey(@NonNull String value);
 
         /** Sets the histogram's buyer adtech's {@link AdTechIdentifier}. */
         @NonNull
@@ -168,6 +190,10 @@ public abstract class DBHistogramIdentifier {
         /** Sets the name of the custom audience the histogram is associated with. */
         @NonNull
         public abstract Builder setCustomAudienceName(@Nullable String value);
+
+        /** Sets the package name of the app the histogram is updated from. */
+        @NonNull
+        public abstract Builder setSourceApp(@NonNull String value);
 
         /**
          * Builds and returns the {@link DBHistogramIdentifier} object.

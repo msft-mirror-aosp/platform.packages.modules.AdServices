@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -33,6 +34,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -384,6 +387,35 @@ public interface Flags {
         return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
     }
 
+    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
+
+    /**
+     * Returns max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctEnrollmentsInAttribution() {
+        return MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE = 100;
+
+    /**
+     * Returns max distinct advertisers with pending impressions per { Publisher X Enrollment X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctDestinationsInActiveSource() {
+        return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -400,6 +432,7 @@ public interface Flags {
     int FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS = 100;
     // Keeping TTL as long as expiry, could be reduced later as we get more fresh CAs with adoption
     long FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS = 60 * 24 * 60L * 60L * 1000; // 60 days
+    long FLEDGE_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -493,6 +526,34 @@ public interface Flags {
      */
     default long getFledgeCustomAudienceActiveTimeWindowInMs() {
         return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
+    }
+
+    int FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 8 * 1024; // 8 KiB
+    int FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B = 8 * 1024; // 8 KiB
+    int FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B = 8 * 1024; // 8 KiB
+
+    /**
+     * Returns the maximum size in bytes allowed for user bidding signals in each
+     * fetchAndJoinCustomAudience request.
+     */
+    default int getFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for the request custom header derived from each
+     * fetchAndJoinCustomAudience request.
+     */
+    default int getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes for the fused custom audience allowed to be persisted by
+     * the fetchAndJoinCustomAudience API.
+     */
+    default int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
     }
 
     boolean FLEDGE_BACKGROUND_FETCH_ENABLED = true;
@@ -607,20 +668,37 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
-    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT = 1000;
-    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT = 950;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT = 900;
 
-    /** Returns the maximum allowed number of events in the frequency cap histogram table. */
-    default int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
-        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+    /** Returns the maximum allowed number of events in the entire frequency cap histogram table. */
+    default int getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT;
     }
 
     /**
-     * Returns the number of events that the frequency cap histogram table should be trimmed to, if
-     * there are too many entries.
+     * Returns the number of events that the entire frequency cap histogram table should be trimmed
+     * to, if there are too many entries.
      */
-    default int getFledgeAdCounterHistogramLowerMaxEventCount() {
-        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
+    default int getFledgeAdCounterHistogramLowerMaxTotalEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the maximum allowed number of events per buyer in the frequency cap histogram table.
+     */
+    default int getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the number of events for a single buyer that the frequency cap histogram table should
+     * be trimmed to, if there are too many entries for that buyer.
+     */
+    default int getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT;
     }
 
     int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
@@ -759,6 +837,14 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
     }
 
+    // Enable FLEDGE fetchAndJoinCustomAudience API.
+    boolean FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED = false;
+
+    /** Returns {@code true} if FLEDGE fetchAndJoinCustomAudience API is enabled. */
+    default boolean getFledgeFetchCustomAudienceEnabled() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
@@ -773,11 +859,215 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
+    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
+
+    /**
+     * @return whether to call remote URLs for debug reporting.
+     */
+    default boolean getFledgeEventLevelDebugReportingEnabled() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+    }
+
+    int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS = 60 * 15;
+
+    /**
+     * @return minimum number of seconds between debug report batch.
+     */
+    default int getFledgeEventLevelDebugReportingBatchDelaySeconds() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
+    }
+
+    int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH = 1000;
+
+    /**
+     * @return maximum number of items in a debug report batch.
+     */
+    default int getFledgeEventLevelDebugReportingMaxItemsPerBatch() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */
     default boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
+    }
+
+    /** The server uses the following version numbers: 1. Brotli : 1 2. Gzip : 2 */
+    int FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION = 2;
+
+    /** Returns the compression algorithm version */
+    default int getFledgeAuctionServerCompressionAlgorithmVersion() {
+        return FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
+    }
+
+    String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
+            "https://d38za9ovyr65qt.cloudfront.net/v1alpha/publicKeys";
+
+    /**
+     * @return Uri to fetch auction encryption key for fledge ad selection.
+     */
+    default String getFledgeAuctionServerAuctionKeyFetchUri() {
+        return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
+    }
+
+    String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
+            "https://chromekanonymity-pa.googleapis.com/v1/proxy/keys";
+
+    /**
+     * @return Uri to fetch join encryption key for fledge ad selection.
+     */
+    default String getFledgeAuctionServerJoinKeyFetchUri() {
+        return FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+    }
+
+    int FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING = 5;
+
+    /**
+     * @return Shard count for using auction key for fledge ad selection.
+     */
+    default int getFledgeAuctionServerAuctionKeySharding() {
+        return FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
+    }
+
+    long FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+
+    default long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+    }
+
+    int FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID = 0x0001;
+
+    default int getFledgeAuctionServerEncryptionAlgorithmKdfId() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID;
+    }
+
+    int FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID = 0x0020;
+
+    default int getFledgeAuctionServerEncryptionAlgorithmKemId() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
+    }
+
+    int FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID = 0x0002;
+
+    default int getFledgeAuctionServerEncryptionAlgorithmAeadId() {
+        return FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID;
+    }
+
+    int FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION = 0;
+
+    /** Returns the payload formatter version */
+    default int getFledgeAuctionServerPayloadFormatVersion() {
+        return FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION;
+    }
+
+    long FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS = 3000;
+
+    default long getFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
+
+    /** Returns whether to run periodic job to fetch encryption keys. */
+    default boolean getFledgeAuctionServerBackgroundKeyFetchJobEnabled() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED;
+    }
+
+    int FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
+            5 * 1000; // 5 seconds
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to open its initial
+     * connection during the FLEDGE encryption key fetch.
+     */
+    default int getFledgeAuctionServerBackgroundKeyFetchNetworkConnectTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS =
+            30 * 1000; // 30 seconds
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to read a response from a
+     * target server during the FLEDGE encryption key fetch.
+     */
+    default int getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    int FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B = 2 * 1024; // 2 KiB
+
+    /**
+     * Returns the maximum size in bytes of a single key fetch response during the FLEDGE encryption
+     * key fetch.
+     */
+    default int getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED = false;
+
+    /** Returns whether to run periodic job to fetch AUCTION keys. */
+    default boolean getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled() {
+        return getFledgeAuctionServerBackgroundKeyFetchJobEnabled()
+                && FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED = false;
+
+    /** Returns whether to run periodic job to fetch JOIN keys. */
+    default boolean getFledgeAuctionServerBackgroundJoinKeyFetchEnabled() {
+        return getFledgeAuctionServerBackgroundKeyFetchJobEnabled()
+                && FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /**
+     * Returns the maximum amount of time (in milliseconds) each Ad selection Background key Fetch
+     * job is allowed to run.
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the best effort max time (in milliseconds) between each Background Key Fetch job run.
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS = TimeUnit.HOURS.toMillis(2);
+
+    /**
+     * Returns the amount of flex (in milliseconds) around the end of each period to run each
+     * Background Key Fetch job.
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchJobFlexMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING = true;
+
+    default boolean getFledgeAuctionServerEnableDebugReporting() {
+        return FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED = false;
+    long FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH = 12L;
+
+    /** Returns whether ad render id is enabled. */
+    default boolean getFledgeAuctionServerAdRenderIdEnabled() {
+        return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
+    }
+
+    /** Returns the max length of Ad Render Id. */
+    default long getFledgeAuctionServerAdRenderIdMaxLength() {
+        return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
     boolean ADSERVICES_ENABLED = false;
@@ -874,6 +1164,14 @@ public interface Flags {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
+    /** The consent notification activity debug mode is off by default. */
+    boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
+
+    /** Returns the consent notification activity debug mode. */
+    default boolean getConsentNotificationActivityDebugMode() {
+        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+    }
+
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
@@ -912,7 +1210,7 @@ public interface Flags {
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -926,7 +1224,7 @@ public interface Flags {
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -1296,6 +1594,23 @@ public interface Flags {
                 || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
+    /**
+     * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
+     * value is false which means storing the rollback handling data in App Search is enabled. This
+     * flag is used for emergency turning off measurement rollback data deletion handling on Android
+     * S.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for storing Measurement rollback deletion handling data in App
+     * Search. The rollback deletion handling on Android S will be disabled if this kill switch
+     * value is true.
+     */
+    default boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
+        return MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
@@ -1385,6 +1700,19 @@ public interface Flags {
     }
 
     /**
+     * Fledge Auction Server API Kill switch. The default value is true which means that Auction
+     * server APIs is disabled by default.
+     */
+    boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = true;
+
+    /**
+     * @return value of Fledge Auction server API kill switch.
+     */
+    default boolean getFledgeAuctionServerKillSwitch() {
+        return getGlobalKillSwitch() || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+    }
+
+    /**
      * Fledge Join Custom Audience API kill switch. The default value is false which means that Join
      * Custom Audience API is enabled by default. This flag should be should as emergency andon
      * cord.
@@ -1413,7 +1741,7 @@ public interface Flags {
      * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
      * support of consent data on T+ devices.
      */
-    boolean ENABLE_APPSEARCH_CONSENT_DATA = false;
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = !SdkLevel.isAtLeastT();
 
     /** @return value of enable appsearch consent data flag */
     default boolean getEnableAppsearchConsentData() {
@@ -1509,7 +1837,7 @@ public interface Flags {
      * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
      * Negative Value means skipping the rate limiting checking.
      */
-    float ADID_REQUEST_PERMITS_PER_SECOND = 5;
+    float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
@@ -1521,13 +1849,25 @@ public interface Flags {
      * PP API Rate Limit for measurement register source. This is the max allowed QPS for one API
      * client to one PP API. Negative Value means skipping the rate limiting checking.
      */
-    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for measurement register web source. This is the max allowed QPS for one
      * API client to one PP API. Negative Value means skipping the rate limiting checking.
      */
-    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
+     * PP API Rate Limit for measurement register trigger. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
+     * PP API Rate Limit for measurement register web trigger. This is the max allowed QPS for one
+     * API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
      * PP API Rate Limit for Topics API based on App Package name. This is the max allowed QPS for
@@ -1580,6 +1920,16 @@ public interface Flags {
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
     default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Trigger Request Permits Per Second. */
+    default float getMeasurementRegisterTriggerRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Web Trigger Request Permits Per Second. */
+    default float getMeasurementRegisterWebTriggerRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Fledge Report Interaction API Request Permits Per Second. */
@@ -1822,6 +2172,7 @@ public interface Flags {
 
     /** UI Dialog Fragment feature enabled. */
     boolean UI_DIALOG_FRAGMENT = false;
+
     /** Returns if the UI Dialog Fragment is enabled. */
     default boolean getUiDialogFragmentEnabled() {
         return UI_DIALOG_FRAGMENT;
@@ -1953,6 +2304,22 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    /** Set the debug UX, which should crrespond to the {@link PrivacySandboxUxCollection} enum. */
+    String DEBUG_UX = "UNSUPPORTED_UX";
+
+    /** Returns the debug UX. */
+    default String getDebugUx() {
+        return DEBUG_UX;
+    }
+
+    /** add speed bump dialogs when turning on or off the toggle of Topics, apps, measurement */
+    boolean TOGGLE_SPEED_BUMP_ENABLED = false;
+
+    /** Returns if the toggle speed bump dialog feature is enabled. */
+    default boolean getToggleSpeedBumpEnabled() {
+        return TOGGLE_SPEED_BUMP_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
@@ -2009,6 +2376,13 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
     }
 
+    /** Returns the limit to the number of unique AdIDs attempted to match for debug keys. */
+    long DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT = 5L;
+
+    default long getMeasurementPlatformDebugAdIdMatchingLimit() {
+        return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
@@ -2027,10 +2401,16 @@ public interface Flags {
 
     // New Feature Flags
     boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
+    boolean FLEDGE_CPC_BILLING_ENABLED = false;
 
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
         return FLEDGE_REGISTER_AD_BEACON_ENABLED;
+    }
+
+    /** Returns whether the CPC billing feature is enabled. */
+    default boolean getFledgeCpcBillingEnabled() {
+        return FLEDGE_CPC_BILLING_ENABLED;
     }
 
     /**
@@ -2047,6 +2427,19 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 
+    /**
+     * Default blocklist of the enrollments for whom debug key insertion based on AdID matching is
+     * blocked.
+     */
+    String DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST = "*";
+
+    /**
+     * Blocklist of the enrollments for whom debug key insertion based on AdID matching is blocked.
+     */
+    default String getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist() {
+        return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
+    }
+
     /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
@@ -2059,7 +2452,7 @@ public interface Flags {
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
     /** Returns whether to enable flexible event reporting API */
-    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+    default boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
     }
 
@@ -2093,5 +2486,156 @@ public interface Flags {
     /** Returns maximum Event Reports per destination */
     default int getMeasurementMaxEventReportsPerDestination() {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
+    }
+
+    /** Default minimum event report delay in milliseconds */
+    long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
+
+    /** Returns minimum event report delay in milliseconds */
+    default long getMeasurementMinEventReportDelayMillis() {
+        return MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+    }
+
+    /** Disable early reporting windows configurability by default. */
+    boolean MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS = false;
+
+    /** Returns true if event reporting windows configurability is enabled, false otherwise. */
+    default boolean getMeasurementEnableConfigurableEventReportingWindows() {
+        return MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
+    }
+
+    /**
+     * Default early reporting windows for VTC type source. Derived from {@link
+     * PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     */
+    String MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS = "";
+
+    /**
+     * Returns configured comma separated early VTC based source's event reporting windows in
+     * seconds.
+     */
+    default String getMeasurementEventReportsVtcEarlyReportingWindows() {
+        return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /**
+     * Default early reporting windows for CTC type source. Derived from {@link
+     * PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     */
+    String MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
+            String.join(
+                    ",",
+                    Long.toString(TimeUnit.DAYS.toSeconds(2)),
+                    Long.toString(TimeUnit.DAYS.toSeconds(7)));
+
+    /**
+     * Returns configured comma separated early CTC based source's event reporting windows in
+     * seconds.
+     */
+    default String getMeasurementEventReportsCtcEarlyReportingWindows() {
+        return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /** Disable aggregate report delay by default. */
+    boolean MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY = false;
+
+    /** Returns true if aggregate report delay configurability is enabled, false otherwise. */
+    default boolean getMeasurementEnableConfigurableAggregateReportDelay() {
+        return MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
+    }
+
+    /**
+     * Default aggregate report delay. Derived from {@link
+     * PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and {@link
+     * PrivacyParams#AGGREGATE_REPORT_DELAY_SPAN}.
+     */
+    String MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
+            String.join(
+                    ",",
+                    Long.toString(TimeUnit.MINUTES.toMillis(10L)),
+                    Long.toString(TimeUnit.MINUTES.toMillis(50L)));
+
+    /**
+     * Returns configured comma separated aggregate report min delay and aggregate report delay
+     * span.
+     */
+    default String getMeasurementAggregateReportDelayConfig() {
+        return MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
+    }
+
+    /** Disable conversions configurability by default. */
+    boolean DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS = false;
+
+    /**
+     * Returns true, if event reports max conversions configurability is enabled, false otherwise.
+     */
+    default boolean getMeasurementEnableVtcConfigurableMaxEventReports() {
+        return DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
+    }
+
+    /** Disable conversions configurability by default. */
+    int DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT = 2;
+
+    /** Returns the default max allowed number of event reports. */
+    default int getMeasurementVtcConfigurableMaxEventReportsCount() {
+        return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
+    }
+
+    /** Default U18 UX feature flag.. */
+    boolean DEFAULT_U18_UX_ENABLED = false;
+
+    /** U18 UX feature flag.. */
+    default boolean getU18UxEnabled() {
+        return DEFAULT_U18_UX_ENABLED;
+    }
+
+    /** Default enableAdServices system API feature flag.. */
+    boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
+
+    /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi() {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+    }
+
+    /** Disables client error logging for the list of error codes. Default value is empty list. */
+    ImmutableList<Integer> ERROR_CODE_LOGGING_DENY_LIST = ImmutableList.of();
+
+    /** Returns a list of error codes for which we don't want to do error logging. */
+    default ImmutableList<Integer> getErrorCodeLoggingDenyList() {
+        return ERROR_CODE_LOGGING_DENY_LIST;
+    }
+
+    /** Returns the map of UX flags. */
+    default Map<String, Boolean> getUxFlags() {
+        return new HashMap<>();
+    }
+
+    /** Enable feature to unify destinations for event reports by default. */
+    boolean DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS = true;
+
+    /**
+     * Returns true if event reporting destinations are enabled to be reported in a coarse manner,
+     * i.e. both app and web destinations are merged into a single array in the event report.
+     */
+    default boolean getMeasurementEnableCoarseEventReportDestinations() {
+        return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
+    }
+
+    /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
+    boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
+
+    /***
+     * Returns true when logging consent migration metrics is enabled when OTA from S to T+.
+     */
+    default boolean getAdservicesConsentMigrationLoggingEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
+    }
+
+    /** The default token for resetting consent notificatio.. */
+    String CONSENT_NOTIFICATION_RESET_TOKEN = "";
+
+    /** Returns the consent notification reset token. */
+    default String getConsentNotificationResetToken() {
+        return CONSENT_NOTIFICATION_RESET_TOKEN;
     }
 }

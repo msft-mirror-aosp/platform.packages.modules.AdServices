@@ -31,6 +31,10 @@ import java.util.Optional;
 /** Enrollment utilities for measurement. */
 public final class Enrollment {
 
+    public static final String FAKE_ENROLLMENT = "fake_enrollment";
+    public static final String LOCALHOST_ENROLLMENT_ID = "localhost_enrollment_id";
+    public static final String LOCALHOST_IP_ENROLLMENT_ID = "localhost_ip_enrollment_id";
+
     private Enrollment() { }
 
     /**
@@ -49,6 +53,13 @@ public final class Enrollment {
             EnrollmentDao enrollmentDao,
             Context context,
             Flags flags) {
+        if (Web.isLocalhost(registrationUri)) {
+            return Optional.of(
+                    Web.isLocalhostIp(registrationUri)
+                            ? LOCALHOST_IP_ENROLLMENT_ID
+                            : LOCALHOST_ENROLLMENT_ID);
+        }
+
         Uri uriWithoutParams = registrationUri.buildUpon().clearQuery().fragment(null).build();
 
         EnrollmentData enrollmentData =
@@ -79,20 +90,5 @@ public final class Enrollment {
             return Optional.empty();
         }
         return Optional.of(enrollmentData.getEnrollmentId());
-    }
-
-    /**
-     * Returns an {@code Optional<Uri>} of the ad-tech server URL that accepts attribution reports.
-     *
-     * @param enrollmentId the enrollment record ID.
-     * @param enrollmentDao an instance of {@code EnrollmentDao}.
-     */
-    public static Optional<Uri> maybeGetReportingOrigin(String enrollmentId,
-            EnrollmentDao enrollmentDao) {
-        EnrollmentData enrollmentData = enrollmentDao.getEnrollmentData(enrollmentId);
-        if (enrollmentData != null && enrollmentData.getAttributionReportingUrl().size() > 0) {
-            return Optional.of(Uri.parse(enrollmentData.getAttributionReportingUrl().get(0)));
-        }
-        return Optional.empty();
     }
 }

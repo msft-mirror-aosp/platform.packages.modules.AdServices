@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.UpdateAdCounterHistogramRequest.INVALID_AD_EVENT_TYPE_MESSAGE;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
@@ -23,6 +25,7 @@ import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 import android.os.Build;
 import android.os.RemoteException;
@@ -35,6 +38,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -173,6 +177,11 @@ public class UpdateAdCounterHistogramWorker {
                     inputParams.getCallerPackageName());
             throw new ConsentManager.RevokedConsentException();
         }
+
+        Preconditions.checkArgument(
+                inputParams.getAdEventType() >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                        && inputParams.getAdEventType() <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                INVALID_AD_EVENT_TYPE_MESSAGE);
 
         return null;
     }

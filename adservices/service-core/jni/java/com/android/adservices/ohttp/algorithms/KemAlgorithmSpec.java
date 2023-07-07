@@ -16,7 +16,11 @@
 
 package com.android.adservices.ohttp.algorithms;
 
+import com.android.adservices.ohttp.KemNativeRef;
+
 import com.google.auto.value.AutoValue;
+
+import java.util.function.Supplier;
 
 /** Specifies the algorithm spec of a Key Encapsulation Mechanism algorithm */
 @AutoValue
@@ -46,6 +50,18 @@ public abstract class KemAlgorithmSpec {
     /** Get the length in bytes of an encoded private key for the algorithm */
     public abstract int privateKeyLength();
 
+    /**
+     * Get the length in bytes of the seed that will be used by Hpke Setup Base Operation
+     *
+     * <p>The Hpke Setup Base operation uses a seed. That seed should always be random unless
+     * testing. The length of the seed depends on the KEM algorithm being used. For example, for KEM
+     * X25519, it is equal to the length of the private key.
+     */
+    public abstract int seedLength();
+
+    /** Gets the supplier of the KEM algorithm native reference */
+    public abstract Supplier<KemNativeRef> kemNativeRefSupplier();
+
     private static KemAlgorithmSpec dhkemX25519HkdfSha256() {
         // Spec taken from https://www.rfc-editor.org/rfc/rfc9180#name-key-encapsulation-mechanism
         return new AutoValue_KemAlgorithmSpec(
@@ -54,7 +70,9 @@ public abstract class KemAlgorithmSpec {
                 /* secretLength= */ 32,
                 /* encapsulatedKeyLength= */ 32,
                 /* publicKeyLength= */ 32,
-                /* privateKeyLength= */ 32);
+                /* privateKeyLength= */ 32,
+                /* seedLength= */ 32,
+                () -> KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference());
     }
 
     /**
