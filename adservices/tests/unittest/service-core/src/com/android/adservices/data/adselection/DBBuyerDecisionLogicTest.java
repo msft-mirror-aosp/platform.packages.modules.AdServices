@@ -40,8 +40,8 @@ public class DBBuyerDecisionLogicTest {
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
-        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUri(), BIDDING_LOGIC_URI);
-        assertEquals(dbBuyerDecisionLogic.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
+        assertEquals(BIDDING_LOGIC_URI, dbBuyerDecisionLogic.getBiddingLogicUri());
+        assertEquals(BUYER_DECISION_LOGIC_JS, dbBuyerDecisionLogic.getBuyerDecisionLogicJs());
     }
 
     @Test

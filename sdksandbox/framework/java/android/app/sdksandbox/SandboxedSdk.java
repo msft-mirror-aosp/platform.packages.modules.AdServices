@@ -16,11 +16,15 @@
 
 package android.app.sdksandbox;
 
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.pm.SharedLibraryInfo;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import java.util.Objects;
 
 /**
  * Represents an SDK loaded in the sandbox process.
@@ -35,7 +39,20 @@ import android.os.Parcelable;
  * {@link SandboxedSdkProvider#beforeUnloadSdk()} has been called.
  */
 public final class SandboxedSdk implements Parcelable {
+    public static final @NonNull Creator<SandboxedSdk> CREATOR =
+            new Creator<SandboxedSdk>() {
+                @Override
+                public SandboxedSdk createFromParcel(Parcel in) {
+                    return new SandboxedSdk(in);
+                }
+
+                @Override
+                public SandboxedSdk[] newArray(int size) {
+                    return new SandboxedSdk[size];
+                }
+            };
     private IBinder mInterface;
+    private @Nullable SharedLibraryInfo mSharedLibraryInfo;
 
     /**
      * Creates a {@link SandboxedSdk} object.
@@ -51,20 +68,30 @@ public final class SandboxedSdk implements Parcelable {
 
     private SandboxedSdk(@NonNull Parcel in) {
         mInterface = in.readStrongBinder();
+        if (in.readInt() != 0) {
+            mSharedLibraryInfo = SharedLibraryInfo.CREATOR.createFromParcel(in);
+        }
     }
 
-    public static final @NonNull Creator<SandboxedSdk> CREATOR =
-            new Creator<SandboxedSdk>() {
-                @Override
-                public SandboxedSdk createFromParcel(Parcel in) {
-                    return new SandboxedSdk(in);
-                }
-
-                @Override
-                public SandboxedSdk[] newArray(int size) {
-                    return new SandboxedSdk[size];
-                }
-            };
+    /**
+     * Attaches information about the SDK like name, version and others which may be useful to
+     * identify the SDK.
+     *
+     * <p>This is used by the system service to attach the library info to the {@link SandboxedSdk}
+     * object return by the SDK after it has been loaded
+     *
+     * @param sharedLibraryInfo The SDK's library info. This contains the name, version and other
+     *     details about the sdk.
+     * @throws IllegalStateException if a base sharedLibraryInfo has already been set.
+     * @hide
+     */
+    public void attachSharedLibraryInfo(@NonNull SharedLibraryInfo sharedLibraryInfo) {
+        if (mSharedLibraryInfo != null) {
+            throw new IllegalStateException("SharedLibraryInfo already set");
+        }
+        Objects.requireNonNull(sharedLibraryInfo, "SharedLibraryInfo cannot be null");
+        mSharedLibraryInfo = sharedLibraryInfo;
+    }
 
     /**
      * Returns the interface to the SDK that was loaded in response to {@link
@@ -77,6 +104,25 @@ public final class SandboxedSdk implements Parcelable {
         return mInterface;
     }
 
+    /**
+     * Returns the {@link SharedLibraryInfo} for the SDK.
+     *
+     * @throws IllegalStateException if the system service has not yet attached {@link
+     *     SharedLibraryInfo} to the {@link SandboxedSdk} object sent by the SDK.
+     */
+    public @NonNull SharedLibraryInfo getSharedLibraryInfo() {
+        if (mSharedLibraryInfo == null) {
+            throw new IllegalStateException(
+                    "SharedLibraryInfo has not been set. This is populated by our system service "
+                            + "once the SandboxedSdk is sent back from as a response to "
+                            + "android.app.sdksandbox.SandboxedSdkProvider$onLoadSdk. Please use "
+                            + "android.app.sdksandbox.SdkSandboxManager#getSandboxedSdks or "
+                            + "android.app.sdksandbox.SdkSandboxController#getSandboxedSdks to "
+                            + "get the correctly populated SandboxedSdks.");
+        }
+        return mSharedLibraryInfo;
+    }
+
     /** {@inheritDoc} */
     @Override
     public int describeContents() {
@@ -87,5 +133,11 @@ public final class SandboxedSdk implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeStrongBinder(mInterface);
+        if (mSharedLibraryInfo != null) {
+            dest.writeInt(1);
+            mSharedLibraryInfo.writeToParcel(dest, 0);
+        } else {
+            dest.writeInt(0);
+        }
     }
 }

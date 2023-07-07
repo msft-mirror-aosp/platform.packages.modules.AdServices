@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.topics.EpochManager.PADDED_TOP_TOPICS_STRING;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -48,7 +50,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -85,6 +86,7 @@ public final class EpochManagerTest {
 
     @Mock Classifier mMockClassifier;
     @Mock Clock mMockClock;
+    @Mock Flags mMockFlag;
 
     @Before
     public void setup() {
@@ -105,6 +107,7 @@ public final class EpochManagerTest {
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.EpochOriginContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
     }
 
     @Test
@@ -377,9 +380,13 @@ public final class EpochManagerTest {
 
     @Test
     public void testGarbageCollectOutdatedEpochData() {
+        final long currentEpoch = 7L;
+        final int epochLookBackNumberForGarbageCollection = 3;
+        final String appName = "app";
+
         // Mock the flag to make test result deterministic
-        Flags mockedFlags = Mockito.mock(Flags.class);
-        when(mockedFlags.getNumberOfEpochsToKeepInHistory()).thenReturn(3);
+        when(mMockFlag.getNumberOfEpochsToKeepInHistory())
+                .thenReturn(epochLookBackNumberForGarbageCollection);
 
         EpochManager epochManager =
                 new EpochManager(
@@ -387,13 +394,13 @@ public final class EpochManagerTest {
                         mDbHelper,
                         new Random(),
                         mMockClassifier,
-                        mockedFlags,
+                        mMockFlag,
                         mMockClock);
 
-        final long currentEpoch = 6L;
-        final int epochLookBackNumberForGarbageCollection = 3;
-        // The epoch that is outdated starts from 6-1-3 = 2
+        // For table except CallerCanLearnTopicsContract, epoch to delete from is 7-3-1 = epoch 3
         final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
+        final long epochToDeleteFromForCallerCanLearn =
+                currentEpoch - epochLookBackNumberForGarbageCollection * 2 - 1;
 
         // Save data in TopTopics Table and AppUsage table for gc testing
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
@@ -403,18 +410,24 @@ public final class EpochManagerTest {
         Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
         List<Topic> topTopics = Arrays.asList(topic1, topic2, topic3, topic4, topic5, topic6);
+        Map<Topic, Set<String>> callerCanLearnTopics = Map.of(topic1, Set.of(appName));
 
-        final String appName = "app";
-        // The epoch range for testing is [1, currentEpoch].
-        for (long epoch = 1L; epoch <= currentEpoch; epoch++) {
+        // TopicsContributorTable
+        Map<Integer, Set<String>> topicContributorsMap = Map.of(topic1.getTopic(), Set.of(appName));
+
+        // To persist data in epoch [0, 7] for tables.
+        for (long epoch = 0L; epoch <= currentEpoch; epoch++) {
             mTopicsDao.persistTopTopics(epoch, topTopics);
             mTopicsDao.recordAppUsageHistory(epoch, appName);
+            mTopicsDao.persistCallerCanLearnTopics(epoch, callerCanLearnTopics);
+            mTopicsDao.persistTopicContributors(epoch, topicContributorsMap);
         }
 
         epochManager.garbageCollectOutdatedEpochData(currentEpoch);
 
-        verify(mockedFlags).getNumberOfEpochsToKeepInHistory();
+        verify(mMockFlag).getNumberOfEpochsToKeepInHistory();
 
+        // Verify TopTopics, AppUsageHistory, TopicsContributor Tables.
         for (long epoch = currentEpoch; epoch > epochToDeleteFrom; epoch--) {
             assertThat(mTopicsDao.retrieveTopTopics(epoch)).isEqualTo(topTopics);
 
@@ -423,12 +436,31 @@ public final class EpochManagerTest {
             Map<String, Integer> expectedAppUsageMap = new HashMap<>();
             expectedAppUsageMap.put(appName, 1);
             assertThat(appUsageMap).isEqualTo(expectedAppUsageMap);
+
+            assertThat(mTopicsDao.retrieveTopicToContributorsMap(epoch))
+                    .isEqualTo(topicContributorsMap);
         }
 
-        // Epoch [1, epochToDeleteFrom] have been garbage collected.
-        for (long epoch = epochToDeleteFrom; epoch >= 1; epoch--) {
+        // Epoch [0, epochToDeleteFrom] have been garbage collected.
+        for (long epoch = epochToDeleteFrom; epoch >= 0; epoch--) {
             assertThat(mTopicsDao.retrieveTopTopics(epoch)).isEmpty();
             assertThat(mTopicsDao.retrieveAppUsageMap(epoch)).isEmpty();
+        }
+
+        // Verify CallerCanLearn Table.
+        for (long epoch = currentEpoch; epoch > epochToDeleteFromForCallerCanLearn; epoch--) {
+            assertThat(
+                            mTopicsDao.retrieveCallerCanLearnTopicsMap(
+                                    epoch, /* numberOfLookBackEpochs */ 1))
+                    .isEqualTo(callerCanLearnTopics);
+        }
+
+        // Epoch [0, epochToDeleteFromForCallerCanLearn] have been garbage collected.
+        for (long epoch = epochToDeleteFromForCallerCanLearn; epoch >= 0; epoch--) {
+            assertThat(
+                            mTopicsDao.retrieveCallerCanLearnTopicsMap(
+                                    epoch, /* numberOfLookBackEpochs */ 1))
+                    .isEmpty();
         }
     }
 
@@ -559,6 +591,26 @@ public final class EpochManagerTest {
         List<Topic> topTopicsFromDB = topicsDao.retrieveTopTopics(epochId);
         assertThat(topTopicsFromDB).isEqualTo(topTopics);
 
+        // Verify TopicContributorsContract
+        // AppClassificationTopics has:
+        // app1 -> topic1, topic2, app2 -> topic2, topic3,
+        // app3 -> topic4, topic5, app4 -> topic5, topic6
+        // All app1 ~ app4 have usages and all topic1 ~ topic6 are top topics
+        // So the reverse mapping of AppClassificationTopics, which is topTopicsToContributorsMap,
+        // should be:
+        // topic1 -> app1, topic2 -> app1, app2, topic3 -> app2
+        // topic4 -> app3, topic5 -> app3, app4, topic6 -> app4
+        Map<Integer, Set<String>> expectedTopTopicsToContributorsMap =
+                Map.of(
+                        topic1.getTopic(), Set.of("app1"),
+                        topic2.getTopic(), Set.of("app1", "app2"),
+                        topic3.getTopic(), Set.of("app2"),
+                        topic4.getTopic(), Set.of("app3"),
+                        topic5.getTopic(), Set.of("app3", "app4"),
+                        topic6.getTopic(), Set.of("app4"));
+        assertThat(topicsDao.retrieveTopicToContributorsMap(epochId))
+                .isEqualTo(expectedTopTopicsToContributorsMap);
+
         // Verify ReturnedTopicContract
         // Random sequence numbers used in this test: {1, 5, 6, 7, 8, 9}.
         // The order of selected topics by iterations: "random_topic", "topic1", "topic2", "topic3",
@@ -595,7 +647,7 @@ public final class EpochManagerTest {
     }
 
     @Test
-    public void testDump() throws FileNotFoundException {
+    public void testDump() {
         // Trigger the dump to verify no crash
         PrintWriter printWriter = new PrintWriter(new Writer() {
             @Override
@@ -852,11 +904,122 @@ public final class EpochManagerTest {
         verify(mMockClock, times(3)).currentTimeMillis();
     }
 
+    @Test
+    public void testComputeTopTopicsToContributorsMap() {
+        EpochManager epochManager = createEpochManagerWithMockedFlag();
+
+        // Topic1 and Topic2 are top topics. Topic3 is not a top topic.
+        final Topic topic1 = createTopic(1);
+        final Topic topic2 = createTopic(2);
+        final Topic topic3 = createTopic(3);
+
+        final String app1 = "app1";
+        final String app2 = "app2";
+        final String app3 = "app3"; // an app without classified topics
+
+        Map<String, List<Topic>> appClassificationTopicsMap =
+                Map.of(
+                        app1, List.of(topic1, topic3),
+                        app2, List.of(topic1, topic2, topic3),
+                        app3, List.of());
+        List<Topic> topTopics = List.of(topic1, topic2);
+
+        // Only topic1 and topic2 will be computed as they are top topics.
+        Map<Integer, Set<String>> expectedTopTopicsToContributorsMap =
+                Map.of(
+                        topic1.getTopic(), Set.of(app1, app2),
+                        topic2.getTopic(), Set.of(app2));
+
+        // Ignore the effect of padded topics
+        when(mMockFlag.getTopicsNumberOfTopTopics()).thenReturn(topTopics.size());
+
+        assertThat(
+                        epochManager.computeTopTopicsToContributorsMap(
+                                appClassificationTopicsMap, topTopics))
+                .isEqualTo(expectedTopTopicsToContributorsMap);
+    }
+
+    @Test
+    public void testComputeTopTopicsToContributorsMap_emptyTopTopics() {
+        EpochManager epochManager = createEpochManagerWithMockedFlag();
+        // Topic1 and Topic2 are top topics. Topic3 is not a top topic.
+        final Topic topic1 = createTopic(1);
+        final Topic topic2 = createTopic(2);
+        final Topic topic3 = createTopic(3);
+
+        final String app1 = "app1";
+        final String app2 = "app2";
+        final String app3 = "app3";
+
+        Map<String, List<Topic>> appClassificationTopicsMap =
+                Map.of(
+                        app1, List.of(topic1, topic3),
+                        app2, List.of(topic1, topic2, topic3),
+                        app3, List.of());
+        List<Topic> topTopics = List.of();
+
+        // Ignore the effect of padded topics
+        when(mMockFlag.getTopicsNumberOfTopTopics()).thenReturn(topTopics.size());
+
+        assertThat(
+                        epochManager.computeTopTopicsToContributorsMap(
+                                appClassificationTopicsMap, topTopics))
+                .isEmpty();
+    }
+
+    @Test
+    public void testComputeTopTopicsToContributorsMap_paddedTopics() {
+        EpochManager epochManager = createEpochManagerWithMockedFlag();
+
+        // Topic1 and Topic2 are top topics. Topic3 is not a top topic.
+        final Topic topic1 = createTopic(1);
+        final Topic topic2 = createTopic(2);
+        final Topic topic3 = createTopic(3);
+        final Topic topic4 = createTopic(4);
+        final Topic topic5 = createTopic(5);
+        final Topic topic6 = createTopic(6);
+
+        final String app1 = "app1";
+        final String app2 = "app2";
+
+        Map<String, List<Topic>> appClassificationTopicsMap =
+                Map.of(
+                        app1, List.of(topic1, topic3),
+                        app2, List.of(topic1, topic2, topic3));
+
+        // app4 and app5 are padded topics without any contributors.
+        List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
+
+        when(mMockFlag.getTopicsNumberOfTopTopics())
+                .thenReturn(FlagsFactory.getFlagsForTest().getTopicsNumberOfTopTopics());
+
+        // topic1, topic2, topic3 will be computed as they are normal top topics.
+        // topic4 and topic5 will be annotated as padded topics.
+        // topic6 won't be included as it's a random topic.
+        Map<Integer, Set<String>> expectedTopTopicsToContributorsMap =
+                Map.of(
+                        topic1.getTopic(), Set.of(app1, app2),
+                        topic2.getTopic(), Set.of(app2),
+                        topic3.getTopic(), Set.of(app1, app2),
+                        topic4.getTopic(), Set.of(PADDED_TOP_TOPICS_STRING),
+                        topic5.getTopic(), Set.of(PADDED_TOP_TOPICS_STRING));
+
+        assertThat(
+                        epochManager.computeTopTopicsToContributorsMap(
+                                appClassificationTopicsMap, topTopics))
+                .isEqualTo(expectedTopTopicsToContributorsMap);
+    }
+
     private Topic createTopic(int topicId) {
         return Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
     }
 
     private List<Topic> createTopics(List<Integer> topicIds) {
         return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+    }
+
+    private EpochManager createEpochManagerWithMockedFlag() {
+        return new EpochManager(
+                mTopicsDao, mDbHelper, new Random(), mMockClassifier, mMockFlag, mMockClock);
     }
 }

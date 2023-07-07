@@ -31,5 +31,4 @@ java_defaults {
         generate_get_transaction_name: true,
     },
     min_sdk_version: "33",
-    target_sdk_version: "33",
 }

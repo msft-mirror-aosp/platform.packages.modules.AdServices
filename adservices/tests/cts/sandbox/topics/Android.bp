@@ -27,6 +27,7 @@ android_test {
         "androidx.test.runner",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
+        "adservices-test-utility",
     ],
     libs: [
         "android.test.base",
@@ -37,7 +38,7 @@ android_test {
       ":Sdk1",
     ],
     min_sdk_version: "33",
-    target_sdk_version: "current",
+    target_sdk_version: "33",
     test_suites: [
         "cts",
         "mts-adservices",

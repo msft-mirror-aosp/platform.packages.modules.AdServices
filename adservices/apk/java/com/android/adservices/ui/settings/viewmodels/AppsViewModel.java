@@ -16,19 +16,24 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
+import com.android.internal.annotations.VisibleForTesting;
+import com.android.settingslib.widget.MainSwitchBar;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -38,6 +43,8 @@ import java.io.IOException;
  * model is responsible for serving apps to the apps view and blocked apps view, and interacting
  * with the {@link ConsentManager} that persists and changes the apps data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Pair<AppsViewModelUiEvent, App>> mEventTrigger =
@@ -45,11 +52,13 @@ public class AppsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<App>> mApps;
     private final MutableLiveData<ImmutableList<App>> mBlockedApps;
     private final ConsentManager mConsentManager;
+    private final MutableLiveData<Boolean> mAppsConsent;
 
     /** UI event triggered by view model */
     public enum AppsViewModelUiEvent {
+        SWITCH_ON_APPS,
+        SWITCH_OFF_APPS,
         BLOCK_APP,
-        RESTORE_APP,
         RESET_APPS,
         DISPLAY_BLOCKED_APPS_FRAGMENT,
     }
@@ -60,6 +69,10 @@ public class AppsViewModel extends AndroidViewModel {
         mConsentManager = ConsentManager.getInstance(application);
         mApps = new MutableLiveData<>(getAppsFromConsentManager());
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
+        mAppsConsent =
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? new MutableLiveData<>(getAppsConsentFromConsentManager())
+                        : null;
     }
 
     @VisibleForTesting
@@ -69,20 +82,25 @@ public class AppsViewModel extends AndroidViewModel {
         mConsentManager = consentManager;
         mApps = new MutableLiveData<>(getAppsFromConsentManager());
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
+        mAppsConsent = new MutableLiveData<>(true);
     }
-
-    // ---------------------------------------------------------------------------------------------
-    // Apps View
-    // ---------------------------------------------------------------------------------------------
 
     /**
      * Provides the apps displayed in {@link AdServicesSettingsAppsFragment}.
      *
-     * @return {@link mApps} a list of apps that represents the apps that use specific interest
-     *     groups.
+     * @return A list of {@link App}s that represents apps that use FLEDGE.
      */
     public LiveData<ImmutableList<App>> getApps() {
         return mApps;
+    }
+
+    /**
+     * Provides the blocked apps list.
+     *
+     * @return a list of apps that represents the user's blocked interests.
+     */
+    public LiveData<ImmutableList<App>> getBlockedApps() {
+        return mBlockedApps;
     }
 
     /**
@@ -111,34 +129,6 @@ public class AppsViewModel extends AndroidViewModel {
         mApps.postValue(getAppsFromConsentManager());
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Blocked Apps View
-    // ---------------------------------------------------------------------------------------------
-
-    /**
-     * Provides the blocked apps displayed in {@link AdServicesSettingsBlockedAppsFragment}.
-     *
-     * @return {@link mBlockedApps} a list of apps that represents the apps the user has blocked
-     *     from generating specific interest groups.
-     */
-    public LiveData<ImmutableList<App>> getBlockedApps() {
-        return mBlockedApps;
-    }
-
-    /**
-     * Restore the consent for the specified app (i.e. unblock the app).
-     *
-     * @param app the app to be restored.
-     */
-    public void restoreAppConsent(App app) throws IOException {
-        mConsentManager.restoreConsentForApp(app);
-        refresh();
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // Action Handlers
-    // ---------------------------------------------------------------------------------------------
-
     /** Returns an observable but immutable event enum representing an view action on UI. */
     public LiveData<Pair<AppsViewModelUiEvent, App>> getUiEvents() {
         return mEventTrigger;
@@ -162,16 +152,6 @@ public class AppsViewModel extends AndroidViewModel {
         mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.BLOCK_APP, app));
     }
 
-    /**
-     * Triggers the block of the specified app in the list of apps in {@link
-     * AdServicesSettingsAppsFragment}.
-     *
-     * @param app the app to be blocked.
-     */
-    public void restoreAppConsentButtonClickHandler(App app) {
-        mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.RESTORE_APP, app));
-    }
-
     /** Triggers a reset of all apps related data. */
     public void resetAppsButtonClickHandler() {
         mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.RESET_APPS, null));
@@ -193,5 +173,51 @@ public class AppsViewModel extends AndroidViewModel {
 
     private ImmutableList<App> getBlockedAppsFromConsentManager() {
         return mConsentManager.getAppsWithRevokedConsent();
+    }
+
+    /**
+     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsAppsFragment} as
+     * a Switch value.
+     *
+     * @return mAppsConsent indicates if user has consented to Apps Api usage.
+     */
+    public MutableLiveData<Boolean> getAppsConsent() {
+        return mAppsConsent;
+    }
+
+    /**
+     * Sets the user consent for PP APIs.
+     *
+     * @param newAppsConsentValue the new value that user consent should be set to for Apps PP APIs.
+     */
+    public void setAppsConsent(Boolean newAppsConsentValue) {
+        if (newAppsConsentValue) {
+            mConsentManager.enable(getApplication(), AdServicesApiType.FLEDGE);
+        } else {
+            mConsentManager.disable(getApplication(), AdServicesApiType.FLEDGE);
+        }
+        mAppsConsent.postValue(getAppsConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance(getApplication())
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
+    }
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchClickHandler(MainSwitchBar appsSwitchBar) {
+        if (appsSwitchBar.isChecked()) {
+            appsSwitchBar.setChecked(false);
+            mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_ON_APPS, null));
+        } else {
+            appsSwitchBar.setChecked(true);
+            mEventTrigger.postValue(new Pair<>(AppsViewModelUiEvent.SWITCH_OFF_APPS, null));
+        }
+    }
+
+    private boolean getAppsConsentFromConsentManager() {
+        return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

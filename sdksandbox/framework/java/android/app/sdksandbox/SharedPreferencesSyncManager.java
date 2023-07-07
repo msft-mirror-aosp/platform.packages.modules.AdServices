@@ -23,6 +23,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
 
@@ -45,9 +46,7 @@ import java.util.Set;
 public class SharedPreferencesSyncManager {
 
     private static final String TAG = "SdkSandboxSyncManager";
-
-    private static SharedPreferencesSyncManager sInstance = null;
-
+    private static ArrayMap<String, SharedPreferencesSyncManager> sInstanceMap = new ArrayMap<>();
     private final ISdkSandboxManager mService;
     private final Context mContext;
     private final Object mLock = new Object();
@@ -71,13 +70,17 @@ public class SharedPreferencesSyncManager {
         mService = service;
     }
 
-    /** Returns a singleton instance of this class. */
+    /**
+     * Returns a new instance of this class if there is a new package, otherewise returns a
+     * singleton instance.
+     */
     public static synchronized SharedPreferencesSyncManager getInstance(
             @NonNull Context context, @NonNull ISdkSandboxManager service) {
-        if (sInstance == null) {
-            sInstance = new SharedPreferencesSyncManager(context, service);
+        final String packageName = context.getPackageName();
+        if (!sInstanceMap.containsKey(packageName)) {
+            sInstanceMap.put(packageName, new SharedPreferencesSyncManager(context, service));
         }
-        return sInstance;
+        return sInstanceMap.get(packageName);
     }
 
     /**
@@ -107,7 +110,24 @@ public class SharedPreferencesSyncManager {
     public void removeSharedPreferencesSyncKeys(@NonNull Set<String> keys) {
         synchronized (mLock) {
             mKeysToSync.removeAll(keys);
-            // TODO(b/19742283): removed keys need to be erased from sandbox.
+
+            final ArrayList<SharedPreferencesKey> keysWithTypeBeingRemoved = new ArrayList<>();
+
+            for (final String key : keys) {
+                keysWithTypeBeingRemoved.add(
+                        new SharedPreferencesKey(key, SharedPreferencesKey.KEY_TYPE_STRING));
+            }
+            final SharedPreferencesUpdate update =
+                    new SharedPreferencesUpdate(keysWithTypeBeingRemoved, new Bundle());
+            try {
+                mService.syncDataFromClient(
+                        mContext.getPackageName(),
+                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                        update,
+                        mCallback);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Couldn't connect to SdkSandboxManagerService: " + e.getMessage());
+            }
         }
     }
 

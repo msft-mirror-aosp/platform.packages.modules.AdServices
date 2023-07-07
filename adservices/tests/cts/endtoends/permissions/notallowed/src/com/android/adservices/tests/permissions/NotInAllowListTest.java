@@ -25,7 +25,9 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -46,15 +48,22 @@ public class NotInAllowListTest {
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
 
+    private String mPreviousSignatureAllowList;
+
     @Before
     public void setup() {
-        overrideConsentManagerDebugMode(true);
-        overridingAdservicesLoggingLevel("VERBOSE");
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
+        overrideSignatureAllowListToEmpty();
     }
 
     @After
     public void teardown() {
-        overrideConsentManagerDebugMode(false);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+        overrideSignatureAllowList();
     }
 
     @Test
@@ -72,13 +81,19 @@ public class NotInAllowListTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
     }
 
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+    // Override Signature Allow List to original
+    public void overrideSignatureAllowList() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_allow_list %s",
+                mPreviousSignatureAllowList);
     }
 
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode(boolean isGiven) {
+    // Override Signature Allow List to deny the signature of this test
+    public void overrideSignatureAllowListToEmpty() {
+        mPreviousSignatureAllowList =
+                ShellUtils.runShellCommand(
+                        "device_config get adservices ppapi_app_signature_allow_list");
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode " + isGiven);
+                "device_config put adservices ppapi_app_signature_allow_list %s", "empty");
     }
 }

@@ -20,9 +20,12 @@ import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -43,12 +46,13 @@ public class AdvertisingTopicsClient {
             @NonNull Context context,
             @NonNull Executor executor,
             @NonNull String sdkName,
-            boolean recordObservation) {
+            boolean recordObservation,
+            @NonNull TopicsManager topicsManager) {
         mContext = context;
         mSdkName = sdkName;
         mRecordObservation = recordObservation;
         mExecutor = executor;
-        mTopicsManager = mContext.getSystemService(TopicsManager.class);
+        mTopicsManager = topicsManager;
     }
 
     /** Gets the SdkName. */
@@ -70,8 +74,7 @@ public class AdvertisingTopicsClient {
     }
 
     /** Get Record Observation. */
-    @NonNull
-    public boolean isRecordObservation() {
+    public boolean shouldRecordObservation() {
         return mRecordObservation;
     }
 
@@ -84,7 +87,7 @@ public class AdvertisingTopicsClient {
                         builder = builder.setAdsSdkName(mSdkName);
                     }
                     if (!mRecordObservation) {
-                        builder.setRecordObservation(false);
+                        builder.setShouldRecordObservation(false);
                     }
                     GetTopicsRequest request = builder.build();
 
@@ -111,10 +114,10 @@ public class AdvertisingTopicsClient {
     /** Builder class. */
     public static final class Builder {
         private String mSdkName;
-        // Set mRecordObservation default to true.
         private boolean mRecordObservation = true;
         private Context mContext;
         private Executor mExecutor;
+        private boolean mUseGetMethodToCreateManagerInstance;
 
         /** Empty-arg constructor with an empty body for Builder */
         public Builder() {}
@@ -138,7 +141,7 @@ public class AdvertisingTopicsClient {
          *     host app or not. This will be used to determine if the caller can receive the topic
          *     in the next epoch.
          */
-        public @NonNull Builder setRecordObservation(boolean recordObservation) {
+        public @NonNull Builder setShouldRecordObservation(boolean recordObservation) {
             mRecordObservation = recordObservation;
             return this;
         }
@@ -158,12 +161,43 @@ public class AdvertisingTopicsClient {
             return this;
         }
 
+        /**
+         * Sets whether to use the TopicsManager.get(context) method explicitly.
+         *
+         * @param value flag indicating whether to use the TopicsManager.get(context) method
+         *     explicitly. Default is {@code false}.
+         */
+        @VisibleForTesting
+        @NonNull
+        public Builder setUseGetMethodToCreateManagerInstance(boolean value) {
+            mUseGetMethodToCreateManagerInstance = value;
+            return this;
+        }
+
         /** Builds a {@link AdvertisingTopicsClient} instance */
         public @NonNull AdvertisingTopicsClient build() {
             if (mExecutor == null) {
                 throw new NullPointerException("Executor is not set");
             }
-            return new AdvertisingTopicsClient(mContext, mExecutor, mSdkName, mRecordObservation);
+
+            if (mContext == null) {
+                throw new NullPointerException("Context is not set");
+            }
+
+            TopicsManager topicsManager = createManager();
+            return new AdvertisingTopicsClient(
+                    mContext, mExecutor, mSdkName, mRecordObservation, topicsManager);
+        }
+
+        private TopicsManager createManager() {
+            if (mUseGetMethodToCreateManagerInstance) {
+                return TopicsManager.get(mContext);
+            }
+
+            // By default, use getSystemService for T+ and get(context) for S-.
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    ? mContext.getSystemService(TopicsManager.class)
+                    : TopicsManager.get(mContext);
         }
     }
 }

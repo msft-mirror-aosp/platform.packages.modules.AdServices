@@ -34,18 +34,18 @@ public class CustomAudienceSignalsTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .build();
 
-        assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER_1);
-        assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
+        assertEquals(CustomAudienceFixture.VALID_OWNER, customAudienceSignals.getOwner());
+        assertEquals(CommonFixture.VALID_BUYER_1, customAudienceSignals.getBuyer());
+        assertEquals(CustomAudienceFixture.VALID_NAME, customAudienceSignals.getName());
         assertEquals(
-                customAudienceSignals.getActivationTime(),
-                CustomAudienceFixture.VALID_ACTIVATION_TIME);
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                customAudienceSignals.getActivationTime());
         assertEquals(
-                customAudienceSignals.getExpirationTime(),
-                CustomAudienceFixture.VALID_EXPIRATION_TIME);
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                customAudienceSignals.getExpirationTime());
         assertEquals(
-                customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                customAudienceSignals.getUserBiddingSignals());
     }
 
     @Test
@@ -55,18 +55,18 @@ public class CustomAudienceSignalsTest {
                         DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
                                 .build());
 
-        assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER_1);
-        assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
+        assertEquals(CustomAudienceFixture.VALID_OWNER, customAudienceSignals.getOwner());
+        assertEquals(CommonFixture.VALID_BUYER_1, customAudienceSignals.getBuyer());
+        assertEquals(CustomAudienceFixture.VALID_NAME, customAudienceSignals.getName());
         assertEquals(
-                customAudienceSignals.getActivationTime(),
-                CustomAudienceFixture.VALID_ACTIVATION_TIME);
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                customAudienceSignals.getActivationTime());
         assertEquals(
-                customAudienceSignals.getExpirationTime(),
-                CustomAudienceFixture.VALID_EXPIRATION_TIME);
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                customAudienceSignals.getExpirationTime());
         assertEquals(
-                customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                customAudienceSignals.getUserBiddingSignals());
     }
 
     @Test

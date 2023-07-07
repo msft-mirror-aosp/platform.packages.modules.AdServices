@@ -24,8 +24,10 @@ import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -42,20 +44,27 @@ import java.util.concurrent.TimeUnit;
  * Class for providing test data for measurement tests.
  */
 public class DbState {
+
+    private static final String DEFAULT_REGISTRATION_URI =
+            WebUtil.validUrl("https://test.example.test");
     List<Source> mSourceList;
+    List<SourceDestination> mSourceDestinationList;
     List<Trigger> mTriggerList;
     List<EventReport> mEventReportList;
     List<Attribution> mAttrRateLimitList;
     List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
     List<AggregateReport> mAggregateReportList;
+    List<DebugReport> mDebugReportList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
+        mSourceDestinationList = new ArrayList<>();
         mTriggerList = new ArrayList<>();
         mEventReportList = new ArrayList<>();
         mAttrRateLimitList = new ArrayList<>();
         mAggregateEncryptionKeyList = new ArrayList<>();
         mAggregateReportList = new ArrayList<>();
+        mDebugReportList = new ArrayList<>();
     }
 
     public DbState(JSONObject testInput) throws JSONException {
@@ -68,6 +77,16 @@ public class DbState {
                 JSONObject sJSON = sources.getJSONObject(i);
                 Source source = getSourceFrom(sJSON);
                 mSourceList.add(source);
+            }
+        }
+
+        // SourceDestinations
+        if (testInput.has("source_destinations")) {
+            JSONArray sourceDestinations = testInput.getJSONArray("source_destinations");
+            for (int i = 0; i < sourceDestinations.length(); i++) {
+                JSONObject sdJSON = sourceDestinations.getJSONObject(i);
+                SourceDestination sourceDestination = getSourceDestinationFrom(sdJSON);
+                mSourceDestinationList.add(sourceDestination);
             }
         }
 
@@ -120,6 +139,16 @@ public class DbState {
                 mAggregateReportList.add(aggregateReport);
             }
         }
+
+        if (testInput.has("debug_reports")) {
+            // DebugReports
+            JSONArray debugReports = testInput.getJSONArray("debug_reports");
+            for (int i = 0; i < debugReports.length(); i++) {
+                JSONObject rJSON = debugReports.getJSONObject(i);
+                DebugReport debugReport = getDebugReportFrom(rJSON);
+                mDebugReportList.add(debugReport);
+            }
+        }
     }
 
     public DbState(SQLiteDatabase readerDB) {
@@ -132,6 +161,14 @@ public class DbState {
             mSourceList.add(SqliteObjectMapper.constructSourceFromCursor(sourceCursor));
         }
         sourceCursor.close();
+
+        // Read SourceDestination table
+        Cursor destCursor = readerDB.query(MeasurementTables.SourceDestination.TABLE,
+                null, null, null, null, null, null);
+        while (destCursor.moveToNext()) {
+            mSourceDestinationList.add(getSourceDestinationFrom(destCursor));
+        }
+        destCursor.close();
 
         // Read Trigger table
         Cursor triggerCursor = readerDB.query(MeasurementTables.TriggerContract.TABLE,
@@ -189,12 +226,33 @@ public class DbState {
                     SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(keyCursor));
         }
         keyCursor.close();
+
+        // Read DebugReport table
+        Cursor debugReportCursor =
+                readerDB.query(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.DebugReportContract.ID);
+        while (debugReportCursor.moveToNext()) {
+            mDebugReportList.add(
+                    SqliteObjectMapper.constructDebugReportFromCursor(debugReportCursor));
+        }
+        debugReportCursor.close();
     }
 
     public void sortAll() {
         mSourceList.sort(
                 Comparator.comparing(Source::getEventTime)
                         .thenComparing(Source::getPriority));
+
+        mSourceDestinationList.sort(
+                Comparator.comparing(SourceDestination::getSourceId)
+                        .thenComparing(SourceDestination::getDestinationType)
+                        .thenComparing(SourceDestination::getDestination));
 
         mTriggerList.sort(Comparator.comparing(Trigger::getTriggerTime));
 
@@ -203,7 +261,7 @@ public class DbState {
                         .thenComparing(EventReport::getTriggerTime));
 
         mAttrRateLimitList.sort(
-                Comparator.comparing(Attribution::getTriggerTime));
+                Comparator.comparing(Attribution::getTriggerId));
 
         mAggregateEncryptionKeyList.sort(
                 Comparator.comparing(AggregateEncryptionKey::getKeyId));
@@ -211,6 +269,8 @@ public class DbState {
         mAggregateReportList.sort(
                 Comparator.comparing(AggregateReport::getScheduledReportTime)
                         .thenComparing(AggregateReport::getSourceRegistrationTime));
+
+        mDebugReportList.sort(Comparator.comparing(DebugReport::getId));
     }
 
     public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
@@ -226,13 +286,13 @@ public class DbState {
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
-                .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
-                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
                 .setAggregateSource(sJSON.optString("aggregationKeys", null))
                 .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
+                .setEventReportWindow(sJSON.getLong("eventReportWindow"))
+                .setAggregatableReportWindow(sJSON.optLong("aggregatableReportWindow"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
@@ -242,7 +302,16 @@ public class DbState {
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                 .setAttributionMode(
                         sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                .setAggregateFilterData(sJSON.optString("aggregateFilterData", null))
+                .setFilterData(sJSON.optString("filterData", null))
+                .setRegistrationOrigin(getRegistrationOrigin(sJSON))
+                .build();
+    }
+
+    private SourceDestination getSourceDestinationFrom(JSONObject sdJSON) throws JSONException {
+        return new SourceDestination.Builder()
+                .setSourceId(sdJSON.getString("sourceId"))
+                .setDestination(sdJSON.getString("destination"))
+                .setDestinationType(sdJSON.getInt("destinationType"))
                 .build();
     }
 
@@ -259,14 +328,18 @@ public class DbState {
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
                 .setFilters(tJSON.optString("filters", null))
+                .setNotFilters(tJSON.optString("not_filters", null))
+                .setRegistrationOrigin(getRegistrationOrigin(tJSON))
                 .build();
     }
 
     private EventReport getEventReportFrom(JSONObject rJSON) throws JSONException {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
-                .setSourceId(new UnsignedLong(rJSON.getString("sourceId")))
-                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
+                .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
+                .setAttributionDestinations(
+                        SqliteObjectMapper.destinationsStringToList(
+                                rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
@@ -277,6 +350,9 @@ public class DbState {
                 .setSourceType(
                         Source.SourceType.valueOf(
                                 rJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
+                .setSourceId(rJSON.optString("sourceId", null))
+                .setTriggerId(rJSON.optString("triggerId", null))
+                .setRegistrationOrigin(getRegistrationOrigin(rJSON))
                 .build();
     }
 
@@ -291,6 +367,8 @@ public class DbState {
                 .setEnrollmentId(attrJSON.getString("enrollmentId"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
+                .setSourceId(attrJSON.optString("sourceId", null))
+                .setTriggerId(attrJSON.optString("triggerId", null))
                 .build();
     }
 
@@ -337,6 +415,31 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.REGISTRANT)))
+                .setSourceId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_ID)))
+                .setTriggerId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.TRIGGER_ID)))
+                .build();
+    }
+
+    private SourceDestination getSourceDestinationFrom(Cursor cursor) {
+        return new SourceDestination.Builder()
+                .setSourceId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceDestination.SOURCE_ID)))
+                .setDestination(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceDestination.DESTINATION)))
+                .setDestinationType(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceDestination.DESTINATION_TYPE)))
                 .build();
     }
 
@@ -352,13 +455,24 @@ public class DbState {
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))
                 .setApiVersion(rJSON.optString("apiVersion", null))
+                .setSourceId(rJSON.optString("sourceId", null))
+                .setTriggerId(rJSON.optString("triggerId", null))
+                .setRegistrationOrigin(getRegistrationOrigin(rJSON))
                 .build();
     }
 
-    private Uri parseIfNonNull(String s) {
-        if (s == null) {
-            return null;
-        }
-        return Uri.parse(s);
+    private DebugReport getDebugReportFrom(JSONObject rJSON) throws JSONException {
+        return new DebugReport.Builder()
+                .setId(rJSON.getString("id"))
+                .setType(rJSON.getString("type"))
+                .setBody(rJSON.getString("body"))
+                .build();
+    }
+
+    private Uri getRegistrationOrigin(JSONObject json) throws JSONException {
+        return Uri.parse(
+                json.isNull("registration_origin")
+                        ? DEFAULT_REGISTRATION_URI
+                        : json.get("registration_origin").toString());
     }
 }

@@ -23,16 +23,22 @@ import android.adservices.common.FledgeErrorResponse;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** TestCustomAudienceManager provides APIs for app and ad-SDKs to test custom audiences. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class TestCustomAudienceManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private final CustomAudienceManager mCustomAudienceManager;
     private final String mCallerPackageName;
@@ -77,6 +83,7 @@ public class TestCustomAudienceManager {
                     request.getBuyer(),
                     request.getName(),
                     request.getBiddingLogicJs(),
+                    request.getBiddingLogicJsVersion(),
                     request.getTrustedBiddingSignals(),
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
@@ -94,7 +101,7 @@ public class TestCustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
@@ -140,7 +147,7 @@ public class TestCustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
@@ -179,7 +186,7 @@ public class TestCustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }

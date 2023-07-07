@@ -24,16 +24,15 @@ import androidx.test.filters.SmallTest;
 import org.junit.Test;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /** Unit tests for {@link AggregatableAttributionSource} */
 @SmallTest
 public final class AggregatableAttributionSourceTest {
 
     private AggregatableAttributionSource createExample() {
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
 
@@ -74,7 +73,7 @@ public final class AggregatableAttributionSourceTest {
     public void testHashCode_notEquals() throws Exception {
         final AggregatableAttributionSource attributionSource1 = createExample();
 
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(1L));
 

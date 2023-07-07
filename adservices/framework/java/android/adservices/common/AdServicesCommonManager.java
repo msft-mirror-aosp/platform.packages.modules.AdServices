@@ -24,13 +24,17 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -47,31 +51,47 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @SystemApi
 public class AdServicesCommonManager {
     /** @hide */
     public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
 
     private final Context mContext;
-    private final ServiceBinder<IAdServicesCommonService>
-            mAdServicesCommonServiceBinder;
+    private final ServiceBinder<IAdServicesCommonService> mAdServicesCommonServiceBinder;
 
     /**
      * Create AdServicesCommonManager.
+     *
      * @hide
      */
     public AdServicesCommonManager(@NonNull Context context) {
         mContext = context;
-        mAdServicesCommonServiceBinder = ServiceBinder.getServiceBinder(
-                context,
-                AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE,
-                IAdServicesCommonService.Stub::asInterface);
+        mAdServicesCommonServiceBinder =
+                ServiceBinder.getServiceBinder(
+                        context,
+                        AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE,
+                        IAdServicesCommonService.Stub::asInterface);
+    }
+
+    /**
+     * Factory method for creating an instance of AdServicesCommonManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link AdServicesCommonManager} instance
+     */
+    @NonNull
+    public static AdServicesCommonManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(AdServicesCommonManager.class)
+                : new AdServicesCommonManager(context);
     }
 
     @NonNull
     private IAdServicesCommonService getService() {
-        IAdServicesCommonService service =
-                mAdServicesCommonServiceBinder.getService();
+        IAdServicesCommonService service = mAdServicesCommonServiceBinder.getService();
         if (service == null) {
             throw new IllegalStateException("Unable to find the service");
         }
@@ -129,7 +149,7 @@ public class AdServicesCommonManager {
      * </ul>
      *
      * @param adServicesEntryPointEnabled indicate entry point enabled or not
-     * @param adIdEnabled indicate user opt-out of adid or not
+     * @param adIdEnabled                 indicate user opt-out of adid or not
      * @hide
      */
     @SystemApi
@@ -140,6 +160,78 @@ public class AdServicesCommonManager {
             service.setAdServicesEnabled(adServicesEntryPointEnabled, adIdEnabled);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
+        }
+    }
+
+    /**
+     * Enable AdServices based on the AdServicesStates input parameter.
+     *
+     * <p>Based on the provided {@code AdServicesStates}, AdServices may be enabled. Specifically,
+     * users will be provided with an enrollment channel (such as consent notification) to become
+     * privacy sandbox users when:
+     *
+     * <ul>
+     *   <li>isAdServicesUiEnabled - true.
+     *   <li>isU18Account | isAdultAccount - true.
+     * </ul>
+     *
+     * @param {@code AdServicesStates} parcel containing relevant AdServices state variables.
+     * @return false if API is disabled, true if the API call completed successfully. Otherwise, it
+     * would return one of the following exceptions to the user:
+     * <ul>
+     *   <li>IllegalStateException - the default exception thrown when service crashes
+     *       unexpectedly.
+     *   <li>SecurityException - when the caller is not authorized to call this API.
+     *   <li>TimeoutException - when the services takes too long to respond.
+     * </ul>
+     * @hide
+     */
+    @SystemApi
+    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    public void enableAdServices(
+            @NonNull AdServicesStates adServicesStates,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, Exception> callback) {
+        Objects.requireNonNull(adServicesStates);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.enableAdServices(
+                    adServicesStates,
+                    new IEnableAdServicesCallback.Stub() {
+                        @Override
+                        public void onResult(EnableAdServicesResponse response) {
+                            executor.execute(
+                                    () -> {
+                                        if (!response.isApiEnabled()) {
+                                            callback.onResult(false);
+                                            return;
+                                        }
+
+                                        if (response.isSuccess()) {
+                                            callback.onResult(true);
+                                        } else {
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            response.getStatusCode()));
+                                        }
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
     }
 }

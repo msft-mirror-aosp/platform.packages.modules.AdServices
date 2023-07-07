@@ -17,14 +17,25 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
+import android.annotation.NonNull;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+
+import com.google.common.collect.ImmutableMultiset;
+
+import org.json.JSONException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -33,28 +44,44 @@ import java.util.Objects;
 public class EventReport {
 
     private String mId;
-    private UnsignedLong mSourceId;
+    private UnsignedLong mSourceEventId;
     private long mReportTime;
     private long mTriggerTime;
     private long mTriggerPriority;
-    private Uri mAttributionDestination;
+    private List<Uri> mAttributionDestinations;
     private String mEnrollmentId;
     private UnsignedLong mTriggerData;
     private UnsignedLong mTriggerDedupKey;
     private double mRandomizedTriggerRate;
     private @Status int mStatus;
+    private @DebugReportStatus int mDebugReportStatus;
     private Source.SourceType mSourceType;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mSourceId;
+    private String mTriggerId;
+    private Uri mRegistrationOrigin;
+    private long mTriggerValue;
 
-    @IntDef(value = {
-            Status.PENDING,
-            Status.DELIVERED,
-    })
+    @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int PENDING = 0;
         int DELIVERED = 1;
+        int MARKED_TO_DELETE = 2;
+    }
+
+    @IntDef(
+            value = {
+                DebugReportStatus.NONE,
+                DebugReportStatus.PENDING,
+                DebugReportStatus.DELIVERED,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DebugReportStatus {
+        int NONE = 0;
+        int PENDING = 1;
+        int DELIVERED = 2;
     }
 
     private EventReport() {
@@ -68,50 +95,65 @@ public class EventReport {
         }
         EventReport eventReport = (EventReport) obj;
         return mStatus == eventReport.mStatus
+                && mDebugReportStatus == eventReport.mDebugReportStatus
                 && mReportTime == eventReport.mReportTime
-                && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
+                && Objects.equals(mAttributionDestinations, eventReport.mAttributionDestinations)
+                && ImmutableMultiset.copyOf(mAttributionDestinations)
+                        .equals(ImmutableMultiset.copyOf(eventReport.mAttributionDestinations))
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && Objects.equals(mTriggerData, eventReport.mTriggerData)
-                && Objects.equals(mSourceId, eventReport.mSourceId)
+                && Objects.equals(mSourceEventId, eventReport.mSourceEventId)
                 && mTriggerPriority == eventReport.mTriggerPriority
                 && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey)
                 && mSourceType == eventReport.mSourceType
                 && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
                 && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
-                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey);
+                && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
+                && Objects.equals(mSourceId, eventReport.mSourceId)
+                && Objects.equals(mTriggerId, eventReport.mTriggerId)
+                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
                 mStatus,
+                mDebugReportStatus,
                 mReportTime,
-                mAttributionDestination,
+                mAttributionDestinations,
                 mEnrollmentId,
                 mTriggerTime,
                 mTriggerData,
-                mSourceId,
+                mSourceEventId,
                 mTriggerPriority,
                 mTriggerDedupKey,
                 mSourceType,
                 mRandomizedTriggerRate,
                 mSourceDebugKey,
-                mTriggerDebugKey);
+                mTriggerDebugKey,
+                mSourceId,
+                mTriggerId,
+                mRegistrationOrigin);
     }
 
     /**
-     * Unique identifier for the report.
+     * In flexible event API, the trigger priority might change so see a setter here
+     *
+     * @param priority the new priority
      */
+    public void setTriggerPriority(long priority) {
+        mTriggerPriority = priority;
+    }
+
+    /** Unique identifier for the report. */
     public String getId() {
         return mId;
     }
 
-    /**
-     * Identifier of the associated {@link Source} event.
-     */
-    public UnsignedLong getSourceId() {
-        return mSourceId;
+    /** Identifier of the associated {@link Source} event. */
+    public UnsignedLong getSourceEventId() {
+        return mSourceEventId;
     }
 
     /**
@@ -136,10 +178,10 @@ public class EventReport {
     }
 
     /**
-     * AttributionDestination of the {@link Source} and {@link Trigger}.
+     * AttributionDestinations of the {@link Source} and {@link Trigger}.
      */
-    public Uri getAttributionDestination() {
-        return mAttributionDestination;
+    public List<Uri> getAttributionDestinations() {
+        return mAttributionDestinations;
     }
 
     /**
@@ -170,6 +212,11 @@ public class EventReport {
         return mStatus;
     }
 
+    /** Current {@link DebugReportStatus} of the report. */
+    public @DebugReportStatus int getDebugReportStatus() {
+        return mDebugReportStatus;
+    }
+
     /**
      * SourceType of the event's source.
      */
@@ -196,6 +243,26 @@ public class EventReport {
         return mTriggerDebugKey;
     }
 
+    /** Source ID */
+    public String getSourceId() {
+        return mSourceId;
+    }
+
+    /** Trigger ID */
+    public String getTriggerId() {
+        return mTriggerId;
+    }
+
+    /** Returns registration origin used to register the source and trigger */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
+    /** Trigger Value */
+    public long getTriggerValue() {
+        return mTriggerValue;
+    }
+
     /** Builder for {@link EventReport} */
     public static final class Builder {
 
@@ -213,27 +280,21 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * See {@link EventReport#getSourceId()}
-         */
-        public Builder setSourceId(UnsignedLong sourceId) {
-            mBuilding.mSourceId = sourceId;
+        /** See {@link EventReport#getSourceEventId()} */
+        public Builder setSourceEventId(UnsignedLong sourceEventId) {
+            mBuilding.mSourceEventId = sourceEventId;
             return this;
         }
 
-        /**
-         * See {@link EventReport#getEnrollmentId()} ()}
-         */
+        /** See {@link EventReport#getEnrollmentId()} */
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
             return this;
         }
 
-        /**
-         * See {@link EventReport#getAttributionDestination()}
-         */
-        public Builder setAttributionDestination(Uri attributionDestination) {
-            mBuilding.mAttributionDestination = attributionDestination;
+        /** See {@link EventReport#getAttributionDestinations()} */
+        public Builder setAttributionDestinations(List<Uri> attributionDestinations) {
+            mBuilding.mAttributionDestinations = attributionDestinations;
             return this;
         }
 
@@ -285,6 +346,12 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link EventReport#getDebugReportStatus()}} */
+        public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
+            mBuilding.mDebugReportStatus = debugReportStatus;
+            return this;
+        }
+
         /**
          * See {@link EventReport#getSourceType()}
          */
@@ -293,54 +360,118 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * See {@link EventReport#getRandomizedTriggerRate()} ()}
-         */
+        /** See {@link EventReport#getRandomizedTriggerRate()}} */
         public Builder setRandomizedTriggerRate(double randomizedTriggerRate) {
             mBuilding.mRandomizedTriggerRate = randomizedTriggerRate;
             return this;
         }
 
-        /** See {@link EventReport#getSourceDebugKey()} ()} */
+        /** See {@link EventReport#getSourceDebugKey()}} */
         public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
             mBuilding.mSourceDebugKey = sourceDebugKey;
             return this;
         }
 
-        /** See {@link EventReport#getTriggerDebugKey()} ()} */
+        /** See {@link EventReport#getTriggerDebugKey()}} */
         public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
 
+        /** See {@link EventReport#getSourceId()} */
+        public Builder setSourceId(String sourceId) {
+            mBuilding.mSourceId = sourceId;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerId()} */
+        public Builder setTriggerId(String triggerId) {
+            mBuilding.mTriggerId = triggerId;
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerId()} */
+        public Builder setTriggerValue(long triggerValue) {
+            mBuilding.mTriggerValue = triggerValue;
+            return this;
+        }
+
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        // TODO (b/285607306): cleanup since this doesn't just do "populateFromSourceAndTrigger"
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
-                Source source, Trigger trigger, EventTrigger eventTrigger) {
-            mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
+                @NonNull Source source,
+                @NonNull Trigger trigger,
+                @NonNull EventTrigger eventTrigger,
+                @Nullable Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+                @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+                @NonNull SourceNoiseHandler sourceNoiseHandler,
+                List<Uri> eventReportDestinations,
+                boolean enableFlexEventApi) {
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
-            // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
-            mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
-            mBuilding.mSourceId = source.getEventId();
+            mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestination = trigger.getAttributionDestination();
-            mBuilding.mReportTime =
-                    source.getReportingTime(
-                            trigger.getTriggerTime(),
-                            trigger.getDestinationType());
+            mBuilding.mAttributionDestinations = eventReportDestinations;
             mBuilding.mSourceType = source.getSourceType();
-            mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            mBuilding.mSourceDebugKey = source.getDebugKey();
-            mBuilding.mTriggerDebugKey = trigger.getDebugKey();
+            mBuilding.mSourceDebugKey = debugKeyPair.first;
+            mBuilding.mTriggerDebugKey = debugKeyPair.second;
+            mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
+            if (Debug.isAttributionDebugReportPermitted(source, trigger,
+                    mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
+                mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
+            }
+            mBuilding.mSourceId = source.getId();
+            mBuilding.mTriggerId = trigger.getId();
+            mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
+            if (enableFlexEventApi
+                    && source.getTriggerSpecs() != null
+                    && !source.getTriggerSpecs().isEmpty()) {
+                // The source is using flexible event API
+                try {
+                    source.buildFlexibleEventReportApi();
+                } catch (JSONException e) {
+                    LogUtil.e(
+                            "EventReport::populateFromSourceAndTrigger cannot parse JSON for flex"
+                                    + " event API");
+                }
+                mBuilding.mTriggerPriority =
+                        source.getFlexEventReportSpec()
+                                .getHighestPriorityOfAttributedAndIncomingTriggers(
+                                        eventTrigger.getTriggerData(),
+                                        eventTrigger.getTriggerPriority());
+                mBuilding.mTriggerData = eventTrigger.getTriggerData();
+                mBuilding.mReportTime =
+                        ReportSpecUtil.getFlexEventReportingTime(
+                                source.getFlexEventReportSpec(),
+                                source.getEventTime(),
+                                trigger.getTriggerTime(),
+                                eventTrigger.getTriggerData());
+                mBuilding.mRandomizedTriggerRate =
+                        source.getFlexEventReportSpec().getFlipProbability();
+                mBuilding.mTriggerValue = eventTrigger.getTriggerValue();
+            } else {
+                mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
+                // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
+                mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
+                mBuilding.mReportTime =
+                        eventReportWindowCalcDelegate.getReportingTime(
+                                source, trigger.getTriggerTime(), trigger.getDestinationType());
+                mBuilding.mRandomizedTriggerRate =
+                        sourceNoiseHandler.getRandomAttributionProbability(source);
+            }
             return this;
         }
 
         private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
             UnsignedLong triggerData = eventTrigger.getTriggerData();
-            if (triggerData == null) {
-                return new UnsignedLong(0L);
-            }
             return triggerData.mod(source.getTriggerDataCardinality());
         }
 

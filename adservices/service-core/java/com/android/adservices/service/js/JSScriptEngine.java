@@ -31,8 +31,9 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
+import com.android.adservices.service.profiling.Tracing;
+import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ClosingFuture;
 import com.google.common.util.concurrent.FluentFuture;
@@ -63,9 +64,9 @@ public class JSScriptEngine {
     public static final String WASM_MODULE_BYTES_ID = "__wasmModuleBytes";
     public static final String WASM_MODULE_ARG_NAME = "wasmModule";
 
-    public static final String NON_SUPPORTED_MAX_HEAP_SIZE_ERROR =
+    public static final String NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG =
             "JS isolate does not support Max heap size";
-    public static final String JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG =
+    public static final String JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG =
             "Unable to create isolate";
 
     @SuppressLint("StaticFieldLeak")
@@ -82,6 +83,9 @@ public class JSScriptEngine {
      * the instance is invalidated by calling {@link
      * JavaScriptSandboxProvider#destroyCurrentInstance()}. The instance is returned wrapped in a
      * {@code Future}
+     *
+     * <p>Throws {@link JSSandboxIsNotAvailableException} if JS Sandbox is not available in the
+     * current version of the WebView
      */
     @VisibleForTesting
     static class JavaScriptSandboxProvider {
@@ -99,6 +103,13 @@ public class JSScriptEngine {
         public FluentFuture<JavaScriptSandbox> getFutureInstance(Context context) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
+                    if (!AvailabilityChecker.isJSSandboxAvailable()) {
+                        LogUtil.e(
+                                "JS Sandbox is not available in this version of WebView "
+                                        + "or WebView is not installed at all!");
+                        throw new JSSandboxIsNotAvailableException();
+                    }
+
                     LogUtil.i("Creating JavaScriptSandbox");
                     mSandboxInitStopWatch =
                             mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
@@ -167,7 +178,9 @@ public class JSScriptEngine {
         }
     }
 
-    /** @return JSScriptEngine instance */
+    /**
+     * @return JSScriptEngine instance
+     */
     public static JSScriptEngine getInstance(@NonNull Context context) {
         synchronized (JSScriptEngine.class) {
             if (sSingleton == null) {
@@ -383,11 +396,14 @@ public class JSScriptEngine {
 
         StopWatch jsExecutionStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX);
         return ClosingFuture.from(jsIsolate.evaluateJavaScriptAsync(fullScript))
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
                             LogUtil.v("WebView result is " + result);
+                            Tracing.endAsyncSection(
+                                    Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX, traceCookie);
                             return result;
                         },
                         mExecutorService)
@@ -395,6 +411,8 @@ public class JSScriptEngine {
                         Exception.class,
                         (ignoredCloser, exception) -> {
                             jsExecutionStopWatch.stop();
+                            Tracing.endAsyncSection(
+                                    Tracing.JSSCRIPTENGINE_EVALUATE_ON_SANDBOX, traceCookie);
                             throw new JSExecutionException(
                                     "Failure running JS in WebView: " + exception.getMessage(),
                                     exception);
@@ -433,7 +451,7 @@ public class JSScriptEngine {
     public ListenableFuture<Boolean> isWasmSupported() {
         return mJsSandboxProvider
                 .getFutureInstance(mContext)
-                .transform(jsSandbox -> isWasmSupported(jsSandbox), mExecutorService);
+                .transform(this::isWasmSupported, mExecutorService);
     }
 
     boolean isConfigurableHeapSizeSupported(JavaScriptSandbox jsSandbox) {
@@ -453,13 +471,14 @@ public class JSScriptEngine {
      */
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
             if (!isConfigurableHeapSizeSupported(jsSandbox)
                     && isolateSettings.getEnforceMaxHeapSizeFeature()) {
                 LogUtil.e("Memory limit enforcement required, but not supported by Isolate");
-                throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_ERROR);
+                throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG);
             }
 
             JavaScriptIsolate javaScriptIsolate;
@@ -485,7 +504,7 @@ public class JSScriptEngine {
                     "JavaScriptIsolate does not support setting max heap size, cannot create an"
                             + " isolate to run JS code into.");
             throw new JSScriptEngineConnectionException(
-                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG, isolateMemoryLimitUnsupported);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, isolateMemoryLimitUnsupported);
         } catch (RuntimeException jsSandboxIsDisconnected) {
             LogUtil.e(
                     "JavaScriptSandboxProcess is disconnected, cannot create an isolate to run JS"
@@ -493,9 +512,10 @@ public class JSScriptEngine {
                             + " future calls.");
             mJsSandboxProvider.destroyCurrentInstance();
             throw new JSScriptEngineConnectionException(
-                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_ERROR_MSG, jsSandboxIsDisconnected);
+                    JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxIsDisconnected);
         } finally {
             isolateStopWatch.stop();
+            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);
         }
     }
 
@@ -547,6 +567,21 @@ public class JSScriptEngine {
     }
 
     /**
+     * Checks if JS Sandbox is available in the WebView version that is installed on the device
+     * before attempting to create it. Attempting to create JS Sandbox when it's not available
+     * results in returning of a null value.
+     */
+    public static class AvailabilityChecker {
+
+        /**
+         * @return true if JS Sandbox is available in the current WebView version, false otherwise.
+         */
+        public static boolean isJSSandboxAvailable() {
+            return JavaScriptSandbox.isSupported();
+        }
+    }
+
+    /**
      * Wrapper class required to convert an {@link java.lang.AutoCloseable} {@link
      * JavaScriptIsolate} into a {@link Closeable} type.
      */
@@ -560,6 +595,7 @@ public class JSScriptEngine {
 
         @Override
         public void close() {
+            int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
             LogUtil.d("Closing WebView isolate");
             // Closing the isolate will also cause the thread in WebView to be terminated if
             // still running.
@@ -567,6 +603,7 @@ public class JSScriptEngine {
             // because there is no new API but just new capability on the WebView side for
             // existing API.
             mIsolate.close();
+            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE, traceCookie);
         }
     }
 }

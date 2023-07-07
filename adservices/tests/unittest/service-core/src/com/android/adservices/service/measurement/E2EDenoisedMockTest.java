@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
-import com.android.adservices.data.measurement.DatastoreException;
+import android.os.RemoteException;
+
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
@@ -26,6 +27,7 @@ import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -35,22 +37,33 @@ import java.util.Collection;
 public class E2EDenoisedMockTest extends E2EMockTest {
     private static final String TEST_DIR_NAME = "msmt_e2e_tests";
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            String name) throws DatastoreException {
-        super(actions, expectedOutput, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+    public E2EDenoisedMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mMeasurementDataDeleter,
+                        mMockContentResolver);
+
+        mAsyncRegistrationQueueRunner =
+                TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
                         sDatastoreManager,
-                        mSourceFetcher,
-                        mTriggerFetcher,
-                        mClickVerifier,
-                        mFlags);
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        mDebugReportApi);
     }
 }

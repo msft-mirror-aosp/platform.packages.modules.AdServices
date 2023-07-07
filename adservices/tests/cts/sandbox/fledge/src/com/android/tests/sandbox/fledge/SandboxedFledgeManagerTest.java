@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.fledge;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -27,10 +26,10 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -57,6 +56,9 @@ public class SandboxedFledgeManagerTest {
 
     @Before
     public void setup() throws TimeoutException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable =
@@ -75,10 +77,8 @@ public class SandboxedFledgeManagerTest {
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
 
-        PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         makeTestProcessForeground();
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
-        overrideConsentManagerDebugMode(true);
     }
 
     /**
@@ -86,13 +86,16 @@ public class SandboxedFledgeManagerTest {
      * Sandbox checks
      */
     private void makeTestProcessForeground() throws TimeoutException {
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(500));
+        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofSeconds(1));
     }
 
     @After
     public void shutDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         SimpleActivity.stopSimpleActivity(sContext);
-        overrideConsentManagerDebugMode(false);
     }
 
     @Test
@@ -106,16 +109,6 @@ public class SandboxedFledgeManagerTest {
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
-    }
-
-    private void overrideConsentManagerDebugMode(boolean enable) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode %s", enable);
+        callback.assertLoadSdkIsSuccessful();
     }
 }

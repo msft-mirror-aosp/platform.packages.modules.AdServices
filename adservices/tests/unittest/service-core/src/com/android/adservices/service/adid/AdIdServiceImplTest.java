@@ -20,17 +20,20 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,11 +42,11 @@ import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Process;
-import android.test.mock.MockContext;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -54,17 +57,24 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -76,15 +86,11 @@ public class AdIdServiceImplTest {
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
-    private static final String ALLOWED_SDK_ID = "1234567";
-    // This is not allowed per the ad_services_config.xml manifest config.
-    private static final String DISALLOWED_SDK_ID = "123";
     private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     private static final int SANDBOX_UID = 25000;
 
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final AdServicesLogger mAdServicesLogger =
-            Mockito.spy(AdServicesLoggerImpl.getInstance());
+    private final Context mSpyContext = spy(ApplicationProvider.getApplicationContext());
+    private final AdServicesLogger mSpyAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
 
     private CountDownLatch mGetAdIdCallbackLatch;
     private CallerMetadata mCallerMetadata;
@@ -92,11 +98,10 @@ public class AdIdServiceImplTest {
     private GetAdIdParam mRequest;
     private MockitoSession mStaticMockitoSession;
 
-    @Mock private PackageManager mPackageManager;
+    @Mock private PackageManager mMockPackageManager;
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
-    @Mock private Context mMockAppContext;
     @Mock private Throttler mMockThrottler;
     @Mock private AdIdServiceImpl mAdIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
@@ -105,7 +110,9 @@ public class AdIdServiceImplTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        mAdIdWorker = new AdIdWorker(mContext, mMockFlags);
+        mAdIdWorker = spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        Mockito.doReturn(null).when(mAdIdWorker).getService();
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -114,8 +121,12 @@ public class AdIdServiceImplTest {
                         .setSdkPackageName(SDK_PACKAGE_NAME)
                         .build();
 
-        when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
+        when(mMockSdkContext.getPackageManager()).thenReturn(mMockPackageManager);
+        when(mSpyContext.getPackageManager()).thenReturn(mMockPackageManager);
+        when(mMockPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
+                .thenReturn(Process.myUid());
+
+        setupPermissions(TEST_APP_PACKAGE_NAME, ACCESS_ADSERVICES_AD_ID);
 
         // Put this test app into bypass list to bypass Allow-list check.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(ADID_API_ALLOW_LIST);
@@ -136,10 +147,10 @@ public class AdIdServiceImplTest {
 
     @Test
     public void checkAllowList_emptyAllowList() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
-        invokeGetAdIdAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
+        invokeGetAdIdAndVerifyError(
+                mSpyContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -154,11 +165,16 @@ public class AdIdServiceImplTest {
         // Rate Limit Reached.
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetAdIdAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
+        // We don't log STATUS_RATE_LIMIT_REACHED for getAdId API.
+        invokeGetAdIdAndVerifyError(
+                mSpyContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        // Sandbox is only applicable for T+
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getAdId()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -175,9 +191,7 @@ public class AdIdServiceImplTest {
         // Mock to grant required permissions
         // Copied UID calculation from Process.getAppUidForSdkSandboxUid().
         final int appCallingUid = SANDBOX_UID - 10000;
-        when(mPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
-                .thenReturn(PackageManager.PERMISSION_GRANTED);
-        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(appCallingUid);
+        when(mMockPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(appCallingUid);
 
         // Verify getAdId() doesn't throw.
         mAdIdServiceImpl = createAdIdServiceImplInstance_SandboxContext();
@@ -205,7 +219,7 @@ public class AdIdServiceImplTest {
         doReturn(false).when(mMockFlags).getEnforceForegroundStatusForAdId();
 
         // Mock to grant required permissions
-        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(uid);
+        when(mMockPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(uid);
 
         // Verify getAdId() doesn't throw.
         mAdIdServiceImpl = createTestAdIdServiceImplInstance();
@@ -217,29 +231,25 @@ public class AdIdServiceImplTest {
     }
 
     @Test
-    public void checkNoPermission() throws InterruptedException {
+    public void checkAppNoPermission() throws Exception {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-        MockContext context =
-                new MockContext() {
-                    @Override
-                    public int checkCallingOrSelfPermission(String permission) {
-                        return PackageManager.PERMISSION_DENIED;
-                    }
-
-                    @Override
-                    public PackageManager getPackageManager() {
-                        return mPackageManager;
-                    }
-                };
-        invokeGetAdIdAndVerifyError(context, STATUS_PERMISSION_NOT_REQUESTED);
+        setupPermissions(TEST_APP_PACKAGE_NAME);
+        invokeGetAdIdAndVerifyError(
+                mSpyContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
-    public void checkSdkNoPermission() throws InterruptedException {
-        when(mPackageManager.checkPermission(ACCESS_ADSERVICES_AD_ID, SDK_PACKAGE_NAME))
-                .thenReturn(PackageManager.PERMISSION_DENIED);
+    public void checkSdkNoPermission() throws Exception {
+        // Sdk Sandbox only exists in T+
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
-        invokeGetAdIdAndVerifyError(mMockSdkContext, STATUS_UNAUTHORIZED);
+
+        setupPermissions(TEST_APP_PACKAGE_NAME, ACCESS_ADSERVICES_AD_ID);
+        doReturn(PackageManager.PERMISSION_DENIED)
+                .when(mMockPackageManager)
+                .checkPermission(eq(ACCESS_ADSERVICES_AD_ID), any());
+        invokeGetAdIdAndVerifyError(
+                mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -249,10 +259,11 @@ public class AdIdServiceImplTest {
     }
 
     @Test
-    public void testGetAdId_enforceCallingPackage_invalidPackage() throws InterruptedException {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-
+    public void testGetAdId_enforceCallingPackage_invalidPackage() throws Exception {
         AdIdServiceImpl adidService = createTestAdIdServiceImplInstance();
+
+        // Invalid package has ad id permissions
+        setupPermissions(INVALID_PACKAGE_NAME, ACCESS_ADSERVICES_AD_ID);
 
         // A request with an invalid package name.
         mRequest =
@@ -289,20 +300,39 @@ public class AdIdServiceImplTest {
                 .isTrue();
     }
 
-    private void invokeGetAdIdAndVerifyError(Context context, int expectedResultCode)
+    private void invokeGetAdIdAndVerifyError(
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetAdIdAndVerifyError(context, expectedResultCode, mRequest);
+        invokeGetAdIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
     }
 
     private void invokeGetAdIdAndVerifyError(
-            Context context, int expectedResultCode, GetAdIdParam request)
+            Context context,
+            int expectedResultCode,
+            GetAdIdParam request,
+            boolean checkLoggingStatus)
             throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(
+                        new Answer<Object>() {
+                            @Override
+                            public Object answer(InvocationOnMock invocation) throws Throwable {
+                                // The method logAPiCallStats is called.
+                                invocation.callRealMethod();
+                                logOperationCalledLatch.countDown();
+                                return null;
+                            }
+                        })
+                .when(mSpyAdServicesLogger)
+                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+
         mAdIdServiceImpl =
                 new AdIdServiceImpl(
                         context,
                         mAdIdWorker,
-                        mAdServicesLogger,
+                        mSpyAdServicesLogger,
                         mClock,
                         mMockFlags,
                         mMockThrottler,
@@ -329,6 +359,25 @@ public class AdIdServiceImplTest {
                     }
                 });
         jobFinishedCountDown.await();
+
+        if (checkLoggingStatus) {
+            // getAdId method finished executing.
+            logOperationCalledLatch.await();
+
+            ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
+
+            verify(mSpyAdServicesLogger).logApiCallStats(argument.capture());
+            assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_API_CALLED);
+            assertThat(argument.getValue().getApiClass())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADID);
+            assertThat(argument.getValue().getApiName())
+                    .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_ADID);
+            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
+            assertThat(argument.getValue().getAppPackageName())
+                    .isEqualTo(request.getAppPackageName());
+            assertThat(argument.getValue().getSdkPackageName())
+                    .isEqualTo(request.getSdkPackageName());
+        }
     }
 
     private void runGetAdId(AdIdServiceImpl adIdServiceImpl) throws Exception {
@@ -380,9 +429,9 @@ public class AdIdServiceImplTest {
     @NonNull
     private AdIdServiceImpl createTestAdIdServiceImplInstance() {
         return new AdIdServiceImpl(
-                mContext,
+                mSpyContext,
                 mAdIdWorker,
-                mAdServicesLogger,
+                mSpyAdServicesLogger,
                 mClock,
                 mMockFlags,
                 mMockThrottler,
@@ -394,10 +443,19 @@ public class AdIdServiceImplTest {
         return new AdIdServiceImpl(
                 mMockSdkContext,
                 mAdIdWorker,
-                mAdServicesLogger,
+                mSpyAdServicesLogger,
                 mClock,
                 mMockFlags,
                 mMockThrottler,
                 mMockAppImportanceFilter);
+    }
+
+    private void setupPermissions(String packageName, String... permissions)
+            throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfo = new PackageInfo();
+        packageInfo.requestedPermissions = permissions;
+        doReturn(packageInfo)
+                .when(mMockPackageManager)
+                .getPackageInfo(eq(packageName), eq(PackageManager.GET_PERMISSIONS));
     }
 }

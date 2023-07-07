@@ -22,8 +22,12 @@ import android.net.Uri;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ValidationTest {
     private static final Uri NULL_ARGUMENT = null;
+    private static final List<Integer> EMPTY_LIST = new ArrayList<>();
 
     @Test
     public void testValidateNonNull_throwsExceptionWhenNull_oneArgument() {
@@ -47,6 +51,27 @@ public class ValidationTest {
     }
 
     @Test
+    public void testValidateNotEmpty_throwsExceptionWhenEmpty_oneArgument() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Validation.validateNotEmpty(EMPTY_LIST)
+        );
+    }
+
+    @Test
+    public void testValidateNotEmpty_throwsExceptionWhenEmpty_twoArguments() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Validation.validateNotEmpty(List.of(1), EMPTY_LIST)
+        );
+    }
+
+    @Test
+    public void testValidateNotEmpty_doesNotThrowExceptionWhenNotEmpty() {
+        Validation.validateNotEmpty(List.of(1, 2, 3));
+    }
+
+    @Test
     public void testValidateUri_throwsExceptionWhenNull_oneArgument() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -58,7 +83,7 @@ public class ValidationTest {
     public void testValidateUri_throwsExceptionWhenNull_twoArguments() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Validation.validateUri(Uri.parse("https://abc.com"), NULL_ARGUMENT)
+                () -> Validation.validateUri(Uri.parse("https://abc.test"), NULL_ARGUMENT)
         );
     }
 
@@ -66,7 +91,7 @@ public class ValidationTest {
     public void testValidateUri_throwsExceptionWhenInvalid_oneArgument() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Validation.validateUri(Uri.parse("abc.com"))
+                () -> Validation.validateUri(Uri.parse("abc.test"))
         );
     }
 
@@ -74,12 +99,12 @@ public class ValidationTest {
     public void testValidateUri_throwsExceptionWhenInvalid_twoArguments() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> Validation.validateUri(Uri.parse("https://abc.com"), Uri.parse("abc.com"))
+                () -> Validation.validateUri(Uri.parse("https://abc.test"), Uri.parse("abc.test"))
         );
     }
 
     @Test
     public void testValidateUri_doesNotThrowExceptionWhenNotNullAndValid() {
-        Validation.validateNonNull(Uri.parse("https://abc.com"), Uri.parse("https://xyz.com"));
+        Validation.validateNonNull(Uri.parse("https://abc.test"), Uri.parse("https://xyz.test"));
     }
 }

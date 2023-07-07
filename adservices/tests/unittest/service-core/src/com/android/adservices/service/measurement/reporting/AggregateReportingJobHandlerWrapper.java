@@ -28,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,7 +47,9 @@ public class AggregateReportingJobHandlerWrapper {
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             long windowStartTime,
-            long windowEndTime) throws IOException, JSONException {
+            long windowEndTime,
+            boolean isDebugInstance)
+            throws IOException, JSONException {
         // Setup encryption manager to return valid public keys
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         AggregateEncryptionKeyManager mockEncryptionManager =
@@ -63,8 +66,10 @@ public class AggregateReportingJobHandlerWrapper {
 
         // Set up aggregate reporting job handler spy
         AggregateReportingJobHandler aggregateReportingJobHandler =
-                Mockito.spy(new AggregateReportingJobHandler(
-                        enrollmentDao, datastoreManager, mockEncryptionManager));
+                Mockito.spy(
+                        new AggregateReportingJobHandler(
+                                        enrollmentDao, datastoreManager, mockEncryptionManager)
+                                .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());
 
@@ -77,8 +82,14 @@ public class AggregateReportingJobHandlerWrapper {
         verify(aggregateReportingJobHandler, atLeast(0))
                 .makeHttpPostRequest(aggregateDestination.capture(), aggregatePayload.capture());
 
+        ArgumentCaptor<AggregateReport> aggregateReport =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(aggregateReportingJobHandler, atLeast(0))
+                .createReportJsonPayload(aggregateReport.capture(), any(), any());
+
         // Collect actual reports
         return new Object[]{
+                aggregateReport.getAllValues(),
                 aggregateDestination.getAllValues(),
                 aggregatePayload.getAllValues()
         };

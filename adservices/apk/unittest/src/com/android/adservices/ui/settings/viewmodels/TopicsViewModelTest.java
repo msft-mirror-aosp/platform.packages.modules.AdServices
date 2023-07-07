@@ -25,14 +25,19 @@ import static org.mockito.Mockito.verify;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
@@ -40,24 +45,47 @@ import java.io.IOException;
 public class TopicsViewModelTest {
 
     private TopicsViewModel mTopicsViewModel;
+    private BlockedTopicsViewModel mBlockedTopicsViewModel;
     @Mock private ConsentManager mConsentManager;
+    @Mock private Flags mMockFlags;
+    private MockitoSession mStaticMockSession = null;
 
     /** Setup needed before every test in this class. */
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         mTopicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+                new TopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
+        mBlockedTopicsViewModel =
+                new BlockedTopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager);
+    }
+
+    /** Teardown needed before every test in this class. */
+    @After
+    public void teardown() throws IOException {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     /** Test if getTopics returns no topics if {@link ConsentManager} returns no topics. */
     @Test
-    public void testGetTopicsReturnsNoTopics() throws IOException {
+    public void testGetTopicsReturnsNoTopics() {
         ImmutableList<Topic> topicsList = ImmutableList.of();
         doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         mTopicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+                new TopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
 
         assertThat(mTopicsViewModel.getTopics().getValue()).containsExactlyElementsIn(topicsList);
     }
@@ -73,7 +101,8 @@ public class TopicsViewModelTest {
         doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         mTopicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+                new TopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
 
         assertThat(mTopicsViewModel.getTopics().getValue()).containsExactlyElementsIn(topicsList);
     }
@@ -91,7 +120,7 @@ public class TopicsViewModelTest {
     @Test
     public void testRestoreTopic() {
         Topic topic1 = Topic.create(1, 1, 1);
-        mTopicsViewModel.restoreTopicConsent(topic1);
+        mBlockedTopicsViewModel.restoreTopicConsent(topic1);
 
         verify(mConsentManager, times(1)).restoreConsentForTopic(topic1);
     }

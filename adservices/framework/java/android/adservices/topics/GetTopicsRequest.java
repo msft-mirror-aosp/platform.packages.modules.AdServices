@@ -15,10 +15,10 @@
  */
 package android.adservices.topics;
 
+import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 
 /** Get Topics Request. */
 public final class GetTopicsRequest {
@@ -26,6 +26,7 @@ public final class GetTopicsRequest {
     /** Name of Ads SDK that is involved in this request. */
     private final String mAdsSdkName;
 
+    /** Whether to record that the caller has observed the topics of the host app or not. */
     private final boolean mRecordObservation;
 
     private GetTopicsRequest(@NonNull Builder builder) {
@@ -34,41 +35,19 @@ public final class GetTopicsRequest {
     }
 
     /** Get the Sdk Name. */
-    @Nullable
+    @NonNull
     public String getAdsSdkName() {
         return mAdsSdkName;
     }
 
     /** Get Record Observation. */
-    @NonNull
-    public boolean isRecordObservation() {
+    public boolean shouldRecordObservation() {
         return mRecordObservation;
-    }
-
-    /**
-     * @deprecated This method is equivalent to {@code new Builder().build()} and all default
-     *     parameters will be used.
-     */
-    @Deprecated
-    @NonNull
-    public static GetTopicsRequest create() {
-        return new Builder().build();
-    }
-
-    /**
-     * @deprecated This method is equivalent to {@code new Builder().setAdsSdkName(String).build()}
-     *     and default parameter will be used.
-     */
-    @Deprecated
-    @NonNull
-    public static GetTopicsRequest createWithAdsSdkName(@NonNull String adsSdkName) {
-        return new Builder().setAdsSdkName(adsSdkName).build();
     }
 
     /** Builder for {@link GetTopicsRequest} objects. */
     public static final class Builder {
-        private String mAdsSdkName;
-        // Set mRecordObservation default to true.
+        private String mAdsSdkName = EMPTY_SDK;
         private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
 
         /** Creates a {@link Builder} for {@link GetTopicsRequest} objects. */
@@ -104,7 +83,7 @@ public final class GetTopicsRequest {
          *     in the next epoch.
          */
         @NonNull
-        public Builder setRecordObservation(boolean recordObservation) {
+        public Builder setShouldRecordObservation(boolean recordObservation) {
             mRecordObservation = recordObservation;
             return this;
         }

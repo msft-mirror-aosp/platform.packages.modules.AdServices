@@ -98,8 +98,7 @@ public final class GetTopicsParam implements Parcelable {
     }
 
     /** Get the Record Observation. */
-    @NonNull
-    public boolean isRecordObservation() {
+    public boolean shouldRecordObservation() {
         return mRecordObservation;
     }
 
@@ -108,7 +107,6 @@ public final class GetTopicsParam implements Parcelable {
         private String mSdkName;
         private String mSdkPackageName;
         private String mAppPackageName;
-        // Set mRecordObservation default to true.
         private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
 
         public Builder() {}
@@ -142,7 +140,7 @@ public final class GetTopicsParam implements Parcelable {
          * the host app or not. This will be used to determine if the caller can receive the topic
          * in the next epoch.
          */
-        public @NonNull Builder setRecordObservation(boolean recordObservation) {
+        public @NonNull Builder setShouldRecordObservation(boolean recordObservation) {
             mRecordObservation = recordObservation;
             return this;
         }

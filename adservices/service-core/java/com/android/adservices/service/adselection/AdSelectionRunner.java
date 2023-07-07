@@ -16,45 +16,49 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.common.AdSelectionSignals;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
-import android.os.LimitExceededException;
+import android.os.Build;
 import android.os.RemoteException;
+import android.os.Trace;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerUtil;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FluentFuture;
@@ -66,20 +70,16 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.time.Clock;
-import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
 
 /**
  * Orchestrator that runs the Ads Auction/Bidding and Scoring logic The class expects the caller to
@@ -88,7 +88,10 @@ import java.util.stream.Collectors;
  *
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
-public final class AdSelectionRunner {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public abstract class AdSelectionRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
 
@@ -98,108 +101,103 @@ public final class AdSelectionRunner {
     @VisibleForTesting static final String ERROR_NO_WINNING_AD_FOUND = "No winning Ads found";
 
     @VisibleForTesting
-    static final String ERROR_NO_VALID_BIDS_FOR_SCORING = "No valid bids for scoring";
-
-    @VisibleForTesting static final String ERROR_NO_CA_AVAILABLE = "No Custom Audience available";
+    static final String ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING =
+            "No valid bids or contextual ads available for scoring";
 
     @VisibleForTesting
-    static final String ERROR_NO_BUYERS_AVAILABLE =
-            "The list of the custom audience buyers should not be empty.";
+    static final String ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE =
+            "No Custom Audience or contextual ads available";
+
+    @VisibleForTesting
+    static final String ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE =
+            "The list of the custom audience buyers and contextual ads both should not be empty.";
 
     @VisibleForTesting
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
     @VisibleForTesting
-    static final String AD_SELECTION_THROTTLED = "Ad selection exceeded allowed rate limit";
+    static final String JS_SANDBOX_IS_NOT_AVAILABLE =
+            String.format(
+                    AD_SELECTION_ERROR_PATTERN,
+                    ERROR_AD_SELECTION_FAILURE,
+                    "JS Sandbox is not available");
 
-    public static final long DAY_IN_SECONDS = 60 * 60 * 24;
-
-    @NonNull private final Context mContext;
-    @NonNull private final CustomAudienceDao mCustomAudienceDao;
-    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
-    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
-    @NonNull private final ListeningExecutorService mLightweightExecutorService;
-    @NonNull private final ListeningExecutorService mBackgroundExecutorService;
-    @NonNull private final AdsScoreGenerator mAdsScoreGenerator;
-    @NonNull private final AdBidGenerator mAdBidGenerator;
-    @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
-    @NonNull private final Clock mClock;
-    @NonNull private final ConsentManager mConsentManager;
-    @NonNull private final AdServicesLogger mAdServicesLogger;
-    @NonNull private final Flags mFlags;
-    @NonNull private final AppImportanceFilter mAppImportanceFilter;
+    @NonNull protected final CustomAudienceDao mCustomAudienceDao;
+    @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull protected final ListeningExecutorService mLightweightExecutorService;
+    @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
+    @NonNull protected final ScheduledThreadPoolExecutor mScheduledExecutor;
+    @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
+    @NonNull protected final Clock mClock;
+    @NonNull protected final AdServicesLogger mAdServicesLogger;
+    @NonNull protected final Flags mFlags;
+    @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
+    @NonNull protected final DebugReporting mDebugReporting;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @NonNull private final AdFilterer mAdFilterer;
+    @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     private final int mCallerUid;
-    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
-    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
+    /**
+     * @param context service context
+     * @param customAudienceDao DAO to access custom audience storage
+     * @param adSelectionEntryDao DAO to access ad selection storage
+     * @param lightweightExecutorService executor for running short tasks
+     * @param backgroundExecutorService executor for longer running tasks (ex. network calls)
+     * @param scheduledExecutor executor for tasks to be run with a delay or timed executions
+     * @param adServicesLogger logger for logging calls to PPAPI
+     * @param flags for accessing feature flags
+     * @param adSelectionServiceFilter for validating the request
+     */
     public AdSelectionRunner(
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
-            @NonNull final ConsentManager consentManager,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final DevContext devContext,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
-            int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final DebugReporting debugReporting,
+            final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
-        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(devContext);
-        Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(throttlerSupplier);
-        Objects.requireNonNull(fledgeAuthorizationFilter);
-        Objects.requireNonNull(fledgeAllowListsFilter);
-        mContext = context;
+        Objects.requireNonNull(adSelectionServiceFilter);
+        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(debugReporting);
+
+        Preconditions.checkArgument(
+                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
+                JS_SANDBOX_IS_NOT_AVAILABLE);
+        Objects.requireNonNull(adSelectionExecutionLogger);
+
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
-        mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
-        mConsentManager = consentManager;
+        mScheduledExecutor = scheduledExecutor;
         mAdServicesLogger = adServicesLogger;
-        mAdsScoreGenerator =
-                new AdsScoreGeneratorImpl(
-                        new AdSelectionScriptEngine(
-                                mContext,
-                                () -> flags.getEnforceIsolateMaxHeapSize(),
-                                () -> flags.getIsolateMaxHeapSizeBytes()),
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mAdServicesHttpsClient,
-                        devContext,
-                        mAdSelectionEntryDao,
-                        flags);
-        mAdBidGenerator =
-                new AdBidGeneratorImpl(
-                        context,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        devContext,
-                        mCustomAudienceDao,
-                        flags);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;
-        mThrottlerSupplier = throttlerSupplier;
-        mAppImportanceFilter = appImportanceFilter;
+        mAdSelectionExecutionLogger = adSelectionExecutionLogger;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
+        mAdFilterer = adFilterer;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
-        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mDebugReporting = debugReporting;
     }
 
     @VisibleForTesting
@@ -207,55 +205,54 @@ public final class AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
-            @NonNull final ConsentManager consentManager,
-            @NonNull final AdsScoreGenerator adsScoreGenerator,
-            @NonNull final AdBidGenerator adBidGenerator,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final DebugReporting debugReporting) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
-        Objects.requireNonNull(consentManager);
-        Objects.requireNonNull(adsScoreGenerator);
-        Objects.requireNonNull(adBidGenerator);
+        Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adSelectionIdGenerator);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeAuthorizationFilter);
+        Objects.requireNonNull(adSelectionExecutionLogger);
+        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(debugReporting);
 
-        mContext = context;
+        Preconditions.checkArgument(
+                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
+                JS_SANDBOX_IS_NOT_AVAILABLE);
+
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
-        mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
-        mConsentManager = consentManager;
-        mAdsScoreGenerator = adsScoreGenerator;
-        mAdBidGenerator = adBidGenerator;
+        mScheduledExecutor = scheduledExecutor;
         mAdSelectionIdGenerator = adSelectionIdGenerator;
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mThrottlerSupplier = throttlerSupplier;
-        mAppImportanceFilter = appImportanceFilter;
+        mAdSelectionExecutionLogger = adSelectionExecutionLogger;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
+        mAdFilterer = adFilterer;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
-        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
-        mFledgeAllowListsFilter = fledgeAllowListsFilter;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mDebugReporting = debugReporting;
     }
 
     /**
@@ -266,25 +263,53 @@ public final class AdSelectionRunner {
      */
     public void runAdSelection(
             @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
+        AdSelectionConfig adSelectionConfig = inputParams.getAdSelectionConfig();
 
         try {
-            ListenableFuture<Void> validateRequestFuture =
+            ListenableFuture<Void> filterAndValidateRequestFuture =
                     Futures.submit(
-                            () ->
-                                    validateRequest(
-                                            inputParams.getAdSelectionConfig(),
-                                            inputParams.getCallerPackageName()),
+                            () -> {
+                                try {
+                                    Trace.beginSection(Tracing.VALIDATE_REQUEST);
+                                    sLogger.v("Starting filtering and validation.");
+                                    mAdSelectionServiceFilter.filterRequest(
+                                            adSelectionConfig.getSeller(),
+                                            inputParams.getCallerPackageName(),
+                                            mFlags
+                                                    .getEnforceForegroundStatusForFledgeRunAdSelection(),
+                                            true,
+                                            mCallerUid,
+                                            AdServicesStatsLog
+                                                    .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                                    validateAdSelectionConfig(adSelectionConfig);
+                                } finally {
+                                    sLogger.v("Completed filtering and validation.");
+                                    Trace.endSection();
+                                }
+                            },
                             mLightweightExecutorService);
 
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    FluentFuture.from(validateRequestFuture)
+                    FluentFuture.from(filterAndValidateRequestFuture)
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateAdSelection(
                                                     inputParams.getAdSelectionConfig(),
                                                     inputParams.getCallerPackageName()),
+                                    mLightweightExecutorService)
+                            .transform(
+                                    this::closeSuccessfulAdSelection, mLightweightExecutorService)
+                            .catching(
+                                    RuntimeException.class,
+                                    this::closeFailedAdSelectionWithRuntimeException,
+                                    mLightweightExecutorService)
+                            .catching(
+                                    AdServicesException.class,
+                                    this::closeFailedAdSelectionWithAdServicesException,
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -292,54 +317,93 @@ public final class AdSelectionRunner {
                     new FutureCallback<DBAdSelection>() {
                         @Override
                         public void onSuccess(DBAdSelection result) {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
                             notifySuccessToCaller(result, callback);
-                            // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionData();
                         }
 
                         @Override
                         public void onFailure(Throwable t) {
-                            if (t instanceof ConsentManager.RevokedConsentException) {
-                                notifyEmptySuccessToCaller(
-                                        callback,
-                                        AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
+                            if (t instanceof FilterException
+                                    && t.getCause()
+                                            instanceof ConsentManager.RevokedConsentException) {
+                                // Skip logging if a FilterException occurs.
+                                // AdSelectionServiceFilter ensures the failing assertion is logged
+                                // internally.
+
+                                // Fail Silently by notifying success to caller
+                                notifyEmptySuccessToCaller(callback);
                             } else {
-                                notifyFailureToCaller(callback, t);
+                                if (t.getCause() instanceof AdServicesException) {
+                                    notifyFailureToCaller(callback, t.getCause());
+                                } else {
+                                    notifyFailureToCaller(callback, t);
+                                }
                             }
-                            // TODO(242280808): Schedule a clear for stale data instead of this hack
-                            clearExpiredAdSelectionData();
                         }
                     },
                     mLightweightExecutorService);
         } catch (Throwable t) {
+            Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
+            sLogger.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
     }
 
+    @Nullable
+    private DBAdSelection closeFailedAdSelectionWithRuntimeException(RuntimeException e) {
+        sLogger.v("Close failed ad selection and rethrow the RuntimeException %s.", e.toString());
+        int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
+        mAdSelectionExecutionLogger.close(resultCode);
+        throw e;
+    }
+
+    @Nullable
+    private DBAdSelection closeFailedAdSelectionWithAdServicesException(AdServicesException e) {
+        int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
+        mAdSelectionExecutionLogger.close(resultCode);
+        sLogger.v(
+                "Close failed ad selection and wrap the AdServicesException with"
+                        + " an RuntimeException with message: %s and log with resultCode : %d",
+                e.getMessage(), resultCode);
+        throw new RuntimeException(e.getMessage(), e.getCause());
+    }
+
+    @NonNull
+    private DBAdSelection closeSuccessfulAdSelection(@NonNull DBAdSelection dbAdSelection) {
+        mAdSelectionExecutionLogger.close(AdServicesStatusUtils.STATUS_SUCCESS);
+        return dbAdSelection;
+    }
+
     private void notifySuccessToCaller(
             @NonNull DBAdSelection result, @NonNull AdSelectionCallback callback) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
+            int overallLatencyMs =
+                    mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
+            sLogger.v(
+                    "Ad Selection with Id:%d completed with overall latency %d in ms, "
+                            + "attempted notifying success",
+                    result.getAdSelectionId(), overallLatencyMs);
+            // TODO(b//253522566): When including logging data from bidding & auction server side
+            //  should be able to differentiate the data from the on-device telemetry.
+            // Note: Success is logged before the callback to ensure deterministic testing.
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    overallLatencyMs);
+
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
                             .setAdSelectionId(result.getAdSelectionId())
                             .setRenderUri(result.getWinningAdRenderUri())
                             .build());
-            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-        } finally {
-            LogUtil.v(
-                    "Ad Selection with Id:%d completed, attempted notifying success",
-                    result.getAdSelectionId());
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
+            sLogger.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
     /** Sends a successful response to the caller that represents a silent failure. */
-    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback, int resultCode) {
+    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback) {
         try {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
@@ -347,33 +411,29 @@ public final class AdSelectionRunner {
                             .setRenderUri(Uri.EMPTY)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
+            sLogger.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
     private void notifyFailureToCaller(
             @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
-            if (t instanceof WrongCallingApplicationStateException) {
-                resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-            } else if (t instanceof UncheckedTimeoutException) {
-                resultCode = AdServicesStatusUtils.STATUS_TIMEOUT;
-            } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                    || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-                resultCode = AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
-            } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-                resultCode = AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-            } else if (t instanceof IllegalArgumentException) {
-                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-            } else if (t instanceof LimitExceededException) {
-                resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
-            } else {
-                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            sLogger.e(t, "Ad Selection failure: ");
+
+            int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+
+            // Skip logging if a FilterException occurs.
+            // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+            // Note: Failure is logged before the callback to ensure deterministic testing.
+            if (!(t instanceof FilterException)) {
+                int overallLatencyMs =
+                        mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
+                sLogger.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
+                // TODO(b//253522566): When including logging data from bidding & auction server
+                // side
+                //  should be able to differentiate the data from the on-device telemetry.
+                mAdServicesLogger.logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
             }
 
             FledgeErrorResponse selectionFailureResponse =
@@ -385,14 +445,9 @@ public final class AdSelectionRunner {
                                             t.getMessage()))
                             .setStatusCode(resultCode)
                             .build();
-            LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
+            sLogger.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
@@ -406,288 +461,162 @@ public final class AdSelectionRunner {
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final String callerPackageName) {
-        LogUtil.v("Beginning Ad Selection Orchestration");
+        sLogger.v("Beginning Ad Selection Orchestration");
+
+        AdSelectionConfig adSelectionConfigInput = adSelectionConfig;
+        if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
+            // Empty all contextual ads if the feature is disabled
+            sLogger.v("Contextual flow is disabled");
+            adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
+        } else {
+            sLogger.v("Contextual flow is enabled, filtering contextual ads");
+            adSelectionConfigInput = getAdSelectionConfigFilterContextualAds(adSelectionConfig);
+        }
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
-                getBuyersCustomAudience(adSelectionConfig);
+                getBuyersCustomAudience(adSelectionConfigInput);
+        ListenableFuture<AdSelectionOrchestrationResult> dbAdSelection =
+                orchestrateAdSelection(
+                        adSelectionConfigInput, callerPackageName, buyerCustomAudience);
 
-        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
-                buyerCAs -> {
-                    return runAdBidding(buyerCAs, adSelectionConfig);
-                };
+        AsyncFunction<
+                        AdSelectionOrchestrationResult,
+                        Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+                saveResultToPersistence =
+                        adSelectionAndJs -> persistAdSelection(adSelectionAndJs, callerPackageName);
 
-        ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                Futures.transformAsync(buyerCustomAudience, bidAds, mLightweightExecutorService);
+        ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+                resultAfterPersistence =
+                        Futures.transformAsync(
+                                dbAdSelection,
+                                saveResultToPersistence,
+                                mLightweightExecutorService);
 
-        AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
-                bids -> {
-                    return runAdScoring(bids, adSelectionConfig);
-                };
+        if (mDebugReporting.isEnabled()) {
+            Futures.addCallback(
+                    resultAfterPersistence,
+                    new FutureCallback<Pair<DBAdSelection, AdSelectionOrchestrationResult>>() {
+                        @Override
+                        public void onSuccess(
+                                Pair<DBAdSelection, AdSelectionOrchestrationResult> result) {
+                            // Send debug reports after persisting results in non critical path.
+                            sendDebugReports(result.second);
+                        }
 
-        ListenableFuture<List<AdScoringOutcome>> scoredAds =
-                Futures.transformAsync(
-                        biddingOutcome, mapBidsToScores, mLightweightExecutorService);
+                        @Override
+                        public void onFailure(Throwable t) {
+                            sLogger.v("Failed to send debug reports");
+                        }
+                    },
+                    mLightweightExecutorService);
+        }
 
-        Function<List<AdScoringOutcome>, AdScoringOutcome> reduceScoresToWinner =
-                scores -> {
-                    return getWinningOutcome(scores);
-                };
-
-        ListenableFuture<AdScoringOutcome> winningOutcome =
-                Futures.transform(scoredAds, reduceScoresToWinner, mLightweightExecutorService);
-
-        Function<AdScoringOutcome, Pair<DBAdSelection.Builder, String>> mapWinnerToDBResult =
-                scoringWinner -> {
-                    return createAdSelectionResult(scoringWinner);
-                };
-
-        ListenableFuture<Pair<DBAdSelection.Builder, String>> dbAdSelectionBuilder =
-                Futures.transform(winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
-
-        AsyncFunction<Pair<DBAdSelection.Builder, String>, DBAdSelection> saveResultToPersistence =
-                adSelectionAndJs -> {
-                    return persistAdSelection(
-                            adSelectionAndJs.first, adSelectionAndJs.second, callerPackageName);
-                };
-
-        return FluentFuture.from(dbAdSelectionBuilder)
-                .transformAsync(saveResultToPersistence, mLightweightExecutorService)
+        return FluentFuture.from(resultAfterPersistence)
+                .transform(savedResultPair -> savedResultPair.first, mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
-                        //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1))
+                        mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
                         this::handleTimeoutError,
                         mLightweightExecutorService);
     }
 
+    abstract ListenableFuture<AdSelectionOrchestrationResult> orchestrateAdSelection(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String callerPackageName,
+            @NonNull ListenableFuture<List<DBCustomAudience>> buyerCustomAudience);
+
     @Nullable
     private DBAdSelection handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, "Ad Selection exceeded time limit");
+        sLogger.e(e, "Ad Selection exceeded time limit");
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
             final AdSelectionConfig adSelectionConfig) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE);
         return mBackgroundExecutorService.submit(
                 () -> {
+                    boolean atLeastOnePresent =
+                            !(adSelectionConfig.getCustomAudienceBuyers().isEmpty()
+                                    && adSelectionConfig.getBuyerContextualAds().isEmpty());
+
                     Preconditions.checkArgument(
-                            !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
-                            ERROR_NO_BUYERS_AVAILABLE);
+                            atLeastOnePresent, ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE);
+                    // Set start of bidding stage.
+                    mAdSelectionExecutionLogger.startBiddingProcess(
+                            countBuyersRequested(adSelectionConfig));
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                                     adSelectionConfig.getCustomAudienceBuyers(),
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
-                    if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-                        // TODO(b/233296309) : Remove this exception after adding contextual
-                        // ads
-                        throw new IllegalStateException(ERROR_NO_CA_AVAILABLE);
+                    if ((buyerCustomAudience == null || buyerCustomAudience.isEmpty())
+                            && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
+                        IllegalStateException exception =
+                                new IllegalStateException(ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE);
+                        mAdSelectionExecutionLogger.endBiddingProcess(
+                                null, getResultCodeFromException(exception));
+                        throw exception;
                     }
+                    // end a successful get-buyers-custom-audience process.
+                    mAdSelectionExecutionLogger.endGetBuyersCustomAudience(
+                            countBuyersFromCustomAudiences(buyerCustomAudience));
+                    Tracing.endAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE, traceCookie);
                     return buyerCustomAudience;
                 });
     }
 
-    private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
-            @NonNull final List<DBCustomAudience> customAudiences,
-            @NonNull final AdSelectionConfig adSelectionConfig)
-            throws InterruptedException, ExecutionException {
-        if (customAudiences.isEmpty()) {
-            LogUtil.w("Cannot invoke bidding on empty list of CAs");
-            return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
-        }
-
-        // TODO(b/237004875) : Use common thread pool for parallel execution if possible
-        ForkJoinPool customThreadPool = new ForkJoinPool(getParallelBiddingCount());
-        final AtomicReference<List<ListenableFuture<AdBiddingOutcome>>> bidWinningAds =
-                new AtomicReference<>();
-
-        try {
-            LogUtil.d("Triggering bidding for all %d custom audiences", customAudiences.size());
-            customThreadPool
-                    .submit(
-                            () -> {
-                                LogUtil.v("Invoking bidding for #%d CAs", customAudiences.size());
-                                bidWinningAds.set(
-                                        customAudiences.parallelStream()
-                                                .map(
-                                                        customAudience -> {
-                                                            return runAdBiddingPerCA(
-                                                                    customAudience,
-                                                                    adSelectionConfig);
-                                                        })
-                                                .collect(Collectors.toList()));
-                            })
-                    .get();
-        } catch (InterruptedException e) {
-            final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(e, exceptionReason);
-            throw new InterruptedException(exceptionReason);
-        } catch (ExecutionException e) {
-            final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(e, exceptionReason);
-            throw new ExecutionException(e.getCause());
-        } finally {
-            customThreadPool.shutdownNow();
-        }
-        return Futures.successfulAsList(bidWinningAds.get());
+    private int countBuyersRequested(@NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+        return adSelectionConfig.getCustomAudienceBuyers().stream()
+                .collect(Collectors.toSet())
+                .size();
     }
 
-    private int getParallelBiddingCount() {
-        int parallelBiddingCountConfigValue = mFlags.getAdSelectionConcurrentBiddingCount();
-        int numberOfAvailableProcessors = Runtime.getRuntime().availableProcessors();
-        return Math.min(parallelBiddingCountConfigValue, numberOfAvailableProcessors);
+    private int countBuyersFromCustomAudiences(
+            @NonNull List<DBCustomAudience> buyerCustomAudience) {
+        Objects.requireNonNull(buyerCustomAudience);
+        return buyerCustomAudience.stream()
+                .map(a -> a.getBuyer())
+                .collect(Collectors.toSet())
+                .size();
     }
 
-    private ListenableFuture<AdBiddingOutcome> runAdBiddingPerCA(
-            @NonNull final DBCustomAudience customAudience,
-            @NonNull final AdSelectionConfig adSelectionConfig) {
-        LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
-
-        // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
-        AdSelectionSignals buyerSignal =
-                Optional.ofNullable(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(customAudience.getBuyer()))
-                        .orElse(AdSelectionSignals.EMPTY);
-        return mAdBidGenerator.runAdBiddingPerCA(
-                customAudience,
-                adSelectionConfig.getAdSelectionSignals(),
-                buyerSignal,
-                AdSelectionSignals.EMPTY,
-                adSelectionConfig);
-        // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-    }
-
-    @SuppressLint("DefaultLocale")
-    private ListenableFuture<List<AdScoringOutcome>> runAdScoring(
-            @NonNull final List<AdBiddingOutcome> adBiddingOutcomes,
-            @NonNull final AdSelectionConfig adSelectionConfig)
-            throws AdServicesException {
-        LogUtil.v("Got %d bidding outcomes", adBiddingOutcomes.size());
-        List<AdBiddingOutcome> validBiddingOutcomes =
-                adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
-
-        if (validBiddingOutcomes.isEmpty()) {
-            LogUtil.w("Received empty list of Bidding outcomes");
-            throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
-        }
-        return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
-    }
-
-    private AdScoringOutcome getWinningOutcome(
-            @NonNull List<AdScoringOutcome> overallAdScoringOutcome) {
-        LogUtil.v("Scoring completed, generating winning outcome");
-        return overallAdScoringOutcome.stream()
-                .filter(a -> a.getAdWithScore().getScore() > 0)
-                .max(
-                        (a, b) ->
-                                Double.compare(
-                                        a.getAdWithScore().getScore(),
-                                        b.getAdWithScore().getScore()))
-                .orElseThrow(() -> new IllegalStateException(ERROR_NO_WINNING_AD_FOUND));
-    }
-
-    /**
-     * This method populates an Ad Selection result ready to be persisted in DB, with all the fields
-     * except adSelectionId and creation time, which should be created as close as possible to
-     * persistence logic
-     *
-     * @param scoringWinner Winning Ad for overall Ad Selection
-     * @return A {@link Pair} with a Builder for {@link DBAdSelection} populated with necessary data
-     *     and a string containing the JS with the decision logic from this buyer.
-     */
-    @VisibleForTesting
-    Pair<DBAdSelection.Builder, String> createAdSelectionResult(
-            @NonNull AdScoringOutcome scoringWinner) {
-        DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
-        LogUtil.v("Creating Ad Selection result from scoring winner");
-        dbAdSelectionBuilder
-                .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
-                .setCustomAudienceSignals(
-                        scoringWinner.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setWinningAdRenderUri(
-                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
-                .setBiddingLogicUri(
-                        scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUri())
-                .setContextualSignals("{}");
-        // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-        return Pair.create(
-                dbAdSelectionBuilder,
-                scoringWinner.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs());
-    }
-
-    private ListenableFuture<DBAdSelection> persistAdSelection(
-            @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
-            @NonNull String buyerDecisionLogicJS,
-            @NonNull String callerPackageName) {
-        final long adSelectionId = mAdSelectionIdGenerator.generateId();
-        LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
+    private ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+            persistAdSelection(
+                    @NonNull AdSelectionOrchestrationResult adSelectionOrchestrationResult,
+                    @NonNull String callerPackageName) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION);
         return mBackgroundExecutorService.submit(
                 () -> {
-                    // TODO : b/230568647 retry ID generation in case of collision
+                    long adSelectionId = mAdSelectionIdGenerator.generateId();
+                    // Retry ID generation in case of collision
+                    while (mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId)) {
+                        adSelectionId = mAdSelectionIdGenerator.generateId();
+                    }
+                    sLogger.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
                     DBAdSelection dbAdSelection;
-                    dbAdSelectionBuilder
+                    adSelectionOrchestrationResult
+                            .mDbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
-                    dbAdSelection = dbAdSelectionBuilder.build();
+                    dbAdSelection = adSelectionOrchestrationResult.mDbAdSelectionBuilder.build();
+                    mAdSelectionExecutionLogger.startPersistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
-                                    .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
+                                    .setBuyerDecisionLogicJs(
+                                            adSelectionOrchestrationResult.mBuyerDecisionLogicJs)
                                     .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
-                    return dbAdSelection;
+                    mAdSelectionExecutionLogger.endPersistAdSelection();
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
+                    return Pair.create(dbAdSelection, adSelectionOrchestrationResult);
                 });
-    }
-
-    /**
-     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
-     *
-     * @return an ignorable {@code null}
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     */
-    private Void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        if (!mConsentManager.getConsent(mContext.getPackageManager()).isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
-        return null;
-    }
-
-    /**
-     * Asserts that the caller has the appropriate foreground status, if enabled.
-     *
-     * @return an ignorable {@code null}
-     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
-     */
-    private Void maybeAssertForegroundCaller() throws WrongCallingApplicationStateException {
-        if (mFlags.getEnforceForegroundStatusForFledgeRunAdSelection()) {
-            mAppImportanceFilter.assertCallerIsInForeground(
-                    mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
-        }
-        return null;
-    }
-
-    /**
-     * Asserts that the package name provided by the caller is one of the packages of the calling
-     * uid.
-     *
-     * @param callerPackageName caller package name from the request
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the provided {@code
-     *     callerPackageName} is not valid
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerPackageName(String callerPackageName)
-            throws FledgeAuthorizationFilter.CallerMismatchException {
-        mFledgeAuthorizationFilter.assertCallingPackageName(
-                callerPackageName, mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
-        return null;
     }
 
     /**
@@ -695,106 +624,68 @@ public final class AdSelectionRunner {
      *
      * @param adSelectionConfig the adSelectionConfig to be validated
      * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @return an ignorable {@code null}
      */
-    private Void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
+    private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(
+                        mPrebuiltLogicGenerator, mFrequencyCapAdDataValidator);
         adSelectionConfigValidator.validate(adSelectionConfig);
-
-        return null;
     }
 
-    /**
-     * Check if a certain ad tech is enrolled and authorized to perform the operation for the
-     * package.
-     *
-     * @param callerPackageName the package name to check against
-     * @param adSelectionConfig contains the ad tech to check against
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     */
-    private Void assertFledgeEnrollment(
-            AdSelectionConfig adSelectionConfig, String callerPackageName)
-            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
-        if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-            mFledgeAuthorizationFilter.assertAdTechAllowed(
-                    mContext,
-                    callerPackageName,
-                    adSelectionConfig.getSeller(),
-                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+    private AdSelectionConfig getAdSelectionConfigFilterContextualAds(
+            AdSelectionConfig adSelectionConfig) {
+        Map<AdTechIdentifier, ContextualAds> filteredContextualAdsMap = new HashMap<>();
+        sLogger.v("Filtering contextual ads in Ad Selection Config");
+        for (Map.Entry<AdTechIdentifier, ContextualAds> entry :
+                adSelectionConfig.getBuyerContextualAds().entrySet()) {
+            filteredContextualAdsMap.put(
+                    entry.getKey(), mAdFilterer.filterContextualAds(entry.getValue()));
         }
-
-        return null;
+        return adSelectionConfig
+                .cloneToBuilder()
+                .setBuyerContextualAds(filteredContextualAdsMap)
+                .build();
     }
 
-    /**
-     * Asserts the package is allowed to call PPAPI.
-     *
-     * @param callerPackageName the package name to be validated.
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     */
-    private Void assertAppInAllowList(String callerPackageName)
-            throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(
-                callerPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
-
-        return null;
+    private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(
+            AdSelectionConfig adSelectionConfig) {
+        sLogger.v("Emptying contextual ads in Ad Selection Config");
+        return adSelectionConfig
+                .cloneToBuilder()
+                .setBuyerContextualAds(Collections.EMPTY_MAP)
+                .build();
     }
 
-    /**
-     * Ensures that the caller package is not throttled from calling the current API
-     *
-     * @param callerPackageName the package name, which should be verified
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
-     *     limits
-     * @return an ignorable {@code null}
-     */
-    private Void assertCallerNotThrottled(final String callerPackageName)
-            throws LimitExceededException {
-        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled = !throttler.tryAcquire(FLEDGE_API_SELECT_ADS, callerPackageName);
+    private void sendDebugReports(AdSelectionOrchestrationResult result) {
+        AdScoringOutcome topScoringAd = result.mWinningOutcome;
+        AdScoringOutcome secondScoringAd = result.mSecondHighestScoredOutcome;
+        DebugReportSenderStrategy sender = mDebugReporting.getSenderStrategy();
+        sender.batchEnqueue(
+                DebugReportProcessor.getUrisFromAdAuction(
+                        result.mDebugReports,
+                        PostAuctionSignals.create(topScoringAd, secondScoringAd)));
+        sender.flush();
+    }
 
-        if (isThrottled) {
-            LogUtil.e("Rate Limit Reached for API: %s", FLEDGE_API_SELECT_ADS);
-            throw new LimitExceededException(AD_SELECTION_THROTTLED);
+    static class AdSelectionOrchestrationResult {
+        @NonNull final DBAdSelection.Builder mDbAdSelectionBuilder;
+        final String mBuyerDecisionLogicJs;
+        @NonNull final List<DebugReport> mDebugReports;
+        @Nullable final AdScoringOutcome mWinningOutcome;
+        @Nullable final AdScoringOutcome mSecondHighestScoredOutcome;
+
+        AdSelectionOrchestrationResult(
+                @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
+                String buyerDecisionLogicJs,
+                @NonNull List<DebugReport> debugReports,
+                @Nullable AdScoringOutcome winningOutcome,
+                @Nullable AdScoringOutcome secondHighestScoredOutcome) {
+            this.mDbAdSelectionBuilder = dbAdSelectionBuilder;
+            this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
+            this.mDebugReports = debugReports;
+            this.mWinningOutcome = winningOutcome;
+            this.mSecondHighestScoredOutcome = secondHighestScoredOutcome;
         }
-        return null;
-    }
-
-    /**
-     * Validates the {@code runAdSelection} request.
-     *
-     * @param adSelectionConfig the adSelectionConfig to be validated
-     * @param callerPackageName caller package name to be validated
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
-     *     not valid
-     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
-     *     limits
-     * @throws IllegalArgumentException if the provided {@code adSelectionConfig} is not valid
-     * @return an ignorable {@code null}
-     */
-    private Void validateRequest(AdSelectionConfig adSelectionConfig, String callerPackageName) {
-        assertCallerPackageName(callerPackageName);
-        assertCallerNotThrottled(callerPackageName);
-        maybeAssertForegroundCaller();
-        assertFledgeEnrollment(adSelectionConfig, callerPackageName);
-        assertAppInAllowList(callerPackageName);
-        assertCallerHasUserConsent();
-        validateAdSelectionConfig(adSelectionConfig);
-
-        return null;
-    }
-
-    private void clearExpiredAdSelectionData() {
-        Instant expirationTime = mClock.instant().minusSeconds(DAY_IN_SECONDS);
-        mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
     }
 }

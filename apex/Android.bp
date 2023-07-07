@@ -35,15 +35,9 @@ apex {
     key: "com.android.adservices.key",
     bootclasspath_fragments: ["com.android.adservices-bootclasspath-fragment"],
     systemserverclasspath_fragments: ["com.android.adservices-systemserverclasspath-fragment"],
-    prebuilts: [
-        "current_sdkinfo",
-        "privapp_allowlist_com.android.adservices.api.xml"
-    ],
+    prebuilts: ["current_sdkinfo"],
     certificate: ":com.android.adservices.certificate",
     defaults: ["t-launched-apex-module"],
-    // Indicates that pre-installed version of this apex can be compressed.
-    // Whether it actually will be compressed is controlled on per-device basis.
-    compressible: true,
     jni_libs: ["libtflite_support_classifiers_native", "libhpke_jni"],
 }
 
@@ -101,6 +95,7 @@ bootclasspath_fragment {
         // result in a build failure due to inconsistent flags.
         package_prefixes: [
             "android.adservices",
+            "android.app.adservices",
             "android.app.sdksandbox",
             "com.android.adservices",
         ],

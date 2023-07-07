@@ -17,22 +17,33 @@
 package com.android.adservices.data.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.ColumnInfo;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.CleanupUtils;
+import com.android.adservices.data.common.DecisionLogic;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * DAO abstract class used to access Custom Audience persistent storage.
@@ -41,6 +52,7 @@ import java.util.Objects;
  */
 @Dao
 public abstract class CustomAudienceDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add user to a new custom audience. As designed, will override existing one.
      *
@@ -172,8 +184,14 @@ public abstract class CustomAudienceDao {
         long customAudienceCount = getCustomAudienceCount();
         long customAudienceCountPerOwner = getCustomAudienceCountForOwner(owner);
         long ownerCount = getCustomAudienceOwnerCount();
-        return new CustomAudienceStats(
-                owner, customAudienceCount, customAudienceCountPerOwner, ownerCount);
+
+        // TODO(b/255780705): Add buyer and per-buyer stats
+        return CustomAudienceStats.builder()
+                .setOwner(owner)
+                .setTotalCustomAudienceCount(customAudienceCount)
+                .setPerOwnerCustomAudienceCount(customAudienceCountPerOwner)
+                .setTotalOwnerCount(ownerCount)
+                .build();
     }
 
     /**
@@ -227,17 +245,50 @@ public abstract class CustomAudienceDao {
     /**
      * Get custom audience JS override by its unique key.
      *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #getBiddingLogicUriOverride(String, AdTechIdentifier, String, String)} instead.
+     *
      * @return custom audience override result if exists.
      */
     @Query(
-            "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner "
-                    + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
+            "SELECT bidding_logic as bidding_logic_js, bidding_logic_version as"
+                    + " buyer_bidding_logic_version FROM custom_audience_overrides WHERE owner ="
+                    + " :owner AND buyer = :buyer AND name = :name AND app_package_name="
+                    + " :appPackageName")
     @Nullable
-    public abstract String getBiddingLogicUriOverride(
+    protected abstract BiddingLogicJsWithVersion getBiddingLogicUriOverrideInternal(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String appPackageName);
+
+    /**
+     * Get custom audience JS override by its unique key.
+     *
+     * @return custom audience override result if exists.
+     */
+    public DecisionLogic getBiddingLogicUriOverride(
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            @NonNull String appPackageName) {
+        BiddingLogicJsWithVersion biddingLogicJsWithVersion =
+                getBiddingLogicUriOverrideInternal(owner, buyer, name, appPackageName);
+
+        if (Objects.isNull(biddingLogicJsWithVersion)) {
+            return null;
+        }
+
+        ImmutableMap.Builder<Integer, Long> versionMap = new ImmutableMap.Builder<>();
+        if (Objects.nonNull(biddingLogicJsWithVersion.getBuyerBiddingLogicVersion())) {
+            versionMap.put(
+                    JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                    biddingLogicJsWithVersion.getBuyerBiddingLogicVersion());
+        }
+
+        return DecisionLogic.create(
+                biddingLogicJsWithVersion.getBiddingLogicJs(), versionMap.build());
+    }
 
     /**
      * Get trusted bidding data override by its unique key.
@@ -315,6 +366,134 @@ public abstract class CustomAudienceDao {
     public int deleteAllExpiredCustomAudienceData(@NonNull Instant expiryTime) {
         deleteAllExpiredCustomAudienceBackgroundFetchData(expiryTime);
         return deleteAllExpiredCustomAudiences(expiryTime);
+    }
+
+    /** Returns the set of all unique owner apps in the custom audience table. */
+    @Query("SELECT DISTINCT owner FROM custom_audience")
+    public abstract List<String> getAllCustomAudienceOwners();
+
+    /**
+     * Deletes all custom audiences belonging to any app in the given set of {@code ownersToRemove}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllDisallowedOwnerCustomAudienceData(PackageManager, Flags)} instead.
+     *
+     * @return the number of deleted custom audiences
+     */
+    @Query("DELETE FROM custom_audience WHERE owner IN (:ownersToRemove)")
+    protected abstract int deleteCustomAudiencesByOwner(@NonNull List<String> ownersToRemove);
+
+    /**
+     * Deletes all custom audience background fetch data belonging to any app in the given set of
+     * {@code ownersToRemove}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllDisallowedOwnerCustomAudienceData(PackageManager, Flags)} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data WHERE owner IN (:ownersToRemove)")
+    protected abstract void deleteCustomAudienceBackgroundFetchDataByOwner(
+            @NonNull List<String> ownersToRemove);
+
+    /**
+     * Deletes all custom audience data belonging to disallowed owner apps in a single transaction,
+     * where the custom audiences' owner apps cannot be found in the installed list or where the
+     * owner apps are not found in the app allowlist.
+     *
+     * @return a {@link CustomAudienceStats} object containing only the number of deleted custom
+     *     audiences and the number of disallowed owner apps found
+     */
+    @Transaction
+    @NonNull
+    public CustomAudienceStats deleteAllDisallowedOwnerCustomAudienceData(
+            @NonNull PackageManager packageManager, @NonNull Flags flags) {
+        Objects.requireNonNull(packageManager);
+        Objects.requireNonNull(flags);
+        List<String> ownersToRemove = getAllCustomAudienceOwners();
+
+        CleanupUtils.removeAllowedPackages(ownersToRemove, packageManager, flags);
+
+        long numDisallowedOwnersFound = ownersToRemove.size();
+        long numRemovedCustomAudiences = 0;
+        if (!ownersToRemove.isEmpty()) {
+            deleteCustomAudienceBackgroundFetchDataByOwner(ownersToRemove);
+            numRemovedCustomAudiences = deleteCustomAudiencesByOwner(ownersToRemove);
+        }
+
+        return CustomAudienceStats.builder()
+                .setTotalCustomAudienceCount(numRemovedCustomAudiences)
+                .setTotalOwnerCount(numDisallowedOwnersFound)
+                .build();
+    }
+
+    /** Returns the set of all unique buyer ad techs in the custom audience table. */
+    @Query("SELECT DISTINCT buyer FROM custom_audience")
+    public abstract List<AdTechIdentifier> getAllCustomAudienceBuyers();
+
+    /**
+     * Deletes all custom audiences belonging to any ad tech in the given set of {@code
+     * buyersToRemove}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllDisallowedBuyerCustomAudienceData(EnrollmentDao, Flags)} instead.
+     *
+     * @return the number of deleted custom audiences
+     */
+    @Query("DELETE FROM custom_audience WHERE buyer IN (:buyersToRemove)")
+    protected abstract int deleteCustomAudiencesByBuyer(
+            @NonNull List<AdTechIdentifier> buyersToRemove);
+
+    /**
+     * Deletes all custom audience background fetch data belonging to any ad tech in the given set
+     * of {@code buyersToRemove}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllDisallowedBuyerCustomAudienceData(EnrollmentDao, Flags)} instead.
+     */
+    @Query("DELETE FROM custom_audience_background_fetch_data WHERE buyer IN (:buyersToRemove)")
+    protected abstract void deleteCustomAudienceBackgroundFetchDataByBuyer(
+            @NonNull List<AdTechIdentifier> buyersToRemove);
+
+    /**
+     * Deletes all custom audience data belonging to disallowed buyer ad techs in a single
+     * transaction, where the custom audiences' buyer ad techs cannot be found in the enrollment
+     * database.
+     *
+     * @return a {@link CustomAudienceStats} object containing only the number of deleted custom
+     *     audiences and the number of disallowed owner apps found
+     */
+    @Transaction
+    @NonNull
+    public CustomAudienceStats deleteAllDisallowedBuyerCustomAudienceData(
+            @NonNull EnrollmentDao enrollmentDao, @NonNull Flags flags) {
+        Objects.requireNonNull(enrollmentDao);
+        Objects.requireNonNull(flags);
+
+        if (flags.getDisableFledgeEnrollmentCheck()) {
+            sLogger.d("FLEDGE enrollment check disabled; skipping enrolled buyer cleanup");
+            return CustomAudienceStats.builder()
+                    .setTotalCustomAudienceCount(0)
+                    .setTotalBuyerCount(0)
+                    .build();
+        }
+
+        List<AdTechIdentifier> buyersToRemove = getAllCustomAudienceBuyers();
+
+        if (!buyersToRemove.isEmpty()) {
+            Set<AdTechIdentifier> allowedAdTechs = enrollmentDao.getAllFledgeEnrolledAdTechs();
+            buyersToRemove.removeAll(allowedAdTechs);
+        }
+
+        long numDisallowedBuyersFound = buyersToRemove.size();
+        long numRemovedCustomAudiences = 0;
+        if (!buyersToRemove.isEmpty()) {
+            deleteCustomAudienceBackgroundFetchDataByBuyer(buyersToRemove);
+            numRemovedCustomAudiences = deleteCustomAudiencesByBuyer(buyersToRemove);
+        }
+
+        return CustomAudienceStats.builder()
+                .setTotalCustomAudienceCount(numRemovedCustomAudiences)
+                .setTotalBuyerCount(numDisallowedBuyersFound)
+                .build();
     }
 
     /**
@@ -407,6 +586,22 @@ public abstract class CustomAudienceDao {
     public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
+     * Fetch all active Custom Audience including null user_bidding_signals
+     *
+     * @param currentTime to compare against CA time values and find an active CA
+     * @return All the Custom Audience that represent
+     */
+    @Query(
+            "SELECT * FROM custom_audience WHERE activation_time <= (:currentTime) AND"
+                    + " (:currentTime) < expiration_time AND"
+                    + " (last_ads_and_bidding_data_updated_time + (:activeWindowTimeMs)) >="
+                    + " (:currentTime) AND trusted_bidding_data_uri IS NOT NULL AND ads IS"
+                    + " NOT NULL ")
+    @Nullable
+    public abstract List<DBCustomAudience> getAllActiveCustomAudienceForServerSideAuction(
+            Instant currentTime, long activeWindowTimeMs);
+
+    /**
      * Fetch all the Custom Audience corresponding to the buyers
      *
      * @param buyers associated with the Custom Audience
@@ -455,35 +650,30 @@ public abstract class CustomAudienceDao {
     public abstract int getNumActiveEligibleCustomAudienceBackgroundFetchData(
             @NonNull Instant currentTime);
 
-    /** Class represents custom audience stats query result. */
-    public static class CustomAudienceStats {
-        private final String mOwner;
-        private final long mTotalCount;
-        private final long mPerOwnerCount;
-        private final long mOwnerCount;
+    @VisibleForTesting
+    static class BiddingLogicJsWithVersion {
+        @ColumnInfo(name = "bidding_logic_js")
+        @NonNull
+        String mBiddingLogicJs;
 
-        public CustomAudienceStats(
-                String owner, long totalCount, long perOwnerCount, long ownerCount) {
-            mOwner = owner;
-            mTotalCount = totalCount;
-            mPerOwnerCount = perOwnerCount;
-            mOwnerCount = ownerCount;
+        @ColumnInfo(name = "buyer_bidding_logic_version")
+        @Nullable
+        Long mBuyerBiddingLogicVersion;
+
+        BiddingLogicJsWithVersion(
+                @NonNull String biddingLogicJs, @Nullable Long buyerBiddingLogicVersion) {
+            this.mBiddingLogicJs = biddingLogicJs;
+            this.mBuyerBiddingLogicVersion = buyerBiddingLogicVersion;
         }
 
-        public String getOwner() {
-            return mOwner;
+        @NonNull
+        public String getBiddingLogicJs() {
+            return mBiddingLogicJs;
         }
 
-        public long getTotalCount() {
-            return mTotalCount;
-        }
-
-        public long getPerOwnerCount() {
-            return mPerOwnerCount;
-        }
-
-        public long getOwnerCount() {
-            return mOwnerCount;
+        @Nullable
+        public Long getBuyerBiddingLogicVersion() {
+            return mBuyerBiddingLogicVersion;
         }
     }
 }

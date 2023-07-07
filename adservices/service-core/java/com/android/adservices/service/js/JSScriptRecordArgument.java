@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.js;
 
+import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,9 +29,18 @@ import java.util.Objects;
 public class JSScriptRecordArgument extends JSScriptArgument {
     private final List<JSScriptArgument> mFields;
 
-    JSScriptRecordArgument(String name, List<JSScriptArgument> fields) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public JSScriptRecordArgument(String name, List<JSScriptArgument> fields) {
         super(name);
         this.mFields = fields;
+    }
+
+    /** Returns a copy of the current object and adds the given {@code additionalFields}. */
+    public JSScriptRecordArgument getCopyWithFields(List<JSScriptArgument> additionalFields) {
+        Objects.requireNonNull(additionalFields);
+        List<JSScriptArgument> newFields = new ArrayList<>(mFields);
+        newFields.addAll(additionalFields);
+        return new JSScriptRecordArgument(mName, newFields);
     }
 
     @Override

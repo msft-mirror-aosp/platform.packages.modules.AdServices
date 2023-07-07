@@ -21,6 +21,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
@@ -50,6 +51,14 @@ public abstract class MeasurementReportSender {
         return returnCode;
     }
 
+    /** Sends an event report to the reporting origin. */
+    public int sendReport(Uri adTechDomain, JSONArray reportJsonArray) throws IOException {
+        URL reportingFullUrl = createReportingFullUrl(adTechDomain);
+
+        HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
+        return sendReportPostRequest(urlConnection, reportJsonArray);
+    }
+
     /**
      * Given a Uri adTechDomain, returns the URL Object
      * of the URL to send the POST request to.
@@ -64,11 +73,21 @@ public abstract class MeasurementReportSender {
         return (HttpURLConnection) mNetworkConnection.setup(reportingOriginURL);
     }
 
-    /**
-     * Posts the reportJson to the HttpUrlConnection.
-     */
-    private int sendReportPostRequest(HttpURLConnection urlConnection,
-            JSONObject reportJson) throws IOException {
+    /** Posts the reportJsonObject to the HttpUrlConnection. */
+    private int sendReportPostRequest(HttpURLConnection urlConnection, JSONObject reportJson)
+            throws IOException {
+        return sendReportPostRequest(urlConnection, reportJson.toString().getBytes());
+    }
+
+    /** Posts the reportJsonArray to the HttpUrlConnection. */
+    private int sendReportPostRequest(HttpURLConnection urlConnection, JSONArray reportJsonArray)
+            throws IOException {
+        return sendReportPostRequest(urlConnection, reportJsonArray.toString().getBytes());
+    }
+
+    /** Posts bytes to the HttpUrlConnection. */
+    private int sendReportPostRequest(HttpURLConnection urlConnection, byte[] bytes)
+            throws IOException {
         int code;
         try {
             urlConnection.setRequestMethod("POST");
@@ -77,7 +96,7 @@ public abstract class MeasurementReportSender {
             urlConnection.setRequestProperty("Origin", "null");
 
             OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-            out.write(reportJson.toString().getBytes());
+            out.write(bytes);
             out.flush();
             out.close();
 

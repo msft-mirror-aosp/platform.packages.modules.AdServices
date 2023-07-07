@@ -21,26 +21,31 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/**
- * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
- */
+/** CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Constant that represents the service name for {@link CustomAudienceManager} to be used in
      * {@link android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -51,6 +56,20 @@ public class CustomAudienceManager {
 
     @NonNull private Context mContext;
     @NonNull private ServiceBinder<ICustomAudienceService> mServiceBinder;
+
+    /**
+     * Factory method for creating an instance of CustomAudienceManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link CustomAudienceManager} instance
+     */
+    @NonNull
+    public static CustomAudienceManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(CustomAudienceManager.class)
+                : new CustomAudienceManager(context);
+    }
 
     /**
      * Create a service binder CustomAudienceManager
@@ -163,7 +182,85 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Internal Error!", e));
+        }
+    }
+
+    /**
+     * Adds the user to the {@link CustomAudience} fetched from a {@code fetchUri}.
+     *
+     * <p>An attempt to register the user for a custom audience with the same combination of {@code
+     * ownerPackageName}, {@code buyer}, and {@code name} will cause the existing custom audience's
+     * information to be overwritten, including the list of ads data.
+     *
+     * <p>Note that the ads list can be completely overwritten by the daily background fetch job.
+     *
+     * <p>This call fails with an {@link SecurityException} if
+     *
+     * <ol>
+     *   <li>the {@code ownerPackageName} is not calling app's package name and/or
+     *   <li>the buyer is not authorized to use the API.
+     * </ol>
+     *
+     * <p>This call fails with an {@link IllegalArgumentException} if
+     *
+     * <ol>
+     *   <li>the storage limit has been exceeded by the calling application and/or
+     *   <li>any URI parameters in the {@link CustomAudience} given are not authenticated with the
+     *       {@link CustomAudience} buyer.
+     * </ol>
+     *
+     * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
+     * allowed rate limits and is throttled.
+     *
+     * <p>This call fails with an {@link IllegalStateException} if an internal service error is
+     * encountered.
+     *
+     * @hide
+     */
+    // TODO(b/278016822): Unhide for fetchAndJoinCustomAudience API review.
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void fetchAndJoinCustomAudience(
+            @NonNull FetchAndJoinCustomAudienceRequest fetchAndJoinCustomAudienceRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(fetchAndJoinCustomAudienceRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final ICustomAudienceService service = getService();
+
+            service.fetchAndJoinCustomAudience(
+                    new FetchAndJoinCustomAudienceInput.Builder(
+                                    fetchAndJoinCustomAudienceRequest.getFetchUri(),
+                                    getCallerPackageName())
+                            .setName(fetchAndJoinCustomAudienceRequest.getName())
+                            .setActivationTime(
+                                    fetchAndJoinCustomAudienceRequest.getActivationTime())
+                            .setExpirationTime(
+                                    fetchAndJoinCustomAudienceRequest.getExpirationTime())
+                            .setUserBiddingSignals(
+                                    fetchAndJoinCustomAudienceRequest.getUserBiddingSignals())
+                            .build(),
+                    new FetchAndJoinCustomAudienceCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
@@ -222,16 +319,16 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
 
     private String getCallerPackageName() {
-        if (mContext instanceof SandboxedSdkContext) {
-            return ((SandboxedSdkContext) mContext).getClientPackageName();
-        } else {
-            return mContext.getPackageName();
-        }
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null
+                ? mContext.getPackageName()
+                : sandboxedSdkContext.getClientPackageName();
     }
 }

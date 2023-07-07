@@ -17,8 +17,12 @@
 package com.android.adservices.data.enrollment;
 
 import android.adservices.common.AdTechIdentifier;
+import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.enrollment.EnrollmentData;
+
+import java.util.Set;
 
 /** Interface for enrollment related data access operations. */
 public interface IEnrollmentDao {
@@ -37,7 +41,7 @@ public interface IEnrollmentDao {
      * @param url could be source registration url or trigger registration url.
      * @return the EnrollmentData; Null in case of SQL failure.
      */
-    EnrollmentData getEnrollmentDataFromMeasurementUrl(String url);
+    EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url);
 
     /**
      * Returns the {@link EnrollmentData} with FLEDGE response-based registration URLs that match
@@ -50,6 +54,28 @@ public interface IEnrollmentDao {
      * @return a matching {@link EnrollmentData} or {@code null} if no matches were found
      */
     EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(AdTechIdentifier adTechIdentifier);
+
+    /**
+     * Returns a set of {@link AdTechIdentifier} objects for all ad techs enrolled with FLEDGE.
+     *
+     * @return a set of all enrolled ad techs' {@link AdTechIdentifier} if they enrolled in FLEDGE;
+     *     empty if none found
+     */
+    Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs();
+
+    /**
+     * Extracts and returns the {@link AdTechIdentifier} and matching {@link EnrollmentData} from a
+     * given {@link Uri}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' RBR URLs do not share the same
+     * domain. If this does happen, only return the first match in the database.
+     *
+     * @param originalUri the {@link Uri} to extract from
+     * @return a matching {@link Pair} of {@link AdTechIdentifier} and {@link EnrollmentData}, or
+     *     {@code null} if no matches were found
+     */
+    Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+            Uri originalUri);
 
     /**
      * Returns the {@link EnrollmentData} given AdTech SDK Name.

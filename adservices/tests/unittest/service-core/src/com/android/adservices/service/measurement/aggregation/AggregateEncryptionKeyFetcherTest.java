@@ -28,6 +28,8 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.WebUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -84,7 +86,7 @@ public final class AggregateEncryptionKeyFetcherTest {
 
     @Test
     public void testBadSourceUrl() throws Exception {
-        Uri badTarget = Uri.parse("bad-schema://foo.com");
+        Uri badTarget = WebUtil.validUri("bad-schema://foo.test");
         Optional<List<AggregateEncryptionKey>> resultOptional =
                 mFetcher.fetch(badTarget, AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
@@ -212,7 +214,7 @@ public final class AggregateEncryptionKeyFetcherTest {
     @Test
     public void testNotOverHttps() throws Exception {
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(Uri.parse("http://foo.com"),
+                mFetcher.fetch(WebUtil.validUri("http://foo.test"),
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
         verify(mFetcher, never()).openUrl(any());

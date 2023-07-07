@@ -18,6 +18,8 @@ package com.android.adservices.service.common;
 
 import android.os.Process;
 
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
+
 /**
  * Utility class to deal with the fact that PPAPI can be called from an app or from the SDK Sandbox.
  */
@@ -31,7 +33,7 @@ public class SdkRuntimeUtil {
      * @return the UID of the Application this call has ben made for
      */
     public static int getCallingAppUid(int callerProcessUid) {
-        if (Process.isSdkSandboxUid(callerProcessUid)) {
+        if (ProcessCompatUtils.isSdkSandboxUid(callerProcessUid)) {
             return Process.getAppUidForSdkSandboxUid(callerProcessUid);
         } else {
             return callerProcessUid;

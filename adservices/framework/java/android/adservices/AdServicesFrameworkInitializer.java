@@ -35,6 +35,9 @@ import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
 import android.app.sdksandbox.SdkSandboxSystemServiceRegistry;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 
@@ -43,6 +46,8 @@ import com.android.adservices.LogUtil;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public class AdServicesFrameworkInitializer {
     private AdServicesFrameworkInitializer() {

@@ -20,6 +20,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -79,16 +80,16 @@ public class CustomAudienceQuantityChecker {
         long mCustomAudiencePerAppMaxCount = mFlags.getFledgeCustomAudiencePerAppMaxCount();
 
         List<String> violations = new ArrayList<>();
-        CustomAudienceDao.CustomAudienceStats customAudienceStats =
+        CustomAudienceStats customAudienceStats =
                 mCustomAudienceDao.getCustomAudienceStats(callerPackageName);
-        if (customAudienceStats.getPerOwnerCount() == 0
-                && customAudienceStats.getOwnerCount() >= mCustomAudienceMaxOwnerCount) {
+        if (customAudienceStats.getPerOwnerCustomAudienceCount() == 0
+                && customAudienceStats.getTotalOwnerCount() >= mCustomAudienceMaxOwnerCount) {
             violations.add(THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED);
         }
-        if (customAudienceStats.getTotalCount() >= mCustomAudienceMaxCount) {
+        if (customAudienceStats.getTotalCustomAudienceCount() >= mCustomAudienceMaxCount) {
             violations.add(THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_DEVICE_HAD_REACHED);
         }
-        if (customAudienceStats.getPerOwnerCount() >= mCustomAudiencePerAppMaxCount) {
+        if (customAudienceStats.getPerOwnerCustomAudienceCount() >= mCustomAudiencePerAppMaxCount) {
             violations.add(THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_OWNER_HAD_REACHED);
         }
         if (!violations.isEmpty()) {
