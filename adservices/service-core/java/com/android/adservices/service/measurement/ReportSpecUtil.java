@@ -66,16 +66,16 @@ public class ReportSpecUtil {
             // No competing condition.
             return new Pair<>(new ArrayList<>(), bucketIncrements);
         }
-        long currentTime = System.currentTimeMillis();
+        long triggerTime = proposedEventReport.getTriggerTime();
         reportSpec.insertAttributedTrigger(proposedEventReport);
         List<EventReport> pendingEventReports =
                 currentReports.stream()
-                        .filter((r) -> r.getReportTime() > currentTime)
+                        .filter((r) -> r.getReportTime() > triggerTime)
                         .collect(Collectors.toList());
         int numDeliveredReport =
                 (int)
                         currentReports.stream()
-                                .filter((r) -> r.getReportTime() <= currentTime)
+                                .filter((r) -> r.getReportTime() <= triggerTime)
                                 .count();
 
         for (EventReport report : currentReports) {
