@@ -89,7 +89,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             }
             assertAppInAllowList(callerPackageName, apiName);
             if (enforceConsent) {
-                assertCallerHasUserConsent(callerPackageName);
+                assertCallerHasUserConsent();
             }
         } catch (Throwable t) {
             throw new FilterException(t);

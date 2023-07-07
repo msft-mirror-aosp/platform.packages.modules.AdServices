@@ -36,11 +36,11 @@ import java.util.Objects;
 @AutoValue
 public abstract class HistogramEvent {
     /**
-     * Returns the arbitrary String representing a grouping that a buyer adtech has assigned to an
-     * ad or histogram.
+     * Returns the arbitrary int representing a grouping that a buyer adtech has assigned to an ad
+     * or histogram.
      */
     @NonNull
-    public abstract String getAdCounterKey();
+    public abstract int getAdCounterKey();
 
     /** Returns the histogram's buyer adtech's {@link AdTechIdentifier}. */
     @NonNull
@@ -62,6 +62,10 @@ public abstract class HistogramEvent {
     @NonNull
     public abstract Instant getTimestamp();
 
+    /** Returns the package name of the source app the histogram is being updated from. */
+    @NonNull
+    public abstract String getSourceApp();
+
     /** Returns an AutoValue builder for a {@link HistogramEvent} object. */
     @NonNull
     public static Builder builder() {
@@ -72,11 +76,11 @@ public abstract class HistogramEvent {
     @AutoValue.Builder
     public abstract static class Builder {
         /**
-         * Sets the arbitrary String representing a grouping that a buyer adtech has assigned to an
-         * ad or histogram.
+         * Sets the arbitrary int representing a grouping that a buyer adtech has assigned to an ad
+         * or histogram.
          */
         @NonNull
-        public abstract Builder setAdCounterKey(@NonNull String adCounterKey);
+        public abstract Builder setAdCounterKey(int adCounterKey);
 
         /** Sets the histogram's buyer adtech's {@link AdTechIdentifier}. */
         @NonNull
@@ -97,6 +101,10 @@ public abstract class HistogramEvent {
         /** Sets the timestamp for the event. */
         @NonNull
         public abstract Builder setTimestamp(@NonNull Instant timestamp);
+
+        /** Sets the package name of the source app the histogram is being updated from. */
+        @NonNull
+        public abstract Builder setSourceApp(@NonNull String sourceApp);
 
         /**
          * Builds and returns the {@link HistogramEvent} object.

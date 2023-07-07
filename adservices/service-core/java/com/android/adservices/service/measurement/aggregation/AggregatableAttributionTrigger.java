@@ -84,6 +84,9 @@ public class AggregatableAttributionTrigger {
         if (getAggregateDeduplicationKeys().isEmpty()) return Optional.empty();
 
         for (AggregateDeduplicationKey key : getAggregateDeduplicationKeys().get()) {
+            if (sourceFilterMap.getAttributionFilterMap().isEmpty()) {
+                return Optional.of(key);
+            }
             if (key.getFilterSet().isPresent()
                     && !Filter.isFilterMatch(sourceFilterMap, key.getFilterSet().get(), true)) {
                 continue;
@@ -92,6 +95,9 @@ public class AggregatableAttributionTrigger {
             if (key.getNotFilterSet().isPresent()
                     && !Filter.isFilterMatch(sourceFilterMap, key.getNotFilterSet().get(), false)) {
                 continue;
+            }
+            if (key.getDeduplicationKey().isEmpty()) {
+                return Optional.empty();
             }
             return Optional.of(key);
         }

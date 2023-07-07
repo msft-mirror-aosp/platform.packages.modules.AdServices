@@ -19,7 +19,7 @@ package com.android.adservices.data.topics.migration;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 
 /**
@@ -28,6 +28,7 @@ import com.android.adservices.data.DbHelper;
  * queries.
  */
 public abstract class AbstractTopicsDbMigrator implements ITopicsDbMigrator {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private final int mMigrationTargetVersion;
 
     public AbstractTopicsDbMigrator(int migrationTargetVersion) {
@@ -58,7 +59,7 @@ public abstract class AbstractTopicsDbMigrator implements ITopicsDbMigrator {
         // (including the case targetVersion is equal to newVersion)
         if (oldVersion < mMigrationTargetVersion && mMigrationTargetVersion <= newVersion) {
 
-            LogUtil.d("Migrating DB to version %d for Topics API.", mMigrationTargetVersion);
+            sLogger.d("Migrating DB to version %d for Topics API.", mMigrationTargetVersion);
             performMigration(db);
             return;
         }

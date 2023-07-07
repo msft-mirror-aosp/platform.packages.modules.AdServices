@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,6 +34,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -42,26 +44,31 @@ import java.util.concurrent.Executor;
  * {@link AggregateReportingJobHandler}
  */
 public final class AggregateFallbackReportingJobService extends JobService {
+    private static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID =
+            MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId();
 
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public boolean onStartJob(JobParameters params) {
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling AggregateFallbackReportingJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
             LogUtil.e("AggregateFallbackReportingJobService is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
@@ -79,9 +86,18 @@ public final class AggregateFallbackReportingJobService extends JobService {
                             new AggregateReportingJobHandler(
                                             EnrollmentDao.getInstance(getApplicationContext()),
                                             DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()))
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.FALLBACK)
                                     .performScheduledPendingReportsInWindow(
                                             windowStartTime, windowEndTime);
+
+                    AdservicesJobServiceLogger.getInstance(
+                                    AggregateFallbackReportingJobService.this)
+                            .recordJobFinished(
+                                    MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                    success,
+                                    !success);
+
                     jobFinished(params, !success);
                 });
         return true;
@@ -90,7 +106,12 @@ public final class AggregateFallbackReportingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AggregateFallbackReportingJobService.onStopJob");
-        return false;
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(
+                        params, MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link AggregateFallbackReportingJobService} */
@@ -98,7 +119,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
     static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
+                                MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                                 new ComponentName(
                                         context, AggregateFallbackReportingJobService.class))
                         .setRequiresDeviceIdle(true)
@@ -141,11 +162,18 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
         }
+
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, skipReason);
+        }
+
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, false);
 

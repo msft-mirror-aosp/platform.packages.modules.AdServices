@@ -16,13 +16,18 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.JsonReader;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
 import com.android.internal.util.Preconditions;
@@ -42,6 +47,7 @@ import java.util.stream.Collectors;
 
 /** Helper methods for shared implementations of {@link Classifier}. */
 public class CommonClassifierHelper {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // The key name of asset metadata property in classifier_assets_metadata.json
     private static final String ASSET_PROPERTY_NAME = "property";
     // The key name of asset element in classifier_assets_metadata.json
@@ -49,6 +55,12 @@ public class CommonClassifierHelper {
     // The algorithm name of checksum
     private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
     private static final String BUILD_ID_FIELD = "build_id";
+
+    // Defined constants for error codes which have very long names.
+    private static final int TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE;
+    private static final int TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND;
 
     /**
      * Compute the SHA256 checksum of classifier asset.
@@ -82,13 +94,21 @@ public class CommonClassifierHelper {
                             Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
                 }
             } catch (IOException e) {
-                LogUtil.e(e, "Unable to read classifier asset file");
+                sLogger.e(e, "Unable to read classifier asset file");
+                ErrorLogUtil.e(
+                        e,
+                        TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 // When catching IOException -> return empty string.
                 return "";
             }
         } catch (NoSuchAlgorithmException e) {
-            LogUtil.e(e, "Unable to find correct message digest algorithm.");
+            sLogger.e(e, "Unable to find correct message digest algorithm.");
             // When catching NoSuchAlgorithmException -> return empty string.
+            ErrorLogUtil.e(
+                    e,
+                    TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return "";
         }
 
@@ -129,7 +149,7 @@ public class CommonClassifierHelper {
 
         // If there are no topic in the appTopics list, an empty topic list will be returned.
         if (topicsToAppTopicCount.isEmpty()) {
-            LogUtil.w("Unable to retrieve any topics from device.");
+            sLogger.w("Unable to retrieve any topics from device.");
             // Log atom for getTopTopics call.
             logger.logEpochComputationGetTopTopicsStats(
                     EpochComputationGetTopTopicsStats.builder()

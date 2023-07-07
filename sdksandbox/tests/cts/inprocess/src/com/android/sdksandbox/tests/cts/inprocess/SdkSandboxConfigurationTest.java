@@ -23,8 +23,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -37,11 +39,13 @@ import android.content.pm.ServiceInfo;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.SELinux;
+import android.webkit.WebView;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,6 +68,13 @@ public class SdkSandboxConfigurationTest {
     private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";
     private static final String CURRENT_USER_ID =
             String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
+
+    @Before
+    public void setUp() {
+        assumeTrue(
+                DeviceSupportUtils.isSdkSandboxSupported(
+                        InstrumentationRegistry.getInstrumentation().getContext()));
+    }
 
     /**
      * Tests that uid belongs to the sdk sandbox processes uid range.
@@ -218,5 +229,24 @@ public class SdkSandboxConfigurationTest {
         } finally {
             ctx.unbindService(conn);
         }
+    }
+
+    /**
+     * Tests that after sdk sandbox has requested a current WebView provider, then the provider is
+     * visible to this sdk sandbox.
+     */
+    @Test
+    public void testCurrentWebViewProviderIsVisibleToSdkSandbox() throws Exception {
+        // This call will force a current webview provider to become visible to this sdk sandbox
+        // process.
+        final PackageInfo info = WebView.getCurrentWebViewPackage();
+        assertThat(info).isNotNull();
+
+        // Now time to query the current WebView provider through PackageManager, this is used to
+        // check if this sdk sandbox process can see the WebView.
+        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final PackageInfo webViewProviderInfo =
+                ctx.getPackageManager().getPackageInfo(info.packageName, PackageInfoFlags.of(0));
+        assertThat(webViewProviderInfo).isNotNull();
     }
 }

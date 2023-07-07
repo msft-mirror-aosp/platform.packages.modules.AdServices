@@ -21,7 +21,6 @@ import android.annotation.Nullable;
 
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,14 +28,14 @@ import java.util.Optional;
 
 /** Aggregate Deduplication Key containing de-deup key and filters info. */
 public class AggregateDeduplicationKey {
-    private UnsignedLong mDedupKey;
+    private Optional<UnsignedLong> mDedupKey;
     private Optional<List<FilterMap>> mFilterSet;
 
     private Optional<List<FilterMap>> mNotFilterSet;
 
     /** Create a new aggregate encryption key object. */
     private AggregateDeduplicationKey() {
-        mDedupKey = null;
+        mDedupKey = Optional.empty();
         mFilterSet = Optional.empty();
         mNotFilterSet = Optional.empty();
     }
@@ -48,16 +47,17 @@ public class AggregateDeduplicationKey {
         }
         AggregateDeduplicationKey key = (AggregateDeduplicationKey) obj;
         return Objects.equals(mDedupKey, key.mDedupKey)
-                && Objects.equals(mFilterSet, key.mFilterSet);
+                && Objects.equals(mFilterSet, key.mFilterSet)
+                && Objects.equals(mNotFilterSet, key.mNotFilterSet);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mDedupKey, mFilterSet);
+        return Objects.hash(mDedupKey, mFilterSet, mNotFilterSet);
     }
 
     /** Deduplication key to match dedup key with source. */
-    public UnsignedLong getDeduplicationKey() {
+    public Optional<UnsignedLong> getDeduplicationKey() {
         return mDedupKey;
     }
 
@@ -75,10 +75,13 @@ public class AggregateDeduplicationKey {
     public static final class Builder {
         private final AggregateDeduplicationKey mBuilding;
 
-        public Builder(@NonNull UnsignedLong dedupKey) {
-            Validation.validateNonNull(dedupKey);
+        public Builder() {
             mBuilding = new AggregateDeduplicationKey();
-            mBuilding.mDedupKey = dedupKey;
+        }
+        /** See {@link AggregateDeduplicationKey#getFilterSet()}. */
+        public Builder setDeduplicationKey(@NonNull UnsignedLong dedupKey) {
+            mBuilding.mDedupKey = Optional.of(dedupKey);
+            return this;
         }
 
         /** See {@link AggregateDeduplicationKey#getFilterSet()}. */
@@ -87,7 +90,7 @@ public class AggregateDeduplicationKey {
             return this;
         }
 
-        /** See {@link AggregateDeduplicationKey#getNotFilter()} */
+        /** See {@link AggregateDeduplicationKey#getNotFilterSet()} */
         public Builder setNotFilterSet(List<FilterMap> notFilterSet) {
             mBuilding.mNotFilterSet = Optional.of(notFilterSet);
             return this;

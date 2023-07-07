@@ -43,7 +43,7 @@ data_sources {
       # AdServices package name on T+
       atrace_apps: "com.google.android.adservices.api"
       # AdServices package name on S- (go/rbc-design)
-      atrace_apps: "com.google.android.ext.adservices.api"
+      atrace_apps: "com.google.android.ext.services"
       atrace_apps: "lmkd"
 
       atrace_categories: "aidl"

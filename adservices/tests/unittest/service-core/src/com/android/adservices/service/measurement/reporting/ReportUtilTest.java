@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThrows;
 import android.net.Uri;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.junit.Test;
 
 import java.util.List;
@@ -40,19 +39,18 @@ public class ReportUtilTest {
     }
 
     @Test
-    public void serializeAttributionDestinations_singleDestination_returnsString()
-            throws JSONException {
+    public void serializeAttributionDestinations_singleDestination_returnsString() {
         List<Uri> destinations = List.of(Uri.parse(DESTINATION_1));
         assertEquals(DESTINATION_1, ReportUtil.serializeAttributionDestinations(destinations));
     }
 
     @Test
-    public void serializeAttributionDestinations_multipleDestinations_returnsOrderedJSONArray()
-            throws JSONException {
-        List<Uri> unordered = List.of(
-                Uri.parse(DESTINATION_2),
-                Uri.parse(DESTINATION_3),
-                Uri.parse(DESTINATION_1));
+    public void serializeAttributionDestinations_multipleDestinations_returnsOrderedJSONArray() {
+        List<Uri> unordered =
+                List.of(
+                        Uri.parse(DESTINATION_2),
+                        Uri.parse(DESTINATION_3),
+                        Uri.parse(DESTINATION_1));
         JSONArray expected = new JSONArray(List.of(DESTINATION_1, DESTINATION_2, DESTINATION_3));
         assertEquals(expected, ReportUtil.serializeAttributionDestinations(unordered));
     }

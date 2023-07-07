@@ -21,6 +21,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "androidx.test.rules",
+        "adservices-assets",
         "collector-device-lib-platform",
         "common-platform-scenarios",
         "common-platform-scenario-tests",

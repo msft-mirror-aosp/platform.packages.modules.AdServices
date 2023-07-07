@@ -40,11 +40,11 @@ public final class PackageManagerCompatUtils {
         // Prevent instantiation
     }
 
-    // This list is the same as the list declared in the Manifest, where the activities are
-    // disabled so that there are no dups on T+ devices.
+    // This list is the same as the list declared in the AdExtServicesManifest, where the
+    // activities are disabled so that there are no dups on T+ devices.
     // TODO(b/263904312): Remove after max_sdk_version is implemented.
     // TODO(b/272737642) scan activities instead of hardcode
-    private static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
+    public static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
             ImmutableList.copyOf(
                     Arrays.asList(
                             "com.android.adservices.ui.settings.activities."
@@ -55,6 +55,21 @@ public final class PackageManagerCompatUtils {
                             "com.android.adservices.ui.settings.activities.BlockedAppsActivity",
                             "com.android.adservices.ui.settings.activities.MeasurementActivity",
                             "com.android.adservices.ui.notifications.ConsentNotificationActivity"));
+
+    // This list is the same as the list declared in the AdExtServicesManifest, where the
+    // services with intent filters need to be disabled so that there are no dups on T+ devices.
+    // TODO(b/263904312): Remove after max_sdk_version is implemented.
+    // TODO(b/272737642) scan services instead of hardcode
+    public static final ImmutableList<String> SERVICE_CLASSES =
+            ImmutableList.copyOf(
+                    Arrays.asList(
+                            "com.android.adservices.adselection.AdSelectionService",
+                            "com.android.adservices.customaudience.CustomAudienceService",
+                            "com.android.adservices.topics.TopicsService",
+                            "com.android.adservices.adid.AdIdService",
+                            "com.android.adservices.appsetid.AppSetIdService",
+                            "com.android.adservices.measurement.MeasurementService",
+                            "com.android.adservices.common.AdServicesCommonService"));
 
     /**
      * Invokes the appropriate overload of {@code getInstalledPackages} on {@link PackageManager}
@@ -175,25 +190,5 @@ public final class PackageManagerCompatUtils {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Update state of activities for user consent and control
-     *
-     * @param context the application context
-     * @param adServicesPackageName the package name of AdServices
-     * @param adServicesActivitiesEnabled the state of AdServices activities
-     */
-    public static void updateAdExtServicesActivities(
-            Context context, String adServicesPackageName, boolean adServicesActivitiesEnabled) {
-        PackageManager packageManager = context.getPackageManager();
-        for (String activity : CONSENT_ACTIVITIES_CLASSES) {
-            packageManager.setComponentEnabledSetting(
-                    new ComponentName(adServicesPackageName, activity),
-                    adServicesActivitiesEnabled
-                            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP);
-        }
     }
 }

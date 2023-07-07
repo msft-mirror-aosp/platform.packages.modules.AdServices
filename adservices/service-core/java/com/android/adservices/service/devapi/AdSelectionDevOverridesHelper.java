@@ -241,9 +241,8 @@ public class AdSelectionDevOverridesHelper {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
-        mAdSelectionEntryDao.removeAdSelectionOverridesByPackageName(
-                mDevContext.getCallingAppPackageName());
-        mAdSelectionEntryDao.removeBuyerDecisionOverridesByPackageName(
+        mAdSelectionEntryDao.removeAllAdSelectionOverrides(mDevContext.getCallingAppPackageName());
+        mAdSelectionEntryDao.removeAllBuyerDecisionOverrides(
                 mDevContext.getCallingAppPackageName());
     }
 

@@ -22,6 +22,8 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.settings.activitydelegates.AppsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.AppsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
@@ -43,17 +45,45 @@ public class AppsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+            initFragment();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        AppsViewModel viewModel = new ViewModelProvider(this).get(AppsViewModel.class);
+        viewModel.refresh();
+    }
+
+    @Override
+    public void initBeta() {
+        initActivity();
+    }
+
+    @Override
+    public void initGA() {
+        initActivity();
+    }
+
+    @Override
+    public void initU18() {}
+
+    private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container_view, AdServicesSettingsAppsFragment.class, null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new AppsActionDelegate(this, new ViewModelProvider(this).get(AppsViewModel.class));
+    }
+
+    private void initActivity() {
+        setContentView(R.layout.apps_activity);
+        // no need to store since not using
+        new AppsActivityActionDelegate(this, new ViewModelProvider(this).get(AppsViewModel.class));
     }
 }

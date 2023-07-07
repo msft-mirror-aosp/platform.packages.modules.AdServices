@@ -23,6 +23,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -57,6 +59,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -70,6 +73,12 @@ public final class FetcherUtilTest {
     @Mock AdServicesLogger mLogger;
 
     private MockitoSession mStaticMockSession;
+
+    public static final int UNKNOWN_SOURCE_TYPE = 0;
+    public static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    public static final int APP_REGISTRATION_SURFACE_TYPE = 2;
+    public static final int UNKNOWN_STATUS = 0;
+    public static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
 
     @Before
     public void setup() {
@@ -89,6 +98,9 @@ public final class FetcherUtilTest {
     @Test
     public void testIsSuccess() {
         assertTrue(FetcherUtil.isSuccess(200));
+        assertTrue(FetcherUtil.isSuccess(201));
+        assertTrue(FetcherUtil.isSuccess(202));
+        assertTrue(FetcherUtil.isSuccess(204));
         assertFalse(FetcherUtil.isSuccess(404));
         assertFalse(FetcherUtil.isSuccess(500));
         assertFalse(FetcherUtil.isSuccess(0));
@@ -351,8 +363,18 @@ public final class FetcherUtilTest {
         int headersMapSize = 28;
 
         // Execution
-        FetcherUtil.emitHeaderMetrics(
-                mFlags, mLogger, registrationType, headersMap, REGISTRATION_URI);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .build();
+
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
+
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -361,7 +383,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -378,8 +405,18 @@ public final class FetcherUtilTest {
         int headersMapSize = 28;
 
         // Execution
-        FetcherUtil.emitHeaderMetrics(
-                mFlags, mLogger, registrationType, headersMap, REGISTRATION_URI);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .build();
+
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
+
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -388,7 +425,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -408,8 +450,18 @@ public final class FetcherUtilTest {
         int headersMapSize = 18;
 
         // Execution
-        FetcherUtil.emitHeaderMetrics(
-                mFlags, mLogger, registrationType, headersMap, REGISTRATION_URI);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .build();
+
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
+
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -418,7 +470,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -437,6 +494,67 @@ public final class FetcherUtilTest {
     public void isValidAggregateDeduplicationKey_success() {
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("18446744073709551615"));
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("0"));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_nullValue_success() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
+    }
+
+    @Test
+    public void getEncryptedPlatformAdIdIfPresent_webRegistration_null() {
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.WEB_SOURCE)
+                        .setAdIdPermission(true)
+                        .setPlatformAdId("not-null-ad-id")
+                        .build();
+
+        assertNull(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
+    }
+
+    @Test
+    public void getEncryptedPlatformAdIdIfPresent_missingAdIdPermission_null() {
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setAdIdPermission(false)
+                        .setPlatformAdId("not-null-ad-id")
+                        .build();
+
+        assertNull(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
+    }
+
+    @Test
+    public void getEncryptedPlatformAdIdIfPresent_nullAdIdValue_null() {
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setAdIdPermission(true)
+                        .setPlatformAdId(null)
+                        .build();
+
+        assertNull(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
+    }
+
+    @Test
+    public void getEncryptedPlatformAdIdIfPresent_adIdValuePresent_notNull() {
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setAdIdPermission(true)
+                        .setPlatformAdId("not-null-ad-id")
+                        .build();
+
+        assertNotNull(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
     }
 
     private Map<String, List<String>> createHeadersMap() {
