@@ -124,4 +124,27 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     public void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats) {
         mStatsdAdServicesLogger.logMeasurementDebugKeysMatch(stats);
     }
+
+    @Override
+    public void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats) {
+        mStatsdAdServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+    }
+
+    @Override
+    public void logMeasurementAttributionStats(
+            MeasurementAttributionStats measurementAttributionStats) {
+        mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
+    }
+
+    @Override
+    public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
+        mStatsdAdServicesLogger.logMeasurementWipeoutStats(measurementWipeoutStats);
+    }
+
+    @Override
+    public void logMeasurementDelayedSourceRegistrationStats(
+            MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats) {
+        mStatsdAdServicesLogger.logMeasurementDelayedSourceRegistrationStats(
+                measurementDelayedSourceRegistrationStats);
+    }
 }

@@ -44,6 +44,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
+    private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
+    private final CountDownLatch mLatch;
+
     private long mTimeSystemServerCalledSandbox = -1;
     private long mTimeSandboxReceivedCallFromSystemServer = -1;
     private long mTimeSandboxCalledSdk = -1;
@@ -51,10 +54,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private long mTimeSandboxCalledSystemServer = -1;
 
     private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
-    private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
     private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
     private IUnloadSdkCallback mUnloadSdkCallback = null;
     private IComputeSdkStorageCallback mComputeSdkStorageCallback = null;
+    private ApplicationInfo mCustomizedInfo;
 
     private boolean mSurfacePackageRequested = false;
     private int mInitializationCount = 0;
@@ -63,9 +66,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     boolean mWasVisibilityPatchChecked = false;
     public boolean dieOnLoad = false;
 
+    public boolean failInitialization = false;
+
     private SharedPreferencesUpdate mLastSyncUpdate = null;
 
-    private final CountDownLatch mLatch;
 
     public FakeSdkSandboxService() {
         mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -87,7 +91,11 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     @Override
     public void initialize(
-            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled)
+            throws IllegalStateException {
+        if (failInitialization) {
+            throw new IllegalStateException();
+        }
         mInitializationCount++;
     }
 
@@ -97,8 +105,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             ApplicationInfo info,
             String sdkName,
             String sdkProviderClass,
-            String ceDataDir,
-            String deDataDir,
+            ApplicationInfo customizedInfo,
             Bundle params,
             ILoadSdkInSandboxCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo)
@@ -107,6 +114,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             throw new DeadObjectException();
         }
         mLoadSdkInSandboxCallback = callback;
+        mCustomizedInfo = customizedInfo;
     }
 
     @Override
@@ -154,10 +162,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     public void sendLoadCodeSuccessful() throws RemoteException {
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                new SandboxedSdk(new Binder()),
-                mManagerToSdkCallback,
-                new SandboxLatencyInfo(mTimeSystemServerCalledSandbox));
+                new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
     }
 
     public void sendLoadCodeSuccessfulWithSandboxLatencies() throws RemoteException {
@@ -176,14 +184,15 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     public void sendLoadCodeError() throws Exception {
         Class<?> clz = Class.forName("android.app.sdksandbox.LoadSdkException");
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         LoadSdkException exception =
                 (LoadSdkException)
                         clz.getConstructor(Integer.TYPE, String.class)
                                 .newInstance(
                                         SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
                                         "Internal error");
-        mLoadSdkInSandboxCallback.onLoadSdkError(
-                exception, new SandboxLatencyInfo(mTimeSystemServerCalledSandbox));
+        mLoadSdkInSandboxCallback.onLoadSdkError(exception, sandboxLatencyInfo);
     }
 
     public void sendSurfacePackageReady(SandboxLatencyInfo sandboxLatencyInfo)
@@ -216,9 +225,13 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         mIsDisabledResponse = response;
     }
 
+    public ApplicationInfo getCustomizedInfo() {
+        return mCustomizedInfo;
+    }
+
     private SandboxLatencyInfo createSandboxLatencyInfo() {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(mTimeSystemServerCalledSandbox);
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 mTimeSandboxReceivedCallFromSystemServer);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(mTimeSandboxCalledSdk);

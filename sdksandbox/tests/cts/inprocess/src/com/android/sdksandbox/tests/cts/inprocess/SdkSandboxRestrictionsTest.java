@@ -117,14 +117,12 @@ public class SdkSandboxRestrictionsTest {
         assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
-    /**
-     * Tests that sandbox cannot send implicit broadcast intents.
-     */
+    /** Tests that sandbox cannot send implicit broadcast intents. */
     @Test
     public void testNoImplicitIntents() {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        Intent sendIntent = new Intent();
+        final Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, "text");
         sendIntent.setType("text/plain");
@@ -138,7 +136,7 @@ public class SdkSandboxRestrictionsTest {
 
     /** Tests that the sandbox cannot send broadcasts. */
     @Test
-    public void testNoBroadcasts() {
+    public void testSendBroadcastsRestrictions_withAction() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -277,9 +275,7 @@ public class SdkSandboxRestrictionsTest {
         }
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access Storage Access Framework
-     */
+    /** Tests that Sdk Sandbox cannot access Storage Access Framework */
     @Test
     public void testSanboxCannotAccess_StorageAccessFramework() throws Exception {
         final String[] intentList = {

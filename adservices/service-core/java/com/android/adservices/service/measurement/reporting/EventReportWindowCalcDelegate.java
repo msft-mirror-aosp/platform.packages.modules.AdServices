@@ -17,23 +17,21 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.PrivacyParams.EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.EVENT_SOURCE_MAX_REPORTS;
 import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS;
 import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS;
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
 
 import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpec;
 
 import com.google.common.collect.ImmutableList;
 
@@ -41,12 +39,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
     private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
 
     private final Flags mFlags;
@@ -62,14 +57,26 @@ public class EventReportWindowCalcDelegate {
      * @param isInstallCase is app installed
      */
     public int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
+        if (source.getSourceType() == Source.SourceType.EVENT
+                && mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()) {
+            // Max VTC event reports are configurable
+            int configuredMaxReports = mFlags.getMeasurementVtcConfigurableMaxEventReportsCount();
+            // Additional report essentially for first open + 1 post install conversion. If there
+            // is already more than 1 report allowed, no need to have that additional report.
+            if (isInstallCase && configuredMaxReports == PrivacyParams.EVENT_SOURCE_MAX_REPORTS) {
+                return PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS;
+            }
+            return configuredMaxReports;
+        }
+
         if (isInstallCase) {
             return source.getSourceType() == Source.SourceType.EVENT
-                    ? INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
-                    : INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
+                    ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
+                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
         }
         return source.getSourceType() == Source.SourceType.EVENT
-                ? EVENT_SOURCE_MAX_REPORTS
-                : NAVIGATION_SOURCE_MAX_REPORTS;
+                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS
+                : PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
     }
 
     /**
@@ -85,15 +92,15 @@ public class EventReportWindowCalcDelegate {
         }
 
         // Cases where source could have both web and app destinations, there if the trigger
-        // destination is an app and it was installed, then installState should be considered true.
+        // destination is an app, and it was installed, then installState should be considered true.
         boolean isAppInstalled = isAppInstalled(source, destinationType);
         List<Long> reportingWindows = getEarlyReportingWindows(source, isAppInstalled);
         for (Long window : reportingWindows) {
             if (triggerTime <= window) {
-                return window + ONE_HOUR_IN_MILLIS;
+                return window + mFlags.getMeasurementMinEventReportDelayMillis();
             }
         }
-        return source.getEventReportWindow() + ONE_HOUR_IN_MILLIS;
+        return source.getEventReportWindow() + mFlags.getMeasurementMinEventReportDelayMillis();
     }
 
     /**
@@ -105,9 +112,10 @@ public class EventReportWindowCalcDelegate {
     public long getReportingTimeForNoising(
             @NonNull Source source, int windowIndex, boolean isInstallCase) {
         List<Long> windowList = getEarlyReportingWindows(source, isInstallCase);
-        return windowIndex < windowList.size()
-                ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS
-                : source.getEventReportWindow() + ONE_HOUR_IN_MILLIS;
+        return mFlags.getMeasurementMinEventReportDelayMillis()
+                + (windowIndex < windowList.size()
+                        ? windowList.get(windowIndex)
+                        : source.getEventReportWindow());
     }
 
     /**
@@ -115,7 +123,7 @@ public class EventReportWindowCalcDelegate {
      * event reporting windows count for noising cases.
      *
      * @param source source for which the count is requested
-     * @param isInstallCase true of cooldown window was specified
+     * @param isInstallCase true of cool down window was specified
      */
     public int getReportingWindowCountForNoising(@NonNull Source source, boolean isInstallCase) {
         // Early Count + expiry
@@ -129,9 +137,16 @@ public class EventReportWindowCalcDelegate {
      * @param triggerDataIndex trigger data state index
      * @param reportSpec flex event report spec
      */
-    public long getReportingTimeForNoisingFlexEventAPI(
+    public long getReportingTimeForNoisingFlexEventApi(
             int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
-        return reportSpec.getWindowEndTime(triggerDataIndex, windowIndex) + ONE_HOUR_IN_MILLIS;
+        for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
+            triggerDataIndex -= triggerSpec.getTriggerData().size();
+            if (triggerDataIndex < 0) {
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
+                        + mFlags.getMeasurementMinEventReportDelayMillis();
+            }
+        }
+        return 0;
     }
 
     private boolean isAppInstalled(Source source, int destinationType) {
@@ -174,7 +189,7 @@ public class EventReportWindowCalcDelegate {
                             ? EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                             : NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
         }
-        return LongStream.of(earlyWindows).boxed().collect(Collectors.toList());
+        return asList(earlyWindows);
     }
 
     private List<Long> getConfiguredOrDefaultEarlyReportingWindows(
@@ -229,5 +244,13 @@ public class EventReportWindowCalcDelegate {
         return sourceType == Source.SourceType.EVENT
                 ? flags.getMeasurementEventReportsVtcEarlyReportingWindows()
                 : flags.getMeasurementEventReportsCtcEarlyReportingWindows();
+    }
+
+    private static List<Long> asList(long[] values) {
+        final List<Long> list = new ArrayList<>();
+        for (Long value : values) {
+            list.add(value);
+        }
+        return list;
     }
 }

@@ -42,8 +42,8 @@ android_test {
         "android.test.base",
         "android.test.mock.stubs",
         "framework-adservices.impl",
+        "framework-annotations-lib",
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
         "mts-adservices",
@@ -80,13 +80,13 @@ android_test {
     	"android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
+        "framework-annotations-lib",
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
         "mts-extservices",
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
-    instrumentation_for: "AdExtServicesApk",
+    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    instrumentation_for: "ExtServices-sminus",
     test_config: "AndroidTest.ExtServices.xml",
 }

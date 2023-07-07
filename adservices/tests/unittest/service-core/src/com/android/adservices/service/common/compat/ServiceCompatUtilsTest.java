@@ -20,6 +20,9 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 import android.content.Context;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -32,7 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 public class ServiceCompatUtilsTest {
-    private static final String EXT_PACKAGE_NAME = "com.google.android.ext.adservices.api";
+    private static final String EXT_PACKAGE_NAME = "com.google.android.ext.services";
     private static final String NON_EXT_PACKAGE_NAME = "com.example.package";
 
     private MockitoSession mMockitoSession;
@@ -57,6 +60,7 @@ public class ServiceCompatUtilsTest {
     public void testShouldDisableJob_S() {
         doReturn(false).when(SdkLevel::isAtLeastT);
         assertThat(ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(mMockContext)).isFalse();
+        verify(mMockContext, never()).getPackageName();
     }
 
     @Test
@@ -71,5 +75,12 @@ public class ServiceCompatUtilsTest {
         doReturn(true).when(SdkLevel::isAtLeastT);
         doReturn(EXT_PACKAGE_NAME).when(mMockContext).getPackageName();
         assertThat(ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(mMockContext)).isTrue();
+    }
+
+    @Test
+    public void testShouldDisableJob_T_ExtPackageNameButNotSuffix() {
+        doReturn(true).when(SdkLevel::isAtLeastT);
+        doReturn(EXT_PACKAGE_NAME + ".more").when(mMockContext).getPackageName();
+        assertThat(ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(mMockContext)).isFalse();
     }
 }

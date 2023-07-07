@@ -164,6 +164,7 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
                         publicKey,
                         info,
                         seed);
+
         byte[] cipherText = hpkeCtxSeal(hpkeContextNativeRef, plainText, aad);
 
         return HpkeEncryptResponse.create(encapsulatedSharedSecret, cipherText);

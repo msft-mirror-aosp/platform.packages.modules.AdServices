@@ -17,7 +17,7 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -35,16 +35,18 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
+import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
@@ -107,9 +109,9 @@ public class MobileDataDownloadTest {
     private static final String TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/922/217081737fd739c74dd3ca5c407813d818526577";
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1800/29dbe982cc8bf8f4ae05557b96cc7d8f69c4c0e4";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1658790241927.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1985/bd113c890bf7597f84367df33e1e75c03bead6f6";
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
@@ -118,11 +120,11 @@ public class MobileDataDownloadTest {
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 5;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 3;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
-    private static final int PRODUCTION_FILEGROUP_VERSION = 1;
+    private static final int PRODUCTION_FILEGROUP_VERSION = 0;
     private static final int PTB_FILEGROUP_VERSION = 0;
     private static final int OEM_FILEGROUP_VERSION = 0;
 
@@ -133,11 +135,12 @@ public class MobileDataDownloadTest {
     private StaticMockitoSession mStaticMockSession = null;
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
-    private DbHelper mDbHelper;
+    private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
+    @Mock UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws Exception {
@@ -157,6 +160,7 @@ public class MobileDataDownloadTest {
                         .spyStatic(MddLogger.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MobileDataDownloadFactory.class)
+                        .spyStatic(UxStatesManager.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(CommonClassifierHelper.class)
@@ -171,12 +175,14 @@ public class MobileDataDownloadTest {
         mFileDownloader =
                 MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);
 
-        mDbHelper = DbTestUtil.getDbHelperForTest();
+        mDbHelper = DbTestUtil.getSharedDbHelperForTest();
 
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mUxStatesManager)
+                .when(() -> UxStatesManager.getInstance(any(Context.class)));
 
         overridingMddLoggingLevel("VERBOSE");
     }
@@ -242,8 +248,8 @@ public class MobileDataDownloadTest {
     public void testTopicsManifestFileGroupPopulator_ManifestConfigOverrider_NoFileGroup()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
-        // The server side test model build_id = 1467, which equals to bundled model build_id =
-        // 1467. ManifestConfigOverrider will not add the DataFileGroup in the
+        // The server side test model build_id = 1800, which equals to bundled model build_id =
+        // 1800. ManifestConfigOverrider will not add the DataFileGroup in the
         // TopicsManifestFileGroupPopulator and will not download either.
         assertThat(
                         mMdd.getFileGroup(
@@ -267,7 +273,7 @@ public class MobileDataDownloadTest {
                 .when(
                         () ->
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
 
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 
@@ -285,7 +291,7 @@ public class MobileDataDownloadTest {
                 .isEqualTo(/* Test filegroup version number */ 0);
         assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1467);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1800);
     }
 
     /**
@@ -425,7 +431,7 @@ public class MobileDataDownloadTest {
                 .when(
                         () ->
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
@@ -487,6 +493,24 @@ public class MobileDataDownloadTest {
                 mMdd.getFileGroup(
                                 GetFileGroupRequest.newBuilder()
                                         .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    // Topics MFGP should be disabled for U18 UX.
+    @Test
+    public void topicsDownloadTest_U18UxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(PrivacySandboxUxCollection.U18_UX).when(mUxStatesManager).getUx();
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
                                         .build())
                         .get();
 
@@ -592,17 +616,17 @@ public class MobileDataDownloadTest {
         NetworkUsageMonitor networkUsageMonitor =
                 new NetworkUsageMonitor(
                         context,
-                    new TimeSource() {
-                        @Override
-                        public long currentTimeMillis() {
-                            return System.currentTimeMillis();
-                        }
+                        new TimeSource() {
+                            @Override
+                            public long currentTimeMillis() {
+                                return System.currentTimeMillis();
+                            }
 
-                        @Override
-                        public long elapsedRealtimeNanos() {
-                            return SystemClock.elapsedRealtimeNanos();
-                        }
-                    });
+                            @Override
+                            public long elapsedRealtimeNanos() {
+                                return SystemClock.elapsedRealtimeNanos();
+                            }
+                        });
 
         return MobileDataDownloadBuilder.newBuilder()
                 .setContext(context)

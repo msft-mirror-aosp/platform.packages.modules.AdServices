@@ -21,9 +21,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.android.adservices.service.measurement.ReportSpec;
-import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.TriggerSpec;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -31,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /** Unit tests for ImpressionNoiseUtil class. */
 @SuppressWarnings("ParameterName")
@@ -65,11 +68,11 @@ public class ImpressionNoiseUtilTest {
 
     private final FourArgumentConsumer<ReportSpec, Integer, List<int[]>, Random>
             mStateSelectionTesterFlexEvent =
-                    (noiseParams, destinationMultiplier, expectedReports, rand) -> {
+                    (reportSpec, destinationMultiplier, expectedReports, rand) -> {
                         List<int[]> actualReports =
                                 ImpressionNoiseUtil
                                         .selectFlexEventReportRandomStateAndGenerateReportConfigs(
-                                                noiseParams, destinationMultiplier, rand);
+                                                reportSpec, destinationMultiplier, rand);
                         assertReportEquality(expectedReports, actualReports);
                     };
 
@@ -308,7 +311,7 @@ public class ImpressionNoiseUtilTest {
     public void
             selectFlexEventReportRandomStateAndGenerateReportConfigs_singleDestinationType_equal()
                     throws JSONException {
-        ReportSpec testReportSpecObject = SourceFixture.getValidReportSpec();
+        ReportSpec testReportSpecObject = getValidReportSpecForRandomOrderTest();
         Random rand = new Random(12);
         mStateSelectionTesterFlexEvent.apply(
                 testReportSpecObject,
@@ -328,12 +331,12 @@ public class ImpressionNoiseUtilTest {
                     throws JSONException {
         Random rand = new Random(12);
         mStateSelectionTesterFlexEvent.apply(
-                SourceFixture.getValidReportSpec(),
+                getValidReportSpecForRandomOrderTest(),
                 2,
                 /*expectedReports=*/ Arrays.asList(new int[] {1, 1, 0}, new int[] {0, 0, 0}),
                 rand);
         mStateSelectionTesterFlexEvent.apply(
-                SourceFixture.getValidReportSpec(),
+                getValidReportSpecForRandomOrderTest(),
                 2,
                 /*expectedReports=*/ Arrays.asList(new int[] {1, 0, 1}, new int[] {0, 0, 1}),
                 rand);
@@ -374,5 +377,31 @@ public class ImpressionNoiseUtilTest {
                 /* triggerDataCardinality= */ 4,
                 /* reportingWindowCount= */ 8,
                 /* destinationMultiplier */ 1);
+    }
+
+    private static JSONArray getValidTriggerSpec() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("trigger_data", new JSONArray(new int[] {1, 2}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 0);
+        windows.put(
+                "end_times",
+                new JSONArray(new long[] {TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)}));
+        json.put("event_report_windows", windows);
+        json.put("summary_window_operator", TriggerSpec.SummaryOperatorType.COUNT);
+        json.put("summary_buckets", new JSONArray(new int[] {1}));
+
+        return new JSONArray(new JSONObject[] {json});
+    }
+
+    /**
+     * This test case is for the tests involving random order. Any parameters changes will get false
+     * results and it is difficult to debug.
+     *
+     * @return A report spec for test
+     * @throws JSONException JSON syntax error
+     */
+    private static ReportSpec getValidReportSpecForRandomOrderTest() throws JSONException {
+        return new ReportSpec(getValidTriggerSpec().toString(), "3");
     }
 }

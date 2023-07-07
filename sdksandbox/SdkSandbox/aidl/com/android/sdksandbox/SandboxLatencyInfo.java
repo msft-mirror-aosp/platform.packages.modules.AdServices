@@ -45,7 +45,7 @@ public final class SandboxLatencyInfo implements Parcelable {
     public static final int SANDBOX_STATUS_FAILED_AT_SANDBOX = 2;
     public static final int SANDBOX_STATUS_FAILED_AT_SDK = 3;
 
-    private final long mTimeSystemServerCalledSandbox;
+    private long mTimeSystemServerCalledSandbox = -1;
     private long mTimeSandboxReceivedCallFromSystemServer = -1;
     private long mTimeSandboxCalledSdk = -1;
     private long mTimeSdkCallCompleted = -1;
@@ -63,9 +63,7 @@ public final class SandboxLatencyInfo implements Parcelable {
                 }
             };
 
-    public SandboxLatencyInfo(long timeSystemServerCalledSandbox) {
-        mTimeSystemServerCalledSandbox = timeSystemServerCalledSandbox;
-    }
+    public SandboxLatencyInfo() {}
 
     private SandboxLatencyInfo(Parcel in) {
         mTimeSystemServerCalledSandbox = in.readLong();
@@ -118,6 +116,10 @@ public final class SandboxLatencyInfo implements Parcelable {
 
     public long getTimeSystemServerCalledSandbox() {
         return mTimeSystemServerCalledSandbox;
+    }
+
+    public void setTimeSystemServerCalledSandbox(long timeSystemServerCalledSandbox) {
+        mTimeSystemServerCalledSandbox = timeSystemServerCalledSandbox;
     }
 
     public void setTimeSandboxReceivedCallFromSystemServer(
