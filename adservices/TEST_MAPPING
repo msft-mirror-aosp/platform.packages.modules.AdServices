@@ -175,6 +175,16 @@
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
       "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices_sminus.apex and run AdExtServicesEndToEndTests.
+      "name": "AdExtServicesEndToEndTests[com.google.android.extservices_sminus.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     }
   ],
   "presubmit": [

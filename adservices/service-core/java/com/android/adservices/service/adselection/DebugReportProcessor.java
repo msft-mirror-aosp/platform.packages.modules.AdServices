@@ -22,12 +22,14 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Event-level debug reporting for ad selection.
@@ -59,24 +62,30 @@ import java.util.Objects;
 // TODO(b/284451364): Return script strategy based on flag and AdId.
 class DebugReportProcessor {
 
-    // UTF-8 characters are 2 bytes each, so a limit of 2000 is ~4 KB.
-    private static final int MAX_URI_CHARACTER_LENGTH = 2048;
-
     // Cap the number of URIs at 75 custom audiences, based on P95 OT results.
     @VisibleForTesting public static final int MAX_NUMBER_OF_URIS_PER_AUCTION_PER_AD_TECH = 75;
-
+    // UTF-8 characters are 2 bytes each, so a limit of 2000 is ~4 KB.
+    private static final int MAX_URI_CHARACTER_LENGTH = 2048;
+    private static final String DEFAULT_REJECT_REASON = "not-available";
+    private static final Set<String> VALID_REJECT_REASON_SET =
+            ImmutableSet.of(
+                    DEFAULT_REJECT_REASON,
+                    "invalid-bid",
+                    "bid-below-auction-floor",
+                    "pending-approval-by-exchange",
+                    "disapproved-by-exchange",
+                    "blocked-by-publisher",
+                    "language-exclusions",
+                    "category-exclusions");
     private static final String WINNING_BID_VARIABLE_TEMPLATE = "${winningBid}";
-
     private static final String WINNING_BID_DEFAULT_VALUE = "0.0";
-
     private static final String MADE_WINNING_BID_VARIABLE_TEMPLATE = "${madeWinningBid}";
-
     private static final String HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE =
             "${highestScoringOtherBid}";
-
     private static final String HIGHEST_SCORING_OTHER_BID_DEFAULT_VALUE = "0.0";
     private static final String MADE_HIGHEST_SCORING_OTHER_BID_VARIABLE_TEMPLATE =
             "${madeHighestScoringOtherBid}";
+    private static final String REJECT_REASON_VARIABLE_TEMPLATE = "${rejectReason}";
 
     /**
      * Process all debug reporting {@link Uri}s from an ad auction's results.
@@ -98,8 +107,10 @@ class DebugReportProcessor {
         checkNotNull(debugReports);
         checkNotNull(postAuctionSignals);
         List<Uri> debugUrls = new ArrayList<>();
+        Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap =
+                collectRejectReasonFromDebugReports(debugReports);
         for (DebugReport debugReport : debugReports) {
-            Uri debugUri = getDebugUri(debugReport, postAuctionSignals);
+            Uri debugUri = getDebugUri(debugReport, postAuctionSignals, caToRejectReasonMap);
             if (Objects.nonNull(debugUri)) {
                 debugUrls.add(debugUri);
             }
@@ -107,8 +118,26 @@ class DebugReportProcessor {
         return applyPerAdTechLimit(debugUrls);
     }
 
+    private static Map<Pair<AdTechIdentifier, String>, String> collectRejectReasonFromDebugReports(
+            List<DebugReport> debugReports) {
+        Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap = new HashMap<>();
+        for (DebugReport debugReport : debugReports) {
+            if (Objects.nonNull(debugReport.getSellerRejectReason())
+                    && VALID_REJECT_REASON_SET.contains(debugReport.getSellerRejectReason())) {
+                caToRejectReasonMap.put(
+                        Pair.create(
+                                debugReport.getCustomAudienceBuyer(),
+                                debugReport.getCustomAudienceName()),
+                        debugReport.getSellerRejectReason());
+            }
+        }
+        return caToRejectReasonMap;
+    }
+
     private static Uri getDebugUri(
-            @NonNull DebugReport debugReport, @NonNull PostAuctionSignals postAuctionSignals) {
+            @NonNull DebugReport debugReport,
+            @NonNull PostAuctionSignals postAuctionSignals,
+            @NonNull Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap) {
         Uri debugUri;
         boolean isWinnerCA =
                 isDebugReportForCustomAudience(
@@ -132,7 +161,8 @@ class DebugReportProcessor {
         }
         return applyVariablesToUri(
                 debugUri,
-                collectVariablesFromAdAuction(debugReport, postAuctionSignals, isWinnerCA));
+                collectVariablesFromAdAuction(
+                        debugReport, postAuctionSignals, caToRejectReasonMap, isWinnerCA));
     }
     private static List<Uri> applyPerAdTechLimit(List<Uri> debugReportingUris) {
         // Processing for the ad tech limit must be done at the final stage, as each AuctionResult
@@ -175,6 +205,7 @@ class DebugReportProcessor {
     private static Map<String, String> collectVariablesFromAdAuction(
             @NonNull DebugReport debugReport,
             @NonNull PostAuctionSignals signals,
+            @NonNull Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap,
             boolean isWinningUri) {
         Map<String, String> templateToVariableMap = new HashMap<>();
         templateToVariableMap.put(
@@ -199,6 +230,13 @@ class DebugReportProcessor {
                         isWinningUri
                                 && isDebugReportForCustomAudienceBuyer(
                                         debugReport, signals.getSecondHighestScoredBuyer())));
+        templateToVariableMap.put(
+                REJECT_REASON_VARIABLE_TEMPLATE,
+                caToRejectReasonMap.getOrDefault(
+                        Pair.create(
+                                debugReport.getCustomAudienceBuyer(),
+                                debugReport.getCustomAudienceName()),
+                        DEFAULT_REJECT_REASON));
         return templateToVariableMap;
     }
 
