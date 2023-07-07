@@ -69,6 +69,9 @@ public class AdSelectionConfigFixture {
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
             CommonFixture.getUri(SELLER, TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
+    public static final Map<AdTechIdentifier, ContextualAds> BUYER_CONTEXTUAL_ADS =
+            ContextualAdsFixture.getBuyerContextualAdsMap();
+
     /** Creates an AdSelectionConfig object to be used in unit and integration tests */
     public static AdSelectionConfig anAdSelectionConfig() {
         return anAdSelectionConfigBuilder().build();
@@ -127,7 +130,6 @@ public class AdSelectionConfigFixture {
      * @hide
      */
     public static AdSelectionConfig.Builder anAdSelectionConfigWithContextualAdsBuilder() {
-        return anAdSelectionConfigBuilder()
-                .setBuyerContextualAds(ContextualAdsFixture.getBuyerContextualAdsMap());
+        return anAdSelectionConfigBuilder().setBuyerContextualAds(BUYER_CONTEXTUAL_ADS);
     }
 }

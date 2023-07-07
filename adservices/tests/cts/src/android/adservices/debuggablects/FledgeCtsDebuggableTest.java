@@ -19,20 +19,34 @@ package android.adservices.debuggablects;
 import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
 
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.DecisionLogic;
+import android.adservices.adselection.GetAdSelectionDataOutcome;
+import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
@@ -42,6 +56,7 @@ import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -70,6 +85,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -78,7 +94,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -86,8 +101,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -105,6 +122,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final int API_RESPONSE_LONGER_TIMEOUT_SECONDS = 120;
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -357,7 +375,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         } else {
             mPreviousAppAllowList =
                     CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
+                            String.format(
+                                    "%s,%s",
+                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
             CompatAdServicesTestUtils.setFlags();
         }
 
@@ -906,11 +926,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    /*
-    // TODO(b/267712947) Unhide Contextual Ad flow with App Install API changes
     @Test
     public void testFledgeSelectionFlow_WithContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1025,6 +1046,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testFledgeSelectionFlow_OnlyContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdSelectionConfig adSelectionConfigOnlyContextualAds =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         // Adding no buyers in config
@@ -1098,7 +1122,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
-    */
 
     @Test
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
@@ -2074,7 +2097,363 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
     }
 
-    @Ignore
+    @Test
+    public void testAdSelectionFromOutcomesFlow_overall_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    outcomes.sort(function(a, b) { return b.bid - a.bid;});\n"
+                        + "    return {'status': 0, 'result': outcomes[0]};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertTrue(selectionOutcome.hasOutcome());
+        assertEquals(outcome2.getAdSelectionId(), selectionOutcome.getAdSelectionId());
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsOutcomeSuccess()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0;
+        double bidFloor = 5;
+        AdSelectionOutcome outcome =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltSelectionUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+        AdSelectionSignals selectionSignals =
+                AdSelectionSignals.fromString(String.format("{%s: %s}", paramValue, bidFloor));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        AdSelectionConfigFixture.SELLER,
+                        List.of(outcome.getAdSelectionId()),
+                        selectionSignals,
+                        prebuiltSelectionUri);
+
+        // Skipping adding overrides since prebuilt uri is used
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertTrue(selectionOutcome.hasOutcome());
+        assertEquals(outcome.getAdSelectionId(), selectionOutcome.getAdSelectionId());
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt__returnsNoOutcomeSuccess()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0;
+        double bidFloor = 15;
+        AdSelectionOutcome outcome =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltSelectionUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+        AdSelectionSignals selectionSignals =
+                AdSelectionSignals.fromString(String.format("{%s: %s}", paramValue, bidFloor));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        AdSelectionConfigFixture.SELLER,
+                        List.of(outcome.getAdSelectionId()),
+                        selectionSignals,
+                        prebuiltSelectionUri);
+
+        // Skipping adding overrides since prebuilt uri is used
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertFalse(selectionOutcome.hasOutcome());
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_returnsNull_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    return {'status': 0, 'result': null};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Run select ads from outcomes
+        AdSelectionOutcome selectionOutcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertFalse(selectionOutcome.hasOutcome());
+        assertEquals(AdSelectionOutcome.NO_OUTCOME, selectionOutcome);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_overallTimeout_failure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String jsWaitMoreThanAllowedForOutcomeSelection = insertJsWait(20000);
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + jsWaitMoreThanAllowedForOutcomeSelection
+                        + "    return {'status': 0, 'result': outcomes[0]};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_emptyAdSelectionIds_Failure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri = Uri.parse("https://test.com/url-wont-used");
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        Collections.emptyList(), selectionSignals, selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    return {'status': 0, 'result': null};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_nonExistingAdSelectionId_Failure()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Inputs for outcome selection
+        long nonExistingAdSelectionId = 12345;
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri = Uri.parse("https://test.com/url-wont-used");
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        Collections.singletonList(nonExistingAdSelectionId),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs =
+                "function selectOutcome(outcomes, selection_signals) {\n"
+                        + "    return {'status': 0, 'result': null};\n"
+                        + "}";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testAdSelectionFromOutcomesFlow_malformedJs_failure() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        // Perform ad selection to persist two results
+        double bid1 = 10.0, bid2 = 15.0;
+        AdSelectionOutcome outcome1 =
+                runAdSelectionAsPreSteps(bid1, BUYER_1, BUYER_1_BIDDING_LOGIC_JS);
+        AdSelectionOutcome outcome2 =
+                runAdSelectionAsPreSteps(bid2, BUYER_2, BUYER_2_BIDDING_LOGIC_JS);
+
+        // Inputs for outcome selection
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+        Uri selectionUri =
+                Uri.parse(
+                        String.format(
+                                "https://%s%s",
+                                AdSelectionConfigFixture.SELLER, SELLER_DECISION_LOGIC_URI_PATH));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        List.of(outcome1.getAdSelectionId(), outcome2.getAdSelectionId()),
+                        selectionSignals,
+                        selectionUri);
+
+        // Add overrides
+        String selectionLogicPickSmallestJs = "malformed js";
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicPickSmallestJs, AdSelectionSignals.EMPTY);
+        mTestAdSelectionClient
+                .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        Exception selectAdsException =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(config)
+                                        .get(
+                                                API_RESPONSE_LONGER_TIMEOUT_SECONDS,
+                                                TimeUnit.SECONDS));
+        assertThat(selectAdsException.getCause()).isInstanceOf(IllegalStateException.class);
+    }
+
     @Test
     public void testFledgeAuctionAppFilteringFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -2208,7 +2587,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    @Ignore
     @Test
     public void testFledgeAuctionAppFilteringFlow_overall_AppInstallFailure() throws Exception {
         /**
@@ -3258,6 +3636,39 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
+    @Ignore("Encryption is not working bc of key fetch problems")
+    @Test
+    public void testGetAdSelectionData_validInput_success()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        joinCustomAudience(customAudience1);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        joinCustomAudience(customAudience2);
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataOutcome outcome =
+                mAdSelectionClient
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Assert.assertNotEquals(
+                AdSelectionOutcome.UNSET_AD_SELECTION_ID, outcome.getAdSelectionId());
+        Assert.assertNotNull(outcome.getAdSelectionData());
+    }
+
     private String insertJsWait(long waitTime) {
         return "    const wait = (ms) => {\n"
                 + "       var start = new Date().getTime();\n"
@@ -3389,8 +3800,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .build();
     }
 
-    /*
-    // TODO(b/267712947) Unhisde Contextual Ad flow with App Install API changes
     private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
         Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
 
@@ -3410,7 +3819,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         return buyerContextualAds;
     }
-    */
 
     private void joinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {
@@ -3429,13 +3837,66 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
                 mCustomAudienceClient
-                        .leaveCustomAudience(
-                                customAudience.getBuyer(),
-                                customAudience.getName())
+                        .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             }
         } finally {
             mCustomAudiencesToCleanUp.clear();
         }
+    }
+
+    private AdSelectionOutcome runAdSelectionAsPreSteps(
+            double bid, AdTechIdentifier buyer, String buyerDecisionLogic) throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        List<Double> bidsForBuyer = ImmutableList.of(bid);
+        CustomAudience customAudience1 = createCustomAudience(buyer, bidsForBuyer);
+
+        // Joining custom audiences
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(buyerDecisionLogic)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_DECISION_LOGIC_URI_PATH)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .setCustomAudienceBuyers(Collections.singletonList(buyer))
+                        .build();
+
+        // Adding AdSelection override
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(
+                        new AddAdSelectionOverrideRequest(
+                                adSelectionConfig,
+                                DEFAULT_DECISION_LOGIC_JS,
+                                TRUSTED_SCORING_SIGNALS))
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        return mAdSelectionClient
+                .selectAds(adSelectionConfig)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 }
