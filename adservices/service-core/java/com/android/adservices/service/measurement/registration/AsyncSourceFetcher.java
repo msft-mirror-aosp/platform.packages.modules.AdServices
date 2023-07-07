@@ -293,11 +293,34 @@ public class AsyncSourceFetcher {
             builder.setWebDestinations(destinationList);
         }
 
+        if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && !json.isNull(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS)) {
+            builder.setCoarseEventReportDestinations(
+                    json.getBoolean(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS));
+        }
+
         if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
             LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
         }
-
+        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
+            if (json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
+                LogUtil.d(
+                        "Flexible event report API parameter is not provided, fall back to previous"
+                                + " version!");
+            } else {
+                builder.setTriggerSpecs(json.getString(SourceHeaderContract.TRIGGER_SPECS));
+                if (!json.isNull(SourceHeaderContract.MAX_BUCKET_INCREMENTS)) {
+                    builder.setMaxBucketIncrements(
+                            json.getString(SourceHeaderContract.MAX_BUCKET_INCREMENTS));
+                }
+                try {
+                    builder.buildInitialFlexEventReportSpec();
+                } catch (JSONException e) {
+                    LogUtil.d("Fail to build the required parameters flex event report API ");
+                }
+            }
+        }
         return true;
     }
 
@@ -371,7 +394,7 @@ public class AsyncSourceFetcher {
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
-        } catch (JSONException | NumberFormatException e) {
+        } catch (JSONException | IllegalArgumentException e) {
             LogUtil.d(e, "AsyncSourceFetcher: Invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
@@ -518,6 +541,9 @@ public class AsyncSourceFetcher {
         String DEBUG_REPORTING = "debug_reporting";
         String DEBUG_JOIN_KEY = "debug_join_key";
         String DEBUG_AD_ID = "debug_ad_id";
+        String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
+        String TRIGGER_SPECS = "trigger_specs";
+        String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
     }
 
     private interface SourceRequestContract {

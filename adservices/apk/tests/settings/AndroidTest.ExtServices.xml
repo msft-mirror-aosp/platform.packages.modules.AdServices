@@ -20,6 +20,8 @@
     <!-- disable device config sync during test -->
     <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
     <option name="run-command" value="device_config put adservices enable_back_compat true"/>
+    <option name="run-command"
+            value="device_config put adservices extservices_bootcomplete_enabled true" />
     <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
 
     <!-- Prevent test from running on Android T+ -->
@@ -47,6 +49,8 @@
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
+        <!-- TODO(b/279938338): change to use log level TestPreparer -->
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
         <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices adservice_enabled true"/>
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
@@ -79,5 +83,5 @@
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices.apex"/>
+            value="com.google.android.extservices_sminus.apex"/>
 </configuration>

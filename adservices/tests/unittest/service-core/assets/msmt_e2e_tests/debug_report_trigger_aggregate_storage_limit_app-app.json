@@ -23,7 +23,6 @@
                 "aggregation_keys": {
                   "a": "0x1"
                 },
-                "debug_reporting": true,
                 "debug_key": "347982378"
               }
             }
@@ -213,20 +212,6 @@
               "source_debug_key": "347982378",
               "source_event_id": "1",
               "source_site": "android-app://example.1s1.test"
-            }
-          }
-        ],
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
-      },
-      {
-        "payload": [
-            {
-            "type": "source-success",
-            "body": {
-              "source_event_id": "1",
-              "attribution_destination": "android-app://example.2d1.test",
-              "source_site": "android-app://example.1s1.test",
-              "source_debug_key": "347982378"
             }
           }
         ],

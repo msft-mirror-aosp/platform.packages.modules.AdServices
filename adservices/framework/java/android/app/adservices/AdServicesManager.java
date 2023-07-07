@@ -49,6 +49,9 @@ import java.util.Objects;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesManager {
+
+    public static final String AD_SERVICES_SYSTEM_SERVICE = "adservices_manager";
+
     @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
 
@@ -111,9 +114,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordNotificationDisplayed();
+            mService.recordNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -138,9 +141,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordGaUxNotificationDisplayed() {
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordGaUxNotificationDisplayed();
+            mService.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -488,6 +491,146 @@ public final class AdServicesManager {
     public void setCurrentPrivacySandboxFeature(String featureType) {
         try {
             mService.setCurrentPrivacySandboxFeature(featureType);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdIdEnabled() {
+        try {
+            return mService.isAdIdEnabled();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isAdIdEnabled bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        try {
+            mService.setAdIdEnabled(isAdIdEnabled);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isU18Account bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isU18Account() {
+        try {
+            return mService.isU18Account();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isU18Account bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setU18Account(boolean isU18Account) {
+        try {
+            mService.setU18Account(isU18Account);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isEntryPointEnabled() {
+        try {
+            return mService.isEntryPointEnabled();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isEntryPointEnabled bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        try {
+            mService.setEntryPointEnabled(isEntryPointEnabled);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isAdultAccount bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdultAccount() {
+        try {
+            return mService.isAdultAccount();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isAdultAccount bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setAdultAccount(boolean isAdultAccount) {
+        try {
+            mService.setAdultAccount(isAdultAccount);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasU18NotificationDisplayed() {
+        try {
+            return mService.wasU18NotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the wasU18NotificationDisplayed bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        try {
+            mService.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getUx() {
+        try {
+            return mService.getUx();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setUx(String ux) {
+        try {
+            mService.setUx(ux);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getEnrollmentChannel() {
+        try {
+            return mService.getEnrollmentChannel();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        try {
+            mService.setEnrollmentChannel(enrollmentChannel);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

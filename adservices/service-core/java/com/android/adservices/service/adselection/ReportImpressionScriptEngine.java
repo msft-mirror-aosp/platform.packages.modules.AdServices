@@ -92,12 +92,41 @@ public class ReportImpressionScriptEngine {
             REPORT_WIN_FUNC_NAME + JSScriptEngine.ENTRY_POINT_FUNC_NAME;
 
     public static final String REGISTER_BEACON_JS =
-            "const interaction_reporting_uris = [];\n"
+            "function isString(s) {\n"
+                    + "    return typeof s === 'string' || s instanceof String;\n"
+                    + "}\n"
                     + "\n"
-                    + "function registerAdBeacon(interaction_key, interaction_reporting_uri) {\n"
-                    + "    interaction_reporting_uris.push({interaction_key,"
-                    + " interaction_reporting_uri});\n"
-                    + "}";
+                    + "function isDict(dict) {\n"
+                    + "return dict !== null && typeof dict === 'object' && !Array.isArray(dict);\n"
+                    + "}"
+                    + "\n"
+                    + "const interaction_reporting_uris = [];\n"
+                    + "\n"
+                    + " function registerAdBeacon(beacons) {\n"
+                    + "     if(interaction_reporting_uris.length) {\n"
+                    + "         throw new TypeError(\"registerAdBeacon may be called at most "
+                    + "once\");\n"
+                    + "     }\n"
+                    + "\n"
+                    + "     // Validating that beacons is a dictionary\n"
+                    + "     if (!isDict(beacons)) {\n"
+                    + "         throw new TypeError(\"registerAdBeacon requires 1 object "
+                    + "parameter\");\n"
+                    + "     }\n"
+                    + "\n"
+                    + "     for (const key in beacons) {\n"
+                    + "         // Validating that both key and value are strings\n"
+                    + "         if(!(isString(key) && isString(beacons[key]))) {\n"
+                    + "             throw new TypeError(\"registerAdBeacon object attributes must"
+                    + " be strings\");\n"
+                    + "         }\n"
+                    + "         interaction_reporting_uris.push({"
+                    + INTERACTION_KEY_ARG_NAME
+                    + ":key, "
+                    + INTERACTION_REPORTING_URI_ARG_NAME
+                    + ":beacons[key]});\n"
+                    + "     }\n"
+                    + " }\n";
 
     public static final String ADD_INTERACTION_REPORTING_URIS_TO_RESULT_JS =
             "if(results.hasOwnProperty('results')) {\n"

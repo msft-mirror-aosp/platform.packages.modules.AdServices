@@ -44,6 +44,7 @@ import java.util.TreeMap;
  * POJO for Source.
  */
 public class Source {
+
     private String mId;
     private UnsignedLong mEventId;
     private Uri mPublisher;
@@ -79,10 +80,15 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private ReportSpec mFlexEventReportSpec;
+    @Nullable private String mTriggerSpecsString;
+    @Nullable private String mMaxBucketIncrementsString;
+    @Nullable private String mEventAttributionStatusString;
+    @Nullable private String mPrivacyParametersString;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
-    @Nullable private ReportSpec mFlexEventReportSpec;
+    private boolean mCoarseEventReportDestinations;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -183,6 +189,14 @@ public class Source {
                 : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
+    /**
+     * @return the flex event report specifications
+     */
+    @Nullable
+    public ReportSpec getFlexEventReportSpec() {
+        return mFlexEventReportSpec;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Source)) {
@@ -223,7 +237,7 @@ public class Source {
                 && Objects.equals(mPlatformAdId, source.mPlatformAdId)
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
-                && Objects.equals(mDebugAdId, source.mDebugAdId)
+                && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
                 && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
     }
 
@@ -260,9 +274,9 @@ public class Source {
                 mPlatformAdId,
                 mDebugAdId,
                 mRegistrationOrigin,
-                mDebugAdId,
                 mDebugJoinKey,
-                mFlexEventReportSpec);
+                mFlexEventReportSpec,
+                mCoarseEventReportDestinations);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -352,7 +366,8 @@ public class Source {
     }
 
     /** Debug key of {@link Source}. */
-    public @Nullable UnsignedLong getDebugKey() {
+    @Nullable
+    public UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -426,6 +441,32 @@ public class Source {
     /** Is Ad Tech Opt-in to Debug Reporting {@link Source}. */
     public boolean isDebugReporting() {
         return mIsDebugReporting;
+    }
+
+    /**
+     * Check whether the parameter of flexible event API is valid or not. Currently, only max
+     * information gain is check because of the computation is complicated. Other straightforward
+     * value errors will be show in the debug log using LogUtil
+     *
+     * @return whether the parameters of flexible are valid
+     */
+    public boolean isFlexEventApiValueValid() {
+        if (mFlexEventReportSpec == null) {
+            // the source doesn't not use flexible event report api. It is always valid
+            return true;
+        }
+        double informationGainThreshold = Double.MIN_VALUE;
+        if (mSourceType == SourceType.EVENT) {
+            informationGainThreshold =
+                    PrivacyParams.getMaxFlexibleEventInformationGainEventSource();
+        } else if (mSourceType == SourceType.NAVIGATION) {
+            informationGainThreshold =
+                    PrivacyParams.getMaxFlexibleEventInformationGainNavigationSource();
+        }
+        if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -546,15 +587,38 @@ public class Source {
         return mDebugAdId;
     }
 
+    /**
+     * Indicates whether event report for this source should be generated with the destinations
+     * where the conversion occurred or merge app and web destinations. Set to true of both app and
+     * web destination should be merged into the array of event report.
+     */
+    public boolean getCoarseEventReportDestinations() {
+        return mCoarseEventReportDestinations;
+    }
+
     /** Returns registration origin used to register the source */
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
     }
 
-    /** Returns flex event report spec */
-    @Nullable
-    public ReportSpec getFlexEventReportSpec() {
-        return mFlexEventReportSpec;
+    /** Returns trigger specs */
+    public String getTriggerSpecs() {
+        return mTriggerSpecsString;
+    }
+
+    /** Returns max bucket increments */
+    public String getMaxBucketIncrements() {
+        return mMaxBucketIncrementsString;
+    }
+
+    /** Returns event attribution status of current source */
+    public String getEventAttributionStatus() {
+        return mEventAttributionStatusString;
+    }
+
+    /** Returns privacy parameters */
+    public String getPrivacyParameters() {
+        return mPrivacyParametersString;
     }
 
     /** See {@link Source#getAppDestinations()} */
@@ -640,6 +704,16 @@ public class Source {
         }
     }
 
+    /** Build the flexible event report API from the raw string */
+    public void buildFlexibleEventReportApi() throws JSONException {
+        mFlexEventReportSpec =
+                new ReportSpec(
+                        mTriggerSpecsString,
+                        mMaxBucketIncrementsString,
+                        mEventAttributionStatusString,
+                        mPrivacyParametersString);
+    }
+
     /**
      * Builder for {@link Source}.
      */
@@ -693,6 +767,7 @@ public class Source {
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             return builder;
         }
 
@@ -726,7 +801,8 @@ public class Source {
         }
 
         /** See {@link Source#getAppDestinations()}. */
-        public Builder setAppDestinations(List<Uri> appDestinations) {
+        @NonNull
+        public Builder setAppDestinations(@Nullable List<Uri> appDestinations) {
             Optional.ofNullable(appDestinations).ifPresent(uris -> {
                 Validation.validateNotEmpty(uris);
                 if (uris.size() > 1) {
@@ -973,6 +1049,50 @@ public class Source {
         @NonNull
         public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
             mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+            return this;
+        }
+
+        /** See {@link Source#getFlexEventReportSpec()} */
+        @NonNull
+        public Builder buildInitialFlexEventReportSpec() throws JSONException {
+            mBuilding.mFlexEventReportSpec =
+                    new ReportSpec(
+                            mBuilding.mTriggerSpecsString, mBuilding.mMaxBucketIncrementsString);
+            return this;
+        }
+
+        /** See {@link Source#getCoarseEventReportDestinations()} */
+        @NonNull
+        public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
+            mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;
+            return this;
+        }
+
+        /** See {@link Source#getTriggerSpecs()} */
+        @NonNull
+        public Builder setTriggerSpecs(@Nullable String triggerSpecs) {
+            mBuilding.mTriggerSpecsString = triggerSpecs;
+            return this;
+        }
+
+        /** See {@link Source#getMaxBucketIncrements()} */
+        @NonNull
+        public Builder setMaxBucketIncrements(@Nullable String maxBucketIncrements) {
+            mBuilding.mMaxBucketIncrementsString = maxBucketIncrements;
+            return this;
+        }
+
+        /** See {@link Source#getEventAttributionStatus()} */
+        @NonNull
+        public Builder setEventAttributionStatus(@Nullable String eventAttributionStatus) {
+            mBuilding.mEventAttributionStatusString = eventAttributionStatus;
+            return this;
+        }
+
+        /** See {@link Source#getPrivacyParameters()} */
+        @NonNull
+        public Builder setPrivacyParameters(@Nullable String privacyParameters) {
+            mBuilding.mPrivacyParametersString = privacyParameters;
             return this;
         }
 

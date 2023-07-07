@@ -315,6 +315,10 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
+        if (!source.isFlexEventApiValueValid()) {
+            debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+            return false;
+        }
         return true;
     }
 
@@ -348,7 +352,7 @@ public class AsyncRegistrationQueueRunner {
                             + " destination count >= "
                             + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
             debugReportApi.scheduleSourceDestinationLimitDebugReport(
-                    source, String.valueOf(destinationCount), dao);
+                    source, String.valueOf(maxDistinctDestinations), dao);
             return false;
         }
 

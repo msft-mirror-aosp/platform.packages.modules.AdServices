@@ -64,9 +64,20 @@ java_library {
     defaults: ["framework-module-defaults"],
 }
 
+java_api_contribution {
+    name: "framework-adservices-public-stubs",
+    api_surface: "public",
+    api_file: "api/current.txt",
+    visibility: [
+        "//build/orchestrator/apis",
+    ],
+}
+
 java_library {
     name: "android.ext.adservices",
     static_libs: ["framework-adservices.impl"],
+    installable: true,
+    provides_uses_lib: "android.ext.adservices",
     sdk_version: "module_current",
     min_sdk_version: "30",
     max_sdk_version: "32",

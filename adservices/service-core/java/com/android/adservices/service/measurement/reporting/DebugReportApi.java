@@ -35,8 +35,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,7 +43,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /** Class used to send debug reports to Ad-Tech {@link DebugReport} */
 public class DebugReportApi {
@@ -56,10 +57,12 @@ public class DebugReportApi {
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
+        String SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR =
+                "source-flexible-event-report-value-error";
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
         String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
-        String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
         String TRIGGER_AGGREGATE_NO_CONTRIBUTIONS = "trigger-aggregate-no-contributions";
+        String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
         String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
                 "trigger-attributions-per-source-destination-limit";
         String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
@@ -77,7 +80,9 @@ public class DebugReportApi {
         String TRIGGER_AGGREGATE_STORAGE_LIMIT = "trigger-aggregate-storage-limit";
     }
 
-    private interface Body {
+    /** Defines different verbose debug report body parameters. */
+    @VisibleForTesting
+    public interface Body {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String LIMIT = "limit";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
@@ -86,6 +91,7 @@ public class DebugReportApi {
         String SOURCE_EVENT_ID = "source_event_id";
         String SOURCE_SITE = "source_site";
         String SOURCE_TYPE = "source_type";
+        String TRIGGER_DATA = "trigger_data";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
@@ -216,6 +222,29 @@ public class DebugReportApi {
                 dao);
     }
 
+    /** Schedules Source Flexible Event API Debug Report */
+    public void scheduleSourceFlexibleEventReportApiDebugReport(
+            Source source, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+            return;
+        }
+        if (isAdTechNotOptIn(
+                source.isDebugReporting(), Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+            return;
+        }
+        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
+                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping debug report %s", Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
+            return;
+        }
+        scheduleReport(
+                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
+                generateSourceDebugReportBody(source, null),
+                source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
+                dao);
+    }
+
     /** Schedules the Source Unknown Error Debug Report */
     public void scheduleSourceUnknownErrorDebugReport(Source source, IMeasurementDao dao) {
         if (isSourceDebugFlagDisabled(Type.SOURCE_UNKNOWN_ERROR)) {
@@ -242,16 +271,20 @@ public class DebugReportApi {
      * doesn't have related source.
      */
     public void scheduleTriggerNoMatchingSourceDebugReport(
-            Trigger trigger, IMeasurementDao dao, String type) {
+            Trigger trigger, IMeasurementDao dao, String type) throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
+            return;
+        }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
@@ -266,17 +299,21 @@ public class DebugReportApi {
             Trigger trigger,
             @Nullable String limit,
             IMeasurementDao dao,
-            String type) {
+            String type)
+            throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)
-                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+            return;
+        }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
@@ -290,20 +327,29 @@ public class DebugReportApi {
      * trigger-event-excessive-reports.
      */
     public void scheduleTriggerDebugReportWithAllFields(
-            Source source, Trigger trigger, IMeasurementDao dao, String type) {
+            Source source,
+            Trigger trigger,
+            UnsignedLong triggerData,
+            IMeasurementDao dao,
+            String type)
+            throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)
-                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+            return;
+        }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
-                generateTriggerDebugReportBodyWithAllFields(source, trigger, debugKeyPair),
+                generateTriggerDebugReportBodyWithAllFields(
+                        source, trigger, triggerData, debugKeyPair),
                 source.getEnrollmentId(),
                 trigger.getRegistrationOrigin(),
                 dao);
@@ -380,6 +426,30 @@ public class DebugReportApi {
         return PermissionState.NONE;
     }
 
+    private PermissionState getAdIdPermissionFromTrigger(Trigger trigger) {
+        if (trigger.getDestinationType() == EventSurfaceType.APP) {
+            if (trigger.hasAdIdPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Trigger doesn't have AdId permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
+    private PermissionState getArDebugPermissionFromTrigger(Trigger trigger) {
+        if (trigger.getDestinationType() == EventSurfaceType.WEB) {
+            if (trigger.hasArDebugPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Trigger doesn't have ArDebug permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
     /** Get is Ad tech not op-in and log */
     private boolean isAdTechNotOptIn(boolean optIn, String type) {
         if (!optIn) {
@@ -405,17 +475,16 @@ public class DebugReportApi {
     }
 
     private static Object generateSourceDestinations(Source source) throws JSONException {
-        if (source.getPublisherType() == EventSurfaceType.APP) {
-            return ReportUtil.serializeAttributionDestinations(source.getAppDestinations());
-        } else {
-            List<Uri> webAttributionDestinations = new ArrayList<>();
-            for (int i = 0; i < source.getWebDestinations().size(); i++) {
-                webAttributionDestinations.add(
-                        Web.topPrivateDomainAndScheme(source.getWebDestinations().get(i))
-                                .orElse(null));
+        List<Uri> destinations = new ArrayList<>();
+        Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
+        List<Uri> webDestinations = source.getWebDestinations();
+        if (webDestinations != null) {
+            for (Uri webDestination : webDestinations) {
+                Optional<Uri> webUri = Web.topPrivateDomainAndScheme(webDestination);
+                webUri.ifPresent(destinations::add);
             }
-            return ReportUtil.serializeAttributionDestinations(webAttributionDestinations);
         }
+        return ReportUtil.serializeAttributionDestinations(destinations);
     }
 
     private static Uri generateSourceSite(Source source) {
@@ -457,6 +526,7 @@ public class DebugReportApi {
     private JSONObject generateTriggerDebugReportBodyWithAllFields(
             @NonNull Source source,
             @NonNull Trigger trigger,
+            @Nullable UnsignedLong triggerData,
             @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair) {
         JSONObject body = new JSONObject();
         try {

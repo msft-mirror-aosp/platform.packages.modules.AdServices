@@ -137,6 +137,17 @@ public abstract class E2ETest {
     interface DebugReportPayloadKeys {
         String TYPE = "type";
         String BODY = "body";
+        List<String> BODY_KEYS =
+                ImmutableList.of(
+                        "attribution_destination",
+                        "limit",
+                        "randomized_trigger_rate",
+                        "scheduled_report_time",
+                        "source_debug_key",
+                        "source_event_id",
+                        "source_site",
+                        "source_type",
+                        "trigger_debug_key");
     }
 
     interface AggregateHistogramKeys {
@@ -463,7 +474,9 @@ public abstract class E2ETest {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
-        DbTestUtil.getDbHelperForTest().getWritableDatabase().delete("enrollment_data", null, null);
+        DbTestUtil.getSharedDbHelperForTest()
+                .getWritableDatabase()
+                .delete("enrollment_data", null, null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
@@ -695,16 +708,30 @@ public abstract class E2ETest {
                 JSONObject payload2 = payloads2.getJSONObject(j);
                 if (type.equals(payload2.optString(DebugReportPayloadKeys.TYPE, ""))) {
                     hasSameType = true;
-                    if (!payload1.optString(DebugReportPayloadKeys.BODY, "")
-                            .equals(payload2.optString(DebugReportPayloadKeys.BODY, ""))) {
-                        log("Debug report body mismatch");
+                    JSONObject body1 = payload1.getJSONObject(DebugReportPayloadKeys.BODY);
+                    JSONObject body2 = payload2.getJSONObject(DebugReportPayloadKeys.BODY);
+                    if (body1.length() != body2.length()) {
+                        log(
+                                "Verbose debug report payload body key-value pair not equal for"
+                                        + " type: "
+                                        + type);
                         return false;
+                    }
+                    for (String key : DebugReportPayloadKeys.BODY_KEYS) {
+                        if (!body1.optString(key, "").equals(body2.optString(key, ""))) {
+                            log(
+                                    "Verbose debug report payload body mismatch for type: "
+                                            + type
+                                            + ", body key: "
+                                            + key);
+                            return false;
+                        }
                     }
                     break;
                 }
             }
             if (!hasSameType) {
-                log("Debug report type mismatch");
+                log("Debug report type mismatch.");
                 return false;
             }
         }
@@ -949,7 +976,7 @@ public abstract class E2ETest {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
         }
-        SQLiteDatabase enrollmentDb = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase enrollmentDb = DbTestUtil.getSharedDbHelperForTest().getWritableDatabase();
         List<String> enrollmentTables = ImmutableList.of("enrollment_data");
         for (String tableName : enrollmentTables) {
             result.append("\n" + tableName + ":\n");
@@ -1185,11 +1212,13 @@ public abstract class E2ETest {
         } while (t <= lastTriggerTime);
 
         // Account for edge case of t between lastTriggerTime and the latter's max report delay.
-        if (t <= lastTriggerTime + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY) {
+        long aggregateReportMaxDelay = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
+        if (t <= lastTriggerTime + aggregateReportMaxDelay) {
             // t must be greater than lastTriggerTime so adding max report
             // delay should be beyond the report delay for lastTriggerTime.
             aggregateReportingJobActions.add(new AggregateReportingJob(t
-                    + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY));
+                    + aggregateReportMaxDelay));
         }
 
         actions.addAll(aggregateReportingJobActions);

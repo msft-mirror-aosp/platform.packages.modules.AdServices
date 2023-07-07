@@ -24,7 +24,6 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
@@ -67,7 +66,7 @@ public class BlockedAppsActionDelegate {
                         if (event == BlockedAppsViewModelUiEvent.RESTORE_APP) {
                             UiStatsLogger.logUnblockAppSelected(mBlockedAppsActivity);
                             mBlockedAppsViewModel.restoreAppConsent(app);
-                            if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockAppDialog(
                                             mBlockedAppsActivity, app);
@@ -97,7 +96,7 @@ public class BlockedAppsActionDelegate {
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
             mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
         } else {
-        mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
+            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
         }
     }
 }

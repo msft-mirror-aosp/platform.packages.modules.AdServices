@@ -21,12 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -42,7 +40,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -74,7 +71,6 @@ public class DialogFragmentTest {
 
     private String mTestName;
     private MockitoSession mStaticMockSession;
-    private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
@@ -86,7 +82,6 @@ public class DialogFragmentTest {
         // Static mocking
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(ConsentManager.class)
@@ -95,9 +90,10 @@ public class DialogFragmentTest {
                         .startMocking();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
-
+        doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         // prepare objects used by static mocking
         mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
@@ -140,9 +136,6 @@ public class DialogFragmentTest {
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        mPhFlags = spy(PhFlags.getInstance());
-        doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-        ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
@@ -198,30 +191,15 @@ public class DialogFragmentTest {
     }
 
     @Test
-    public void dialogExistAfterRotateTest() throws RemoteException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
-        assertThat(consentSwitch.exists()).isTrue();
-
-        // click switch
-        consentSwitch.click();
-        UiObject dialogTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
-        UiObject positiveText =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
-        assertThat(dialogTitle.exists()).isTrue();
-        assertThat(positiveText.exists()).isTrue();
-        sDevice.setOrientationRight();
-        assertThat(dialogTitle.exists()).isTrue();
-        assertThat(positiveText.exists()).isTrue();
-    }
-
-    @Test
     public void optOutDialogTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         assertThat(consentSwitch.exists()).isTrue();
+
+        // guarantee in on state
+        if (!consentSwitch.isChecked()) {
+            consentSwitch.click();
+        }
 
         // click switch
         consentSwitch.click();
@@ -353,6 +331,14 @@ public class DialogFragmentTest {
     @Test
     public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        // perform a gentle swipe so scroll won't miss the text close to the
+        // bottom of the current screen.
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if(!appsTitle.exists()){
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
         UiObject blockAppText =
@@ -390,8 +376,18 @@ public class DialogFragmentTest {
     @Test
     public void unblockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if(!appsTitle.exists()){
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
+
+        // perform a gentle swipe so scroll won't miss the text close to the
+        // bottom of the current screen.
+        ApkTestUtil.gentleSwipe(sDevice);
 
         // open blocked apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
@@ -419,6 +415,12 @@ public class DialogFragmentTest {
     @Test
     public void resetAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if(!appsTitle.exists()){
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 

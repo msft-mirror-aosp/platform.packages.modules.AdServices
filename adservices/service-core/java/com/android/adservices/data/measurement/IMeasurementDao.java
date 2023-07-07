@@ -28,6 +28,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
+import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -38,6 +39,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** Interface for Measurement related data access operations. */
@@ -189,12 +191,27 @@ public interface IMeasurementDao {
     List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException;
 
     /**
+     * Queries and returns the most recent matching delayed {@link Source} (Optional) for the
+     * provided {@link Trigger}.
+     */
+    Optional<Source> getNearestDelayedMatchingActiveSource(@NonNull Trigger trigger)
+            throws DatastoreException;
+
+    /**
      * Updates the {@link Source.Status} value for the provided list of {@link Source}
      *
      * @param sourceIds list of sources.
      * @param status value to be set
      */
     void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
+            throws DatastoreException;
+
+    /**
+     * @param sourceId the source id
+     * @param reportSpec the new report specification in source
+     * @throws DatastoreException throws DatastoreException
+     */
+    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
             throws DatastoreException;
 
     /**
@@ -327,7 +344,7 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -497,6 +514,15 @@ public interface IMeasurementDao {
             @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
             throws DatastoreException;
 
+    /**
+     * Get source IDs based on trigger IDs for flexible event API
+     *
+     * @param triggerIds triggers to be matched with source
+     * @return the list of sourced ids
+     * @throws DatastoreException throw DatastoreException
+     */
+    List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+            throws DatastoreException;
     /**
      * Returns list of sources matching registrant, publishers and also in the provided time frame.
      * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.
