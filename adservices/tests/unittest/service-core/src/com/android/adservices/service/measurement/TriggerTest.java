@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -129,6 +130,8 @@ public class TriggerTest {
                         .setDebugJoinKey(debugJoinKey)
                         .setPlatformAdId(debugAppAdId)
                         .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -156,6 +159,8 @@ public class TriggerTest {
                         .setDebugJoinKey(debugJoinKey)
                         .setPlatformAdId(debugAppAdId)
                         .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .build());
     }
 
@@ -293,6 +298,13 @@ public class TriggerTest {
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId1").build(),
                 TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain1.example.test"))
+                        .build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
+                        .build());
     }
 
     @Test
@@ -331,7 +343,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -344,7 +357,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -361,7 +375,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -378,7 +393,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -391,7 +407,26 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentRegistrationOrigin() {
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                null);
     }
 
     @Test
@@ -708,7 +743,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void parseEventTriggers() throws JSONException {
+    public void parseEventTriggers_equal() throws JSONException {
         // setup
         JSONObject filtersMap1 =
                 new JSONObject(
@@ -734,6 +769,7 @@ public class TriggerTest {
                                         + "{\n"
                                         + "  \"trigger_data\": \"2\",\n"
                                         + "  \"priority\": \"2\",\n"
+                                        + "  \"value\": \"100\",\n"
                                         + "  \"deduplication_key\": \"2\",\n"
                                         + "  \"filters\": [{\n"
                                         + "    \"filter_key_1\": [\"filter_value_1\"], \n"
@@ -747,6 +783,7 @@ public class TriggerTest {
                                         + "{\n"
                                         + "  \"trigger_data\": \"3\",\n"
                                         + "  \"priority\": \"3\",\n"
+                                        + "  \"value\": \"120\",\n"
                                         + "  \"deduplication_key\": \"3\",\n"
                                         + "  \"not_filters\": [{\n"
                                         + "    \"key_1\": [\"value_1_x\"] \n"
@@ -758,28 +795,36 @@ public class TriggerTest {
         EventTrigger eventTrigger1 =
                 new EventTrigger.Builder(new UnsignedLong(2L))
                         .setTriggerPriority(2L)
+                        .setTriggerValue(100L)
                         .setDedupKey(new UnsignedLong(2L))
-                        .setFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(filtersMap1)
-                                        .build()))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(notFiltersMap1)
-                                        .build()))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(filtersMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(notFiltersMap1)
+                                                .build()))
                         .build();
         EventTrigger eventTrigger2 =
                 new EventTrigger.Builder(new UnsignedLong(3L))
                         .setTriggerPriority(3L)
+                        .setTriggerValue(120L)
                         .setDedupKey(new UnsignedLong(3L))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(notFiltersMap2)
-                                        .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(notFiltersMap2)
+                                                .build()))
                         .build();
 
         // Action
-        List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers();
+        List<EventTrigger> actualEventTriggers =
+                trigger.parseEventTriggers(
+                        FlagsFactory.getFlagsForTest()
+                                .getMeasurementFlexibleEventReportingApiEnabled());
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
@@ -816,7 +861,8 @@ public class TriggerTest {
             String notFilters,
             UnsignedLong debugKey,
             String mAttributionConfig,
-            String mAdtechBitMapping) {
+            String mAdtechBitMapping,
+            Uri registrationOrigin) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -833,6 +879,7 @@ public class TriggerTest {
                                 .setDebugKey(debugKey)
                                 .setAttributionConfig(mAttributionConfig)
                                 .setAdtechBitMapping(mAdtechBitMapping)
+                                .setRegistrationOrigin(registrationOrigin)
                                 .build());
     }
 

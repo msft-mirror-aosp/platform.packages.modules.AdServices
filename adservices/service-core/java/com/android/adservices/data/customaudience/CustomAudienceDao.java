@@ -586,6 +586,22 @@ public abstract class CustomAudienceDao {
     public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
+     * Fetch all active Custom Audience including null user_bidding_signals
+     *
+     * @param currentTime to compare against CA time values and find an active CA
+     * @return All the Custom Audience that represent
+     */
+    @Query(
+            "SELECT * FROM custom_audience WHERE activation_time <= (:currentTime) AND"
+                    + " (:currentTime) < expiration_time AND"
+                    + " (last_ads_and_bidding_data_updated_time + (:activeWindowTimeMs)) >="
+                    + " (:currentTime) AND trusted_bidding_data_uri IS NOT NULL AND ads IS"
+                    + " NOT NULL ")
+    @Nullable
+    public abstract List<DBCustomAudience> getAllActiveCustomAudienceForServerSideAuction(
+            Instant currentTime, long activeWindowTimeMs);
+
+    /**
      * Fetch all the Custom Audience corresponding to the buyers
      *
      * @param buyers associated with the Custom Audience

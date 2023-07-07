@@ -38,7 +38,7 @@ public class CtsPackageChangedReceiverTest {
     /**
      * Verify that the com.android.adservices.service.common.PACKAGE_CHANGED broadcast is protected
      * as defined in the AdServices' AndroidManifest.xml and can't be sent by non-system apps. The
-     * test is a non-system app and should through a SecurityException when it tries to send the
+     * test is a non-system app and should throw a SecurityException when it tries to send the
      * broadcast.
      */
     @Test(expected = SecurityException.class)

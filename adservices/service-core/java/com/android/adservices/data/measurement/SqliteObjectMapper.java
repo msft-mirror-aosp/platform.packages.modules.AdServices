@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 /** Helper class for SQLite operations. */
 public class SqliteObjectMapper {
-
     /**
      * Create {@link EventReport} object from SQLite datastore.
      */
@@ -88,6 +87,11 @@ public class SqliteObjectMapper {
                 cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
         setTextColumn(
                 cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -173,6 +177,28 @@ public class SqliteObjectMapper {
         setTextColumn(
                 cursor, MeasurementTables.SourceContract.PLATFORM_AD_ID, builder::setPlatformAdId);
         setTextColumn(cursor, MeasurementTables.SourceContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                builder::setCoarseEventReportDestinations);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
+                builder::setMaxBucketIncrements);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                builder::setEventAttributionStatus);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
+                builder::setPrivacyParameters);
         return builder.build();
     }
 
@@ -235,6 +261,11 @@ public class SqliteObjectMapper {
         setTextColumn(
                 cursor, MeasurementTables.TriggerContract.PLATFORM_AD_ID, builder::setPlatformAdId);
         setTextColumn(cursor, MeasurementTables.TriggerContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -277,6 +308,11 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
         setUnsignedLongColumn(
                 cursor, MeasurementTables.AggregateReport.DEDUP_KEY, builder::setDedupKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -306,6 +342,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REFERENCE_ID,
+                builder::setReferenceId);
 
         return builder.build();
     }

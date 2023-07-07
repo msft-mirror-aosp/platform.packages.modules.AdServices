@@ -27,6 +27,7 @@ public class DBHistogramEventDataFixture {
             long foreignKeyId) {
         return DBHistogramEventData.builder()
                 .setHistogramIdentifierForeignKey(foreignKeyId)
+                .setAdCounterIntKey(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getAdCounterKey())
                 .setAdEventType(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getAdEventType())
                 .setTimestamp(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getTimestamp());
     }

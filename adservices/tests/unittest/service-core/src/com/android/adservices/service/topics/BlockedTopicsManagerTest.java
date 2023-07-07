@@ -39,6 +39,7 @@ import android.app.adservices.IAdServicesManager;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Parcel;
 import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -70,8 +71,6 @@ public class BlockedTopicsManagerTest {
     private static final long MODEL_VERSION = 1L;
     private static final Topic TOPIC =
             Topic.create(/* topicId */ 1, TAXONOMY_VERSION, MODEL_VERSION);
-    private static final TopicParcel TOPIC_PARCEL =
-            BlockedTopicsManager.convertTopicToTopicParcel(TOPIC);
 
     private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
@@ -90,6 +89,16 @@ public class BlockedTopicsManagerTest {
 
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
+    }
+
+    @Test
+    public void testTopicParcelCreation() {
+        TopicParcel topicParcelFromParcel = TopicParcel.CREATOR.createFromParcel(Parcel.obtain());
+        TopicParcel[] topicParcels = TopicParcel.CREATOR.newArray(2);
+        topicParcelFromParcel.writeToParcel(Parcel.obtain(), 0);
+
+        assertThat(topicParcelFromParcel.describeContents()).isEqualTo(0);
+        assertThat(topicParcels[0]).isNull();
     }
 
     @Test
@@ -131,7 +140,7 @@ public class BlockedTopicsManagerTest {
 
         // Verify the topic is unblocked
         blockedTopicsManager.unblockTopic(TOPIC);
-        verify(mMockIAdServicesManager).removeBlockedTopic(TOPIC_PARCEL);
+        verify(mMockIAdServicesManager).removeBlockedTopic(TOPIC.convertTopicToTopicParcel());
     }
 
     @Test
@@ -144,7 +153,8 @@ public class BlockedTopicsManagerTest {
                 getSpiedBlockedTopicsManager(
                         blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
         blockedTopicsManager.blockTopic(TOPIC);
-        verify(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
+        verify(mMockIAdServicesManager)
+                .recordBlockedTopic(List.of(TOPIC.convertTopicToTopicParcel()));
 
         // Verify the topic is blocked
         List<Topic> expectedBlockedTopics = blockedTopicsManager.retrieveAllBlockedTopics();
@@ -157,7 +167,7 @@ public class BlockedTopicsManagerTest {
 
         // Verify the topic is unblocked
         blockedTopicsManager.unblockTopic(TOPIC);
-        verify(mMockIAdServicesManager).removeBlockedTopic(TOPIC_PARCEL);
+        verify(mMockIAdServicesManager).removeBlockedTopic(TOPIC.convertTopicToTopicParcel());
         // Also verify PPAPI has removed this topic
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
     }
@@ -277,16 +287,20 @@ public class BlockedTopicsManagerTest {
 
     @Test
     public void testMayMigratePpApiBlockedTopicsToSystemService() throws RemoteException {
-        doNothing().when(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
+        doNothing()
+                .when(mMockIAdServicesManager)
+                .recordBlockedTopic(List.of(TOPIC.convertTopicToTopicParcel()));
 
         mTopicsDao.recordBlockedTopic(TOPIC);
 
         mayMigratePpApiBlockedTopicsToSystemService(mContextSpy, mTopicsDao, mAdServicesManager);
-        verify(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
+        verify(mMockIAdServicesManager)
+                .recordBlockedTopic(List.of(TOPIC.convertTopicToTopicParcel()));
 
         // Verify this should only happen once
         mayMigratePpApiBlockedTopicsToSystemService(mContextSpy, mTopicsDao, mAdServicesManager);
-        verify(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
+        verify(mMockIAdServicesManager)
+                .recordBlockedTopic(List.of(TOPIC.convertTopicToTopicParcel()));
 
         // Clear shared preference
         resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
@@ -425,9 +439,15 @@ public class BlockedTopicsManagerTest {
                         enableAppSearchConsent);
 
         // Disable IPC calls
-        doNothing().when(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
-        doNothing().when(mMockIAdServicesManager).removeBlockedTopic(TOPIC_PARCEL);
-        doReturn(List.of(TOPIC_PARCEL)).when(mMockIAdServicesManager).retrieveAllBlockedTopics();
+        doNothing()
+                .when(mMockIAdServicesManager)
+                .recordBlockedTopic(List.of(TOPIC.convertTopicToTopicParcel()));
+        doNothing()
+                .when(mMockIAdServicesManager)
+                .removeBlockedTopic(TOPIC.convertTopicToTopicParcel());
+        doReturn(List.of(TOPIC.convertTopicToTopicParcel()))
+                .when(mMockIAdServicesManager)
+                .retrieveAllBlockedTopics();
         doNothing().when(mMockIAdServicesManager).clearAllBlockedTopics();
 
         return blockedTopicsManager;

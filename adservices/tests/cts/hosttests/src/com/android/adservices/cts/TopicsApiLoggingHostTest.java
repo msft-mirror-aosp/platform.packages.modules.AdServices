@@ -63,10 +63,8 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
     private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
-            "com.google.android.ext.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
-            "com.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
 
     @Rule public TestMetrics mMetrics = new TestMetrics();
 
@@ -232,6 +230,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
      * running various PPAPI related tests.
      */
     private void setFlags() throws DeviceNotAvailableException {
+        setEnableBackCompatFlag(true);
         setBlockedTopicsSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
         // Measurement rollback check requires loading AdServicesManagerService's Binder from the
@@ -242,6 +241,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
 
     /** Reset system-server related flags to their default values after test execution. */
     private void resetFlagsToDefault() throws DeviceNotAvailableException {
+        setEnableBackCompatFlag(false);
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         enableMeasurementRollbackDelete();
@@ -271,5 +271,11 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
                 .executeShellCommand(
                         "device_config put adservices measurement_rollback_deletion_kill_switch"
                                 + " false");
+    }
+
+    private void setEnableBackCompatFlag(boolean isEnabled) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices enable_back_compat " + isEnabled);
     }
 }

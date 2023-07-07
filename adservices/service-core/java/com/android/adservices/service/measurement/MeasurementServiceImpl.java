@@ -59,7 +59,9 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
+import com.android.adservices.service.measurement.access.DevContextAccessResolver;
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
@@ -97,6 +99,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
+    private final DevContextFilter mDevContextFilter;
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
     private static final String CALLBACK_ERROR = "Unable to send result to the callback";
 
@@ -114,7 +117,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 Throttler.getInstance(FlagsFactory.getFlags()),
                 flags,
                 AdServicesLoggerImpl.getInstance(),
-                appImportanceFilter);
+                appImportanceFilter,
+                DevContextFilter.create(context));
     }
 
     @VisibleForTesting
@@ -126,7 +130,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Throttler throttler,
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter) {
+            @NonNull AppImportanceFilter appImportanceFilter,
+            @NonNull DevContextFilter devContextFilter) {
         mContext = context;
         mClock = clock;
         mMeasurementImpl = measurementImpl;
@@ -135,6 +140,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
+        mDevContextFilter = devContextFilter;
     }
 
     @Override
@@ -161,7 +167,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
-        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
+        final boolean attributionPermission =
+                PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
         sBackgroundExecutor.execute(
                 () -> {
                     performRegistration(
@@ -180,7 +187,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission)),
+                                    new PermissionAccessResolver(attributionPermission),
+                                    new DevContextAccessResolver(
+                                            mDevContextFilter.createDevContextFromCallingUid(
+                                                    callerUid),
+                                            request)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -215,7 +226,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         }
 
         final int callerUid = Binder.getCallingUidOrThrow();
-        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
+        final boolean attributionPermission =
+                PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
         sBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
@@ -239,7 +251,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new PermissionAccessResolver(attributionPermission),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
-                                            request.getAppPackageName())),
+                                            request.getAppPackageName()),
+                                    new DevContextAccessResolver(
+                                            mDevContextFilter.createDevContextFromCallingUid(
+                                                    callerUid),
+                                            request.getSourceRegistrationRequest())),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -274,7 +290,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         }
 
         final int callerUid = Binder.getCallingUidOrThrow();
-        final boolean attributionPermission = PermissionHelper.hasAttributionPermission(mContext);
+        final boolean attributionPermission =
+                PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
         sBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
@@ -295,7 +312,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission)),
+                                    new PermissionAccessResolver(attributionPermission),
+                                    new DevContextAccessResolver(
+                                            mDevContextFilter.createDevContextFromCallingUid(
+                                                    callerUid),
+                                            request.getTriggerRegistrationRequest())),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),

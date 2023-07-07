@@ -25,7 +25,9 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
+import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
@@ -168,6 +170,57 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
             throw new AdTechNotAllowedException();
         }
+    }
+
+    /**
+     * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
+     * the ad tech is enrolled and authorized to perform the operation for the package.
+     *
+     * @param context API service context
+     * @param appPackageName the package name to check against
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param apiNameLoggingId the logging ID of the API being called
+     * @return an {@link AdTechIdentifier} which is allowed to perform the operation
+     * @throws AdTechNotAllowedException if the ad tech is not authorized to perform the operation
+     */
+    @NonNull
+    public AdTechIdentifier getAndAssertAdTechFromUriAllowed(
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            @NonNull Uri uriForAdTech,
+            int apiNameLoggingId)
+            throws AdTechNotAllowedException {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(uriForAdTech);
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(uriForAdTech);
+
+        if (enrollmentResult == null) {
+            sLogger.v(
+                    "Enrollment data match not found for URI \"%s\" while calling API %d",
+                    uriForAdTech, apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        AdTechIdentifier adTechIdentifier = enrollmentResult.first;
+        EnrollmentData enrollmentData = enrollmentResult.second;
+
+        if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                        context, appPackageName, enrollmentData.getEnrollmentId())
+                || PhFlags.getInstance()
+                        .isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            sLogger.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" from URI \"%s\" not"
+                            + " authorized to call API %d",
+                    appPackageName, adTechIdentifier.toString(), uriForAdTech, apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        return adTechIdentifier;
     }
 
     /**

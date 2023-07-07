@@ -17,7 +17,9 @@
 package android.app.sdksandbox.testutils;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
@@ -30,6 +32,11 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
 
     @Override
     public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {}
+
+    @Override
+    public boolean canSendBroadcast(@NonNull Intent intent) {
+        return false;
+    }
 
     @Override
     public void enforceAllowedToStartActivity(@NonNull Intent intent) {}
@@ -63,5 +70,21 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
     }
 
     @Override
-    public void registerAdServicesManagerService(IBinder iBinder) {}
+    public void registerAdServicesManagerService(IBinder iBinder, boolean published) {}
+
+    @Override
+    public boolean canRegisterBroadcastReceiver(
+            @NonNull IntentFilter intentFilter, int flags, boolean onlyProtectedBroadcasts) {
+        return true;
+    }
+
+    @Override
+    public boolean canAccessContentProviderFromSdkSandbox(@NonNull ProviderInfo providerInfo) {
+        return true;
+    }
+
+    @Override
+    public void enforceAllowedToHostSandboxedActivity(
+            @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {}
+
 }
