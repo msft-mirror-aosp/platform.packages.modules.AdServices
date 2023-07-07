@@ -52,6 +52,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** MeasurementManager provides APIs to manage source and trigger registrations. */
 // TODO(b/269798827): Enable for R.
@@ -82,7 +83,7 @@ public class MeasurementManager {
     public @interface MeasurementApiState {}
 
     private interface MeasurementAdIdCallback {
-        void onAdIdCallback(boolean isAdIdEnabled);
+        void onAdIdCallback(boolean isAdIdEnabled, @Nullable String adIdValue);
     }
 
     private final long AD_ID_TIMEOUT_MS = 400;
@@ -263,10 +264,14 @@ public class MeasurementManager {
                                 getSdkPackageName())
                         .setRequestTime(SystemClock.uptimeMillis())
                         .setInputEvent(inputEvent);
+        // TODO(b/281546062): Can probably remove isAdIdEnabled, since whether adIdValue is null or
+        //  not will determine if adId is enabled.
         getAdId(
-                isAdIdEnabled ->
+                (isAdIdEnabled, adIdValue) ->
                         register(
-                                builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
+                                builder.setAdIdPermissionGranted(isAdIdEnabled)
+                                        .setAdIdValue(adIdValue)
+                                        .build(),
                                 service,
                                 executor,
                                 callback));
@@ -329,7 +334,7 @@ public class MeasurementManager {
                         SystemClock.uptimeMillis());
 
         getAdId(
-                isAdIdEnabled ->
+                (isAdIdEnabled, adIdValue) ->
                         registerWebSourceWrapper(
                                 builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
                                 service,
@@ -411,7 +416,7 @@ public class MeasurementManager {
                         request, getAppPackageName(), getSdkPackageName());
 
         getAdId(
-                isAdIdEnabled ->
+                (isAdIdEnabled, adIdValue) ->
                         registerWebTriggerWrapper(
                                 builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
                                 service,
@@ -469,11 +474,13 @@ public class MeasurementManager {
                         trigger,
                         getAppPackageName(),
                         getSdkPackageName());
-
+        // TODO(b/281546062)
         getAdId(
-                isAdIdEnabled ->
+                (isAdIdEnabled, adIdValue) ->
                         register(
-                                builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
+                                builder.setAdIdPermissionGranted(isAdIdEnabled)
+                                        .setAdIdValue(adIdValue)
+                                        .build(),
                                 service,
                                 executor,
                                 callback));
@@ -654,12 +661,14 @@ public class MeasurementManager {
     private void getAdId(MeasurementAdIdCallback measurementAdIdCallback) {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         AtomicBoolean isAdIdEnabled = new AtomicBoolean();
+        AtomicReference<String> adIdValue = new AtomicReference<>();
         mAdIdManager.getAdId(
                 mAdIdExecutor,
                 new OutcomeReceiver<AdId, Exception>() {
                     @Override
                     public void onResult(AdId adId) {
                         isAdIdEnabled.set(isAdIdPermissionEnabled(adId));
+                        adIdValue.set(adId.getAdId().equals(AdId.ZERO_OUT) ? null : adId.getAdId());
                         LogUtil.d("AdId permission enabled %b", isAdIdEnabled.get());
                         countDownLatch.countDown();
                     }
@@ -688,6 +697,6 @@ public class MeasurementManager {
         if (timedOut) {
             LogUtil.w("AdId call timed out");
         }
-        measurementAdIdCallback.onAdIdCallback(isAdIdEnabled.get());
+        measurementAdIdCallback.onAdIdCallback(isAdIdEnabled.get(), adIdValue.get());
     }
 }

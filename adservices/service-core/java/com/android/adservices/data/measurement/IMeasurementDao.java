@@ -28,6 +28,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
+import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -38,6 +39,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** Interface for Measurement related data access operations. */
@@ -139,6 +141,19 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Gets the count of sources in the source table in a time period before event time with
+     * matching publisher, enrollment, excluding the given registration origin.
+     */
+    Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+            Uri registrationOrigin,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            long eventTime,
+            long timePeriodInMs)
+            throws DatastoreException;
+
+    /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
@@ -176,12 +191,27 @@ public interface IMeasurementDao {
     List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException;
 
     /**
+     * Queries and returns the most recent matching delayed {@link Source} (Optional) for the
+     * provided {@link Trigger}.
+     */
+    Optional<Source> getNearestDelayedMatchingActiveSource(@NonNull Trigger trigger)
+            throws DatastoreException;
+
+    /**
      * Updates the {@link Source.Status} value for the provided list of {@link Source}
      *
      * @param sourceIds list of sources.
      * @param status value to be set
      */
     void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
+            throws DatastoreException;
+
+    /**
+     * @param sourceId the source id
+     * @param reportSpec the new report specification in source
+     * @throws DatastoreException throws DatastoreException
+     */
+    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
             throws DatastoreException;
 
     /**
@@ -314,7 +344,7 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -485,6 +515,15 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Get source IDs based on trigger IDs for flexible event API
+     *
+     * @param triggerIds triggers to be matched with source
+     * @return the list of sourced ids
+     * @throws DatastoreException throw DatastoreException
+     */
+    List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+            throws DatastoreException;
+    /**
      * Returns list of sources matching registrant, publishers and also in the provided time frame.
      * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.
      * In the resulting set, if matchBehavior is {@link
@@ -562,5 +601,18 @@ public interface IMeasurementDao {
      * @param enrollmentId enrollment ID
      */
     void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
+            throws DatastoreException;
+
+    /**
+     * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the
+     * platform AdID from app contexts for debug key population in reports. It counts distinct AdIDs
+     * provided by the AdTech across sources and triggers in the DB.
+     *
+     * @param enrollmentId enrollmentId of previous source/trigger registrations to check AdId
+     *     provided on registration.
+     * @return number of unique AdIds the AdTech has provided.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException;
 }

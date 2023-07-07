@@ -22,11 +22,14 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
@@ -185,13 +188,12 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-    // TODO(b/274723533): Uncomment after un-hiding the API
-    /*
+
     @Test
-    public void testValidPermissions_reportInteraction() {
+    public void testValidPermissions_reportEvent() {
         long adSelectionId = 1;
-        String interactionKey = "click";
-        String interactionData = "{\"key\":\"value\"}";
+        String eventKey = "click";
+        String eventData = "{\"key\":\"value\"}";
 
         AdSelectionClient mAdSelectionClient =
                 new AdSelectionClient.Builder()
@@ -199,25 +201,23 @@ public class PermissionsValidTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        ReportInteractionRequest request =
-                new ReportInteractionRequest(
-                        adSelectionId,
-                        interactionKey,
-                        interactionData,
-                        ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER
-                                | ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER);
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                adSelectionId,
+                                eventKey,
+                                eventData,
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                        | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .build();
 
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> mAdSelectionClient.reportInteraction(request).get());
+                        () -> mAdSelectionClient.reportEvent(request).get());
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-    */
 
-    // TODO(b/221876775): Unhide for frequency cap mainline promotion
-    /*
     @Test
     public void testValidPermissions_updateAdCounterHistogram() {
         long adSelectionId = 1;
@@ -229,10 +229,10 @@ public class PermissionsValidTest {
                         .build();
 
         UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                new UpdateAdCounterHistogramRequest.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                AdTechIdentifier.fromString("test.com"))
                         .build();
         ExecutionException exception =
                 assertThrows(
@@ -242,7 +242,6 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-    */
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()

@@ -9,11 +9,12 @@ java_library {
     srcs: [
         "src/**/*.java",
     ],
-
+    libs: [
+        "framework-annotations-lib",
+    ],
     static_libs: [
         "androidx.test.runner",
         "collector-helper-utilities",
-        "guava",
         "collector-device-lib-platform",
     ],
 

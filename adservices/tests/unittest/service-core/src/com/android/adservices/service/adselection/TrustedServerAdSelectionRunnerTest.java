@@ -51,6 +51,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
@@ -126,6 +128,8 @@ public class TrustedServerAdSelectionRunnerTest {
                                     .setBidPrice(1))
                     .build();
     private static final AdFilterer sAdFilterer = new AdFiltererNoOpImpl();
+    private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
+            new FrequencyCapAdDataValidatorNoOpImpl();
 
     private MockitoSession mStaticMockSession = null;
     private Context mContext = ApplicationProvider.getApplicationContext();
@@ -153,6 +157,10 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
 
     @Mock AdSelectionServiceFilter mAdSelectionServiceFilter;
+
+    @Mock private DebugReporting mDebugReportingMock;
+
+    @Mock private DebugReportSenderStrategy mDebugReportSenderMock;
 
     @Before
     public void setUp() {
@@ -211,8 +219,10 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
                 invokeRunAdSelection(
                         mAdSelectionRunner,
@@ -269,8 +279,10 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -329,8 +341,10 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -395,8 +409,10 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
 
         invokeRunAdSelection(
                 mAdSelectionRunner,
@@ -444,8 +460,10 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
         invokeRunAdSelection(
                 mAdSelectionRunner,
                 adSelectionConfig,

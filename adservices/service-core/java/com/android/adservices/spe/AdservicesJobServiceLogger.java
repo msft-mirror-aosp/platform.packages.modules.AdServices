@@ -151,6 +151,20 @@ public final class AdservicesJobServiceLogger {
     }
 
     /**
+     * Log when the execution is skipped due to customized reasons.
+     *
+     * @param jobId the unique id of the job to log for
+     * @param skipReason the result to skip the execution
+     */
+    public void recordJobSkipped(int jobId, int skipReason) {
+        if (FlagsFactory.getFlags().getBackgroundJobsLoggingKillSwitch()) {
+            return;
+        }
+
+        logExecutionStats(jobId, mClock.currentTimeMillis(), skipReason, UNAVAILABLE_STOP_REASON);
+    }
+
+    /**
      * Log for various lifecycles of an execution.
      *
      * <p>a completed lifecycle includes job finished in {@link

@@ -16,13 +16,11 @@
 
 package com.android.adservices.service.measurement.noising;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.PrivacyParams;
 
 import com.google.common.math.DoubleMath;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -265,10 +263,6 @@ public class Combinatorics {
      */
     public static int getNumStatesFlexAPI(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
-        if (!validateInputReportingPara(totalCap, perTypeNumWindowList, perTypeCapList)) {
-            LogUtil.e("Input parameters are out of range");
-            return -1;
-        }
         boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
@@ -287,17 +281,6 @@ public class Combinatorics {
         }
 
         return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
-    }
-
-    private static boolean validateInputReportingPara(
-            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
-        for (int n : perTypeNumWindowList) {
-            if (n > PrivacyParams.getMaxFlexibleEventReportingWindows()) return false;
-        }
-        return PrivacyParams.getMaxFlexibleEventReports()
-                        >= Math.min(totalCap, Arrays.stream(perTypeCapList).sum())
-                && perTypeNumWindowList.length
-                        <= PrivacyParams.getMaxFlexibleEventTriggerDataCardinality();
     }
 
     /**
@@ -394,7 +377,7 @@ public class Combinatorics {
                 // The triggers to be appended.
                 List<AtomReportState> toAppend = new ArrayList<>();
                 for (int k = 0; k < i; k++) {
-                    toAppend.add(new AtomReportState(triggerTypeIndex, winVal));
+                    toAppend.add(new AtomReportState(triggerTypeIndex, winVal - 1));
                 }
                 List<AtomReportState> otherReports =
                         getReportSetBasedOnRankRecursive(
@@ -418,13 +401,23 @@ public class Combinatorics {
 
     /** A single report including triggerDataType and window index for the fake report generation */
     public static class AtomReportState {
-        public int triggerDataType;
-        public int windowIndex;
+        private final int mTriggerDataType;
+        private final int mWindowIndex;
 
         public AtomReportState(int triggerDataType, int windowIndex) {
-            this.triggerDataType = triggerDataType;
-            this.windowIndex = windowIndex;
+            this.mTriggerDataType = triggerDataType;
+            this.mWindowIndex = windowIndex;
         }
+
+        public int getTriggerDataType() {
+            return mTriggerDataType;
+        }
+        ;
+
+        public final int getWindowIndex() {
+            return mWindowIndex;
+        }
+        ;
 
         @Override
         public boolean equals(Object obj) {
@@ -432,12 +425,12 @@ public class Combinatorics {
                 return false;
             }
             AtomReportState t = (AtomReportState) obj;
-            return triggerDataType == t.triggerDataType && windowIndex == t.windowIndex;
+            return mTriggerDataType == t.mTriggerDataType && mWindowIndex == t.mWindowIndex;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(windowIndex, triggerDataType);
+            return Objects.hash(mWindowIndex, mTriggerDataType);
         }
     }
 }
