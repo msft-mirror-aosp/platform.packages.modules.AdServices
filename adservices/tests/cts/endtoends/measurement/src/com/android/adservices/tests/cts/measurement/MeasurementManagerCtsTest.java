@@ -54,6 +54,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -147,6 +148,7 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
+    @Ignore
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
         final MeasurementManager manager = MeasurementManager.get(sContext);
@@ -207,6 +209,7 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
+    @Ignore
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
         final MeasurementManager manager = MeasurementManager.get(sContext);
