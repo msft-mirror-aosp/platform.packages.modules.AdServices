@@ -61,7 +61,7 @@ public class ReconsentNotificationTriggerTest {
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
 
         UiUtils.enableNotificationPermission();
         // consent debug mode is turned off for this test class as we only care about the
