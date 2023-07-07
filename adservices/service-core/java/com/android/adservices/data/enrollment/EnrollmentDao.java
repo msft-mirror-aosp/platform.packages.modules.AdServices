@@ -25,6 +25,7 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -366,6 +367,90 @@ public class EnrollmentDao implements IEnrollmentDao {
                     enrolledAdTechIdentifiers.size());
 
             return enrolledAdTechIdentifiers;
+        }
+    }
+
+    @Override
+    @Nullable
+    public Pair<AdTechIdentifier, EnrollmentData>
+            getEnrollmentDataForFledgeByMatchingAdTechIdentifier(Uri originalUri) {
+        if (originalUri == null) {
+            return null;
+        }
+
+        String originalUriHost = originalUri.getHost();
+        if (originalUriHost == null || originalUriHost.isEmpty()) {
+            return null;
+        }
+
+        // Instead of searching through all enrollment rows, narrow the search by searching only
+        //  the rows with FLEDGE RBR URLs which may match the TLD
+        String[] subdomains = originalUriHost.split("\\.");
+        if (subdomains.length < 1) {
+            return null;
+        }
+
+        String topLevelDomain = subdomains[subdomains.length - 1];
+
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " LIKE '%"
+                                + topLevelDomain
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for URI \"%s\" with top level domain \"%s\"",
+                        originalUri, topLevelDomain);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching URI \"%s\" with top level domain \"%s\"",
+                    cursor.getCount(), originalUri, topLevelDomain);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                for (String rbrUriString :
+                        potentialMatch.getRemarketingResponseBasedRegistrationUrl()) {
+                    try {
+                        // Make sure the URI can be parsed and the parsed host matches the ad tech
+                        String rbrUriHost = Uri.parse(rbrUriString).getHost();
+                        if (originalUriHost.equalsIgnoreCase(rbrUriHost)
+                                || originalUriHost
+                                        .toLowerCase(Locale.ENGLISH)
+                                        .endsWith("." + rbrUriHost.toLowerCase(Locale.ENGLISH))) {
+                            LogUtil.v(
+                                    "Found positive match RBR URL \"%s\" for given URI \"%s\"",
+                                    rbrUriString, originalUri);
+
+                            // AdTechIdentifiers are currently expected to only contain eTLD+1
+                            return new Pair<>(
+                                    AdTechIdentifier.fromString(rbrUriHost), potentialMatch);
+                        }
+                    } catch (IllegalArgumentException exception) {
+                        LogUtil.v(
+                                "Error while matching URI %s to FLEDGE RBR URI %s; skipping URI. "
+                                        + "Error message: %s",
+                                originalUri, rbrUriString, exception.getMessage());
+                    }
+                }
+            }
+
+            return null;
         }
     }
 

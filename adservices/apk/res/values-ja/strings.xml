@@ -212,13 +212,13 @@
     <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ON / # 個のアプリ}other{ON / # 個のアプリ}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ON"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"OFF"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"広告のトピックは、最近使用されたアプリに基づいており、パーソナライズド広告を表示するためにアプリが使用します。\n\nアプリで共有されたくないトピックをブロックできます。また Android では、トピックを定期的に自動で削除しています。"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="2539452210063311377">"広告のトピックは、最近使用されたアプリに基づいており、パーソナライズド広告を表示するためにアプリが使用します。\n\nアプリで共有されたくないトピックをブロックできます。また Android では、トピックを定期的に自動で削除しています。\n\nこの機能を ON にすることもできますが、この機能が全面的に利用可能になって各種アプリで使用されるようになるまでは、トピックの一覧は表示されません。"</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"広告トピックを許可"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"ブロックした広告トピック"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"すべての広告トピックをリセット"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android は、過去数週間にユーザーが使用したアプリに基づいて興味 / 関心のあるトピックを記録します。\n\nパーソナライズド広告のため、使用するアプリから後で Android に対してトピックが求められることがあります。Android は個人情報とアプリの使用に関する情報を保護する形で最大 3 件のトピックを共有します。\n\nAndroid は定期的にトピックを自動削除します。アプリを引き続き使用すると、トピックはリストに再表示される可能性があります。また、Android にアプリと共有されたくないトピックをブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、アプリから提案される広告の設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"アプリによる広告の提案を許可"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"ユーザーが使用するアプリがユーザーの好みを特定して、別のアプリで広告を提案する場合があります。\n\n広告の提案を行わないようアプリをブロックできます。また Android では、アプリによるおすすめのデータを定期的に自動で削除しています。"</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1869320244600600364">"ユーザーが使用するアプリがユーザーの好みを特定して、別のアプリで広告を提案する場合があります。\n\n広告の提案を行わないようアプリをブロックできます。また Android では、アプリによるおすすめのデータを定期的に自動で削除しています。\n\nこの機能を ON にすることもできますが、この機能が全面的に利用可能になって各種アプリで使用されるようになるまでは、アプリの一覧は表示されません。"</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ブロックしたアプリ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"アプリから提案されたデータをリセット"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"一般に、ご利用のアプリはユーザーの利便性をパーソナライズするためにユーザーが関心 / 興味を持っている内容を記録します。また、アプリはユーザーのトピックに関する情報も Android で保存できます。\n\nたとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心がある、と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。\n\nAndroid は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。また、アプリがユーザーに適した広告を提案しないようブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>

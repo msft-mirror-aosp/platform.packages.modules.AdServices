@@ -23,6 +23,7 @@ import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.os.FileUtils;
 import android.os.UserHandle;
 
@@ -81,15 +82,7 @@ public class SdkSandboxStorageManagerUnitTest {
                 .when(mSpyContext)
                 .createContextAsUser(Mockito.any(UserHandle.class), Mockito.anyInt());
 
-        PackageManagerLocal packageManagerLocal =
-                (volumeUuid,
-                        packageName,
-                        subDirNames,
-                        userId,
-                        appId,
-                        previousAppId,
-                        seInfo,
-                        flags) -> {};
+        PackageManagerLocal packageManagerLocal = Mockito.mock(PackageManagerLocal.class);
 
         mSdkSandboxManagerLocal = new FakeSdkSandboxManagerLocal();
         mSdkSandboxStorageManager =

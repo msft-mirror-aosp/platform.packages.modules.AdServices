@@ -58,6 +58,24 @@ public final class SdkSandboxMediationHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testGetAppOwnedSdkSandboxInterfaces() throws Exception {
+        installPackage(TEST_APP_APK_NAME);
+        runPhase("testGetAppOwnedSdkSandboxInterfaces");
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces_NoInterface() throws Exception {
+        installPackage(TEST_APP_APK_NAME);
+        runPhase("testGetAppOwnedSdkSandboxInterfaces_NoInterface");
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces_MultipleInterfaces() throws Exception {
+        installPackage(TEST_APP_APK_NAME);
+        runPhase("testGetAppOwnedSdkSandboxInterfaces_MultipleInterfaces");
+    }
+
+    @Test
     public void testGetSandboxedSdk_GetsAllSdksLoadedInTheSandbox() throws Exception {
         installPackage(TEST_APP_APK_NAME);
         runPhase("testGetSandboxedSdk_GetsAllSdksLoadedInTheSandbox");

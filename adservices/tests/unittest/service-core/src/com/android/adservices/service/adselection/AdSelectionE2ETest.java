@@ -39,6 +39,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
 import static com.android.adservices.service.adselection.JsFetcher.MISSING_SCORING_LOGIC;
@@ -103,10 +104,14 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -117,6 +122,7 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -187,6 +193,8 @@ public class AdSelectionE2ETest {
     private static final String DEFAULT_CUSTOM_AUDIENCE_NAME_SUFFIX = "";
 
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH_AD_COST =
+            "/buyer/bidding/logic/adCost/";
     private static final String BUYER_TRUSTED_SIGNAL_URI_PATH = "/kv/buyer/signals/";
     private static final String BUYER_TRUSTED_SIGNAL_PARAMS =
             "?keys=example%2Cvalid%2Clist%2Cof%2Ckeys";
@@ -209,6 +217,18 @@ public class AdSelectionE2ETest {
                     + " return {'status': 0, 'results': {'reporting_uri': '%s' } };\n"
                     + "}";
 
+    public static final String READ_BID_FROM_AD_METADATA_JS_WITH_AD_COST =
+            "function generateBid(ad, auction_signals, per_buyer_signals, trusted_bidding_signals,"
+                + " contextual_signals, custom_audience_signals) { \n"
+                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result, 'adCost':"
+                + " ad.metadata.adCost };\n"
+                + "}\n"
+                + "\n"
+                + "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                + " contextual_signals, custom_audience_signals) { \n"
+                + " return {'status': 0, 'results': {'reporting_uri': '%s' } };\n"
+                + "}";
+
     private static final String READ_BID_FROM_AD_METADATA_JS_V3 =
             "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
                     + "    trusted_bidding_signals, contextual_signals) {\n"
@@ -221,6 +241,20 @@ public class AdSelectionE2ETest {
                     + "    }\n"
                     + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
                     + "'render': result.render_uri };\n"
+                    + "}";
+
+    private static final String READ_BID_FROM_AD_METADATA_JS_V3_WITH_AD_COST =
+            "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = custom_audience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri, 'adCost': result.metadata.adCost };\n"
                     + "}";
 
     public static final String USE_BID_AS_SCORE_JS =
@@ -285,6 +319,9 @@ public class AdSelectionE2ETest {
     private static final MockWebServerRule.RequestMatcher<String> REQUEST_PREFIX_MATCHER =
             (a, b) -> !b.isEmpty() && a.startsWith(b);
 
+    private static final AdCost AD_COST_1 = new AdCost(1.2, NUM_BITS_STOCHASTIC_ROUNDING);
+    private static final AdCost AD_COST_2 = new AdCost(2.2, NUM_BITS_STOCHASTIC_ROUNDING);
+
     // TODO(b/275657377) Refactor duplicate dispatchers
     public static final Dispatcher DISPATCHER_V2_ONLY_BIDDING_LOGIC =
             new Dispatcher() {
@@ -345,6 +382,20 @@ public class AdSelectionE2ETest {
                                 == versionFromHeader) {
                             return new MockResponse()
                                     .setBody(READ_BID_FROM_AD_METADATA_JS_V3)
+                                    .setHeader(headerName, versionFromHeader);
+                        }
+                    } else if ((BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_1.toString())
+                                    .equals(request.getPath())
+                            || (BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_2.toString())
+                                    .equals(request.getPath())) {
+                        String headerName =
+                                JsVersionHelper.getVersionHeaderName(
+                                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
+                        long versionFromHeader = Long.parseLong(request.getHeader(headerName));
+                        if (JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
+                                == versionFromHeader) {
+                            return new MockResponse()
+                                    .setBody(READ_BID_FROM_AD_METADATA_JS_V3_WITH_AD_COST)
                                     .setHeader(headerName, versionFromHeader);
                         }
                     } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
@@ -511,6 +562,9 @@ public class AdSelectionE2ETest {
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
+    private EncryptionKeyDao mEncryptionKeyDao;
+    private EncryptionContextDao mEncryptionContextDao;
+    private ReportingUrisDao mReportingUrisDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
@@ -520,6 +574,7 @@ public class AdSelectionE2ETest {
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
 
     @Before
     public void setUp() throws Exception {
@@ -540,7 +595,11 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .frequencyCapDao();
-
+        AdSelectionServerDatabase serverDb =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
+        mEncryptionContextDao = serverDb.encryptionContextDao();
+        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mReportingUrisDao = serverDb.reportingUrisDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -559,7 +618,7 @@ public class AdSelectionE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         mAdServicesHttpsClient =
@@ -578,6 +637,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -590,7 +652,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         Uri uriPathForScoringWithReportResults =
@@ -616,6 +679,12 @@ public class AdSelectionE2ETest {
                                             String.format(
                                                     READ_BID_FROM_AD_METADATA_JS,
                                                     uriPathForBiddingWithReportResults));
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_1.toString())
+                                        .equals(request.getPath())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_2.toString())
+                                        .equals(request.getPath())) {
+                            return new MockResponse()
+                                    .setBody(READ_BID_FROM_AD_METADATA_JS_WITH_AD_COST);
                         } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
                             return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
                         } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
@@ -760,6 +829,247 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingEnabled()
+            throws Exception {
+        AdSelectionE2ETestFlags flagsWithCPCEnabled =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeCpcBillingEnabled() {
+                        return true;
+                    }
+                };
+        doReturn(flagsWithCPCEnabled).when(FlagsFactory::getFlags);
+
+        // Re init adSelection service with new flags
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithCPCEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_1),
+                        bidsForBuyer1,
+                        AD_COST_1.getAdCost());
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_2),
+                        bidsForBuyer2,
+                        AD_COST_2.getAdCost());
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // Assert adCost was propagated through
+        String expectedBuyerContextualSignals =
+                BuyerContextualSignals.builder().setAdCost(AD_COST_2).build().toString();
+        assertEquals(
+                expectedBuyerContextualSignals,
+                mAdSelectionEntryDaoSpy
+                        .getAdSelectionEntityById(resultSelectionId)
+                        .getBuyerContextualSignals());
+
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingDisabled()
+            throws Exception {
+        AdSelectionE2ETestFlags flagsWithCPCDisabled =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeCpcBillingEnabled() {
+                        return false;
+                    }
+                };
+        doReturn(flagsWithCPCDisabled).when(FlagsFactory::getFlags);
+
+        // Re init adSelection service with new flags
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithCPCDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_1),
+                        bidsForBuyer1,
+                        AD_COST_1.getAdCost());
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_2),
+                        bidsForBuyer2,
+                        AD_COST_2.getAdCost());
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // Assert adCost was not propagated through due to flag disabled
+        String expectedBuyerContextualSignals = "{}";
+        assertEquals(
+                expectedBuyerContextualSignals,
+                mAdSelectionEntryDaoSpy
+                        .getAdSelectionEntityById(resultSelectionId)
+                        .getBuyerContextualSignals());
+
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
     public void testRunAdSelectionSuccess_prebuiltScoringLogic() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
@@ -868,6 +1178,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -880,7 +1193,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -956,6 +1270,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -968,7 +1285,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1094,6 +1412,243 @@ public class AdSelectionE2ETest {
         assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccess_v3BiddingLogicWithAdCostCpcBillingEnabled()
+            throws Exception {
+        AdSelectionE2ETestFlags flagsWithCPCEnabled =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeCpcBillingEnabled() {
+                        return true;
+                    }
+                };
+        doReturn(flagsWithCPCEnabled).when(FlagsFactory::getFlags);
+
+        // Re init adSelection service with new flags
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithCPCEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_1),
+                        bidsForBuyer1,
+                        AD_COST_1.getAdCost());
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_2),
+                        bidsForBuyer2,
+                        AD_COST_2.getAdCost());
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // Assert adCost was propagated through
+        String expectedBuyerContextualSignals =
+                BuyerContextualSignals.builder().setAdCost(AD_COST_2).build().toString();
+        assertEquals(
+                expectedBuyerContextualSignals,
+                mAdSelectionEntryDaoSpy
+                        .getAdSelectionEntityById(resultSelectionId)
+                        .getBuyerContextualSignals());
+
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccess_v3BiddingLogicWithAdCostCpcBillingDisabled()
+            throws Exception {
+        AdSelectionE2ETestFlags flagsWithCPCDisabled =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeCpcBillingEnabled() {
+                        return false;
+                    }
+                };
+        doReturn(flagsWithCPCDisabled).when(FlagsFactory::getFlags);
+
+        // Re init adSelection service with new flags
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithCPCDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+        mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_1),
+                        bidsForBuyer1,
+                        AD_COST_1.getAdCost());
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudienceWithAdCost(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(
+                                BUYER_BIDDING_LOGIC_URI_PATH_AD_COST + BUYER_2),
+                        bidsForBuyer2,
+                        AD_COST_2.getAdCost());
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // Assert adCost was not propagated through due to flag disabled
+        String expectedBuyerContextualSignals = "{}";
+        assertEquals(
+                expectedBuyerContextualSignals,
+                mAdSelectionEntryDaoSpy
+                        .getAdSelectionEntityById(resultSelectionId)
+                        .getBuyerContextualSignals());
+
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
@@ -1538,6 +2093,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1550,7 +2108,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1575,8 +2134,7 @@ public class AdSelectionE2ETest {
                 server,
                 2,
                 ImmutableList.of(
-                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH),
+                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1, BUYER_TRUSTED_SIGNAL_URI_PATH),
                 REQUEST_PREFIX_MATCHER);
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
@@ -1667,6 +2225,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1679,7 +2240,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2367,6 +2929,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2379,7 +2944,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2474,6 +3040,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2486,7 +3055,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2583,6 +3153,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2595,7 +3168,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -2695,6 +3269,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2707,7 +3284,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -2810,6 +3388,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2822,7 +3403,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -2938,6 +3520,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2950,7 +3535,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -4080,6 +4666,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4092,7 +4681,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -4316,6 +4906,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4328,7 +4921,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4385,6 +4979,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4397,7 +4994,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4565,6 +5163,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4577,7 +5178,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4634,6 +5236,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4646,7 +5251,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4746,6 +5352,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4758,7 +5367,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -5389,6 +5999,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5401,7 +6014,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -5511,6 +6125,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5523,7 +6140,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -5634,6 +6252,9 @@ public class AdSelectionE2ETest {
                         mAppInstallDao,
                         mCustomAudienceDao,
                         mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mReportingUrisDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5646,7 +6267,8 @@ public class AdSelectionE2ETest {
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
-                        mConsentManagerMock);
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -5750,6 +6372,66 @@ public class AdSelectionE2ETest {
                             Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)),
                             "{\"result\":" + bids.get(i) + "}",
                             Collections.EMPTY_SET,
+                            null,
+                            null));
+        }
+
+        return new DBCustomAudience.Builder()
+                .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(buyer)
+                .setName(buyer.toString() + CustomAudienceFixture.VALID_NAME + nameSuffix)
+                .setActivationTime(activationTime)
+                .setExpirationTime(expirationTime)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(lastUpdateTime)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        new DBTrustedBiddingData.Builder()
+                                .setUri(
+                                        mMockWebServerRule.uriForPath(
+                                                BUYER_TRUSTED_SIGNAL_URI_PATH))
+                                .setKeys(TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
+                                .build())
+                .setBiddingLogicUri(biddingUri)
+                .setAds(ads)
+                .build();
+    }
+
+    /**
+     * @param buyer The name of the buyer for this Custom Audience
+     * @param biddingUri path from where the bidding logic for this CA can be fetched from
+     * @param bids these bids, are added to its metadata. Our JS logic then picks this value and
+     *     creates ad with the provided value as bid
+     * @param activationTime is the activation time of the Custom Audience
+     * @param expirationTime is the expiration time of the Custom Audience
+     * @param lastUpdateTime is the last time of the Custom Audience ads and bidding data got
+     *     updated
+     * @param adCost The click cost of the ad
+     * @return a real Custom Audience object that can be persisted and used in bidding and scoring
+     */
+    private DBCustomAudience createDBCustomAudienceWithAdCost(
+            final AdTechIdentifier buyer,
+            final String nameSuffix,
+            final Uri biddingUri,
+            List<Double> bids,
+            Instant activationTime,
+            Instant expirationTime,
+            Instant lastUpdateTime,
+            double adCost) {
+
+        // Generate ads for with bids provided
+        List<DBAdData> ads = new ArrayList<>();
+
+        // Create ads with the buyer name and bid number as the ad URI
+        // Add the bid value to the metadata
+        for (int i = 0; i < bids.size(); i++) {
+            // TODO(b/266015983) Add real data
+            ads.add(
+                    new DBAdData(
+                            Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)),
+                            "{\"result\":" + bids.get(i) + ",\"adCost\":" + adCost + "}",
+                            Collections.EMPTY_SET,
+                            null,
                             null));
         }
 
@@ -5791,6 +6473,27 @@ public class AdSelectionE2ETest {
                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                 CustomAudienceFixture.VALID_EXPIRATION_TIME,
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+    }
+
+    /**
+     * @param buyer The name of the buyer for this Custom Audience
+     * @param biddingUri path from where the bidding logic for this CA can be fetched from
+     * @param bids these bids, are added to its metadata. Our JS logic then picks this value and
+     *     creates ad with the provided value as bid
+     * @param adCost The click cost of the ad
+     * @return a real Custom Audience object that can be persisted and used in bidding and scoring
+     */
+    private DBCustomAudience createDBCustomAudienceWithAdCost(
+            final AdTechIdentifier buyer, final Uri biddingUri, List<Double> bids, double adCost) {
+        return createDBCustomAudienceWithAdCost(
+                buyer,
+                DEFAULT_CUSTOM_AUDIENCE_NAME_SUFFIX,
+                biddingUri,
+                bids,
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                adCost);
     }
 
     private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
@@ -6052,6 +6755,11 @@ public class AdSelectionE2ETest {
         @Override
         public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getFledgeCpcBillingEnabled() {
+            return false;
         }
     }
 }

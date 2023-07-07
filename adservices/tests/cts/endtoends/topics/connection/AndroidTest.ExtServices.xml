@@ -51,6 +51,7 @@
         <option name="run-command"
                 value="setprop debug.adservices.consent_manager_debug_mode true"/>
         <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command"
                 value="setprop debug.adservices.disable_topics_enrollment_check true"/>
@@ -75,5 +76,5 @@
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices.apex"/>
+            value="com.google.android.extservices_sminus.apex"/>
 </configuration>

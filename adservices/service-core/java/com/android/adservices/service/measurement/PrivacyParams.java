@@ -182,10 +182,10 @@ public final class PrivacyParams {
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
     /** Minimum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_MIN_REPORT_DELAY = TimeUnit.MINUTES.toMillis(10L);
+    public static final long AGGREGATE_REPORT_MIN_DELAY = TimeUnit.MINUTES.toMillis(10L);
 
     /** Maximum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
+    public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(50L);
 
     /**
      * Max distinct web destinations in a source registration.
@@ -226,10 +226,13 @@ public final class PrivacyParams {
         return PRIVACY_EPSILON;
     }
 
-    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
 
-    // place holder for future change
-    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE =
+            1.5849266D;
+
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE =
+            11.4617280D;
 
     /**
      * Maximum early reporting windows configured through {@link
@@ -238,8 +241,12 @@ public final class PrivacyParams {
      */
     public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
 
-    public static double getMaxFlexibleEventInformationGain() {
-        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
+    public static double getMaxFlexibleEventInformationGainEventSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE;
+    }
+
+    public static double getMaxFlexibleEventInformationGainNavigationSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE;
     }
 
     private PrivacyParams() {
