@@ -142,7 +142,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse("http://baz.test"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
+                                sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
 
@@ -197,7 +197,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse("http://baz.test"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
+                                sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .setInputEvent(mInputEvent)
                         .build();
@@ -253,7 +253,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse("http://baz.test"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
+                                sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
 
@@ -304,7 +304,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse("http://baz.test"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
+                                sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .setAdIdValue(PLATFORM_AD_ID_VALUE)
                         .setAdIdPermissionGranted(true)
@@ -830,7 +830,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse("http://baz.test"),
-                                sDefaultContext.getAttributionSource().getPackageName(),
+                                sDefaultContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
 

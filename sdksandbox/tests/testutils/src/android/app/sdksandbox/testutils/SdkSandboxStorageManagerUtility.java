@@ -29,6 +29,7 @@ import java.util.List;
 public class SdkSandboxStorageManagerUtility {
 
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
+    private static final String TAG = "SdkSandboxStorageManagerUtility";
 
     public SdkSandboxStorageManagerUtility(SdkSandboxStorageManager sdkSandboxStorageManager) {
         mSdkSandboxStorageManager = sdkSandboxStorageManager;
@@ -38,13 +39,12 @@ public class SdkSandboxStorageManagerUtility {
             int userId,
             String clientPackageName,
             List<String> sdkNames,
-            List<String> nonSdkDirectories)
-            throws Exception {
+            List<String> nonSdkDirectories) {
         try {
             createSdkStorageForTest(
                     /*volumeUuid=*/ null, userId, clientPackageName, sdkNames, nonSdkDirectories);
         } catch (Exception e) {
-            Log.d("TAGGGGG", "Error while creating files: " + e.toString());
+            Log.d(TAG, "Error while creating files: " + e.toString());
         }
     }
 

@@ -23,8 +23,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.ui.ModeSelector;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.UxSelector;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 
 /**
@@ -35,7 +35,7 @@ import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivity
-        implements ModeSelector {
+        implements UxSelector {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,7 +44,7 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
             OTAResourcesManager.applyOTAResources(getApplicationContext(), false);
         }
         if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithMode(/* should refresh UI */ false);
+            initWithUx(this, getApplicationContext());
         }
     }
 

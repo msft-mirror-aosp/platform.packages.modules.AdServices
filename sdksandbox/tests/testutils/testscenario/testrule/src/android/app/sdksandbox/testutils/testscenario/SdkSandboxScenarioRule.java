@@ -276,6 +276,11 @@ public class SdkSandboxScenarioRule implements TestRule {
                                 surfacePackageCallback.getSurfacePackage());
                         renderedView.setVisibility(View.VISIBLE);
                         renderedView.setZOrderOnTop(true);
+
+                        // Keyboard events will only go to the surface view if it has focus.
+                        // This needs to be done with a touch event.
+                        renderedView.setFocusableInTouchMode(true);
+                        renderedView.requestFocusFromTouch();
                     }
                 });
         if (surfacePackageException.get() != null) {

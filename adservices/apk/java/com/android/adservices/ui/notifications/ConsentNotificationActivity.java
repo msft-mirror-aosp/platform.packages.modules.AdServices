@@ -29,14 +29,14 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.UxSelector;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class ConsentNotificationActivity extends FragmentActivity {
-
+public class ConsentNotificationActivity extends FragmentActivity implements UxSelector {
     public enum NotificationFragmentEnum {
         LANDING_PAGE_DISPLAYED,
         LANDING_PAGE_DISMISSED,
@@ -87,7 +87,38 @@ public class ConsentNotificationActivity extends FragmentActivity {
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
         }
+        if (FlagsFactory.getFlags().getU18UxEnabled()) {
+            initWithUx(this, getApplicationContext());
+        } else {
+            initFragment();
+        }
+    }
 
+    @Override
+    public void initBeta() {
+        setContentView(R.layout.consent_notification_activity);
+    }
+
+    @Override
+    public void initGA() {
+        if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
+            setContentView(R.layout.consent_notification_ga_v2_activity);
+        } else {
+            setContentView(R.layout.consent_notification_ga_activity);
+        }
+    }
+
+    @Override
+    public void initU18() {
+        setContentView(R.layout.consent_notification_u18_activity);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outBundle) {
+        super.onSaveInstanceState(outBundle);
+    }
+
+    private void initFragment() {
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
             if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
                 setContentView(R.layout.consent_notification_ga_v2_activity);
@@ -97,11 +128,6 @@ public class ConsentNotificationActivity extends FragmentActivity {
         } else {
             setContentView(R.layout.consent_notification_activity);
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outBundle) {
-        super.onSaveInstanceState(outBundle);
     }
 
     /**

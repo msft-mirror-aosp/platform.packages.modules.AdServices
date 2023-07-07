@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 
@@ -50,9 +49,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
             LogUtil.d(
                     "Disabling AsyncRegistrationFallbackJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(
-                    params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         AdservicesJobServiceLogger.getInstance(this)
@@ -62,7 +59,8 @@ public class AsyncRegistrationFallbackJobService extends JobService {
             LogUtil.e("AsyncRegistrationFallbackJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         Instant jobStartTime = Clock.systemUTC().instant();
@@ -145,14 +143,17 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordJobSkipped(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID, skipReason);
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID, skipReason);
+        }
 
         // Tell the JobScheduler that the job is done and does not need to be rescheduled
         jobFinished(params, false);

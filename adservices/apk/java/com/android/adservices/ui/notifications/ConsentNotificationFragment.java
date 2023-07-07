@@ -48,13 +48,13 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationFragment extends Fragment {
-    public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
 
     private boolean mIsEUDevice;
@@ -71,8 +71,6 @@ public class ConsentNotificationFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
         setupListeners(savedInstanceState);
     }
 
@@ -88,10 +86,9 @@ public class ConsentNotificationFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        boolean isEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = NotificationUtil.isEeaDevice(requireActivity(), getContext());
         View rootView;
-        if (isEUDevice) {
+        if (mIsEUDevice) {
             rootView =
                     inflater.inflate(R.layout.consent_notification_fragment_eu, container, false);
         } else {

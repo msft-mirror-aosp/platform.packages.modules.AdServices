@@ -37,6 +37,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class AggregateReportSenderTest {
 
     @Rule
@@ -96,12 +98,13 @@ public class AggregateReportSenderTest {
 
     @Test
     public void testCreateHttpUrlConnection() throws Exception {
-        HttpURLConnection mockConnection = Mockito.mock(HttpURLConnection.class);
+        HttpsURLConnection mockConnection = Mockito.mock(HttpsURLConnection.class);
         URL spyUrl = Mockito.spy(new URL("https://foo"));
         Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
 
         AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
-        HttpURLConnection connection = aggregateReportSender.createHttpUrlConnection(spyUrl);
+        HttpsURLConnection connection =
+                (HttpsURLConnection) aggregateReportSender.createHttpUrlConnection(spyUrl);
         assertEquals(mockConnection, connection);
     }
 

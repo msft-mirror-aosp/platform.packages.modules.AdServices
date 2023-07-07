@@ -16,7 +16,6 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -42,9 +41,9 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -115,9 +114,7 @@ public class MddJobService extends JobService {
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
             return skipAndCancelBackgroundJob(
-                    params,
-                    jobId,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+                    params, jobId, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         // Record the invocation of onStartJob() for logging purpose.
@@ -129,7 +126,8 @@ public class MddJobService extends JobService {
             return skipAndCancelBackgroundJob(
                     params,
                     jobId,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -327,10 +325,15 @@ public class MddJobService extends JobService {
     }
 
     private boolean skipAndCancelBackgroundJob(
-            final JobParameters params, int jobId, int skipReason) {
-        this.getSystemService(JobScheduler.class).cancel(getMddTaskJobId(getMddTag(params)));
+            final JobParameters params, int jobId, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(getMddTaskJobId(getMddTag(params)));
+        }
 
-        AdservicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.
