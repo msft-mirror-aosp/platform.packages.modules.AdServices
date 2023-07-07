@@ -18,7 +18,12 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 
-import com.google.common.annotations.VisibleForTesting;
+import androidx.annotation.Nullable;
+
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,15 +40,21 @@ public class AggregateReportBody {
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
+    @Nullable private UnsignedLong mSourceDebugKey;
+    @Nullable private UnsignedLong mTriggerDebugKey;
 
     private static final String API_NAME = "attribution-reporting";
 
     private interface PayloadBodyKeys {
         String SHARED_INFO = "shared_info";
         String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
+        String SOURCE_DEBUG_KEY = "source_debug_key";
+        String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
-    private interface DebugCleartextPayloadKeys {
+    private interface AggregationServicePayloadKeys {
+        String PAYLOAD = "payload";
+        String KEY_ID = "key_id";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
     }
 
@@ -67,16 +78,27 @@ public class AggregateReportBody {
         mReportId = other.mReportId;
         mReportingOrigin = other.mReportingOrigin;
         mDebugCleartextPayload = other.mDebugCleartextPayload;
+        mSourceDebugKey = other.mSourceDebugKey;
+        mTriggerDebugKey = other.mTriggerDebugKey;
     }
 
-    /**
-     * Generate the JSON serialization of the aggregate report.
-     */
-    public JSONObject toJson() throws JSONException {
+    /** Generate the JSON serialization of the aggregate report. */
+    public JSONObject toJson(AggregateEncryptionKey key) throws JSONException {
         JSONObject aggregateBodyJson = new JSONObject();
-        aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfoToJson().toString());
-        aggregateBodyJson.put(PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
-                aggregationServicePayloadsToJson());
+
+        final String sharedInfo = sharedInfoToJson().toString();
+        aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfo);
+        aggregateBodyJson.put(
+                PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
+                aggregationServicePayloadsToJson(sharedInfo, key));
+
+        if (mSourceDebugKey != null) {
+            aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey.toString());
+        }
+        if (mTriggerDebugKey != null) {
+            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
+        }
+
         return aggregateBodyJson;
     }
 
@@ -98,18 +120,26 @@ public class AggregateReportBody {
         return sharedInfoJson;
     }
 
-    /**
-     * Generate the JSON array serialization of the aggregation service payloads field.
-     */
+    /** Generate the JSON array serialization of the aggregation service payloads field. */
     @VisibleForTesting
-    JSONArray aggregationServicePayloadsToJson() throws JSONException {
+    JSONArray aggregationServicePayloadsToJson(String sharedInfo, AggregateEncryptionKey key)
+            throws JSONException {
         JSONArray aggregationServicePayloadsJson = new JSONArray();
 
-        JSONObject debugCleartextPayloadJson = new JSONObject();
-        debugCleartextPayloadJson.put(DebugCleartextPayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                mDebugCleartextPayload);
+        final String encryptedPayload =
+                AggregateCryptoConverter.encrypt(
+                        key.getPublicKey(), mDebugCleartextPayload, sharedInfo);
 
-        aggregationServicePayloadsJson.put(debugCleartextPayloadJson);
+        final JSONObject aggregationServicePayload = new JSONObject();
+        aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
+        aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
+
+        if (mSourceDebugKey != null || mTriggerDebugKey != null) {
+            aggregationServicePayload.put(
+                    AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
+        }
+        aggregationServicePayloadsJson.put(aggregationServicePayload);
 
         return aggregationServicePayloadsJson;
     }
@@ -177,6 +207,18 @@ public class AggregateReportBody {
          */
         public @NonNull Builder setDebugCleartextPayload(@NonNull String debugCleartextPayload) {
             mBuilding.mDebugCleartextPayload = debugCleartextPayload;
+            return this;
+        }
+
+        /** Source debug key */
+        public @NonNull Builder setSourceDebugKey(@Nullable UnsignedLong sourceDebugKey) {
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            return this;
+        }
+
+        /** Trigger debug key */
+        public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
+            mBuilding.mTriggerDebugKey = triggerDebugKey;
             return this;
         }
 

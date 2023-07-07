@@ -33,7 +33,6 @@ import java.util.Objects;
  * This POJO represents the ad_selection_entry data that combines the data fields joined from the
  * ad_selection and buyer_decision_logic entities.
  */
-// TODO (b/229660121): Ad unit tests for this class
 public final class DBAdSelectionEntry {
     private static final int UNSET = 0;
 
@@ -47,11 +46,11 @@ public final class DBAdSelectionEntry {
 
     @ColumnInfo(name = "contextual_signals")
     @NonNull
-    private final String mContextualSignals;
+    private final String mBuyerContextualSignals;
 
-    @ColumnInfo(name = "winning_ad_render_url")
+    @ColumnInfo(name = "winning_ad_render_uri")
     @NonNull
-    private final Uri mWinningAdRenderUrl;
+    private final Uri mWinningAdRenderUri;
 
     @ColumnInfo(name = "winning_ad_bid")
     private final double mWinningAdBid;
@@ -64,21 +63,33 @@ public final class DBAdSelectionEntry {
     @Nullable
     private final String mBuyerDecisionLogicJs;
 
+    @ColumnInfo(name = "bidding_logic_uri")
+    @NonNull
+    private final Uri mBiddingLogicUri;
+
+    @ColumnInfo(name = "seller_contextual_signals")
+    @Nullable
+    private final String mSellerContextualSignals;
+
     public DBAdSelectionEntry(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
-            @NonNull String contextualSignals,
-            @NonNull Uri winningAdRenderUrl,
+            @NonNull String buyerContextualSignals,
+            @NonNull Uri winningAdRenderUri,
             double winningAdBid,
             @NonNull Instant creationTimestamp,
-            @Nullable String buyerDecisionLogicJs) {
+            @Nullable String buyerDecisionLogicJs,
+            @NonNull Uri biddingLogicUri,
+            @Nullable String sellerContextualSignals) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
-        this.mContextualSignals = contextualSignals;
-        this.mWinningAdRenderUrl = winningAdRenderUrl;
+        this.mBuyerContextualSignals = buyerContextualSignals;
+        this.mWinningAdRenderUri = winningAdRenderUri;
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
         this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
+        this.mBiddingLogicUri = biddingLogicUri;
+        this.mSellerContextualSignals = sellerContextualSignals;
     }
 
     @Override
@@ -89,12 +100,14 @@ public final class DBAdSelectionEntry {
             return mAdSelectionId == adSelectionEntry.mAdSelectionId
                     && Objects.equals(
                             mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
-                    && mContextualSignals.equals(adSelectionEntry.mContextualSignals)
-                    && Objects.equals(mWinningAdRenderUrl, adSelectionEntry.mWinningAdRenderUrl)
+                    && mBuyerContextualSignals.equals(adSelectionEntry.mBuyerContextualSignals)
+                    && Objects.equals(mWinningAdRenderUri, adSelectionEntry.mWinningAdRenderUri)
                     && mWinningAdBid == adSelectionEntry.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelectionEntry.mCreationTimestamp)
+                    && Objects.equals(mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs)
+                    && Objects.equals(mBiddingLogicUri, adSelectionEntry.mBiddingLogicUri)
                     && Objects.equals(
-                            mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs);
+                            mSellerContextualSignals, adSelectionEntry.mSellerContextualSignals);
         }
         return false;
     }
@@ -104,11 +117,13 @@ public final class DBAdSelectionEntry {
         return Objects.hash(
                 mAdSelectionId,
                 mCustomAudienceSignals,
-                mContextualSignals,
-                mWinningAdRenderUrl,
+                mBuyerContextualSignals,
+                mWinningAdRenderUri,
                 mWinningAdBid,
                 mCreationTimestamp,
-                mBuyerDecisionLogicJs);
+                mBuyerDecisionLogicJs,
+                mBiddingLogicUri,
+                mSellerContextualSignals);
     }
 
     /**
@@ -128,20 +143,17 @@ public final class DBAdSelectionEntry {
     }
 
     /**
-     * @return the contextual signals, for instance application name used in this
-     *     ad_selection_entry.
+     * @return the contextual signals that will be used in buyer scripts
      */
     @NonNull
-    public String getContextualSignals() {
-        return mContextualSignals;
+    public String getBuyerContextualSignals() {
+        return mBuyerContextualSignals;
     }
 
-    /**
-     * @return the rendering URL of the winning ad in this ad_selection_entry.
-     */
+    /** @return the rendering URI of the winning ad in this ad_selection_entry. */
     @NonNull
-    public Uri getWinningAdRenderUrl() {
-        return mWinningAdRenderUrl;
+    public Uri getWinningAdRenderUri() {
+        return mWinningAdRenderUri;
     }
 
     /**
@@ -167,15 +179,31 @@ public final class DBAdSelectionEntry {
         return mBuyerDecisionLogicJs;
     }
 
+    /** @return the buyer-provided uri for buyer-side logic. */
+    @NonNull
+    public Uri getBiddingLogicUri() {
+        return mBiddingLogicUri;
+    }
+
+    /**
+     * @return the contextual signals that will be used in seller scripts
+     */
+    @Nullable
+    public String getSellerContextualSignals() {
+        return mSellerContextualSignals;
+    }
+
     /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
         private CustomAudienceSignals mCustomAudienceSignals;
-        private String mContextualSignals;
-        private Uri mWinningAdRenderUrl;
+        private String mBuyerContextualSignals;
+        private Uri mWinningAdRenderUri;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mBuyerDecisionLogicJs;
+        private Uri mBiddingLogicUri;
+        private String mSellerContextualSignals;
 
         public Builder() {}
 
@@ -198,17 +226,18 @@ public final class DBAdSelectionEntry {
 
         /** Sets the contextual signals with this ad_selection_entry. */
         @NonNull
-        public DBAdSelectionEntry.Builder setContextualSignals(@NonNull String contextualSignals) {
-            Objects.requireNonNull(contextualSignals);
-            this.mContextualSignals = contextualSignals;
+        public DBAdSelectionEntry.Builder setBuyerContextualSignals(
+                @NonNull String buyerContextualSignals) {
+            Objects.requireNonNull(buyerContextualSignals);
+            this.mBuyerContextualSignals = buyerContextualSignals;
             return this;
         }
 
-        /** Sets the winning ad's rendering URL for this ad_selection_entry. */
+        /** Sets the winning ad's rendering URI for this ad_selection_entry. */
         @NonNull
-        public DBAdSelectionEntry.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
-            Objects.requireNonNull(mWinningAdRenderUrl);
-            this.mWinningAdRenderUrl = mWinningAdRenderUrl;
+        public DBAdSelectionEntry.Builder setWinningAdRenderUri(@NonNull Uri mWinningAdRenderUri) {
+            Objects.requireNonNull(mWinningAdRenderUri);
+            this.mWinningAdRenderUri = mWinningAdRenderUri;
             return this;
         }
 
@@ -237,6 +266,25 @@ public final class DBAdSelectionEntry {
             return this;
         }
 
+        /** Sets the buyer_decision_logic_js of this ad_selection_entry. */
+        @NonNull
+        public DBAdSelectionEntry.Builder setBiddingLogicUri(@NonNull Uri biddingLogicUri) {
+            Objects.requireNonNull(biddingLogicUri);
+            this.mBiddingLogicUri = biddingLogicUri;
+            return this;
+        }
+
+        /**
+         * Sets the seller contextual signals with this ad selection. These signals will only be
+         * used for seller scripts.
+         */
+        @Nullable
+        public DBAdSelectionEntry.Builder setSellerContextualSignals(
+                @Nullable String sellerContextualSignals) {
+            this.mSellerContextualSignals = sellerContextualSignals;
+            return this;
+        }
+
         /**
          * Builds an {@link DBAdSelectionEntry} instance.
          *
@@ -254,18 +302,21 @@ public final class DBAdSelectionEntry {
                     Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBuyerDecisionLogicJs);
             Preconditions.checkArgument(
                     !oneNull, "Buyer fields must both be null in case of contextual ad.");
-            Objects.requireNonNull(mContextualSignals);
-            Objects.requireNonNull(mWinningAdRenderUrl);
+            Objects.requireNonNull(mBuyerContextualSignals);
+            Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
+            Objects.requireNonNull(mBiddingLogicUri);
 
             return new DBAdSelectionEntry(
                     mAdSelectionId,
                     mCustomAudienceSignals,
-                    mContextualSignals,
-                    mWinningAdRenderUrl,
+                    mBuyerContextualSignals,
+                    mWinningAdRenderUri,
                     mWinningAdBid,
                     mCreationTimestamp,
-                    mBuyerDecisionLogicJs);
+                    mBuyerDecisionLogicJs,
+                    mBiddingLogicUri,
+                    mSellerContextualSignals);
         }
     }
 }

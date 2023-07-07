@@ -21,6 +21,6 @@ import android.view.SurfaceControlViewHost.SurfacePackage;
 
 /** @hide */
 oneway interface IRequestSurfacePackageCallback {
-    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params);
-    void onSurfacePackageError(int errorCode, String errorMsg);
+    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params, long timeSystemServerCalledApp);
+    void onSurfacePackageError(int errorCode, String errorMsg, long timeSystemServerCalledApp);
 }

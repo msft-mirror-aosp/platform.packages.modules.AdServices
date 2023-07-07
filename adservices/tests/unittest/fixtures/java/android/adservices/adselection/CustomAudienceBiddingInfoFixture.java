@@ -16,20 +16,33 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.adselection.AdCost;
+import com.android.adservices.service.adselection.BuyerContextualSignals;
 
 public class CustomAudienceBiddingInfoFixture {
 
-    public static final Uri VALID_BIDDING_LOGIC_URL =
-            new Uri.Builder().path("valid-buyer.example.com/bidding/logic/here/").build();
+    public static final String VALID_BIDDING_LOGIC_URI_FORMAT = "https://%s/bidding/logic/here/";
 
     public static final String BUYER_DECISION_LOGIC_JS =
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                     + ") {;\n"
                     + "}";
 
-    public static final CustomAudienceSignals.Builder CUSTOM_AUDIENCE_SIGNAL_BUILDER =
-            CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder();
+    public static final BuyerContextualSignals BUYER_CONTEXTUAL_SIGNALS =
+            BuyerContextualSignals.builder()
+                    .setAdCost(new AdCost(1.0, NUM_BITS_STOCHASTIC_ROUNDING))
+                    .build();
+
+    public static Uri getValidBiddingLogicUri(String buyer) {
+        return Uri.parse(String.format(VALID_BIDDING_LOGIC_URI_FORMAT, buyer));
+    }
+
+    public static Uri getValidBiddingLogicUri(AdTechIdentifier buyer) {
+        return getValidBiddingLogicUri(buyer.toString());
+    }
 }

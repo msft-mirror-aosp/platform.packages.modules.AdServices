@@ -16,11 +16,20 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
+
+import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -38,133 +47,199 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
 
+    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
+    private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
+    private boolean mIsDebugInstance;
 
-    AggregateReportingJobHandler(DatastoreManager datastoreManager) {
+    private ReportingStatus.UploadMethod mUploadMethod;
+
+    AggregateReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
+        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
+        mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
     }
 
-    public enum PerformReportResult {
-        SUCCESS,
-        ALREADY_DELIVERED,
-        POST_REQUEST_ERROR,
-        DATASTORE_ERROR
+    AggregateReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            ReportingStatus.UploadMethod uploadMethod) {
+        mEnrollmentDao = enrollmentDao;
+        mDatastoreManager = datastoreManager;
+        mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
+        mUploadMethod = uploadMethod;
+    }
+
+    @VisibleForTesting
+    AggregateReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            AggregateEncryptionKeyManager aggregateEncryptionKeyManager) {
+        mEnrollmentDao = enrollmentDao;
+        mDatastoreManager = datastoreManager;
+        mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
     }
 
     /**
-     * Finds all aggregate reports within the given window that have a status
-     * {@link AggregateReport.Status.PENDING} and attempts to upload them individually.
+     * Set isDebugInstance
+     *
+     * @param isDebugInstance indicates a debug aggregate report
+     * @return the instance of AggregateReportingJobHandler
+     */
+    public AggregateReportingJobHandler setIsDebugInstance(boolean isDebugInstance) {
+        mIsDebugInstance = isDebugInstance;
+        return this;
+    }
+
+    /**
+     * Finds all aggregate reports within the given window that have a status {@link
+     * AggregateReport.Status#PENDING} or {@link AggregateReport.DebugReportStatus#PENDING} based on
+     * mIsDebugReport and attempts to upload them individually.
      *
      * @param windowStartTime Start time of the search window
-     * @param windowEndTime   End time of the search window
+     * @param windowEndTime End time of the search window
      * @return always return true to signal to JobScheduler that the task is done.
      */
-    synchronized boolean performScheduledPendingReportsInWindow(long windowStartTime,
-            long windowEndTime) {
-        Optional<List<String>> pendingAggregateReportsInWindowOpt = mDatastoreManager
-                .runInTransactionWithResult((dao) ->
-                        dao.getPendingAggregateReportIdsInWindow(windowStartTime, windowEndTime));
+    synchronized boolean performScheduledPendingReportsInWindow(
+            long windowStartTime, long windowEndTime) {
+        Optional<List<String>> pendingAggregateReportsInWindowOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> {
+                            if (mIsDebugInstance) {
+                                return dao.getPendingAggregateDebugReportIds();
+                            } else {
+                                return dao.getPendingAggregateReportIdsInWindow(
+                                        windowStartTime, windowEndTime);
+                            }
+                        });
         if (!pendingAggregateReportsInWindowOpt.isPresent()) {
             // Failure during event report retrieval
             return true;
         }
 
         List<String> pendingAggregateReportIdsInWindow = pendingAggregateReportsInWindowOpt.get();
-        for (String aggregateReportId : pendingAggregateReportIdsInWindow) {
-            performReport(aggregateReportId);
-        }
-        return true;
-    }
+        List<AggregateEncryptionKey> keys =
+                mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        pendingAggregateReportIdsInWindow.size());
 
-    /**
-     * Finds all aggregate reports for an app, these aggregate reports have a status
-     * {@link EventReport.Status.PENDING} and attempts to upload them individually.
-     * @param appName the given app name corresponding to the registrant field in Source table.
-     * @return always return true to signal to JobScheduler that the task is done.
-     */
+        if (keys.size() == pendingAggregateReportIdsInWindow.size()) {
+            for (int i = 0; i < pendingAggregateReportIdsInWindow.size(); i++) {
+                ReportingStatus reportingStatus = new ReportingStatus();
+                final String aggregateReportId = pendingAggregateReportIdsInWindow.get(i);
+                @AdServicesStatusUtils.StatusCode
+                int result = performReport(aggregateReportId, keys.get(i), reportingStatus);
 
-    synchronized boolean performAllPendingReportsForGivenApp(Uri appName) {
-        LogUtil.d("AggregateReportingJobHandler: performAllPendingReportsForGivenApp");
-        Optional<List<String>> pendingAggregateReportsForGivenApp = mDatastoreManager
-                .runInTransactionWithResult((dao) ->
-                        dao.getPendingAggregateReportIdsForGivenApp(appName));
+                if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
+                    reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
+                } else {
+                    reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                }
 
-        if (!pendingAggregateReportsForGivenApp.isPresent()) {
-            // Failure during event report retrieval
-            return true;
-        }
-
-        List<String> pendingAggregateReportForGivenApp = pendingAggregateReportsForGivenApp.get();
-        for (String aggregateReportId : pendingAggregateReportForGivenApp) {
-            PerformReportResult result = performReport(aggregateReportId);
-            if (result != PerformReportResult.SUCCESS) {
-                LogUtil.i("Perform report status is %s for app : %s",
-                        result, String.valueOf(appName));
+                if (mUploadMethod != null) {
+                    reportingStatus.setUploadMethod(mUploadMethod);
+                }
+                if (!mIsDebugInstance) {
+                    logReportingStats(reportingStatus);
+                }
             }
+        } else {
+            LogUtil.w("The number of keys do not align with the number of reports");
         }
         return true;
     }
 
     /**
-     * Perform aggregate reporting by finding the relevant {@link AggregateReport} and
-     * making an HTTP POST request to the specified report to URL with the report data as a JSON in
-     * the body.
+     * Perform aggregate reporting by finding the relevant {@link AggregateReport} and making an
+     * HTTP POST request to the specified report to URL with the report data as a JSON in the body.
      *
      * @param aggregateReportId for the datastore id of the {@link AggregateReport}
+     * @param key used for encrypting report payload
      * @return success
      */
-    synchronized PerformReportResult performReport(String aggregateReportId) {
+    @AdServicesStatusUtils.StatusCode
+    synchronized int performReport(
+            String aggregateReportId, AggregateEncryptionKey key, ReportingStatus reportingStatus) {
         Optional<AggregateReport> aggregateReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
-            return PerformReportResult.DATASTORE_ERROR;
+            LogUtil.d("Aggregate report not found");
+            return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
-        if (aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
-            return PerformReportResult.ALREADY_DELIVERED;
+
+        if (mIsDebugInstance
+                && aggregateReport.getDebugReportStatus()
+                        != AggregateReport.DebugReportStatus.PENDING) {
+            LogUtil.d("Debugging status is not pending");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
+            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+        }
+        if (!mIsDebugInstance && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
+            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
-            JSONObject aggregateReportJsonBody = createReportJsonPayload(aggregateReport);
-            int returnCode = makeHttpPostRequest(aggregateReport.getReportingOrigin(),
-                    aggregateReportJsonBody);
-
+            Uri reportingOrigin = aggregateReport.getRegistrationOrigin();
+            JSONObject aggregateReportJsonBody =
+                    createReportJsonPayload(aggregateReport, reportingOrigin, key);
+            int returnCode = makeHttpPostRequest(reportingOrigin, aggregateReportJsonBody);
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
-                boolean success = mDatastoreManager.runInTransaction((dao) ->
-                        dao.markAggregateReportDelivered(aggregateReportId));
+                boolean success =
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> {
+                                    if (mIsDebugInstance) {
+                                        dao.markAggregateDebugReportDelivered(aggregateReportId);
+                                    } else {
+                                        dao.markAggregateReportStatus(
+                                                aggregateReportId,
+                                                AggregateReport.Status.DELIVERED);
+                                    }
+                                });
 
-                return success ? PerformReportResult.SUCCESS :
-                        PerformReportResult.DATASTORE_ERROR;
+                if (success) {
+                    long deliveryTime = System.currentTimeMillis();
+                    reportingStatus.setReportingDelay(
+                            deliveryTime - aggregateReport.getScheduledReportTime());
+                    return AdServicesStatusUtils.STATUS_SUCCESS;
+                } else {
+                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
+                    return AdServicesStatusUtils.STATUS_IO_ERROR;
+                }
             } else {
-                return PerformReportResult.POST_REQUEST_ERROR;
+                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+                return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
-            return PerformReportResult.POST_REQUEST_ERROR;
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
 
-    /**
-     * Creates the JSON payload for the POST request from the AggregateReport.
-     */
+    /** Creates the JSON payload for the POST request from the AggregateReport. */
     @VisibleForTesting
-    JSONObject createReportJsonPayload(AggregateReport aggregateReport)
-            throws JSONException {
+    JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
+            AggregateEncryptionKey key) throws JSONException {
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
                 .setSourceRegistrationTime(
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(
-                                aggregateReport.getSourceRegistrationTime())))
+                        String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        aggregateReport.getSourceRegistrationTime())))
                 .setScheduledReportTime(
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(
-                                aggregateReport.getScheduledReportTime())))
+                        String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        aggregateReport.getScheduledReportTime())))
                 .setApiVersion(aggregateReport.getApiVersion())
-                .setReportingOrigin(aggregateReport.getReportingOrigin().toString())
+                .setReportingOrigin(reportingOrigin.toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
+                .setSourceDebugKey(aggregateReport.getSourceDebugKey())
+                .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .build()
-                .toJson();
+                .toJson(key);
     }
 
     /**
@@ -173,7 +248,23 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
             throws IOException {
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(mIsDebugInstance);
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
+    }
+
+    private void logReportingStats(ReportingStatus reportingStatus) {
+        if (!reportingStatus.getReportingDelay().isPresent()) {
+            reportingStatus.setReportingDelay(0L);
+        }
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementReports(
+                        new MeasurementReportsStats.Builder()
+                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
+                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
+                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                                .setReportingDelay(reportingStatus.getReportingDelay().get())
+                                .build());
     }
 }

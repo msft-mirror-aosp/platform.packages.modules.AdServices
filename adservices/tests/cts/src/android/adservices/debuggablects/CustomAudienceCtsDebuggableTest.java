@@ -16,50 +16,66 @@
 
 package android.adservices.debuggablects;
 
-import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceCtsDebuggableTest {
+public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
-    private AdvertisingCustomAudienceClient mClient;
+    private TestAdvertisingCustomAudienceClient mTestClient;
 
-    private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
+    private static final String OWNER = sContext.getPackageName();
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
-    private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
+    private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
+            AdSelectionSignals.fromString("{\"trusted_bidding_signal\":1}");
 
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
+    private String mPreviousAppAllowList;
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
-        mClient =
-                new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(context)
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        if (SdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        } else {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
+
+        mTestClient =
+                new TestAdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContextFilter devContextFilter = DevContextFilter.create(context);
-        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
         mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
@@ -68,20 +84,30 @@ public class CustomAudienceCtsDebuggableTest {
                         + String.format("Developer options on: %b", isDeveloperMode);
     }
 
+    @After
+    public void tearDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+    }
+
     @Test
     public void testAddOverrideSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
-        ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
+        ListenableFuture<Void> result = mTestClient.overrideCustomAudienceRemoteInfo(request);
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
@@ -93,12 +119,11 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
-        ListenableFuture<Void> result = mClient.removeCustomAudienceRemoteInfoOverride(request);
+        ListenableFuture<Void> result = mTestClient.removeCustomAudienceRemoteInfoOverride(request);
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
@@ -110,27 +135,25 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
-        ListenableFuture<Void> addResult = mClient.overrideCustomAudienceRemoteInfo(addRequest);
+        ListenableFuture<Void> addResult = mTestClient.overrideCustomAudienceRemoteInfo(addRequest);
 
         // Asserting no exception since there is no returned value
         addResult.get(10, TimeUnit.SECONDS);
 
         RemoveCustomAudienceOverrideRequest removeRequest =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
         ListenableFuture<Void> removeResult =
-                mClient.removeCustomAudienceRemoteInfoOverride(removeRequest);
+                mTestClient.removeCustomAudienceRemoteInfoOverride(removeRequest);
 
         // Asserting no exception since there is no returned value
         removeResult.get(10, TimeUnit.SECONDS);
@@ -140,7 +163,7 @@ public class CustomAudienceCtsDebuggableTest {
     public void testResetAllOverridesSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-        ListenableFuture<Void> result = mClient.resetAllCustomAudienceOverrides();
+        ListenableFuture<Void> result = mTestClient.resetAllCustomAudienceOverrides();
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);

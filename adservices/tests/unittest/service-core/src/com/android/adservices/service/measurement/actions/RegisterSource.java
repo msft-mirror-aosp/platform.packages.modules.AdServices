@@ -18,7 +18,11 @@ package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.content.AttributionSource;
@@ -35,42 +39,53 @@ import java.util.Map;
 public final class RegisterSource implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
+    // Used in interop tests
+    public final String mPublisher;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
+    public final boolean mArDebugPermission;
 
     public RegisterSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
                 TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
 
         AttributionSource attributionSource = getAttributionSource(
-                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
+                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
+                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT));
 
-        RegistrationRequest registrationRequest = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setTopOriginUri(Uri.parse(regParamsJson.getString(
-                        TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
-                .setRegistrationUri(Uri.parse(regParamsJson.getString(
-                        TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                .setInputEvent(regParamsJson.getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
-                        .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE) ? null : getInputEvent())
-                .setAttributionSource(attributionSource)
-                .build();
+        mPublisher = regParamsJson.optString(TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY);
 
-        Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap =
-                getUriToResponseHeadersMap(obj);
-
-        long timestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-
-        mRegistrationRequest = registrationRequest;
-        mUriToResponseHeadersMap = uriToResponseHeadersMap;
-        mTimestamp = timestamp;
+        mRegistrationRequest =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_SOURCE,
+                                Uri.parse(
+                                        regParamsJson.getString(
+                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "")
+                        .setInputEvent(
+                                regParamsJson
+                                                .getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
+                                                .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
+                                        ? null
+                                        : getInputEvent())
+                        .build();
+        mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
+        mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = hasSourceDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
+        mArDebugPermission = hasArDebugPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
+    @Override
     public long getComparable() {
         return mTimestamp;
     }
 
-    public Map<String, List<String>> getNextResponse(String uri) {
-        List<Map<String, List<String>>> responseList = mUriToResponseHeadersMap.get(uri);
-        return responseList.remove(0);
+    public String getPublisher() {
+        return mPublisher;
     }
 }

@@ -6,7 +6,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -14,9 +14,10 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -24,7 +25,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -32,17 +33,19 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "SUCCESS",
-        "id": "AR1"
+        "result": 0,
+        "id": "AR1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -51,7 +54,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -59,9 +62,10 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -69,7 +73,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -77,17 +81,19 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
       "param": {
         "responseCode": 400,
         "action": "SINGLE_REPORT",
-        "result": "POST_REQUEST_ERROR",
-        "id": "AR1"
+        "result": 4,
+        "id": "AR1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -96,7 +102,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -104,9 +110,10 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -114,7 +121,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site",
@@ -122,101 +129,19 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": "ALREADY_DELIVERED",
-        "id": "AR1"
-      }
-    },
-    {
-      "name": "Multiple reports for given app",
-      "input": {
-        "sources": [],
-        "triggers": [],
-        "event_reports": [],
-        "attribution_rate_limits": [],
-        "aggregate_reports": [
-          {
-            "publisher": "https://source.site1",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR1",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
-          },
-          {
-            "publisher": "https://source.site2",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR2",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
-          },
-          {
-            "publisher": "https://source.site1",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR3",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
-          }
-            ]
-      },
-      "output": {
-        "sources": [],
-        "triggers": [],
-        "event_reports": [],
-        "attribution_rate_limits": [],
-        "aggregate_reports": [
-          {
-            "publisher": "https://source.site1",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR1",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
-          },
-          {
-            "publisher": "https://source.site2",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR2",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
-          },
-          {
-            "publisher": "https://source.site1",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR3",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
-          }
-        ]
-      },
-      "param": {
-        "responseCode": 200,
-        "action": "ALL_REPORTS_FOR_APP",
-        "appName": "https://source.site1"
+        "result": 2,
+        "id": "AR1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -225,7 +150,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -233,9 +158,10 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -243,9 +169,10 @@
             "id": "AR2",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -253,7 +180,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -261,9 +188,10 @@
             "id": "AR1",
             "scheduledReportTime": 20000000,
             "sourceRegistrationTime": 19999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -271,9 +199,10 @@
             "id": "AR2",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -281,7 +210,8 @@
         "responseCode": 200,
         "action": "ALL_REPORTS",
         "start": 19999000,
-        "end": 20000000
+        "end": 20000000,
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -290,7 +220,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -298,9 +228,10 @@
             "id": "AR1",
             "scheduledReportTime": 10000000,
             "sourceRegistrationTime": 9999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -308,9 +239,10 @@
             "id": "AR2",
             "scheduledReportTime": 23000000,
             "sourceRegistrationTime": 22100000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -318,9 +250,10 @@
             "id": "AR3",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -328,7 +261,7 @@
         "sources": [],
         "triggers": [],
         "event_reports": [],
-        "attribution_rate_limits": [],
+        "attributions": [],
         "aggregate_reports": [
           {
             "publisher": "https://source.site1",
@@ -336,9 +269,10 @@
             "id": "AR1",
             "scheduledReportTime": 10000000,
             "sourceRegistrationTime": 9999000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -346,9 +280,10 @@
             "id": "AR2",
             "scheduledReportTime": 23000000,
             "sourceRegistrationTime": 22100000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -356,9 +291,10 @@
             "id": "AR3",
             "scheduledReportTime": 19999000,
             "sourceRegistrationTime": 19998000,
-            "reportingOrigin": "https://adtech.domain",
+            "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -366,7 +302,8 @@
         "responseCode": 200,
         "action": "ALL_REPORTS",
         "start": 11000000,
-        "end": 20000000
+        "end": 20000000,
+        "registration_origin": "https://subdomain.example.test"
       }
     }
   ]

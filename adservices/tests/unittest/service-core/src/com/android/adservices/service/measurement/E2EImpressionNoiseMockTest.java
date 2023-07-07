@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.measurement;
 
-import android.net.Uri;
 
-import com.android.adservices.data.measurement.DatastoreException;
+import android.net.Uri;
+import android.os.RemoteException;
+
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.RegisterSource;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
 import org.json.JSONException;
@@ -51,29 +54,62 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         String TRIGGER_DATA = "trigger_data";
     }
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            String name) throws DatastoreException {
-        super(actions, expectedOutput, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
-        mMeasurementImpl = TestObjectProvider.getMeasurementImpl(TestObjectProvider.Type.NOISY,
-                sDatastoreManager, mSourceFetcher, mTriggerFetcher);
+    public E2EImpressionNoiseMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
+        mMeasurementImpl =
+                TestObjectProvider.getMeasurementImpl(
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mMeasurementDataDeleter,
+                        mMockContentResolver);
+        mAsyncRegistrationQueueRunner =
+                TestObjectProvider.getAsyncRegistrationQueueRunner(
+                        TestObjectProvider.Type.NOISY,
+                        sDatastoreManager,
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        mDebugReportApi);
         getExpectedTriggerDataDistributions();
     }
 
     @Override
-    void processEventReports(List<EventReport> eventReports, List<Uri> destinations,
-            List<JSONObject> payloads) throws JSONException {
+    void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processActualEventReports(
+            List<EventReport> eventReports, List<Uri> destinations, List<JSONObject> payloads)
+            throws JSONException {
         // Each report-destination × event-ID should have the same count of trigger_data as in the
         // expected output, but the trigger_data value distribution should be different. The test
         // is currently supporting only one reporting job, which batches multiple reports at once,
         // although each is a separate network request.
         for (int i = 0; i < destinations.size(); i++) {
-            String uri = destinations.get(i).toString();
+            String uri = getReportUrl(ReportType.EVENT, destinations.get(i).toString());
             JSONObject payload = payloads.get(i);
             String eventId = payload.getString(PayloadKeys.EVENT_ID);
             String triggerData = payload.getString(PayloadKeys.TRIGGER_DATA);
@@ -88,7 +124,8 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         for (String key : mActualTriggerDataDistributions.keySet()) {
             if (!mExpectedTriggerDataDistributions.containsKey(key)) {
                 Assert.assertTrue(getTestFailureMessage(
-                        "Missing key in expected trigger data distributions"), false);
+                        "Missing key in expected trigger data distributions"
+                        + getDatastoreState()), false);
             }
         }
         boolean testPassed = false;
@@ -107,8 +144,10 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                 }
             }
         }
-        Assert.assertTrue(getTestFailureMessage(
-                "Trigger data distributions were the same"), testPassed);
+        Assert.assertTrue(
+                getTestFailureMessage(
+                        "Trigger data distributions were the same " + getDatastoreState()),
+                testPassed);
     }
 
     private void getExpectedTriggerDataDistributions() {

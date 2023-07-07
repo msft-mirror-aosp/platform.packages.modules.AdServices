@@ -16,6 +16,9 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
+
 import android.annotation.NonNull;
 
 import com.android.internal.util.Preconditions;
@@ -26,17 +29,17 @@ import java.util.Objects;
  * Represent input parameters to the reportImpression API.
  */
 public class ReportImpressionRequest {
-    private static final long UNSET = 0;
-
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
-    private ReportImpressionRequest(
+    public ReportImpressionRequest(
             long adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
+        Preconditions.checkArgument(
+                adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-        this.mAdSelectionId = adSelectionId;
-        this.mAdSelectionConfig = adSelectionConfig;
+        mAdSelectionId = adSelectionId;
+        mAdSelectionConfig = adSelectionConfig;
     }
 
     /** Returns the adSelectionId, one of the inputs to {@link ReportImpressionRequest} */
@@ -48,42 +51,5 @@ public class ReportImpressionRequest {
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {
         return mAdSelectionConfig;
-    }
-
-    /** Builder for {@link ReportImpressionRequest} objects. */
-    public static final class Builder {
-        // Initializing mAdSelectionId to start as -1, to differentiate it from the default
-        // initialization of 0.
-        private long mAdSelectionId = UNSET;
-        private AdSelectionConfig mAdSelectionConfig;
-
-        public Builder() {}
-
-        /** Set the mAdSelectionId. */
-        @NonNull
-        public ReportImpressionRequest.Builder setAdSelectionId(long adSelectionId) {
-            this.mAdSelectionId = adSelectionId;
-            return this;
-        }
-
-        /** Set the AdSelectionConfig. */
-        @NonNull
-        public ReportImpressionRequest.Builder setAdSelectionConfig(
-                @NonNull AdSelectionConfig adSelectionConfig) {
-            Objects.requireNonNull(adSelectionConfig);
-
-            this.mAdSelectionConfig = adSelectionConfig;
-            return this;
-        }
-
-        /** Builds a {@link ReportImpressionRequest} instance. */
-        @NonNull
-        public ReportImpressionRequest build() {
-            Objects.requireNonNull(mAdSelectionConfig);
-
-            Preconditions.checkArgument(mAdSelectionId != UNSET, "AdSelectionId not set");
-
-            return new ReportImpressionRequest(mAdSelectionId, mAdSelectionConfig);
-        }
     }
 }

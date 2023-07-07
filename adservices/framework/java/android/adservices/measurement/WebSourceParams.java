@@ -39,26 +39,26 @@ public final class WebSourceParams implements Parcelable {
                     return new WebSourceParams[size];
                 }
             };
-    /** Used to fetch registration metadata. */
-    @NonNull private final Uri mRegistrationUri;
-    /** True, if debugKey should be allowed in reports. */
-    private final boolean mAllowDebugKey;
-
     /**
-     * Constructor for {@link WebSourceParams}.
-     *
-     * @param registrationUri registration URI
-     * @param allowDebugKey flag to allow or disallow debug keys
+     * URI that the Attribution Reporting API sends a request to in order to obtain source
+     * registration parameters.
      */
-    private WebSourceParams(@NonNull Uri registrationUri, boolean allowDebugKey) {
-        mRegistrationUri = registrationUri;
-        mAllowDebugKey = allowDebugKey;
+    @NonNull private final Uri mRegistrationUri;
+    /**
+     * Used by the browser to indicate whether the debug key obtained from the registration URI is
+     * allowed to be used
+     */
+    private final boolean mDebugKeyAllowed;
+
+    private WebSourceParams(@NonNull Builder builder) {
+        mRegistrationUri = builder.mRegistrationUri;
+        mDebugKeyAllowed = builder.mDebugKeyAllowed;
     }
 
     /** Unpack a SourceRegistration from a Parcel. */
     private WebSourceParams(@NonNull Parcel in) {
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
-        mAllowDebugKey = in.readBoolean();
+        mDebugKeyAllowed = in.readBoolean();
     }
 
     @Override
@@ -66,13 +66,13 @@ public final class WebSourceParams implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof WebSourceParams)) return false;
         WebSourceParams that = (WebSourceParams) o;
-        return mAllowDebugKey == that.mAllowDebugKey
+        return mDebugKeyAllowed == that.mDebugKeyAllowed
                 && Objects.equals(mRegistrationUri, that.mRegistrationUri);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mRegistrationUri, mAllowDebugKey);
+        return Objects.hash(mRegistrationUri, mDebugKeyAllowed);
     }
 
     /** Getter for registration Uri. */
@@ -85,8 +85,8 @@ public final class WebSourceParams implements Parcelable {
      * Getter for debug allowed/disallowed flag. Its value as {@code true} means to allow parsing
      * debug keys from registration responses and their addition in the generated reports.
      */
-    public boolean isAllowDebugKey() {
-        return mAllowDebugKey;
+    public boolean isDebugKeyAllowed() {
+        return mDebugKeyAllowed;
     }
 
     @Override
@@ -98,43 +98,46 @@ public final class WebSourceParams implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mRegistrationUri.writeToParcel(out, flags);
-        out.writeBoolean(mAllowDebugKey);
+        out.writeBoolean(mDebugKeyAllowed);
     }
 
     /** A builder for {@link WebSourceParams}. */
     public static final class Builder {
-        /** Used to fetch registration metadata. */
-        private Uri mRegistrationUri;
-        /** True, if debugKey should be allowed in reports. */
-        private boolean mAllowDebugKey;
-
-        /** Builder for {@link WebSourceParams}. */
-        public Builder() {
-            mAllowDebugKey = false;
-        }
+        /**
+         * URI that the Attribution Reporting API sends a request to in order to obtain source
+         * registration parameters.
+         */
+        @NonNull private final Uri mRegistrationUri;
+        /**
+         * Used by the browser to indicate whether the debug key obtained from the registration URI
+         * is allowed to be used
+         */
+        private boolean mDebugKeyAllowed;
 
         /**
-         * Setter for registration Uri. It is a required parameter.
+         * Builder constructor for {@link WebSourceParams}. {@code mIsDebugKeyAllowed} is assigned
+         * false by default.
          *
-         * @param registrationUri registration URI
-         * @return builder
+         * @param registrationUri URI that the Attribution Reporting API sends a request to in order
+         *     to obtain source registration parameters.
          */
-        @NonNull
-        public Builder setRegistrationUri(@NonNull Uri registrationUri) {
+        public Builder(@NonNull Uri registrationUri) {
+            Objects.requireNonNull(registrationUri);
             mRegistrationUri = registrationUri;
-            return this;
+            mDebugKeyAllowed = false;
         }
 
         /**
          * Setter for debug allow/disallow flag. Setting it to true will allow parsing debug keys
          * from registration responses and their addition in the generated reports.
          *
-         * @param allowDebugKey debug allow/disallow flag
+         * @param debugKeyAllowed used by the browser to indicate whether the debug key obtained
+         *     from the registration URI is allowed to be used
          * @return builder
          */
         @NonNull
-        public Builder setAllowDebugKey(boolean allowDebugKey) {
-            mAllowDebugKey = allowDebugKey;
+        public Builder setDebugKeyAllowed(boolean debugKeyAllowed) {
+            this.mDebugKeyAllowed = debugKeyAllowed;
             return this;
         }
 
@@ -145,11 +148,7 @@ public final class WebSourceParams implements Parcelable {
          */
         @NonNull
         public WebSourceParams build() {
-            if (mRegistrationUri == null) {
-                throw new IllegalArgumentException("registration URI unset");
-            }
-
-            return new WebSourceParams(mRegistrationUri, mAllowDebugKey);
+            return new WebSourceParams(this);
         }
     }
 }

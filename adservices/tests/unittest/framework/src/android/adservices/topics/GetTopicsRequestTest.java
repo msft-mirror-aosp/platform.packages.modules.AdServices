@@ -15,17 +15,11 @@
  */
 package android.adservices.topics;
 
-import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.app.sdksandbox.SandboxedSdkContext;
-import android.content.Context;
-import android.content.pm.ApplicationInfo;
-
-import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -35,84 +29,52 @@ import org.junit.Test;
  */
 @SmallTest
 public final class GetTopicsRequestTest {
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
     private static final String SOME_SDK_NAME = "SomeSDKName";
-    private static final String RESOURCES_PACKAGE = "com.android.codeproviderresources_1";
-    private static final String CLIENT_PACKAGE_NAME = "com.android.client";
-    private static final String SDK_NAME = "com.android.codeproviderresources";
-    private static final String SDK_CE_DATA_DIR = "/data/misc_ce/0/sdksandbox/com.foo/sdk@123";
-    private static final String SDK_DE_DATA_DIR = "/data/misc_de/0/sdksandbox/com.foo/sdk@123";
 
     @Test
-    public void testSandboxedSdk_setSdkName() throws Exception {
-        SandboxedSdkContext mSandboxedSdkContext =
-                new SandboxedSdkContext(
-                        InstrumentationRegistry.getContext(),
-                        CLIENT_PACKAGE_NAME,
-                        new ApplicationInfo(),
-                        SDK_NAME,
-                        SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR);
+    public void testBuilder_notSettingSdkName() {
+        GetTopicsRequest request = new GetTopicsRequest.Builder().build();
+        assertThat(request.getAdsSdkName()).isEmpty();
+        // RecordObservation default value is true
+        assertThat(request.shouldRecordObservation()).isTrue();
+    }
 
-        // Sdk setting the SdkName even when running inside the sandbox.
+    @Test
+    public void testBuilderSetAdsSdkName_nullSdkName() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new GetTopicsRequest.Builder(mSandboxedSdkContext)
-                            .setSdkName(SOME_SDK_NAME)
-                            .build();
+                    new GetTopicsRequest.Builder().setAdsSdkName(/* adsSdkName */ null).build();
                 });
     }
 
     @Test
-    public void testSandboxedSdk_notSetSdkName() throws Exception {
-        SandboxedSdkContext mSandboxedSdkContext =
-                new SandboxedSdkContext(
-                        InstrumentationRegistry.getContext(),
-                        CLIENT_PACKAGE_NAME,
-                        new ApplicationInfo(),
-                        SDK_NAME,
-                        SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR);
-        GetTopicsRequest request = // don't call setSdkName
-                new GetTopicsRequest.Builder(mSandboxedSdkContext).build();
-        assertThat(request.getSdkName()).isEqualTo(SDK_NAME);
-    }
-
-    @Test
-    public void testNonSandboxedSdk_nonNullSdkName() {
+    public void testBuilderSetAdsSdkName_nonNullSdkName() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder(sContext).setSdkName(SOME_SDK_NAME).build();
-
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
-    }
-
-    @Test
-    public void testNonSandboxedSdk_nullSdkName() {
-        GetTopicsRequest request =
-                new GetTopicsRequest.Builder(sContext)
-                        // Not setting mSdkName making it null.
+                new GetTopicsRequest.Builder()
+                        .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
                         .build();
-        // When sdkName is not set in builder, we will use EMPTY_SDK by default
-        assertThat(request.getSdkName()).isEqualTo(EMPTY_SDK);
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+        // RecordObservation default value is true
+        assertThat(request.shouldRecordObservation()).isTrue();
     }
 
     @Test
-    public void testNonSandboxedSdk_nonNullContext() {
+    public void testBuilderSetAdsSdkName_recordObservationFalse() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder(sContext).setSdkName(SOME_SDK_NAME).build();
-
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+                new GetTopicsRequest.Builder()
+                        .setAdsSdkName(/* adsSdkName */ SOME_SDK_NAME)
+                        .setShouldRecordObservation(false)
+                        .build();
+        assertThat(request.getAdsSdkName()).isEqualTo(SOME_SDK_NAME);
+        assertThat(request.shouldRecordObservation()).isFalse();
     }
 
     @Test
-    public void testNonSandboxedSdk_nullContext() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new GetTopicsRequest.Builder(/* context */ null)
-                            .setSdkName(SOME_SDK_NAME)
-                            .build();
-                });
+    public void testBuilder_recordObservationFalse() {
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder().setShouldRecordObservation(false).build();
+        assertThat(request.getAdsSdkName()).isEmpty();
+        assertThat(request.shouldRecordObservation()).isFalse();
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -30,22 +32,17 @@ import com.android.internal.util.Preconditions;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 
 /**
- * This POJO represents the AdSelection data in the ad_selection table entity. TODO(b/228114258):
- * Add foreign key on the bidding_logic_url column to enforce the mapping between AdSelection and
- * BuyerDecisionLogic, so that entries in the buyer_decision_logic table will not be deleted as long
- * as there is mapping exists in the ad_selection table.
+ * This POJO represents the AdSelection data in the ad_selection table entity.
  *
  * @hide
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Entity(
         tableName = "ad_selection",
-        indices = {@Index(value = {"bidding_logic_url"})})
+        indices = {@Index(value = {"bidding_logic_uri"})})
 public final class DBAdSelection {
-    private static final int UNSET = 0;
-
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
@@ -56,15 +53,15 @@ public final class DBAdSelection {
 
     @ColumnInfo(name = "contextual_signals")
     @NonNull
-    private final String mContextualSignals;
+    private final String mBuyerContextualSignals;
 
-    @ColumnInfo(name = "bidding_logic_url")
+    @ColumnInfo(name = "bidding_logic_uri")
     @Nullable
-    private final Uri mBiddingLogicUrl;
+    private final Uri mBiddingLogicUri;
 
-    @ColumnInfo(name = "winning_ad_render_url")
+    @ColumnInfo(name = "winning_ad_render_uri")
     @NonNull
-    private final Uri mWinningAdRenderUrl;
+    private final Uri mWinningAdRenderUri;
 
     @ColumnInfo(name = "winning_ad_bid")
     private final double mWinningAdBid;
@@ -73,21 +70,47 @@ public final class DBAdSelection {
     @NonNull
     private final Instant mCreationTimestamp;
 
+    @ColumnInfo(name = "caller_package_name")
+    @NonNull
+    private final String mCallerPackageName;
+
+    @ColumnInfo(name = "ad_counter_keys")
+    @Deprecated(since = "Integer keys are now used; kept for Room DB backwards compatibility")
+    @Nullable
+    private final Set<String> mAdCounterKeys;
+
+    @ColumnInfo(name = "ad_counter_int_keys")
+    @Nullable
+    private final Set<Integer> mAdCounterIntKeys;
+
+    @ColumnInfo(name = "seller_contextual_signals")
+    @Nullable
+    private final String mSellerContextualSignals;
+
     public DBAdSelection(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
-            @NonNull String contextualSignals,
-            @Nullable Uri biddingLogicUrl,
-            @NonNull Uri winningAdRenderUrl,
+            @NonNull String buyerContextualSignals,
+            @Nullable Uri biddingLogicUri,
+            @NonNull Uri winningAdRenderUri,
             double winningAdBid,
-            @NonNull Instant creationTimestamp) {
+            @NonNull Instant creationTimestamp,
+            @NonNull String callerPackageName,
+            // String keys deprecated but kept in ctor for Room DB backwards compatibility
+            @Nullable Set<String> adCounterKeys,
+            @Nullable Set<Integer> adCounterIntKeys,
+            @Nullable String sellerContextualSignals) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
-        this.mContextualSignals = contextualSignals;
-        this.mBiddingLogicUrl = biddingLogicUrl;
-        this.mWinningAdRenderUrl = winningAdRenderUrl;
+        this.mBuyerContextualSignals = buyerContextualSignals;
+        this.mBiddingLogicUri = biddingLogicUri;
+        this.mWinningAdRenderUri = winningAdRenderUri;
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
+        this.mCallerPackageName = callerPackageName;
+        this.mAdCounterKeys = adCounterKeys;
+        this.mAdCounterIntKeys = adCounterIntKeys;
+        this.mSellerContextualSignals = sellerContextualSignals;
     }
 
     @Override
@@ -97,11 +120,16 @@ public final class DBAdSelection {
 
             return mAdSelectionId == adSelection.mAdSelectionId
                     && Objects.equals(mCustomAudienceSignals, adSelection.mCustomAudienceSignals)
-                    && mContextualSignals.equals(adSelection.mContextualSignals)
-                    && Objects.equals(mBiddingLogicUrl, adSelection.mBiddingLogicUrl)
-                    && Objects.equals(mWinningAdRenderUrl, adSelection.mWinningAdRenderUrl)
+                    && mBuyerContextualSignals.equals(adSelection.mBuyerContextualSignals)
+                    && Objects.equals(mBiddingLogicUri, adSelection.mBiddingLogicUri)
+                    && Objects.equals(mWinningAdRenderUri, adSelection.mWinningAdRenderUri)
                     && mWinningAdBid == adSelection.mWinningAdBid
-                    && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp);
+                    && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp)
+                    && mCallerPackageName.equals(adSelection.mCallerPackageName)
+                    && Objects.equals(mAdCounterKeys, adSelection.mAdCounterKeys)
+                    && Objects.equals(mAdCounterIntKeys, adSelection.mAdCounterIntKeys)
+                    && Objects.equals(
+                            mSellerContextualSignals, adSelection.mSellerContextualSignals);
         }
         return false;
     }
@@ -111,11 +139,15 @@ public final class DBAdSelection {
         return Objects.hash(
                 mAdSelectionId,
                 mCustomAudienceSignals,
-                mContextualSignals,
-                mBiddingLogicUrl,
-                mWinningAdRenderUrl,
+                mBuyerContextualSignals,
+                mBiddingLogicUri,
+                mWinningAdRenderUri,
                 mWinningAdBid,
-                mCreationTimestamp);
+                mCreationTimestamp,
+                mCallerPackageName,
+                mAdCounterKeys,
+                mAdCounterIntKeys,
+                mSellerContextualSignals);
     }
 
     /**
@@ -135,27 +167,25 @@ public final class DBAdSelection {
     }
 
     /**
-     * @return the contextual signals i.e. application name used in this ad selection.
+     * @return the contextual signals that will be used in buyer scripts
      */
     @NonNull
-    public String getContextualSignals() {
-        return mContextualSignals;
+    public String getBuyerContextualSignals() {
+        return mBuyerContextualSignals;
     }
 
     /**
-     * @return the biddingLogicUrl that is used to fetch the generateBid() and the reportResults().
+     * @return the biddingLogicUri that is used to fetch the generateBid() and the reportResults().
      */
     @Nullable
-    public Uri getBiddingLogicUrl() {
-        return mBiddingLogicUrl;
+    public Uri getBiddingLogicUri() {
+        return mBiddingLogicUri;
     }
 
-    /**
-     * @return the rendering URL of the winning ad in this ad selection.
-     */
+    /** @return the rendering URI of the winning ad in this ad selection. */
     @NonNull
-    public Uri getWinningAdRenderUrl() {
-        return mWinningAdRenderUrl;
+    public Uri getWinningAdRenderUri() {
+        return mWinningAdRenderUri;
     }
 
     /**
@@ -173,22 +203,58 @@ public final class DBAdSelection {
         return mCreationTimestamp;
     }
 
+    /** @return the caller's package name for this ad selection. */
+    @NonNull
+    public String getCallerPackageName() {
+        return mCallerPackageName;
+    }
+
+    /**
+     * @return the winning ad's set of counter keys
+     * @deprecated This field is no longer used but is kept for Room DB compatibility; please use
+     *     {@link #getAdCounterIntKeys()} instead.
+     */
+    @Nullable
+    Set<String> getAdCounterKeys() {
+        return mAdCounterKeys;
+    }
+
+    /**
+     * @return the winning ad's set of counter keys
+     */
+    @Nullable
+    public Set<Integer> getAdCounterIntKeys() {
+        return mAdCounterIntKeys;
+    }
+
+    /**
+     * @return the contextual signals that will be used in seller scripts
+     */
+    @Nullable
+    public String getSellerContextualSignals() {
+        return mSellerContextualSignals;
+    }
+
     /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
-        private long mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         private CustomAudienceSignals mCustomAudienceSignals;
-        private String mContextualSignals;
-        private Uri mBiddingLogicUrl;
-        private Uri mWinningAdRenderUrl;
+        private String mBuyerContextualSignals;
+        private Uri mBiddingLogicUri;
+        private Uri mWinningAdRenderUri;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
+        private String mCallerPackageName;
+        private Set<Integer> mAdCounterIntKeys;
+        private String mSellerContextualSignals;
 
         public Builder() {}
 
         /** Sets the ad selection id. */
         @NonNull
         public DBAdSelection.Builder setAdSelectionId(long adSelectionId) {
-            Preconditions.checkArgument(adSelectionId != 0, "Ad selection Id should not be zero.");
+            Preconditions.checkArgument(
+                    adSelectionId != UNSET_AD_SELECTION_ID, "Ad selection Id should not be zero.");
             this.mAdSelectionId = adSelectionId;
             return this;
         }
@@ -203,27 +269,28 @@ public final class DBAdSelection {
 
         /** Sets the contextual signals with this ad selection. */
         @NonNull
-        public DBAdSelection.Builder setContextualSignals(@NonNull String contextualSignals) {
-            Objects.requireNonNull(contextualSignals);
-            this.mContextualSignals = contextualSignals;
+        public DBAdSelection.Builder setBuyerContextualSignals(
+                @NonNull String buyerContextualSignals) {
+            Objects.requireNonNull(buyerContextualSignals);
+            this.mBuyerContextualSignals = buyerContextualSignals;
             return this;
         }
 
         /**
-         * Sets the buyer-provided biddingLogicUrl that is used to fetch the generateBid() and
+         * Sets the buyer-provided biddingLogicUri that is used to fetch the generateBid() and
          * reportResults() javascript.
          */
         @NonNull
-        public DBAdSelection.Builder setBiddingLogicUrl(@Nullable Uri biddingLogicUrl) {
-            this.mBiddingLogicUrl = biddingLogicUrl;
+        public DBAdSelection.Builder setBiddingLogicUri(@Nullable Uri biddingLogicUri) {
+            this.mBiddingLogicUri = biddingLogicUri;
             return this;
         }
 
-        /** Sets the winning ad's rendering URL for this AdSelection. */
+        /** Sets the winning ad's rendering URI for this AdSelection. */
         @NonNull
-        public DBAdSelection.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
-            Objects.requireNonNull(mWinningAdRenderUrl);
-            this.mWinningAdRenderUrl = mWinningAdRenderUrl;
+        public DBAdSelection.Builder setWinningAdRenderUri(@NonNull Uri mWinningAdRenderUri) {
+            Objects.requireNonNull(mWinningAdRenderUri);
+            this.mWinningAdRenderUri = mWinningAdRenderUri;
             return this;
         }
 
@@ -244,6 +311,39 @@ public final class DBAdSelection {
             return this;
         }
 
+        /** Sets the app package name of the calling sdk in this ad selection. */
+        @NonNull
+        public DBAdSelection.Builder setCallerPackageName(@NonNull String callerPackageName) {
+            Objects.requireNonNull(callerPackageName);
+            this.mCallerPackageName = callerPackageName;
+            return this;
+        }
+
+        /**
+         * Sets the winning ad's set of integer counter keys, which are used to update ad counter
+         * histograms for frequency cap filtering.
+         */
+        @NonNull
+        public Builder setAdCounterIntKeys(@NonNull Set<Integer> adCounterIntKeys) {
+            if (adCounterIntKeys == null || adCounterIntKeys.isEmpty()) {
+                mAdCounterIntKeys = null;
+            } else {
+                mAdCounterIntKeys = adCounterIntKeys;
+            }
+            return this;
+        }
+
+        /**
+         * Sets the seller contextual signals with this ad selection. These signals will only be
+         * used for seller scripts.
+         */
+        @Nullable
+        public DBAdSelection.Builder setSellerContextualSignals(
+                @Nullable String sellerContextualSignals) {
+            this.mSellerContextualSignals = sellerContextualSignals;
+            return this;
+        }
+
         /**
          * Builds an {@link DBAdSelection} instance.
          *
@@ -254,25 +354,28 @@ public final class DBAdSelection {
         @NonNull
         public DBAdSelection build() {
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET, "Ad selection Id should not be zero.");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
-            boolean oneNull =
-                    Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBiddingLogicUrl);
             Preconditions.checkArgument(
-                    !oneNull, "Buyer fields must both be null in case of contextual ad.");
-            Objects.requireNonNull(mContextualSignals);
-            Objects.requireNonNull(mWinningAdRenderUrl);
+                    mBiddingLogicUri != null, "Buyer decision logic uri should not be null.");
+            Objects.requireNonNull(mBuyerContextualSignals);
+            Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
+            Objects.requireNonNull(mCallerPackageName);
 
             return new DBAdSelection(
                     mAdSelectionId,
                     mCustomAudienceSignals,
-                    mContextualSignals,
-                    mBiddingLogicUrl,
-                    mWinningAdRenderUrl,
+                    mBuyerContextualSignals,
+                    mBiddingLogicUri,
+                    mWinningAdRenderUri,
                     mWinningAdBid,
-                    mCreationTimestamp);
+                    mCreationTimestamp,
+                    mCallerPackageName,
+                    null,
+                    mAdCounterIntKeys,
+                    mSellerContextualSignals);
         }
     }
 }

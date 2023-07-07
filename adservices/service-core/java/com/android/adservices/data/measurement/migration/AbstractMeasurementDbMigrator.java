@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement.migration;
 
+import android.annotation.NonNull;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.LogUtil;
@@ -44,5 +45,5 @@ public abstract class AbstractMeasurementDbMigrator implements IMeasurementDbMig
      *
      * @param db db to migrate
      */
-    protected abstract void performMigration(SQLiteDatabase db);
+    protected abstract void performMigration(@NonNull SQLiteDatabase db);
 }

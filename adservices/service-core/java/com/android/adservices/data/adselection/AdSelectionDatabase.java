@@ -17,45 +17,59 @@
 package com.android.adservices.data.adselection;
 
 import android.content.Context;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
-import com.android.internal.annotations.GuardedBy;
+import com.android.adservices.data.common.FledgeRoomConverters;
 
-import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 /** Room based database for Ad Selection. */
-// TODO (b/229660121): Ad unit tests for this class
 @Database(
-        exportSchema = false,
-        entities = {DBAdSelection.class, DBBuyerDecisionLogic.class, DBAdSelectionOverride.class},
-        version = 1)
-@TypeConverters({AdSelectionDatabase.Converters.class})
+        entities = {
+            DBAdSelection.class,
+            DBBuyerDecisionLogic.class,
+            DBAdSelectionOverride.class,
+            DBAdSelectionFromOutcomesOverride.class,
+            DBRegisteredAdInteraction.class,
+            DBBuyerDecisionOverride.class
+        },
+        version = AdSelectionDatabase.DATABASE_VERSION,
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2),
+            @AutoMigration(from = 2, to = 3),
+            @AutoMigration(from = 3, to = 4),
+            @AutoMigration(from = 4, to = 5),
+            @AutoMigration(from = 5, to = 6),
+        })
+@TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
+    public static final int DATABASE_VERSION = 6;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "adselection.db";
 
-    @GuardedBy("SINGLETON_LOCK")
-    private static AdSelectionDatabase sSingleton = null;
+    private static volatile AdSelectionDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionDatabase given a context. */
     public static AdSelectionDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "Context must be provided.");
+        // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
+        AdSelectionDatabase singleReadResult = sSingleton;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (SINGLETON_LOCK) {
-            if (Objects.isNull(sSingleton)) {
+            if (sSingleton == null) {
                 sSingleton =
                         Room.databaseBuilder(context, AdSelectionDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
                                 .build();
             }
             return sSingleton;
@@ -66,38 +80,4 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
      * @return a Dao to access entities in AdSelection database.
      */
     public abstract AdSelectionEntryDao adSelectionEntryDao();
-
-    /** Room DB type converters. Register custom type converters here. */
-    public static class Converters {
-
-        private Converters() {}
-
-        /** Serialize {@link Instant} to Long. */
-        @TypeConverter
-        @Nullable
-        public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Instant} from long. */
-        @TypeConverter
-        @Nullable
-        public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Uri} from String. */
-        @TypeConverter
-        @Nullable
-        public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
-        }
-
-        /** Serialize {@link Uri} to String. */
-        @TypeConverter
-        @Nullable
-        public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
-        }
-    }
 }

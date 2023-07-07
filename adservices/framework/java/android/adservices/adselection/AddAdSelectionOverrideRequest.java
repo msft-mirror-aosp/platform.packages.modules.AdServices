@@ -16,6 +16,7 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
@@ -24,25 +25,54 @@ import java.util.concurrent.Executor;
 
 /**
  * This POJO represents the {@link
- * AdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest, Executor,
- * OutcomeReceiver)} request
+ * TestAdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest,
+ * Executor, OutcomeReceiver)} request
  *
- * <p>It contains two fields, a {@link AdSelectionConfig} which will serve as the identifier for the
- * specific override, and a {@code String} decisionLogicJs field representing the override value
+ * <p>It contains, a {@link AdSelectionConfig} which will serve as the identifier for the specific
+ * override, a {@code String} decisionLogicJs and {@code String} trustedScoringSignals field
+ * representing the override value
  */
 public class AddAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
     @NonNull private final String mDecisionLogicJs;
 
-    private AddAdSelectionOverrideRequest(
-            AdSelectionConfig adSelectionConfig, String decisionLogicJs) {
+    @NonNull private final AdSelectionSignals mTrustedScoringSignals;
+
+    @NonNull private final BuyersDecisionLogic mBuyersDecisionLogic;
+
+    /**
+     * Builds a {@link AddAdSelectionOverrideRequest} instance.
+     *
+     * @hide
+     */
+    public AddAdSelectionOverrideRequest(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJs,
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(decisionLogicJs);
+        Objects.requireNonNull(trustedScoringSignals);
+        Objects.requireNonNull(buyersDecisionLogic);
+
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
+        mTrustedScoringSignals = trustedScoringSignals;
+        mBuyersDecisionLogic = buyersDecisionLogic;
+    }
+
+    public AddAdSelectionOverrideRequest(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJs,
+            @NonNull AdSelectionSignals trustedScoringSignals) {
+        this(adSelectionConfig, decisionLogicJs, trustedScoringSignals, BuyersDecisionLogic.EMPTY);
     }
 
     /**
-     * @return AdSelectionConfig, the configuration of the ad selection process.
+     * @return an instance of {@link AdSelectionConfig}, the configuration of the ad selection
+     *     process. This configuration provides the data necessary to run Ad Selection flow that
+     *     generates bids and scores to find a wining ad for rendering.
      */
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {
@@ -50,47 +80,30 @@ public class AddAdSelectionOverrideRequest {
     }
 
     /**
-     * @return The override javascript result
+     * @return The override javascript result, should be a string that contains valid JS code. The
+     *     code should contain the scoring logic that will be executed during Ad selection.
      */
     @NonNull
     public String getDecisionLogicJs() {
         return mDecisionLogicJs;
     }
 
-    /** Builder for {@link AddAdSelectionOverrideRequest} objects. */
-    public static final class Builder {
-        private AdSelectionConfig mAdSelectionConfig;
-        private String mDecisionLogicJs;
+    /**
+     * @return The override trusted scoring signals, should be a valid json string. The trusted
+     *     signals would be fed into the scoring logic during Ad Selection.
+     */
+    @NonNull
+    public AdSelectionSignals getTrustedScoringSignals() {
+        return mTrustedScoringSignals;
+    }
 
-        public Builder() {}
-
-        /** Set the override decision logic javascript. */
-        @NonNull
-        public AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(
-                @NonNull String decisionLogicJs) {
-            Objects.requireNonNull(decisionLogicJs);
-
-            this.mDecisionLogicJs = decisionLogicJs;
-            return this;
-        }
-
-        /** Set the AdSelectionConfig. */
-        @NonNull
-        public AddAdSelectionOverrideRequest.Builder setAdSelectionConfig(
-                @NonNull AdSelectionConfig adSelectionConfig) {
-            Objects.requireNonNull(adSelectionConfig);
-
-            this.mAdSelectionConfig = adSelectionConfig;
-            return this;
-        }
-
-        /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
-        @NonNull
-        public AddAdSelectionOverrideRequest build() {
-            Objects.requireNonNull(mAdSelectionConfig);
-            Objects.requireNonNull(mDecisionLogicJs);
-
-            return new AddAdSelectionOverrideRequest(mAdSelectionConfig, mDecisionLogicJs);
-        }
+    /**
+     * @return The override for the decision logic for each buyer that is used by contextual ads for
+     *     reporting, which may be extended to updating bid values for contextual ads in the future
+     * @hide
+     */
+    @NonNull
+    public BuyersDecisionLogic getBuyersDecisionLogic() {
+        return mBuyersDecisionLogic;
     }
 }

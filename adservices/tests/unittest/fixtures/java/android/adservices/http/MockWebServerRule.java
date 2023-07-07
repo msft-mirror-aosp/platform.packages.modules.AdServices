@@ -16,14 +16,20 @@
 
 package android.adservices.http;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import android.content.Context;
 import android.net.Uri;
+
+import com.android.adservices.LogUtil;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -33,8 +39,11 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -43,14 +52,16 @@ import javax.net.ssl.SSLSocketFactory;
 
 /** Instances of this class are not thread safe. */
 public class MockWebServerRule implements TestRule {
-    // TODO: add support for HTTPS
-
     private static final int UNINITIALIZED = -1;
-
-    private int mPort = UNINITIALIZED;
-    private MockWebServer mMockWebServer;
     private final InputStream mCertificateInputStream;
     private final char[] mKeyStorePassword;
+    private int mPort = UNINITIALIZED;
+    private MockWebServer mMockWebServer;
+
+    private MockWebServerRule(InputStream inputStream, String keyStorePassword) {
+        mCertificateInputStream = inputStream;
+        mKeyStorePassword = keyStorePassword == null ? null : keyStorePassword.toCharArray();
+    }
 
     public static MockWebServerRule forHttp() {
         return new MockWebServerRule(null, null);
@@ -83,29 +94,43 @@ public class MockWebServerRule implements TestRule {
         return new MockWebServerRule(certificateInputStream, keyStorePassword);
     }
 
-    private MockWebServerRule(InputStream inputStream, String keyStorePassword) {
-        mCertificateInputStream = inputStream;
-        mKeyStorePassword = keyStorePassword == null ? null : keyStorePassword.toCharArray();
-    }
-
     private boolean useHttps() {
         return Objects.nonNull(mCertificateInputStream);
     }
 
-    public MockWebServer startMockWebServer(List<MockResponse> responses) throws Exception {
+    private interface MockWebServerInitializer {
+        void initWebServer(MockWebServer mockWebServer);
+    }
+
+    private MockWebServer startMockWebServer(MockWebServerInitializer mockWebServerInitializer)
+            throws Exception {
         if (mPort == UNINITIALIZED) {
+            LogUtil.v("Initializing MockWebServer. Finding port");
             reserveServerListeningPort();
+            LogUtil.v("MockWebServer will use port " + mPort);
+        } else {
+            LogUtil.v("MockWebServer already initialized at port " + mPort);
         }
 
+        LogUtil.v("Initializing MockWebServer");
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
         }
-        for (MockResponse response : responses) {
-            mMockWebServer.enqueue(response);
-        }
+        mockWebServerInitializer.initWebServer(mMockWebServer);
+        LogUtil.v("Starting MockWebServer");
         mMockWebServer.play(mPort);
+        LogUtil.v("MockWebServer started at port " + mPort);
         return mMockWebServer;
+    }
+
+    public MockWebServer startMockWebServer(List<MockResponse> responses) throws Exception {
+        return startMockWebServer(
+                mockWebServer -> {
+                    for (MockResponse response : responses) {
+                        mMockWebServer.enqueue(response);
+                    }
+                });
     }
 
     public MockWebServer startMockWebServer(Function<RecordedRequest, MockResponse> lambda)
@@ -121,19 +146,16 @@ public class MockWebServerRule implements TestRule {
     }
 
     public MockWebServer startMockWebServer(Dispatcher dispatcher) throws Exception {
-        if (mPort == UNINITIALIZED) {
-            reserveServerListeningPort();
-        }
-
-        mMockWebServer = new MockWebServer();
-        if (useHttps()) {
-            mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
-        }
-        mMockWebServer.setDispatcher(dispatcher);
-
-        mMockWebServer.play(mPort);
-        return mMockWebServer;
+        return startMockWebServer(
+                mockWebServer -> {
+                    mockWebServer.setDispatcher(dispatcher);
+                });
     }
+
+    public void shutdownMockServer() throws IOException {
+        mMockWebServer.shutdown();
+    }
+
     /**
      * @return the mock web server for this rull and {@code null} if it hasn't been started yet by
      *     calling {@link #startMockWebServer(List)}.
@@ -142,11 +164,16 @@ public class MockWebServerRule implements TestRule {
         return mMockWebServer;
     }
 
+    public String getServerHostname() {
+        return String.format(Locale.ENGLISH, "localhost:%d", mPort);
+    }
+
     /**
      * @return the base address the mock web server will be listening to when started.
      */
     public String getServerBaseAddress() {
-        return String.format("%s://localhost:%d", useHttps() ? "https" : "http", mPort);
+        return String.format(
+                Locale.ENGLISH, "%s://%s", useHttps() ? "https" : "http", getServerHostname());
     }
 
     /**
@@ -159,11 +186,51 @@ public class MockWebServerRule implements TestRule {
     public Uri uriForPath(String path) {
         return Uri.parse(
                 String.format(
-                        "%s%s%s", getServerBaseAddress(), path.startsWith("/") ? "" : "/", path));
+                        Locale.ENGLISH,
+                        "%s%s%s",
+                        getServerBaseAddress(),
+                        path.startsWith("/") ? "" : "/",
+                        path));
+    }
+
+    /**
+     * This method is equivalent to {@link #uriForPath(String)} but it adds a valid (but
+     * unreachable) subdomain.
+     *
+     * @return a {@link Uri} to use for DB persistence with the given {@code @path}, which cannot be
+     *     reached on the mock web server
+     */
+    public Uri unreachableUriWithSubdomainForPath(String path) {
+        return Uri.parse(
+                String.format(
+                        Locale.ENGLISH,
+                        "%s://%s%s%s",
+                        useHttps() ? "https" : "http",
+                        getServerHostname(),
+                        path.startsWith("/") ? "" : "/",
+                        path));
     }
 
     private void reserveServerListeningPort() throws IOException {
         ServerSocket serverSocket = new ServerSocket(0);
+        serverSocket.setReuseAddress(true);
+        mPort = serverSocket.getLocalPort();
+        serverSocket.close();
+    }
+
+    /**
+     * Provides the ability to define a port before starting the mock web server. Otherwise, if the
+     * port has already been initialized it will throw an {@link IllegalStateException}
+     *
+     * @param port the port to be configured
+     * @throws IOException if port already in used
+     */
+    public void reserveServerListeningPort(int port) throws IOException {
+        if (mPort != UNINITIALIZED) {
+            throw new IllegalStateException("Port has already been initialized");
+        }
+
+        ServerSocket serverSocket = new ServerSocket(port);
         serverSocket.setReuseAddress(true);
         mPort = serverSocket.getLocalPort();
         serverSocket.close();
@@ -181,6 +248,70 @@ public class MockWebServerRule implements TestRule {
         return sslContext.getSocketFactory();
     }
 
+    /**
+     * A utility that validates that the mock web server got the expected traffic.
+     *
+     * @param mockWebServer server instance used for making requests
+     * @param expectedRequestCount the number of requests expected to be received by the server
+     * @param expectedRequests the list of URLs that should have been requested, in case of repeat
+     *     requests the size of expectedRequests list could be less than the expectedRequestCount
+     * @param requestMatcher A custom matcher that dictates if the request meets the criteria of
+     *     being hit or not. This allows tests to do partial match of URLs in case of params or
+     *     other sub path of URL.
+     */
+    public void verifyMockServerRequests(
+            final MockWebServer mockWebServer,
+            final int expectedRequestCount,
+            final List<String> expectedRequests,
+            final RequestMatcher<String> requestMatcher) {
+
+        assertEquals(
+                "Number of expected requests does not match actual request count",
+                expectedRequestCount,
+                mockWebServer.getRequestCount());
+
+        // For parallel executions requests should be checked agnostic of order
+        final Set<String> actualRequests = new HashSet<>();
+        for (int i = 0; i < expectedRequestCount; i++) {
+            try {
+                actualRequests.add(mockWebServer.takeRequest().getPath());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        assertFalse(
+                String.format(
+                        Locale.ENGLISH,
+                        "Expected requests cannot be empty, actual requests <%s>",
+                        actualRequests),
+                expectedRequestCount != 0 && expectedRequests.isEmpty());
+
+        for (String request : expectedRequests) {
+            Assert.assertTrue(
+                    String.format(
+                            Locale.ENGLISH,
+                            "Actual requests <%s> do not contain request <%s>",
+                            actualRequests,
+                            request),
+                    wasPathRequested(actualRequests, request, requestMatcher));
+        }
+    }
+
+    private boolean wasPathRequested(
+            final Set<String> actualRequests,
+            final String request,
+            final RequestMatcher<String> requestMatcher) {
+        for (String actualRequest : actualRequests) {
+            // Passing a custom comparator allows tests to do partial match of URLs in case of
+            // params or other sub path of URL
+            if (requestMatcher.wasRequestMade(actualRequest, request)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
@@ -196,5 +327,9 @@ public class MockWebServerRule implements TestRule {
                 }
             }
         };
+    }
+
+    public interface RequestMatcher<T> {
+        boolean wasRequestMade(T actualRequest, T expectedRequest);
     }
 }

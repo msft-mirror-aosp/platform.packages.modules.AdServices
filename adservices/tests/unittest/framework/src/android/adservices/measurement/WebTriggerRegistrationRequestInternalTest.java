@@ -17,7 +17,9 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.net.Uri;
@@ -29,33 +31,27 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class WebTriggerRegistrationRequestInternalTest {
     private static final Context CONTEXT =
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
     private static final WebTriggerParams TRIGGER_REGISTRATION_2 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final List<WebTriggerParams> TRIGGER_REGISTRATIONS =
             Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2);
 
     private static final WebTriggerRegistrationRequest EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST =
-            new WebTriggerRegistrationRequest.Builder()
-                    .setTriggerParams(TRIGGER_REGISTRATIONS)
-                    .setDestination(TOP_ORIGIN_URI)
+            new WebTriggerRegistrationRequest.Builder(TRIGGER_REGISTRATIONS, TOP_ORIGIN_URI)
                     .build();
 
     @Test
@@ -74,34 +70,82 @@ public class WebTriggerRegistrationRequestInternalTest {
     }
 
     @Test
-    public void build_nullParameters_throwsException() {
+    public void build_nullTriggerRegistrationRequest_throwsException() {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new WebTriggerRegistrationRequestInternal.Builder()
-                                .setTriggerRegistrationRequest(null)
-                                .setAttributionSource(CONTEXT.getAttributionSource())
-                                .build());
-
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new WebTriggerRegistrationRequestInternal.Builder()
-                                .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                                .setAttributionSource(null)
+                        new WebTriggerRegistrationRequestInternal.Builder(
+                                        null, CONTEXT.getPackageName(), SDK_PACKAGE_NAME)
                                 .build());
     }
 
+    @Test
+    public void build_nullAppPackageName_throwsException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new WebTriggerRegistrationRequestInternal.Builder(
+                                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
+                                        /* appPackageName */ null,
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void build_nullSdkPackageName_throwsException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new WebTriggerRegistrationRequestInternal.Builder(
+                                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
+                                        CONTEXT.getPackageName(),
+                                        /* sdkPackageName = */ null)
+                                .build());
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistrationRequest().describeContents());
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final WebTriggerRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        final WebTriggerRegistrationRequestInternal request2 = createExampleRegistrationRequest();
+        final Set<WebTriggerRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        final Set<WebTriggerRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        assertEquals(request1.hashCode(), request2.hashCode());
+        assertEquals(request1, request2);
+        assertEquals(requestSet1, requestSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final WebTriggerRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        final WebTriggerRegistrationRequestInternal request2 =
+                new WebTriggerRegistrationRequestInternal.Builder(
+                                EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST, "com.foo", SDK_PACKAGE_NAME)
+                        .build();
+        final Set<WebTriggerRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        final Set<WebTriggerRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        assertNotEquals(request1.hashCode(), request2.hashCode());
+        assertNotEquals(request1, request2);
+        assertNotEquals(requestSet1, requestSet2);
+    }
+
     private WebTriggerRegistrationRequestInternal createExampleRegistrationRequest() {
-        return new WebTriggerRegistrationRequestInternal.Builder()
-                .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                .setAttributionSource(CONTEXT.getAttributionSource())
+        return new WebTriggerRegistrationRequestInternal.Builder(
+                        EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
+                        CONTEXT.getPackageName(),
+                        SDK_PACKAGE_NAME)
+                .setAdIdPermissionGranted(true)
                 .build();
     }
 
     private void verifyExampleRegistrationInternal(WebTriggerRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getTriggerRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource(), request.getAttributionSource());
+        assertEquals(CONTEXT.getPackageName(), request.getAppPackageName());
+        assertTrue(request.isAdIdPermissionGranted());
     }
 
     private void verifyExampleRegistration(WebTriggerRegistrationRequest request) {

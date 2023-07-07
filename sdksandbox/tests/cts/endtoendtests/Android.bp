@@ -19,9 +19,43 @@ package {
 android_test {
     name: "SdkSandboxManagerTests",
     srcs: [
-        "src/**/*.java",
+        "src/**/*endtoend/*.java",
     ],
     static_libs: [
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "compatibility-device-util-axt-minus-dexmaker",
+        "truth-prebuilt",
+        "modules-utils-build",
+        "SdkSandboxTestUtils",
+        "CtsSdkProviderApi",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.mock",
+        "android.test.runner",
+        "framework-configinfrastructure",
+    ],
+    data: [
+      ":SdkSandboxManagerCtsProvider",
+      ":EmptySdkProviderApp",
+    ],
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "Tiramisu",
+    test_suites: [
+        "cts",
+        "mts-adservices",
+        "general-tests",
+    ],
+}
+
+android_test {
+    name: "SdkSandboxManagerDisabledTests",
+    srcs: [
+        "src/**/*disablede2e/*.java",
+    ],
+    static_libs: [
+        "androidx.test.ext.junit",
         "androidx.test.runner",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
@@ -32,14 +66,10 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":LoadSdkSuccessfullySdkProvider",
-      ":RetryLoadSameSdkShouldFailSdkProvider",
-      ":LoadSdkWithInternalErrorSdkProvider",
-      ":RequestSurfacePackageSuccessfullySdkProvider",
-      ":RequestSurfacePackageWithInternalErrorSdkProvider",
-      ":SendDataSdkProvider",
-      ":CodeProviderWithResources",
+      ":SdkSandboxManagerCtsProvider",
     ],
+    test_config: "DisabledAndroidTest.xml",
+    manifest: "DisabledAndroidManifest.xml",
     min_sdk_version: "Tiramisu",
     target_sdk_version: "current",
     test_suites: [

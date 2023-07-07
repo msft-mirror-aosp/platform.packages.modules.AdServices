@@ -17,7 +17,8 @@
 package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
-import android.os.Bundle;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxedSdk;
 
 public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     private final FakeLoadSdkCallback mFakeLoadSdkCallback;
@@ -31,17 +32,21 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     }
 
     @Override
-    public void onLoadSdkSuccess(Bundle params) {
-        mFakeLoadSdkCallback.onLoadSdkSuccess(params);
+    public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk, long timeSystemServerCalledApp) {
+        mFakeLoadSdkCallback.onResult(sandboxedSdk);
     }
 
     @Override
-    public void onLoadSdkFailure(int errorCode, String errorMsg) {
-        mFakeLoadSdkCallback.onLoadSdkFailure(errorCode, errorMsg);
+    public void onLoadSdkFailure(LoadSdkException exception, long timeSystemServerCalledApp) {
+        mFakeLoadSdkCallback.onError(exception);
     }
 
-    public boolean isLoadSdkSuccessful() {
-        return mFakeLoadSdkCallback.isLoadSdkSuccessful();
+    public void assertLoadSdkIsSuccessful() {
+        mFakeLoadSdkCallback.assertLoadSdkIsSuccessful();
+    }
+
+    public void assertLoadSdkIsUnsuccessful() {
+        mFakeLoadSdkCallback.assertLoadSdkIsUnsuccessful();
     }
 
     public int getLoadSdkErrorCode() {
@@ -50,5 +55,9 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
 
     public String getLoadSdkErrorMsg() {
         return mFakeLoadSdkCallback.getLoadSdkErrorMsg();
+    }
+
+    public LoadSdkException getLoadSdkException() {
+        return mFakeLoadSdkCallback.getLoadSdkException();
     }
 }

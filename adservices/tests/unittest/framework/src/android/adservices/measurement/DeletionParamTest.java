@@ -17,8 +17,8 @@ package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.net.Uri;
@@ -30,67 +30,162 @@ import androidx.test.filters.SmallTest;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 
 /** Unit tests for {@link DeletionParam} */
 @SmallTest
 public final class DeletionParamTest {
-    private static final String TAG = "DeletionRequestTest";
-
     private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private DeletionParam createExample() {
-        return new DeletionParam.Builder()
-                .setOriginUri(Uri.parse("http://foo.com"))
-                .setStart(Instant.ofEpochMilli(1642060000000L))
-                .setEnd(Instant.ofEpochMilli(1642060538000L))
-                .setAttributionSource(sContext.getAttributionSource())
+        return new DeletionParam.Builder(
+                        Collections.singletonList(Uri.parse("http://foo.com")),
+                        Collections.emptyList(),
+                        Instant.ofEpochMilli(1642060000000L),
+                        Instant.ofEpochMilli(1642060538000L),
+                        sContext.getPackageName(),
+                        "sdk.package.name")
+                .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
+                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
                 .build();
     }
 
     private DeletionParam createDefaultExample() {
-        return new DeletionParam.Builder()
-                .setOriginUri(null)
-                .setStart(null)
-                .setEnd(null)
-                .setAttributionSource(sContext.getAttributionSource())
+        return new DeletionParam.Builder(
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Instant.MIN,
+                        Instant.MAX,
+                        sContext.getPackageName(),
+                        /* sdkPackageName = */ "")
                 .build();
     }
 
     void verifyExample(DeletionParam request) {
-        assertEquals("http://foo.com", request.getOriginUri().toString());
+        assertEquals(1, request.getOriginUris().size());
+        assertEquals("http://foo.com", request.getOriginUris().get(0).toString());
+        assertTrue(request.getDomainUris().isEmpty());
+        assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
+        assertEquals(
+                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
         assertEquals(1642060000000L, request.getStart().toEpochMilli());
         assertEquals(1642060538000L, request.getEnd().toEpochMilli());
-        assertNotNull(request.getAttributionSource());
+        assertNotNull(request.getAppPackageName());
     }
 
     void verifyDefaultExample(DeletionParam request) {
-        assertNull(request.getOriginUri());
-        assertNull(request.getStart());
-        assertNull(request.getEnd());
-        assertNotNull(request.getAttributionSource());
+        assertTrue(request.getOriginUris().isEmpty());
+        assertTrue(request.getDomainUris().isEmpty());
+        assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
+        assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
+        assertEquals(Instant.MIN, request.getStart());
+        assertEquals(Instant.MAX, request.getEnd());
+        assertNotNull(request.getAppPackageName());
     }
 
     @Test
-    public void testNoAttributionSource() throws Exception {
+    public void testMissingOrigin_throwException() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new DeletionParam.Builder().build();
-                });
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        /* originUris = */ null,
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        sContext.getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
     }
 
     @Test
-    public void testDefaults() throws Exception {
+    public void testMissingDomainUris_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        /* domainUris = */ null,
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        sContext.getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingStart_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        /* start = */ null,
+                                        Instant.MAX,
+                                        sContext.getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingEnd_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        /* end = */ null,
+                                        sContext.getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingAppPackageName_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        /* appPackageName = */ null,
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testMissingSdkPackageName_throwException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new DeletionParam.Builder(
+                                        Collections.emptyList(),
+                                        Collections.emptyList(),
+                                        Instant.MIN,
+                                        Instant.MAX,
+                                        sContext.getPackageName(),
+                                        /* sdkPackageName = */ null)
+                                .build());
+    }
+
+    @Test
+    public void testDefaults() {
         verifyDefaultExample(createDefaultExample());
     }
 
     @Test
-    public void testCreation() throws Exception {
+    public void testCreation() {
         verifyExample(createExample());
     }
 
     @Test
-    public void testParcelingDelete() throws Exception {
+    public void testParcelingDelete() {
         Parcel p = Parcel.obtain();
         createExample().writeToParcel(p, 0);
         p.setDataPosition(0);
@@ -99,11 +194,16 @@ public final class DeletionParamTest {
     }
 
     @Test
-    public void testParcelingDeleteDefaults() throws Exception {
+    public void testParcelingDeleteDefaults() {
         Parcel p = Parcel.obtain();
         createDefaultExample().writeToParcel(p, 0);
         p.setDataPosition(0);
         verifyDefaultExample(DeletionParam.CREATOR.createFromParcel(p));
         p.recycle();
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExample().describeContents());
     }
 }

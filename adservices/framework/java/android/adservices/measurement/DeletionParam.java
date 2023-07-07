@@ -16,64 +16,74 @@
 package android.adservices.measurement;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
-import android.content.AttributionSource;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
- * Class to hold deletion related request.
+ * Class to hold deletion related request. This is an internal class for communication between the
+ * {@link MeasurementManager} and {@link IMeasurementService} impl.
  *
  * @hide
  */
 public final class DeletionParam implements Parcelable {
-    private final Uri mOriginUri;
+    private final List<Uri> mOriginUris;
+    private final List<Uri> mDomainUris;
     private final Instant mStart;
     private final Instant mEnd;
-    private final AttributionSource mAttributionSource;
+    private final String mAppPackageName;
+    private final String mSdkPackageName;
+    @DeletionRequest.DeletionMode private final int mDeletionMode;
+    @DeletionRequest.MatchBehavior private final int mMatchBehavior;
 
-    /** Create a deletion request. */
-    private DeletionParam(
-            @Nullable Uri originUri,
-            @Nullable Instant start,
-            @Nullable Instant end,
-            @NonNull AttributionSource attributionSource) {
-        Objects.requireNonNull(attributionSource);
-        mOriginUri = originUri;
-        mStart = start;
-        mEnd = end;
-        mAttributionSource = attributionSource;
+    private DeletionParam(@NonNull Builder builder) {
+        mOriginUris = builder.mOriginUris;
+        mDomainUris = builder.mDomainUris;
+        mDeletionMode = builder.mDeletionMode;
+        mMatchBehavior = builder.mMatchBehavior;
+        mStart = builder.mStart;
+        mEnd = builder.mEnd;
+        mAppPackageName = builder.mAppPackageName;
+        mSdkPackageName = builder.mSdkPackageName;
     }
 
     /** Unpack an DeletionRequest from a Parcel. */
     private DeletionParam(Parcel in) {
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
-        boolean hasOrigin = in.readBoolean();
-        if (hasOrigin) {
-            mOriginUri = Uri.CREATOR.createFromParcel(in);
-        } else {
-            mOriginUri = null;
-        }
+        mAppPackageName = in.readString();
+        mSdkPackageName = in.readString();
+
+        mDomainUris = new ArrayList<>();
+        in.readTypedList(mDomainUris, Uri.CREATOR);
+
+        mOriginUris = new ArrayList<>();
+        in.readTypedList(mOriginUris, Uri.CREATOR);
+
         boolean hasStart = in.readBoolean();
         if (hasStart) {
-            mStart = Instant.ofEpochMilli(in.readLong());
+            mStart = Instant.parse(in.readString());
         } else {
             mStart = null;
         }
+
         boolean hasEnd = in.readBoolean();
         if (hasEnd) {
-            mEnd = Instant.ofEpochMilli(in.readLong());
+            mEnd = Instant.parse(in.readString());
         } else {
             mEnd = null;
         }
+
+        mDeletionMode = in.readInt();
+        mMatchBehavior = in.readInt();
     }
 
-    /** Creator for Paracelable (via reflection). */
-    public static final @NonNull Parcelable.Creator<DeletionParam> CREATOR =
+    /** Creator for Parcelable (via reflection). */
+    @NonNull
+    public static final Parcelable.Creator<DeletionParam> CREATOR =
             new Parcelable.Creator<DeletionParam>() {
                 @Override
                 public DeletionParam createFromParcel(Parcel in) {
@@ -94,89 +104,152 @@ public final class DeletionParam implements Parcelable {
     /** For Parcelable, write out to a Parcel in particular order. */
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
-        mAttributionSource.writeToParcel(out, flags);
-        if (mOriginUri != null) {
-            out.writeBoolean(true);
-            mOriginUri.writeToParcel(out, flags);
-        } else {
-            out.writeBoolean(false);
-        }
+        out.writeString(mAppPackageName);
+        out.writeString(mSdkPackageName);
+
+        out.writeTypedList(mDomainUris);
+
+        out.writeTypedList(mOriginUris);
+
         if (mStart != null) {
             out.writeBoolean(true);
-            out.writeLong(mStart.toEpochMilli());
+            out.writeString(mStart.toString());
         } else {
             out.writeBoolean(false);
         }
+
         if (mEnd != null) {
             out.writeBoolean(true);
-            out.writeLong(mEnd.toEpochMilli());
+            out.writeString(mEnd.toString());
         } else {
             out.writeBoolean(false);
         }
+
+        out.writeInt(mDeletionMode);
+
+        out.writeInt(mMatchBehavior);
     }
 
-    /** Origin of the App / Publisher, or null for all origins. */
-    public @Nullable Uri getOriginUri() {
-        return mOriginUri;
+    /**
+     * Publisher/Advertiser Origins for which data should be deleted. These will be matched as-is.
+     */
+    @NonNull
+    public List<Uri> getOriginUris() {
+        return mOriginUris;
     }
 
-    /** Instant in time the deletion starts, or null if none. */
-    public @Nullable Instant getStart() {
+    /**
+     * Publisher/Advertiser domains for which data should be deleted. These will be pattern matched
+     * with regex SCHEME://(.*\.|)SITE .
+     */
+    @NonNull
+    public List<Uri> getDomainUris() {
+        return mDomainUris;
+    }
+
+    /** Deletion mode for matched records. */
+    @DeletionRequest.DeletionMode
+    public int getDeletionMode() {
+        return mDeletionMode;
+    }
+
+    /** Match behavior for provided origins/domains. */
+    @DeletionRequest.MatchBehavior
+    public int getMatchBehavior() {
+        return mMatchBehavior;
+    }
+
+    /**
+     * Instant in time the deletion starts, or {@link java.time.Instant#MIN} if starting at the
+     * oldest possible time.
+     */
+    @NonNull
+    public Instant getStart() {
         return mStart;
     }
 
-    /** Instant in time the deletion ends, or null if none. */
-    public @Nullable Instant getEnd() {
+    /**
+     * Instant in time the deletion ends, or {@link java.time.Instant#MAX} if ending at the most
+     * recent time.
+     */
+    @NonNull
+    public Instant getEnd() {
         return mEnd;
     }
 
-    /** AttributionSource of the deletion. */
-    public @NonNull AttributionSource getAttributionSource() {
-        return mAttributionSource;
+    /** Package name of the app used for the deletion. */
+    @NonNull
+    public String getAppPackageName() {
+        return mAppPackageName;
+    }
+
+    /** Package name of the sdk used for the deletion. */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkPackageName;
     }
 
     /** A builder for {@link DeletionParam}. */
     public static final class Builder {
-        private Uri mOriginUri;
-        private Instant mStart;
-        private Instant mEnd;
-        private AttributionSource mAttributionSource;
+        private final List<Uri> mOriginUris;
+        private final List<Uri> mDomainUris;
+        private final Instant mStart;
+        private final Instant mEnd;
+        private final String mAppPackageName;
+        private final String mSdkPackageName;
+        @DeletionRequest.DeletionMode private int mDeletionMode;
+        @DeletionRequest.MatchBehavior private int mMatchBehavior;
 
-        public Builder() {}
+        /**
+         * Builder constructor for {@link DeletionParam}.
+         *
+         * @param originUris see {@link DeletionParam#getOriginUris()}
+         * @param domainUris see {@link DeletionParam#getDomainUris()}
+         * @param start see {@link DeletionParam#getStart()}
+         * @param end see {@link DeletionParam#getEnd()}
+         * @param appPackageName see {@link DeletionParam#getAppPackageName()}
+         * @param sdkPackageName see {@link DeletionParam#getSdkPackageName()}
+         */
+        public Builder(
+                @NonNull List<Uri> originUris,
+                @NonNull List<Uri> domainUris,
+                @NonNull Instant start,
+                @NonNull Instant end,
+                @NonNull String appPackageName,
+                @NonNull String sdkPackageName) {
+            Objects.requireNonNull(originUris);
+            Objects.requireNonNull(domainUris);
+            Objects.requireNonNull(start);
+            Objects.requireNonNull(end);
+            Objects.requireNonNull(appPackageName);
+            Objects.requireNonNull(sdkPackageName);
 
-        /** See {@link DeletionParam#getOriginUri}. */
-        public @NonNull Builder setOriginUri(@Nullable Uri origin) {
-            mOriginUri = origin;
-            return this;
-        }
-
-        /** See {@link DeletionParam#getStart}. */
-        public @NonNull Builder setStart(@Nullable Instant start) {
+            mOriginUris = originUris;
+            mDomainUris = domainUris;
             mStart = start;
-            return this;
-        }
-
-        /** See {@link DeletionParam#getEnd}. */
-        public @NonNull Builder setEnd(@Nullable Instant end) {
             mEnd = end;
+            mAppPackageName = appPackageName;
+            mSdkPackageName = sdkPackageName;
+        }
+
+        /** See {@link DeletionParam#getDeletionMode()}. */
+        @NonNull
+        public Builder setDeletionMode(@DeletionRequest.DeletionMode int deletionMode) {
+            mDeletionMode = deletionMode;
             return this;
         }
 
-        /** See {@link DeletionParam#getAttributionSource}. */
-        public @NonNull Builder setAttributionSource(@NonNull AttributionSource attributionSource) {
-            Objects.requireNonNull(attributionSource);
-            mAttributionSource = attributionSource;
+        /** See {@link DeletionParam#getDeletionMode()}. */
+        @NonNull
+        public Builder setMatchBehavior(@DeletionRequest.MatchBehavior int matchBehavior) {
+            mMatchBehavior = matchBehavior;
             return this;
         }
 
         /** Build the DeletionRequest. */
-        public @NonNull DeletionParam build() {
-            // Ensure attributionSource has been set,
-            // throw IllegalArgumentException if null.
-            if (mAttributionSource == null) {
-                throw new IllegalArgumentException("attributionSource unset");
-            }
-            return new DeletionParam(mOriginUri, mStart, mEnd, mAttributionSource);
+        @NonNull
+        public DeletionParam build() {
+            return new DeletionParam(this);
         }
     }
 }

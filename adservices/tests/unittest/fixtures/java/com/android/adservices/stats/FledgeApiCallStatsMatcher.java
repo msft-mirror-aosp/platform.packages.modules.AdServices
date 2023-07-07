@@ -19,8 +19,6 @@ package com.android.adservices.stats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 
-import static org.mockito.Mockito.argThat;
-
 import com.android.adservices.service.stats.ApiCallStats;
 
 import org.mockito.ArgumentMatcher;
@@ -54,10 +52,5 @@ public class FledgeApiCallStatsMatcher implements ArgumentMatcher<ApiCallStats> 
                 AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                 mExpectedApiName,
                 mExpectedResultCode);
-    }
-
-    public static ApiCallStats aCallStatForFledgeApiWithStatus(
-            int expectedApiName, int expectedResultCode) {
-        return argThat(new FledgeApiCallStatsMatcher(expectedApiName, expectedResultCode));
     }
 }

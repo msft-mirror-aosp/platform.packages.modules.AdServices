@@ -28,6 +28,8 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.WebUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -84,7 +86,7 @@ public final class AggregateEncryptionKeyFetcherTest {
 
     @Test
     public void testBadSourceUrl() throws Exception {
-        Uri badTarget = Uri.parse("bad-schema://foo.com");
+        Uri badTarget = WebUtil.validUri("bad-schema://foo.test");
         Optional<List<AggregateEncryptionKey>> resultOptional =
                 mFetcher.fetch(badTarget, AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
@@ -132,9 +134,87 @@ public final class AggregateEncryptionKeyFetcherTest {
     }
 
     @Test
+    public void testMissingAgeHeader() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream(
+                AggregateEncryptionKeyTestUtil.getDefaultResponseBody().getBytes());
+        long expectedExpiry = AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY
+                + Long.parseLong(AggregateEncryptionKeyTestUtil.DEFAULT_CACHED_AGE) * 1000;
+        doReturn(mUrlConnection).when(mFetcher).openUrl(
+                new URL(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getInputStream()).thenReturn(inputStream);
+        when(mUrlConnection.getHeaderFields()).thenReturn(Map.of(
+                "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE)));
+        Optional<List<AggregateEncryptionKey>> resultOptional =
+                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
+        List<AggregateEncryptionKey> result = resultOptional.get();
+        assertEquals(2, result.size());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID,
+                result.get(0).getKeyId());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY,
+                result.get(0).getPublicKey());
+        assertEquals(expectedExpiry, result.get(0).getExpiry());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID,
+                result.get(1).getKeyId());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY,
+                result.get(1).getPublicKey());
+        assertEquals(expectedExpiry, result.get(1).getExpiry());
+        verify(mUrlConnection).setRequestMethod("GET");
+    }
+
+    @Test
+    public void testBrokenAgeHeader() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream(
+                AggregateEncryptionKeyTestUtil.getDefaultResponseBody().getBytes());
+        long expectedExpiry = AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY
+                + Long.parseLong(AggregateEncryptionKeyTestUtil.DEFAULT_CACHED_AGE) * 1000;
+        doReturn(mUrlConnection).when(mFetcher).openUrl(
+                new URL(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getInputStream()).thenReturn(inputStream);
+        when(mUrlConnection.getHeaderFields()).thenReturn(Map.of(
+                "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE),
+                "age", List.of("not an int")));
+        Optional<List<AggregateEncryptionKey>> resultOptional =
+                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
+        List<AggregateEncryptionKey> result = resultOptional.get();
+        assertEquals(2, result.size());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID,
+                result.get(0).getKeyId());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY,
+                result.get(0).getPublicKey());
+        assertEquals(expectedExpiry, result.get(0).getExpiry());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID,
+                result.get(1).getKeyId());
+        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY,
+                result.get(1).getPublicKey());
+        assertEquals(expectedExpiry, result.get(1).getExpiry());
+        verify(mUrlConnection).setRequestMethod("GET");
+    }
+
+    @Test
+    public void testCachedAgeGreaterThanMaxAge() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream(
+                AggregateEncryptionKeyTestUtil.getDefaultResponseBody().getBytes());
+        doReturn(mUrlConnection).when(mFetcher).openUrl(
+                new URL(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getInputStream()).thenReturn(inputStream);
+        when(mUrlConnection.getHeaderFields()).thenReturn(Map.of(
+                "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE),
+                "age", List.of("604801")));
+        Optional<List<AggregateEncryptionKey>> resultOptional =
+                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
+        assertFalse(resultOptional.isPresent());
+    }
+
+    @Test
     public void testNotOverHttps() throws Exception {
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(Uri.parse("http://foo.com"),
+                mFetcher.fetch(WebUtil.validUri("http://foo.test"),
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
         verify(mFetcher, never()).openUrl(any());

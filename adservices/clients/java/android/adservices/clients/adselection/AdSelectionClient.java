@@ -19,15 +19,18 @@ package android.adservices.clients.adselection;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.adselection.AddAdSelectionOverrideRequest;
-import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.exceptions.AdServicesException;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -40,41 +43,40 @@ import java.util.concurrent.Executor;
  */
 // TODO: This should be in JetPack code.
 public class AdSelectionClient {
+
     private AdSelectionManager mAdSelectionManager;
     private Context mContext;
     private Executor mExecutor;
 
-    private AdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
+    private AdSelectionClient(
+            @NonNull Context context,
+            @NonNull Executor executor,
+            @NonNull AdSelectionManager adSelectionManager) {
         mContext = context;
         mExecutor = executor;
-        mAdSelectionManager = mContext.getSystemService(AdSelectionManager.class);
+        mAdSelectionManager = adSelectionManager;
     }
 
     /**
-     * Invokes the {@code runAdSelection} method of {@link AdSelectionManager}, and returns a future
-     * with {@link AdSelectionOutcome} if succeeds, or an {@link AdServicesException} if fails.
+     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
+     * {@link AdSelectionOutcome} if succeeds, or an {@link Exception} if fails.
      */
     @NonNull
-    public ListenableFuture<AdSelectionOutcome> runAdSelection(
+    public ListenableFuture<AdSelectionOutcome> selectAds(
             @NonNull AdSelectionConfig adSelectionConfig) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.runAdSelection(
+                    mAdSelectionManager.selectAds(
                             adSelectionConfig,
                             mExecutor,
-                            new OutcomeReceiver<AdSelectionOutcome, AdServicesException>() {
-
+                            new OutcomeReceiver<AdSelectionOutcome, Exception>() {
                                 @Override
                                 public void onResult(@NonNull AdSelectionOutcome result) {
-                                    completer.set(
-                                            new AdSelectionOutcome.Builder()
-                                                    .setAdSelectionId(result.getAdSelectionId())
-                                                    .setRenderUrl(result.getRenderUrl())
-                                                    .build());
+                                    completer.set(result);
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -94,14 +96,14 @@ public class AdSelectionClient {
                     mAdSelectionManager.reportImpression(
                             input,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -109,104 +111,73 @@ public class AdSelectionClient {
                 });
     }
 
-    /**
-     * Invokes the {@code overrideAdSelectionConfigRemoteInfo} method of {@link AdSelectionManager},
-     * and returns a Void future
-     *
-     * This method is only available when Developer mode is enabled and the app is debuggable.
-     *
-     * @hide
-     */
+    /** Invokes {@link AdSelectionManager#reportEvent} and returns a Void future */
     @NonNull
-    public ListenableFuture<Void> overrideAdSelectionConfigRemoteInfo(
-            @NonNull AddAdSelectionOverrideRequest request) {
+    public ListenableFuture<Void> reportEvent(@NonNull ReportEventRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.overrideAdSelectionConfigRemoteInfo(
+                    mAdSelectionManager.reportEvent(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
-
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
-                    return "overrideAdSelectionConfigRemoteInfo";
+                    return "reportEvent";
                 });
     }
 
     /**
-     * Invokes the {@code removeAdSelectionConfigRemoteInfoOverride} method of {@link
-     * AdSelectionManager}, and returns a Void future
-     *
-     * This method is only available when Developer mode is enabled and the app is debuggable.
+     * Invokes {@link AdSelectionManager#updateAdCounterHistogram(UpdateAdCounterHistogramRequest,
+     * Executor, OutcomeReceiver)} and returns a {@link ListenableFuture} for the resulting call.
      *
      * @hide
      */
     @NonNull
-    public ListenableFuture<Void> removeAdSelectionConfigRemoteInfoOverride(
-            @NonNull RemoveAdSelectionOverrideRequest request) {
+    public ListenableFuture<Void> updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.removeAdSelectionConfigRemoteInfoOverride(
+                    mAdSelectionManager.updateAdCounterHistogram(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
-
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
-                    return "removeAdSelectionConfigRemoteInfoOverride";
+                    return "updateAdCounterHistogram";
                 });
     }
 
     /**
-     * Invokes the {@code removeAdSelectionConfigRemoteInfoOverride} method of {@link
-     * AdSelectionManager}, and returns a Void future
-     *
-     * This method is only available when Developer mode is enabled and the app is debuggable.
-     *
-     * @hide
+     * Invokes the {@code setAppInstallAdvertiser} method of {@link AdSelectionManager}, and returns
+     * a Void future.
      */
     @NonNull
-    public ListenableFuture<Void> resetAllAdSelectionConfigRemoteOverrides() {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mAdSelectionManager.resetAllAdSelectionConfigRemoteOverrides(
-                            mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
-
-                                @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
-                                }
-
-                                @Override
-                                public void onError(@NonNull AdServicesException error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "resetAllAdSelectionConfigRemoteOverrides";
-                });
+    public ListenableFuture<Void> setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest setAppInstallAdvertisersRequest) {
+        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /** Builder class. */
     public static final class Builder {
         private Context mContext;
         private Executor mExecutor;
+        private boolean mUseGetMethodToCreateManagerInstance;
 
         /** Empty-arg constructor with an empty body for Builder */
         public Builder() {}
@@ -234,6 +205,19 @@ public class AdSelectionClient {
         }
 
         /**
+         * Sets whether to use the AdSelectionManager.get(context) method explicitly.
+         *
+         * @param value flag indicating whether to use the AdSelectionManager.get(context) method
+         *     explicitly. Default is {@code false}.
+         */
+        @VisibleForTesting
+        @NonNull
+        public Builder setUseGetMethodToCreateManagerInstance(boolean value) {
+            mUseGetMethodToCreateManagerInstance = value;
+            return this;
+        }
+
+        /**
          * Builds the Ad Selection Client.
          *
          * @throws NullPointerException if {@code mContext} is null or if {@code mExecutor} is null
@@ -243,7 +227,17 @@ public class AdSelectionClient {
             Objects.requireNonNull(mContext);
             Objects.requireNonNull(mExecutor);
 
-            return new AdSelectionClient(mContext, mExecutor);
+            return new AdSelectionClient(mContext, mExecutor, createAdSelectionManager());
+        }
+
+        private AdSelectionManager createAdSelectionManager() {
+            if (mUseGetMethodToCreateManagerInstance) {
+                return AdSelectionManager.get(mContext);
+            }
+
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    ? mContext.getSystemService(AdSelectionManager.class)
+                    : AdSelectionManager.get(mContext);
         }
     }
 }

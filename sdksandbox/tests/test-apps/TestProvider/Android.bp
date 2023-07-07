@@ -23,11 +23,15 @@ android_test_helper_app {
     platform_apis: true,
     srcs: [
         "src/**/*.java",
-        ":framework-sdksandbox-sources",
+    ],
+    libs: [
+        "framework-sdksandbox.impl",
     ],
     dex_preopt: {
         enabled: true,
     },
     test_suites: ["general-tests"],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 

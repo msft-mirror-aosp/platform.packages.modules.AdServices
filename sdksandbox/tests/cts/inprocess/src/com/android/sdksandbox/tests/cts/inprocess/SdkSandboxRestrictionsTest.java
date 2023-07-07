@@ -20,9 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
-import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.NotificationManager;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -37,6 +41,9 @@ import android.provider.MediaStore;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.modules.utils.build.SdkLevel;
+
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +63,22 @@ import java.util.UUID;
  */
 @RunWith(JUnit4.class)
 public class SdkSandboxRestrictionsTest {
+
+    @Before
+    public void setUp() {
+        assumeTrue(
+                DeviceSupportUtils.isSdkSandboxSupported(
+                        InstrumentationRegistry.getInstrumentation().getContext()));
+    }
+
+    /** Tests that the SDK sandbox cannot send notifications. */
+    @Test
+    public void testNoNotifications() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        NotificationManager notificationManager =
+                context.getSystemService(NotificationManager.class);
+        assertThat(notificationManager.areNotificationsEnabled()).isFalse();
+    }
 
     /**
      * Tests that sandbox cannot access the Widevine ID.
@@ -91,18 +114,15 @@ public class SdkSandboxRestrictionsTest {
         SecurityException thrown = assertThrows(
                 SecurityException.class,
                 () -> context.startActivity(intent));
-        assertThat(thrown).hasMessageThat().contains(
-                "may not be broadcast from an SDK sandbox uid");
+        assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
-    /**
-     * Tests that sandbox cannot send implicit broadcast intents.
-     */
+    /** Tests that sandbox cannot send implicit broadcast intents. */
     @Test
     public void testNoImplicitIntents() {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        Intent sendIntent = new Intent();
+        final Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, "text");
         sendIntent.setType("text/plain");
@@ -111,6 +131,29 @@ public class SdkSandboxRestrictionsTest {
         SecurityException thrown = assertThrows(
                 SecurityException.class,
                 () -> ctx.startActivity(sendIntent));
+        assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
+    }
+
+    /** Tests that the sandbox cannot send broadcasts. */
+    @Test
+    public void testSendBroadcastsRestrictions_withAction() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        SecurityException thrown =
+                assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
+        assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
+    }
+
+    /** Tests that the sandbox cannot send broadcasts. */
+    @Test
+    public void testSendBroadcastRestrictions_withoutAction() {
+        assumeTrue(SdkLevel.isAtLeastU());
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Intent intent = new Intent();
+
+        SecurityException thrown =
+                assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
         assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
     }
 
@@ -129,13 +172,20 @@ public class SdkSandboxRestrictionsTest {
         ctx.startActivity(intent);
     }
 
-    /**
-     * Tests that sandbox cannot access hidden API methods via reflection.
-     */
+    /** Tests that the sandbox cannot send explicit intents by specifying a package or component. */
     @Test
-    public void testNoHiddenApiAccess() {
-        assertThrows(NoSuchMethodException.class,
-                () -> SandboxedSdkContext.class.getDeclaredMethod("getSdkName"));
+    public void testNoExplicitIntents() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        Intent packageIntent = new Intent(Intent.ACTION_VIEW);
+        packageIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        packageIntent.setPackage("test.package");
+        assertThrows(ActivityNotFoundException.class, () -> context.startActivity(packageIntent));
+
+        Intent componentIntent = new Intent(Intent.ACTION_VIEW);
+        componentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        componentIntent.setComponent(new ComponentName("test.package", "TestClass"));
+        assertThrows(ActivityNotFoundException.class, () -> context.startActivity(componentIntent));
     }
 
     /** Tests that sandbox cannot execute code in read-write locations. */
@@ -225,9 +275,7 @@ public class SdkSandboxRestrictionsTest {
         }
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access Storage Access Framework
-     */
+    /** Tests that Sdk Sandbox cannot access Storage Access Framework */
     @Test
     public void testSanboxCannotAccess_StorageAccessFramework() throws Exception {
         final String[] intentList = {
@@ -242,8 +290,9 @@ public class SdkSandboxRestrictionsTest {
 
             SecurityException thrown = assertThrows(SecurityException.class,
                     () -> ctx.startActivity(intent));
-            assertThat(thrown).hasMessageThat().contains(
-                    "may not be broadcast from an SDK sandbox uid");
+            assertThat(thrown)
+                    .hasMessageThat()
+                    .contains("may not be started from an SDK sandbox uid.");
         }
     }
 

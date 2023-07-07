@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,6 +51,9 @@ import javax.net.ssl.HttpsURLConnection;
 @SmallTest
 public final class AggregateEncryptionKeyManagerTest {
     private static final int NUM_KEYS_REQUESTED = 5;
+    private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            Uri.parse("https://not-going-to-be-visited.test");
+    private static final Uri LOCALHOST = Uri.parse("https://localhost");
 
     @Mock DatastoreManager mDatastoreManager;
     @Spy AggregateEncryptionKeyFetcher mFetcher;
@@ -61,14 +65,16 @@ public final class AggregateEncryptionKeyManagerTest {
     }
 
     @Test
-    public void testNeverCallsAggregateEncryptionKeyFetcher() throws Exception {
+    public void getAggregateEncryptionKeys_hasKeysInDatastore_doesNotCallFetcher()
+            throws Exception {
         // Mock the datastore to return the expected seed key list; we are testing that the fetcher
         // is not called.
         doAnswer((Answer<Optional<List<AggregateEncryptionKey>>>)
                 invocation -> Optional.of(getExpectedKeys()))
                         .when(mDatastoreManager).runInTransactionWithResult(any());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC());
+                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
+                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
         List<AggregateEncryptionKey> providedKeys =
                 aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
         assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
@@ -79,7 +85,7 @@ public final class AggregateEncryptionKeyManagerTest {
     }
 
     @Test
-    public void testReturnsEmptyListWhenFetchFails() throws Exception {
+    public void getAggregateEncryptionKeys_fetcherFails_returnsEmptyList() throws Exception {
         // Mock the datastore to return an empty list.
         doAnswer((Answer<Optional<List<AggregateEncryptionKey>>>)
                 invocation -> Optional.of(new ArrayList<>()))
@@ -88,12 +94,36 @@ public final class AggregateEncryptionKeyManagerTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any());
         when(mUrlConnection.getResponseCode()).thenReturn(400);
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC());
+                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
+                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
         List<AggregateEncryptionKey> providedKeys =
                 aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
         assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
                 + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
                         providedKeys.isEmpty());
+    }
+
+    @Test
+    public void getAggregateEncryptionKeys_localhostCoordinator_doesNotCacheKeys()
+            throws Exception {
+        // Mock the datastore to return an empty list.
+        doAnswer((Answer<Optional<List<AggregateEncryptionKey>>>)
+                invocation -> Optional.of(new ArrayList<>()))
+                        .when(mDatastoreManager).runInTransactionWithResult(any());
+        List<AggregateEncryptionKey> expectedKeys = getExpectedKeys();
+        // Mock the fetcher returning keys.
+        doReturn(Optional.of(expectedKeys)).when(mFetcher).fetch(any(Uri.class), anyLong());
+        AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
+                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
+                        LOCALHOST);
+        List<AggregateEncryptionKey> providedKeys =
+                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
+        assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
+                + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
+                AggregateEncryptionKeyTestUtil.isSuperset(expectedKeys, providedKeys)
+                        && providedKeys.size() == NUM_KEYS_REQUESTED);
+        // Datastore is called once to delete expired encryption keys.
+        verify(mDatastoreManager, times(1)).runInTransaction(any());
     }
 
     private static List<AggregateEncryptionKey> getExpectedKeys() {

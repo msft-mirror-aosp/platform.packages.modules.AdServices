@@ -55,15 +55,23 @@ public abstract class DBAdSelectionOverride {
     @NonNull
     public abstract String getDecisionLogicJS();
 
-    /**
-     * @return DBAdSelectionOverride built with those params
-     */
+    /** @return The override trusted scoring signals */
+    @CopyAnnotations
+    @ColumnInfo(name = "trusted_scoring_signals")
+    @NonNull
+    public abstract String getTrustedScoringSignals();
+
+    /** @return DBAdSelectionOverride built with those params */
     public static DBAdSelectionOverride create(
-            String adSelectionConfigId, String appPackageName, String decisionLogicJS) {
+            String adSelectionConfigId,
+            String appPackageName,
+            String decisionLogicJS,
+            String trustedScoringSignals) {
         return builder()
                 .setAdSelectionConfigId(adSelectionConfigId)
                 .setAppPackageName(appPackageName)
                 .setDecisionLogicJS(decisionLogicJS)
+                .setTrustedScoringSignals(trustedScoringSignals)
                 .build();
     }
 
@@ -85,6 +93,10 @@ public abstract class DBAdSelectionOverride {
 
         /** Sets the JS code to use instead of fetching it from a trusted server. */
         public abstract DBAdSelectionOverride.Builder setDecisionLogicJS(String decisionLogicJS);
+
+        /** Sets the Trusted Scoring Signals to use instead of fetching it from a trusted server. */
+        public abstract DBAdSelectionOverride.Builder setTrustedScoringSignals(
+                String trustedScoringSignals);
 
         /**
          * @return an instance of {@link DBAdSelectionOverride} built with the information in this

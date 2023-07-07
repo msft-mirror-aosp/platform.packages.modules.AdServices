@@ -18,10 +18,13 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static org.mockito.Mockito.when;
 
+import android.net.Uri;
+
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -45,6 +48,8 @@ import javax.net.ssl.HttpsURLConnection;
 @RunWith(Parameterized.class)
 public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbIntegrationTest {
     private static final int NUM_KEYS_REQUESTED = 5;
+    private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            Uri.parse("https://not-going-to-be-visited.test");
 
     @Mock Clock mClock;
     @Spy AggregateEncryptionKeyFetcher mFetcher;
@@ -70,9 +75,11 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
 
     @Override
     public void runActionToTest() {
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(datastoreManager, mFetcher, mClock);
+                new AggregateEncryptionKeyManager(datastoreManager, mFetcher, mClock,
+                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
         List<AggregateEncryptionKey> providedKeys =
                 aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
         Assert.assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "

@@ -17,6 +17,7 @@
 package android.adservices.customaudience;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -30,8 +31,7 @@ import java.util.Objects;
  * by buyer JavaScript logic running in an isolated execution environment.
  */
 public final class TrustedBiddingData implements Parcelable {
-    @NonNull
-    private final Uri mTrustedBiddingUrl;
+    @NonNull private final Uri mTrustedBiddingUri;
     @NonNull
     private final List<String> mTrustedBiddingKeys;
 
@@ -50,20 +50,20 @@ public final class TrustedBiddingData implements Parcelable {
     };
 
     private TrustedBiddingData(@NonNull TrustedBiddingData.Builder builder) {
-        mTrustedBiddingUrl = builder.mTrustedBiddingUrl;
+        mTrustedBiddingUri = builder.mTrustedBiddingUri;
         mTrustedBiddingKeys = builder.mTrustedBiddingKeys;
     }
 
     private TrustedBiddingData(@NonNull Parcel in) {
         Objects.requireNonNull(in);
-        mTrustedBiddingUrl = Uri.CREATOR.createFromParcel(in);
+        mTrustedBiddingUri = Uri.CREATOR.createFromParcel(in);
         mTrustedBiddingKeys = in.createStringArrayList();
     }
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
-        mTrustedBiddingUrl.writeToParcel(dest, flags);
+        mTrustedBiddingUri.writeToParcel(dest, flags);
         dest.writeStringList(mTrustedBiddingKeys);
     }
 
@@ -74,12 +74,12 @@ public final class TrustedBiddingData implements Parcelable {
     }
 
     /**
-     * @return the URL pointing to the trusted key-value server holding bidding signals. The URL
-     * must use HTTPS.
+     * @return the URI pointing to the trusted key-value server holding bidding signals. The URI
+     *     must use HTTPS.
      */
     @NonNull
-    public Uri getTrustedBiddingUrl() {
-        return mTrustedBiddingUrl;
+    public Uri getTrustedBiddingUri() {
+        return mTrustedBiddingUri;
     }
 
     /**
@@ -98,8 +98,8 @@ public final class TrustedBiddingData implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof TrustedBiddingData)) return false;
         TrustedBiddingData that = (TrustedBiddingData) o;
-        return mTrustedBiddingUrl.equals(that.mTrustedBiddingUrl) && mTrustedBiddingKeys.equals(
-                that.mTrustedBiddingKeys);
+        return mTrustedBiddingUri.equals(that.mTrustedBiddingUri)
+                && mTrustedBiddingKeys.equals(that.mTrustedBiddingKeys);
     }
 
     /**
@@ -107,28 +107,26 @@ public final class TrustedBiddingData implements Parcelable {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(mTrustedBiddingUrl, mTrustedBiddingKeys);
+        return Objects.hash(mTrustedBiddingUri, mTrustedBiddingKeys);
     }
 
     /** Builder for {@link TrustedBiddingData} objects. */
     public static final class Builder {
-        @NonNull
-        private Uri mTrustedBiddingUrl;
-        @NonNull
-        private List<String> mTrustedBiddingKeys;
+        @Nullable private Uri mTrustedBiddingUri;
+        @Nullable private List<String> mTrustedBiddingKeys;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
         }
 
         /**
-         * Sets the URL pointing to a trusted key-value server used to fetch bidding signals during
-         * the ad selection process. The URL must use HTTPS.
+         * Sets the URI pointing to a trusted key-value server used to fetch bidding signals during
+         * the ad selection process. The URI must use HTTPS.
          */
         @NonNull
-        public Builder setTrustedBiddingUrl(@NonNull Uri trustedBiddingUrl) {
-            Objects.requireNonNull(trustedBiddingUrl);
-            mTrustedBiddingUrl = trustedBiddingUrl;
+        public Builder setTrustedBiddingUri(@NonNull Uri trustedBiddingUri) {
+            Objects.requireNonNull(trustedBiddingUri);
+            mTrustedBiddingUri = trustedBiddingUri;
             return this;
         }
 
@@ -151,7 +149,7 @@ public final class TrustedBiddingData implements Parcelable {
          */
         @NonNull
         public TrustedBiddingData build() {
-            Objects.requireNonNull(mTrustedBiddingUrl);
+            Objects.requireNonNull(mTrustedBiddingUri);
             // Note that the list of keys is allowed to be empty, but not null
             Objects.requireNonNull(mTrustedBiddingKeys);
 

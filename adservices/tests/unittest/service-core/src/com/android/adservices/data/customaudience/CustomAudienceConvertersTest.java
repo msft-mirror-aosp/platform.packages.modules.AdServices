@@ -22,8 +22,12 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.data.common.DBAdData;
+
+import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.junit.Test;
@@ -33,30 +37,169 @@ import java.util.stream.Collectors;
 
 public class CustomAudienceConvertersTest {
 
+    DBCustomAudience.Converters mConverters = new DBCustomAudience.Converters(true, true);
+
     @Test
     public void testDeserialize_invalidString() {
-        RuntimeException runtimeException = assertThrows(RuntimeException.class,
-                () -> DBCustomAudience.Converters.fromJson("   "));
+        RuntimeException runtimeException =
+                assertThrows(RuntimeException.class, () -> mConverters.fromJson("   "));
         assertTrue(runtimeException.getCause() instanceof JSONException);
     }
 
     @Test
     public void testSerializeAndDeserialize_runNormally() {
-        List<DBAdData> input = AdDataFixture.VALID_ADS.stream().map(
-                DBAdData::fromServiceObject).collect(
-                Collectors.toList());
-        String serializedString = DBCustomAudience.Converters.toJson(input);
-        List<DBAdData> output = DBCustomAudience.Converters.fromJson(serializedString);
+        List<DBAdData> input =
+                AdDataFixture.getValidFilterAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        String serializedString = mConverters.toJson(input);
+        List<DBAdData> output = mConverters.fromJson(serializedString);
         assertEquals(input, output);
     }
 
     @Test
-    public void testSerialize_nullInput() {
-        assertNull(DBCustomAudience.Converters.toJson(null));
+    public void testSerializeAndDeserialize_runNormallyNoFilters() {
+        List<DBAdData> input =
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        String serializedString = mConverters.toJson(input);
+        List<DBAdData> output = mConverters.fromJson(serializedString);
+        assertEquals(input, output);
     }
 
     @Test
-    public void testDeserialize_nullInput() {
-        assertNull(DBCustomAudience.Converters.fromJson(null));
+    public void testSerializeAndDeserialize_filtersDisabled() {
+        DBCustomAudience.Converters noFilterConverter =
+                new DBCustomAudience.Converters(false, true);
+        List<DBAdData> input =
+                AdDataFixture.getValidFilterAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        List<DBAdData> expected =
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        String serializedString = noFilterConverter.toJson(input);
+        List<DBAdData> output = noFilterConverter.fromJson(serializedString);
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testSerializeAndDeserialize_toJsonFiltersDisabled() {
+        DBCustomAudience.Converters noFilterConverter =
+                new DBCustomAudience.Converters(false, true);
+        List<DBAdData> input =
+                AdDataFixture.getValidFilterAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        List<DBAdData> expected =
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        String serializedString = noFilterConverter.toJson(input);
+        List<DBAdData> output = mConverters.fromJson(serializedString);
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testSerializeAndDeserialize_fromJsonFiltersDisabled() {
+        DBCustomAudience.Converters noFilterConverter =
+                new DBCustomAudience.Converters(false, true);
+        List<DBAdData> input =
+                AdDataFixture.getValidFilterAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        List<DBAdData> expected =
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1).stream()
+                        .map(DBAdDataFixture::convertAdDataToDBAdData)
+                        .collect(Collectors.toList());
+        String serializedString = mConverters.toJson(input);
+        List<DBAdData> output = noFilterConverter.fromJson(serializedString);
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testSerializeAndDeserialize_toJsonRenderIdDisabled() {
+        DBCustomAudience.Converters noRenderIdConverter =
+                new DBCustomAudience.Converters(true, false);
+
+        DBAdData input =
+                DBAdDataFixture.convertAdDataToDBAdData(
+                        AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                                .setAdRenderId("ad-render-id")
+                                .build());
+        DBAdData expected =
+                DBAdDataFixture.convertAdDataToDBAdData(
+                        AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                                .setAdRenderId(null)
+                                .build());
+
+        String serializedString = noRenderIdConverter.toJson(ImmutableList.of(input));
+        List<DBAdData> output = mConverters.fromJson(serializedString);
+        assertEquals(List.of(expected), output);
+    }
+
+    @Test
+    public void testSerializeAndDeserialize_fromJsonRenderIdDisabled() {
+        DBCustomAudience.Converters noRenderIdConverter =
+                new DBCustomAudience.Converters(true, false);
+
+        DBAdData input =
+                DBAdDataFixture.convertAdDataToDBAdData(
+                        AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                                .setAdRenderId("ad-render-id")
+                                .build());
+        DBAdData expected =
+                DBAdDataFixture.convertAdDataToDBAdData(
+                        AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                                .setAdRenderId(null)
+                                .build());
+
+        String serializedString = mConverters.toJson(ImmutableList.of(input));
+        List<DBAdData> output = noRenderIdConverter.fromJson(serializedString);
+        assertEquals(List.of(expected), output);
+    }
+
+    @Test
+    public void testSerializeAndDeserialize_toJsonRenderIdEnabled() {
+        DBCustomAudience.Converters noRenderIdConverter =
+                new DBCustomAudience.Converters(true, true);
+
+        DBAdData expected =
+                DBAdDataFixture.convertAdDataToDBAdData(
+                        AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                                .setAdRenderId("ad-render-id")
+                                .build());
+
+        String serializedString = noRenderIdConverter.toJson(ImmutableList.of(expected));
+        List<DBAdData> output = mConverters.fromJson(serializedString);
+        assertEquals(List.of(expected), output);
+    }
+
+    @Test
+    public void testSerializeAndDeserialize_fromJsonRenderIdEnabled() {
+        DBCustomAudience.Converters noRenderIdConverter =
+                new DBCustomAudience.Converters(true, true);
+
+        DBAdData expected =
+                DBAdDataFixture.convertAdDataToDBAdData(
+                        AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
+                                .setAdRenderId("ad-render-id")
+                                .build());
+
+        String serializedString = mConverters.toJson(ImmutableList.of(expected));
+        List<DBAdData> output = noRenderIdConverter.fromJson(serializedString);
+        assertEquals(List.of(expected), output);
+    }
+
+    @Test
+    public void testSerialize_nullInput() throws JSONException {
+        assertNull(mConverters.toJson(null));
+    }
+
+    @Test
+    public void testDeserialize_nullInput() throws JSONException {
+        assertNull(mConverters.fromJson(null));
     }
 }

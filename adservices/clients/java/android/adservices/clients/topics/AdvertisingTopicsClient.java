@@ -20,9 +20,12 @@ import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -34,16 +37,22 @@ import java.util.concurrent.Executor;
 public class AdvertisingTopicsClient {
 
     private String mSdkName;
+    private boolean mRecordObservation;
     private TopicsManager mTopicsManager;
     private Context mContext;
     private Executor mExecutor;
 
     private AdvertisingTopicsClient(
-            @NonNull Context context, @NonNull Executor executor, @NonNull String sdkName) {
+            @NonNull Context context,
+            @NonNull Executor executor,
+            @NonNull String sdkName,
+            boolean recordObservation,
+            @NonNull TopicsManager topicsManager) {
         mContext = context;
         mSdkName = sdkName;
+        mRecordObservation = recordObservation;
         mExecutor = executor;
-        mTopicsManager = mContext.getSystemService(TopicsManager.class);
+        mTopicsManager = topicsManager;
     }
 
     /** Gets the SdkName. */
@@ -64,12 +73,26 @@ public class AdvertisingTopicsClient {
         return mExecutor;
     }
 
+    /** Get Record Observation. */
+    public boolean shouldRecordObservation() {
+        return mRecordObservation;
+    }
+
     /** Gets the topics. */
     public @NonNull ListenableFuture<GetTopicsResponse> getTopics() {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
+                    GetTopicsRequest.Builder builder = new GetTopicsRequest.Builder();
+                    if (mSdkName != null) {
+                        builder = builder.setAdsSdkName(mSdkName);
+                    }
+                    if (!mRecordObservation) {
+                        builder.setShouldRecordObservation(false);
+                    }
+                    GetTopicsRequest request = builder.build();
+
                     mTopicsManager.getTopics(
-                            new GetTopicsRequest.Builder(mContext).setSdkName(mSdkName).build(),
+                            request,
                             mExecutor,
                             new OutcomeReceiver<GetTopicsResponse, Exception>() {
                                 @Override
@@ -91,8 +114,10 @@ public class AdvertisingTopicsClient {
     /** Builder class. */
     public static final class Builder {
         private String mSdkName;
+        private boolean mRecordObservation = true;
         private Context mContext;
         private Executor mExecutor;
+        private boolean mUseGetMethodToCreateManagerInstance;
 
         /** Empty-arg constructor with an empty body for Builder */
         public Builder() {}
@@ -106,6 +131,18 @@ public class AdvertisingTopicsClient {
         /** Sets the SdkName. */
         public @NonNull Builder setSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;
+            return this;
+        }
+
+        /**
+         * Set the Record Observation.
+         *
+         * @param recordObservation whether to record that the caller has observed the topics of the
+         *     host app or not. This will be used to determine if the caller can receive the topic
+         *     in the next epoch.
+         */
+        public @NonNull Builder setShouldRecordObservation(boolean recordObservation) {
+            mRecordObservation = recordObservation;
             return this;
         }
 
@@ -124,12 +161,43 @@ public class AdvertisingTopicsClient {
             return this;
         }
 
+        /**
+         * Sets whether to use the TopicsManager.get(context) method explicitly.
+         *
+         * @param value flag indicating whether to use the TopicsManager.get(context) method
+         *     explicitly. Default is {@code false}.
+         */
+        @VisibleForTesting
+        @NonNull
+        public Builder setUseGetMethodToCreateManagerInstance(boolean value) {
+            mUseGetMethodToCreateManagerInstance = value;
+            return this;
+        }
+
         /** Builds a {@link AdvertisingTopicsClient} instance */
         public @NonNull AdvertisingTopicsClient build() {
             if (mExecutor == null) {
                 throw new NullPointerException("Executor is not set");
             }
-            return new AdvertisingTopicsClient(mContext, mExecutor, mSdkName);
+
+            if (mContext == null) {
+                throw new NullPointerException("Context is not set");
+            }
+
+            TopicsManager topicsManager = createManager();
+            return new AdvertisingTopicsClient(
+                    mContext, mExecutor, mSdkName, mRecordObservation, topicsManager);
+        }
+
+        private TopicsManager createManager() {
+            if (mUseGetMethodToCreateManagerInstance) {
+                return TopicsManager.get(mContext);
+            }
+
+            // By default, use getSystemService for T+ and get(context) for S-.
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    ? mContext.getSystemService(TopicsManager.class)
+                    : TopicsManager.get(mContext);
         }
     }
 }

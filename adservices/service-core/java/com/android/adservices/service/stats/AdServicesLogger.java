@@ -24,6 +24,81 @@ public interface AdServicesLogger {
     /** log ApiCallStats which has stats about the API call such as the status. */
     void logApiCallStats(ApiCallStats apiCallStats);
 
+    /** log UIStats which has stats about UI events. */
+    void logUIStats(UIStats uiStats);
+
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
-    void logFledgeApiCallStats(int apiName, int resultCode);
+    void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
+
+    /** Logs measurement registrations response size. */
+    void logMeasurementRegistrationsResponseSize(MeasurementRegistrationResponseStats stats);
+
+    /**
+     * Logs the runAdSelection process stats as an {@link RunAdSelectionProcessReportedStats}
+     * object.
+     */
+    void logRunAdSelectionProcessReportedStats(RunAdSelectionProcessReportedStats stats);
+
+    /**
+     * Logs the runAdBidding process stats as an {@link RunAdBiddingProcessReportedStats} object.
+     */
+    void logRunAdBiddingProcessReportedStats(RunAdBiddingProcessReportedStats stats);
+
+    /**
+     * Logs the runAdScoring process stats as an {@link RunAdScoringProcessReportedStats} object.
+     */
+    void logRunAdScoringProcessReportedStats(RunAdScoringProcessReportedStats stats);
+
+    /**
+     * Logs the runAdBiddingPerCA process stats as an {@link RunAdBiddingPerCAProcessReportedStats}
+     * object.
+     */
+    void logRunAdBiddingPerCAProcessReportedStats(RunAdBiddingPerCAProcessReportedStats stats);
+
+    /**
+     * Logs the backgroundFetch process stats as an {@link BackgroundFetchProcessReportedStats}
+     * object.
+     */
+    void logBackgroundFetchProcessReportedStats(BackgroundFetchProcessReportedStats stats);
+
+    /**
+     * Logs the updateCustomAudience process stats as an {@link
+     * com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStats} objects.
+     */
+    void logUpdateCustomAudienceProcessReportedStats(
+            UpdateCustomAudienceProcessReportedStats stats);
+
+    /**
+     * Logs GetTopics API call stats as an {@link
+     * com.android.adservices.service.stats.GetTopicsReportedStats} object.
+     */
+    void logGetTopicsReportedStats(GetTopicsReportedStats stats);
+
+    /**
+     * Logs stats for getTopTopics as an {@link
+     * com.android.adservices.service.stats.EpochComputationGetTopTopicsStats} object.
+     */
+    void logEpochComputationGetTopTopicsStats(EpochComputationGetTopTopicsStats stats);
+
+    /**
+     * Logs classifier stats during epoch computation as an {@link
+     * com.android.adservices.service.stats.EpochComputationClassifierStats} object.
+     */
+    void logEpochComputationClassifierStats(EpochComputationClassifierStats stats);
+
+    /** Logs measurement debug keys stats. */
+    void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats);
+
+    /** Logs measurement AdID match for debug keys stats. */
+    void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats);
+
+    /** Logs measurement attribution stats. */
+    void logMeasurementAttributionStats(MeasurementAttributionStats measurementAttributionStats);
+
+    /** Logs measurement wipeout stats. */
+    void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats);
+
+    /** Logs measurement delayed source registration stats. */
+    void logMeasurementDelayedSourceRegistrationStats(
+            MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
 }

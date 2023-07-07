@@ -29,11 +29,10 @@
             android:layout_toStartOf="@+id/option_button"
             android:paddingTop="24dp"
             android:paddingBottom="24dp"
-            android:textColor="@android:color/primary_text_light"
-            android:textSize="20sp" />
+            android:textAppearance="@style/TextAppearance.H5" />
     <Button
             android:id="@+id/option_button"
-            style="@style/ActionPrimaryButton"
+            style="@style/MainStyle.SettingsControlButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"

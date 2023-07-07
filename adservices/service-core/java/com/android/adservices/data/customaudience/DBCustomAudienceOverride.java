@@ -16,6 +16,9 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
+import android.annotation.Nullable;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -33,21 +36,17 @@ import com.google.auto.value.AutoValue.CopyAnnotations;
         tableName = "custom_audience_overrides",
         primaryKeys = {"owner", "buyer", "name"})
 public abstract class DBCustomAudienceOverride {
-    /**
-     * @return the owner
-     */
+    /** @return the owner */
     @CopyAnnotations
     @ColumnInfo(name = "owner")
     @NonNull
     public abstract String getOwner();
 
-    /**
-     * @return the buyer
-     */
+    /** @return the buyer */
     @CopyAnnotations
     @ColumnInfo(name = "buyer")
     @NonNull
-    public abstract String getBuyer();
+    public abstract AdTechIdentifier getBuyer();
 
     /**
      * @return name
@@ -73,6 +72,12 @@ public abstract class DBCustomAudienceOverride {
     @NonNull
     public abstract String getBiddingLogicJS();
 
+    /** @return the version of the override javascript result */
+    @CopyAnnotations
+    @ColumnInfo(name = "bidding_logic_version")
+    @Nullable
+    public abstract Long getBiddingLogicJsVersion();
+
     /**
      * @return The override trusted bidding data result
      */
@@ -81,15 +86,14 @@ public abstract class DBCustomAudienceOverride {
     @NonNull
     public abstract String getTrustedBiddingData();
 
-    /**
-     * @return DBAdSelectionOverride built with those params
-     */
+    /** @return DBAdSelectionOverride built with those params */
     public static DBCustomAudienceOverride create(
             String owner,
-            String buyer,
+            AdTechIdentifier buyer,
             String name,
             String appPackageName,
             String biddingLogicJS,
+            Long biddingLogicJsVersion,
             String trustedBiddingData) {
         return builder()
                 .setOwner(owner)
@@ -97,6 +101,7 @@ public abstract class DBCustomAudienceOverride {
                 .setName(name)
                 .setAppPackageName(appPackageName)
                 .setBiddingLogicJS(biddingLogicJS)
+                .setBiddingLogicJsVersion(biddingLogicJsVersion)
                 .setTrustedBiddingData(trustedBiddingData)
                 .build();
     }
@@ -114,7 +119,7 @@ public abstract class DBCustomAudienceOverride {
         public abstract DBCustomAudienceOverride.Builder setOwner(String owner);
 
         /** Sets the buyer of the {@link DBCustomAudienceOverride} entry. */
-        public abstract DBCustomAudienceOverride.Builder setBuyer(String buyer);
+        public abstract DBCustomAudienceOverride.Builder setBuyer(AdTechIdentifier buyer);
 
         /** Sets the name of the {@link DBCustomAudienceOverride} entry. */
         public abstract DBCustomAudienceOverride.Builder setName(String name);
@@ -124,6 +129,9 @@ public abstract class DBCustomAudienceOverride {
 
         /** Sets the biddingLogicJS of the {@link DBCustomAudienceOverride} entry. */
         public abstract DBCustomAudienceOverride.Builder setBiddingLogicJS(String biddingLogicJS);
+
+        /** Sets the biddingLogicJSVersion of the {@link DBCustomAudienceOverride} entry. */
+        public abstract Builder setBiddingLogicJsVersion(Long value);
 
         /** Sets the trustedBiddingData of the {@link DBCustomAudienceOverride} entry. */
         public abstract DBCustomAudienceOverride.Builder setTrustedBiddingData(

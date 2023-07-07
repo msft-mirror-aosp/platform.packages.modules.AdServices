@@ -19,13 +19,14 @@ package com.android.adservices.service.topics;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.text.TextUtils;
-import android.util.Dumpable;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
@@ -34,7 +35,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
-import com.android.adservices.service.topics.classifier.OnDeviceClassifier;
+import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -47,21 +49,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /** A class to manage Epoch computation. */
-public class EpochManager implements Dumpable {
-    // TODO(b/223915674): make this configurable.
-    // The Top Topics will have 6 topics.
-    // The first 5 topics are the Top Topics derived by ML, and the 6th is a random topic from
-    // taxonomy.
-    // The index starts from 0.
-    private static final int RANDOM_TOPIC_INDEX = 5;
-
-    // TODO(b/223916172): make this configurable.
-    // The number of top Topics not including the random one.
-    private static final int NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE = 5;
-
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class EpochManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -70,9 +63,6 @@ public class EpochManager implements Dumpable {
                 Pair.create(
                         TopicsTables.AppClassificationTopicsContract.TABLE,
                         TopicsTables.AppClassificationTopicsContract.EPOCH_ID),
-                Pair.create(
-                        TopicsTables.CallerCanLearnTopicsContract.TABLE,
-                        TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID),
                 Pair.create(
                         TopicsTables.TopTopicsContract.TABLE,
                         TopicsTables.TopTopicsContract.EPOCH_ID),
@@ -84,9 +74,37 @@ public class EpochManager implements Dumpable {
                         TopicsTables.UsageHistoryContract.EPOCH_ID),
                 Pair.create(
                         TopicsTables.AppUsageHistoryContract.TABLE,
-                        TopicsTables.AppUsageHistoryContract.EPOCH_ID)
+                        TopicsTables.AppUsageHistoryContract.EPOCH_ID),
+                Pair.create(
+                        TopicsTables.TopicContributorsContract.TABLE,
+                        TopicsTables.TopicContributorsContract.EPOCH_ID)
             };
 
+    /**
+     * The string to annotate that the topic is a padded topic in {@code TopicContributors} table.
+     * After the computation of {@code TopicContributors} table, if there is a top topic without
+     * contributors, it must be a padded topic. Persist {@code Entry{Topic,
+     * PADDED_TOP_TOPICS_STRING}} into {@code TopicContributors} table.
+     *
+     * <p>The reason to persist {@code Entry{Topic, PADDED_TOP_TOPICS_STRING}} is because topics
+     * need to be assigned to newly installed app. Moreover, non-random top topics without
+     * contributors, due to app uninstallations, are filtered out as candidate topics to assign
+     * with. Generally, a padded topic should have no contributors, but it should NOT be filtered
+     * out as a non-random top topics without contributors. Based on these facts, {@code
+     * Entry{Topic, PADDED_TOP_TOPICS_STRING}} is persisted to annotate that do NOT remove this
+     * padded topic though it has no contributors.
+     *
+     * <p>Put a "!" at last to avoid a spoof app to name itself with {@code
+     * PADDED_TOP_TOPICS_STRING}. Refer to
+     * https://developer.android.com/studio/build/configure-app-module, application name can only
+     * contain [a-zA-Z0-9_].
+     */
+    @VisibleForTesting
+    public static final String PADDED_TOP_TOPICS_STRING = "no_contributors_due_to_padding!";
+
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static EpochManager sSingleton;
 
     private final TopicsDao mTopicsDao;
@@ -116,14 +134,14 @@ public class EpochManager implements Dumpable {
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
     public static EpochManager getInstance(@NonNull Context context) {
-        synchronized (EpochManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new EpochManager(
                                 TopicsDao.getInstance(context),
                                 DbHelper.getInstance(context),
                                 new Random(),
-                                OnDeviceClassifier.getInstance(context),
+                                ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 Clock.SYSTEM_CLOCK);
             }
@@ -139,25 +157,30 @@ public class EpochManager implements Dumpable {
         }
 
         // This cross db and java boundaries multiple times, so we need to have a db transaction.
+        sLogger.d("Start of Epoch Computation");
         db.beginTransaction();
 
         long currentEpochId = getCurrentEpochId();
-        LogUtil.d("EpochManager.processEpoch for the current epochId %d", currentEpochId);
+        sLogger.d("EpochManager.processEpoch for the current epochId %d", currentEpochId);
 
         try {
+            // Step 0: erase outdated epoch's data, i.e. epoch earlier than
+            // (currentEpoch - numberOfLookBackEpochs) (inclusive)
+            garbageCollectOutdatedEpochData(currentEpochId);
+
             // Step 1: Compute the UsageMap from the UsageHistory table.
             // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
             // in the current Epoch.
             Map<String, List<String>> appSdksUsageMap =
                     mTopicsDao.retrieveAppSdksUsageMap(currentEpochId);
-            LogUtil.v("appSdksUsageMap size is  %d", appSdksUsageMap.size());
+            sLogger.v("appSdksUsageMap size is  %d", appSdksUsageMap.size());
 
             // Step 2: Compute the Map from App to its classification topics.
             // Only produce for apps that called the Topics API in the current Epoch.
             // appClassificationTopicsMap = Map<App, List<Topics>>
             Map<String, List<Topic>> appClassificationTopicsMap =
-                    computeAppClassificationTopics(appSdksUsageMap);
-            LogUtil.v("appClassificationTopicsMap size is %d", appClassificationTopicsMap.size());
+                    mClassifier.classify(appSdksUsageMap.keySet());
+            sLogger.v("appClassificationTopicsMap size is %d", appClassificationTopicsMap.size());
 
             // Then save app-topics Map into DB
             mTopicsDao.persistAppClassificationTopics(currentEpochId, appClassificationTopicsMap);
@@ -166,113 +189,68 @@ public class EpochManager implements Dumpable {
             // This is similar to the Callers Can Learn table in the explainer.
             Map<Topic, Set<String>> callersCanLearnThisEpochMap =
                     computeCallersCanLearnMap(appSdksUsageMap, appClassificationTopicsMap);
-            LogUtil.v(
+            sLogger.v(
                     "callersCanLearnThisEpochMap size is  %d", callersCanLearnThisEpochMap.size());
 
             // And then save this CallersCanLearnMap to DB.
             mTopicsDao.persistCallerCanLearnTopics(currentEpochId, callersCanLearnThisEpochMap);
 
             // Step 4: For each topic, retrieve the callers (App or SDK) that can learn about that
-            // topic. We look at last 3 epochs.
+            // topic. We look at last 3 epochs. More specifically, epochs in
+            // [currentEpochId - 2, currentEpochId]. (inclusive)
             // Return callersCanLearnMap = Map<Topic, Set<Caller>>  where Caller = App or Sdk.
             Map<Topic, Set<String>> callersCanLearnMap =
                     mTopicsDao.retrieveCallerCanLearnTopicsMap(
                             currentEpochId, mFlags.getTopicsNumberOfLookBackEpochs());
-            LogUtil.v("callersCanLearnMap size is %d", callersCanLearnMap.size());
+            sLogger.v("callersCanLearnMap size is %d", callersCanLearnMap.size());
 
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
-            List<Topic> topTopics = computeTopTopics(appClassificationTopicsMap);
+            List<Topic> topTopics =
+                    mClassifier.getTopTopics(
+                            appClassificationTopicsMap,
+                            mFlags.getTopicsNumberOfTopTopics(),
+                            mFlags.getTopicsNumberOfRandomTopics());
             // Abort the computation if empty list of top topics is returned from classifier.
             // This could happen if there is no usage of the Topics API in the last epoch.
             if (topTopics.isEmpty()) {
-                LogUtil.w(
+                sLogger.w(
                         "Empty list of top topics is returned from classifier. Aborting the"
                                 + " computation!");
                 db.setTransactionSuccessful();
                 return;
             }
-            LogUtil.v("topTopics are  %s", topTopics.toString());
+            sLogger.v("topTopics are  %s", topTopics.toString());
 
             // Then save Top Topics into DB
             mTopicsDao.persistTopTopics(currentEpochId, topTopics);
+
+            // Compute TopicToContributors mapping for top topics. In an epoch, an app is a
+            // contributor to a topic if the app has called Topics API in this epoch and is
+            // classified to the topic.
+            // Do this only when feature is enabled.
+            Map<Integer, Set<String>> topTopicsToContributorsMap =
+                    computeTopTopicsToContributorsMap(appClassificationTopicsMap, topTopics);
+            // Then save Topic Contributors into DB
+            mTopicsDao.persistTopicContributors(currentEpochId, topTopicsToContributorsMap);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently, hard-code the taxonomyVersion and the modelVersion.
             // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
             Map<Pair<String, String>, Topic> returnedAppSdkTopics =
                     computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap, topTopics);
-            LogUtil.v("returnedAppSdkTopics size is  %d", returnedAppSdkTopics.size());
+            sLogger.v("returnedAppSdkTopics size is  %d", returnedAppSdkTopics.size());
 
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(currentEpochId, returnedAppSdkTopics);
-
-            // Finally erase outdated epoch's data
-            garbageCollectOutdatedEpochData(currentEpochId);
 
             // Mark the transaction successful.
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
+            sLogger.d("End of Epoch Computation");
         }
-    }
-
-    // Query the Classifier to get the top Topics for this epoch.
-    // appClassificationTopicsMap = Map<App, List<Topics>>
-    // TODO: (b/232807776) Remove Topic Casting when topic can be populated from classifier
-    @NonNull
-    private List<Topic> computeTopTopics(Map<String, List<Topic>> appClassificationTopicsMap) {
-        Map<String, List<Integer>> appClassificationTopicsMapIntegerTopic = new HashMap<>();
-        for (Map.Entry<String, List<Topic>> appTopics : appClassificationTopicsMap.entrySet()) {
-            appClassificationTopicsMapIntegerTopic.put(
-                    appTopics.getKey(),
-                    appTopics.getValue().stream()
-                            .map(Topic::getTopic)
-                            .collect(Collectors.toList()));
-        }
-        List<Integer> topTopics =
-                mClassifier.getTopTopics(
-                        appClassificationTopicsMapIntegerTopic,
-                        mFlags.getTopicsNumberOfTopTopics(),
-                        mFlags.getTopicsNumberOfRandomTopics());
-        return topTopics.stream()
-                .map(
-                        topicsId ->
-                                Topic.create(
-                                        topicsId,
-                                        /* taxonomyVersion = */ 1L,
-                                        /* modelVersion = */ 1L))
-                .collect(Collectors.toList());
-    }
-
-    // Compute the Map from App to its classification topics.
-    // Only produce for apps that called the Topics API in the current Epoch.
-    // input:
-    // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
-    // Return appClassificationTopicsMap = Map<App, List<Topic>>
-    // TODO: (b/232807776) Remove Topic Casting when topic can be populated from classifier
-    @VisibleForTesting
-    @NonNull
-    Map<String, List<Topic>> computeAppClassificationTopics(
-            Map<String, List<String>> appSdksUsageMap) {
-        Map<String, List<Integer>> appClassificationTopicsMapIntegerTopic =
-                mClassifier.classify(appSdksUsageMap.keySet());
-        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
-        for (Map.Entry<String, List<Integer>> appTopics :
-                appClassificationTopicsMapIntegerTopic.entrySet()) {
-            appClassificationTopicsMap.put(
-                    appTopics.getKey(),
-                    appTopics.getValue().stream()
-                            .map(
-                                    topicsId ->
-                                            Topic.create(
-                                                    topicsId,
-                                                    /* taxonomyVersion = */ 1L,
-                                                    /* modelVersion = */ 1L))
-                            .collect(Collectors.toList()));
-        }
-        return appClassificationTopicsMap;
     }
 
     /**
@@ -286,7 +264,7 @@ public class EpochManager implements Dumpable {
     public void recordUsageHistory(String app, String sdk) {
         long epochId = getCurrentEpochId();
         // TODO(b/223159123): Do we need to filter out this log in prod build?
-        LogUtil.v(
+        sLogger.v(
                 "EpochManager.recordUsageHistory for current EpochId = %d for %s, %s",
                 epochId, app, sdk);
         mTopicsDao.recordUsageHistory(epochId, app, sdk);
@@ -301,19 +279,20 @@ public class EpochManager implements Dumpable {
      * @param callersCanLearnMap the map that stores topic->caller mapping which shows a topic can
      *     be learnt by a caller
      * @param topTopics a {@link List} of top topics
+     * @param numberOfTopTopics number of regular topics in top topics
      * @return a {@code boolean} that indicates if the caller can learn the topic
      */
-    // TODO(b/234444036): Enable this feature for newly installed apps
     // TODO(b/236834213): Create a class for Top Topics
-    public boolean isTopicLearnableByCaller(
+    public static boolean isTopicLearnableByCaller(
             @NonNull Topic topic,
             @NonNull String caller,
             @NonNull Map<Topic, Set<String>> callersCanLearnMap,
-            @NonNull List<Topic> topTopics) {
+            @NonNull List<Topic> topTopics,
+            int numberOfTopTopics) {
         // If a topic is the random topic in top topic list, it can be learnt by any caller.
         int index = topTopics.lastIndexOf(topic);
         // Regular top topics are placed in the front of the list. Topics after are random topics.
-        if (index >= mFlags.getTopicsNumberOfTopTopics()) {
+        if (index >= numberOfTopTopics) {
             return true;
         }
 
@@ -341,12 +320,12 @@ public class EpochManager implements Dumpable {
         if (origin == -1) {
             origin = currentTimeStamp;
             mTopicsDao.persistEpochOrigin(origin);
-            LogUtil.d(
+            sLogger.d(
                     "Origin isn't found! Set current time %s as origin.",
                     Instant.ofEpochMilli(origin).toString());
         }
 
-        LogUtil.v("Epoch length is  %d", epochJobPeriodsMs);
+        sLogger.v("Epoch length is  %d", epochJobPeriodsMs);
         return (long) Math.floor((currentTimeStamp - origin) / (double) epochJobPeriodsMs);
     }
 
@@ -370,7 +349,7 @@ public class EpochManager implements Dumpable {
             String app = entry.getKey();
             List<Topic> appTopics = entry.getValue();
             if (appTopics == null) {
-                LogUtil.e("Can't find the Classification Topics for app = " + app);
+                sLogger.e("Can't find the Classification Topics for app = " + app);
                 continue;
             }
 
@@ -418,11 +397,16 @@ public class EpochManager implements Dumpable {
             String app = appSdks.getKey();
 
             // Check if the app can learn this topic.
-            if (isTopicLearnableByCaller(returnedTopic, app, callersCanLearnMap, topTopics)) {
+            if (isTopicLearnableByCaller(
+                    returnedTopic,
+                    app,
+                    callersCanLearnMap,
+                    topTopics,
+                    mFlags.getTopicsNumberOfTopTopics())) {
                 // The app calls Topics API directly. In this case, we set the sdk == empty string.
                 returnedAppSdkTopics.put(Pair.create(app, /* empty Sdk */ ""), returnedTopic);
                 // TODO(b/223159123): Do we need to filter out this log in prod build?
-                LogUtil.v(
+                sLogger.v(
                         "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned for"
                                 + " %s",
                         returnedTopic, app);
@@ -430,10 +414,15 @@ public class EpochManager implements Dumpable {
 
             // Then check all SDKs of the app.
             for (String sdk : appSdks.getValue()) {
-                if (isTopicLearnableByCaller(returnedTopic, sdk, callersCanLearnMap, topTopics)) {
+                if (isTopicLearnableByCaller(
+                        returnedTopic,
+                        sdk,
+                        callersCanLearnMap,
+                        topTopics,
+                        mFlags.getTopicsNumberOfTopTopics())) {
                     returnedAppSdkTopics.put(Pair.create(app, sdk), returnedTopic);
                     // TODO(b/223159123): Do we need to filter out this log in prod build?
-                    LogUtil.v(
+                    sLogger.v(
                             "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned"
                                     + " for %s, %s",
                             returnedTopic, app, sdk);
@@ -455,30 +444,77 @@ public class EpochManager implements Dumpable {
                                 + mFlags.getTopicsNumberOfRandomTopics());
         int random = mRandom.nextInt(100);
 
+        // First random topic would be after numberOfTopTopics.
+        int randomTopicIndex = mFlags.getTopicsNumberOfTopTopics();
         // For 5%, get the random topic.
         if (random < mFlags.getTopicsPercentageForRandomTopic()) {
             // The random topic is the last one on the list.
-            return topTopics.get(RANDOM_TOPIC_INDEX);
+            return topTopics.get(randomTopicIndex);
         }
 
-        // For 95%, pick randomly one out of 5 top topics.
-        return topTopics.get(random % NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE);
+        // For 95%, pick randomly one out of first n top topics.
+        return topTopics.get(random % randomTopicIndex);
     }
 
     // To garbage collect data for old epochs.
     @VisibleForTesting
     void garbageCollectOutdatedEpochData(long currentEpochID) {
+        int epochLookBackNumberForGarbageCollection = mFlags.getNumberOfEpochsToKeepInHistory();
         // Assume current Epoch is T, and the earliest epoch should be kept is T-3
         // Then any epoch data older than T-3-1 = T-4, including T-4 should be deleted.
-        long epochToDeleteFrom = currentEpochID - mFlags.getNumberOfEpochsToKeepInHistory() - 1;
+        long epochToDeleteFrom = currentEpochID - epochLookBackNumberForGarbageCollection - 1;
         // To do garbage collection for each table
         for (Pair<String, String> tableColumnPair : TABLE_INFO_FOR_EPOCH_GARBAGE_COLLECTION) {
             mTopicsDao.deleteDataOfOldEpochs(
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
+
+        // In app installation, we need to assign topics to newly installed app-sdk caller. In order
+        // to check topic learnability of the sdk, CallerCanLearnTopicsContract needs to persist
+        // numberOfLookBackEpochs more epochs. For example, assume current epoch is T. In app
+        // installation, topics will be assigned to T-1, T-2 and T-3. In order to check learnability
+        // at Epoch T-3, we need to check CallerCanLearnTopicsContract of epoch T-4, T-5 and T-6.
+        long epochToDeleteFromForCallerCanLearn =
+                currentEpochID - epochLookBackNumberForGarbageCollection * 2L - 1;
+        mTopicsDao.deleteDataOfOldEpochs(
+                TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID,
+                epochToDeleteFromForCallerCanLearn);
     }
 
-    @Override
+    // Compute the mapping of topic to its contributor apps. In an epoch, an app is a contributor to
+    // a topic if the app has called Topics API in this epoch and is classified to the topic. Only
+    // computed for top topics.
+    @VisibleForTesting
+    Map<Integer, Set<String>> computeTopTopicsToContributorsMap(
+            @NonNull Map<String, List<Topic>> appClassificationTopicsMap,
+            @NonNull List<Topic> topTopics) {
+        Map<Integer, Set<String>> topicToContributorMap = new HashMap<>();
+
+        for (Map.Entry<String, List<Topic>> appTopics : appClassificationTopicsMap.entrySet()) {
+            String app = appTopics.getKey();
+
+            for (Topic topic : appTopics.getValue()) {
+                // Only compute for top topics.
+                if (topTopics.contains(topic)) {
+                    int topicId = topic.getTopic();
+                    topicToContributorMap.putIfAbsent(topicId, new HashSet<>());
+                    topicToContributorMap.get(topicId).add(app);
+                }
+            }
+        }
+
+        // At last, check whether there is any top topics without contributors. If so, annotate it
+        // with PADDED_TOP_TOPICS_STRING in the map. See PADDED_TOP_TOPICS_STRING for more details.
+        for (int i = 0; i < mFlags.getTopicsNumberOfTopTopics(); i++) {
+            Topic topTopic = topTopics.get(i);
+            topicToContributorMap.putIfAbsent(
+                    topTopic.getTopic(), Set.of(PADDED_TOP_TOPICS_STRING));
+        }
+
+        return topicToContributorMap;
+    }
+
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();

@@ -17,85 +17,127 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.common.AdTechIdentifier;
+import android.annotation.NonNull;
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdRenderIdValidator;
+import com.android.adservices.service.common.AdTechIdentifierValidator;
+import com.android.adservices.service.common.AdTechUriValidator;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.Validator;
+import com.android.adservices.service.common.ValidatorUtil;
+import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.net.InternetDomainName;
 
+import java.util.Map;
 import java.util.Objects;
 
 /** This class runs the validation of the {@link AdSelectionConfig} subfields. */
 public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    public static final String SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY =
-            "The AdSelectionConfig's seller should not be null nor empty.";
-    public static final String SELLER_HAS_MISSING_DOMAIN_NAME =
-            "The AdSelectionConfig seller has missing domain name.";
-    public static final String SELLER_HAS_INVALID_DOMAIN_NAME =
-            "The AdSelectionConfig seller has invalid domain name.";
-    public static final String DECISION_LOGIC_URL_SHOULD_HAVE_PRESENT_HOST =
-            "The AdSelectionConfig decisionLogicUrl should have present host.";
-    public static final String SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT =
-            "The seller host name %s and the seller-provided "
-                    + "decision logic urls host name %s are not"
-                    + " consistent.";
+    private static final String AD_SELECTION_CONFIG_CLASS_NAME = "AdSelectionConfig";
 
-    @Override
-    public ImmutableList getValidationViolations(@NonNull AdSelectionConfig adSelectionConfig) {
-        ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
-        if (Objects.isNull(adSelectionConfig)) {
-            violations.add("The adSelectionConfig should not be null.");
-        }
-        violations.addAll(
-                validateSellerAndSellerDecisionUrls(
-                        adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUrl()));
+    @VisibleForTesting
+    static final String TRUSTED_SCORING_SIGNALS_URI_TYPE = "Trusted Scoring Signals URI";
 
-        return violations.build();
+    @VisibleForTesting static final String DECISION_LOGIC_URI_TYPE = "Decision Logic URI";
+
+    @VisibleForTesting
+    static final String CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME =
+            "Contextual ads decision logic URI";
+
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final AdTechIdentifierValidator mAdTechIdentifierValidator;
+    // AdRenderId is ignored in contextual ads
+    @NonNull private final AdRenderIdValidator mAdRenderIdValidator;
+
+    public AdSelectionConfigValidator(
+            @NonNull PrebuiltLogicGenerator prebuiltLogicGenerator,
+            @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator) {
+        Objects.requireNonNull(prebuiltLogicGenerator);
+        Objects.requireNonNull(frequencyCapAdDataValidator);
+
+        mPrebuiltLogicGenerator = prebuiltLogicGenerator;
+        mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdTechIdentifierValidator =
+                new AdTechIdentifierValidator(
+                        AD_SELECTION_CONFIG_CLASS_NAME, ValidatorUtil.AD_TECH_ROLE_SELLER);
+        mAdRenderIdValidator = AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP;
     }
 
-    /**
-     * Validate the seller and seller-provided decision_logic_url in the {@link AdSelectionConfig}.
-     *
-     * @param seller is the string name of the ssp.
-     * @param decisionLogicUrl is the seller provided decision logic url.
-     * @return a list of strings of messages from each violation.
-     */
-    private ImmutableList<String> validateSellerAndSellerDecisionUrls(
-            @NonNull String seller, @NonNull Uri decisionLogicUrl) {
-        ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
-        String sellerHost = Uri.parse("https://" + seller).getHost();
-        if (isStringNullOrEmpty(seller)) {
-            violations.add(SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY);
-        } else if (Objects.isNull(sellerHost) || sellerHost.isEmpty()) {
-            violations.add(SELLER_HAS_MISSING_DOMAIN_NAME);
-        } else if (!InternetDomainName.isValid(seller)) {
-            violations.add(SELLER_HAS_INVALID_DOMAIN_NAME);
+    @Override
+    public void addValidation(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull ImmutableCollection.Builder<String> violations) {
+        if (Objects.isNull(adSelectionConfig)) {
+            violations.add("The AdSelectionConfig should not be null.");
         }
 
-        if (Objects.isNull(decisionLogicUrl)) {
-            violations.add("The AdSelectionConfig's decisionLogicUrl should be specified.");
+        String sellerString = adSelectionConfig.getSeller().toString();
+        mAdTechIdentifierValidator.addValidation(sellerString, violations);
+
+        if (mPrebuiltLogicGenerator.isPrebuiltUri(adSelectionConfig.getDecisionLogicUri())) {
+            sLogger.v("Decision logic URI validation is skipped because prebuilt URI is detected!");
         } else {
-            String decisionLogicUrlHost = decisionLogicUrl.getHost();
-            if (isStringNullOrEmpty(decisionLogicUrlHost)) {
-                violations.add(DECISION_LOGIC_URL_SHOULD_HAVE_PRESENT_HOST);
-            } else if (!seller.isEmpty()
-                    && !Objects.isNull(sellerHost)
-                    && !sellerHost.isEmpty()
-                    && !decisionLogicUrlHost.equalsIgnoreCase(sellerHost)) {
-                violations.add(
-                        String.format(
-                                SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT,
-                                sellerHost,
-                                decisionLogicUrlHost));
+            sLogger.v("Validating decision logic URI");
+            AdTechUriValidator sellerDecisionLogicUriValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_SELLER,
+                            sellerString,
+                            AD_SELECTION_CONFIG_CLASS_NAME,
+                            DECISION_LOGIC_URI_TYPE);
+            sellerDecisionLogicUriValidator.addValidation(
+                    adSelectionConfig.getDecisionLogicUri(), violations);
+        }
+
+        if (!adSelectionConfig.getTrustedScoringSignalsUri().equals(Uri.EMPTY)) {
+            AdTechUriValidator trustedScoringSignalsUriValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_SELLER,
+                            sellerString,
+                            AD_SELECTION_CONFIG_CLASS_NAME,
+                            TRUSTED_SCORING_SIGNALS_URI_TYPE);
+            trustedScoringSignalsUriValidator.addValidation(
+                    adSelectionConfig.getTrustedScoringSignalsUri(), violations);
+        }
+
+        violations.addAll(validateContextualAds(adSelectionConfig.getBuyerContextualAds()));
+    }
+
+    private ImmutableList<String> validateContextualAds(
+            Map<AdTechIdentifier, ContextualAds> contextualAdsMap) {
+        ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
+
+        for (Map.Entry<AdTechIdentifier, ContextualAds> entry : contextualAdsMap.entrySet()) {
+            // Validate that the buyer decision logic for Contextual Ads satisfies buyer eTLD+1
+            AdTechUriValidator buyerUriValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            entry.getValue().getBuyer().toString(),
+                            ContextualAds.class.getName(),
+                            CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME);
+            buyerUriValidator.addValidation(entry.getValue().getDecisionLogicUri(), violations);
+
+            // Validate that the ad render URI for Contextual Ads satisfies buyer eTLD+1
+            AdDataValidator adDataValidator =
+                    new AdDataValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            entry.getValue().getBuyer().toString(),
+                            mFrequencyCapAdDataValidator,
+                            mAdRenderIdValidator);
+            for (AdWithBid ad : entry.getValue().getAdsWithBid()) {
+                adDataValidator.addValidation(ad.getAdData(), violations);
             }
         }
         return violations.build();
-    }
-
-    private boolean isStringNullOrEmpty(@Nullable String str) {
-        return Objects.isNull(str) || str.isEmpty();
     }
 }

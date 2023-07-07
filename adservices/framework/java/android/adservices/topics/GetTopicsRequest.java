@@ -16,87 +16,82 @@
 package android.adservices.topics;
 
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+import static android.adservices.topics.TopicsManager.RECORD_OBSERVATION_DEFAULT;
 
 import android.annotation.NonNull;
-import android.app.sdksandbox.SandboxedSdkContext;
-import android.content.Context;
 
-/**
- * Get Topics Request.
- */
-public class GetTopicsRequest {
-    private final Context mContext;
-    private final String mSdkName;
+/** Get Topics Request. */
+public final class GetTopicsRequest {
 
-    private GetTopicsRequest(@NonNull Context context, @NonNull String sdkName) {
-        mContext = context;
-        mSdkName = sdkName;
+    /** Name of Ads SDK that is involved in this request. */
+    private final String mAdsSdkName;
+
+    /** Whether to record that the caller has observed the topics of the host app or not. */
+    private final boolean mRecordObservation;
+
+    private GetTopicsRequest(@NonNull Builder builder) {
+        mAdsSdkName = builder.mAdsSdkName;
+        mRecordObservation = builder.mRecordObservation;
     }
 
-    /** Get the Context. */
+    /** Get the Sdk Name. */
     @NonNull
-    public Context getContext() {
-        return mContext;
+    public String getAdsSdkName() {
+        return mAdsSdkName;
     }
 
-    /**
-     * Get the Sdk Name.
-     */
-    @NonNull
-    public String getSdkName() {
-        return mSdkName;
+    /** Get Record Observation. */
+    public boolean shouldRecordObservation() {
+        return mRecordObservation;
     }
 
-    /**
-     * Builder for {@link GetTopicsRequest} objects.
-     */
+    /** Builder for {@link GetTopicsRequest} objects. */
     public static final class Builder {
-        private final Context mContext;
-        private String mSdkName;
+        private String mAdsSdkName = EMPTY_SDK;
+        private boolean mRecordObservation = RECORD_OBSERVATION_DEFAULT;
 
-        public Builder(@NonNull Context context) {
-            mContext = context;
+        /** Creates a {@link Builder} for {@link GetTopicsRequest} objects. */
+        public Builder() {}
+
+        /**
+         * Set Ads Sdk Name.
+         *
+         * <p>This must be called by SDKs running outside of the Sandbox. Other clients must not
+         * call it.
+         *
+         * @param adsSdkName the Ads Sdk Name.
+         */
+        @NonNull
+        public Builder setAdsSdkName(@NonNull String adsSdkName) {
+            // This is the case the SDK calling from outside of the Sandbox.
+            // Check if the caller set the adsSdkName
+            if (adsSdkName == null) {
+                throw new IllegalArgumentException(
+                        "When calling Topics API outside of the Sandbox, caller should set Ads Sdk"
+                                + " Name");
+            }
+
+            mAdsSdkName = adsSdkName;
+            return this;
         }
 
         /**
-         * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
-         * set this field.
-         * <p> Currently we allow callers to specify the SdkName. In the future releases we will
-         * probably have a way to get the SdkName internally.
+         * Set the Record Observation.
+         *
+         * @param recordObservation whether to record that the caller has observed the topics of the
+         *     host app or not. This will be used to determine if the caller can receive the topic
+         *     in the next epoch.
          */
-        public @NonNull Builder setSdkName(@NonNull String sdkName) {
-            mSdkName = sdkName;
+        @NonNull
+        public Builder setShouldRecordObservation(boolean recordObservation) {
+            mRecordObservation = recordObservation;
             return this;
         }
 
         /** Builds a {@link GetTopicsRequest} instance. */
-        public @NonNull GetTopicsRequest build() {
-            if (null == mContext) {
-                throw new IllegalArgumentException("Must set the context for GetTopicsRequest");
-            }
-
-            // First check if context is SandboxedSdkContext or not
-            if (mContext instanceof SandboxedSdkContext) {
-                String sdkNameFromSandboxedContext = ((SandboxedSdkContext) mContext).getSdkName();
-                if (null == sdkNameFromSandboxedContext || sdkNameFromSandboxedContext.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            "sdkNameFromSandboxedContext should not be null or empty");
-                }
-                if (mSdkName != null) {
-                    throw new IllegalArgumentException(
-                            "When calling PPAPI from Sandbox, caller should not set mSdkName");
-                }
-                mSdkName = sdkNameFromSandboxedContext;
-            } else { // This is the case without the Sandbox.
-                // Check if the caller set the mSdkName
-                if (mSdkName == null) {
-                    // When Sdk name is not set, we assume the App calls the Topics API directly.
-                    // We set the Sdk name to empty to mark this.
-                    mSdkName = EMPTY_SDK;
-                }
-            }
-
-            return new GetTopicsRequest(mContext, mSdkName);
+        @NonNull
+        public GetTopicsRequest build() {
+            return new GetTopicsRequest(this);
         }
     }
 }

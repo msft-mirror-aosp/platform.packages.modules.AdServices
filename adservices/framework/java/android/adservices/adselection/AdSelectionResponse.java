@@ -16,6 +16,9 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
@@ -27,28 +30,26 @@ import java.util.Objects;
 
 /**
  * This class represents the response returned by the {@link AdSelectionManager} as the result of a
- * successful {@code runAdSelection} call.
+ * successful {@code selectAds} call.
  *
  * @hide
  */
 public final class AdSelectionResponse implements Parcelable {
-    private static final long UNSET = 0;
-
     private final long mAdSelectionId;
-    @NonNull private final Uri mRenderUrl;
+    @NonNull private final Uri mRenderUri;
 
-    private AdSelectionResponse(long adSelectionId, @NonNull Uri renderUrl) {
-        Objects.requireNonNull(renderUrl);
+    private AdSelectionResponse(long adSelectionId, @NonNull Uri renderUri) {
+        Objects.requireNonNull(renderUri);
 
         mAdSelectionId = adSelectionId;
-        mRenderUrl = renderUrl;
+        mRenderUri = renderUri;
     }
 
     private AdSelectionResponse(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
         mAdSelectionId = in.readLong();
-        mRenderUrl = Uri.CREATOR.createFromParcel(in);
+        mRenderUri = Uri.CREATOR.createFromParcel(in);
     }
 
     @NonNull
@@ -66,10 +67,10 @@ public final class AdSelectionResponse implements Parcelable {
                 }
             };
 
-    /** Returns the renderUrl that the AdSelection returns. */
+    /** Returns the renderUri that the AdSelection returns. */
     @NonNull
-    public Uri getRenderUrl() {
-        return mRenderUrl;
+    public Uri getRenderUri() {
+        return mRenderUri;
     }
 
     /** Returns the adSelectionId that identifies the AdSelection. */
@@ -83,14 +84,14 @@ public final class AdSelectionResponse implements Parcelable {
         if (o instanceof AdSelectionResponse) {
             AdSelectionResponse adSelectionResponse = (AdSelectionResponse) o;
             return mAdSelectionId == adSelectionResponse.mAdSelectionId
-                    && Objects.equals(mRenderUrl, adSelectionResponse.mRenderUrl);
+                    && Objects.equals(mRenderUri, adSelectionResponse.mRenderUri);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mRenderUrl);
+        return Objects.hash(mAdSelectionId, mRenderUri);
     }
 
     @Override
@@ -103,7 +104,17 @@ public final class AdSelectionResponse implements Parcelable {
         Objects.requireNonNull(dest);
 
         dest.writeLong(mAdSelectionId);
-        mRenderUrl.writeToParcel(dest, flags);
+        mRenderUri.writeToParcel(dest, flags);
+    }
+
+    @Override
+    public String toString() {
+        return "AdSelectionResponse{"
+                + "mAdSelectionId="
+                + mAdSelectionId
+                + ", mRenderUri="
+                + mRenderUri
+                + '}';
     }
 
     /**
@@ -112,8 +123,8 @@ public final class AdSelectionResponse implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private long mAdSelectionId = UNSET;
-        @NonNull private Uri mRenderUrl;
+        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
+        @NonNull private Uri mRenderUri;
 
         public Builder() {}
 
@@ -124,12 +135,12 @@ public final class AdSelectionResponse implements Parcelable {
             return this;
         }
 
-        /** Sets the RenderUrl. */
+        /** Sets the RenderUri. */
         @NonNull
-        public AdSelectionResponse.Builder setRenderUrl(@NonNull Uri renderUrl) {
-            Objects.requireNonNull(renderUrl);
+        public AdSelectionResponse.Builder setRenderUri(@NonNull Uri renderUri) {
+            Objects.requireNonNull(renderUri);
 
-            mRenderUrl = renderUrl;
+            mRenderUri = renderUri;
             return this;
         }
 
@@ -137,17 +148,16 @@ public final class AdSelectionResponse implements Parcelable {
          * Builds a {@link AdSelectionResponse} instance.
          *
          * @throws IllegalArgumentException if the adSelectionIid is not set
-         *
-         * @throws NullPointerException if the RenderUrl is null
+         * @throws NullPointerException if the RenderUri is null
          */
         @NonNull
         public AdSelectionResponse build() {
-            Objects.requireNonNull(mRenderUrl);
+            Objects.requireNonNull(mRenderUri);
 
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET, "AdSelectionId has not been set!");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-            return new AdSelectionResponse(mAdSelectionId, mRenderUrl);
+            return new AdSelectionResponse(mAdSelectionId, mRenderUri);
         }
     }
 }

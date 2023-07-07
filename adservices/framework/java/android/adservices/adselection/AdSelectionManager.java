@@ -16,38 +16,66 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.exceptions.AdServicesException;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeoutException;
 
 /**
- * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
- * as report impressions.
+ * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well as
+ * report impressions.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    /**
+     * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
+     * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
+     *
+     * @hide
+     */
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
-    /**
-     * This field will be used once full implementation is ready.
-     *
-     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
-     */
-    @SuppressWarnings("unused")
-    private final Context mContext;
+    @NonNull private Context mContext;
+    @NonNull private ServiceBinder<AdSelectionService> mServiceBinder;
 
-    private final ServiceBinder<AdSelectionService> mServiceBinder;
+    /**
+     * Factory method for creating an instance of AdSelectionManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link AdSelectionManager} instance
+     */
+    @NonNull
+    public static AdSelectionManager get(@NonNull Context context) {
+        // On T+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(AdSelectionManager.class)
+                : new AdSelectionManager(context);
+    }
 
     /**
      * Create AdSelectionManager
@@ -57,67 +85,328 @@ public class AdSelectionManager {
     public AdSelectionManager(@NonNull Context context) {
         Objects.requireNonNull(context);
 
+        // In case the AdSelectionManager is initiated from inside a sdk_sandbox process the
+        // fields will be immediately rewritten by the initialize method below.
+        initialize(context);
+    }
+
+    /**
+     * Initializes {@link AdSelectionManager} with the given {@code context}.
+     *
+     * <p>This method is called by the {@link SandboxedSdkContext} to propagate the correct context.
+     * For more information check the javadoc on the {@link
+     * android.app.sdksandbox.SdkSandboxSystemServiceRegistry}.
+     *
+     * @hide
+     * @see android.app.sdksandbox.SdkSandboxSystemServiceRegistry
+     */
+    public AdSelectionManager initialize(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_AD_SELECTION_SERVICE,
                         AdSelectionService.Stub::asInterface);
+        return this;
     }
 
     @NonNull
-    private AdSelectionService getService() {
-        AdSelectionService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("Unable to find the ad selection service");
+    public TestAdSelectionManager getTestAdSelectionManager() {
+        return new TestAdSelectionManager(this);
+    }
+
+    @NonNull
+    AdSelectionService getService() {
+        return mServiceBinder.getService();
+    }
+
+    /**
+     * Collects device data for ad selection.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void getAdSelectionData(
+            @NonNull GetAdSelectionDataRequest getAdSelectionDataRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<GetAdSelectionDataOutcome, Exception> receiver) {
+        Objects.requireNonNull(getAdSelectionDataRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.getAdSelectionData(
+                    new GetAdSelectionDataInput.Builder()
+                            .setAdSelectionDataRequest(getAdSelectionDataRequest)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new GetAdSelectionDataCallback.Stub() {
+                        @Override
+                        public void onSuccess(GetAdSelectionDataResponse resultParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onResult(
+                                                    new GetAdSelectionDataOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setAdSelectionData(
+                                                                    resultParcel
+                                                                            .getAdSelectionData())
+                                                            .build()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            sLogger.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
-        return service;
+    }
+
+    /**
+     * Persists the ad selection results from the server-side.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void persistAdSelectionResult(
+            @NonNull PersistAdSelectionResultRequest persistAdSelectionResultRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
+        Objects.requireNonNull(persistAdSelectionResultRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.persistAdSelectionResult(
+                    new PersistAdSelectionResultInput.Builder()
+                            .setPersistAdSelectionResultRequest(persistAdSelectionResultRequest)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new PersistAdSelectionResultCallback.Stub() {
+                        @Override
+                        public void onSuccess(PersistAdSelectionResultResponse resultParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getAdRenderUri())
+                                                            .build()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            sLogger.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
     }
 
     /**
      * Runs the ad selection process on device to select a remarketing ad for the caller
      * application.
-     * <p>
-     * The input {@code adSelectionConfig} is provided by the Ads SDK and the
-     * {@link AdSelectionConfig} object is transferred via a Binder call. For this reason, the
-     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
-     * {@link AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
-     * <p>
-     * The output is passed by the receiver, which either returns an {@link AdSelectionOutcome} for
-     * a successful run, or an {@link AdServicesException} includes the type of the exception thrown
-     * and the corresponding error message.
-     * <p>
-     * If the result of the {@link AdServicesException#getCause} is an {@link
-     * IllegalArgumentException}, it is caused by invalid input argument the API received to run the
-     * ad selection.
-     * <p>
-     * If the result of the {@link AdServicesException#getCause} is an {@link RemoteException} with
-     * error message "Failure of AdSelection services.", it is caused by an internal failure of the
-     * ad selection service.
+     *
+     * <p>The input {@code adSelectionConfig} is provided by the Ads SDK and the {@link
+     * AdSelectionConfig} object is transferred via a Binder call. For this reason, the total size
+     * of these objects is bound to the Android IPC limitations. Failures to transfer the {@link
+     * AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to run the ad selection.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
      */
-    public void runAdSelection(
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull Executor executor,
-            @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final AdSelectionService service = getService();
-            service.runAdSelection(
-                    adSelectionConfig,
+            service.selectAds(
+                    new AdSelectionInput.Builder()
+                            .setAdSelectionConfig(adSelectionConfig)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new AdSelectionCallback.Stub() {
+                        @Override
+                        public void onSuccess(AdSelectionResponse resultParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getRenderUri())
+                                                            .build()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            sLogger.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
+     * Selects an ad from the results of previously ran ad selections.
+     *
+     * <p>The input {@code adSelectionFromOutcomesConfig} is provided by the Ads SDK and the {@link
+     * AdSelectionFromOutcomesConfig} object is transferred via a Binder call. For this reason, the
+     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
+     * {@link AdSelectionFromOutcomesConfig} will throws an {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
+     *
+     * <p>The input {@code adSelectionFromOutcomesConfig} contains:
+     *
+     * <ul>
+     *   <li>{@code Seller} is required to be a registered {@link
+     *       android.adservices.common.AdTechIdentifier}. Otherwise, {@link IllegalStateException}
+     *       will be thrown.
+     *   <li>{@code List of ad selection ids} should exist and come from {@link
+     *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
+     *       {@link IllegalArgumentException} for input validation will raise listing violating ad
+     *       selection ids.
+     *   <li>{@code Selection logic URI} that could follow either the HTTPS or Ad Selection Prebuilt
+     *       schemas.
+     *       <p>If the URI follows HTTPS schema then the host should match the {@code seller}.
+     *       Otherwise, {@link IllegalArgumentException} will be thrown.
+     *       <p>Prebuilt URIs are a way of substituting a generic pre-built logics for the required
+     *       JavaScripts for {@code selectOutcome}. Prebuilt Uri for this endpoint should follow;
+     *       <ul>
+     *         <li>{@code
+     *             ad-selection-prebuilt://ad-selection-from-outcomes/<name>?<script-generation-parameters>}
+     *       </ul>
+     *       <p>If an unsupported prebuilt URI is passed or prebuilt URI feature is disabled by the
+     *       service then {@link IllegalArgumentException} will be thrown.
+     *       <p>See {@link AdSelectionFromOutcomesConfig.Builder#setSelectionLogicUri} for supported
+     *       {@code <name>} and required {@code <script-generation-parameters>}.
+     * </ul>
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to run the ad selection.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link TimeoutException} is thrown, it is caused when a timeout is encountered
+     * during bidding, scoring, or overall selection process to find winning Ad.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void selectAds(
+            @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
+        Objects.requireNonNull(adSelectionFromOutcomesConfig);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.selectAdsFromOutcomes(
+                    new AdSelectionFromOutcomesInput.Builder()
+                            .setAdSelectionFromOutcomesConfig(adSelectionFromOutcomesConfig)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
                     new AdSelectionCallback.Stub() {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
                             executor.execute(
                                     () -> {
-                                        receiver.onResult(
-                                                new AdSelectionOutcome.Builder()
-                                                        .setAdSelectionId(
-                                                                resultParcel.getAdSelectionId())
-                                                        .setRenderUrl(resultParcel.getRenderUrl())
-                                                        .build());
+                                        if (resultParcel == null) {
+                                            receiver.onResult(AdSelectionOutcome.NO_OUTCOME);
+                                        } else {
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getRenderUri())
+                                                            .build());
+                                        }
                                     });
                         }
 
@@ -125,26 +414,104 @@ public class AdSelectionManager {
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
                                     () -> {
-                                        receiver.onError(failureParcel.asException());
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
                                     });
                         }
                     });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Failure of AdSelection service.", e);
-            receiver.onError(new AdServicesException("Failure of AdSelection service."));
+            sLogger.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
-     * Report the given impression. The {@link ReportImpressionRequest} is provided by the Ads SDK.
-     * The receiver either returns a {@code void} for a successful run, or an {@link
-     * AdServicesException} indicates the error.
+     * Notifies the service that there is a new impression to report for the ad selected by the
+     * ad-selection run identified by {@code adSelectionId}. There is no guarantee about when the
+     * impression will be reported. The impression reporting could be delayed and reports could be
+     * batched.
+     *
+     * <p>To calculate the winning seller reporting URL, the service fetches the seller's JavaScript
+     * logic from the {@link AdSelectionConfig#getDecisionLogicUri()} found at {@link
+     * ReportImpressionRequest#getAdSelectionConfig()}. Then, the service executes one of the
+     * functions found in the seller JS called {@code reportResult}, providing on-device signals as
+     * well as {@link ReportImpressionRequest#getAdSelectionConfig()} as input parameters.
+     *
+     * <p>The function definition of {@code reportResult} is:
+     *
+     * <p>{@code function reportResult(ad_selection_config, render_url, bid, contextual_signals) {
+     * return { 'status': status, 'results': {'signals_for_buyer': signals_for_buyer,
+     * 'reporting_url': reporting_url } }; } }
+     *
+     * <p>To calculate the winning buyer reporting URL, the service fetches the winning buyer's
+     * JavaScript logic which is fetched via the buyer's {@link
+     * android.adservices.customaudience.CustomAudience#getBiddingLogicUri()}. Then, the service
+     * executes one of the functions found in the buyer JS called {@code reportWin}, providing
+     * on-device signals, {@code signals_for_buyer} calculated by {@code reportResult}, and specific
+     * fields from {@link ReportImpressionRequest#getAdSelectionConfig()} as input parameters.
+     *
+     * <p>The function definition of {@code reportWin} is:
+     *
+     * <p>{@code function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,
+     * contextual_signals, custom_audience_reporting_signals) { return {'status': 0, 'results':
+     * {'reporting_url': reporting_url } }; } }
+     *
+     * <p>In addition, buyers and sellers have the option to register to receive reports on specific
+     * ad events. To do so, they can invoke the platform provided {@code registerAdBeacon} function
+     * inside {@code reportWin} and {@code reportResult} for buyers and sellers, respectively.
+     *
+     * <p>The function definition of {@code registerBeacon} is:
+     *
+     * <p>{@code function registerAdBeacon(beacons)}, where {@code beacons} is a dict of string to
+     * string pairs
+     *
+     * <p>For each ad event a buyer/seller is interested in reports for, they would add an {@code
+     * event_key}: {@code event_reporting_uri} pair to the {@code beacons} dict, where {@code
+     * event_key} is an identifier for that specific event. This {@code event_key} should match
+     * {@link ReportEventRequest#getKey()} when the SDK invokes {@link #reportEvent}. In addition,
+     * each {@code event_reporting_uri} should parse properly into a {@link android.net.Uri}. This
+     * will be the {@link android.net.Uri} reported to when the SDK invokes {@link #reportEvent}.
+     *
+     * <p>When the buyer/seller has added all the pairings they want to receive events for, they can
+     * invoke {@code registerAdBeacon(beacons)}, where {@code beacons} is the name of the dict they
+     * added the pairs to.
+     *
+     * <p>{@code registerAdBeacon} will throw a {@code TypeError} in these situations:
+     *
+     * <ol>
+     *   <li>{@code registerAdBeacon}is called more than once. If this error is caught in
+     *       reportWin/reportResult, the original set of pairings will be registered
+     *   <li>{@code registerAdBeacon} doesn't have exactly 1 dict argument.
+     *   <li>The contents of the 1 dict argument are not all {@code String: String} pairings.
+     * </ol>
+     *
+     * <p>The output is passed by the {@code receiver}, which either returns an empty {@link Object}
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to report the impression.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * <p>Impressions will be reported at most once as a best-effort attempt.
      */
-    @NonNull
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -155,167 +522,253 @@ public class AdSelectionManager {
                     new ReportImpressionInput.Builder()
                             .setAdSelectionId(request.getAdSelectionId())
                             .setAdSelectionConfig(request.getAdSelectionConfig())
+                            .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
                                     () -> {
-                                        receiver.onError(failureParcel.asException());
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
                                     });
                         }
                     });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!"));
+            sLogger.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
-     * Overrides the AdSelection API to avoid fetching data from remote servers and use the data
-     * provided in {@link AddAdSelectionOverrideRequest} instead. The {@link
-     * AddAdSelectionOverrideRequest} is provided by the Ads SDK.
+     * Notifies the service that there is a new ad event to report for the ad selected by the
+     * ad-selection run identified by {@code adSelectionId}. An ad event is any occurrence that
+     * happens to an ad associated with the given {@code adSelectionId}. There is no guarantee about
+     * when the ad event will be reported. The event reporting could be delayed and reports could be
+     * batched.
      *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
+     * <p>Using {@link ReportEventRequest#getKey()}, the service will fetch the {@code reportingUri}
+     * that was registered in {@code registerAdBeacon}. See documentation of {@link
+     * #reportImpression} for more details regarding {@code registerAdBeacon}. Then, the service
+     * will attach {@link ReportEventRequest#getData()} to the request body of a POST request and
+     * send the request. The body of the POST request will have the {@code content-type} of {@code
+     * text/plain}, and the data will be transmitted in {@code charset=UTF-8}.
      *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
+     * successful run, or an {@link Exception} includes the type of the exception thrown and the
+     * corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to report the ad event.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * <p>Events will be reported at most once as a best-effort attempt.
      */
-    @NonNull
-    public void overrideAdSelectionConfigRemoteInfo(
-            @NonNull AddAdSelectionOverrideRequest request,
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void reportEvent(
+            @NonNull ReportEventRequest request,
+            @NonNull Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+        try {
+            final AdSelectionService service = getService();
+            service.reportInteraction(
+                    new ReportInteractionInput.Builder()
+                            .setAdSelectionId(request.getAdSelectionId())
+                            .setInteractionKey(request.getKey())
+                            .setInteractionData(request.getData())
+                            .setReportingDestinations(request.getReportingDestinations())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new ReportInteractionCallback.Stub() {
+                        @Override
+                        public void onSuccess() {
+                            executor.execute(() -> receiver.onResult(new Object()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            sLogger.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
+     * Gives the provided list of adtechs the ability to do app install filtering on the calling
+     * app.
+     *
+     * <p>The input {@code request} is provided by the Ads SDK and the {@code request} object is
+     * transferred via a Binder call. For this reason, the total size of these objects is bound to
+     * the Android IPC limitations. Failures to transfer the {@code advertisers} will throws an
+     * {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
+     * successful run, or an {@link Exception} includes the type of the exception thrown and the
+     * corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest request,
+            @NonNull Executor executor,
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final AdSelectionService service = getService();
-            service.overrideAdSelectionConfigRemoteInfo(
-                    request.getAdSelectionConfig(),
-                    request.getDecisionLogicJs(),
-                    new AdSelectionOverrideCallback.Stub() {
+            service.setAppInstallAdvertisers(
+                    new SetAppInstallAdvertisersInput.Builder()
+                            .setAdvertisers(request.getAdvertisers())
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new SetAppInstallAdvertisersCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
                                     () -> {
-                                        receiver.onError(failureParcel.asException());
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
                                     });
                         }
                     });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!"));
+            sLogger.e(e, "Exception");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
-     * Removes an override in th Ad Selection API with associated the data in {@link
-     * RemoveAdSelectionOverrideRequest}. The {@link RemoveAdSelectionOverrideRequest} is provided
-     * by the Ads SDK.
+     * Updates the counter histograms for an ad which was previously selected by a call to {@link
+     * #selectAds(AdSelectionConfig, Executor, OutcomeReceiver)}.
      *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
+     * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
+     * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
+     * bidding process during ad selection.
      *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     * <p>Counter histograms can only be updated for ads specified by the given {@code
+     * adSelectionId} returned by a recent call to FLEDGE ad selection from the same caller app.
+     *
+     * <p>A {@link SecurityException} is returned via the {@code outcomeReceiver} if:
+     *
+     * <ol>
+     *   <li>the app has not declared the correct permissions in its manifest, or
+     *   <li>the app or entity identified by the {@code callerAdTechIdentifier} are not authorized
+     *       to use the API.
+     * </ol>
+     *
+     * An {@link IllegalStateException} is returned via the {@code outcomeReceiver} if the call does
+     * not come from an app with a foreground activity.
+     *
+     * <p>A {@link LimitExceededException} is returned via the {@code outcomeReceiver} if the call
+     * exceeds the calling app's API throttle.
+     *
+     * <p>In all other failure cases, the {@code outcomeReceiver} will return an empty {@link
+     * Object}. Note that to protect user privacy, internal errors will not be sent back via an
+     * exception.
      */
-    @NonNull
-    public void removeAdSelectionConfigRemoteInfoOverride(
-            @NonNull RemoveAdSelectionOverrideRequest request,
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramRequest updateAdCounterHistogramRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(request);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
+            @NonNull OutcomeReceiver<Object, Exception> outcomeReceiver) {
+        Objects.requireNonNull(updateAdCounterHistogramRequest, "Request must not be null");
+        Objects.requireNonNull(executor, "Executor must not be null");
+        Objects.requireNonNull(outcomeReceiver, "Outcome receiver must not be null");
 
         try {
-            final AdSelectionService service = getService();
-            service.removeAdSelectionConfigRemoteInfoOverride(
-                    request.getAdSelectionConfig(),
-                    new AdSelectionOverrideCallback.Stub() {
+            final AdSelectionService service = Objects.requireNonNull(getService());
+            service.updateAdCounterHistogram(
+                    new UpdateAdCounterHistogramInput.Builder(
+                                    updateAdCounterHistogramRequest.getAdSelectionId(),
+                                    updateAdCounterHistogramRequest.getAdEventType(),
+                                    updateAdCounterHistogramRequest.getCallerAdTech(),
+                                    getCallerPackageName())
+                            .build(),
+                    new UpdateAdCounterHistogramCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> outcomeReceiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
                             executor.execute(
                                     () -> {
-                                        receiver.onError(failureParcel.asException());
+                                        outcomeReceiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
                                     });
                         }
                     });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service");
+            outcomeReceiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!"));
+            sLogger.e(e, "Remote exception encountered while updating ad counter histogram");
+            outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
     }
 
-    /**
-     * Removes all override data in the Ad Selection API.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    @NonNull
-    public void resetAllAdSelectionConfigRemoteOverrides(
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final AdSelectionService service = getService();
-            service.resetAllAdSelectionConfigRemoteOverrides(
-                    new AdSelectionOverrideCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
-                        }
-                    });
-        } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!"));
-        }
+    private String getCallerPackageName() {
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null
+                ? mContext.getPackageName()
+                : sandboxedSdkContext.getClientPackageName();
     }
 }

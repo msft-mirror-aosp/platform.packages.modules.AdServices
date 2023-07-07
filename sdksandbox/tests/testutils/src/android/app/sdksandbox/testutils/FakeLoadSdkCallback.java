@@ -18,70 +18,89 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback;
-import android.os.Bundle;
+import static org.junit.Assert.fail;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxedSdk;
+import android.os.OutcomeReceiver;
 
-public class FakeLoadSdkCallback implements LoadSdkCallback {
-    private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
+import androidx.annotation.Nullable;
+
+import com.google.common.base.Preconditions;
+
+public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSdkException> {
+    private final WaitableCountDownLatch mLoadSdkLatch;
 
     private boolean mLoadSdkSuccess;
 
-    private int mErrorCode;
-    private String mErrorMsg;
+    private SandboxedSdk mSandboxedSdk;
+    private LoadSdkException mLoadSdkException = null;
+
+    public FakeLoadSdkCallback() {
+        mLoadSdkLatch = new WaitableCountDownLatch(5);
+    }
+
+    public FakeLoadSdkCallback(int waitTimeSec) {
+        Preconditions.checkArgument(waitTimeSec > 0, "Callback should use a positive wait time");
+        mLoadSdkLatch = new WaitableCountDownLatch(waitTimeSec);
+    }
 
     @Override
-    public void onLoadSdkSuccess(Bundle params) {
+    public void onResult(SandboxedSdk sandboxedSdk) {
         mLoadSdkSuccess = true;
+        mSandboxedSdk = sandboxedSdk;
         mLoadSdkLatch.countDown();
     }
 
     @Override
-    public void onLoadSdkFailure(int errorCode, String errorMsg) {
+    public void onError(LoadSdkException exception) {
         mLoadSdkSuccess = false;
-        mErrorCode = errorCode;
-        mErrorMsg = errorMsg;
+        mLoadSdkException = exception;
         mLoadSdkLatch.countDown();
     }
 
-    public boolean isLoadSdkSuccessful() {
-        return isLoadSdkSuccessful(false);
+    public void assertLoadSdkIsUnsuccessful() {
+        mLoadSdkLatch.waitForLatch();
+        if (mLoadSdkException == null) {
+            fail("Load SDK was successful, which was not expected.");
+        }
     }
 
-    public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
-        waitForLatch(mLoadSdkLatch);
-        if (ignoreSdkAlreadyLoadedError
-                && mErrorCode == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED) {
-            mLoadSdkSuccess = true;
+    public void assertLoadSdkIsSuccessful() {
+        assertLoadSdkIsSuccessful("Load SDK");
+    }
+
+    public void assertLoadSdkIsSuccessful(@Nullable String message) {
+        mLoadSdkLatch.waitForLatch(message);
+        if (mLoadSdkException != null) {
+            fail(
+                    message
+                            + " was not successful. errorCode: "
+                            + this.getLoadSdkErrorCode()
+                            + ", errorMsg: "
+                            + this.getLoadSdkErrorMsg());
         }
-        return mLoadSdkSuccess;
     }
 
     public int getLoadSdkErrorCode() {
-        waitForLatch(mLoadSdkLatch);
+        mLoadSdkLatch.waitForLatch();
         assertThat(mLoadSdkSuccess).isFalse();
-        return mErrorCode;
+        return mLoadSdkException.getLoadSdkErrorCode();
     }
 
     public String getLoadSdkErrorMsg() {
-        waitForLatch(mLoadSdkLatch);
-        return mErrorMsg;
+        mLoadSdkLatch.waitForLatch();
+        assertThat(mLoadSdkSuccess).isFalse();
+        return mLoadSdkException.getMessage();
     }
 
-    private void waitForLatch(CountDownLatch latch) {
-        try {
-            // Wait for callback to be called
-            final int waitTime = 5;
-            if (!latch.await(waitTime, TimeUnit.SECONDS)) {
-                throw new IllegalStateException(
-                        "Callback not called within " + waitTime + " seconds");
-            }
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(
-                    "Interrupted while waiting on callback: " + e.getMessage());
-        }
+    public SandboxedSdk getSandboxedSdk() {
+        mLoadSdkLatch.waitForLatch();
+        return mSandboxedSdk;
+    }
+
+    public LoadSdkException getLoadSdkException() {
+        mLoadSdkLatch.waitForLatch();
+        return mLoadSdkException;
     }
 }

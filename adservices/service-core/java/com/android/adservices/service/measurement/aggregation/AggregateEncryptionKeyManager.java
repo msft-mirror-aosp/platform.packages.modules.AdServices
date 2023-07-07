@@ -20,37 +20,57 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-/**
- * A public key used to encrypt aggregatable reports.
- */
-final class AggregateEncryptionKeyManager {
+/** A public key used to encrypt aggregatable reports. */
+public final class AggregateEncryptionKeyManager {
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyFetcher mAggregateEncryptionKeyFetcher;
     private final Clock mClock;
+    private final Uri mAggregateEncryptionKeyCoordinatorUrl;
 
-    AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
+    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher();
         mClock = Clock.systemUTC();
+        String encryptionKeyCoordinatorUrl =
+                AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl();
+        if (encryptionKeyCoordinatorUrl != null) {
+            mAggregateEncryptionKeyCoordinatorUrl = Uri.parse(encryptionKeyCoordinatorUrl);
+        } else {
+            mAggregateEncryptionKeyCoordinatorUrl = null;
+        }
     }
 
     @VisibleForTesting
     AggregateEncryptionKeyManager(DatastoreManager datastoreManager,
-            AggregateEncryptionKeyFetcher aggregateEncryptionKeyFetcher, Clock clock) {
+            AggregateEncryptionKeyFetcher aggregateEncryptionKeyFetcher,
+            Clock clock,
+            Uri aggregateEncryptionKeyCoordinatorUrl) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = aggregateEncryptionKeyFetcher;
         mClock = clock;
+        mAggregateEncryptionKeyCoordinatorUrl = aggregateEncryptionKeyCoordinatorUrl;
     }
 
-    List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
+    /**
+     * Retrieves a {@link List<AggregateEncryptionKey>} in which the size of the collection matches
+     * the numKeys specified in the parameters. If no keys are found, the collection would be empty.
+     */
+    public List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
+        if (mAggregateEncryptionKeyCoordinatorUrl == null) {
+            LogUtil.w("Fetching aggregate encryption keys failed, empty coordinator url.");
+            return Collections.emptyList();
+        }
+
         long eventTime = mClock.millis();
 
         Optional<List<AggregateEncryptionKey>> aggregateEncryptionKeysOptional =
@@ -63,15 +83,17 @@ final class AggregateEncryptionKeyManager {
         // If no non-expired keys are available (or the datastore retrieval failed), fetch them
         // over the network, insert them in the datastore and delete expired keys.
         if (aggregateEncryptionKeys.size() == 0) {
-            Uri target = Uri.parse(
-                    AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl());
             Optional<List<AggregateEncryptionKey>> fetchResult =
-                    mAggregateEncryptionKeyFetcher.fetch(target, eventTime);
+                    mAggregateEncryptionKeyFetcher.fetch(
+                            mAggregateEncryptionKeyCoordinatorUrl, eventTime);
             if (fetchResult.isPresent()) {
                 aggregateEncryptionKeys = fetchResult.get();
-                for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
-                    mDatastoreManager.runInTransaction((dao) ->
-                            dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
+                // Do not cache keys provided by localhost
+                if (!Web.isLocalhost(mAggregateEncryptionKeyCoordinatorUrl)) {
+                    for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
+                        mDatastoreManager.runInTransaction((dao) ->
+                                dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
+                    }
                 }
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));

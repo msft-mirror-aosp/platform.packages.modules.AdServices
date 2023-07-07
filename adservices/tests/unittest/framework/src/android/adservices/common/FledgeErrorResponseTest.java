@@ -18,6 +18,7 @@ package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
@@ -44,7 +45,7 @@ public final class FledgeErrorResponseTest {
     }
 
     @Test
-    public void testWriteToParcel() throws Exception {
+    public void testWriteToParcel() {
         String notImplementedMessage = "Not Implemented!";
         FledgeErrorResponse response =
                 new FledgeErrorResponse.Builder()
@@ -63,7 +64,7 @@ public final class FledgeErrorResponseTest {
     }
 
     @Test
-    public void testWriteToParcelEmptyMessage() throws Exception {
+    public void testWriteToParcelEmptyMessage() {
         FledgeErrorResponse response =
                 new FledgeErrorResponse.Builder()
                         .setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS)
@@ -88,5 +89,34 @@ public final class FledgeErrorResponseTest {
                             // Not setting status code making it -1.
                             .build();
                 });
+    }
+
+    @Test
+    public void testFledgeErrorResponseDescribeContents() {
+        String notImplementedMessage = "Not Implemented!";
+        FledgeErrorResponse response =
+                new FledgeErrorResponse.Builder()
+                        .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                        .setErrorMessage(notImplementedMessage)
+                        .build();
+
+        assertEquals(0, response.describeContents());
+    }
+
+    @Test
+    public void testToString() {
+        String notImplementedMessage = "Not Implemented!";
+        FledgeErrorResponse response =
+                new FledgeErrorResponse.Builder()
+                        .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                        .setErrorMessage(notImplementedMessage)
+                        .build();
+
+        assertThat(response.toString())
+                .isEqualTo(
+                        String.format(
+                                "FledgeErrorResponse{mStatusCode=%s, mErrorMessage='%s'}",
+                                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                                notImplementedMessage));
     }
 }

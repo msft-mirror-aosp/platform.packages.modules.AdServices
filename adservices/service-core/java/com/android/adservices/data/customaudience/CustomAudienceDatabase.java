@@ -17,53 +17,85 @@
 package com.android.adservices.data.customaudience;
 
 import android.content.Context;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
+import androidx.room.RenameColumn;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
+import androidx.room.migration.AutoMigrationSpec;
 
-import com.android.internal.annotations.GuardedBy;
+import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 
-import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 /** Room based database for custom audience. */
 @Database(
-        // Set exportSchema to true to see generated schema file.
-        // File location is defined in Android.bp -Aroom.schemaLocation.
-        exportSchema = false,
         entities = {
             DBCustomAudience.class,
             DBCustomAudienceBackgroundFetchData.class,
             DBCustomAudienceOverride.class
         },
-        version = CustomAudienceDatabase.DATABASE_VERSION)
-@TypeConverters({CustomAudienceDatabase.Converters.class})
+        version = CustomAudienceDatabase.DATABASE_VERSION,
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class),
+            @AutoMigration(from = 2, to = 3),
+        })
+@TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 3;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "customaudience.db";
 
-    @GuardedBy("SINGLETON_LOCK")
-    private static CustomAudienceDatabase sSingleton;
+    @RenameColumn(
+            tableName = DBCustomAudience.TABLE_NAME,
+            fromColumnName = "bidding_logic_url",
+            toColumnName = "bidding_logic_uri")
+    @RenameColumn(
+            tableName = DBCustomAudience.TABLE_NAME,
+            fromColumnName = "trusted_bidding_data_url",
+            toColumnName = "trusted_bidding_data_uri")
+    @RenameColumn(
+            tableName = DBCustomAudienceBackgroundFetchData.TABLE_NAME,
+            fromColumnName = "daily_update_url",
+            toColumnName = "daily_update_uri")
+    static class AutoMigration1To2 implements AutoMigrationSpec {}
+
+    private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
 
-    /** Returns an instance of the AdServiceDatabase given a context. */
+    /** Returns an instance of the CustomAudienceDatabase given a context. */
     public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
+        // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
+        CustomAudienceDatabase singleReadResult = sSingleton;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                DBCustomAudience.Converters converters =
+                        new DBCustomAudience.Converters(
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAdSelectionFilteringEnabled()),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAuctionServerAdRenderIdEnabled())
+                        );
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
+                                .addTypeConverter(converters)
                                 .build();
             }
             return sSingleton;
@@ -76,43 +108,4 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
      * @return Dao to access custom audience storage.
      */
     public abstract CustomAudienceDao customAudienceDao();
-
-    /**
-     * Room DB type converters.
-     *
-     * <p>Register custom type converters here.
-     */
-    public static class Converters {
-
-        private Converters() {
-        }
-
-        /** Serialize {@link Instant} to Long. */
-        @TypeConverter
-        @Nullable
-        public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Instant} from long. */
-        @TypeConverter
-        @Nullable
-        public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Uri} from String. */
-        @TypeConverter
-        @Nullable
-        public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
-        }
-
-        /** Serialize {@link Uri} to String. */
-        @TypeConverter
-        @Nullable
-        public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
-        }
-    }
 }
