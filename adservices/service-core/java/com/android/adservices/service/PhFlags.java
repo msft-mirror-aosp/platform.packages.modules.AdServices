@@ -155,6 +155,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
+    static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
+            "key_measurement_enable_ara_parsing_alignment_v1";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -3447,6 +3450,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS
                         + " = "
                         + getMeasurementEnableCoarseEventReportDestinations());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1
+                        + " = "
+                        + getMeasurementEnableAraParsingAlignmentV1());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -4173,6 +4181,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAraParsingAlignmentV1() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1,
+                /* defaultValue */ MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1);
     }
 
     @Override

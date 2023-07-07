@@ -193,27 +193,27 @@ public final class FetcherUtilTest {
 
     @Test
     public void testIsValidAggregateKeyPiece_valid() {
-        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0x15A"));
+        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0x15A", mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_validWithUpperCasePrefix() {
-        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0X15A"));
+        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0X15A", mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_null() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece(null));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece(null, mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_missingPrefix() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234"));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234", mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_tooShort() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("0x"));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("0x", mFlags));
     }
 
     @Test
@@ -222,7 +222,7 @@ public final class FetcherUtilTest {
         for (int i = 0; i < 33; i++) {
             keyPiece.append("1");
         }
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece(keyPiece.toString()));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece(keyPiece.toString(), mFlags));
     }
 
     @Test
