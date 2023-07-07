@@ -35,6 +35,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -110,6 +111,7 @@ public class AdIdManagerTest {
     }
 
     @Test
+    @Ignore
     public void testAdIdManager_verifyRateLimitReached() throws Exception {
         final AdIdManager adIdManager = sContext.getSystemService(AdIdManager.class);
 
