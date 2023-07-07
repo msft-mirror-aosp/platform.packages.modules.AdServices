@@ -264,6 +264,19 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
+    public boolean isSandboxBoundForApp(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            SdkSandboxConnection connection = getSdkSandboxConnectionLocked(callingInfo);
+            if (connection != null) {
+                synchronized (connection.mLock) {
+                    return connection.isBound;
+                }
+            }
+            return false;
+        }
+    }
+
+    @Override
     public int getSandboxStatusForApp(CallingInfo callingInfo) {
         synchronized (mLock) {
             SdkSandboxConnection connection = getSdkSandboxConnectionLocked(callingInfo);

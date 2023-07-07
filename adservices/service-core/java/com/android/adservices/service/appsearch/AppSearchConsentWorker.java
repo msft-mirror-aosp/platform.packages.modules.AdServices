@@ -36,14 +36,19 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -61,40 +66,40 @@ import java.util.stream.Collectors;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class AppSearchConsentWorker {
+class AppSearchConsentWorker {
     // At the worker level, we ensure that writes do not conflict with any other writes/reads.
     private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
 
     // Timeout for AppSearch write query in milliseconds.
     private static final int TIMEOUT_MS = 2000;
 
-    // This is used to convert the current package name belonging to AdExtServices to the
-    // corresponding package name for AdServices.
-    private static final String EXTSERVICES_PACKAGE_NAME_SUBSTRING = "ext.";
     private static final String CONSENT_DATABASE_NAME = "adservices_consent";
     private static final String APP_CONSENT_DATABASE_NAME = "adservices_app_consent";
     private static final String NOTIFICATION_DATABASE_NAME = "adservices_notification";
     private static final String INTERACTIONS_DATABASE_NAME = "adservices_interactions";
+    private static final String TOPICS_DATABASE_NAME = "adservices-topics";
+    private static final String UX_STATES_DATABASE_NAME = "adservices-ux-states";
 
     // Required for allowing AdServices apk access to read consent written by ExtServices module.
     private String mAdservicesPackageName;
-    private static final String ADSERVICES_SHA =
-            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
     private Context mContext;
 
     private ListenableFuture<AppSearchSession> mConsentSearchSession;
     private ListenableFuture<AppSearchSession> mAppConsentSearchSession;
     private ListenableFuture<AppSearchSession> mNotificationSearchSession;
     private ListenableFuture<AppSearchSession> mInteractionsSearchSession;
+    private ListenableFuture<AppSearchSession> mTopicsSearchSession;
+    private ListenableFuture<AppSearchSession> mUxStatesSearchSession;
 
     // When reading across APKs, a GlobalSearchSession is needed, hence we use it when reading.
     private ListenableFuture<GlobalSearchSession> mGlobalSearchSession;
     private Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
 
-    private PackageIdentifier mPackageIdentifier;
+    private List<PackageIdentifier> mPackageIdentifiers = new ArrayList<>();
     // There is a single user ID for a given process, so this class would not be instantiated
     // across two user IDs.
     private String mUid = getUserIdentifierFromBinderCallingUid();
+    private static final String SPLITTER = ",";
 
     private AppSearchConsentWorker(@NonNull Context context) {
         Objects.requireNonNull(context);
@@ -120,6 +125,14 @@ public class AppSearchConsentWorker {
                         new PlatformStorage.SearchContext.Builder(
                                         mContext, INTERACTIONS_DATABASE_NAME)
                                 .build());
+        mTopicsSearchSession =
+                PlatformStorage.createSearchSessionAsync(
+                        new PlatformStorage.SearchContext.Builder(mContext, TOPICS_DATABASE_NAME)
+                                .build());
+        mUxStatesSearchSession =
+                PlatformStorage.createSearchSessionAsync(
+                        new PlatformStorage.SearchContext.Builder(mContext, UX_STATES_DATABASE_NAME)
+                                .build());
 
         // We use global session for reads since we may perform read on T+ AdServices package to
         // restore consent data post OTA.
@@ -130,13 +143,17 @@ public class AppSearchConsentWorker {
         // The package identifier of the AdServices package on T+ should always have access to read
         // data written by AdExtServices package on S-.
         mAdservicesPackageName = getAdServicesPackageName(mContext);
-        mPackageIdentifier =
-                new PackageIdentifier(
-                        mAdservicesPackageName, new Signature(ADSERVICES_SHA).toByteArray());
+
+        String shaCertsFlagValue = FlagsFactory.getFlags().getAdservicesApkShaCertificate();
+        for (String shaCert : shaCertsFlagValue.split(SPLITTER)) {
+            mPackageIdentifiers.add(
+                    new PackageIdentifier(
+                            mAdservicesPackageName, new Signature(shaCert).toByteArray()));
+        }
     }
 
-    /** Get an instance of AppSearchConsentService. */
-    public static AppSearchConsentWorker getInstance(@NonNull Context context) {
+    /** Get an instance of AppSearchConsentWorker. */
+    static AppSearchConsentWorker getInstance(@NonNull Context context) {
         Objects.requireNonNull(context);
         return new AppSearchConsentWorker(context);
     }
@@ -145,7 +162,7 @@ public class AppSearchConsentWorker {
      * Get the consent for this user ID for this API type, as stored in AppSearch. Returns false if
      * the database doesn't exist in AppSearch.
      */
-    public boolean getConsent(@NonNull String apiType) {
+    boolean getConsent(@NonNull String apiType) {
         Objects.requireNonNull(apiType);
         READ_WRITE_LOCK.readLock().lock();
         try {
@@ -161,7 +178,7 @@ public class AppSearchConsentWorker {
      * confirmation that the write was successful, then we throw an exception so that user does not
      * incorrectly think that the consent is updated.
      */
-    public void setConsent(@NonNull String apiType, @NonNull Boolean consented) {
+    void setConsent(@NonNull String apiType, @NonNull Boolean consented) {
         Objects.requireNonNull(apiType);
         Objects.requireNonNull(consented);
         READ_WRITE_LOCK.writeLock().lock();
@@ -175,7 +192,7 @@ public class AppSearchConsentWorker {
                             AppSearchConsentDao.NAMESPACE,
                             apiType,
                             consented.toString());
-            dao.writeConsentData(mConsentSearchSession, mPackageIdentifier, mExecutor)
+            dao.writeData(mConsentSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote consent data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -190,7 +207,7 @@ public class AppSearchConsentWorker {
      * Get the apps with consent as stored in AppSearch. If no such list was stored, empty list is
      * returned.
      */
-    public List<String> getAppsWithConsent(@NonNull String consentType) {
+    List<String> getAppsWithConsent(@NonNull String consentType) {
         Objects.requireNonNull(consentType);
         READ_WRITE_LOCK.readLock().lock();
         try {
@@ -204,11 +221,11 @@ public class AppSearchConsentWorker {
     }
 
     /** Clear app consent data for this user for the given type of consent. */
-    public void clearAppsWithConsent(@NonNull String consentType) {
+    void clearAppsWithConsent(@NonNull String consentType) {
         Objects.requireNonNull(consentType);
         READ_WRITE_LOCK.writeLock().lock();
         try {
-            AppSearchDao.deleteConsentData(
+            AppSearchDao.deleteData(
                             AppSearchAppConsentDao.class,
                             mAppConsentSearchSession,
                             mExecutor,
@@ -224,7 +241,7 @@ public class AppSearchConsentWorker {
     }
 
     /** Adds an app to the list of apps with this consentType for this user. */
-    public boolean addAppWithConsent(@NonNull String consentType, @NonNull String app) {
+    boolean addAppWithConsent(@NonNull String consentType, @NonNull String app) {
         Objects.requireNonNull(consentType);
         Objects.requireNonNull(app);
         READ_WRITE_LOCK.writeLock().lock();
@@ -254,7 +271,7 @@ public class AppSearchConsentWorker {
                 apps.add(app);
                 dao.setApps(apps);
             }
-            dao.writeConsentData(mAppConsentSearchSession, mPackageIdentifier, mExecutor)
+            dao.writeData(mAppConsentSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote app consent data to AppSearch (add): " + dao);
             return true;
@@ -271,7 +288,7 @@ public class AppSearchConsentWorker {
      * confirmation that the write was successful, then we throw an exception so that user does not
      * incorrectly think that the consent is updated.
      */
-    public void removeAppWithConsent(@NonNull String consentType, @NonNull String app) {
+    void removeAppWithConsent(@NonNull String consentType, @NonNull String app) {
         Objects.requireNonNull(consentType);
         Objects.requireNonNull(app);
         READ_WRITE_LOCK.readLock().lock();
@@ -290,7 +307,7 @@ public class AppSearchConsentWorker {
                     dao.getApps().stream()
                             .filter(filterApp -> !filterApp.equals(app))
                             .collect(Collectors.toList()));
-            dao.writeConsentData(mAppConsentSearchSession, mPackageIdentifier, mExecutor)
+            dao.writeData(mAppConsentSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote app consent data to AppSearch (remove): " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -302,7 +319,7 @@ public class AppSearchConsentWorker {
     }
 
     /** Returns whether the beta UX notification was displayed to this user on this device. */
-    public boolean wasNotificationDisplayed() {
+    boolean wasNotificationDisplayed() {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchNotificationDao.wasNotificationDisplayed(
@@ -313,7 +330,7 @@ public class AppSearchConsentWorker {
     }
 
     /** Returns whether the GA UX notification was displayed to this user on this device. */
-    public boolean wasGaUxNotificationDisplayed() {
+    boolean wasGaUxNotificationDisplayed() {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchNotificationDao.wasGaUxNotificationDisplayed(
@@ -327,7 +344,7 @@ public class AppSearchConsentWorker {
      * Record having shown the beta UX notification to this user on this device. We cannot reset
      * this, i.e., once a notification is shown, it is forever recorded as shown.
      */
-    public void recordNotificationDisplayed() {
+    void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchNotificationDao dao =
@@ -335,9 +352,9 @@ public class AppSearchConsentWorker {
                             AppSearchNotificationDao.getRowId(mUid),
                             mUid,
                             AppSearchNotificationDao.NAMESPACE,
-                            /* wasNotificationDisplayed= */ true,
+                            /* wasNotificationDisplayed= */ wasNotificationDisplayed,
                             /* wasGaUxNotificationDisplayed= */ wasGaUxNotificationDisplayed());
-            dao.writeConsentData(mNotificationSearchSession, mPackageIdentifier, mExecutor)
+            dao.writeData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote notification data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -349,7 +366,7 @@ public class AppSearchConsentWorker {
     }
 
     /** Record having shown the GA UX notification to this user on this device. */
-    public void recordGaUxNotificationDisplayed() {
+    void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchNotificationDao dao =
@@ -358,8 +375,8 @@ public class AppSearchConsentWorker {
                             mUid,
                             AppSearchNotificationDao.NAMESPACE,
                             /* wasNotificationDisplayed= */ wasNotificationDisplayed(),
-                            /* wasGaUxNotificationDisplayed= */ true);
-            dao.writeConsentData(mNotificationSearchSession, mPackageIdentifier, mExecutor)
+                            /* wasGaUxNotificationDisplayed= */ wasNotificationDisplayed);
+            dao.writeData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote notification data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -374,7 +391,7 @@ public class AppSearchConsentWorker {
      * Returns the PrivacySandboxFeature recorded for this user on this device. Possible values are
      * as per {@link com.android.adservices.service.common.feature.PrivacySandboxFeatureType}.
      */
-    public PrivacySandboxFeatureType getPrivacySandboxFeature() {
+    PrivacySandboxFeatureType getPrivacySandboxFeature() {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchInteractionsDao.getPrivacySandboxFeatureType(
@@ -385,7 +402,7 @@ public class AppSearchConsentWorker {
     }
 
     /** Record the current privacy sandbox feature. */
-    public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
+    void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
         String apiType = AppSearchInteractionsDao.API_TYPE_PRIVACY_SANDBOX_FEATURE;
         READ_WRITE_LOCK.writeLock().lock();
         try {
@@ -396,7 +413,7 @@ public class AppSearchConsentWorker {
                             AppSearchInteractionsDao.NAMESPACE,
                             apiType,
                             currentFeatureType.ordinal());
-            dao.writeConsentData(mInteractionsSearchSession, mPackageIdentifier, mExecutor)
+            dao.writeData(mInteractionsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote feature type data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -412,7 +429,8 @@ public class AppSearchConsentWorker {
      *
      * @return true if the user interacted with the consent manually, otherwise false.
      */
-    public @ConsentManager.UserManualInteraction int getUserManualInteractionWithConsent() {
+    @ConsentManager.UserManualInteraction
+    int getUserManualInteractionWithConsent() {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchInteractionsDao.getManualInteractions(
@@ -423,7 +441,7 @@ public class AppSearchConsentWorker {
     }
 
     /** Saves information to the storage that user interacted with consent manually. */
-    public void recordUserManualInteractionWithConsent(
+    void recordUserManualInteractionWithConsent(
             @ConsentManager.UserManualInteraction int interaction) {
         String apiType = AppSearchInteractionsDao.API_TYPE_INTERACTIONS;
         READ_WRITE_LOCK.writeLock().lock();
@@ -435,11 +453,109 @@ public class AppSearchConsentWorker {
                             AppSearchInteractionsDao.NAMESPACE,
                             apiType,
                             interaction);
-            dao.writeConsentData(mInteractionsSearchSession, mPackageIdentifier, mExecutor)
+            dao.writeData(mInteractionsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote interactions data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e("Failed to write interactions data to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns the list of blocked topics. */
+    List<Topic> getBlockedTopics() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchTopicsConsentDao.getBlockedTopics(
+                    mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Record a blocked topic. */
+    void recordBlockedTopic(Topic topic) {
+        Objects.requireNonNull(topic);
+        READ_WRITE_LOCK.writeLock().lock();
+
+        try {
+            // Since AppSearch doesn't support PATCH api, we need to do a {read, modify, write}. See
+            // b/274507022 for details.
+            AppSearchTopicsConsentDao dao =
+                    AppSearchTopicsConsentDao.readConsentData(
+                            mGlobalSearchSession, mExecutor, mUid);
+            // If there was no such row in the table, create the row. Else, update existing one.
+            if (dao == null) {
+                dao =
+                        new AppSearchTopicsConsentDao(
+                                mUid,
+                                mUid,
+                                AppSearchTopicsConsentDao.NAMESPACE,
+                                List.of(topic.getTopic()),
+                                List.of(topic.getTaxonomyVersion()),
+                                List.of(topic.getModelVersion()));
+            } else {
+                dao.addBlockedTopic(topic);
+            }
+            dao.writeData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote topics consent data to AppSearch (block): " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write consent to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Remove a previously recorded blocked topic. */
+    void recordUnblockedTopic(Topic topic) {
+        Objects.requireNonNull(topic);
+        READ_WRITE_LOCK.writeLock().lock();
+
+        try {
+            // Since AppSearch doesn't support PATCH api, we need to do a {read, modify, write}. See
+            // b/274507022 for details.
+            AppSearchTopicsConsentDao dao =
+                    AppSearchTopicsConsentDao.readConsentData(
+                            mGlobalSearchSession, mExecutor, mUid);
+            // If there was no such row in the table, do nothing. Else, update existing one.
+            if (dao == null) {
+                return;
+            }
+            dao.removeBlockedTopic(topic);
+            dao.writeData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote topics consent data to AppSearch (unblock): " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write consent to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Clears the list of blocked topics. */
+    void clearBlockedTopics() {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            // We don't do {read, modify, write} here since the DAO has no other information besides
+            // blocked topics so we can rewrite it.
+            AppSearchTopicsConsentDao dao =
+                    new AppSearchTopicsConsentDao(
+                            mUid,
+                            mUid,
+                            AppSearchTopicsConsentDao.NAMESPACE,
+                            List.of(),
+                            List.of(),
+                            List.of());
+            dao.writeData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote topics consent data to AppSearch (clear): " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write consent to AppSearch ", e);
             throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
@@ -475,9 +591,265 @@ public class AppSearchConsentWorker {
             if (packageName == null || packageName.isEmpty()) {
                 throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
             }
-            return packageName.replace(EXTSERVICES_PACKAGE_NAME_SUBSTRING, "");
+            return packageName.replace(
+                    AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX,
+                    AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX);
         }
         // If we don't know the AdServices package name, we can't do a write.
         throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    /** Returns whether isAdIdEnabled bit is true. */
+    boolean isAdIdEnabled() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsAdIdEnabled(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isAdIdEnabled bit in app search. */
+    void setAdIdEnabled(boolean isAdIdEnabled) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setAdIdEnabled(isAdIdEnabled);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isAdIdEnabled bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isAdIdEnabled to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isU18Account bit is true. */
+    boolean isU18Account() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsU18Account(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isU18Account bit in app search. */
+    void setU18Account(boolean isU18Account) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setU18Account(isU18Account);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isU18Account bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isU18Account to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsEntryPointEnabled(
+                    mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isEntryPointEnabled bit in app search. */
+    void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setEntryPointEnabled(isEntryPointEnabled);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isEntryPointEnabled bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isEntryPointEnabled to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isAdultAccount bit is true. */
+    boolean isAdultAccount() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsAdultAccount(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isAdultAccount bit in app search. */
+    void setAdultAccount(boolean isAdultAccount) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setAdultAccount(isAdultAccount);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isAdultAccount bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isAdultAccount to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether wasU18NotificationDisplayed bit is true. */
+    boolean wasU18NotificationDisplayed() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsU18NotificationDisplayed(
+                    mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the wasU18NotificationDisplayed bit in app search. */
+    void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the wasU18NotificationDisplayed bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the wasU18NotificationDisplayed to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns the current privacy sandbox UX. */
+    PrivacySandboxUxCollection getUx() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readUx(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the current privacy sandbox UX. */
+    void setUx(PrivacySandboxUxCollection ux) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setUx(ux.toString());
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote PrivacySandboxUx to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write PrivacySandboxUx to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns the privacy sandbox enrollment channel. */
+    PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(PrivacySandboxUxCollection ux) {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readEnrollmentChannel(
+                    mGlobalSearchSession, mExecutor, mUid, ux);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the current privacy sandbox enrollment channel. */
+    void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            if (!Arrays.asList(ux.getEnrollmentChannelCollection()).contains(enrollmentChannel)) {
+                // setting an enrollment channel that is not part of the given UX is a no-op.
+                return;
+            }
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setEnrollmentChannel(enrollmentChannel.toString());
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote PrivacySandboxUx to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write PrivacySandboxUx to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
     }
 }

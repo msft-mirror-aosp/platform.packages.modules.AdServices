@@ -16,6 +16,10 @@
 
 package com.android.adservices.data;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -34,7 +38,6 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV6
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
-import com.android.adservices.errorlogging.AdServicesErrorCode;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -111,7 +114,9 @@ public class DbHelper extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             LogUtil.e(e, "Failed to get a readable database");
             ErrorLogUtil.e(
-                    e, AdServicesErrorCode.DATABASE_READ_EXCEPTION, /* ppapiName Unknown = */ 0);
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
             return null;
         }
     }
@@ -124,7 +129,9 @@ public class DbHelper extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             LogUtil.e(e, "Failed to get a writeable database");
             ErrorLogUtil.e(
-                    e, AdServicesErrorCode.DATABASE_WRITE_EXCEPTION, /* ppapiName Unknown = */ 0);
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
             return null;
         }
     }

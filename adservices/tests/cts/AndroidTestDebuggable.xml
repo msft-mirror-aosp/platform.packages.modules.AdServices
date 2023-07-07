@@ -60,6 +60,12 @@
 
         <!-- Disable Register Ad Beacon Feature at teardown -->
         <option name="teardown-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
+
+        <!-- Disable CPC billing feature at run -->
+        <option name="run-command" value="device_config put adservices fledge_cpc_billing_enabled false" />
+
+        <!-- Disable CPC billing feature at teardown -->
+        <option name="teardown-command" value="device_config put adservices fledge_cpc_billing_enabled false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

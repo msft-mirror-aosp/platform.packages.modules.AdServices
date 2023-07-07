@@ -59,5 +59,6 @@ public class AsyncRegistrationFixture {
         public static final AsyncRegistration.RegistrationType TYPE =
                 AsyncRegistration.RegistrationType.APP_SOURCE;
         public static final String REGISTRATION_ID = "R1";
+        public static final String PLATFORM_AD_ID = "test-platform-ad-id";
     }
 }

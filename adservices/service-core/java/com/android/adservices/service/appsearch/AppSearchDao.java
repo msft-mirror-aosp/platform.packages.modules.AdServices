@@ -41,11 +41,13 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 
 /**
  * Base class for all data access objects for AppSearch. This class handles the common logic for
@@ -91,8 +93,9 @@ class AppSearchDao {
     }
 
     /**
-     * Read the consent data from AppSearch. This requires a query to be specified. If the query is
-     * not specified, we do not perform a search since multiple rows will be returned.
+     * Read the consent data from the provided GlobalSearchSession. This requires a query to be
+     * specified. If the query is not specified, we do not perform a search since multiple rows will
+     * be returned.
      *
      * @return the instance of subclass type that was read from AppSearch.
      */
@@ -103,10 +106,51 @@ class AppSearchDao {
             @NonNull Executor executor,
             @NonNull String namespace,
             @NonNull String query) {
+        return readData(
+                cls,
+                searchSession,
+                executor,
+                namespace,
+                query,
+                (session, spec) -> session.search(query, spec));
+    }
+
+    /**
+     * Read the session data from the provided AppSearchSession. This requires a query to be
+     * specified. If the query is not specified, we do not perform a search since multiple rows will
+     * be returned.
+     *
+     * @return the instance of subclass type that was read from AppSearch.
+     */
+    @Nullable
+    protected static <T> T readAppSearchSessionData(
+            @NonNull Class<T> cls,
+            @NonNull ListenableFuture<AppSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String namespace,
+            @NonNull String query) {
+        return readData(
+                cls,
+                searchSession,
+                executor,
+                namespace,
+                query,
+                (session, spec) -> session.search(query, spec));
+    }
+
+    @Nullable
+    private static <T, S> T readData(
+            @NonNull Class<T> cls,
+            @NonNull ListenableFuture<S> searchSession,
+            @NonNull Executor executor,
+            @NonNull String namespace,
+            @NonNull String query,
+            @NonNull BiFunction<S, SearchSpec, SearchResults> sessionQuery) {
         Objects.requireNonNull(cls);
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(namespace);
+        Objects.requireNonNull(sessionQuery);
 
         // Namespace and Query cannot be empty.
         if (query == null || query.isEmpty() || namespace.isEmpty()) {
@@ -117,15 +161,16 @@ class AppSearchDao {
             SearchSpec searchSpec = new SearchSpec.Builder().addFilterNamespaces(namespace).build();
             ListenableFuture<SearchResults> searchFuture =
                     Futures.transform(
-                            searchSession, session -> session.search(query, searchSpec), executor);
+                            searchSession,
+                            session -> sessionQuery.apply(session, searchSpec),
+                            executor);
             FluentFuture<T> future =
                     FluentFuture.from(searchFuture)
                             .transformAsync(
                                     results -> iterateSearchResults(cls, results, executor),
                                     executor)
                             .transform(result -> ((T) result), executor);
-            T result = future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            return result;
+            return future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             LogUtil.e("getConsent() Appsearch lookup failed with: ", e);
         }
@@ -133,28 +178,29 @@ class AppSearchDao {
     }
 
     /**
-     * Write the consent data to AppSearch. This requires knowing the packageIdentifier of the
+     * Write consent/session data to AppSearch. This requires knowing the packageIdentifier of the
      * package that needs to be allowed read access to the data. When we write the data on S- device
      * we specify the packageIdentifier as that of the T+ AdServices APK, which after OTA, needs
      * access to the data written before OTA. What is written is the subclass type of DAO.
      *
      * @return the result of the write.
      */
-    FluentFuture<AppSearchBatchResult<String, Void>> writeConsentData(
+    FluentFuture<AppSearchBatchResult<String, Void>> writeData(
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
-            @NonNull PackageIdentifier packageIdentifier,
+            @NonNull List<PackageIdentifier> packageIdentifiers,
             @NonNull Executor executor) {
         Objects.requireNonNull(appSearchSession);
-        Objects.requireNonNull(packageIdentifier);
+        Objects.requireNonNull(packageIdentifiers);
         Objects.requireNonNull(executor);
 
         try {
-            SetSchemaRequest setSchemaRequest =
-                    new SetSchemaRequest.Builder()
-                            .addDocumentClasses(getClass())
-                            .setSchemaTypeVisibilityForPackage(
-                                    getClass().getSimpleName(), true, packageIdentifier)
-                            .build();
+            SetSchemaRequest.Builder setSchemaRequestBuilder = new SetSchemaRequest.Builder();
+            setSchemaRequestBuilder.addDocumentClasses(getClass());
+            for (PackageIdentifier packageIdentifier : packageIdentifiers) {
+                setSchemaRequestBuilder.setSchemaTypeVisibilityForPackage(
+                        getClass().getSimpleName(), true, packageIdentifier);
+            }
+            SetSchemaRequest setSchemaRequest = setSchemaRequestBuilder.build();
             PutDocumentsRequest putRequest =
                     new PutDocumentsRequest.Builder().addDocuments(this).build();
             FluentFuture<AppSearchBatchResult<String, Void>> putFuture =
@@ -197,7 +243,7 @@ class AppSearchDao {
      *
      * @return the result of the delete.
      */
-    protected static <T> FluentFuture<AppSearchBatchResult<String, Void>> deleteConsentData(
+    protected static <T> FluentFuture<AppSearchBatchResult<String, Void>> deleteData(
             @NonNull Class<T> cls,
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
             @NonNull Executor executor,

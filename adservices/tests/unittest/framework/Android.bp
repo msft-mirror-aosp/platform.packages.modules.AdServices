@@ -75,6 +75,6 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
-    instrumentation_for: "AdExtServicesApk",
+    instrumentation_for: "ExtServices-sminus",
 }
 

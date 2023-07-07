@@ -17,6 +17,7 @@ package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -27,9 +28,9 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
@@ -69,26 +70,46 @@ public class AppsActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_APPS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInAppsDialog(mAppsActivity);
+                                }
                                 mAppsViewModel.setAppsConsent(true);
                                 mAppsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_APPS:
-                                mAppsViewModel.setAppsConsent(false);
-                                mAppsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutAppsDialog(
+                                            mAppsActivity, mAppsViewModel);
+                                } else {
+                                    mAppsViewModel.setAppsConsent(false);
+                                    mAppsViewModel.refresh();
+                                }
+
                                 break;
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected(mAppsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showBlockAppDialog(
-                                            mAppsActivity, mAppsViewModel, app);
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showBlockAppDialog(
+                                                mAppsActivity, mAppsViewModel, app);
+                                    } else {
+                                        DialogManager.showBlockAppDialog(
+                                                mAppsActivity, mAppsViewModel, app);
+                                    }
                                 } else {
                                     mAppsViewModel.revokeAppConsent(app);
                                 }
                                 break;
                             case RESET_APPS:
                                 UiStatsLogger.logResetAppSelected(mAppsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetAppDialog(mAppsActivity, mAppsViewModel);
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showResetAppDialog(
+                                                mAppsActivity, mAppsViewModel);
+                                    } else {
+                                        DialogManager.showResetAppDialog(
+                                                mAppsActivity, mAppsViewModel);
+                                    }
                                 } else {
                                     mAppsViewModel.resetApps();
                                 }
@@ -142,6 +163,8 @@ public class AppsActionDelegate {
                 .setText(R.string.settingsUI_reset_apps_ga_title);
         ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
                 .setText(R.string.settingsUI_apps_view_no_apps_ga_text);
+        ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
+                .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private void setBetaAppsViewText() {

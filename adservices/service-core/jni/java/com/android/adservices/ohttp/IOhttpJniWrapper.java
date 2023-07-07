@@ -32,11 +32,8 @@ interface IOhttpJniWrapper {
     /** Returns a reference to the AEAD algorithm AES-256-GCM */
     long hpkeAeadAes256Gcm();
 
-    /**
-     * Returns reference to a newly-allocated EVP_HPKE_CTX BoringSSL object. Object thus created
-     * must be freed by calling {@link #hpkeCtxFree(long)}
-     */
-    long hpkeCtxNew();
+    /** Returns a reference to the HKDF_SHA256 message digest (i.e., SHA256) */
+    long hkdfSha256MessageDigest();
 
     /**
      * Calls the boringSSL EVP_HPKE_CTX_setup_sender_with_seed method which implements the
@@ -58,7 +55,7 @@ interface IOhttpJniWrapper {
      * @return The encapsulated shared secret that can be decrypted by the server using their
      *     private key and will also be required on the client to decrypt server's response
      */
-    byte[] hpkeCtxSetupSenderWithSeed(
+    EncapsulatedSharedSecret hpkeCtxSetupSenderWithSeed(
             HpkeContextNativeRef ctx,
             KemNativeRef kemNativeRef,
             KdfNativeRef kdfNativeRef,
@@ -97,4 +94,48 @@ interface IOhttpJniWrapper {
             byte[] seed,
             @Nullable byte[] plainText,
             @Nullable byte[] aad);
+
+    /**
+     * Returns reference to a newly-allocated EVP_HPKE_CTX BoringSSL object. Object thus created
+     * must be freed by calling {@link #hpkeCtxFree(long)}
+     */
+    long hpkeCtxNew();
+
+    /**
+     * Uses the HPKE context to export a secret of length {@code secretLength}. This function uses
+     * contextual information in the form of a {@code contextString} for the secret. This is
+     * necessary to separate different uses of exported secrets and bind relevant caller-specific
+     * context into the output.
+     */
+    HpkeExportResponse hpkeExport(
+            HpkeContextNativeRef hpkeContext, byte[] contextString, int secretLength);
+
+    /**
+     * Computes and returns a HKDF PseudoRandomKey (as specified by RFC 5869) from initial keying
+     * material {@code secret} and {@code salt} using a digest method referenced by {@code
+     * hkdfMessageDigestNativeRef}
+     */
+    HkdfExtractResponse hkdfExtract(
+            HkdfMessageDigestNativeRef hkdfMessageDigestNativeRef, byte[] secret, byte[] salt);
+
+    /**
+     * Computes and returns a HKDF Output Keying Material (as specified by RFC 5869) of length
+     * {@code keyLength} from the PseudoRandomKey ({@code prkArray}) and {@code info} using a digest
+     * referenced by {@code hkdfMessageDigestNativeRef}
+     */
+    HkdfExpandResponse hkdfExpand(
+            HkdfMessageDigestNativeRef hkdfMessageDigestNativeRef,
+            byte[] prkArray,
+            byte[] infoArray,
+            int keyLength);
+
+    /**
+     * Decrypts the {@code cipherTextArray} using the symmetric key {@code keyArray} and the
+     * single-use {@code nonceArray} that were used at the time of encryption.
+     */
+    byte[] aeadOpen(
+            AeadNativeRef aeadNativeRef,
+            byte[] keyArray,
+            byte[] nonceArray,
+            byte[] cipherTextArray);
 }

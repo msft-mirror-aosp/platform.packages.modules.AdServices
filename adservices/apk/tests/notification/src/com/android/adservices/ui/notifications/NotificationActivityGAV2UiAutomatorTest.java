@@ -17,9 +17,6 @@ package com.android.adservices.ui.notifications;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -36,44 +33,29 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
-import com.android.adservices.service.common.BackgroundJobsManager;
-import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
 public class NotificationActivityGAV2UiAutomatorTest {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
-    private static final String NOTIFICATION_TEST_PACKAGE =
-            "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final int SCROLL_WAIT_TIME = 2000;
     private static UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
-    private MockitoSession mStaticMockSession;
     private String mTestName;
-
-    @Mock Flags mMockFlags;
 
     @BeforeClass
     public static void classSetup() {
@@ -84,14 +66,12 @@ public class NotificationActivityGAV2UiAutomatorTest {
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            startMockCompatFlags();
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-            doReturn(true).when(mMockFlags).getEuNotifFlowChangeEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices eu_notif_flow_change_enabled true");
+            CompatAdServicesTestUtils.setFlags();
         }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices eu_notif_flow_change_enabled true");
+
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         sDevice.pressHome();
@@ -107,8 +87,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 
@@ -227,41 +207,16 @@ public class NotificationActivityGAV2UiAutomatorTest {
         assertThat(appsTitle.exists()).isTrue();
     }
 
-    @Test
-    @Ignore("git master fail")
-    public void privacyPolicyLinkTestRow() throws UiObjectNotFoundException {
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
-        sDevice.pressHome();
-
-        /* isEUActivity false: Rest of World Notification landing page */
-        startActivity(false);
-        /* find the expander and click to expand to get the content */
-        UiObject moreExpander =
-                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
-        moreExpander.click();
-
-        UiObject sentence =
-                ApkTestUtil.scrollTo(
-                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
-        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
-                packageNameOfDefaultBrowser, sentence, 20)) {
-            return;
-        }
-        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-            return;
-        }
-        Assert.fail("Web browser not found after several clicks on the last line");
-    }
-
     private void startActivity(boolean isEUActivity) {
-        String notificationPackage =
-                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                        ? NOTIFICATION_TEST_PACKAGE
-                        : NOTIFICATION_PACKAGE;
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux GA_UX");
+
+        String notificationPackage = NOTIFICATION_PACKAGE;
         Intent intent = new Intent(notificationPackage);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
+
         ApplicationProvider.getApplicationContext().startActivity(intent);
         sDevice.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
     }
@@ -274,43 +229,23 @@ public class NotificationActivityGAV2UiAutomatorTest {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 
-    private void startMockCompatFlags() {
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doNothing()
-                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                BackgroundJobsManager.scheduleJobsPerApi(
-                                        any(Context.class), any(AdServicesApiType.class)));
-        // Back compat only supports the following flags
-        doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
-        doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
-        doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
-    }
-
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
             String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
-            throws UiObjectNotFoundException {
+            throws Exception {
         int right = sentence.getBounds().right,
                 bottom = sentence.getBounds().bottom,
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-                return true;
-            }
+            Thread.sleep(200);
         }
+
+        if (!sentence.exists()) {
+            sDevice.pressBack();
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
+            return true;
+        }
+
         return false;
     }
 }

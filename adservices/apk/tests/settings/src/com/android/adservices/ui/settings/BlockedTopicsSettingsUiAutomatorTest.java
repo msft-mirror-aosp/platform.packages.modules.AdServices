@@ -45,7 +45,6 @@ import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -137,8 +136,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        // TODO(274978520) turn on block topics test on S
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Enable Beta UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(false);
 
@@ -225,8 +222,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        // TODO(274978520) turn on block topics test on S
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);
 

@@ -22,8 +22,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
@@ -83,6 +86,9 @@ import static com.android.adservices.service.stats.UpdateCustomAudienceProcessRe
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+
+import com.android.adservices.service.measurement.WipeoutStatus;
+import com.android.adservices.service.measurement.attribution.AttributionStatus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -488,5 +494,108 @@ public class AdServicesLoggerImplTest {
                 ArgumentCaptor.forClass(MsmtDebugKeysMatchStats.class);
         verify(mStatsdLoggerMock).logMeasurementDebugKeysMatch(argumentCaptor.capture());
         assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogMsmtAdIdMatchForDebugKeysStats() {
+        final String enrollmentId = "enrollmentId";
+        long uniqueAdIds = 2L;
+        long uniqueAdIdLimit = 5L;
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setNumUniqueAdIds(uniqueAdIds)
+                        .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+        ArgumentCaptor<MsmtAdIdMatchForDebugKeysStats> argumentCaptor =
+                ArgumentCaptor.forClass(MsmtAdIdMatchForDebugKeysStats.class);
+        verify(mStatsdLoggerMock)
+                .logMeasurementAdIdMatchForDebugKeysStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogMeasurementAttributionStats() {
+        MeasurementAttributionStats stats =
+                new MeasurementAttributionStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
+                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceDerived(false)
+                        .setInstallAttribution(true)
+                        .setAttributionDelay(100L)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementAttributionStats(stats);
+        ArgumentCaptor<MeasurementAttributionStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementAttributionStats.class);
+        verify(mStatsdLoggerMock).logMeasurementAttributionStats(argumentCaptor.capture());
+        assertEquals(argumentCaptor.getValue().getCode(), AD_SERVICES_MEASUREMENT_ATTRIBUTION);
+        assertEquals(
+                argumentCaptor.getValue().getSourceType(),
+                AttributionStatus.SourceType.EVENT.ordinal());
+        assertEquals(
+                argumentCaptor.getValue().getSurfaceType(),
+                AttributionStatus.AttributionSurface.APP_WEB.ordinal());
+        assertEquals(
+                argumentCaptor.getValue().getResult(),
+                AttributionStatus.AttributionResult.SUCCESS.ordinal());
+        assertEquals(
+                argumentCaptor.getValue().getFailureType(),
+                AttributionStatus.FailureType.UNKNOWN.ordinal());
+        assertEquals(argumentCaptor.getValue().isSourceDerived(), false);
+        assertEquals(argumentCaptor.getValue().isInstallAttribution(), true);
+        assertEquals(argumentCaptor.getValue().getAttributionDelay(), 100L);
+    }
+
+    @Test
+    public void testLogMeasurementWipeoutStats() {
+        MeasurementWipeoutStats stats =
+                new MeasurementWipeoutStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                        .setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal())
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementWipeoutStats(stats);
+        ArgumentCaptor<MeasurementWipeoutStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementWipeoutStats.class);
+        verify(mStatsdLoggerMock).logMeasurementWipeoutStats(argumentCaptor.capture());
+        assertEquals(argumentCaptor.getValue().getCode(), AD_SERVICES_MEASUREMENT_WIPEOUT);
+        assertEquals(
+                argumentCaptor.getValue().getWipeoutType(),
+                WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal());
+    }
+
+    @Test
+    public void testLogMeasurementDelayedSourceRegistrationStats() {
+        int UnknownEnumValue = 0;
+        long registrationDelay = 500L;
+        MeasurementDelayedSourceRegistrationStats stats =
+                new MeasurementDelayedSourceRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
+                        .setRegistrationStatus(UnknownEnumValue)
+                        .setRegistrationDelay(registrationDelay)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementDelayedSourceRegistrationStats(stats);
+        ArgumentCaptor<MeasurementDelayedSourceRegistrationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementDelayedSourceRegistrationStats.class);
+        verify(mStatsdLoggerMock)
+                .logMeasurementDelayedSourceRegistrationStats(argumentCaptor.capture());
+        assertEquals(
+                argumentCaptor.getValue().getCode(),
+                AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION);
+        assertEquals(argumentCaptor.getValue().getRegistrationStatus(), UnknownEnumValue);
+        assertEquals(argumentCaptor.getValue().getRegistrationDelay(), registrationDelay);
     }
 }

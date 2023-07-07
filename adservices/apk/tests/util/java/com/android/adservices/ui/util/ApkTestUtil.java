@@ -21,8 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -46,11 +44,10 @@ import java.util.Locale;
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
-    public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
-    private static final String PRIVACY_SANDBOX_TEST_UI = "android.test.adservices.ui.MAIN";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
+
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
@@ -79,6 +76,7 @@ public class ApkTestUtil {
 
         return consentSwitch;
     }
+
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
@@ -99,6 +97,14 @@ public class ApkTestUtil {
         UiObject obj = scrollTo(device, resId);
         // objects may be partially hidden by the status bar and nav bars.
         obj.clickTopLeft();
+    }
+
+    public static void gentleSwipe(UiDevice device) throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+
+        scrollView.scrollForward(100);
     }
 
     /** Returns the UiObject corresponding to a resource ID after scrolling. */
@@ -135,21 +141,30 @@ public class ApkTestUtil {
 
     /** Launch Privacy Sandbox Setting View. */
     public static void launchSettingView(Context context, UiDevice device, int launchTimeout) {
-        // Uses test package on S- since AdServices Activities in PRIVACY_SANDBOX_PACKAGE are
-        // disabled by default on S-
-        String privacySandboxUi;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            privacySandboxUi = PRIVACY_SANDBOX_TEST_UI;
-        } else {
-            privacySandboxUi = PRIVACY_SANDBOX_UI;
-        }
         // Launch the setting view.
-        Intent intent = new Intent(privacySandboxUi);
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
 
         // Wait for the view to appear
-        device.wait(Until.hasObject(By.pkg(privacySandboxUi).depth(0)), launchTimeout);
+        device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), launchTimeout);
+    }
+
+    /** Launch Privacy Sandbox Setting View with UX extra. */
+    public static void launchSettingViewGivenUx(
+            Context context, UiDevice device, int launchTimeout, String ux) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+
+        // Launch the setting view.
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("ux", ux);
+
+        context.startActivity(intent);
+
+        // Wait for the view to appear
+        device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), launchTimeout);
     }
 
     /** Returns the package name of the default browser of the device. */
@@ -170,17 +185,11 @@ public class ApkTestUtil {
     /** Takes the screenshot at the end of each test for debugging. */
     public static void takeScreenshot(UiDevice device, String methodName) {
         try {
-            String uiDocumentsDir = "/Documents/AdServicesUiTests_Screenshots_";
             String timeStamp =
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile =
-                    new File(
-                            Environment.getExternalStorageDirectory()
-                                    + uiDocumentsDir
-                                    + methodName
-                                    + timeStamp);
+            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

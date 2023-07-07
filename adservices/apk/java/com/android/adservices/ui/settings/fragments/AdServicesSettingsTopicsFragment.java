@@ -53,7 +53,6 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupViewModel(view);
-        initActionListeners();
     }
 
     @Override
@@ -62,6 +61,7 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
         TopicsViewModel viewModel =
                 new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
         viewModel.refresh();
+        initActionListeners();
     }
 
     // initialize all action listeners except for actions in topics list

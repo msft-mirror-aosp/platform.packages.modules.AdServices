@@ -21,27 +21,79 @@ import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import com.android.modules.utils.build.SdkLevel;
+import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.VideoView;
 
 import com.android.modules.utils.build.SdkLevel;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SdkApi extends ISdkApi.Stub {
+    private static final String WEB_VIEW_LINK = "https://youtu.be/pQdzFbmlvOo";
+    private static final String WEBSITE_LINK = "https://www.google.com";
+    private static final String VIDEO_URL_KEY = "video-url";
+
     private final Context mContext;
+
+    private WebView mWebView;
 
     public SdkApi(Context sdkContext) {
         mContext = sdkContext;
+        preloadWebViewForActivity(sdkContext);
+    }
+
+    @Override
+    public ParcelFileDescriptor getFileDescriptor(String inputValue) {
+        try {
+            final String fileName = "testParcelFileDescriptor";
+            FileOutputStream fout = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
+            // Writing inputValue String to a file
+            fout.write(inputValue.getBytes(StandardCharsets.UTF_16));
+            fout.close();
+            File file = new File(mContext.getFilesDir(), fileName);
+            ParcelFileDescriptor pFd =
+                    ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
+            return pFd;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
+    public String parseFileDescriptor(ParcelFileDescriptor pFd) {
+        String value;
+
+        try {
+            FileInputStream fis = new FileInputStream(pFd.getFileDescriptor());
+            // Reading fileInputStream and adding its value to a string
+            value = new String(fis.readAllBytes(), StandardCharsets.UTF_16);
+            fis.close();
+            pFd.close();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        return value;
     }
 
     @Override
@@ -75,7 +127,7 @@ public class SdkApi extends ISdkApi.Stub {
 
     @Override
     public String getMessage() {
-        return "Message Received from a sandboxedSDK";
+        return "Message from sdk in the sandbox process";
     }
 
     @Override
@@ -84,34 +136,107 @@ public class SdkApi extends ISdkApi.Stub {
     }
 
     @Override
-    public void startActivity(IActivityStarter iActivityStarter) throws RemoteException {
+    public String getSandboxDump() {
+        // Check if the SDK can access device volume.
+        AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+        int curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        return "Current music volume: " + curVolume + ", max music volume: " + maxVolume;
+    }
+
+    @Override
+    public void startActivity(IActivityStarter iActivityStarter, Bundle params)
+            throws RemoteException {
         if (!SdkLevel.isAtLeastU()) {
             throw new IllegalStateException("Starting activity requires Android U or above!");
         }
+
+        final String videoUrl = params.getString(VIDEO_URL_KEY, null);
         SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
         IBinder token =
-                controller.registerSdkSandboxActivityHandler(activity -> populateView(activity));
+                controller.registerSdkSandboxActivityHandler(
+                        activity -> {
+                            View mediaView;
+                            if (videoUrl != null) {
+                                mediaView = createVideoAd(activity, videoUrl);
+                            } else {
+                                mediaView = mWebView;
+                            }
+                            new ActivityHandler(activity, mContext, mediaView).buildLayout();
+                        });
         iActivityStarter.startActivity(token);
     }
 
-    private void populateView(Activity activity) {
-        // creating LinearLayout
-        LinearLayout linLayout = new LinearLayout(activity);
-        // specifying vertical orientation
-        linLayout.setOrientation(LinearLayout.VERTICAL);
-        // creating LayoutParams
-        LinearLayout.LayoutParams linLayoutParam =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT);
-        TextView textView = new TextView(activity);
-        textView.setText("This is an Activity running inside the sandbox process!");
-        linLayout.addView(textView);
-        // set LinearLayout as a root element of the screen
-        activity.setContentView(linLayout, linLayoutParam);
+    @Override
+    public boolean isCustomizedSdkContextEnabled() {
+        // If customized-sdk-context is enabled, then per-sdk storage should be returned for all
+        // storage apis on Context object
+        final String filesDir = mContext.getFilesDir().getAbsolutePath();
+        final String perSdkDir = mContext.getDataDir().getAbsolutePath();
+        return filesDir.startsWith(perSdkDir);
     }
 
     private SharedPreferences getClientSharedPreferences() {
         return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
+    }
+
+    private VideoView createVideoAd(Activity activity, String videoUrl) {
+        final VideoView videoView = new VideoView(activity);
+        videoView.setVideoURI(Uri.parse(videoUrl));
+        videoView.requestFocus();
+
+        videoView.setOnPreparedListener(mp -> videoView.start());
+
+        videoView.setOnCompletionListener(
+                new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        videoView.setOnTouchListener(
+                                (view, event) -> {
+                                    Intent visitUrl = new Intent(Intent.ACTION_VIEW);
+                                    visitUrl.setData(Uri.parse("https://www.google.com"));
+                                    visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                                    activity.startActivity(visitUrl);
+                                    return true;
+                                });
+                    }
+                });
+        return videoView;
+    }
+
+    private void preloadWebViewForActivity(Context sdkContext) {
+        mWebView = new WebView(sdkContext);
+        initializeSettings(mWebView.getSettings());
+        // Handle Urls locally
+        mWebView.setWebViewClient(
+                new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(
+                            WebView view, WebResourceRequest request) {
+                        return false;
+                    }
+                });
+        if (isCustomizedSdkContextEnabled()) {
+            mWebView.loadUrl(WEB_VIEW_LINK);
+        } else {
+            mWebView.loadUrl(WEBSITE_LINK);
+        }
+    }
+
+    private void initializeSettings(WebSettings settings) {
+        settings.setJavaScriptEnabled(true);
+
+        settings.setGeolocationEnabled(true);
+        settings.setSupportZoom(true);
+        settings.setDatabaseEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
+
+        // Default layout behavior for chrome on android.
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
     }
 }

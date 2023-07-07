@@ -16,6 +16,10 @@
 
 package com.android.adservices.errorlogging;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -26,6 +30,8 @@ import android.database.sqlite.SQLiteException;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +44,7 @@ public class AdServicesErrorLoggerImplTest {
     // Constants used for tests
     private static final String CLASS_NAME = "TopicsService";
     private static final String METHOD_NAME = "getTopics";
-    private static final int PPAPI_NAME = 1;
+    private static final int PPAPI_NAME = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
     private static final int LINE_NUMBER = 11;
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
 
@@ -49,28 +55,46 @@ public class AdServicesErrorLoggerImplTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
+        doReturn(ImmutableList.of()).when(mFlags).getErrorCodeLoggingDenyList();
     }
 
     @Test
-    public void testLogError_flagDisabled() {
+    public void testLogError_errorLoggingFlagDisabled() {
         doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         mErrorLogger.logError(
-                AdServicesErrorCode.CONSENT_REVOKED_ERROR, PPAPI_NAME, CLASS_NAME, METHOD_NAME);
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME,
+                CLASS_NAME, METHOD_NAME);
 
         verify(mStatsdLoggerMock, never()).logAdServicesError(any());
     }
 
     @Test
-    public void testLogError_flagEnabled() {
+    public void testLogError_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
-        AdServicesErrorCode errorCode = AdServicesErrorCode.CONSENT_REVOKED_ERROR;
+        doReturn(ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR))
+                .when(mFlags)
+                .getErrorCodeLoggingDenyList();
 
-        mErrorLogger.logError(errorCode, PPAPI_NAME, CLASS_NAME, METHOD_NAME);
+        mErrorLogger.logError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME,
+                CLASS_NAME, METHOD_NAME);
+
+        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+    }
+
+    @Test
+    public void testLogError_errorLoggingFlagEnabled() {
+        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
+        mErrorLogger.logError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR,
+                PPAPI_NAME,
+                CLASS_NAME,
+                METHOD_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode.getErrorCode())
+                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
                         .setPpapiName(PPAPI_NAME)
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
@@ -79,28 +103,47 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_flagDisabled() {
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagDisabled() {
         doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         mErrorLogger.logErrorWithExceptionInfo(
-                new Exception(), AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME);
+                new Exception(),
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                PPAPI_NAME);
 
         verify(mStatsdLoggerMock, never()).logAdServicesError(any());
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_flagEnabled() {
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
+        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
+        doReturn(ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION))
+                .when(mFlags)
+                .getErrorCodeLoggingDenyList();
+
+        mErrorLogger.logErrorWithExceptionInfo(
+                new Exception(),
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                PPAPI_NAME);
+
+        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+    }
+
+    @Test
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
 
-        AdServicesErrorCode errorCode = AdServicesErrorCode.DATABASE_READ_EXCEPTION;
         Exception exception = createSQLiteException(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
-                exception, AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME);
+                exception,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                PPAPI_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode.getErrorCode())
+                        .setErrorCode(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
                         .setPpapiName(PPAPI_NAME)
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
@@ -111,18 +154,21 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_flagEnabled() {
+    public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
 
-        AdServicesErrorCode errorCode = AdServicesErrorCode.DATABASE_READ_EXCEPTION;
         String fullClassName = "com.android.adservices.topics.TopicsService";
         Exception exception = createSQLiteException(fullClassName, METHOD_NAME, LINE_NUMBER);
 
-        mErrorLogger.logErrorWithExceptionInfo(exception, errorCode, PPAPI_NAME);
+        mErrorLogger.logErrorWithExceptionInfo(
+                exception,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                PPAPI_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode.getErrorCode())
+                        .setErrorCode(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
                         .setPpapiName(PPAPI_NAME)
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
@@ -133,18 +179,20 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_emptyClassName_flagEnabled() {
+    public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
 
-        AdServicesErrorCode errorCode = AdServicesErrorCode.DATABASE_READ_EXCEPTION;
         Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
-                exception, AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME);
+                exception,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                PPAPI_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode.getErrorCode())
+                        .setErrorCode(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
                         .setPpapiName(PPAPI_NAME)
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)

@@ -26,7 +26,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -49,9 +48,20 @@ public class EventReportingJobHandler {
     private final DatastoreManager mDatastoreManager;
     private boolean mIsDebugInstance;
 
+    private ReportingStatus.UploadMethod mUploadMethod;
+
     EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
+    }
+
+    EventReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            ReportingStatus.UploadMethod uploadMethod) {
+        mEnrollmentDao = enrollmentDao;
+        mDatastoreManager = datastoreManager;
+        mUploadMethod = uploadMethod;
     }
 
     /**
@@ -94,8 +104,22 @@ public class EventReportingJobHandler {
         List<String> pendingEventReportIdsInWindow = pendingEventReportsInWindowOpt.get();
         for (String eventReportId : pendingEventReportIdsInWindow) {
             // TODO: Use result to track rate of success vs retry vs failure
-            @AdServicesStatusUtils.StatusCode int result = performReport(eventReportId);
-            logReportingStats(result);
+            ReportingStatus reportingStatus = new ReportingStatus();
+            @AdServicesStatusUtils.StatusCode
+            int result = performReport(eventReportId, reportingStatus);
+
+            if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
+                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
+            } else {
+                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+            }
+
+            if (mUploadMethod != null) {
+                reportingStatus.setUploadMethod(mUploadMethod);
+            }
+            if (!mIsDebugInstance) {
+                logReportingStats(reportingStatus);
+            }
         }
         return true;
     }
@@ -107,7 +131,7 @@ public class EventReportingJobHandler {
      * @param eventReportId for the datastore id of the {@link EventReport}
      * @return success
      */
-    synchronized int performReport(String eventReportId) {
+    synchronized int performReport(String eventReportId, ReportingStatus reportingStatus) {
         Optional<EventReport> eventReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
@@ -120,23 +144,18 @@ public class EventReportingJobHandler {
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
             LogUtil.d("debugging status is not pending");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
             LogUtil.d("event report status is not pending");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
-            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
-                    eventReport.getEnrollmentId(), mEnrollmentDao);
-            if (!reportingOrigin.isPresent()) {
-                // We do not know here what the cause is of the failure to retrieve the reporting
-                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
-                LogUtil.d("Report origin not present");
-                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            }
+            Uri reportingOrigin = eventReport.getRegistrationOrigin();
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(reportingOrigin.get(), eventReportJsonPayload);
+            int returnCode = makeHttpPostRequest(reportingOrigin, eventReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
@@ -151,15 +170,22 @@ public class EventReportingJobHandler {
                                     }
                                 });
 
-                return success
-                        ? AdServicesStatusUtils.STATUS_SUCCESS
-                        : AdServicesStatusUtils.STATUS_IO_ERROR;
+                if (success) {
+                    long deliveryTime = System.currentTimeMillis();
+                    reportingStatus.setReportingDelay(deliveryTime - eventReport.getReportTime());
+                    return AdServicesStatusUtils.STATUS_SUCCESS;
+                } else {
+                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
+                    return AdServicesStatusUtils.STATUS_IO_ERROR;
+                }
             } else {
                 // TODO: Determine behavior for other response codes?
+                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
@@ -197,13 +223,19 @@ public class EventReportingJobHandler {
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 
-    private void logReportingStats(int resultCode) {
+    private void logReportingStats(ReportingStatus reportingStatus) {
+        if (!reportingStatus.getReportingDelay().isPresent()) {
+            reportingStatus.setReportingDelay(0L);
+        }
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementReports(
                         new MeasurementReportsStats.Builder()
                                 .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
                                 .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
-                                .setResultCode(resultCode)
+                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                                .setReportingDelay(reportingStatus.getReportingDelay().get())
                                 .build());
     }
 }

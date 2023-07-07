@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 
+import android.Manifest;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.content.ComponentName;
 import android.content.Context;
@@ -65,6 +66,13 @@ public class SdkSandboxServiceProviderImplUnitTest {
         mAmLocal = Mockito.spy(ActivityManagerLocal.class);
         ExtendedMockito.doReturn(mAmLocal)
                 .when(() -> LocalManagerRegistry.getManager(ActivityManagerLocal.class));
+
+        // Required for Context#registerReceiverForAllUsers and reading DeviceConfig.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.INTERACT_ACROSS_USERS_FULL,
+                        Manifest.permission.READ_DEVICE_CONFIG);
 
         mServiceProvider = new SdkSandboxServiceProviderImpl(mSpyContext);
         mCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);

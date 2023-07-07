@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPOR
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static java.lang.Math.min;
 
@@ -225,6 +224,16 @@ public class AsyncSourceFetcher {
             }
         }
 
+        String enrollmentBlockList =
+                mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
+        Set<String> blockedEnrollmentsString =
+                new HashSet<>(AllowLists.splitAllowList(enrollmentBlockList));
+        if (!AllowLists.doesAllowListAllowAll(enrollmentBlockList)
+                && !blockedEnrollmentsString.contains(enrollmentId)
+                && !json.isNull(SourceHeaderContract.DEBUG_AD_ID)) {
+            builder.setDebugAdId(json.optString(SourceHeaderContract.DEBUG_AD_ID));
+        }
+
         Set<String> allowedEnrollmentsString =
                 new HashSet<>(
                         AllowLists.splitAllowList(
@@ -284,11 +293,34 @@ public class AsyncSourceFetcher {
             builder.setWebDestinations(destinationList);
         }
 
+        if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && !json.isNull(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS)) {
+            builder.setCoarseEventReportDestinations(
+                    json.getBoolean(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS));
+        }
+
         if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
             LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
         }
-
+        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
+            if (json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
+                LogUtil.d(
+                        "Flexible event report API parameter is not provided, fall back to previous"
+                                + " version!");
+            } else {
+                builder.setTriggerSpecs(json.getString(SourceHeaderContract.TRIGGER_SPECS));
+                if (!json.isNull(SourceHeaderContract.MAX_BUCKET_INCREMENTS)) {
+                    builder.setMaxBucketIncrements(
+                            json.getString(SourceHeaderContract.MAX_BUCKET_INCREMENTS));
+                }
+                try {
+                    builder.buildInitialFlexEventReportSpec();
+                } catch (JSONException e) {
+                    LogUtil.d("Fail to build the required parameters flex event report API ");
+                }
+            }
+        }
         return true;
     }
 
@@ -313,6 +345,20 @@ public class AsyncSourceFetcher {
         builder.setArDebugPermission(arDebugPermission);
         builder.setPublisherType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
+        Optional<Uri> registrationUriOrigin =
+                Web.originAndScheme(asyncRegistration.getRegistrationUri());
+        if (!registrationUriOrigin.isPresent()) {
+            LogUtil.d(
+                    "AsyncSourceFetcher: "
+                            + "Invalid or empty registration uri - "
+                            + asyncRegistration.getRegistrationUri());
+            return Optional.empty();
+        }
+        builder.setRegistrationOrigin(registrationUriOrigin.get());
+
+        builder.setPlatformAdId(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+
         List<String> field =
                 headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
         if (field == null || field.size() != 1) {
@@ -348,7 +394,7 @@ public class AsyncSourceFetcher {
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
-        } catch (JSONException | NumberFormatException e) {
+        } catch (JSONException | IllegalArgumentException e) {
             LogUtil.d(e, "AsyncSourceFetcher: Invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
@@ -390,12 +436,7 @@ public class AsyncSourceFetcher {
                     asyncRegistration.getSourceType().toString());
             urlConnection.setInstanceFollowRedirects(false);
             headers = urlConnection.getHeaderFields();
-            FetcherUtil.emitHeaderMetrics(
-                    mFlags,
-                    mLogger,
-                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                    headers,
-                    asyncRegistration.getRegistrationUri());
+            asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
@@ -428,12 +469,14 @@ public class AsyncSourceFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.getValidEnrollmentId(
-                        asyncRegistration.getRegistrationUri(),
-                        asyncRegistration.getRegistrant().getAuthority(),
-                        mEnrollmentDao,
-                        mContext,
-                        mFlags);
+                mFlags.isDisableMeasurementEnrollmentCheck()
+                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        : Enrollment.getValidEnrollmentId(
+                                asyncRegistration.getRegistrationUri(),
+                                asyncRegistration.getRegistrant().getAuthority(),
+                                mEnrollmentDao,
+                                mContext,
+                                mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
                     "fetchSource: Valid enrollment id not found. Registration URI: %s",
@@ -442,7 +485,9 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
 
-        return parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
+        Optional<Source> parsedSource =
+                parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
+        return parsedSource;
     }
 
     private boolean isSourceHeaderPresent(Map<String, List<String>> headers) {
@@ -495,6 +540,10 @@ public class AsyncSourceFetcher {
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String DEBUG_AD_ID = "debug_ad_id";
+        String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
+        String TRIGGER_SPECS = "trigger_specs";
+        String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
     }
 
     private interface SourceRequestContract {

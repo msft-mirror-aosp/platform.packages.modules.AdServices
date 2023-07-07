@@ -73,11 +73,16 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
             "Single custom audience ads count should not exceed %d, the provided data size is %d";
 
     @NonNull private final Flags mFlags;
+    // Process stable flag value.
+    private final boolean mIsFilteringEnabled;
+    private final boolean mIsAdRenderIdEnabled;
 
     public CustomAudienceFieldSizeValidator(@NonNull Flags flags) {
         Objects.requireNonNull(flags);
 
         mFlags = flags;
+        mIsFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        mIsAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
     }
 
     /**
@@ -182,9 +187,9 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
     private int getAdsSize(List<AdData> ads) {
         AdDataConversionStrategy adDataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        mFlags.getFledgeAdSelectionFilteringEnabled());
+                        mIsFilteringEnabled, mIsAdRenderIdEnabled);
         return ads.stream()
-                .map(adDataConversionStrategy::fromServiceObject)
+                .map(ad -> adDataConversionStrategy.fromServiceObject(ad).build())
                 .mapToInt(DBAdData::size)
                 .sum();
     }

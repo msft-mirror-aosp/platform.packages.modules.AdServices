@@ -26,15 +26,11 @@ public interface AdServicesErrorLogger {
      * flag enabled.
      */
     void logError(
-            AdServicesErrorCode errorCode,
-            int ppapiName,
-            @NonNull String className,
-            @NonNull String methodName);
+            int errorCode, int ppapiName, @NonNull String className, @NonNull String methodName);
 
     /**
      * Creates value {@link AdServicesErrorStats} object that contains exception information and
      * logs AdServices error/exceptions if flag enabled.
      */
-    void logErrorWithExceptionInfo(
-            @NonNull Throwable tr, AdServicesErrorCode errorCode, int ppapiName);
+    void logErrorWithExceptionInfo(@NonNull Throwable tr, int errorCode, int ppapiName);
 }

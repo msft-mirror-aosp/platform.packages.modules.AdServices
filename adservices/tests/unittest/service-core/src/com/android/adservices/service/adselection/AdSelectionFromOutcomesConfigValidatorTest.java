@@ -223,7 +223,7 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(adOutcomeId)
                             .setCustomAudienceSignals(customAudienceSignals)
-                            .setContextualSignals(contextualSignals)
+                            .setBuyerContextualSignals(contextualSignals)
                             .setBiddingLogicUri(biddingLogicUri1)
                             .setWinningAdRenderUri(renderUri)
                             .setWinningAdBid(adOutcomeId * 10.0)

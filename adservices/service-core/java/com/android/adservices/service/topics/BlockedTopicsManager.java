@@ -16,6 +16,15 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
@@ -23,16 +32,20 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +60,7 @@ public class BlockedTopicsManager {
     private static BlockedTopicsManager sSingleton;
     @VisibleForTesting static final String SHARED_PREFS_BLOCKED_TOPICS = "PPAPI_Blocked_Topics";
 
-    @VisibleForTesting
-    static final String SHARED_PREFS_KEY_HAS_MIGRATED =
+    public static final String SHARED_PREFS_KEY_HAS_MIGRATED =
             "BLOCKED_TOPICS_HAS_MIGRATED_TO_SYSTEM_SERVER";
 
     @VisibleForTesting
@@ -68,15 +80,28 @@ public class BlockedTopicsManager {
     private final TopicsDao mTopicsDao;
     private final AdServicesManager mAdServicesManager;
     private final int mBlockedTopicsSourceOfTruth;
+    private final boolean mEnableAppSearchConsent;
+    private final AppSearchConsentManager mAppSearchConsentManager;
 
     @VisibleForTesting
     BlockedTopicsManager(
             @NonNull TopicsDao topicsDao,
-            @NonNull AdServicesManager adServicesManager,
-            @Flags.ConsentSourceOfTruth int blockedTopicsSourceOfTruth) {
+            @Nullable AdServicesManager adServicesManager,
+            @Nullable AppSearchConsentManager appSearchConsentManager,
+            @Flags.ConsentSourceOfTruth int blockedTopicsSourceOfTruth,
+            boolean enableAppSearchConsent) {
+        Objects.requireNonNull(topicsDao);
+        if (blockedTopicsSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER
+                || blockedTopicsSourceOfTruth == Flags.SYSTEM_SERVER_ONLY) {
+            Objects.requireNonNull(adServicesManager);
+        } else if (blockedTopicsSourceOfTruth == Flags.APPSEARCH_ONLY) {
+            Objects.requireNonNull(appSearchConsentManager);
+        }
         mTopicsDao = topicsDao;
         mAdServicesManager = adServicesManager;
+        mAppSearchConsentManager = appSearchConsentManager;
         mBlockedTopicsSourceOfTruth = blockedTopicsSourceOfTruth;
+        mEnableAppSearchConsent = enableAppSearchConsent;
     }
 
     /** Returns an instance of the {@link BlockedTopicsManager} given a context. */
@@ -87,14 +112,28 @@ public class BlockedTopicsManager {
                 // Execute one-time migration of blocked topics if needed.
                 int blockedTopicsSourceOfTruth =
                         FlagsFactory.getFlags().getBlockedTopicsSourceOfTruth();
+                // It is possible that the old value of the flag lingers after OTA until the first
+                // PH sync. In that case, we should not use the stale value, but use the default
+                // instead. The next PH sync will restore the T+ value.
+                if (SdkLevel.isAtLeastT()) {
+                    blockedTopicsSourceOfTruth = Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+                }
                 AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
+                AppSearchConsentManager appSearchConsentManager =
+                        AppSearchConsentManager.getInstance(context);
                 TopicsDao topicsDao = TopicsDao.getInstance(context);
                 handleBlockedTopicsMigrationIfNeeded(
                         context, topicsDao, adServicesManager, blockedTopicsSourceOfTruth);
+                boolean enableAppSearchConsent =
+                        FlagsFactory.getFlags().getEnableAppsearchConsentData();
 
                 sSingleton =
                         new BlockedTopicsManager(
-                                topicsDao, adServicesManager, blockedTopicsSourceOfTruth);
+                                topicsDao,
+                                adServicesManager,
+                                appSearchConsentManager,
+                                blockedTopicsSourceOfTruth,
+                                enableAppSearchConsent);
             }
             return sSingleton;
         }
@@ -117,19 +156,33 @@ public class BlockedTopicsManager {
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.recordBlockedTopic(
-                                List.of(convertTopicToTopicParcel(topic)));
+                                List.of(topic.convertTopicToTopicParcel()));
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         mTopicsDao.recordBlockedTopic(topic);
                         mAdServicesManager.recordBlockedTopic(
-                                List.of(convertTopicToTopicParcel(topic)));
+                                List.of(topic.convertTopicToTopicParcel()));
                         break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mEnableAppSearchConsent) {
+                            mAppSearchConsentManager.blockTopic(topic);
+                            break;
+                        }
                     default:
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                                this.getClass().getSimpleName(),
+                                new Object() {}.getClass().getEnclosingMethod().getName());
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 throw new RuntimeException(ERROR_MESSAGE_RECORD_BLOCKED_TOPIC, e);
             }
         }
@@ -151,18 +204,32 @@ public class BlockedTopicsManager {
                         mTopicsDao.removeBlockedTopic(topic);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.removeBlockedTopic(convertTopicToTopicParcel(topic));
+                        mAdServicesManager.removeBlockedTopic(topic.convertTopicToTopicParcel());
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         mTopicsDao.removeBlockedTopic(topic);
-                        mAdServicesManager.removeBlockedTopic(convertTopicToTopicParcel(topic));
+                        mAdServicesManager.removeBlockedTopic(topic.convertTopicToTopicParcel());
                         break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mEnableAppSearchConsent) {
+                            mAppSearchConsentManager.unblockTopic(topic);
+                            break;
+                        }
                     default:
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                                this.getClass().getSimpleName(),
+                                new Object() {}.getClass().getEnclosingMethod().getName());
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 throw new RuntimeException(ERROR_MESSAGE_REMOVE_BLOCKED_TOPIC);
             }
         }
@@ -187,12 +254,26 @@ public class BlockedTopicsManager {
                         return mAdServicesManager.retrieveAllBlockedTopics().stream()
                                 .map(this::convertTopicParcelToTopic)
                                 .collect(Collectors.toList());
+                    case Flags.APPSEARCH_ONLY:
+                        if (mEnableAppSearchConsent) {
+                            return mAppSearchConsentManager.retrieveAllBlockedTopics();
+                        }
                     default:
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                                this.getClass().getSimpleName(),
+                                new Object() {}.getClass().getEnclosingMethod().getName());
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                sLogger.e("Failed to retrieve blocked topics: ", e);
                 throw new RuntimeException(ERROR_MESSAGE_GET_BLOCKED_TOPICS);
             }
         }
@@ -200,28 +281,42 @@ public class BlockedTopicsManager {
 
     /**
      * Clear preserved blocked topics in system server when the blocked topic source of truth
-     * contains SYSTEM_SERVER
+     * contains SYSTEM_SERVER or AppSearch.
      */
-    public void clearAllBlockedTopicsInSystemServiceIfNeeded() {
+    public void clearAllBlockedTopics() {
         synchronized (LOCK) {
             try {
                 switch (mBlockedTopicsSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
                         // Return directly. PPAPI data is handled by
                         // mCacheManager.clearAllTopicsData() and this method is to only clear
-                        // preserved blocked topics in system server.
+                        // preserved blocked topics in system server or AppSearch.
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         // Intentional fallthrough
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         mAdServicesManager.clearAllBlockedTopics();
                         break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mEnableAppSearchConsent) {
+                            mAppSearchConsentManager.clearAllBlockedTopics();
+                            break;
+                        }
                     default:
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                                this.getClass().getSimpleName(),
+                                new Object() {}.getClass().getEnclosingMethod().getName());
                         throw new RuntimeException(
                                 ConsentConstants
                                         .ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
                 }
             } catch (RuntimeException e) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 throw new RuntimeException(ERROR_MESSAGE_CLEAR_BLOCKED_TOPICS_IN_SYSTEM_SERVER);
             }
         }
@@ -238,12 +333,17 @@ public class BlockedTopicsManager {
     static void handleBlockedTopicsMigrationIfNeeded(
             @NonNull Context context,
             @NonNull TopicsDao topicsDao,
-            @NonNull AdServicesManager adServicesManager,
+            @Nullable AdServicesManager adServicesManager,
             @Flags.ConsentSourceOfTruth int blockedTopicsSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(topicsDao);
+        // Migration of data to system server is not done on S-.
+        if (!SdkLevel.isAtLeastT()) {
+            return;
+        }
 
-        if (blockedTopicsSourceOfTruth != Flags.PPAPI_ONLY) {
+        if (blockedTopicsSourceOfTruth == Flags.SYSTEM_SERVER_ONLY
+                || blockedTopicsSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER) {
             Objects.requireNonNull(adServicesManager);
         }
 
@@ -285,6 +385,11 @@ public class BlockedTopicsManager {
         if (editor.commit()) {
             sLogger.d("Finish resetting shared preference for " + sharedPreferenceKey);
         } else {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                    sSingleton.getClass().getSimpleName(),
+                    new Object() {}.getClass().getEnclosingMethod().getName());
             sLogger.e("Failed to reset shared preference for " + sharedPreferenceKey);
         }
     }
@@ -313,7 +418,7 @@ public class BlockedTopicsManager {
         // Migrate blocked topics to System Service.
         List<TopicParcel> topicParcels = new ArrayList<>();
         for (Topic topic : topicsDao.retrieveAllBlockedTopics()) {
-            topicParcels.add(convertTopicToTopicParcel(topic));
+            topicParcels.add(topic.convertTopicToTopicParcel());
         }
         adServicesManager.recordBlockedTopic(topicParcels);
 
@@ -324,6 +429,11 @@ public class BlockedTopicsManager {
         if (editor.commit()) {
             sLogger.d("Finish migrating blocked topics from PPAPI to System Service");
         } else {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                    sSingleton.getClass().getSimpleName(),
+                    new Object() {}.getClass().getEnclosingMethod().getName());
             sLogger.e(
                     "Finish migrating blocked topics from PPAPI to System Service but shared"
                             + " preference is not updated.");
@@ -353,19 +463,15 @@ public class BlockedTopicsManager {
         if (editor.commit()) {
             sLogger.d("Finish clearing blocked topics in PPAPI.");
         } else {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                    sSingleton.getClass().getSimpleName(),
+                    new Object() {}.getClass().getEnclosingMethod().getName());
             sLogger.e(
                     "Finish clearing blocked topics in PPAPI but shared preference is not"
                             + " updated.");
         }
-    }
-
-    @VisibleForTesting
-    static TopicParcel convertTopicToTopicParcel(@NonNull Topic topic) {
-        return new TopicParcel.Builder()
-                .setTopicId(topic.getTopic())
-                .setTaxonomyVersion(topic.getTaxonomyVersion())
-                .setModelVersion(topic.getModelVersion())
-                .build();
     }
 
     private Topic convertTopicParcelToTopic(@NonNull TopicParcel topicParcel) {

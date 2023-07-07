@@ -82,19 +82,22 @@ android_library {
         "androidx.appsearch_appsearch",
         "androidx.appsearch_appsearch-platform-storage",
         "cbor-java",
-        "guava",
         "mobile_data_downloader_lib",
         "modules-utils-preconditions",
         "tflite_support_classifiers_java",
         "mobile_data_downloader_lib",
         "androidx.webkit_webkit",
         "androidx.javascriptengine_javascriptengine",
+        "adservices-cobalt",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
         "modules-utils-build",
     ],
     jarjar_rules: "jarjar-rules.txt",
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["BackCompatLintChecker"],
+    },
 }
 
 cc_library_shared {
