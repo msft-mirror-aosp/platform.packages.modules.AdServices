@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import com.android.adservices.service.Flags;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,16 +45,6 @@ public final class PrivacyParams {
      * Max reports for Install Attributed 'Event' {@link Source}.
      */
     public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;
-
-    /**
-     * Maximum attributions per rate limit window.
-     * Rate limit unit: (Source Site, Destination Site, Reporting Site, Window).
-     */
-    private static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    public static int getMaxAttributionPerRateLimitWindow() {
-        return MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-    }
 
     /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
@@ -114,7 +106,7 @@ public final class PrivacyParams {
      * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
      * available on the source.
      */
-    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.017022D;
+    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218D;
 
     /**
      * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
@@ -174,6 +166,9 @@ public final class PrivacyParams {
      */
     public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
+    /** Minimum time window after which reporting origin can be migrated */
+    public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
     /**
      * L1, the maximum sum of the contributions (values) across all buckets for a given source
      * event.
@@ -187,36 +182,15 @@ public final class PrivacyParams {
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
     /** Minimum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_MIN_REPORT_DELAY = TimeUnit.MINUTES.toMillis(10L);
+    public static final long AGGREGATE_REPORT_MIN_DELAY = TimeUnit.MINUTES.toMillis(10L);
 
     /** Maximum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
+    public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(50L);
 
     /**
      * Max distinct web destinations in a source registration.
      */
     public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
-
-    /**
-     * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
-            10;
-
-    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution() {
-        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
-    }
-
-    /**
-     * Max distinct advertisers with pending impressions per
-     * { Publisher X Enrollment X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
-            100;
-
-    public static int getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource() {
-        return MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
-    }
 
     /**
      * Max distinct enrollments with source registration per
@@ -252,13 +226,27 @@ public final class PrivacyParams {
         return PRIVACY_EPSILON;
     }
 
-    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
 
-    // place holder for future change
-    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE =
+            1.5849266D;
 
-    public static double getMaxFlexibleEventInformationGain() {
-        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE =
+            11.4617280D;
+
+    /**
+     * Maximum early reporting windows configured through {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS} or {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
+     */
+    public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
+
+    public static double getMaxFlexibleEventInformationGainEventSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE;
+    }
+
+    public static double getMaxFlexibleEventInformationGainNavigationSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE;
     }
 
     private PrivacyParams() {

@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
@@ -44,26 +44,63 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        LogUtil.i("AdExtBootCompletedReceiver onReceive invoked");
+
         // TODO(b/269798827): Enable for R.
         // On T+ devices, always disable the AdExtServices activities and services.
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
                 && Build.VERSION.SDK_INT != Build.VERSION_CODES.S_V2) {
-            // If this is not an S- device, disable the activities, services, and do not
-            // register the broadcast receivers.
+            // If this is not an S- device, disable the activities, services, unregister the
+            // broadcast receivers, and unschedule any background jobs.
+            unregisterPackageChangedBroadcastReceivers(context);
             updateAdExtServicesActivities(context, /* shouldEnable= */ false);
             updateAdExtServicesServices(context, /* shouldEnable= */ false);
+            disableScheduledBackgroundJobs(context);
             return;
         }
+
         // If this is an S- device but the flags are disabled, do nothing.
         if (!FlagsFactory.getFlags().getEnableBackCompat()
                 || !FlagsFactory.getFlags().getAdServicesEnabled()
                 || FlagsFactory.getFlags().getGlobalKillSwitch()) {
+            LogUtil.d("Exiting AdExtBootCompletedReceiver because flags are disabled");
             return;
         }
 
         registerPackagedChangedBroadcastReceivers(context);
         updateAdExtServicesActivities(context, /* shouldEnable= */ true);
         updateAdExtServicesServices(context, /* shouldEnable= */ true);
+    }
+
+    /**
+     * Cancels all scheduled jobs if running within the ExtServices APK. Needed because we could
+     * have some persistent jobs that were scheduled on S before an OTA to T.
+     */
+    @VisibleForTesting
+    void disableScheduledBackgroundJobs(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
+        try {
+            String packageName = context.getPackageName();
+            if (packageName == null
+                    || packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                // Running within the AdServices package, so don't do anything.
+                LogUtil.e("Running within AdServices package, not changing scheduled job state");
+                return;
+            }
+
+            JobScheduler scheduler = context.getSystemService(JobScheduler.class);
+            if (scheduler == null) {
+                LogUtil.e("Could not retrieve JobScheduler instance, so not cancelling jobs");
+                return;
+            }
+
+            scheduler.cancelAll();
+            LogUtil.d("All scheduled jobs cancelled on package %s", packageName);
+        } catch (Exception e) {
+            LogUtil.e(e, "Error when cancelling scheduled jobs");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -74,7 +111,17 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     void registerPackagedChangedBroadcastReceivers(Context context) {
         PackageChangedReceiver.enableReceiver(context, FlagsFactory.getFlags());
-        LogUtil.d("Package changed broadcast receivers registered.");
+        LogUtil.d(
+                "Package changed broadcast receivers registered from package %s",
+                context.getPackageName());
+    }
+
+    @VisibleForTesting
+    void unregisterPackageChangedBroadcastReceivers(Context context) {
+        PackageChangedReceiver.disableReceiver(context, FlagsFactory.getFlags());
+        LogUtil.d(
+                "Package change broadcast receivers unregistered from package %s",
+                context.getPackageName());
     }
 
     /**
@@ -85,13 +132,12 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     void updateAdExtServicesActivities(@NonNull Context context, boolean shouldEnable) {
         Objects.requireNonNull(context);
 
-        PackageManager packageManager = context.getPackageManager();
         try {
-            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            String packageName = context.getPackageName();
             updateComponents(
                     context,
                     PackageManagerCompatUtils.CONSENT_ACTIVITIES_CLASSES,
-                    packageInfo.packageName,
+                    packageName,
                     shouldEnable);
             LogUtil.d("Updated state of AdExtServices activities: [enabled=" + shouldEnable + "]");
         } catch (Exception e) {
@@ -108,14 +154,10 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     void updateAdExtServicesServices(@NonNull Context context, boolean shouldEnable) {
         Objects.requireNonNull(context);
 
-        PackageManager packageManager = context.getPackageManager();
         try {
-            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            String packageName = context.getPackageName();
             updateComponents(
-                    context,
-                    PackageManagerCompatUtils.SERVICE_CLASSES,
-                    packageInfo.packageName,
-                    shouldEnable);
+                    context, PackageManagerCompatUtils.SERVICE_CLASSES, packageName, shouldEnable);
             LogUtil.d("Updated state of AdExtServices services: [enable=" + shouldEnable + "]");
         } catch (Exception e) {
             LogUtil.e("Error when updating services: " + e.getMessage());
@@ -132,7 +174,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
         Objects.requireNonNull(components);
         Objects.requireNonNull(adServicesPackageName);
-        if (adServicesPackageName.contains(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+        if (adServicesPackageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
             throw new IllegalStateException(
                     "Components for package with AdServices APK package suffix should not be "
                             + "updated!");

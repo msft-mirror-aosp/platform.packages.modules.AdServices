@@ -51,12 +51,9 @@ public final class DebugReportingJobService extends JobService {
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public boolean onStartJob(JobParameters params) {
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling DebugReportingJobService job because it's running in ExtServices on"
@@ -70,7 +67,7 @@ public final class DebugReportingJobService extends JobService {
         }
         boolean isDebugReportApi = params.getExtras().getBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API);
 
-        LogUtil.d("DebugReportingJobService.onStartJob: ");
+        LogUtil.d("DebugReportingJobService.onStartJob: isDebugReportApi " + isDebugReportApi);
         sBlockingExecutor.execute(
                 () -> {
                     sendReports(isDebugReportApi);
@@ -123,7 +120,7 @@ public final class DebugReportingJobService extends JobService {
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler, isDebugReportApi);
-            LogUtil.d("Scheduled DebugReportingJobService");
+            LogUtil.d("Scheduled DebugReportingJobService: isDebugReportApi " + isDebugReportApi);
         } else {
             LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
         }

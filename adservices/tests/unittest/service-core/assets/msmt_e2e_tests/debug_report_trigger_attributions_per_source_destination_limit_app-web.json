@@ -101,7 +101,7 @@
         "source_type": "navigation",
         "source_debug_key": "347982378",
         "trigger_debug_key": "8971346783",
-        "randomized_trigger_rate": 0.017022
+        "randomized_trigger_rate": 0.0170218
       }
     }],
     "debug_event_level_results": [{
@@ -115,17 +115,17 @@
         "source_type": "navigation",
         "source_debug_key": "347982378",
         "trigger_debug_key": "8971346783",
-        "randomized_trigger_rate": 0.017022
+        "randomized_trigger_rate": 0.0170218
       }
     }],
-    "debug_report_results": [
+    "verbose_debug_reports": [
       {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {
             "type": "trigger-attributions-per-source-destination-limit",
             "body": {
-              "attribution_destination": "https://example.1d1.test",
+              "attribution_destination": "https://1d1.test",
               "trigger_debug_key": "8971346784",
               "limit": "1",
               "source_debug_key": "347982378",

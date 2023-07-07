@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -742,7 +743,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void parseEventTriggers() throws JSONException {
+    public void parseEventTriggers_equal() throws JSONException {
         // setup
         JSONObject filtersMap1 =
                 new JSONObject(
@@ -768,6 +769,7 @@ public class TriggerTest {
                                         + "{\n"
                                         + "  \"trigger_data\": \"2\",\n"
                                         + "  \"priority\": \"2\",\n"
+                                        + "  \"value\": \"100\",\n"
                                         + "  \"deduplication_key\": \"2\",\n"
                                         + "  \"filters\": [{\n"
                                         + "    \"filter_key_1\": [\"filter_value_1\"], \n"
@@ -781,6 +783,7 @@ public class TriggerTest {
                                         + "{\n"
                                         + "  \"trigger_data\": \"3\",\n"
                                         + "  \"priority\": \"3\",\n"
+                                        + "  \"value\": \"120\",\n"
                                         + "  \"deduplication_key\": \"3\",\n"
                                         + "  \"not_filters\": [{\n"
                                         + "    \"key_1\": [\"value_1_x\"] \n"
@@ -792,28 +795,36 @@ public class TriggerTest {
         EventTrigger eventTrigger1 =
                 new EventTrigger.Builder(new UnsignedLong(2L))
                         .setTriggerPriority(2L)
+                        .setTriggerValue(100L)
                         .setDedupKey(new UnsignedLong(2L))
-                        .setFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(filtersMap1)
-                                        .build()))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(notFiltersMap1)
-                                        .build()))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(filtersMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(notFiltersMap1)
+                                                .build()))
                         .build();
         EventTrigger eventTrigger2 =
                 new EventTrigger.Builder(new UnsignedLong(3L))
                         .setTriggerPriority(3L)
+                        .setTriggerValue(120L)
                         .setDedupKey(new UnsignedLong(3L))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(notFiltersMap2)
-                                        .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(notFiltersMap2)
+                                                .build()))
                         .build();
 
         // Action
-        List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers();
+        List<EventTrigger> actualEventTriggers =
+                trigger.parseEventTriggers(
+                        FlagsFactory.getFlagsForTest()
+                                .getMeasurementFlexibleEventReportingApiEnabled());
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);

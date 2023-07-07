@@ -16,8 +16,10 @@
 
 package com.android.sdksandboxcode_1;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.interfaces.IAppOwnedSdkApi;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
@@ -25,14 +27,23 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.widget.EditText;
+import android.widget.MediaController;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -47,9 +58,19 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static final String VIEW_TYPE_KEY = "view-type";
     private static final String VIDEO_VIEW_VALUE = "video-view";
+    private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
+    private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
+    private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
+    private static final String VIEW_TYPE_EDITTEXT = "view-type-edittext";
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
-    private boolean mSdkSdkCommEnabled = false;
+    private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
+    private static final String ON_CLICK_BEHAVIOUR_TYPE_KEY = "on-click-behavior";
+    private static final String ON_CLICK_OPEN_CHROME = "on-click-open-chrome";
+    private static final String ON_CLICK_OPEN_PACKAGE = "on-click-open-package";
+    private static final String PACKAGE_TO_OPEN_KEY = "package-to-open";
+    private String mSdkSdkCommEnabled = null;
+    private String mOnClickOpenPackage = null;
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
@@ -63,25 +84,92 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
+        if (params.getString(ON_CLICK_BEHAVIOUR_TYPE_KEY, "").equals(ON_CLICK_OPEN_PACKAGE)) {
+            mOnClickOpenPackage = params.getString(PACKAGE_TO_OPEN_KEY, "");
+        }
         String type = params.getString(VIEW_TYPE_KEY, "");
         if (VIDEO_VIEW_VALUE.equals(type)) {
             String videoUrl = params.getString(VIDEO_URL_KEY, "");
             return new TestVideoView(windowContext, videoUrl);
+        } else if (VIEW_TYPE_INFLATED_VIEW.equals(type)) {
+            final LayoutInflater inflater =
+                    (LayoutInflater)
+                            windowContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View view = inflater.inflate(R.layout.sample_layout, null);
+            view.setOnClickListener(getOnClickListener(getContext()));
+            return view;
+        } else if (VIEW_TYPE_WEBVIEW.equals(type)) {
+            return new TestWebView(windowContext);
+        } else if (VIEW_TYPE_AD_REFRESH.equals(type)) {
+            final LayoutInflater inflater =
+                    (LayoutInflater)
+                            windowContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            final View view = inflater.inflate(R.layout.sample_layout, null);
+            view.setOnClickListener(getOnClickListener(getContext()));
+            view.postDelayed(
+                    () -> {
+                        final Random random = new Random();
+                        final TextView textView = (TextView) view.findViewById(R.id.textViewItem);
+                        textView.setBackgroundColor(
+                                Color.rgb(
+                                        random.nextInt(256),
+                                        random.nextInt(256),
+                                        random.nextInt(256)));
+
+                        view.postDelayed(
+                                () -> {
+                                    final RelativeLayout rl =
+                                            (RelativeLayout) view.findViewById(R.id.item);
+                                    rl.setBackgroundColor(
+                                            Color.rgb(
+                                                    random.nextInt(256),
+                                                    random.nextInt(256),
+                                                    random.nextInt(256)));
+                                },
+                                2000);
+                    },
+                    1000);
+
+            return view;
+        } else if (VIEW_TYPE_EDITTEXT.equals(type)) {
+            EditText editText = new EditText(windowContext);
+            editText.setWidth(width);
+            editText.setHeight(height);
+            editText.setBackgroundColor(Color.BLUE);
+            editText.setTextColor(Color.WHITE);
+            editText.setText("Enter text: ");
+            return editText;
         }
-        mSdkSdkCommEnabled = params.getBoolean(EXTRA_SDK_SDK_ENABLED_KEY, false);
-        return new TestView(windowContext, getContext(), mSdkSdkCommEnabled);
+        mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
+
+        return new TestView(
+                windowContext, getContext(), mSdkSdkCommEnabled, getOnClickListener(getContext()));
+    }
+
+    protected View.OnClickListener getOnClickListener(Context context) {
+        if (mOnClickOpenPackage == null) {
+            return new OpenBrowserOnClickListener(context);
+        } else return new OpenPackageOnClickListener(context, mOnClickOpenPackage);
     }
 
     private static class TestView extends View {
 
         private static final CharSequence MEDIATEE_SDK = "com.android.sdksandboxcode_mediatee";
+        private static final String DROPDOWN_KEY_SDK_SANDBOX = "SDK_IN_SANDBOX";
+        private static final String DROPDOWN_KEY_SDK_APP = "SDK_IN_APP";
         private Context mSdkContext;
-        private boolean mSdkSdkCommEnabled;
+        private String mSdkToSdkCommEnabled;
+        private View.OnClickListener mClickListener;
 
-        TestView(Context windowContext, Context sdkContext, boolean sdkSdkCommEnabled) {
+        TestView(
+                Context windowContext,
+                Context sdkContext,
+                String sdkSdkCommEnabled,
+                View.OnClickListener clickListener) {
             super(windowContext);
             mSdkContext = sdkContext;
-            mSdkSdkCommEnabled = sdkSdkCommEnabled;
+            mSdkToSdkCommEnabled = sdkSdkCommEnabled;
+            mClickListener = clickListener;
         }
 
         @Override
@@ -93,34 +181,55 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
             Random random = new Random();
-            String message;
+            String message = null;
 
-            if (mSdkSdkCommEnabled) {
-                SandboxedSdk mediateeSdk;
-                try {
-                    // get message from another sandboxed SDK
-                    List<SandboxedSdk> sandboxedSdks =
-                            mSdkContext
-                                    .getSystemService(SdkSandboxController.class)
-                                    .getSandboxedSdks();
-                    mediateeSdk =
-                            sandboxedSdks.stream()
-                                    .filter(
-                                            s ->
-                                                    s.getSharedLibraryInfo()
-                                                            .getName()
-                                                            .contains(MEDIATEE_SDK))
-                                    .findAny()
-                                    .get();
-                } catch (Exception e) {
-                    throw new RuntimeException("Error in sdk-sdk communication ", e);
-                }
-                try {
-                    IBinder binder = mediateeSdk.getInterface();
-                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                    message = sdkApi.getMessage();
-                } catch (RemoteException e) {
-                    throw new RuntimeException(e);
+            if (!TextUtils.isEmpty(mSdkToSdkCommEnabled)) {
+                if (mSdkToSdkCommEnabled.equals(DROPDOWN_KEY_SDK_SANDBOX)) {
+                    SandboxedSdk mediateeSdk;
+                    try {
+                        // get message from another sandboxed SDK
+                        List<SandboxedSdk> sandboxedSdks =
+                                mSdkContext
+                                        .getSystemService(SdkSandboxController.class)
+                                        .getSandboxedSdks();
+                        mediateeSdk =
+                                sandboxedSdks.stream()
+                                        .filter(
+                                                s ->
+                                                        s.getSharedLibraryInfo()
+                                                                .getName()
+                                                                .contains(MEDIATEE_SDK))
+                                        .findAny()
+                                        .get();
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Error in sdk-sdk communication ", e);
+                    }
+                    try {
+                        IBinder binder = mediateeSdk.getInterface();
+                        ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                        message = sdkApi.getMessage();
+                    } catch (RemoteException e) {
+                        throw new IllegalStateException(e);
+                    }
+                } else if (mSdkToSdkCommEnabled.equals(DROPDOWN_KEY_SDK_APP)) {
+                    try {
+                        // get message from an app owned SDK
+                        List<AppOwnedSdkSandboxInterface> appOwnedSdks =
+                                mSdkContext
+                                        .getSystemService(SdkSandboxController.class)
+                                        .getAppOwnedSdkSandboxInterfaces();
+
+                        AppOwnedSdkSandboxInterface appOwnedSdk =
+                                appOwnedSdks.stream()
+                                        .filter(s -> s.getName().contains(APP_OWNED_SDK_NAME))
+                                        .findAny()
+                                        .get();
+                        IAppOwnedSdkApi appOwnedSdkApi =
+                                IAppOwnedSdkApi.Stub.asInterface(appOwnedSdk.getInterface());
+                        message = appOwnedSdkApi.getMessage();
+                    } catch (RemoteException e) {
+                        throw new IllegalStateException(e);
+                    }
                 }
             } else {
                 message = mSdkContext.getResources().getString(R.string.view_message);
@@ -128,10 +237,20 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-            setOnClickListener(this::onClickListener);
+            setOnClickListener(mClickListener);
+        }
+    }
+
+    private static class OpenBrowserOnClickListener implements View.OnClickListener {
+
+        private final Context mSdkContext;
+
+        private OpenBrowserOnClickListener(Context sdkContext) {
+            mSdkContext = sdkContext;
         }
 
-        private void onClickListener(View view) {
+        @Override
+        public void onClick(View view) {
             Context context = view.getContext();
             Toast.makeText(context, "Opening url", Toast.LENGTH_LONG).show();
 
@@ -145,7 +264,39 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     }
 
+    private static class OpenPackageOnClickListener implements View.OnClickListener {
+
+        private final Context mSdkContext;
+        private final String mPackageToOpen;
+
+        private OpenPackageOnClickListener(Context sdkContext, String packageToOpen) {
+            mSdkContext = sdkContext;
+            mPackageToOpen = packageToOpen;
+        }
+
+        @Override
+        public void onClick(View view) {
+            Context context = view.getContext();
+            Intent intent =
+                    mSdkContext.getPackageManager().getLaunchIntentForPackage(mPackageToOpen);
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mSdkContext.startActivity(intent);
+            } else {
+                Log.i(TAG, "Opening the Play store.");
+                intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(
+                        Uri.parse(
+                                "https://play.google.com/store/apps/details?id=" + mPackageToOpen));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mSdkContext.startActivity(intent);
+            }
+        }
+    }
+
     private static class TestVideoView extends VideoView {
+
+        private MediaPlayer mPlayer;
 
         TestVideoView(Context windowContext, String url) {
             super(windowContext);
@@ -154,8 +305,56 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                             () -> {
                                 setVideoURI(Uri.parse(url));
                                 requestFocus();
-                                start();
+
+                                // Add playback controls to the video.
+                                MediaController mediaController = new MediaController(getContext());
+                                mediaController.setAnchorView(this);
+                                setMediaController(mediaController);
+
+                                setOnPreparedListener(this::onPrepared);
                             });
+        }
+
+        private void onPrepared(MediaPlayer mp) {
+            mPlayer = mp;
+            mPlayer.setVolume(1.0f, 1.0f);
+            start();
+        }
+
+        @Override
+        public void pause() {
+            super.pause();
+            Log.i(TAG, "Video was paused.");
+
+            // For testing, mute the video when it is paused for the first time.
+            mPlayer.setVolume(0.0f, 0.0f);
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            Log.i(TAG, "Video was started.");
+        }
+    }
+
+    private static class TestWebView extends WebView {
+        TestWebView(Context windowContext) {
+            super(windowContext);
+            initializeSettings(getSettings());
+            loadUrl("https://www.google.com/");
+        }
+
+        private void initializeSettings(WebSettings settings) {
+            settings.setJavaScriptEnabled(true);
+            settings.setGeolocationEnabled(true);
+            settings.setSupportZoom(true);
+            settings.setDatabaseEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setAllowFileAccess(true);
+            settings.setAllowContentAccess(true);
+            settings.setUseWideViewPort(true);
+            settings.setLoadWithOverviewMode(true);
+            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
         }
     }
 }

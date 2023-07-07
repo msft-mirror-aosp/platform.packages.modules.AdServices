@@ -170,14 +170,21 @@ public final class ImpressionNoiseUtil {
             ReportSpec reportSpec, int destinationMultiplier, Random rand) {
 
         int[][] params = reportSpec.getPrivacyParamsForComputation();
+        int[] updatedPerTypeNumWindowList = new int[params[1].length];
         for (int i = 0; i < params[1].length; i++) {
-            params[1][i] *= destinationMultiplier;
+            updatedPerTypeNumWindowList[i] = params[1][i] * destinationMultiplier;
         }
-        int numStates = Combinatorics.getNumStatesFlexAPI(params[0][0], params[1], params[2]);
+        int numStates =
+                Combinatorics.getNumStatesFlexAPI(
+                        params[0][0], updatedPerTypeNumWindowList, params[2]);
         int sequenceIndex = rand.nextInt(numStates);
         List<Combinatorics.AtomReportState> rawFakeReports =
                 Combinatorics.getReportSetBasedOnRank(
-                        params[0][0], params[1], params[2], sequenceIndex, new HashMap<>());
+                        params[0][0],
+                        updatedPerTypeNumWindowList,
+                        params[2],
+                        sequenceIndex,
+                        new HashMap<>());
         List<int[]> fakeReportConfigs = new ArrayList<>();
         for (Combinatorics.AtomReportState rawFakeReport : rawFakeReports) {
             int[] fakeReportConfig = new int[3];
