@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.data.measurement.migration;
 
 import android.annotation.NonNull;
@@ -22,23 +21,24 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 /**
- * Migrates Measurement DB to version 12. This upgrade adds a column record input parameters for
- * flexible event reporting API.
+ * Migrates Measurement DB to version 19. Changes: - Source Table: - Add event_report_windows column
+ * - Rename max_bucket_increments to max_event_level_reports
  */
-public class MeasurementDbMigratorV12 extends AbstractMeasurementDbMigrator {
+public class MeasurementDbMigratorV19 extends AbstractMeasurementDbMigrator {
     private static final String[] ALTER_STATEMENTS = {
+        String.format(
+                "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS,
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.TRIGGER_SPECS),
-        String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
-                MeasurementTables.SourceContract.TABLE,
-                MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS),
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS),
     };
 
-    public MeasurementDbMigratorV12() {
-        super(12);
+    public MeasurementDbMigratorV19() {
+        super(19);
     }
 
     @Override

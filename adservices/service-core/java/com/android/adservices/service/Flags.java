@@ -416,6 +416,54 @@ public interface Flags {
         return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
     }
 
+    boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
+
+    /** Returns true if flex lite api is enabled else false. */
+    default boolean getMeasurementFlexLiteAPIEnabled() {
+        return MEASUREMENT_FLEX_LITE_API_ENABLED;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
+
+    /** Returns max information gain in Flexible Event API for Event sources */
+    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
+
+    /** Returns max information gain in Flexible Event API for Navigation sources */
+    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+    }
+
+    int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
+    /** Returns max event reports in Flexible Event API */
+    default int getMeasurementFlexAPIMaxEventReports() {
+        return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
+    }
+
+    int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
+
+    /** Returns max event report windows in Flexible Event API */
+    default int getMeasurementFlexAPIMaxEventReportWindows() {
+        return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
+    }
+
+    int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
+
+    /** Returns max trigger data cardinality in Flexible Event API */
+    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+        return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
+    }
+
+    long MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS = TimeUnit.HOURS.toSeconds(1);
+
+    /** Returns minimum event report window */
+    default long getMeasurementMinimumEventReportWindowInSeconds() {
+        return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
