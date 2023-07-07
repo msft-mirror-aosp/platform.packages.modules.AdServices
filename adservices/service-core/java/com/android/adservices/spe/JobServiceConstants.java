@@ -22,8 +22,7 @@ import android.app.job.JobParameters;
 public final class JobServiceConstants {
     /**
      * Unavailable stop reason, used when {@link
-     * android.app.job.JobService#onStopJob(JobParameters)} is not invoked in an execution. The
-     * final metrics will filter this by {@link JobExecutionResultCode} in the logging server.
+     * android.app.job.JobService#onStopJob(JobParameters)} is not invoked in an execution.
      *
      * <p>Use the value of {@link JobParameters#STOP_REASON_UNDEFINED} in case API version is lower
      * than S.
@@ -65,4 +64,6 @@ public final class JobServiceConstants {
      * by system or device issue.
      */
     static final long UNAVAILABLE_JOB_LATENCY = -1L;
+
+    static final int MILLISECONDS_PER_MINUTE = 60 * 1000;
 }

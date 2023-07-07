@@ -115,7 +115,7 @@ public class SetAdCounterHistogramOverrideInputTest {
 
         final String expected =
                 String.format(
-                        "SetAdCounterHistogramOverrideInput{mAdEventType=%s, mAdCounterKey='%s',"
+                        "SetAdCounterHistogramOverrideInput{mAdEventType=%d, mAdCounterKey=%d,"
                                 + " mHistogramTimestamps=%s, mBuyer=%s, mCustomAudienceOwner='%s',"
                                 + " mCustomAudienceName='%s'}",
                         FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
@@ -126,13 +126,6 @@ public class SetAdCounterHistogramOverrideInputTest {
                         NAME);
 
         assertThat(originalInput.toString()).isEqualTo(expected);
-    }
-
-    @Test
-    public void testSetNullAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new SetAdCounterHistogramOverrideInput.Builder().setAdCounterKey(null));
     }
 
     @Test
@@ -182,17 +175,24 @@ public class SetAdCounterHistogramOverrideInputTest {
     }
 
     @Test
-    public void testBuildUnsetAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new SetAdCounterHistogramOverrideInput.Builder()
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                                .setHistogramTimestamps(HISTOGRAM_TIMESTAMPS)
-                                .setBuyer(CommonFixture.VALID_BUYER_1)
-                                .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
-                                .setCustomAudienceName(NAME)
-                                .build());
+    public void testBuildUnsetAdCounterKey_success() {
+        final SetAdCounterHistogramOverrideInput originalInput =
+                new SetAdCounterHistogramOverrideInput.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setHistogramTimestamps(HISTOGRAM_TIMESTAMPS)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCustomAudienceName(NAME)
+                        .build();
+
+        assertThat(originalInput.getAdEventType())
+                .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
+        assertThat(originalInput.getAdCounterKey()).isEqualTo(0);
+        assertThat(originalInput.getHistogramTimestamps()).isEqualTo(HISTOGRAM_TIMESTAMPS);
+        assertThat(originalInput.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(originalInput.getCustomAudienceOwner())
+                .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(originalInput.getCustomAudienceName()).isEqualTo(NAME);
     }
 
     @Test

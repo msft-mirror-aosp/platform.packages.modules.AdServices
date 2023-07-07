@@ -29,9 +29,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -67,6 +71,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.AllowLists;
@@ -237,6 +242,7 @@ public class TopicsServiceImplTest {
                 ExtendedMockito.mockitoSession()
                         .mockStatic(Binder.class)
                         .spyStatic(AllowLists.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .startMocking();
     }
 
@@ -419,7 +425,7 @@ public class TopicsServiceImplTest {
     @Test
     public void checkSdkNoPermission() throws InterruptedException {
         Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
-        when(mPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
+        when(mPackageManager.checkPermission(eq(ACCESS_ADSERVICES_TOPICS), any()))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
         invokeGetTopicsAndVerifyError(
@@ -542,9 +548,7 @@ public class TopicsServiceImplTest {
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
         List<TopicParcel> topicParcels =
-                topics.stream()
-                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
-                        .collect(Collectors.toList());
+                topics.stream().map(Topic::convertTopicToTopicParcel).collect(Collectors.toList());
 
         // Mock IPC calls
         doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcels.get(0)));
@@ -606,9 +610,7 @@ public class TopicsServiceImplTest {
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
         List<TopicParcel> topicParcels =
-                topics.stream()
-                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
-                        .collect(Collectors.toList());
+                topics.stream().map(Topic::convertTopicToTopicParcel).collect(Collectors.toList());
 
         // Mock IPC calls
         doNothing().when(mMockAdServicesManager).recordBlockedTopic(anyList());
@@ -821,6 +823,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_enforceCallingPackage_invalidPackage() throws InterruptedException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
@@ -867,6 +870,13 @@ public class TopicsServiceImplTest {
                         mGetTopicsCallbackLatch.await(
                                 BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test

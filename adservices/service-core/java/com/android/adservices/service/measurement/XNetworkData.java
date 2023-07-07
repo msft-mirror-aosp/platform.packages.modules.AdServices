@@ -58,25 +58,6 @@ public class XNetworkData {
         return mKeyOffset;
     }
 
-    /**
-     * Serializes the object as Json.
-     *
-     * @return serialized json object
-     */
-    @Nullable
-    public JSONObject serializeAsJson() {
-        JSONObject xNetworkDataJson = new JSONObject();
-        try {
-            if (mKeyOffset.isPresent()) {
-                xNetworkDataJson.put(KEY_OFFSET, mKeyOffset.get().getValue());
-            }
-        } catch (JSONException e) {
-            LogUtil.d(e, "Serialization of XNetworkData failed.");
-            return null;
-        }
-        return xNetworkDataJson;
-    }
-
     /** Builder for {@link XNetworkData}. */
     public static final class Builder {
         private Optional<UnsignedLong> mKeyOffset;
@@ -95,7 +76,7 @@ public class XNetworkData {
                     LogUtil.d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
                     // Wrapped into JSONException so that it does not crash and becomes a checked
                     // Exception that is caught by the caller.
-                    throw new JSONException(e);
+                    throw new JSONException("Failed to parse keyOffset", e);
                 }
             }
         }

@@ -53,8 +53,10 @@ package android.adservices.adselection {
   public class AdSelectionManager {
     method @NonNull public static android.adservices.adselection.AdSelectionManager get(@NonNull android.content.Context);
     method @NonNull public android.adservices.adselection.TestAdSelectionManager getTestAdSelectionManager();
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void reportEvent(@NonNull android.adservices.adselection.ReportEventRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void reportImpression(@NonNull android.adservices.adselection.ReportImpressionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void selectAds(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,java.lang.Exception>);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void updateAdCounterHistogram(@NonNull android.adservices.adselection.UpdateAdCounterHistogramRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
   public class AdSelectionOutcome {
@@ -81,6 +83,24 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
   }
 
+  public class ReportEventRequest {
+    method public long getAdSelectionId();
+    method @NonNull public String getData();
+    method @NonNull public String getKey();
+    method public int getReportingDestinations();
+    field public static final int FLAG_REPORTING_DESTINATION_BUYER = 2; // 0x2
+    field public static final int FLAG_REPORTING_DESTINATION_SELLER = 1; // 0x1
+  }
+
+  public static final class ReportEventRequest.Builder {
+    ctor public ReportEventRequest.Builder(long, @NonNull String, @NonNull String, int);
+    method @NonNull public android.adservices.adselection.ReportEventRequest build();
+    method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setAdSelectionId(long);
+    method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setData(@NonNull String);
+    method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setKey(@NonNull String);
+    method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setReportingDestinations(int);
+  }
+
   public class ReportImpressionRequest {
     ctor public ReportImpressionRequest(long, @NonNull android.adservices.adselection.AdSelectionConfig);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
@@ -91,6 +111,20 @@ package android.adservices.adselection {
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void overrideAdSelectionConfigRemoteInfo(@NonNull android.adservices.adselection.AddAdSelectionOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void removeAdSelectionConfigRemoteInfoOverride(@NonNull android.adservices.adselection.RemoveAdSelectionOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void resetAllAdSelectionConfigRemoteOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+  }
+
+  public class UpdateAdCounterHistogramRequest {
+    method public int getAdEventType();
+    method public long getAdSelectionId();
+    method @NonNull public android.adservices.common.AdTechIdentifier getCallerAdTech();
+  }
+
+  public static final class UpdateAdCounterHistogramRequest.Builder {
+    ctor public UpdateAdCounterHistogramRequest.Builder(long, int, @NonNull android.adservices.common.AdTechIdentifier);
+    method @NonNull public android.adservices.adselection.UpdateAdCounterHistogramRequest build();
+    method @NonNull public android.adservices.adselection.UpdateAdCounterHistogramRequest.Builder setAdEventType(int);
+    method @NonNull public android.adservices.adselection.UpdateAdCounterHistogramRequest.Builder setAdSelectionId(long);
+    method @NonNull public android.adservices.adselection.UpdateAdCounterHistogramRequest.Builder setCallerAdTech(@NonNull android.adservices.common.AdTechIdentifier);
   }
 
 }
@@ -116,6 +150,8 @@ package android.adservices.common {
 
   public final class AdData implements android.os.Parcelable {
     method public int describeContents();
+    method @NonNull public java.util.Set<java.lang.Integer> getAdCounterKeys();
+    method @Nullable public android.adservices.common.AdFilters getAdFilters();
     method @NonNull public String getMetadata();
     method @NonNull public android.net.Uri getRenderUri();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
@@ -125,8 +161,23 @@ package android.adservices.common {
   public static final class AdData.Builder {
     ctor public AdData.Builder();
     method @NonNull public android.adservices.common.AdData build();
+    method @NonNull public android.adservices.common.AdData.Builder setAdCounterKeys(@NonNull java.util.Set<java.lang.Integer>);
+    method @NonNull public android.adservices.common.AdData.Builder setAdFilters(@Nullable android.adservices.common.AdFilters);
     method @NonNull public android.adservices.common.AdData.Builder setMetadata(@NonNull String);
     method @NonNull public android.adservices.common.AdData.Builder setRenderUri(@NonNull android.net.Uri);
+  }
+
+  public final class AdFilters implements android.os.Parcelable {
+    method public int describeContents();
+    method @Nullable public android.adservices.common.FrequencyCapFilters getFrequencyCapFilters();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdFilters> CREATOR;
+  }
+
+  public static final class AdFilters.Builder {
+    ctor public AdFilters.Builder();
+    method @NonNull public android.adservices.common.AdFilters build();
+    method @NonNull public android.adservices.common.AdFilters.Builder setFrequencyCapFilters(@Nullable android.adservices.common.FrequencyCapFilters);
   }
 
   public final class AdSelectionSignals implements android.os.Parcelable {
@@ -149,6 +200,46 @@ package android.adservices.common {
     method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdTechIdentifier> CREATOR;
+  }
+
+  public final class FrequencyCapFilters implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public java.util.List<android.adservices.common.KeyedFrequencyCap> getKeyedFrequencyCapsForClickEvents();
+    method @NonNull public java.util.List<android.adservices.common.KeyedFrequencyCap> getKeyedFrequencyCapsForImpressionEvents();
+    method @NonNull public java.util.List<android.adservices.common.KeyedFrequencyCap> getKeyedFrequencyCapsForViewEvents();
+    method @NonNull public java.util.List<android.adservices.common.KeyedFrequencyCap> getKeyedFrequencyCapsForWinEvents();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field public static final int AD_EVENT_TYPE_CLICK = 3; // 0x3
+    field public static final int AD_EVENT_TYPE_IMPRESSION = 1; // 0x1
+    field public static final int AD_EVENT_TYPE_VIEW = 2; // 0x2
+    field public static final int AD_EVENT_TYPE_WIN = 0; // 0x0
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.FrequencyCapFilters> CREATOR;
+  }
+
+  public static final class FrequencyCapFilters.Builder {
+    ctor public FrequencyCapFilters.Builder();
+    method @NonNull public android.adservices.common.FrequencyCapFilters build();
+    method @NonNull public android.adservices.common.FrequencyCapFilters.Builder setKeyedFrequencyCapsForClickEvents(@NonNull java.util.List<android.adservices.common.KeyedFrequencyCap>);
+    method @NonNull public android.adservices.common.FrequencyCapFilters.Builder setKeyedFrequencyCapsForImpressionEvents(@NonNull java.util.List<android.adservices.common.KeyedFrequencyCap>);
+    method @NonNull public android.adservices.common.FrequencyCapFilters.Builder setKeyedFrequencyCapsForViewEvents(@NonNull java.util.List<android.adservices.common.KeyedFrequencyCap>);
+    method @NonNull public android.adservices.common.FrequencyCapFilters.Builder setKeyedFrequencyCapsForWinEvents(@NonNull java.util.List<android.adservices.common.KeyedFrequencyCap>);
+  }
+
+  public final class KeyedFrequencyCap implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public int getAdCounterKey();
+    method @NonNull public java.time.Duration getInterval();
+    method public int getMaxCount();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.KeyedFrequencyCap> CREATOR;
+  }
+
+  public static final class KeyedFrequencyCap.Builder {
+    ctor public KeyedFrequencyCap.Builder(int, int, @NonNull java.time.Duration);
+    method @NonNull public android.adservices.common.KeyedFrequencyCap build();
+    method @NonNull public android.adservices.common.KeyedFrequencyCap.Builder setAdCounterKey(int);
+    method @NonNull public android.adservices.common.KeyedFrequencyCap.Builder setInterval(@NonNull java.time.Duration);
+    method @NonNull public android.adservices.common.KeyedFrequencyCap.Builder setMaxCount(int);
   }
 
 }

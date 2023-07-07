@@ -16,6 +16,9 @@
 
 package com.android.adservices.spe;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+import static com.android.adservices.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP;
@@ -35,11 +38,16 @@ import android.content.SharedPreferences;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.stats.ExecutionReportedStats;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 /** Unit test for {@link AdservicesJobServiceLogger}. */
 public class AdservicesJobServiceLoggerTest {
@@ -53,10 +61,15 @@ public class AdservicesJobServiceLoggerTest {
             AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
 
     private AdservicesJobServiceLogger mLogger;
+    @Mock StatsdAdServicesLogger mMockStatsdLogger;
 
     @Before
     public void setup() {
-        mLogger = Mockito.spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK));
+        MockitoAnnotations.initMocks(this);
+        mLogger =
+                Mockito.spy(
+                        new AdservicesJobServiceLogger(
+                                CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
 
         // Clear shared preference
         CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
@@ -113,7 +126,7 @@ public class AdservicesJobServiceLoggerTest {
                         JOB_ID_1,
                         UNAVAILABLE_JOB_LATENCY,
                         previousExecutionPeriod,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
 
         mLogger.persistJobExecutionData(JOB_ID_1, currentJobStartTime);
@@ -123,7 +136,7 @@ public class AdservicesJobServiceLoggerTest {
                         JOB_ID_1,
                         UNAVAILABLE_JOB_LATENCY,
                         previousExecutionPeriod,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
         assertThat(
                         sharedPreferences.getLong(
@@ -158,7 +171,7 @@ public class AdservicesJobServiceLoggerTest {
                         JOB_ID_1,
                         UNAVAILABLE_JOB_LATENCY,
                         previousExecutionPeriod,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
 
         mLogger.persistJobExecutionData(JOB_ID_1, currentJobStartTime);
@@ -168,7 +181,7 @@ public class AdservicesJobServiceLoggerTest {
                         JOB_ID_1,
                         UNAVAILABLE_JOB_LATENCY,
                         previousExecutionPeriod,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
         assertThat(
                         sharedPreferences.getLong(
@@ -215,7 +228,8 @@ public class AdservicesJobServiceLoggerTest {
         long executionPeriod = 50L;
         long executionLatency = jobStopTime - jobStartTime;
         int stopReason = UNAVAILABLE_STOP_REASON;
-        JobExecutionResultCode resultCode = JobExecutionResultCode.SUCCESSFUL;
+        int resultCode =
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 
         // Store execution data.
         SharedPreferences sharedPreferences =
@@ -228,20 +242,12 @@ public class AdservicesJobServiceLoggerTest {
         doNothing()
                 .when(mLogger)
                 .logJobStatsHelper(
-                        JOB_ID_1,
-                        executionLatency,
-                        executionPeriod,
-                        resultCode.getResultCode(),
-                        stopReason);
+                        JOB_ID_1, executionLatency, executionPeriod, resultCode, stopReason);
         mLogger.logExecutionStats(JOB_ID_1, jobStopTime, resultCode, stopReason);
 
         verify(mLogger)
                 .logJobStatsHelper(
-                        JOB_ID_1,
-                        executionLatency,
-                        executionPeriod,
-                        resultCode.getResultCode(),
-                        stopReason);
+                        JOB_ID_1, executionLatency, executionPeriod, resultCode, stopReason);
         assertThat(
                         sharedPreferences.getLong(
                                 keyJobStopTime, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP))
@@ -256,7 +262,8 @@ public class AdservicesJobServiceLoggerTest {
         long jobStopTime = 200L;
         long executionPeriod = 50L;
         int stopReason = UNAVAILABLE_STOP_REASON;
-        JobExecutionResultCode resultCode = JobExecutionResultCode.SUCCESSFUL;
+        int resultCode =
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 
         // Store execution data.
         SharedPreferences sharedPreferences =
@@ -284,5 +291,65 @@ public class AdservicesJobServiceLoggerTest {
                         sharedPreferences.getLong(
                                 keyJobStopTime, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP);
+    }
+
+    @Test
+    public void testLogJobStatsHelper() {
+        ArgumentCaptor<ExecutionReportedStats> captor =
+                ArgumentCaptor.forClass(ExecutionReportedStats.class);
+        long executionDurationInMs = 1000L;
+        long executionFrequencyInMs = 2000L * MILLISECONDS_PER_MINUTE;
+        int resultCode =
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+        int stopReason = UNAVAILABLE_STOP_REASON;
+
+        mLogger.logJobStatsHelper(
+                JOB_ID_1, executionDurationInMs, executionFrequencyInMs, resultCode, stopReason);
+
+        verify(mMockStatsdLogger).logExecutionReportedStats(captor.capture());
+        assertThat(captor.getValue())
+                .isEqualTo(
+                        ExecutionReportedStats.builder()
+                                .setJobId(JOB_ID_1)
+                                .setExecutionLatencyMs((int) executionDurationInMs)
+                                .setExecutionPeriodMinute(
+                                        (int) (executionFrequencyInMs / MILLISECONDS_PER_MINUTE))
+                                .setExecutionResultCode(resultCode)
+                                .setStopReason(stopReason)
+                                .build());
+    }
+
+    @Test
+    public void testLogJobStatsHelper_overflowValues() {
+        ArgumentCaptor<ExecutionReportedStats> captor =
+                ArgumentCaptor.forClass(ExecutionReportedStats.class);
+        long executionDurationInMs = 1L + Integer.MAX_VALUE;
+        long executionFrequencyInMs = (1L + Integer.MAX_VALUE) * MILLISECONDS_PER_MINUTE;
+        int resultCode =
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+        int stopReason = UNAVAILABLE_STOP_REASON;
+
+        mLogger.logJobStatsHelper(
+                JOB_ID_1, executionDurationInMs, executionFrequencyInMs, resultCode, stopReason);
+
+        verify(mMockStatsdLogger).logExecutionReportedStats(captor.capture());
+        assertThat(captor.getValue())
+                .isEqualTo(
+                        ExecutionReportedStats.builder()
+                                .setJobId(JOB_ID_1)
+                                .setExecutionLatencyMs(Integer.MAX_VALUE)
+                                .setExecutionPeriodMinute(Integer.MAX_VALUE)
+                                .setExecutionResultCode(resultCode)
+                                .setStopReason(stopReason)
+                                .build());
+    }
+
+    @Test
+    public void testConvertLongToInteger() {
+        assertThat(AdservicesJobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
+                .isEqualTo(Integer.MIN_VALUE);
+        assertThat(AdservicesJobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
+                .isEqualTo(Integer.MAX_VALUE);
+        assertThat(AdservicesJobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
     }
 }

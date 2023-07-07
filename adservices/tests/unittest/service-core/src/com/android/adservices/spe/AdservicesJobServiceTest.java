@@ -15,6 +15,13 @@
  */
 package com.android.adservices.spe;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
@@ -24,7 +31,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,6 +45,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -94,6 +101,7 @@ public class AdservicesJobServiceTest {
     @Mock private Clock mMockClock;
 
     private AdservicesJobServiceLogger mLogger;
+    @Mock StatsdAdServicesLogger mMockStatsdLogger;
     private MockitoSession mStaticMockSession;
 
     @Before
@@ -108,12 +116,7 @@ public class AdservicesJobServiceTest {
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-        mLogger = spy(new AdservicesJobServiceLogger(CONTEXT, mMockClock));
-
-        // Do not actually send log to server.
-        doNothing()
-                .when(mLogger)
-                .logJobStatsHelper(anyInt(), anyLong(), anyLong(), anyInt(), anyInt());
+        mLogger = spy(new AdservicesJobServiceLogger(CONTEXT, mMockClock, mMockStatsdLogger));
 
         // Clear shared preference
         CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
@@ -154,7 +157,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_1,
                         PERIOD_EXECUTION_1,
-                        JobExecutionResultCode.SUCCESSFUL.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
         // Second Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
@@ -169,7 +172,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
-                        JobExecutionResultCode.SUCCESSFUL.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
     }
     /** To test 1) Failure as first execution 2) failure w/o retry. */
@@ -202,7 +205,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_1,
                         PERIOD_EXECUTION_1,
-                        JobExecutionResultCode.FAILED_WITH_RETRY.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY,
                         stopReason);
         // Second Execution -- Fail to execute without retry
         jobService.setOnSuccessCallback(false);
@@ -218,7 +221,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
-                        JobExecutionResultCode.FAILED_WITHOUT_RETRY.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY,
                         stopReason);
     }
     /** To test 1) onStopJob() is called as first execution 2) onStopJob w/o retry. */
@@ -253,7 +256,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_1,
                         PERIOD_EXECUTION_1,
-                        JobExecutionResultCode.ONSTOP_CALLED_WITH_RETRY.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY,
                         stopReason);
         // Second Execution -- onStopJob() is called without retry
         jobService.setShouldOnStopJobHappen(true);
@@ -270,7 +273,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
-                        JobExecutionResultCode.ONSTOP_CALLED_WITHOUT_RETRY.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY,
                         stopReason);
     }
     /** To test the flow that execution is halted without calling onStopJob(). */
@@ -303,7 +306,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         Latency_EXECUTION_1,
                         PERIOD_EXECUTION_1,
-                        JobExecutionResultCode.SUCCESSFUL.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
         // Second Execution -- halted due to system/device issue.
         // Set the flag shouldOnStopJobHappen to true to stop executing onStartJob(), but do not
@@ -332,7 +335,7 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         UNAVAILABLE_JOB_LATENCY,
                         PERIOD_EXECUTION_2,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         stopReason);
     }
     /**
@@ -394,14 +397,61 @@ public class AdservicesJobServiceTest {
                         JOB_ID,
                         UNAVAILABLE_JOB_LATENCY,
                         PERIOD_EXECUTION_1,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         stopReason);
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
-                        JobExecutionResultCode.SUCCESSFUL.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
+                        stopReason);
+    }
+
+    /** To test 1) skipping as first execution 2) skipping result code */
+    @Test
+    public void testJobExecutionLifeCycle_skipThenSkip() throws InterruptedException {
+        TestJobService jobService = new TestJobService(mLogger);
+        // Enable logging feature
+        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
+        // Mock clock to return mocked currentTimeStamp in sequence.
+        when(mMockClock.currentTimeMillis())
+                .thenReturn(
+                        START_TIMESTAMP_EXECUTION_1,
+                        END_TIMESTAMP_EXECUTION_1,
+                        START_TIMESTAMP_EXECUTION_2,
+                        END_TIMESTAMP_EXECUTION_2);
+        // onStopJob() is not called, so stop reason is the unavailable value.
+        int stopReason = UNAVAILABLE_STOP_REASON;
+        // First Execution -- skip to execute
+        jobService.setShouldSkip(true);
+        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        jobService.onStartJob(mMockJobParameters);
+        assertThat(
+                        logOperationCalledLatch1.await(
+                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
+                .isTrue();
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                        stopReason);
+        // Second Execution -- Succeed to execute
+        jobService.setShouldSkip(true);
+        CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
+        jobService.onStartJob(mMockJobParameters);
+        assertThat(
+                        logOperationCalledLatch2.await(
+                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
+                .isTrue();
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_2,
+                        PERIOD_EXECUTION_2,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                         stopReason);
     }
 
@@ -452,6 +502,22 @@ public class AdservicesJobServiceTest {
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
     }
+
+    @Test
+    public void testKillSwitchIsOn_skipExecution() throws InterruptedException {
+        TestJobService jobService = new TestJobService(mLogger);
+        // Disable logging feature
+        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(true);
+        // First Execution -- onStopJob() is called with retry
+        jobService.setShouldSkip(true);
+        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        jobService.onStartJob(mMockJobParameters);
+        assertThat(
+                        logOperationCalledLatch1.await(
+                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
+                .isFalse();
+    }
+
     // Since executions happen in background thread, create and use a countdownLatch to verify
     // the logging event has happened.
     private CountDownLatch createCountDownLatchWithMockedOperation() {
@@ -468,6 +534,7 @@ public class AdservicesJobServiceTest {
                 .logJobStatsHelper(anyInt(), anyLong(), anyLong(), anyInt(), anyInt());
         return logOperationCalledLatch;
     }
+
     // Helper class implemented as the pattern of Adservices background jobs. It's used to mimic
     // different scenarios of a JobService's lifecycle, in order to test the logging logic.
     //
@@ -478,6 +545,7 @@ public class AdservicesJobServiceTest {
         private boolean mShouldRetryOnStopJob;
         private boolean mShouldRetryOnJobFinished;
         private boolean mShouldOnStopJobHappen;
+        private boolean mShouldSkip;
         private final AdservicesJobServiceLogger mLogger;
 
         TestJobService(AdservicesJobServiceLogger logger) {
@@ -489,6 +557,13 @@ public class AdservicesJobServiceTest {
             mLogger.recordOnStartJob(JOB_ID);
 
             if (mShouldOnStopJobHappen) {
+                return false;
+            }
+
+            if (mShouldSkip) {
+                mLogger.recordJobSkipped(
+                        JOB_ID,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
                 return false;
             }
 
@@ -541,6 +616,10 @@ public class AdservicesJobServiceTest {
 
         void setShouldOnStopJobHappen(boolean shouldHappen) {
             mShouldOnStopJobHappen = shouldHappen;
+        }
+
+        void setShouldSkip(@SuppressWarnings("SameParameterValue") boolean shouldSkip) {
+            mShouldSkip = shouldSkip;
         }
     }
 }

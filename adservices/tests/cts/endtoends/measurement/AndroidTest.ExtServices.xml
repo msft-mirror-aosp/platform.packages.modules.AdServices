@@ -39,10 +39,18 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>
 
+        <!-- Defaulting the API rate limit -->
+        <option name="run-command"
+                value="device_config put adservices measurement_register_source_request_permits_per_second 25.0" />
+        <option name="run-command"
+                value="device_config put adservices measurement_register_web_source_request_permits_per_second 25.0" />
+        
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
@@ -64,5 +72,5 @@
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
     <option name="config-descriptor:metadata"
-            key="mainline-param" value="com.google.android.extservices.apex" />
+            key="mainline-param" value="com.google.android.extservices_sminus.apex" />
 </configuration>

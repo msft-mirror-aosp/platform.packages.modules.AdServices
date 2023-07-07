@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -98,9 +99,11 @@ public class PrebuiltLogicGenerator {
     @VisibleForTesting static final String NAMED_PARAM_TEMPLATE = "\\$\\{%s\\}";
     private static final Pattern PARAM_IDENTIFIER_REGEX_PATTERN =
             Pattern.compile(String.format(NAMED_PARAM_TEMPLATE, "(.*?)"));
-    private final Flags mFlags;
+    @NonNull private final Flags mFlags;
 
-    public PrebuiltLogicGenerator(Flags flags) {
+    public PrebuiltLogicGenerator(@NonNull Flags flags) {
+        Objects.requireNonNull(flags);
+
         mFlags = flags;
     }
 

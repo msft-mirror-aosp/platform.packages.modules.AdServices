@@ -27,6 +27,7 @@ java_test_host {
         "tradefed",
     ],
     static_libs: [
+        "modules-utils-build-testing",
         "cts-install-lib-host",
         "SdkSandboxHostTestUtils",
     ],
@@ -42,11 +43,11 @@ java_defaults {
     name: "SdkSandboxStorageHostTestDefaults",
     srcs: [
         "app/src/**/SdkSandboxStorageTestApp.java",
-        "app/src/**/TestActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
     static_libs: [
         "androidx.core_core",
         "androidx.test.ext.junit",

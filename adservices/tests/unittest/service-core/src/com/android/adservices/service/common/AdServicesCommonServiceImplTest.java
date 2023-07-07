@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
@@ -25,14 +27,19 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import android.adservices.common.AdServicesStates;
+import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.IAdServicesCommonCallback;
+import android.adservices.common.IEnableAdServicesCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -45,6 +52,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.ui.UxEngine;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -68,6 +76,7 @@ public class AdServicesCommonServiceImplTest {
     @Mock private Flags mFlags;
     @Mock private Context mContext;
     @Mock private PackageManager mPackageManager;
+    @Mock private UxEngine mUxEngine;
     @Mock private SharedPreferences mSharedPreferences;
     @Mock private SharedPreferences.Editor mEditor;
     @Mock private ConsentManager mConsentManager;
@@ -86,11 +95,12 @@ public class AdServicesCommonServiceImplTest {
                         .spyStatic(ConsentNotificationJobService.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(BackgroundJobsManager.class)
+                        .spyStatic(PermissionHelper.class)
                         .mockStatic(PackageManagerCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
         doReturn(true).when(mFlags).getAdServicesEnabled();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
@@ -131,7 +141,7 @@ public class AdServicesCommonServiceImplTest {
     @Test
     public void getAdserviceStatusTest() throws InterruptedException {
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
         // Calling get adservice status, init set the flag to true, expect to return true
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
@@ -159,7 +169,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mFlags).isBackCompatActivityFeatureEnabled();
 
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
         // Calling get adservice status, set the activity to enabled, expect to return true
@@ -543,5 +553,82 @@ public class AdServicesCommonServiceImplTest {
                 times(0));
     }
 
+    @Test
+    public void enableAdServicesTest_unauthorizedCaller() {
+        mGetCommonCallbackLatch = new CountDownLatch(1);
+        ExtendedMockito.doReturn(false)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
 
+        mCommonService.enableAdServices(
+                new AdServicesStates.Builder().build(),
+                new IEnableAdServicesCallback.Stub() {
+                    @Override
+                    public void onResult(EnableAdServicesResponse response) {}
+
+                    @Override
+                    public void onFailure(int statusCode) {
+                        assertEquals(statusCode, STATUS_UNAUTHORIZED);
+                        mGetCommonCallbackLatch.countDown();
+                    }
+                });
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags, never()).getEnableAdServicesSystemApi();
+        verify(mUxEngine, never()).start(any());
+    }
+
+    @Test
+    public void enableAdServicesTest_apiDisabled() {
+        mGetCommonCallbackLatch = new CountDownLatch(1);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
+
+        mCommonService.enableAdServices(
+                new AdServicesStates.Builder().build(),
+                new IEnableAdServicesCallback.Stub() {
+                    @Override
+                    public void onResult(EnableAdServicesResponse response) {
+                        assertThat(response.isApiEnabled()).isFalse();
+                        mGetCommonCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode) {
+                        Assert.fail();
+                    }
+                });
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableAdServicesSystemApi();
+        verify(mUxEngine, never()).start(any());
+    }
+
+    @Test
+    public void enableAdServicesTest_engineStarted() {
+        mGetCommonCallbackLatch = new CountDownLatch(1);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+
+        mCommonService.enableAdServices(
+                new AdServicesStates.Builder().build(),
+                new IEnableAdServicesCallback.Stub() {
+                    @Override
+                    public void onResult(EnableAdServicesResponse response) {
+                        assertThat(response.isApiEnabled()).isTrue();
+                        assertThat(response.isSuccess()).isTrue();
+                        mGetCommonCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode) {
+                        Assert.fail();
+                    }
+                });
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
+        verify(mFlags).getEnableAdServicesSystemApi();
+        verify(mUxEngine).start(any());
+    }
 }

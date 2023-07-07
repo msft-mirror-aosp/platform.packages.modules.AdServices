@@ -28,9 +28,11 @@ import android.util.JsonReader;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -54,6 +56,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,8 +76,10 @@ public class ModelManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     public static final String BUNDLED_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     public static final String BUNDLED_TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
-    public static final String BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH =
+    public static final String BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_assets_metadata.json";
+    private static final String BUNDLED_CLASSIFIER_INPUT_CONFIG_FILE_PATH =
+            "classifier/classifier_input_config.txt";
     public static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
 
     private static final String FILE_GROUP_NAME = "topics-classifier-model";
@@ -83,6 +88,8 @@ public class ModelManager {
     private static final String LIST_COLUMN_DELIMITER = "\t";
     // Use "," as a delimiter to read multi-topics of one app in precomputed app topics file
     private static final String TOPICS_DELIMITER = ",";
+    // Arbitrary string representing contents of a classifier input field to validate input format.
+    private static final String CLASSIFIER_INPUT_FIELD = "CLASSIFIER_INPUT_FIELD";
 
     // The key name of asset metadata property in classifier_assets_metadata.json
     private static final String ASSET_PROPERTY_NAME = "property";
@@ -98,8 +105,10 @@ public class ModelManager {
 
     private static final String DOWNLOADED_LABEL_FILE_ID = "labels_topics.txt";
     private static final String DOWNLOADED_TOP_APPS_FILE_ID = "precomputed_app_list.csv";
-    private static final String DOWNLOADED_CLASSIFIER_ASSETS_METADATA_ID =
+    private static final String DOWNLOADED_CLASSIFIER_ASSETS_METADATA_FILE_ID =
             "classifier_assets_metadata.json";
+    private static final String DOWNLOADED_CLASSIFIER_INPUT_CONFIG_FILE_ID =
+            "classifier_input_config.txt";
     private static final String DOWNLOADED_MODEL_FILE_ID = "model.tflite";
 
     private static ModelManager sSingleton;
@@ -109,6 +118,7 @@ public class ModelManager {
     private final String mTopAppsFilePath;
     private final String mClassifierAssetsMetadataPath;
     private final String mModelFilePath;
+    private final String mClassifierInputConfigPath;
     private final SynchronousFileStorage mFileStorage;
     private final Map<String, ClientFile> mDownloadedFiles;
 
@@ -118,14 +128,16 @@ public class ModelManager {
             @NonNull String labelsFilePath,
             @NonNull String topAppsFilePath,
             @NonNull String classifierAssetsMetadataPath,
+            @NonNull String classifierInputConfigPath,
             @NonNull String modelFilePath,
             @NonNull SynchronousFileStorage fileStorage,
             @Nullable Map<String, ClientFile> downloadedFiles) {
-        mContext = context;
+        mContext = context.getApplicationContext();
         mAssetManager = context.getAssets();
         mLabelsFilePath = labelsFilePath;
         mTopAppsFilePath = topAppsFilePath;
         mClassifierAssetsMetadataPath = classifierAssetsMetadataPath;
+        mClassifierInputConfigPath = classifierInputConfigPath;
         mModelFilePath = modelFilePath;
         mFileStorage = fileStorage;
         mDownloadedFiles = downloadedFiles;
@@ -141,7 +153,8 @@ public class ModelManager {
                                 context,
                                 BUNDLED_LABELS_FILE_PATH,
                                 BUNDLED_TOP_APP_FILE_PATH,
-                                BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH,
+                                BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                                BUNDLED_CLASSIFIER_INPUT_CONFIG_FILE_PATH,
                                 BUNDLED_MODEL_FILE_PATH,
                                 MobileDataDownloadFactory.getFileStorage(context),
                                 getDownloadedFiles(context));
@@ -437,7 +450,7 @@ public class ModelManager {
                 new ImmutableMap.Builder<>();
         InputStream inputStream = null;
         if (useDownloadedFiles()) {
-            inputStream = readDownloadedFile(DOWNLOADED_CLASSIFIER_ASSETS_METADATA_ID);
+            inputStream = readDownloadedFile(DOWNLOADED_CLASSIFIER_ASSETS_METADATA_FILE_ID);
         } else {
             // Use bundled files.
             try {
@@ -535,6 +548,91 @@ public class ModelManager {
             return ImmutableMap.of();
         }
         return classifierAssetsMetadata.build();
+    }
+
+    /**
+     * Retrieve classifier input configuration from config file.
+     *
+     * @return A ClassifierInputConfig containing the format string for the classifier input and a
+     *     list of fields to populate it. Empty ClassifierInputConfig will be returned for {@link
+     *     IOException}.
+     */
+    @NonNull
+    public ClassifierInputConfig retrieveClassifierInputConfig() {
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
+        if (useDownloadedFiles()) {
+            inputStream = readDownloadedFile(DOWNLOADED_CLASSIFIER_INPUT_CONFIG_FILE_ID);
+        } else {
+            // Use bundled files.
+            try {
+                inputStream = mAssetManager.open(mClassifierInputConfigPath);
+            } catch (IOException e) {
+                LogUtil.e(e, "Failed to read classifier input config file");
+            }
+        }
+        return inputStream == null
+                ? ClassifierInputConfig.getEmptyConfig()
+                : getClassifierInputConfig(inputStream);
+    }
+
+    @NonNull
+    private ClassifierInputConfig getClassifierInputConfig(@NonNull InputStream inputStream) {
+        String line;
+        String inputFormat;
+        ImmutableList.Builder<ClassifierInputField> inputFields = ImmutableList.builder();
+
+        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream)) {
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+
+            if ((line = reader.readLine()) == null || line.length() == 0) {
+                return ClassifierInputConfig.getEmptyConfig();
+            }
+            inputFormat = line;
+
+            while ((line = reader.readLine()) != null) {
+                // If the line has at least 1 character, this line will be added to the input
+                // fields.
+                if (line.length() > 0) {
+                    try {
+                        inputFields.add(ClassifierInputField.valueOf(line));
+                    } catch (IllegalArgumentException e) {
+                        LogUtil.e("Invalid input field in classifier input config: {}", line);
+                        return ClassifierInputConfig.getEmptyConfig();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LogUtil.e(e, "Unable to read classifier input config");
+            // When catching IOException -> return empty ClassifierInputConfig
+            // TODO(b/226944089): A strategy to handle exceptions
+            //  in Classifier and PrecomputedLoader
+            return ClassifierInputConfig.getEmptyConfig();
+        }
+
+        ClassifierInputConfig classifierInputConfig =
+                new ClassifierInputConfig(inputFormat, inputFields.build());
+
+        if (!validateClassifierInputConfig(classifierInputConfig)) {
+            return ClassifierInputConfig.getEmptyConfig();
+        }
+
+        return classifierInputConfig;
+    }
+
+    @NonNull
+    private boolean validateClassifierInputConfig(
+            @NonNull ClassifierInputConfig classifierInputConfig) {
+        String[] inputFields = new String[classifierInputConfig.getInputFields().size()];
+        Arrays.fill(inputFields, CLASSIFIER_INPUT_FIELD);
+        try {
+            String formattedInput =
+                    String.format(classifierInputConfig.getInputFormat(), (Object[]) inputFields);
+            LogUtil.d("Validated classifier input format: {}", formattedInput);
+        } catch (IllegalFormatException e) {
+            LogUtil.e("Classifier input config is incorrectly formatted");
+            return false;
+        }
+        return true;
     }
 
     // Return an InputStream if downloaded model file can be found by

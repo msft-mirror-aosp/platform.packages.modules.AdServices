@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -34,10 +35,10 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.WebUtil;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,10 +54,8 @@ import java.util.List;
 /** Unit test for {@link DebugReportingJobHandler} */
 @RunWith(MockitoJUnitRunner.class)
 public class DebugReportingJobHandlerTest {
-    private static final EnrollmentData ENROLLMENT =
-            new EnrollmentData.Builder()
-                    .setAttributionReportingUrl(List.of("https://ad-tech.test"))
-                    .build();
+
+    private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
@@ -91,7 +90,6 @@ public class DebugReportingJobHandlerTest {
     @Before
     public void setUp() {
         mDatastoreManager = new FakeDatasoreManager();
-        when(mEnrollmentDao.getEnrollmentData(any())).thenReturn(ENROLLMENT);
         mDebugReportingJobHandler = new DebugReportingJobHandler(mEnrollmentDao, mDatastoreManager);
         mSpyDebugReportingJobHandler = Mockito.spy(mDebugReportingJobHandler);
         mSpyDebugDebugReportingJobHandler =
@@ -102,12 +100,13 @@ public class DebugReportingJobHandlerTest {
     public void testSendDebugReportForSuccess()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport = createDebugReport1();
-        JSONObject debugReportPayload = debugReport.toPayloadJson();
+        JSONArray debugReportPayload = new JSONArray();
+        debugReportPayload.put(debugReport.toPayloadJson());
 
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
         doReturn(debugReportPayload)
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -127,12 +126,12 @@ public class DebugReportingJobHandlerTest {
     public void testSendDebugReportForFailure()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport = createDebugReport1();
-        JSONObject debugReportPayload = debugReport.toPayloadJson();
-
+        JSONArray debugReportPayload = new JSONArray();
+        debugReportPayload.put(debugReport.toPayloadJson());
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
         doReturn(debugReportPayload)
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -150,9 +149,11 @@ public class DebugReportingJobHandlerTest {
     public void testPerformScheduledReportsForMultipleReports()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport1 = createDebugReport1();
-        JSONObject debugReportPayload1 = debugReport1.toPayloadJson();
+        JSONArray debugReportPayload1 = new JSONArray();
+        debugReportPayload1.put(debugReport1.toPayloadJson());
         DebugReport debugReport2 = createDebugReport2();
-        JSONObject debugReportPayload2 = debugReport2.toPayloadJson();
+        JSONArray debugReportPayload2 = new JSONArray();
+        debugReportPayload2.put(debugReport2.toPayloadJson());
 
         when(mMeasurementDao.getDebugReportIds())
                 .thenReturn(List.of(debugReport1.getId(), debugReport2.getId()));
@@ -160,7 +161,7 @@ public class DebugReportingJobHandlerTest {
         when(mMeasurementDao.getDebugReport(debugReport2.getId())).thenReturn(debugReport2);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(any(), any());
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
         doReturn(debugReportPayload1)
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(debugReport1);
@@ -175,21 +176,6 @@ public class DebugReportingJobHandlerTest {
         verify(mTransaction, times(5)).end();
     }
 
-    @Test
-    public void testSendReportWhenNotEnrolled() throws DatastoreException {
-        DebugReport debugReport = createDebugReport1();
-
-        when(mEnrollmentDao.getEnrollmentData(any())).thenReturn(null);
-        when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
-        Assert.assertEquals(
-                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                mSpyDebugReportingJobHandler.performReport(debugReport.getId()));
-
-        verify(mMeasurementDao, never()).deleteDebugReport(any());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
-    }
-
     private DebugReport createDebugReport1() {
         return new DebugReport.Builder()
                 .setId("reportId1")
@@ -201,6 +187,7 @@ public class DebugReportingJobHandlerTest {
                                 + "      \"source_event_id\": \"45623\"\n"
                                 + "    }")
                 .setEnrollmentId("1")
+                .setRegistrationOrigin(REGISTRATION_URI)
                 .build();
     }
 
@@ -215,6 +202,7 @@ public class DebugReportingJobHandlerTest {
                                 + "      \"source_event_id\": \"45623\"\n"
                                 + "    }")
                 .setEnrollmentId("1")
+                .setRegistrationOrigin(REGISTRATION_URI)
                 .build();
     }
 }

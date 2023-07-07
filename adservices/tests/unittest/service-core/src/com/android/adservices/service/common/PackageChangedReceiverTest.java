@@ -33,15 +33,19 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -56,9 +60,11 @@ import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -89,6 +95,7 @@ public class PackageChangedReceiverTest {
     @Mock SharedStorageDatabase mSharedStorageDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
     @Mock AppInstallDao mAppInstallDaoMock;
+    @Mock FrequencyCapDao mFrequencyCapDaoMock;
     @Mock ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
@@ -140,6 +147,15 @@ public class PackageChangedReceiverTest {
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
         doNothingForFledge(spyReceiver);
+        return spyReceiver;
+    }
+
+    private PackageChangedReceiver createSpyPackageReceiverForExtServices() {
+        PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
+        doNothingForMeasurement(spyReceiver);
+        doNothingForTopics(spyReceiver);
+        doNothingForFledge(spyReceiver);
+        doNothingForConsent(spyReceiver);
         return spyReceiver;
     }
 
@@ -417,6 +433,23 @@ public class PackageChangedReceiverTest {
         runPackageDataClearedForFledgeKillSwitchOn(intent);
     }
 
+    @Test
+    public void testPackageChangedReceiverDisabled() {
+        Context mockContext = mock(Context.class);
+        PackageManager mockPackageManager = mock(PackageManager.class);
+        doReturn(mockPackageManager).when(mockContext).getPackageManager();
+
+        PackageChangedReceiver.disableReceiver(mockContext, mMockFlags);
+
+        ArgumentCaptor<ComponentName> cap = ArgumentCaptor.forClass(ComponentName.class);
+        verify(mockPackageManager)
+                .setComponentEnabledSetting(
+                        cap.capture(),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        anyInt());
+        assertThat(cap.getValue().getClassName()).isEqualTo(PackageChangedReceiver.class.getName());
+    }
+
     private void runPackageFullyRemovedForTopicsKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
@@ -578,6 +611,7 @@ public class PackageChangedReceiverTest {
             // Mock static database .getInstance() methods executed on a separate thread
             doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
             doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
+            doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
 
             CountDownLatch caCompletionLatch = new CountDownLatch(1);
             Answer<Void> caAnswer =
@@ -593,6 +627,15 @@ public class PackageChangedReceiverTest {
                         return null;
                     };
             doAnswer(appInstallanswer).when(mAppInstallDaoMock).deleteByPackageName(any());
+            CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
+            Answer<Void> frequencyCapAnswer =
+                    unusedInvocation -> {
+                        frequencyCapCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(frequencyCapAnswer)
+                    .when(mFrequencyCapDaoMock)
+                    .deleteHistogramDataBySourceApp(any());
 
             // Initialize package receiver meant for FLEDGE
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
@@ -610,8 +653,10 @@ public class PackageChangedReceiverTest {
             if (filteringEnabled) {
                 assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
                 verify(mAppInstallDaoMock).deleteByPackageName(any());
+                assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+                verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
             } else {
-                verifyZeroInteractions(mAppInstallDaoMock);
+                verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
             }
         } finally {
             session.finishMocking();
@@ -642,7 +687,8 @@ public class PackageChangedReceiverTest {
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
             verify(spyReceiver, never()).getSharedStorageDatabase(any());
-            verifyZeroInteractions(mSharedStorageDatabaseMock, mAppInstallDaoMock);
+            verifyZeroInteractions(
+                    mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
         } finally {
             session.finishMocking();
         }
@@ -932,6 +978,7 @@ public class PackageChangedReceiverTest {
             // Mock static database .getInstance() methods executed on a separate thread
             doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
             doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
+            doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
 
             CountDownLatch caCompletionLatch = new CountDownLatch(1);
             Answer<Void> caAnswer =
@@ -947,6 +994,15 @@ public class PackageChangedReceiverTest {
                         return null;
                     };
             doAnswer(appInstallAnswer).when(mAppInstallDaoMock).deleteByPackageName(any());
+            CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
+            Answer<Void> frequencyCapAnswer =
+                    unusedInvocation -> {
+                        frequencyCapCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(frequencyCapAnswer)
+                    .when(mFrequencyCapDaoMock)
+                    .deleteHistogramDataBySourceApp(any());
 
             // Initialize package receiver meant for FLEDGE
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
@@ -963,6 +1019,7 @@ public class PackageChangedReceiverTest {
             assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
             verify(mAppInstallDaoMock).deleteByPackageName(any());
+            verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
         } finally {
             session.finishMocking();
         }
@@ -991,7 +1048,8 @@ public class PackageChangedReceiverTest {
             // Verify no executions
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
-            verifyZeroInteractions(mSharedStorageDatabaseMock, mAppInstallDaoMock);
+            verifyZeroInteractions(
+                    mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
         } finally {
             session.finishMocking();
         }
@@ -1029,6 +1087,59 @@ public class PackageChangedReceiverTest {
                     .isFalse();
         } finally {
             session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceive_onT_onExtServices() {
+        MockitoSession mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+            Intent intent =
+                    createIntentSentByAdServiceSystemService(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+            PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
+            Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
+            doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                    .when(spyContext)
+                    .getPackageName();
+            receiver.onReceive(spyContext, intent);
+            verify(receiver, never()).consentOnPackageFullyRemoved(any(), any(), anyInt());
+            verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
+            verify(receiver, never()).topicsOnPackageFullyRemoved(any(), any());
+            verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceive_onS_onExtServices() {
+        MockitoSession mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+            Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+            PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
+            Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
+            doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                    .when(spyContext)
+                    .getPackageName();
+            receiver.onReceive(spyContext, intent);
+            verify(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+            verify(receiver).measurementOnPackageFullyRemoved(any(), any());
+            verify(receiver).topicsOnPackageFullyRemoved(any(), any());
+            verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        } finally {
+            mMockitoSession.finishMocking();
         }
     }
 }

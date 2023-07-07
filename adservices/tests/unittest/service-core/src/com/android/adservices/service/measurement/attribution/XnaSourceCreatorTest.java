@@ -275,7 +275,8 @@ public class XnaSourceCreatorTest {
                 .setIsDebugReporting(true)
                 .setRegistrationId(SourceFixture.ValidSourceParams.REGISTRATION_ID)
                 .setSharedAggregationKeys(SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS)
-                .setInstallTime(SourceFixture.ValidSourceParams.INSTALL_TIME);
+                .setInstallTime(SourceFixture.ValidSourceParams.INSTALL_TIME)
+                .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     private String buildMatchingFilterData() {

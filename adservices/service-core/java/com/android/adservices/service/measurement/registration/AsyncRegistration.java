@@ -51,6 +51,8 @@ public class AsyncRegistration {
     private final boolean mAdIdPermission;
     @Nullable private String mRegistrationId;
 
+    @Nullable private final String mPlatformAdId;
+
     public enum RedirectType {
         LOCATION,
         LIST
@@ -71,6 +73,7 @@ public class AsyncRegistration {
         mDebugKeyAllowed = builder.mDebugKeyAllowed;
         mAdIdPermission = builder.mAdIdPermission;
         mRegistrationId = builder.mRegistrationId;
+        mPlatformAdId = builder.mPlatformAdId;
     }
 
     @Override
@@ -91,7 +94,8 @@ public class AsyncRegistration {
                 && Objects.equals(mRegistrant, that.mRegistrant)
                 && mSourceType == that.mSourceType
                 && mType == that.mType
-                && Objects.equals(mRegistrationId, that.mRegistrationId);
+                && Objects.equals(mRegistrationId, that.mRegistrationId)
+                && mPlatformAdId.equals(that.mPlatformAdId);
     }
 
     @Override
@@ -110,7 +114,8 @@ public class AsyncRegistration {
                 mType,
                 mDebugKeyAllowed,
                 mAdIdPermission,
-                mRegistrationId);
+                mRegistrationId,
+                mPlatformAdId);
     }
 
     /** Unique identifier for the {@link AsyncRegistration}. */
@@ -190,6 +195,14 @@ public class AsyncRegistration {
         return mRegistrationId;
     }
 
+    /**
+     * Returns the AdID from an app registration, to be matched with a value from a web registration
+     * response for supplying debug keys.
+     */
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
     /** Increments the retry count of the current record. */
     public void incrementRetryCount() {
         ++mRetryCount;
@@ -232,6 +245,8 @@ public class AsyncRegistration {
         private boolean mDebugKeyAllowed;
         private boolean mAdIdPermission;
         @Nullable private String mRegistrationId;
+
+        @Nullable private String mPlatformAdId;
 
         /** See {@link AsyncRegistration#getId()}. */
         @NonNull
@@ -334,12 +349,21 @@ public class AsyncRegistration {
         }
 
         /** See {@link AsyncRegistration#getRegistrationId()} */
+        @NonNull
         public Builder setRegistrationId(@NonNull String registrationId) {
             mRegistrationId = registrationId;
             return this;
         }
 
+        /** See {@link AsyncRegistration#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mPlatformAdId = platformAdId;
+            return this;
+        }
+
         /** Build the {@link AsyncRegistration}. */
+        @NonNull
         public AsyncRegistration build() {
             Objects.requireNonNull(mRegistrationId);
             return new AsyncRegistration(this);

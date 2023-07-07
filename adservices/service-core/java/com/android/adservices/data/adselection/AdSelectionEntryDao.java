@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -146,7 +146,7 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -169,10 +169,11 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
                 + " winning_ad_bid,ad_selection.creation_timestamp as"
                 + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
-                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri"
-                + " FROM ad_selection LEFT JOIN buyer_decision_logic ON"
-                + " ad_selection.bidding_logic_uri = buyer_decision_logic.bidding_logic_uri WHERE"
-                + " ad_selection.ad_selection_id = :adSelectionId")
+                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id ="
+                + " :adSelectionId")
     public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
@@ -197,8 +198,9 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
                 + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
-                + " ad_selection.bidding_logic_uri AS bidding_logic_uri FROM ad_selection LEFT"
-                + " JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
                 + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) ")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
@@ -225,8 +227,9 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
                 + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
-                + " ad_selection.bidding_logic_uri AS bidding_logic_uri FROM ad_selection LEFT"
-                + " JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
                 + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(
@@ -287,7 +290,7 @@ public abstract class AdSelectionEntryDao {
     public abstract Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
@@ -297,7 +300,7 @@ public abstract class AdSelectionEntryDao {
      *     the ad selection, or {@code null} if no match is found
      */
     @Query(
-            "SELECT custom_audience_signals_buyer, ad_counter_keys FROM ad_selection "
+            "SELECT custom_audience_signals_buyer, ad_counter_int_keys FROM ad_selection "
                     + "WHERE ad_selection_id = :adSelectionId "
                     + "AND caller_package_name = :callerPackageName")
     @Nullable
@@ -484,8 +487,7 @@ public abstract class AdSelectionEntryDao {
             "SELECT COUNT(*) FROM registered_ad_interactions WHERE ad_selection_id ="
                     + " :adSelectionId AND destination = :reportingDestination")
     public abstract long getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
-            long adSelectionId,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+            long adSelectionId, @ReportEventRequest.ReportingDestination int reportingDestination);
 
     /**
      * Inserts a list of {@link DBRegisteredAdInteraction}s into the database, enforcing these

@@ -16,8 +16,11 @@
 
 package android.app.sdksandbox.hosttestutils;
 
+import static org.junit.Assert.assertTrue;
+
 import com.android.tradefed.log.LogUtil;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.util.RunUtil;
 
 import java.util.Arrays;
 
@@ -46,6 +49,29 @@ public class AdoptableStorageUtils {
         assertEmpty(mTest.getDevice().executeShellCommand("sm partition " + mDiskId + " private"));
         final LocalVolumeInfo vol = getAdoptionVolume();
         return vol.uuid;
+    }
+
+    /**
+     * Enable a virtual disk to give us the best shot at being able to pass various tests. This
+     * helps verify devices that may not currently have an SD card inserted.
+     */
+    public void enableVirtualDisk() throws Exception {
+        if (isAdoptableStorageSupported()) {
+            mTest.getDevice().executeShellCommand("sm set-virtual-disk true");
+
+            // Ensure virtual disk is mounted.
+            int attempt = 0;
+            boolean hasVirtualDisk = false;
+            String result = "";
+            while (!hasVirtualDisk && attempt++ < 50) {
+                RunUtil.getDefault().sleep(1000);
+                result = mTest.getDevice().executeShellCommand("sm list-disks adoptable").trim();
+                hasVirtualDisk = result.startsWith("disk:");
+            }
+            assertTrue("Virtual disk is not ready: " + result, hasVirtualDisk);
+
+            waitForVolumeReadyNoCheckingOrEjecting();
+        }
     }
 
     // Destroy the volume created before
@@ -131,5 +157,18 @@ public class AdoptableStorageUtils {
             Thread.sleep(1000);
         }
         throw new AssertionError("Volume not ready " + vol.volId);
+    }
+
+    /** Ensure no volume is in ejecting or checking state */
+    private void waitForVolumeReadyNoCheckingOrEjecting() throws Exception {
+        int attempt = 0;
+        boolean noCheckingEjecting = false;
+        String result = "";
+        while (!noCheckingEjecting && attempt++ < 60) {
+            result = mTest.getDevice().executeShellCommand("sm list-volumes");
+            noCheckingEjecting = !result.contains("ejecting") && !result.contains("checking");
+            RunUtil.getDefault().sleep(100);
+        }
+        assertTrue("Volumes are not ready: " + result, noCheckingEjecting);
     }
 }

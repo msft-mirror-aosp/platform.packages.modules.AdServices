@@ -46,7 +46,7 @@ public class SQLDatastoreManagerTest {
     public void setUp() {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(LogUtil.class)
+                        .spyStatic(LogUtil.class)
                         .initMocks(this)
                         .startMocking();
         mSQLDatastoreManager = new SQLDatastoreManager(CONTEXT);

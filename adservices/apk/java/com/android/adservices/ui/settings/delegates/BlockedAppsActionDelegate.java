@@ -24,9 +24,9 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
@@ -66,8 +66,13 @@ public class BlockedAppsActionDelegate {
                         if (event == BlockedAppsViewModelUiEvent.RESTORE_APP) {
                             UiStatsLogger.logUnblockAppSelected(mBlockedAppsActivity);
                             mBlockedAppsViewModel.restoreAppConsent(app);
-                            if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                DialogManager.showUnblockAppDialog(mBlockedAppsActivity, app);
+                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                    DialogFragmentManager.showUnblockAppDialog(
+                                            mBlockedAppsActivity, app);
+                                } else {
+                                    DialogManager.showUnblockAppDialog(mBlockedAppsActivity, app);
+                                }
                             }
                         } else {
                             Log.e("AdservicesUI", "Unknown Action for UI Logging");
@@ -91,7 +96,7 @@ public class BlockedAppsActionDelegate {
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
             mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
         } else {
-        mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
+            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
         }
     }
 }

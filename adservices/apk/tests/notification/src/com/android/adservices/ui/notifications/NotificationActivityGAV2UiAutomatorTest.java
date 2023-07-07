@@ -38,11 +38,9 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Spy;
@@ -209,38 +207,16 @@ public class NotificationActivityGAV2UiAutomatorTest {
         assertThat(appsTitle.exists()).isTrue();
     }
 
-    @Test
-    @Ignore("git master fail")
-    public void privacyPolicyLinkTestRow() throws UiObjectNotFoundException {
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
-        sDevice.pressHome();
-
-        /* isEUActivity false: Rest of World Notification landing page */
-        startActivity(false);
-        /* find the expander and click to expand to get the content */
-        UiObject moreExpander =
-                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
-        moreExpander.click();
-
-        UiObject sentence =
-                ApkTestUtil.scrollTo(
-                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
-        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
-                packageNameOfDefaultBrowser, sentence, 20)) {
-            return;
-        }
-        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-            return;
-        }
-        Assert.fail("Web browser not found after several clicks on the last line");
-    }
-
     private void startActivity(boolean isEUActivity) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux GA_UX");
+
         String notificationPackage = NOTIFICATION_PACKAGE;
         Intent intent = new Intent(notificationPackage);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
+
         ApplicationProvider.getApplicationContext().startActivity(intent);
         sDevice.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
     }
@@ -255,16 +231,21 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
             String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
-            throws UiObjectNotFoundException {
+            throws Exception {
         int right = sentence.getBounds().right,
                 bottom = sentence.getBounds().bottom,
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-                return true;
-            }
+            Thread.sleep(200);
         }
+
+        if (!sentence.exists()) {
+            sDevice.pressBack();
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
+            return true;
+        }
+
         return false;
     }
 }
