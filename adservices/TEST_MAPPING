@@ -289,14 +289,14 @@
     },
     {
       "name": "LegacyAdServicesGaUxCtsRootTest"
-    },
-    {
-      "name": "CtsAdServicesHostTests"
     }
   ],
   "postsubmit": [
     {
       "name": "AdServicesMddIntegrationTests"
+    },
+    {
+      "name": "CtsAdServicesHostTests"
     }
   ]
 }
