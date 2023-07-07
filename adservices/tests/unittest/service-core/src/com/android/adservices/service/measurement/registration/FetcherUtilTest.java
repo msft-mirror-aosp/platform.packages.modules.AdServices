@@ -37,6 +37,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -59,6 +60,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -69,6 +71,8 @@ import java.util.stream.IntStream;
 public final class FetcherUtilTest {
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
+    private static final String KEY = "key";
+
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
 
@@ -170,6 +174,71 @@ public final class FetcherUtilTest {
         assertEquals(Uri.parse("foo.test"), redirects.get(0));
         assertEquals(Uri.parse("bar.test"), redirects.get(1));
         assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LOCATION).isEmpty());
+    }
+
+    @Test
+    public void extractUnsignedLong_maxValue_success() throws JSONException {
+        String unsignedLongString = "18446744073709551615";
+        JSONObject obj = new JSONObject().put(KEY, unsignedLongString);
+        assertEquals(
+                Optional.of(new UnsignedLong(unsignedLongString)),
+                FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_negative_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "-123");
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_notAString_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, 123);
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_tooLarge_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "18446744073709551616");
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_notAnInt_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "123p");
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_maxValue_success() throws JSONException {
+        String longString = "9223372036854775807";
+        JSONObject obj = new JSONObject().put(KEY, longString);
+        assertEquals(Optional.of(Long.parseLong(longString)), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_negative_success() throws JSONException {
+        String longString = "-935";
+        JSONObject obj = new JSONObject().put(KEY, longString);
+        assertEquals(Optional.of(Long.parseLong(longString)), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_notAString_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, 123);
+        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_tooLarge_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "9223372036854775808");
+        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_notAnInt_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "123p");
+        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
     }
 
     @Test
