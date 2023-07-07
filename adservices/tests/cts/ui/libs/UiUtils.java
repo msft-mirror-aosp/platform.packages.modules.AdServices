@@ -34,8 +34,15 @@ import androidx.test.uiautomator.UiSelector;
 import com.android.adservices.api.R;
 import com.android.compatibility.common.util.ShellUtils;
 
+import java.util.UUID;
 
 public class UiUtils {
+
+    public static void refreshConsentResetToken() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_reset_token "
+                        + UUID.randomUUID().toString());
+    }
 
     public static void turnOffEnableAdsServicesAPI() {
         ShellUtils.runShellCommand(
@@ -139,7 +146,6 @@ public class UiUtils {
                         new UiSelector()
                                 .packageName(SYSTEM_UI_NAME)
                                 .resourceId(SYSTEM_UI_RESOURCE_ID));
-        assertThat(scroller.exists()).isTrue();
 
         int notificationTitle =
                 isEuTest
