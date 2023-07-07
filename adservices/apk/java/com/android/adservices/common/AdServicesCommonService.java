@@ -28,6 +28,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 import com.android.adservices.service.common.AdServicesSyncUtil;
+import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.ui.notifications.ConsentNotificationTrigger;
 
 import java.util.Objects;
@@ -46,9 +47,10 @@ public class AdServicesCommonService extends Service {
         super.onCreate();
         if (mAdServicesCommonService == null) {
             mAdServicesCommonService =
-                    new AdServicesCommonServiceImpl(this, FlagsFactory.getFlags());
+                    new AdServicesCommonServiceImpl(
+                            this, FlagsFactory.getFlags(), UxEngine.getInstance(this));
         }
-        LogUtil.i("created adservices common service");
+        LogUtil.d("created adservices common service");
         try {
             AdServicesSyncUtil.getInstance()
                     .register(
@@ -56,7 +58,7 @@ public class AdServicesCommonService extends Service {
                                 @Override
                                 public void accept(
                                         Context context, Boolean shouldDisplayEuNotification) {
-                                    LogUtil.i(
+                                    LogUtil.d(
                                             "running trigger command with "
                                                     + shouldDisplayEuNotification);
                                     ConsentNotificationTrigger.showConsentNotification(

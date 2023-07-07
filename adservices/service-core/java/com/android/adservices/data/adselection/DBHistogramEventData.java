@@ -79,6 +79,11 @@ public abstract class DBHistogramEventData {
     @NonNull
     public abstract Instant getTimestamp();
 
+    /** Returns the arbitrary integer the event data is keyed on. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "ad_counter_int_key", defaultValue = "0", index = true)
+    public abstract int getAdCounterIntKey();
+
     /** Returns an AutoValue builder for a {@link DBHistogramEventData} object. */
     @NonNull
     public static DBHistogramEventData.Builder builder() {
@@ -95,12 +100,14 @@ public abstract class DBHistogramEventData {
             @Nullable Long rowId,
             long histogramIdentifierForeignKey,
             @FrequencyCapFilters.AdEventType int adEventType,
-            @NonNull Instant timestamp) {
+            @NonNull Instant timestamp,
+            int adCounterIntKey) {
         return builder()
                 .setRowId(rowId)
                 .setHistogramIdentifierForeignKey(histogramIdentifierForeignKey)
                 .setAdEventType(adEventType)
                 .setTimestamp(timestamp)
+                .setAdCounterIntKey(adCounterIntKey)
                 .build();
     }
 
@@ -116,6 +123,7 @@ public abstract class DBHistogramEventData {
                 .setHistogramIdentifierForeignKey(foreignKey)
                 .setAdEventType(event.getAdEventType())
                 .setTimestamp(event.getTimestamp())
+                .setAdCounterIntKey(event.getAdCounterKey())
                 .build();
     }
 
@@ -150,6 +158,10 @@ public abstract class DBHistogramEventData {
         /** Sets the timestamp for the event. */
         @NonNull
         public abstract Builder setTimestamp(@NonNull Instant timestamp);
+
+        /** Sets the arbitrary integer the event data is keyed on. */
+        @NonNull
+        public abstract Builder setAdCounterIntKey(int adCounterKey);
 
         /**
          * Builds and returns the {@link DBHistogramEventData} object.

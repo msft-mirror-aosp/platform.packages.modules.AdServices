@@ -31,9 +31,9 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.adservices.AdServicesManager;
@@ -37,6 +39,8 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -253,8 +257,8 @@ public class AppSearchConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() {
-        mAppSearchConsentWorker.recordNotificationDisplayed();
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
+        mAppSearchConsentWorker.recordNotificationDisplayed(wasNotificationDisplayed);
     }
 
     /**
@@ -270,8 +274,8 @@ public class AppSearchConsentManager {
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
      */
-    public void recordGaUxNotificationDisplayed() {
-        mAppSearchConsentWorker.recordGaUxNotificationDisplayed();
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
+        mAppSearchConsentWorker.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
     }
 
     /**
@@ -406,6 +410,17 @@ public class AppSearchConsentManager {
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(appConsentDao);
 
+        // On R/S, this function should never be executed because AppSearch to PPAPI and
+        // System Server migration is a T+ feature. On T+, this function should only execute
+        // if it's within the AdServices APK and not ExtServices. So check if it's within
+        // ExtServices, and bail out if that's the case on any platform.
+        String packageName = context.getPackageName();
+        if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.d(
+                    "Aborting attempt to migrate Consent data to PPAPI and System Service in"
+                            + " ExtServices");
+            return false;
+        }
         // Only perform migration if all the pre-conditions are met.
         // <p>a) The device is T+
         // <p>b) Data is not already migrated
@@ -417,11 +432,11 @@ public class AppSearchConsentManager {
 
         if (wasNotificationDisplayed()) {
             datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordNotificationDisplayed();
+            adServicesManager.recordNotificationDisplayed(true);
         }
         if (wasGaUxNotificationDisplayed()) {
             datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordGaUxNotificationDisplayed();
+            adServicesManager.recordGaUxNotificationDisplayed(true);
         }
         if (!wasGaUxNotificationDisplayed() && !wasNotificationDisplayed()) {
             // This shouldn't happen since we checked that either of these notifications is
@@ -492,5 +507,78 @@ public class AppSearchConsentManager {
                 .stream()
                 .map(applicationInfo -> applicationInfo.packageName)
                 .collect(Collectors.toSet());
+    }
+
+    /** Save the isAdIdEnabled bit. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        mAppSearchConsentWorker.setAdIdEnabled(isAdIdEnabled);
+    }
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public Boolean isAdIdEnabled() {
+        return mAppSearchConsentWorker.isAdIdEnabled();
+    }
+
+    /** Save the isU18Account bit. */
+    public void setU18Account(boolean isU18Account) {
+        mAppSearchConsentWorker.setU18Account(isU18Account);
+    }
+
+    /** Returns whether the isU18Account bit is true. */
+    public Boolean isU18Account() {
+        return mAppSearchConsentWorker.isU18Account();
+    }
+
+    /** Save the isEntryPointEnabled bit. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        mAppSearchConsentWorker.setEntryPointEnabled(isEntryPointEnabled);
+    }
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public Boolean isEntryPointEnabled() {
+        return mAppSearchConsentWorker.isEntryPointEnabled();
+    }
+
+    /** Save the isAdultAccount bit. */
+    public void setAdultAccount(boolean isAdultAccount) {
+        mAppSearchConsentWorker.setAdultAccount(isAdultAccount);
+    }
+
+    /** Returns whether the isAdultAccount bit is true. */
+    public Boolean isAdultAccount() {
+        return mAppSearchConsentWorker.isAdultAccount();
+    }
+
+    /** Save the wasU18NotificationDisplayed bit. */
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        mAppSearchConsentWorker.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+    }
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    public Boolean wasU18NotificationDisplayed() {
+        return mAppSearchConsentWorker.wasU18NotificationDisplayed();
+    }
+
+    /** Returns the current privacy sandbox UX. */
+    public PrivacySandboxUxCollection getUx() {
+        return mAppSearchConsentWorker.getUx();
+    }
+
+    /** Set the current privacy sandbox UX. */
+    public void setUx(PrivacySandboxUxCollection ux) {
+        mAppSearchConsentWorker.setUx(ux);
+    }
+
+    /** Returns the current privacy sandbox enrollment channel. */
+    public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
+            PrivacySandboxUxCollection ux) {
+        return mAppSearchConsentWorker.getEnrollmentChannel(ux);
+    }
+
+    /** Set the current privacy sandbox enrollment channel. */
+    public void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+        mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
     }
 }

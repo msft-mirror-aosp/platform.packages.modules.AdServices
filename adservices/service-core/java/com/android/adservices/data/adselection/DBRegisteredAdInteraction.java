@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -57,7 +57,7 @@ public abstract class DBRegisteredAdInteraction {
      */
     @CopyAnnotations
     @ColumnInfo(name = "destination")
-    @ReportInteractionRequest.ReportingDestination
+    @ReportEventRequest.ReportingDestination
     public abstract int getDestination();
 
     /** @return Uri to be used during interaction reporting */
@@ -66,12 +66,14 @@ public abstract class DBRegisteredAdInteraction {
     @NonNull
     public abstract Uri getInteractionReportingUri();
 
-    /** @return DBRegisteredAdInteraction built with those params */
+    /**
+     * @return DBRegisteredAdInteraction built with those params
+     */
     @NonNull
     public static DBRegisteredAdInteraction create(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination,
+            @ReportEventRequest.ReportingDestination int destination,
             Uri interactionReportingUri) {
         return builder()
                 .setAdSelectionId(adSelectionId)
@@ -102,7 +104,7 @@ public abstract class DBRegisteredAdInteraction {
         /** Sets the reporting destination for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull
         public abstract DBRegisteredAdInteraction.Builder setDestination(
-                @ReportInteractionRequest.ReportingDestination int destination);
+                @ReportEventRequest.ReportingDestination int destination);
 
         /** Sets the interactionReportingUri for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull

@@ -14,8 +14,10 @@
 
 package com.android.sdksandbox.cts.provider.mediationtest;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 
 interface IMediationTestSdkApi {
+    List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces();
     List<SandboxedSdk> getSandboxedSdks();
 }

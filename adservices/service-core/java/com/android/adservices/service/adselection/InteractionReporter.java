@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -56,6 +57,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -67,11 +69,15 @@ import java.util.concurrent.ExecutorService;
 public class InteractionReporter {
     public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
             "Could not find a match in the database for this adSelectionId and callerPackageName!";
+    public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED =
+            "Interaction data max size exceeded!";
+    public static final String INTERACTION_KEY_SIZE_MAX_EXCEEDED =
+            "Interaction key max size exceeded!";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int LOGGING_API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
-    @ReportInteractionRequest.ReportingDestination
+    @ReportEventRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
             new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
 
@@ -152,6 +158,21 @@ public class InteractionReporter {
                                                         .doesAdSelectionMatchingCallerPackageNameExist(
                                                                 adSelectionId, callerPackageName),
                                                 NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+                                        Preconditions.checkArgument(
+                                                inputParams
+                                                                .getInteractionKey()
+                                                                .getBytes(StandardCharsets.UTF_8)
+                                                                .length
+                                                        <= mFlags
+                                                                .getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB(),
+                                                INTERACTION_KEY_SIZE_MAX_EXCEEDED);
+                                        Preconditions.checkArgument(
+                                                inputParams
+                                                                .getInteractionData()
+                                                                .getBytes(StandardCharsets.UTF_8)
+                                                                .length
+                                                        <= REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B,
+                                                INTERACTION_DATA_SIZE_MAX_EXCEEDED);
                                     } finally {
                                         sLogger.v("Completed filtering and validation.");
                                         Trace.endSection();
@@ -240,7 +261,7 @@ public class InteractionReporter {
                 mBackgroundExecutorService.submit(
                         () -> {
                             List<Uri> resultingReportingUris = new ArrayList<>();
-                            for (@ReportInteractionRequest.ReportingDestination
+                            for (@ReportEventRequest.ReportingDestination
                             int destination : POSSIBLE_DESTINATIONS) {
                                 if (bitExists(destination, destinationsBitField)) {
                                     if (mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
@@ -335,8 +356,8 @@ public class InteractionReporter {
     }
 
     private boolean bitExists(
-            @ReportInteractionRequest.ReportingDestination int bit,
-            @ReportInteractionRequest.ReportingDestination int bitSet) {
+            @ReportEventRequest.ReportingDestination int bit,
+            @ReportEventRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
     }
 

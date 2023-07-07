@@ -30,6 +30,72 @@ public class MeasurementDbMigratorV9 extends AbstractMeasurementDbMigrator {
     private static final String SOURCE_CONTRACT_BACKUP =
             MeasurementTables.SourceContract.TABLE + "_backup";
 
+    public static final String CREATE_TABLE_SOURCE_V9 =
+            "CREATE TABLE "
+                    + MeasurementTables.SourceContract.TABLE
+                    + " ("
+                    + MeasurementTables.SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + MeasurementTables.SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.STATUS
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + MeasurementTables.SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + MeasurementTables.SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT "
+                    + ")";
+
     private static final List<String> SOURCE_COLUMNS = ImmutableList.of(
             MeasurementTables.SourceContract.ID,
             MeasurementTables.SourceContract.EVENT_ID,
@@ -187,70 +253,4 @@ public class MeasurementDbMigratorV9 extends AbstractMeasurementDbMigrator {
         db.execSQL(SOURCE_CREATE_INDEX_ET);
         db.execSQL(SOURCE_CREATE_INDEX_P_S_ET);
     }
-
-    private static final String CREATE_TABLE_SOURCE_V9 =
-            "CREATE TABLE "
-                    + MeasurementTables.SourceContract.TABLE
-                    + " ("
-                    + MeasurementTables.SourceContract.ID
-                    + " TEXT PRIMARY KEY NOT NULL, "
-                    + MeasurementTables.SourceContract.EVENT_ID
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.PUBLISHER
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.PUBLISHER_TYPE
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.ENROLLMENT_ID
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.EVENT_TIME
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.EXPIRY_TIME
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.EVENT_REPORT_WINDOW
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.PRIORITY
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.STATUS
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.SOURCE_TYPE
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.REGISTRANT
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.ATTRIBUTION_MODE
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.FILTER_DATA
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.AGGREGATE_SOURCE
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.DEBUG_KEY
-                    + " INTEGER , "
-                    + MeasurementTables.SourceContract.DEBUG_REPORTING
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.AD_ID_PERMISSION
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.AR_DEBUG_PERMISSION
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.REGISTRATION_ID
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS
-                    + " TEXT, "
-                    + MeasurementTables.SourceContract.INSTALL_TIME
-                    + " INTEGER, "
-                    + MeasurementTables.SourceContract.DEBUG_JOIN_KEY
-                    + " TEXT"
-                    + ")";
 }

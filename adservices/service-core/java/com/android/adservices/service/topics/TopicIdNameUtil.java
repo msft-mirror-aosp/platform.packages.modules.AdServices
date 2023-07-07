@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ID_TO_NAME_LIST_READ_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -74,6 +78,10 @@ public class TopicIdNameUtil {
             }
         } catch (IOException e) {
             sLogger.e(e, "Unable to read topicId to topicName list");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ID_TO_NAME_LIST_READ_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return ImmutableMap.<Integer, String>builder().build();
         }
 

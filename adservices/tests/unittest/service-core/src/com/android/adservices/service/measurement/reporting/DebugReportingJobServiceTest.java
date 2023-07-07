@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.EXTRA_BUNDLE_IS_DEBUG_REPORT_API;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -61,6 +61,10 @@ import java.util.Optional;
  * Unit test for {@link DebugReportingJobService
  */
 public class DebugReportingJobServiceTest {
+    private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
+            MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    private static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID =
+            MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1000L;
 

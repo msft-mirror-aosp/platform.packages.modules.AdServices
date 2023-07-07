@@ -71,10 +71,14 @@ public class CommonClassifierHelperTest {
             "classifier/precomputed_test_app_list.csv";
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_test_assets_metadata.json";
+    private static final String TEST_CLASSIFIER_INPUT_CONFIG_PATH =
+            "classifier/classifier_input_config.txt";
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_assets_metadata.json";
+    private static final String PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH =
+            "classifier/classifier_input_config.txt";
     private static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
 
     private ModelManager mTestModelManager;
@@ -111,6 +115,7 @@ public class CommonClassifierHelperTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_PRECOMPUTED_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         BUNDLED_MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -121,6 +126,7 @@ public class CommonClassifierHelperTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         BUNDLED_MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -572,7 +578,7 @@ public class CommonClassifierHelperTest {
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(
                                 sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
-                .isEqualTo(1467);
+                .isEqualTo(1800);
         // Verify test model build_id.
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(

@@ -16,12 +16,13 @@
 
 package android.app.sdksandbox.testutils;
 
+import androidx.annotation.Nullable;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class WaitableCountDownLatch {
+public final class WaitableCountDownLatch {
 
-    private static final String EMPTY_STRING = "";
     private final CountDownLatch mLatch;
     private final int mWaitTimeSec;
 
@@ -35,17 +36,21 @@ public class WaitableCountDownLatch {
     }
 
     public void waitForLatch() {
-        waitForLatch(EMPTY_STRING);
+        waitForLatch(/* message= */ null);
     }
 
-    public void waitForLatch(String message) {
+    public void waitForLatch(@Nullable String message) {
+        if (message == null) {
+            message = "Latch";
+        }
         try {
             // Wait for callback to be called
             if (!mLatch.await(mWaitTimeSec, TimeUnit.SECONDS)) {
                 throw new IllegalStateException(
-                        message + " Latch timed out after " + mWaitTimeSec + " seconds");
+                        message + " timed out after " + mWaitTimeSec + " seconds");
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IllegalStateException(
                     "Interrupted while waiting for latch " + e.getMessage());
         }

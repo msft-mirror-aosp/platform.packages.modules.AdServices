@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class DBAdSelectionHistogramInfoTest {
     private static final String SERIALIZED_AD_COUNTER_KEYS =
-            FledgeRoomConverters.serializeStringSet(AdDataFixture.getAdCounterKeys());
+            FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
 
     @Test
     public void testCreateValidHistogramInfo() {

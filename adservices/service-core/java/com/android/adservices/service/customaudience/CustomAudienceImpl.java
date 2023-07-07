@@ -22,6 +22,8 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -118,6 +120,12 @@ public class CustomAudienceImpl {
         sLogger.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
+        boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        boolean adRenerIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
+        AdDataConversionStrategy dataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                        adSelectionFilteringEnabled, adRenerIdEnabled);
+
         Duration customAudienceDefaultExpireIn =
                 Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
 
@@ -127,7 +135,7 @@ public class CustomAudienceImpl {
                         callerPackageName,
                         currentTime,
                         customAudienceDefaultExpireIn,
-                        mFlags);
+                        dataConversionStrategy);
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(

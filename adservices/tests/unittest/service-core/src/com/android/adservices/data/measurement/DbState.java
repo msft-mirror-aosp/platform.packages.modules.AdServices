@@ -24,6 +24,7 @@ import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.reporting.DebugReport;
@@ -43,6 +44,9 @@ import java.util.concurrent.TimeUnit;
  * Class for providing test data for measurement tests.
  */
 public class DbState {
+
+    private static final String DEFAULT_REGISTRATION_URI =
+            WebUtil.validUrl("https://test.example.test");
     List<Source> mSourceList;
     List<SourceDestination> mSourceDestinationList;
     List<Trigger> mTriggerList;
@@ -299,6 +303,7 @@ public class DbState {
                 .setAttributionMode(
                         sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
                 .setFilterData(sJSON.optString("filterData", null))
+                .setRegistrationOrigin(getRegistrationOrigin(sJSON))
                 .build();
     }
 
@@ -324,6 +329,7 @@ public class DbState {
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
                 .setFilters(tJSON.optString("filters", null))
                 .setNotFilters(tJSON.optString("not_filters", null))
+                .setRegistrationOrigin(getRegistrationOrigin(tJSON))
                 .build();
     }
 
@@ -331,8 +337,9 @@ public class DbState {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
-                .setAttributionDestinations(SqliteObjectMapper.destinationsStringToList(
-                        rJSON.getString("attributionDestination")))
+                .setAttributionDestinations(
+                        SqliteObjectMapper.destinationsStringToList(
+                                rJSON.getString("attributionDestination")))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
@@ -345,6 +352,7 @@ public class DbState {
                                 rJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setSourceId(rJSON.optString("sourceId", null))
                 .setTriggerId(rJSON.optString("triggerId", null))
+                .setRegistrationOrigin(getRegistrationOrigin(rJSON))
                 .build();
     }
 
@@ -449,6 +457,7 @@ public class DbState {
                 .setApiVersion(rJSON.optString("apiVersion", null))
                 .setSourceId(rJSON.optString("sourceId", null))
                 .setTriggerId(rJSON.optString("triggerId", null))
+                .setRegistrationOrigin(getRegistrationOrigin(rJSON))
                 .build();
     }
 
@@ -460,10 +469,10 @@ public class DbState {
                 .build();
     }
 
-    private List<Uri> parseIfNonNull(String s) {
-        if (s == null) {
-            return null;
-        }
-        return List.of(Uri.parse(s));
+    private Uri getRegistrationOrigin(JSONObject json) throws JSONException {
+        return Uri.parse(
+                json.isNull("registration_origin")
+                        ? DEFAULT_REGISTRATION_URI
+                        : json.get("registration_origin").toString());
     }
 }
