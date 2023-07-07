@@ -36,6 +36,7 @@ import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -133,7 +134,7 @@ public class TopicsService extends Service {
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
         FlagsFactory.getFlags().dump(writer, args);
-        if (Build.isDebuggable()) {
+        if (BuildCompatUtils.isDebuggable()) {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);

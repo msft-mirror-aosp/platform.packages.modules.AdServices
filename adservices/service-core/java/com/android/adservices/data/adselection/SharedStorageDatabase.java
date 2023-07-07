@@ -37,12 +37,12 @@ import java.util.Objects;
             DBHistogramIdentifier.class,
         },
         version = SharedStorageDatabase.DATABASE_VERSION,
-        autoMigrations = {@AutoMigration(from = 1, to = 2)})
+        autoMigrations = {@AutoMigration(from = 1, to = 2), @AutoMigration(from = 2, to = 3)})
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class SharedStorageDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     public static final String DATABASE_NAME = "sharedstorage.db";
     static final Long FOREIGN_KEY_AUTOGENERATE_SUBSTITUTE = null;
 

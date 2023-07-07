@@ -49,7 +49,7 @@ interface IAdServicesManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    void recordNotificationDisplayed();
+    void recordNotificationDisplayed(boolean wasNotificationDisplayed);
 
     /**
      * Returns information whether Consent Notification was displayed or not.
@@ -62,7 +62,7 @@ interface IAdServicesManager {
      * Saves information to the storage that GA UX notification was displayed for the
      * first time to the user.
      */
-    void recordGaUxNotificationDisplayed();
+    void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed);
 
     /**
      * Returns information whether GA UX Consent Notification was displayed or not.
@@ -193,4 +193,45 @@ interface IAdServicesManager {
     boolean setConsentForAppIfNew(in String packageName,in int packageUid,in boolean isConsentRevoked);
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    boolean isAdIdEnabled();
+
+    /** Saves the isAdIdEnabled bit. */
+    void setAdIdEnabled(boolean isAdIdEnabled);
+
+    /** Returns whether the isU18Account bit is true. */
+    boolean isU18Account();
+
+    /** Saves the isU18Account bit. */
+    void setU18Account(boolean isU18Account);
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled();
+
+    /** Saves the isEntryPointEnabled bit. */
+    void setEntryPointEnabled(boolean isEntryPointEnabled);
+
+    /** Returns whether the isAdultAccount bit is true. */
+    boolean isAdultAccount();
+
+    void setAdultAccount(boolean isAdultAccount);
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    boolean wasU18NotificationDisplayed();
+
+    /** Saves the wasU18NotificationDisplayed bit. */
+    void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed);
+
+    /** Returns the current UX. */
+    String getUx();
+
+    /** Set the current UX. */
+    void setUx(in String ux);
+
+    /** Returns the current enrollement channel. */
+    String getEnrollmentChannel();
+
+    /** Set the current enrollment channel. */
+    void setEnrollmentChannel(in String enrollmentChannel);
 }

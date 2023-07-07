@@ -24,11 +24,14 @@ public class BannerOptions {
         RANDOM_COLOUR,
         INFLATED,
         VIDEO,
-        WEBVIEW
+        WEBVIEW,
+        AD_REFRESH,
+        EDITTEXT
     }
 
     public enum OnClick {
-        OPEN_CHROME
+        OPEN_CHROME,
+        OPEN_PACKAGE,
     }
 
     public enum Placement {
@@ -36,10 +39,19 @@ public class BannerOptions {
         SCROLL_VIEW
     }
 
+    public enum AdSize {
+        SMALL,
+        MEDIUM,
+        LARGE,
+    };
+
     private final ViewType mViewType;
     private final String mVideoUrl;
     private final OnClick mOnClick;
     private final Placement mPlacement;
+    private final AdSize mAdSize;
+
+    private final String mPackageToOpen;
 
     public ViewType getViewType() {
         return mViewType;
@@ -57,19 +69,34 @@ public class BannerOptions {
         return mVideoUrl;
     }
 
+    public String getmPackageToOpen() {
+        return mPackageToOpen;
+    }
+
+    public AdSize getAdSize() {
+        return mAdSize;
+    }
+
     @Override
     public String toString() {
         return String.format(
-                "BannerOptions { ViewType=%s, VideoUrl=%s, OnClick=%s, Placement=%s }",
-                mViewType, mVideoUrl, mOnClick, mPlacement);
+                "BannerOptions { ViewType=%s, VideoUrl=%s, OnClick=%s, Placement=%s AdSize=%s }",
+                mViewType, mVideoUrl, mOnClick, mPlacement, mAdSize);
     }
 
     private BannerOptions(
-            ViewType viewType, String videoUrl, OnClick onClick, Placement placement) {
+            ViewType viewType,
+            String videoUrl,
+            OnClick onClick,
+            String packageToOpen,
+            Placement placement,
+            AdSize adSize) {
         mViewType = viewType;
         mVideoUrl = videoUrl;
         mOnClick = onClick;
         mPlacement = placement;
+        mPackageToOpen = packageToOpen;
+        mAdSize = adSize;
     }
 
     public static BannerOptions fromSharedPreferences(SharedPreferences sharedPreferences) {
@@ -77,6 +104,8 @@ public class BannerOptions {
                 ViewType.valueOf(sharedPreferences.getString("banner_view_type", "")),
                 sharedPreferences.getString("banner_video_url", ""),
                 OnClick.valueOf(sharedPreferences.getString("banner_on_click", "")),
-                Placement.valueOf(sharedPreferences.getString("banner_placement", "")));
+                sharedPreferences.getString("package_to_open", ""),
+                Placement.valueOf(sharedPreferences.getString("banner_placement", "")),
+                AdSize.valueOf(sharedPreferences.getString("banner_ad_size", "")));
     }
 }

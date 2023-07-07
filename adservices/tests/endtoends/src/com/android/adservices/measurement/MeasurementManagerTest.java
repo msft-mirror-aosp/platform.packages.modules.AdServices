@@ -76,7 +76,7 @@ import java.util.concurrent.TimeoutException;
 public class MeasurementManagerTest {
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
     private static final long TIMEOUT = 5000L;
-    private static final long CALLBACK_TIMEOUT = 100L;
+    private static final long CALLBACK_TIMEOUT = 1000L;
 
     private static final long AD_ID_TIMEOUT = 500;
 

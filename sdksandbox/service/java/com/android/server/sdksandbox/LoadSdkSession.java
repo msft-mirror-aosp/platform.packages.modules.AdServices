@@ -210,8 +210,8 @@ class LoadSdkSession {
             ApplicationInfo customizedInfo,
             long timeSystemServerCalledSandbox,
             long timeSystemServerReceivedCallFromApp) {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(timeSystemServerCalledSandbox);
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCalledSandbox);
 
         // TODO(b/258679084): If a second load request comes here, while the first is pending, it
         // will go through. SdkSandboxManagerService already has a check for this, but we should
@@ -338,7 +338,8 @@ class LoadSdkSession {
     }
 
     void unload(long timeSystemServerReceivedCallFromApp) {
-        SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo(mInjector.getCurrentTime());
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
         IUnloadSdkCallback unloadCallback =
                 new IUnloadSdkCallback.Stub() {
                     @Override
@@ -652,8 +653,8 @@ class LoadSdkSession {
                     /*success=*/ true,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                     mCallingInfo.getUid());
-            final SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(timeSystemServerCalledSandbox);
+            final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+            sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCalledSandbox);
             try {
                 synchronized (this) {
                     mManagerToSdkCallback.onSurfacePackageRequested(

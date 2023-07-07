@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_BLOCKED_TOPICS_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_OLD_EPOCH_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOP_TOPICS_FAILURE;
@@ -987,7 +988,15 @@ public class TopicsDao {
         try {
             for (String table : ALL_TOPICS_TABLES) {
                 if (!tablesToExclude.contains(table)) {
-                    db.delete(table, /* whereClause= */ null, /* whereArgs= */ null);
+                    try {
+                        db.delete(table, /* whereClause= */ null, /* whereArgs= */ null);
+                    } catch (SQLException e) {
+                        sLogger.e("Failed to delete %s table for Topics." + e.getMessage(), table);
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                    }
                 }
             }
 

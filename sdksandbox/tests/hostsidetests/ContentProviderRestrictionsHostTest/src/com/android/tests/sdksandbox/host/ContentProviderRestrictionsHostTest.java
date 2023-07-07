@@ -63,6 +63,14 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testGetContentProvider_DeviceConfigAllowlistApplied() throws Exception {
+        runPhase("testGetContentProvider_DeviceConfigAllowlistApplied");
+        runPhase("testGetContentProvider_DeviceConfigNextAllowlistApplied");
+        runPhase("testGetContentProvider_DeviceConfigWildcardAllowlistApplied");
+        runPhase("testGetContentProvider_DeviceConfigAllowlistWithWildcardApplied");
+    }
+
+    @Test
     public void testGetWebViewContentProvider_restrictionsApplied() throws Exception {
         runPhase("testGetWebViewContentProvider_restrictionsApplied");
     }
@@ -83,12 +91,12 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testGetContentProvider_defaultValueRestrictionsNotApplied() throws Exception {
-        runPhase("testGetContentProvider_defaultValueRestrictionsNotApplied");
+    public void testGetContentProvider_defaultValueRestrictionsApplied() throws Exception {
+        runPhase("testGetContentProvider_defaultValueRestrictionsApplied");
     }
 
     @Test
-    public void testRegisterContentObserver_defaultValueRestrictionsNotApplied() throws Exception {
-        runPhase("testRegisterContentObserver_defaultValueRestrictionsNotApplied");
+    public void testRegisterContentObserver_defaultValueRestrictionsApplied() throws Exception {
+        runPhase("testRegisterContentObserver_defaultValueRestrictionsApplied");
     }
 }

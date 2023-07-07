@@ -149,19 +149,18 @@ public class SdkSandboxStorageTestApp {
         int uid = Process.myUid();
         UserHandle user = Process.myUserHandle();
 
-        // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
+        // Have the sdk use up space
         final int sizeInBytes = 10000000; // 10 MB
-        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ false);
-        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ true);
+        mSdk.createFilesInStorage(sizeInBytes);
 
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        long deltaAppSize = 2 * sizeInBytes;
-        long deltaCacheSize = sizeInBytes;
+        long deltaAppSize = 4 * sizeInBytes;
+        long deltaCacheSize = 2 * sizeInBytes;
 
         // Assert app size is same
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();

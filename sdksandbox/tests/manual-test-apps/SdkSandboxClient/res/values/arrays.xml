@@ -22,13 +22,21 @@
         <item>Inflated from layout</item>
         <item>Video</item>
         <item>Webview</item>
+        <item>Ad Refresh</item>
+        <item>EditText</item>
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
+        <item>Open Package</item>
     </array>
     <array name="banner_placement">
         <item>Bottom of screen</item>
         <item>In Scroll View</item>
+    </array>
+    <array name="banner_ad_size">
+        <item>Small</item>
+        <item>Medium</item>
+        <item>Large</item>
     </array>
     <!-- Values for the options, matching the enum names. -->
     <array name="banner_view_type_values">
@@ -36,12 +44,20 @@
         <item>INFLATED</item>
         <item>VIDEO</item>
         <item>WEBVIEW</item>
+        <item>AD_REFRESH</item>
+        <item>EDITTEXT</item>
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>
+        <item>OPEN_PACKAGE</item>
     </array>
     <array name="banner_placement_values">
         <item>BOTTOM</item>
         <item>SCROLL_VIEW</item>
+    </array>
+    <array name="banner_ad_size_values">
+        <item>SMALL</item>
+        <item>MEDIUM</item>
+        <item>LARGE</item>
     </array>
 </resources>

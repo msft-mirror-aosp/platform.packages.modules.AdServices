@@ -35,7 +35,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /** Holds filters to remove ads from the selectAds auction. */
 public final class AdFiltererImpl implements AdFilterer {
@@ -118,12 +117,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     "Applying filters to %d contextual ads with current time %s.",
                     contextualAds.getAdsWithBid().size(), currentTime);
             for (AdWithBid ad : contextualAds.getAdsWithBid()) {
-                DBAdData dbAdData =
-                        new DBAdData(
-                                ad.getAdData().getRenderUri(),
-                                ad.getAdData().getMetadata(),
-                                ad.getAdData().getAdCounterKeys(),
-                                ad.getAdData().getAdFilters());
+                DBAdData dbAdData = new DBAdData.Builder(ad.getAdData()).build();
                 if (doesAdPassFilters(
                         dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
                     adsList.add(ad);
@@ -235,7 +229,7 @@ public final class AdFiltererImpl implements AdFilterer {
     }
 
     private boolean doesAdPassFrequencyCapFiltersForWinType(
-            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            List<KeyedFrequencyCap> keyedFrequencyCaps,
             AdTechIdentifier buyer,
             String customAudienceOwner,
             String customAudienceName,
@@ -252,7 +246,7 @@ public final class AdFiltererImpl implements AdFilterer {
                             FrequencyCapFilters.AD_EVENT_TYPE_WIN,
                             intervalStartTime);
 
-            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
                 return false;
             }
         }
@@ -261,7 +255,7 @@ public final class AdFiltererImpl implements AdFilterer {
     }
 
     private boolean doesAdPassFrequencyCapFiltersForNonWinType(
-            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            List<KeyedFrequencyCap> keyedFrequencyCaps,
             int adEventType,
             AdTechIdentifier buyer,
             Instant currentTime) {
@@ -272,7 +266,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     mFrequencyCapDao.getNumEventsForBuyerAfterTime(
                             frequencyCap.getAdCounterKey(), buyer, adEventType, intervalStartTime);
 
-            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
                 return false;
             }
         }

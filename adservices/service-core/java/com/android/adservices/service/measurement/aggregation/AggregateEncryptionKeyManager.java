@@ -20,6 +20,7 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -87,9 +88,12 @@ public final class AggregateEncryptionKeyManager {
                             mAggregateEncryptionKeyCoordinatorUrl, eventTime);
             if (fetchResult.isPresent()) {
                 aggregateEncryptionKeys = fetchResult.get();
-                for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
-                    mDatastoreManager.runInTransaction((dao) ->
-                            dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
+                // Do not cache keys provided by localhost
+                if (!Web.isLocalhost(mAggregateEncryptionKeyCoordinatorUrl)) {
+                    for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
+                        mDatastoreManager.runInTransaction((dao) ->
+                                dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
+                    }
                 }
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));

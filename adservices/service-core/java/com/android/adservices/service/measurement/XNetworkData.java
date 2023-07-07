@@ -76,7 +76,7 @@ public class XNetworkData {
                     LogUtil.d(e, "XNetworkData.Builder: Failed to parse keyOffset.");
                     // Wrapped into JSONException so that it does not crash and becomes a checked
                     // Exception that is caught by the caller.
-                    throw new JSONException(e);
+                    throw new JSONException("Failed to parse keyOffset", e);
                 }
             }
         }

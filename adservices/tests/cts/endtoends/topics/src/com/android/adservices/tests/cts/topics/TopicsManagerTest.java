@@ -19,6 +19,8 @@ package com.android.adservices.tests.cts.topics;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
@@ -26,23 +28,26 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesSupportRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+// TODO(b/243062789): Test should not use CountDownLatch or Sleep.
 @RunWith(JUnit4.class)
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
@@ -67,7 +72,8 @@ public class TopicsManagerTest {
     // Threshold value for classifier confidence set to 0 to allow all topics and avoid filtering.
     private static final float TEST_CLASSIFIER_THRESHOLD = 0.0f;
     // ON_DEVICE_CLASSIFIER
-    private static final int TEST_CLASSIFIER_TYPE = 1;
+    private static final int ON_DEVICE_CLASSIFIER_TYPE = 1;
+    private static final int PRECOMPUTED_CLASSIFIER_TYPE = 2;
 
     // Classifier default constants.
     private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
@@ -93,10 +99,11 @@ public class TopicsManagerTest {
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
 
+    // Skip the test if it runs on unsupported platforms.
+    @Rule public final AdServicesSupportRule mAdServicesSupportRule = new AdServicesSupportRule();
+
     @Before
     public void setup() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
@@ -120,6 +127,96 @@ public class TopicsManagerTest {
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+    }
+
+    @Test
+    public void testTopicsManager_testTopicsKillSwitch() throws Exception {
+        // Override Topics kill switch to disable Topics API.
+        overrideTopicsKillSwitch(true);
+
+        // Set classifier flag to use precomputed-then-on-device classifier.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
+        // Default classifier uses the precomputed list first, then on-device classifier.
+        AdvertisingTopicsClient advertisingTopicsClient =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk1")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        // As the kill switch for Topics API is enabled, we should expect failure here.
+        assertThat(
+                assertThrows(
+                        ExecutionException.class,
+                        () -> advertisingTopicsClient.getTopics().get())
+                        .getMessage())
+                .isEqualTo("java.lang.IllegalStateException: Service is not available.");
+
+        // Override Topics kill switch to enable Topics API.
+        overrideTopicsKillSwitch(false);
+    }
+
+    @Test
+    public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
+            throws Exception {
+        // Override Topics on device classifier kill switch to disable on device classifier.
+        overrideTopicsOnDeviceSwitch(true);
+
+        // Set classifier flag to use on-device classifier.
+        overrideClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+
+        // The Test App has 1 SDK: sdk5
+        // sdk3 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient5 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk5")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        // At beginning, Sdk5 receives no topic.
+        GetTopicsResponse sdk5Result = advertisingTopicsClient5.getTopics().get();
+        assertThat(sdk5Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk5 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk5Result = advertisingTopicsClient5.getTopics().get();
+        assertThat(sdk5Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk5Result.getTopics()).hasSize(1);
+        Topic topic = sdk5Result.getTopics().get(0);
+
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
+        // Topic should be from the precomputed list and not the on device classifier due to the
+        // override.
+        List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        // Set classifier flag back to default.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
+        // Override Topics on device classifier kill switch to disable Topics API.
+        overrideTopicsOnDeviceSwitch(false);
     }
 
     @Test
@@ -212,7 +309,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runOnDeviceClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use on-device classifier.
-        overrideClassifierType(TEST_CLASSIFIER_TYPE);
+        overrideClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
 
         // Set number of top labels returned by the on-device classifier to 5.
         overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
@@ -268,7 +365,7 @@ public class TopicsManagerTest {
         // depending on whether the package name is that for S- or T+.
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
-        if (ADSERVICES_PACKAGE_NAME.contains("android.ext.adservices")) {
+        if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
             expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10276);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
@@ -282,6 +379,79 @@ public class TopicsManagerTest {
         overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Set classifier threshold back to default.
         overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
+    }
+
+    @Test
+    public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
+            throws Exception {
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
+    }
+
+    @Test
+    public void testTopicsManager_runPrecomputedClassifier() throws Exception {
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
+    }
+
+    private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
+            throws Exception {
+        // Set classifier flag to use precomputed classifier.
+        overrideClassifierType(PRECOMPUTED_CLASSIFIER_TYPE);
+
+        // The Test App has 1 SDK: sdk4
+        // sdk4 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient4 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk4")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
+                        .build();
+
+        // At beginning, Sdk4 receives no topic.
+        GetTopicsResponse sdk4Result = advertisingTopicsClient4.getTopics().get();
+        assertThat(sdk4Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk4 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk4Result = advertisingTopicsClient4.getTopics().get();
+        assertThat(sdk4Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the precomputed classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk4Result.getTopics()).hasSize(1);
+        Topic topic = sdk4Result.getTopics().get(0);
+
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
+        // Top 5 topic ids as listed in precomputed_app_list.csv
+        List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        // Set classifier flag back to default.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+    }
+
+    private void overrideTopicsOnDeviceSwitch(boolean val) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices topics_on_device_classifier_kill_switch " + val);
+    }
+
+    private void overrideTopicsKillSwitch(boolean val) {
+        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch " + val);
     }
 
     // Override the flag to select classifier type.

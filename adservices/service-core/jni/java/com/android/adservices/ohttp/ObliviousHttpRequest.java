@@ -17,8 +17,9 @@
 package com.android.adservices.ohttp;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.io.BaseEncoding;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 /** Contains the results of Ohttp encryption and the request context required for decryption */
@@ -31,7 +32,7 @@ public abstract class ObliviousHttpRequest {
     @SuppressWarnings("mutable")
     abstract byte[] cipherText();
 
-    /** Rreturns the Oblivious HTTP request context that should be saved for decryption */
+    /** Returns the Oblivious HTTP request context that should be saved for decryption */
     public abstract ObliviousHttpRequestContext requestContext();
 
     /** Create a Oblivious HTTP Request object */
@@ -56,18 +57,11 @@ public abstract class ObliviousHttpRequest {
      * <p>concat(hdr, enc, ct) per
      * https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#name-encapsulation-of-requests
      */
-    public String serialize() {
-        StringBuilder stringBuilder = new StringBuilder();
-        String headerString =
-                BaseEncoding.base16()
-                        .lowerCase()
-                        .encode(requestContext().keyConfig().serializeOhttpPayloadHeader());
-        stringBuilder.append(headerString);
-        stringBuilder.append(
-                BaseEncoding.base16()
-                        .lowerCase()
-                        .encode(requestContext().encapsulatedSharedSecret().getBytes()));
-        stringBuilder.append(BaseEncoding.base16().lowerCase().encode(cipherText()));
-        return stringBuilder.toString();
+    public byte[] serialize() throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(requestContext().keyConfig().serializeOhttpPayloadHeader());
+        outputStream.write(requestContext().encapsulatedSharedSecret().getBytes());
+        outputStream.write(cipherText());
+        return outputStream.toByteArray();
     }
 }

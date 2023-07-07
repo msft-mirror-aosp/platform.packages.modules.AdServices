@@ -47,6 +47,11 @@
             android:entryValues="@array/banner_on_click_values"
             android:defaultValue="OPEN_CHROME"
         />
+        <EditTextPreference
+            app:key="package_to_open"
+            app:title="@string/on_click_package"
+            app:useSimpleSummaryProvider="true"
+        />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -59,6 +64,19 @@
             android:entries="@array/banner_placement"
             android:entryValues="@array/banner_placement_values"
             android:defaultValue="BOTTOM"
+        />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="banner_size"
+        app:title="@string/size">
+        <ListPreference
+            app:key="banner_ad_size"
+            app:title="@string/ad_size"
+            app:useSimpleSummaryProvider="true"
+            android:entries="@array/banner_ad_size"
+            android:entryValues="@array/banner_ad_size_values"
+            android:defaultValue="SMALL"
         />
     </PreferenceCategory>
 

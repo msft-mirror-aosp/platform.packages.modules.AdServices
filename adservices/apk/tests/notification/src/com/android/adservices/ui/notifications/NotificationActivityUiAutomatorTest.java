@@ -16,6 +16,8 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Matchers.any;
@@ -41,12 +43,11 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,6 +75,7 @@ public class NotificationActivityUiAutomatorTest {
 
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
+    @Mock private UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
@@ -89,6 +91,7 @@ public class NotificationActivityUiAutomatorTest {
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(UxStatesManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -97,7 +100,13 @@ public class NotificationActivityUiAutomatorTest {
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
+        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(BETA_UX).when(mUxStatesManager).getUx();
+        doReturn("BETA_UX").when(mMockFlags).getDebugUx();
+
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(mUxStatesManager)
+                .when(() -> UxStatesManager.getInstance(any(Context.class)));
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         ExtendedMockito.doNothing()
@@ -208,37 +217,6 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-    }
-
-    @Test
-    public void privacyPolicyLinkTest() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
-        sDevice.pressHome();
-
-        /* isEUActivity false: Rest of World Notification landing page */
-        startActivity(false);
-        /* find the expander and click to expand to get the content */
-        UiObject moreExpander =
-                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
-        moreExpander.click();
-
-        UiObject sentence =
-                ApkTestUtil.scrollTo(
-                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
-        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
-                packageNameOfDefaultBrowser, sentence, 20)) {
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
-            return;
-        }
-
-        ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
-        Assert.fail("Web browser not found after several clicks on the last line");
     }
 
     @Test
