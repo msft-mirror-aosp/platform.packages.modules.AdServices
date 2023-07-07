@@ -31,30 +31,30 @@ import com.google.cobalt.SystemProfile;
  */
 @AutoValue
 @CopyAnnotations
-abstract class CountEvent {
+public abstract class CountEvent {
     /** The system profile hash. */
     @CopyAnnotations
     @ColumnInfo(name = "system_profile_hash")
     @NonNull
-    abstract long systemProfileHash();
+    public abstract long systemProfileHash();
 
     /** The system profile. */
     @CopyAnnotations
     @ColumnInfo(name = "system_profile")
     @NonNull
-    abstract SystemProfile systemProfile();
+    public abstract SystemProfile systemProfile();
 
     /** The event vector. */
     @CopyAnnotations
     @ColumnInfo(name = "event_vector")
     @NonNull
-    abstract EventVector eventVector();
+    public abstract EventVector eventVector();
 
     /** The found aggregate value. */
     @CopyAnnotations
     @ColumnInfo(name = "aggregate_value")
     @NonNull
-    abstract AggregateValue aggregateValue();
+    public abstract AggregateValue aggregateValue();
 
     /**
      * Creates a {@link CreateEvent}.
@@ -62,7 +62,7 @@ abstract class CountEvent {
      * <p>Used by Room to instantiate objects.
      */
     @NonNull
-    static CountEvent create(
+    public static CountEvent create(
             long systemProfileHash,
             SystemProfile systemProfile,
             EventVector eventVector,
