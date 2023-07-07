@@ -440,6 +440,94 @@ public class DebugReportProcessorTest {
     }
 
     @Test
+    public void singleBuyerLoss_rejectReasonIsNotAvailable() {
+        Uri lossUri = Uri.parse("https://example.com/reportLoss?rr=${rejectReason}");
+        PostAuctionSignals signals = newDefaultPostAuctionSignals().build();
+        DebugReport lossDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(lossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .build();
+
+        List<Uri> uris =
+                DebugReportProcessor.getUrisFromAdAuction(List.of(lossDebugReport), signals);
+
+        Uri expectedUri = Uri.parse("https://example.com/reportLoss?rr=not-available");
+        assertThat(uris).containsExactly(expectedUri);
+    }
+
+    @Test
+    public void singleBuyerLoss_rejectReasonIsNotAvailable_InvalidRejectReason() {
+        Uri lossUri = Uri.parse("https://example.com/reportLoss?rr=${rejectReason}");
+        PostAuctionSignals signals = newDefaultPostAuctionSignals().build();
+        DebugReport lossDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(lossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .setSellerRejectReason("a-random-reject-reason")
+                        .build();
+
+        List<Uri> uris =
+                DebugReportProcessor.getUrisFromAdAuction(List.of(lossDebugReport), signals);
+
+        Uri expectedUri = Uri.parse("https://example.com/reportLoss?rr=not-available");
+        assertThat(uris).containsExactly(expectedUri);
+    }
+
+    @Test
+    public void singleBuyerLoss_rejectReasonIsSet() {
+        Uri lossUri = Uri.parse("https://example.com/reportLoss?rr=${rejectReason}");
+        PostAuctionSignals signals = newDefaultPostAuctionSignals().build();
+        DebugReport lossDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(lossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .setSellerRejectReason("invalid-bid")
+                        .build();
+
+        List<Uri> uris =
+                DebugReportProcessor.getUrisFromAdAuction(List.of(lossDebugReport), signals);
+
+        Uri expectedUri = Uri.parse("https://example.com/reportLoss?rr=invalid-bid");
+        assertThat(uris).containsExactly(expectedUri);
+    }
+
+    @Test
+    public void singleBuyerLoss_rejectReasonIsCapturedFromSellerToBuyer() {
+        Uri buyerLossUri = Uri.parse("https://example.com/reportLoss?rr=${rejectReason}");
+        Uri sellerLossUri = Uri.parse("https://google.com/reportLoss?rr=${rejectReason}");
+        PostAuctionSignals signals = newDefaultPostAuctionSignals().build();
+        DebugReport buyerLossDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(buyerLossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .build();
+        DebugReport sellerLossDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(sellerLossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .setSellerRejectReason("invalid-bid")
+                        .setSeller(AD_TECH_IDENTIFIER_2)
+                        .build();
+
+        List<Uri> uris =
+                DebugReportProcessor.getUrisFromAdAuction(
+                        List.of(buyerLossDebugReport, sellerLossDebugReport), signals);
+
+        Set<Uri> expectedUris = new HashSet<>();
+        expectedUris.add(Uri.parse("https://example.com/reportLoss?rr=invalid-bid"));
+        expectedUris.add(Uri.parse("https://google.com/reportLoss?rr=invalid-bid"));
+        assertEquals(2, uris.size());
+        Set<Uri> actualUris = new HashSet<>(uris);
+        assertEquals(expectedUris, actualUris);
+    }
+
+    @Test
     public void emptySession_doesNotThrow() {
         List<Uri> uris =
                 DebugReportProcessor.getUrisFromAdAuction(

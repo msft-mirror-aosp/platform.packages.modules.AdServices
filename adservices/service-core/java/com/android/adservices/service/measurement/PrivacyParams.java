@@ -202,24 +202,6 @@ public final class PrivacyParams {
         return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
     }
 
-    private static final int MAX_FLEXIBLE_EVENT_REPORTS = 20;
-
-    public static int getMaxFlexibleEventReports() {
-        return MAX_FLEXIBLE_EVENT_REPORTS;
-    }
-
-    private static final int MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY = 8;
-
-    public static int getMaxFlexibleEventTriggerDataCardinality() {
-        return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
-    }
-
-    private static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
-
-    public static int getMaxFlexibleEventReportingWindows() {
-        return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
-    }
-
     private static final int PRIVACY_EPSILON = 14;
 
     public static int getPrivacyEpsilon() {
@@ -228,26 +210,12 @@ public final class PrivacyParams {
 
     public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
 
-    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE =
-            1.5849266D;
-
-    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE =
-            11.4617280D;
-
     /**
      * Maximum early reporting windows configured through {@link
      * Flags#MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS} or {@link
      * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
      */
     public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
-
-    public static double getMaxFlexibleEventInformationGainEventSource() {
-        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE;
-    }
-
-    public static double getMaxFlexibleEventInformationGainNavigationSource() {
-        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE;
-    }
 
     private PrivacyParams() {
     }

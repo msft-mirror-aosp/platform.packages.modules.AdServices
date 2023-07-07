@@ -31,6 +31,7 @@ import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
+import com.google.cobalt.UnencryptedObservationBatch;
 
 import java.time.Instant;
 import java.util.List;
@@ -147,6 +148,17 @@ public abstract class TestOnlyDao {
                         aggregateStoreTableRow.aggregateValue()));
     }
 
+    /**
+     * Insert the day a report was last sent.
+     *
+     * @param reportKey the report
+     * @param dayIndex the day
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    public Void insertLastSentDayIndex(ReportKey reportKey, int dayIndex) {
+        return insertLastSentDayIndex(ReportEntity.create(reportKey, dayIndex));
+    }
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract Void insertLastSentDayIndex(ReportEntity reportEntity);
 
@@ -176,8 +188,61 @@ public abstract class TestOnlyDao {
                     + " 'INITIAL_DISABLED_TIME')")
     abstract Map<GlobalValueEntity.Key, String> queryEnablementTimes();
 
-    /** Delete all reports */
+    /**
+     * Return the day a report was last sent, if in the reports table.
+     *
+     * @param reportKey the report
+     * @return the last sent day index, if found
+     */
+    public Optional<Integer> queryLastSentDayIndex(ReportKey reportKey) {
+        return queryLastSentDayIndex(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId());
+    }
+
+    /**
+     * Return the day a report was last sent, if in the reports table.
+     *
+     * @param customerId the customer id for the report
+     * @param projectId the project id for the report
+     * @param metricId the metric id for the report
+     * @param reportId the report id for the report
+     * @return the last sent day index, if found
+     */
+    @Query(
+            "SELECT last_sent_day_index "
+                    + "FROM Reports "
+                    + "WHERE customer_id = :customerId "
+                    + "AND project_id = :projectId "
+                    + "AND metric_id = :metricId "
+                    + "AND report_id = :reportId")
+    abstract Optional<Integer> queryLastSentDayIndex(
+            long customerId, long projectId, long metricId, long reportId);
+
+    /** Delete all reports from the report store. */
     @VisibleForTesting
     @Query("DELETE FROM Reports")
     public abstract void deleteAllReports();
+
+    /** Get all the repory keys in the report store. */
+    @VisibleForTesting
+    @Query("SELECT customer_id, project_id, metric_id, report_id FROM Reports")
+    public abstract List<ReportKey> getReportKeys();
+
+    /** Get all the unencrypted observation batches in the observation store. */
+    @VisibleForTesting
+    @Query("SELECT unencrypted_observation_batch FROM ObservationStore")
+    public abstract List<UnencryptedObservationBatch> getObservationBatches();
+
+    /** Get all the report ids in the aggregate store. */
+    @VisibleForTesting
+    @Query("SELECT report_id from AggregateStore")
+    public abstract List<Integer> getAggregatedReportIds();
+
+    /** Get all the day indices in the aggregate store. */
+    @VisibleForTesting
+    @Query("SELECT day_index from AggregateStore")
+    public abstract List<Integer> getDayIndices();
 }

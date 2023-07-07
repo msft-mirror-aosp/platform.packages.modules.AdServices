@@ -19,10 +19,15 @@ package com.android.cobalt.data;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+
+import com.android.cobalt.crypto.Encrypter;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
+import com.google.cobalt.ObservationBatch;
+import com.google.cobalt.ObservationToEncrypt;
 import com.google.cobalt.UnencryptedObservationBatch;
 
 /**
@@ -33,20 +38,20 @@ import com.google.cobalt.UnencryptedObservationBatch;
 @AutoValue
 @CopyAnnotations
 @Entity(tableName = "ObservationStore")
-abstract class ObservationStoreEntity {
+public abstract class ObservationStoreEntity {
 
     /** The id automatically assigned to the observation batch. */
     @CopyAnnotations
     @ColumnInfo(name = "observation_store_id")
     @PrimaryKey(autoGenerate = true)
     @NonNull
-    abstract int observationStoreId();
+    public abstract int observationStoreId();
 
     /** The stored observation batch. */
     @CopyAnnotations
     @ColumnInfo(name = "unencrypted_observation_batch")
     @NonNull
-    abstract UnencryptedObservationBatch unencryptedObservationBatch();
+    public abstract UnencryptedObservationBatch unencryptedObservationBatch();
 
     /**
      * Creates an {@link ObservationStoreEntity}.
@@ -54,9 +59,35 @@ abstract class ObservationStoreEntity {
      * <p>Used by Room to instantiate objects.
      */
     @NonNull
-    static ObservationStoreEntity create(
+    public static ObservationStoreEntity create(
             int observationStoreId, UnencryptedObservationBatch unencryptedObservationBatch) {
         return new AutoValue_ObservationStoreEntity(
                 observationStoreId, unencryptedObservationBatch);
+    }
+
+    /** Creates an {@link ObservationStoreEntity} to insert. */
+    @Ignore
+    @NonNull
+    static ObservationStoreEntity createForInsertion(
+            UnencryptedObservationBatch unencryptedObservationBatch) {
+        return new AutoValue_ObservationStoreEntity(0 /*unused */, unencryptedObservationBatch);
+    }
+
+    /**
+     * Creates an {@link ObservationBatch} using the provided {@link Encrypter}.
+     *
+     * @param encrypter the {@link Encrypter} to encrypt data with.
+     * @return an ObservationBatch
+     */
+    @NonNull
+    public ObservationBatch encrypt(@NonNull Encrypter encrypter) {
+        ObservationBatch.Builder encryptedObservations =
+                ObservationBatch.newBuilder()
+                        .setMetaData(unencryptedObservationBatch().getMetadata());
+        for (ObservationToEncrypt toEncrypt :
+                unencryptedObservationBatch().getUnencryptedObservationsList()) {
+            encryptedObservations.addEncryptedObservation(encrypter.encryptObservation(toEncrypt));
+        }
+        return encryptedObservations.build();
     }
 }
