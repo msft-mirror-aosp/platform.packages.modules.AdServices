@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
@@ -31,6 +36,8 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -47,6 +54,7 @@ public class BackgroundFetchRunner {
     private final PackageManager mPackageManager;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
+    private final CustomAudienceLoggerFactory mCustomAudienceLoggerFactory;
     private final AdServicesHttpsClient mHttpsClient;
 
     public BackgroundFetchRunner(
@@ -54,17 +62,20 @@ public class BackgroundFetchRunner {
             @NonNull AppInstallDao appInstallDao,
             @NonNull PackageManager packageManager,
             @NonNull EnrollmentDao enrollmentDao,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull CustomAudienceLoggerFactory customAudienceLoggerFactory) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(packageManager);
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(customAudienceLoggerFactory);
         mCustomAudienceDao = customAudienceDao;
         mAppInstallDao = appInstallDao;
         mPackageManager = packageManager;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
+        mCustomAudienceLoggerFactory = customAudienceLoggerFactory;
         mHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -134,21 +145,47 @@ public class BackgroundFetchRunner {
         Objects.requireNonNull(jobStartTime);
         Objects.requireNonNull(fetchData);
 
+        UpdateCustomAudienceExecutionLogger updateCustomAudienceExecutionLogger =
+                mCustomAudienceLoggerFactory.getUpdateCustomAudienceExecutionLogger();
+
+        updateCustomAudienceExecutionLogger.start();
+
         return fetchAndValidateCustomAudienceUpdatableData(
                         jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUri())
                 .transform(
                         updatableData -> {
+                            int numOfAds = FIELD_UNSET;
+                            int adsDataSizeInBytes = FIELD_UNSET;
+                            int resultCode;
+
                             DBCustomAudienceBackgroundFetchData updatedData =
                                     fetchData.copyWithUpdatableData(updatableData);
 
                             if (updatableData.getContainsSuccessfulUpdate()) {
                                 mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
                                         updatedData, updatableData);
+                                if (Objects.nonNull(updatableData.getAds())) {
+                                    numOfAds = updatableData.getAds().size();
+                                    adsDataSizeInBytes =
+                                            updatableData.getAds().toString().getBytes().length;
+                                }
+                                resultCode = STATUS_SUCCESS;
                             } else {
                                 // In a failed update, we don't need to update the main CA table, so
                                 // only update the background fetch table
                                 mCustomAudienceDao.persistCustomAudienceBackgroundFetchData(
                                         updatedData);
+                                resultCode = STATUS_INTERNAL_ERROR;
+                            }
+
+                            try {
+                                updateCustomAudienceExecutionLogger.close(
+                                        adsDataSizeInBytes, numOfAds, resultCode);
+                            } catch (Exception e) {
+                                sLogger.d(
+                                        "Error when closing updateCustomAudienceExecutionLogger, "
+                                                + "skipping metrics logging: {}",
+                                        e.getMessage());
                             }
 
                             return null;

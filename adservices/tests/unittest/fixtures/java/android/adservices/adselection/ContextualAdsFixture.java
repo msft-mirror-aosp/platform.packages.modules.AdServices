@@ -67,7 +67,7 @@ public class ContextualAdsFixture {
                                 .map(
                                         bid ->
                                                 new AdWithBid(
-                                                        AdDataFixture.getValidAdDataByBuyer(
+                                                        AdDataFixture.getValidFilterAdDataByBuyer(
                                                                 buyer, bid.intValue()),
                                                         bid))
                                 .collect(Collectors.toList()));

@@ -109,11 +109,10 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         final int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
-        // Note: The permission check uses sdk package name since PackageManager checks if the
-        // permission is declared in the manifest of that package name.
+        // Note: The permission check uses sdk sandbox calling package name since PackageManager
+        // checks if the permission is declared in the manifest of that package name.
         boolean hasAdIdPermission =
-                PermissionHelper.hasAdIdPermission(
-                        mContext, ProcessCompatUtils.isSdkSandboxUid(callingUid), sdkPackageName);
+                PermissionHelper.hasAdIdPermission(mContext, packageName, callingUid);
 
         sBackgroundExecutor.execute(
                 () -> {

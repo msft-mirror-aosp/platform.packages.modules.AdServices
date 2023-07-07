@@ -131,7 +131,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         if (SdkLevel.isAtLeastT()
                 && packageName != null
                 && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to receive in PackageChangedReceiver on T+ for"
                             + " ExtServices");
             return;
@@ -280,6 +280,12 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                             getSharedStorageDatabase(context)
                                     .appInstallDao()
                                     .deleteByPackageName(packageUri.toString()));
+            LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .frequencyCapDao()
+                                    .deleteHistogramDataBySourceApp(packageUri.toString()));
         }
     }
 

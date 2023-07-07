@@ -165,6 +165,22 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     }
 
     @Test
+    public void testJoinCustomAudience_withValidSubdomains_success() throws Exception {
+        joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderWithSubdomainsForBuyer(
+                                CommonFixture.VALID_BUYER_1)
+                        .build());
+    }
+
+    @Test
+    public void testJoinCustomAudience_withValidSubdomains_success_usingGetMethodToCreateManager()
+            throws Exception {
+        // Override mClient with a new value that explicitly uses the Get method to create manager
+        createClientUsingGetMethod();
+        testJoinCustomAudience_withValidSubdomains_success();
+    }
+
+    @Test
     public void testJoinCustomAudience_invalidAdsMetadata_fail() {
         CustomAudience customAudienceWithInvalidAdDataMetadata =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)

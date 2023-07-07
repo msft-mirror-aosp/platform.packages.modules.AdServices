@@ -149,9 +149,7 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).disable(mContext);
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =
@@ -211,10 +209,8 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
         verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager).recordGaUxNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordNotificationDisplayed(true);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =
@@ -270,9 +266,7 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).enable(mContext);
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =
@@ -334,10 +328,8 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).recordTopicsDefaultConsent(true);
         verify(mConsentManager).recordFledgeDefaultConsent(true);
         verify(mConsentManager).recordMeasurementDefaultConsent(true);
-        verify(mConsentManager).recordGaUxNotificationDisplayed();
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(true);
+        verify(mConsentManager).recordNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =
@@ -381,10 +373,8 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
         verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager).recordGaUxNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordNotificationDisplayed(true);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =
@@ -458,10 +448,8 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
         verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager).recordGaUxNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordNotificationDisplayed(true);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
         final Notification notification =
@@ -539,9 +527,7 @@ public class ConsentNotificationTriggerTest {
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
-        verify(mConsentManager).recordNotificationDisplayed();
-        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        verifyNoMoreInteractions(mConsentManager);
+        verify(mConsentManager).recordNotificationDisplayed(true);
     }
 
     private void verifyControlsAndMoreButtonAreDisplayed(

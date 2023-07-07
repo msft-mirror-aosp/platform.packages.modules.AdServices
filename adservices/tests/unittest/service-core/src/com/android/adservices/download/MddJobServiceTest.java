@@ -17,7 +17,6 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -467,21 +466,16 @@ public class MddJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLogging() {
+    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
         // Logging killswitch is off.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
         testOnStartJob_shouldDisableJobTrue();
 
-        // Verify logging has happened
-        verify(mLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
-                        anyInt());
+        // Verify no logging has happened even though logging is enabled because this field is not
+        // logged
+        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     private void testOnStartJob_killswitchIsOn() {

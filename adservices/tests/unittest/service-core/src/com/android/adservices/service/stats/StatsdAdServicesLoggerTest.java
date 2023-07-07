@@ -16,9 +16,11 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
@@ -554,6 +556,124 @@ public class StatsdAdServicesLoggerTest {
                                 eq(methodName),
                                 eq(lineNumber),
                                 eq(exceptionName));
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logConsentMigrationStats_success() {
+        when(mFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(true);
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        // Invoke logging call
+        mLogger.logConsentMigrationStats(consentMigrationStats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_CONSENT_MIGRATED),
+                                eq(true),
+                                eq(true),
+                                eq(true),
+                                eq(true),
+                                eq(2),
+                                eq(2),
+                                eq(2));
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logConsentMigrationStats_disabled() {
+        when(mFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(false);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(true)
+                        .setFledgeConsent(true)
+                        .setMsmtConsent(true)
+                        .setDefaultConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
+                        .setRegion(2)
+                        .build();
+
+        // Invoke logging call
+        mLogger.logConsentMigrationStats(consentMigrationStats);
+
+        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementAdIdMatchForDebugKeys_success() {
+        final String enrollmentId = "EnrollmentId";
+        long uniqueAdIdValue = 1L;
+        long uniqueAdIdLimit = 5L;
+        int attributionType = AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(attributionType)
+                        .setNumUniqueAdIds(uniqueAdIdValue)
+                        .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyLong()));
+
+        // Invoke logging call
+        mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS),
+                                eq(enrollmentId),
+                                eq(attributionType),
+                                eq(true),
+                                eq(uniqueAdIdValue),
+                                eq(uniqueAdIdLimit));
+
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));

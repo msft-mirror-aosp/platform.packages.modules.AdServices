@@ -39,6 +39,20 @@ filegroup {
     path: "java",
 }
 
+filegroup {
+    name: "framework-sdksandbox-jarjar",
+    srcs: ["jarjar_rules.txt"]
+}
+
+java_defaults {
+    name: "framework-sdksandbox-jarjar-defaults",
+    jarjar_rules: ":framework-sdksandbox-jarjar",
+    static_libs: ["modules-utils-build"],
+    libs: [
+        "androidx.annotation_annotation",
+    ],
+}
+
 java_sdk_library {
     name: "framework-sdksandbox",
     srcs: [":framework-sdksandbox-sources"],
@@ -50,6 +64,7 @@ java_sdk_library {
     defaults: [
         "framework-module-defaults",
         "sdksandbox-java-defaults",
+        "framework-sdksandbox-jarjar-defaults",
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",
@@ -61,4 +76,13 @@ java_sdk_library {
             "com.android.server.sdksandbox.**",
         ],
     },
+}
+
+java_api_contribution {
+    name: "framework-sdksandbox-public-stubs",
+    api_surface: "public",
+    api_file: "api/current.txt",
+    visibility: [
+        "//build/orchestrator/apis",
+    ],
 }

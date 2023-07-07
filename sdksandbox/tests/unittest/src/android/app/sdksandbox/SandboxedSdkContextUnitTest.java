@@ -104,8 +104,12 @@ public class SandboxedSdkContextUnitTest {
         Context baseContext = context;
         ClassLoader loader = getClass().getClassLoader();
         if (sCustomizedSdkContextEnabled) {
-            // Not a valid flow for T- devices
-            assertThat(sCustomizedSdkContextEnabled).isFalse();
+            info.dataDir = SDK_CE_DATA_DIR;
+            info.credentialProtectedDataDir = SDK_CE_DATA_DIR;
+            info.deviceProtectedDataDir = SDK_DE_DATA_DIR;
+
+            baseContext = context.createContextForSdkInSandbox(info, 0);
+            loader = baseContext.getClassLoader();
         }
 
         mSandboxedSdkContext =

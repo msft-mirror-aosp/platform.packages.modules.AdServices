@@ -39,6 +39,8 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -255,8 +257,8 @@ public class AppSearchConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() {
-        mAppSearchConsentWorker.recordNotificationDisplayed();
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
+        mAppSearchConsentWorker.recordNotificationDisplayed(wasNotificationDisplayed);
     }
 
     /**
@@ -272,8 +274,8 @@ public class AppSearchConsentManager {
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
      */
-    public void recordGaUxNotificationDisplayed() {
-        mAppSearchConsentWorker.recordGaUxNotificationDisplayed();
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
+        mAppSearchConsentWorker.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
     }
 
     /**
@@ -414,7 +416,7 @@ public class AppSearchConsentManager {
         // ExtServices, and bail out if that's the case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to migrate Consent data to PPAPI and System Service in"
                             + " ExtServices");
             return false;
@@ -430,11 +432,11 @@ public class AppSearchConsentManager {
 
         if (wasNotificationDisplayed()) {
             datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordNotificationDisplayed();
+            adServicesManager.recordNotificationDisplayed(true);
         }
         if (wasGaUxNotificationDisplayed()) {
             datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordGaUxNotificationDisplayed();
+            adServicesManager.recordGaUxNotificationDisplayed(true);
         }
         if (!wasGaUxNotificationDisplayed() && !wasNotificationDisplayed()) {
             // This shouldn't happen since we checked that either of these notifications is
@@ -555,5 +557,28 @@ public class AppSearchConsentManager {
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     public Boolean wasU18NotificationDisplayed() {
         return mAppSearchConsentWorker.wasU18NotificationDisplayed();
+    }
+
+    /** Returns the current privacy sandbox UX. */
+    public PrivacySandboxUxCollection getUx() {
+        return mAppSearchConsentWorker.getUx();
+    }
+
+    /** Set the current privacy sandbox UX. */
+    public void setUx(PrivacySandboxUxCollection ux) {
+        mAppSearchConsentWorker.setUx(ux);
+    }
+
+    /** Returns the current privacy sandbox enrollment channel. */
+    public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
+            PrivacySandboxUxCollection ux) {
+        return mAppSearchConsentWorker.getEnrollmentChannel(ux);
+    }
+
+    /** Set the current privacy sandbox enrollment channel. */
+    public void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+        mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
     }
 }
