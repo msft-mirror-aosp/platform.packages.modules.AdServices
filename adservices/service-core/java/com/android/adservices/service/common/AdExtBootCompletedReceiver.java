@@ -21,7 +21,6 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
@@ -45,6 +44,8 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        LogUtil.i("AdExtBootCompletedReceiver onReceive invoked");
+
         // TODO(b/269798827): Enable for R.
         // On T+ devices, always disable the AdExtServices activities and services.
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
@@ -62,6 +63,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         if (!FlagsFactory.getFlags().getEnableBackCompat()
                 || !FlagsFactory.getFlags().getAdServicesEnabled()
                 || FlagsFactory.getFlags().getGlobalKillSwitch()) {
+            LogUtil.d("Exiting AdExtBootCompletedReceiver because flags are disabled");
             return;
         }
 
@@ -79,17 +81,17 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
 
         try {
-            String packageName = getPackageName(context);
+            String packageName = context.getPackageName();
             if (packageName == null
                     || packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                 // Running within the AdServices package, so don't do anything.
-                LogUtil.d("Running within AdServices package, not changing scheduled job state");
+                LogUtil.e("Running within AdServices package, not changing scheduled job state");
                 return;
             }
 
             JobScheduler scheduler = context.getSystemService(JobScheduler.class);
             if (scheduler == null) {
-                LogUtil.d("Could not retrieve JobScheduler instance, so not cancelling jobs");
+                LogUtil.e("Could not retrieve JobScheduler instance, so not cancelling jobs");
                 return;
             }
 
@@ -131,7 +133,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
 
         try {
-            String packageName = getPackageName(context);
+            String packageName = context.getPackageName();
             updateComponents(
                     context,
                     PackageManagerCompatUtils.CONSENT_ACTIVITIES_CLASSES,
@@ -153,7 +155,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
 
         try {
-            String packageName = getPackageName(context);
+            String packageName = context.getPackageName();
             updateComponents(
                     context, PackageManagerCompatUtils.SERVICE_CLASSES, packageName, shouldEnable);
             LogUtil.d("Updated state of AdExtServices services: [enable=" + shouldEnable + "]");
@@ -172,7 +174,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
         Objects.requireNonNull(components);
         Objects.requireNonNull(adServicesPackageName);
-        if (adServicesPackageName.contains(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+        if (adServicesPackageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
             throw new IllegalStateException(
                     "Components for package with AdServices APK package suffix should not be "
                             + "updated!");
@@ -187,11 +189,5 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
                             : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                     PackageManager.DONT_KILL_APP);
         }
-    }
-
-    private String getPackageName(Context context) throws PackageManager.NameNotFoundException {
-        PackageManager packageManager = context.getPackageManager();
-        PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-        return packageInfo.packageName;
     }
 }

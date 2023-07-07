@@ -26,9 +26,11 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
 
+import java.util.List;
+
 public class BroadcastsTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
-    public class BroadcastTestSdkImpl extends IBroadcastSdkApi.Stub {
+    static class BroadcastTestSdkImpl extends IBroadcastSdkApi.Stub {
         private final Context mContext;
 
         public BroadcastTestSdkImpl(Context sdkContext) {
@@ -36,13 +38,18 @@ public class BroadcastsTestSandboxedSdkProvider extends SandboxedSdkProvider {
         }
 
         @Override
-        public void registerBroadcastReceiver() {
+        public void registerBroadcastReceiver(List<String> actions) {
+            IntentFilter filter = new IntentFilter();
+            for (String action : actions) {
+                filter.addAction(action);
+            }
             mContext.registerReceiver(
                     new BroadcastReceiver() {
                         @Override
                         public void onReceive(Context context, Intent intent) {}
                     },
-                    new IntentFilter(Intent.ACTION_SEND));
+                    filter,
+                    Context.RECEIVER_EXPORTED);
         }
     }
 

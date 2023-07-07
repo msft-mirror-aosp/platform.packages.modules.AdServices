@@ -16,13 +16,11 @@
 
 package com.android.adservices.service.measurement.noising;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.PrivacyParams;
 
 import com.google.common.math.DoubleMath;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -265,10 +263,6 @@ public class Combinatorics {
      */
     public static int getNumStatesFlexAPI(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
-        if (!validateInputReportingPara(totalCap, perTypeNumWindowList, perTypeCapList)) {
-            LogUtil.e("Input parameters are out of range");
-            return -1;
-        }
         boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
@@ -287,17 +281,6 @@ public class Combinatorics {
         }
 
         return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
-    }
-
-    private static boolean validateInputReportingPara(
-            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
-        for (int n : perTypeNumWindowList) {
-            if (n > PrivacyParams.getMaxFlexibleEventReportingWindows()) return false;
-        }
-        return PrivacyParams.getMaxFlexibleEventReports()
-                        >= Math.min(totalCap, Arrays.stream(perTypeCapList).sum())
-                && perTypeNumWindowList.length
-                        <= PrivacyParams.getMaxFlexibleEventTriggerDataCardinality();
     }
 
     /**

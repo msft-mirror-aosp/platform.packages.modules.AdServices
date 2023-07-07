@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
-import static com.android.adservices.service.measurement.SourceFixture.getValidSourceBuilder;
+import static com.android.adservices.service.measurement.SourceFixture.getMinimalValidSourceBuilder;
 import static com.android.adservices.service.measurement.TriggerFixture.ValidTriggerParams;
 import static com.android.adservices.service.measurement.TriggerFixture.getValidTriggerBuilder;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
@@ -43,6 +43,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MsmtAdIdMatchForDebugKeysStats;
 import com.android.adservices.service.stats.MsmtDebugKeysMatchStats;
 
 import org.junit.Before;
@@ -79,7 +80,6 @@ public class DebugKeyAccessorTest {
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingLimit())
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(0L);
     }
 
     @Test
@@ -1586,11 +1586,54 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatching_appToWeb_nullPlatformAdId_debugKeysAbsent_logsMetric()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        "test-ad-id");
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_matchingAdIds_debugKeysPresent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1614,11 +1657,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_nonMatchingAdIds_debugKeysAbsent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1642,11 +1697,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_failedMatch_doesNotMatchJoinKeys()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1672,6 +1739,17 @@ public class DebugKeyAccessorTest {
         // not occur.
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
@@ -1703,6 +1781,7 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -1733,6 +1812,7 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -1764,6 +1844,16 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
@@ -1792,11 +1882,54 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatching_webToApp_nullPlatformAdId_debugKeysAbsent_logsMetric()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        true,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        "test-ad-id");
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_matchingAdIds_debugKeysPresent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1820,11 +1953,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_nonMatchingAdIds_debugKeysAbsent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1848,11 +1993,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_failedMatch_doesNotMatchJoinKeys()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1878,6 +2035,17 @@ public class DebugKeyAccessorTest {
         // not occur.
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
@@ -1894,7 +2062,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        null);
+                        "test-ad-id");
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1902,13 +2070,14 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        null,
+                        "test-ad-id",
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -1924,7 +2093,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        null);
+                        "test-ad-id");
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1932,13 +2101,14 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        null,
+                        "test-ad-id",
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -1955,7 +2125,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        null);
+                        "test-ad-id");
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1963,13 +2133,23 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        null,
+                        "test-ad-id",
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
@@ -1998,11 +2178,55 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
+    }
+
+    @Test
+    public void
+            getDebugKeysForVerbose_adIdAppToWeb_nullPlatformAdId_sourceDebugKeyAbsent_logsMetric()
+                    throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        "test-ad-id");
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_matchingAdIds_sourceDebugKeyPresent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -2026,11 +2250,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_nonMatchingAdIds_sourceDebugKeyAbsent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -2054,11 +2290,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_failedMatch_sourceDebugKeyAbsent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -2084,6 +2332,17 @@ public class DebugKeyAccessorTest {
         // not occur.
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
@@ -2115,6 +2374,7 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -2145,6 +2405,7 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -2176,6 +2437,16 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
@@ -2204,11 +2475,55 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
+    }
+
+    @Test
+    public void
+            getDebugKeysForVerbose_adIdWebToApp_nullPlatformAdId_sourceDebugKeyAbsent_logsMetric()
+                    throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        "test-ad-id");
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_matchingAdIds_sourceDebugKeyPresent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -2232,11 +2547,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_nonMatchingAdIds_sourceDebugKeyAbsent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -2260,11 +2587,23 @@ public class DebugKeyAccessorTest {
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_failedMatch_sourceDebugKeyAbsent()
             throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -2290,6 +2629,17 @@ public class DebugKeyAccessorTest {
         // not occur.
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
@@ -2306,7 +2656,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        null);
+                        "test-ad-id");
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2314,13 +2664,14 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        null,
+                        "test-ad-id",
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -2336,7 +2687,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        null);
+                        "test-ad-id");
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2344,13 +2695,14 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        null,
+                        "test-ad-id",
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementAdIdMatchForDebugKeysStats(any());
     }
 
     @Test
@@ -2367,7 +2719,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        null);
+                        "test-ad-id");
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2375,13 +2727,23 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        null,
+                        "test-ad-id",
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         assertNull(debugKeyPair.first);
         assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
 
     private static Trigger createTrigger(
@@ -2413,7 +2775,7 @@ public class DebugKeyAccessorTest {
             String debugJoinKey,
             String platformAdId,
             String debugAdId) {
-        return getValidSourceBuilder()
+        return getMinimalValidSourceBuilder()
                 .setArDebugPermission(arDebugPermission)
                 .setAdIdPermission(adIdPermission)
                 .setDebugKey(SOURCE_DEBUG_KEY)

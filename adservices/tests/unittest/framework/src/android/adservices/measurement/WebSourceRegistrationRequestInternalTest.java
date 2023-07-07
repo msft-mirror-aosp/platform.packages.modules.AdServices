@@ -87,7 +87,7 @@ public class WebSourceRegistrationRequestInternalTest {
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
                                         null,
-                                        CONTEXT.getAttributionSource().getPackageName(),
+                                        CONTEXT.getPackageName(),
                                         SDK_PACKAGE_NAME,
                                         REQUEST_TIME)
                                 .build());
@@ -113,7 +113,7 @@ public class WebSourceRegistrationRequestInternalTest {
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder(
                                         EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                        CONTEXT.getAttributionSource().getPackageName(),
+                                        CONTEXT.getPackageName(),
                                         /* sdkPackageName = */ null,
                                         REQUEST_TIME)
                                 .build());
@@ -156,7 +156,7 @@ public class WebSourceRegistrationRequestInternalTest {
     private WebSourceRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebSourceRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                        CONTEXT.getAttributionSource().getPackageName(),
+                        CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         REQUEST_TIME)
                 .setAdIdPermissionGranted(true)
@@ -165,7 +165,7 @@ public class WebSourceRegistrationRequestInternalTest {
 
     private void verifyExampleRegistrationInternal(WebSourceRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getSourceRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getAppPackageName());
+        assertEquals(CONTEXT.getPackageName(), request.getAppPackageName());
         assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
         assertTrue(request.isAdIdPermissionGranted());
     }

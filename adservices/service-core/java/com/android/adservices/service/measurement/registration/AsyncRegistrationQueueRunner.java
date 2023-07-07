@@ -315,6 +315,10 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
+        if (!source.isFlexEventApiValueValid()) {
+            debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+            return false;
+        }
         return true;
     }
 

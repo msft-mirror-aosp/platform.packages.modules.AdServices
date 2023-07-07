@@ -4513,7 +4513,7 @@ public final class AsyncTriggerFetcherTest {
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
-                        CONTEXT.getAttributionSource().getPackageName(),
+                        CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .build();
     }
@@ -4522,7 +4522,7 @@ public final class AsyncTriggerFetcherTest {
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
-                        CONTEXT.getAttributionSource().getPackageName(),
+                        CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .setAdIdValue(PLATFORM_AD_ID_VALUE)

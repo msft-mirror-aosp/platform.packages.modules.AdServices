@@ -17,6 +17,7 @@
 package com.android.adservices.data.topics;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -26,8 +27,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -41,6 +45,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -658,6 +663,32 @@ public final class TopicsDaoTest {
         assertThat(mTopicsDao.retrieveTopTopics(currentEpoch - 1)).isEqualTo(topTopics_epoch_3);
         assertThat(mTopicsDao.retrieveTopTopics(currentEpoch - 2)).isEqualTo(topTopics_epoch_2);
         assertThat(mTopicsDao.retrieveTopTopics(currentEpoch - 3)).isEmpty();
+    }
+
+    @Test
+    public void testDeleteAllTopicsTables_sqlExceptionOnDelete() {
+        // Setup required mocks.
+        DbHelper mockDbHelper = Mockito.mock(DbHelper.class);
+        SQLiteDatabase mockDatabase = Mockito.mock(SQLiteDatabase.class);
+        TopicsDao topicsDao = new TopicsDao(mockDbHelper);
+
+        // Do nothing for ErrorLogUtil calls.
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        // Throw exception on deletion of any table.
+        when(mockDbHelper.safeGetWritableDatabase()).thenReturn(mockDatabase);
+        when(mockDatabase.delete(any(), any(), any())).thenThrow(SQLException.class);
+
+        // Call topicsDao with empty exclusion list.
+        topicsDao.deleteAllTopicsTables(/*tablesToExclude*/ List.of());
+
+        // Verify the correct client error log is reported for all 10 tables.
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
+                times(10));
     }
 
     @Test

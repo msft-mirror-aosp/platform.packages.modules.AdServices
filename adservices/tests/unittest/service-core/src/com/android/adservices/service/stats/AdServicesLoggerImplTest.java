@@ -497,6 +497,30 @@ public class AdServicesLoggerImplTest {
     }
 
     @Test
+    public void testLogMsmtAdIdMatchForDebugKeysStats() {
+        final String enrollmentId = "enrollmentId";
+        long uniqueAdIds = 2L;
+        long uniqueAdIdLimit = 5L;
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setNumUniqueAdIds(uniqueAdIds)
+                        .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+        ArgumentCaptor<MsmtAdIdMatchForDebugKeysStats> argumentCaptor =
+                ArgumentCaptor.forClass(MsmtAdIdMatchForDebugKeysStats.class);
+        verify(mStatsdLoggerMock)
+                .logMeasurementAdIdMatchForDebugKeysStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
     public void testLogMeasurementAttributionStats() {
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()

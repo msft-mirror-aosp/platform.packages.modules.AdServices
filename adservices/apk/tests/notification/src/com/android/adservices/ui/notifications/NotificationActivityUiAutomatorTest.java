@@ -16,6 +16,8 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Matchers.any;
@@ -41,6 +43,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -72,6 +75,7 @@ public class NotificationActivityUiAutomatorTest {
 
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
+    @Mock private UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
@@ -87,6 +91,7 @@ public class NotificationActivityUiAutomatorTest {
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(UxStatesManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -95,7 +100,13 @@ public class NotificationActivityUiAutomatorTest {
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
+        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(BETA_UX).when(mUxStatesManager).getUx();
+        doReturn("BETA_UX").when(mMockFlags).getDebugUx();
+
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(mUxStatesManager)
+                .when(() -> UxStatesManager.getInstance(any(Context.class)));
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         ExtendedMockito.doNothing()

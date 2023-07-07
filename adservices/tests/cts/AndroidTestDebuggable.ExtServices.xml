@@ -38,7 +38,7 @@
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices.apex" />
+            value="com.google.android.extservices_sminus.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -83,6 +83,10 @@
         <!-- Disable Register Ad Beacon Feature -->
         <option name="run-command"
                 value="setprop debug.adservices.fledge_register_ad_beacon_enabled false"/>
+
+        <!-- Disable CPC Billing Feature -->
+        <option name="run-command"
+                value="setprop debug.adservices.fledge_cpc_billing_enabled false"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

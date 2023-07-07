@@ -33,7 +33,8 @@ import android.content.Context;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationDebugChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;

@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdWithBid;
+import android.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
 
@@ -38,6 +39,12 @@ public abstract class AdBiddingOutcome {
     public abstract CustomAudienceBiddingInfo getCustomAudienceBiddingInfo();
 
     /**
+     * @return data for event-level debug reporting.
+     */
+    @Nullable
+    public abstract DebugReport getDebugReport();
+
+    /**
      * @return Generic builder
      */
     public static Builder builder() {
@@ -53,6 +60,9 @@ public abstract class AdBiddingOutcome {
         /** Sets the CustomAudienceBiddingInfo */
         public abstract Builder setCustomAudienceBiddingInfo(
                 CustomAudienceBiddingInfo customAudienceBiddingInfo);
+
+        /** Sets the DebugReport. */
+        abstract Builder setDebugReport(DebugReport debugReport);
 
         /** Build an AdBiddingOutcome object. */
         public abstract AdBiddingOutcome build();

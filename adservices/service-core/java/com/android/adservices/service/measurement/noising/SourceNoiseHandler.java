@@ -25,8 +25,8 @@ import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
@@ -122,14 +122,10 @@ public class SourceNoiseHandler {
                             .map(
                                     reportConfig ->
                                             new Source.FakeReport(
-                                                    new UnsignedLong(
-                                                            Long.valueOf(
-                                                                    flexEventReportSpec
-                                                                            .getTriggerDataValue(
-                                                                                    reportConfig[
-                                                                                            0]))),
+                                                    flexEventReportSpec.getTriggerDataValue(
+                                                            reportConfig[0]),
                                                     mEventReportWindowCalcDelegate
-                                                            .getReportingTimeForNoisingFlexEventAPI(
+                                                            .getReportingTimeForNoisingFlexEventApi(
                                                                     reportConfig[1],
                                                                     reportConfig[0],
                                                                     flexEventReportSpec),
@@ -148,7 +144,8 @@ public class SourceNoiseHandler {
 
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability(@NonNull Source source) {
-        if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()) {
+        if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()
+                || mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()) {
             return calculateNoiseDynamically(source);
         }
 

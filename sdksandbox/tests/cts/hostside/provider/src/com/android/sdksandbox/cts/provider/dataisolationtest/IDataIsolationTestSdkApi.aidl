@@ -14,6 +14,11 @@
 
 package com.android.sdksandbox.cts.provider.dataisolationtest;
 
+import android.os.Bundle;
+
 interface IDataIsolationTestSdkApi {
     void testSdkSandboxDataIsolation_SandboxCanAccessItsDirectory();
+    void testSdkSandboxDataIsolation_CannotVerifyAppExistence();
+    void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence(in Bundle params);
+    void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes(in Bundle params);
 }

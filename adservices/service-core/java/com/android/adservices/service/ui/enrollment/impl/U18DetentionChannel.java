@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.impl;
 
 import android.content.Context;
 import android.os.Build;
@@ -23,13 +23,14 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /** Enroll through the U18 detention channel. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class U18DetentionChannel implements PrivacySandboxEnrollmentChannel {
 
-    /** Checks if user is eligible for the U18 dention channel. */
+    /** Checks if user is eligible for the U18 detention channel. */
     public boolean isEligible(
             PrivacySandboxUxCollection uxCollection,
             ConsentManager consentManager,

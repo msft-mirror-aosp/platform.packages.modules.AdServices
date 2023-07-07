@@ -123,7 +123,7 @@ public class FledgeRoomConverters {
         try {
             jsonSet = new JSONArray(serializedSet);
         } catch (Exception exception) {
-            sLogger.d(exception, "Error deserializing set of strings from DB; ");
+            sLogger.d(exception, "Error deserializing set of strings from DB; returning null set");
             return null;
         }
 
@@ -141,6 +141,53 @@ public class FledgeRoomConverters {
                 break;
             }
             outputSet.add(currentString);
+        }
+
+        return outputSet;
+    }
+
+    /** Serialize a {@link Set} of Integers into a JSON array as a String. */
+    @TypeConverter
+    @Nullable
+    public static String serializeIntegerSet(@Nullable Set<Integer> integerSet) {
+        if (integerSet == null) {
+            return null;
+        }
+
+        JSONArray jsonSet = new JSONArray(integerSet);
+        return jsonSet.toString();
+    }
+
+    /** Deserialize a {@link Set} of Strings from a JSON array. */
+    @TypeConverter
+    @Nullable
+    public static Set<Integer> deserializeIntegerSet(@Nullable String serializedSet) {
+        if (serializedSet == null) {
+            return null;
+        }
+
+        Set<Integer> outputSet = new HashSet<>();
+        JSONArray jsonSet;
+        try {
+            jsonSet = new JSONArray(serializedSet);
+        } catch (Exception exception) {
+            sLogger.d(exception, "Error deserializing set of ints from DB; returning null set");
+            return null;
+        }
+
+        for (int arrayIndex = 0; arrayIndex < jsonSet.length(); arrayIndex++) {
+            int currentInt;
+            try {
+                currentInt = jsonSet.getInt(arrayIndex);
+            } catch (Exception exception) {
+                sLogger.d(
+                        exception,
+                        "Error deserializing set int #%d from DB; skipping element from %s",
+                        arrayIndex,
+                        serializedSet);
+                continue;
+            }
+            outputSet.add(currentInt);
         }
 
         return outputSet;
