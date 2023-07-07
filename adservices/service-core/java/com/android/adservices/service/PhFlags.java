@@ -577,6 +577,26 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
 
+    static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED = "measurement_flex_lite_api_enabled";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT =
+            "measurement_flex_api_max_information_gain_event";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION =
+            "measurement_flex_api_max_information_gain_navigation";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
+            "measurement_flex_api_max_event_reports";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS =
+            "measurement_flex_api_max_event_report_windows";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY =
+            "measurement_flex_api_max_trigger_data_cardinality";
+
+    static final String KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS =
+            "measurement_minimum_event_report_window_in_seconds";
+
     static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
             "measurement_max_sources_per_publisher";
 
@@ -590,7 +610,7 @@ public final class PhFlags implements Flags {
             "measurement_max_event_reports_per_destination";
 
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_seconds";
+            "measurement_min_event_report_delay_millis";
 
     static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
             "measurement_enable_configurable_event_reporting_windows";
@@ -2825,6 +2845,62 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementFlexLiteAPIEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
+                /* defaultValue */ MEASUREMENT_FLEX_LITE_API_ENABLED);
+    }
+
+    @Override
+    public float getMeasurementFlexAPIMaxInformationGainEvent() {
+        return DeviceConfig.getFloat(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+    }
+
+    @Override
+    public float getMeasurementFlexAPIMaxInformationGainNavigation() {
+        return DeviceConfig.getFloat(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+    }
+
+    @Override
+    public int getMeasurementFlexAPIMaxEventReports() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS);
+    }
+
+    @Override
+    public int getMeasurementFlexAPIMaxEventReportWindows() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS);
+    }
+
+    @Override
+    public int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY);
+    }
+
+    @Override
+    public long getMeasurementMinimumEventReportWindowInSeconds() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS);
+    }
+
+    @Override
     public int getMeasurementMaxSourcesPerPublisher() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -3210,6 +3286,41 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
                         + " = "
                         + getMeasurementFlexibleEventReportingApiEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_LITE_API_ENABLED
+                        + " = "
+                        + getMeasurementFlexLiteAPIEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
+                        + " = "
+                        + getMeasurementFlexAPIMaxInformationGainEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION
+                        + " = "
+                        + getMeasurementFlexAPIMaxInformationGainNavigation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
+                        + " = "
+                        + getMeasurementFlexAPIMaxEventReports());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS
+                        + " = "
+                        + getMeasurementFlexAPIMaxEventReportWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY
+                        + " = "
+                        + getMeasurementFlexAPIMaxTriggerDataCardinality());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS
+                        + " = "
+                        + getMeasurementMinimumEventReportWindowInSeconds());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST

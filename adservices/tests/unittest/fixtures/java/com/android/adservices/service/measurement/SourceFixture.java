@@ -55,7 +55,7 @@ public final class SourceFixture {
         return getValidSourceBuilder().build();
     }
 
-    private static Source.Builder getValidSourceBuilder() {
+    public static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
@@ -175,6 +175,7 @@ public final class SourceFixture {
         try {
             return getValidSourceBuilder()
                     .setFlexEventReportSpec(getValidReportSpecCountBased())
+                    .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
                     .build();
         } catch (JSONException e) {
             return null;
@@ -196,7 +197,7 @@ public final class SourceFixture {
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setMaxEventLevelReports(reportSpec.getMaxReports())
                 .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
@@ -206,7 +207,7 @@ public final class SourceFixture {
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setMaxEventLevelReports(reportSpec.getMaxReports())
                 .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
