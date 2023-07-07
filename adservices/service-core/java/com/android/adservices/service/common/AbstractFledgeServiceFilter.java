@@ -22,6 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.LimitExceededException;
 
@@ -94,6 +95,20 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
+     * Asserts caller has user consent to use FLEDGE APIs in the calling app and persists consent
+     * for.
+     *
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     */
+    protected void assertAndPersistCallerHasUserConsentForApp(String callerPackageName)
+            throws ConsentManager.RevokedConsentException {
+        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName)) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+    }
+
+    /**
      * Asserts that the caller has the appropriate foreground status.
      *
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check
@@ -115,6 +130,22 @@ public abstract class AbstractFledgeServiceFilter {
     protected void assertCallerPackageName(String callerPackageName, int callerUid, int apiName)
             throws FledgeAuthorizationFilter.CallerMismatchException {
         mFledgeAuthorizationFilter.assertCallingPackageName(callerPackageName, callerUid, apiName);
+    }
+
+    /**
+     * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
+     * the ad tech is enrolled and authorized to perform the operation for the package.
+     *
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param callerPackageName the package name to check against
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     */
+    protected AdTechIdentifier getAndAssertAdTechFromUriAllowed(
+            String callerPackageName, Uri uriForAdTech, int apiName)
+            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        return mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
+                mContext, callerPackageName, uriForAdTech, apiName);
     }
 
     /**

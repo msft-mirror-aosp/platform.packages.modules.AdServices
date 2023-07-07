@@ -43,7 +43,7 @@ public final class RegistrationRequestTest {
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_SOURCE,
                         Uri.parse("http://baz.com"),
-                        sContext.getAttributionSource().getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .setRequestTime(1000L)
                 .setAdIdPermissionGranted(true)
@@ -69,7 +69,7 @@ public final class RegistrationRequestTest {
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.INVALID,
                                         Uri.parse("http://foo.com"),
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -82,7 +82,7 @@ public final class RegistrationRequestTest {
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.REGISTER_TRIGGER,
                                         /* registrationUri = */ null,
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -108,7 +108,7 @@ public final class RegistrationRequestTest {
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.REGISTER_TRIGGER,
                                         /* registrationUri = */ Uri.parse("http://foo.com"),
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         /* sdkPackageName = */ null)
                                 .build());
     }
@@ -119,7 +119,7 @@ public final class RegistrationRequestTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse("http://foo.com"),
-                                sContext.getAttributionSource().getPackageName(),
+                                sContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
         assertEquals("http://foo.com", request.getRegistrationUri().toString());

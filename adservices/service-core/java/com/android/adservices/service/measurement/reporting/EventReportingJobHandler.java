@@ -117,7 +117,9 @@ public class EventReportingJobHandler {
             if (mUploadMethod != null) {
                 reportingStatus.setUploadMethod(mUploadMethod);
             }
-            logReportingStats(reportingStatus);
+            if (!mIsDebugInstance) {
+                logReportingStats(reportingStatus);
+            }
         }
         return true;
     }

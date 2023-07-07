@@ -207,12 +207,11 @@ class LoadSdkSession {
     // Asks the given sandbox service to load this SDK.
     void load(
             ISdkSandboxService service,
-            String ceDataDir,
-            String deDataDir,
+            ApplicationInfo customizedInfo,
             long timeSystemServerCalledSandbox,
             long timeSystemServerReceivedCallFromApp) {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(timeSystemServerCalledSandbox);
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCalledSandbox);
 
         // TODO(b/258679084): If a second load request comes here, while the first is pending, it
         // will go through. SdkSandboxManagerService already has a check for this, but we should
@@ -242,8 +241,7 @@ class LoadSdkSession {
                     mSdkProviderInfo.getApplicationInfo(),
                     mSdkProviderInfo.getSdkInfo().getName(),
                     mSdkProviderInfo.getSdkProviderClassName(),
-                    ceDataDir,
-                    deDataDir,
+                    customizedInfo,
                     mLoadParams,
                     mRemoteSdkLink,
                     sandboxLatencyInfo);
@@ -340,7 +338,8 @@ class LoadSdkSession {
     }
 
     void unload(long timeSystemServerReceivedCallFromApp) {
-        SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo(mInjector.getCurrentTime());
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
         IUnloadSdkCallback unloadCallback =
                 new IUnloadSdkCallback.Stub() {
                     @Override
@@ -654,8 +653,8 @@ class LoadSdkSession {
                     /*success=*/ true,
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                     mCallingInfo.getUid());
-            final SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(timeSystemServerCalledSandbox);
+            final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+            sandboxLatencyInfo.setTimeSystemServerCalledSandbox(timeSystemServerCalledSandbox);
             try {
                 synchronized (this) {
                     mManagerToSdkCallback.onSurfacePackageRequested(
@@ -817,13 +816,13 @@ class LoadSdkSession {
 
     private SdkProviderInfo createSdkProviderInfo() {
         try {
-            PackageManager pm = mContext.getPackageManager();
             UserHandle userHandle = UserHandle.getUserHandleForUid(mCallingInfo.getUid());
+            Context userContext = mContext.createContextAsUser(userHandle, /* flags= */ 0);
+            PackageManager pm = userContext.getPackageManager();
             ApplicationInfo info =
-                    pm.getApplicationInfoAsUser(
+                    pm.getApplicationInfo(
                             mCallingInfo.getPackageName(),
-                            ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES),
-                            userHandle);
+                            ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES));
             List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
             for (int j = 0; j < sharedLibraries.size(); j++) {
                 SharedLibraryInfo sharedLibrary = sharedLibraries.get(j);
@@ -843,7 +842,8 @@ class LoadSdkSession {
                 ApplicationInfo applicationInfo =
                         pm.getPackageInfo(
                                         sharedLibrary.getDeclaringPackage(),
-                                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES)
+                                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                                | PackageManager.MATCH_ANY_USER)
                                 .applicationInfo;
                 return new SdkProviderInfo(applicationInfo, sharedLibrary, sdkProviderClassName);
             }
@@ -851,6 +851,10 @@ class LoadSdkSession {
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
+    }
+
+    ApplicationInfo getApplicationInfo() {
+        return mSdkProviderInfo.getApplicationInfo();
     }
 
     /** Class which retrieves and stores the sdkName, sdkProviderClassName, and ApplicationInfo */

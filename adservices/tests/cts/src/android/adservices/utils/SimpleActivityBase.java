@@ -131,7 +131,7 @@ public class SimpleActivityBase extends Activity {
             mWaitingAction = action;
             IntentFilter filter = new IntentFilter();
             filter.addAction(action);
-            mContext.registerReceiver(mReceiver, filter);
+            mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_EXPORTED);
         }
 
         public Intent doWait(long timeoutMillis) throws TimeoutException {

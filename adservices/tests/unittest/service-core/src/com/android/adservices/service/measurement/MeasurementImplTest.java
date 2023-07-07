@@ -147,7 +147,7 @@ public final class MeasurementImplTest {
                         .build();
         return new WebTriggerRegistrationRequestInternal.Builder(
                         webTriggerRegistrationRequest,
-                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                        DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .build();
     }
@@ -171,7 +171,7 @@ public final class MeasurementImplTest {
                         .build();
         return new WebSourceRegistrationRequestInternal.Builder(
                         sourceRegistrationRequest,
-                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                        DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         REQUEST_TIME)
                 .build();
@@ -220,7 +220,7 @@ public final class MeasurementImplTest {
                                         Collections.emptyList(),
                                         Instant.ofEpochMilli(Long.MIN_VALUE),
                                         Instant.ofEpochMilli(Long.MAX_VALUE),
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                        DEFAULT_CONTEXT.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
         assertEquals(STATUS_SUCCESS, result);
@@ -247,7 +247,7 @@ public final class MeasurementImplTest {
                                         Collections.emptyList(),
                                         Instant.now().minusSeconds(1),
                                         Instant.now(),
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                        DEFAULT_CONTEXT.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
@@ -263,7 +263,7 @@ public final class MeasurementImplTest {
                                 Collections.emptyList(),
                                 Instant.ofEpochMilli(Long.MIN_VALUE),
                                 Instant.ofEpochMilli(Long.MAX_VALUE),
-                                DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                DEFAULT_CONTEXT.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                         .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
@@ -284,7 +284,7 @@ public final class MeasurementImplTest {
                                         Collections.emptyList(),
                                         Instant.MIN,
                                         Instant.MAX,
-                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                        DEFAULT_CONTEXT.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
@@ -411,7 +411,7 @@ public final class MeasurementImplTest {
                                     Collections.emptyList(),
                                     Instant.ofEpochMilli(Long.MIN_VALUE),
                                     Instant.ofEpochMilli(Long.MAX_VALUE),
-                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    DEFAULT_CONTEXT.getPackageName(),
                                     SDK_PACKAGE_NAME)
                             .build());
 
@@ -460,7 +460,7 @@ public final class MeasurementImplTest {
                                     Collections.emptyList(),
                                     Instant.ofEpochMilli(Long.MIN_VALUE),
                                     Instant.ofEpochMilli(Long.MAX_VALUE),
-                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    DEFAULT_CONTEXT.getPackageName(),
                                     SDK_PACKAGE_NAME)
                             .build());
 
@@ -504,7 +504,7 @@ public final class MeasurementImplTest {
                                     Collections.emptyList(),
                                     Instant.ofEpochMilli(Long.MIN_VALUE),
                                     Instant.ofEpochMilli(Long.MAX_VALUE),
-                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    DEFAULT_CONTEXT.getPackageName(),
                                     SDK_PACKAGE_NAME)
                             .build());
 
@@ -554,7 +554,7 @@ public final class MeasurementImplTest {
                                     Collections.emptyList(),
                                     Instant.ofEpochMilli(Long.MIN_VALUE),
                                     Instant.ofEpochMilli(Long.MAX_VALUE),
-                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    DEFAULT_CONTEXT.getPackageName(),
                                     SDK_PACKAGE_NAME)
                             .build());
 

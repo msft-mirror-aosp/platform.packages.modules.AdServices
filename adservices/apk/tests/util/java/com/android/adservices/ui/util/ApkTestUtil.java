@@ -44,10 +44,10 @@ import java.util.Locale;
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
-    public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
+
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
@@ -76,6 +76,7 @@ public class ApkTestUtil {
 
         return consentSwitch;
     }
+
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
@@ -143,6 +144,23 @@ public class ApkTestUtil {
         // Launch the setting view.
         Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+
+        // Wait for the view to appear
+        device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), launchTimeout);
+    }
+
+    /** Launch Privacy Sandbox Setting View with UX extra. */
+    public static void launchSettingViewGivenUx(
+            Context context, UiDevice device, int launchTimeout, String ux) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+
+        // Launch the setting view.
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("ux", ux);
+
         context.startActivity(intent);
 
         // Wait for the view to appear

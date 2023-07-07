@@ -28,6 +28,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
+import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -203,6 +204,14 @@ public interface IMeasurementDao {
      * @param status value to be set
      */
     void updateSourceStatus(@NonNull List<String> sourceIds, @Source.Status int status)
+            throws DatastoreException;
+
+    /**
+     * @param sourceId the source id
+     * @param reportSpec the new report specification in source
+     * @throws DatastoreException throws DatastoreException
+     */
+    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
             throws DatastoreException;
 
     /**
@@ -505,6 +514,15 @@ public interface IMeasurementDao {
             @NonNull List<String> sourceIds, @NonNull List<String> triggerIds)
             throws DatastoreException;
 
+    /**
+     * Get source IDs based on trigger IDs for flexible event API
+     *
+     * @param triggerIds triggers to be matched with source
+     * @return the list of sourced ids
+     * @throws DatastoreException throw DatastoreException
+     */
+    List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+            throws DatastoreException;
     /**
      * Returns list of sources matching registrant, publishers and also in the provided time frame.
      * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.

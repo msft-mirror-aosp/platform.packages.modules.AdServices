@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 
@@ -179,7 +178,7 @@ public class EventReportingJobServiceTest {
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withLogging() throws Exception {
+    public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
                     // Logging killswitch is off.
@@ -188,14 +187,10 @@ public class EventReportingJobServiceTest {
 
                     onStartJob_shouldDisableJobTrue();
 
-                    // Verify logging has happened
-                    verify(mSpyLogger)
-                            .logExecutionStats(
-                                    anyInt(),
-                                    anyLong(),
-                                    eq(
-                                            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
-                                    anyInt());
+                    // Verify logging has not happened even though logging is enabled because this
+                    // field is not logged
+                    verify(mSpyLogger, never())
+                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
                 });
     }
 

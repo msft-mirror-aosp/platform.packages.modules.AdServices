@@ -126,6 +126,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats) {
+        mStatsdAdServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+    }
+
+    @Override
     public void logMeasurementAttributionStats(
             MeasurementAttributionStats measurementAttributionStats) {
         mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);

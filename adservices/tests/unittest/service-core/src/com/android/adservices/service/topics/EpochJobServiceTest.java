@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
@@ -34,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -68,9 +68,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link com.android.adservices.service.topics.EpochJobService} */
 @SuppressWarnings("ConstantConditions")
@@ -160,8 +157,9 @@ public class EpochJobServiceTest {
         testOnStartJob_killSwitchOff();
 
         // Verify logging methods are invoked.
-        verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mSpyLogger, atLeastOnce()).persistJobExecutionData(anyInt(), anyLong());
+        verify(mSpyLogger, atLeastOnce())
+                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -218,9 +216,6 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_globalKillSwitchOverridesAll() throws InterruptedException {
-        // Add a countDownLatch to ensure background thread gets executed
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-
         // Global Killswitch is on.
         doReturn(true).when(mMockFlags).getGlobalKillSwitch();
 
@@ -232,11 +227,22 @@ public class EpochJobServiceTest {
 
         mSpyEpochJobService.onStartJob(mMockJobParameters);
 
-        // The countDownLatch doesn't get decreased and waits until timeout.
-        assertThat(countDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isFalse();
+        // Schedule the job to assert after starting that the scheduled job has been started
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(CONTEXT, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS)
+                        .setPersisted(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
-        // When the kill switch is on, the EpochJobService exits early and do nothing.
+        // Now verify that when the Job starts, it will schedule itself.
+        assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
+
+        assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
     }
 
     @Test
@@ -252,21 +258,16 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLogging() {
+    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
         // Logging killswitch is off.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
         testOnStartJob_shouldDisableJobTrue();
 
-        // Verify logging has happened
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
-                        anyInt());
+        // Verify logging has not happened even though logging is enabled because this field is not
+        // logged
+        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -413,8 +414,6 @@ public class EpochJobServiceTest {
                         mBlockedTopicsManager,
                         mMockAppUpdateManager,
                         mMockFlags);
-        // Add a countDownLatch to ensure background thread gets executed
-        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         // Killswitch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
@@ -429,15 +428,22 @@ public class EpochJobServiceTest {
 
         mSpyEpochJobService.onStartJob(mMockJobParameters);
 
-        // The countDownLatch doesn't get decreased and waits until timeout.
-        assertThat(countDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isFalse();
+        // Schedule the job to assert after starting that the scheduled job has been started
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(CONTEXT, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS)
+                        .setPersisted(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
 
-        // Check that processEpoch() and loadCache() are executed to justify
-        // TopicsWorker.computeEpoch() is executed.
-        ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
-        verify(mMockEpochManager).processEpoch();
-        verify(mMockCacheManager).loadCache(anyLong());
+        // Now verify that when the Job starts, it will schedule itself.
+        assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
+
+        assertThat(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
     }
 
     private void testOnStartJob_killSwitchOn() {
@@ -497,7 +503,7 @@ public class EpochJobServiceTest {
         assertNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
 
         verify(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
-        verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
+        verify(mSpyLogger, never()).recordOnStartJob(anyInt());
     }
 
     private void testOnStopJob() {

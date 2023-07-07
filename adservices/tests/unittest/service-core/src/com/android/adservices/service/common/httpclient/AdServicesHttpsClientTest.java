@@ -29,6 +29,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
+import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
@@ -151,7 +152,7 @@ public class AdServicesHttpsClientTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> getAndReadNothing(Uri.parse(url.toString())));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -209,7 +210,7 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -639,7 +640,7 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class, () -> postJson(Uri.parse(url.toString()), mData));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -660,6 +661,29 @@ public class AdServicesHttpsClientTest {
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testFailedResponseWithStatusCode() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setResponseCode(305)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        // Assert future chain throws an AdServicesNetworkException.
+        Exception wrapperException =
+                assertThrows(
+                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+        assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
+
+        // Assert the expected AdServicesNetworkException is thrown.
+        AdServicesNetworkException exception =
+                (AdServicesNetworkException) wrapperException.getCause();
+        assertThat(exception.getErrorCode())
+                .isEqualTo(AdServicesNetworkException.ERROR_REDIRECTION);
+        assertThat(exception.getRetryAfter())
+                .isEqualTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE);
+        assertThat(exception.getMessage()).isNull();
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri) throws Exception {

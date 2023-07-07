@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.impl;
 
 import android.content.Context;
 import android.os.Build;
@@ -23,7 +23,8 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /** Enrollment channel for checking if user has already enrolled in an UX. */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -42,7 +43,7 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             case U18_UX:
                 return consentManager.wasU18NotificationDisplayed();
             default:
-                // Unsupport and non-valid UXs can never have enrollment channels.
+                // Unsupported and non-valid UXs can never have enrollment channels.
                 return false;
         }
     }
