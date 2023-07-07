@@ -16,11 +16,22 @@
 
 package com.android.adservices.data.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -28,10 +39,16 @@ import androidx.test.filters.MediumTest;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,12 +72,19 @@ public final class TopicsDaoTest {
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
+    private MockitoSession mStaticMockSession;
+
     private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ErrorLogUtil.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -73,6 +97,11 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.EpochOriginContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -637,6 +666,32 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testDeleteAllTopicsTables_sqlExceptionOnDelete() {
+        // Setup required mocks.
+        DbHelper mockDbHelper = Mockito.mock(DbHelper.class);
+        SQLiteDatabase mockDatabase = Mockito.mock(SQLiteDatabase.class);
+        TopicsDao topicsDao = new TopicsDao(mockDbHelper);
+
+        // Do nothing for ErrorLogUtil calls.
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        // Throw exception on deletion of any table.
+        when(mockDbHelper.safeGetWritableDatabase()).thenReturn(mockDatabase);
+        when(mockDatabase.delete(any(), any(), any())).thenThrow(SQLException.class);
+
+        // Call topicsDao with empty exclusion list.
+        topicsDao.deleteAllTopicsTables(/*tablesToExclude*/ List.of());
+
+        // Verify the correct client error log is reported for all 10 tables.
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
+                times(10));
+    }
+
+    @Test
     public void testDeleteAllTopicsTables() {
         Topic topic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
@@ -910,6 +965,7 @@ public final class TopicsDaoTest {
 
     @Test
     public void testDeleteEntriesFromTableByColumnWithEqualCondition_nonExistingArguments() {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         // Persist an entry to Returned Topics Table
         final long epochId1 = 1L;
         final int numberOfLookBackEpochs = 1;
@@ -952,6 +1008,14 @@ public final class TopicsDaoTest {
                 /* isStringEqualConditionColumnValue */ false);
         assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
                 .isEqualTo(expectedReturnedTopicsMap);
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
+                times(3));
     }
 
     @Test
@@ -996,6 +1060,7 @@ public final class TopicsDaoTest {
         appClassificationTopicsMap1.put(app1, List.of(topic1));
 
         mTopicsDao.persistAppClassificationTopics(epochId1, appClassificationTopicsMap1);
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         // Justify the status before erasing data
         // MapEpoch1: app1 -> topic1
@@ -1025,6 +1090,14 @@ public final class TopicsDaoTest {
                 List.of(app1));
         // Nothing will happen as no satisfied entry to delete
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
+                times(2));
     }
 
     @Test

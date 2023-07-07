@@ -22,6 +22,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -129,6 +130,11 @@ public class EnrollmentDataDownloadManagerTest {
                 .isEqualTo(EnrollmentDataDownloadManager.DownloadStatus.SUCCESS);
 
         verify(mMockEnrollmentDao, times(5)).insert(any());
+
+        // Verify no duplicate inserts after enrollment data is saved before.
+        assertThat(mEnrollmentDataDownloadManager.readAndInsertEnrolmentDataFromMdd().get())
+                .isEqualTo(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
+        verifyZeroInteractions(mMockEnrollmentDao);
     }
 
     @Test

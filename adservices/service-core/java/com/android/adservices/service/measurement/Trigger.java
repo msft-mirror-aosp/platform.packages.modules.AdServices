@@ -71,6 +71,7 @@ public class Trigger {
     @Nullable private String mDebugJoinKey;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -117,7 +118,8 @@ public class Trigger {
                 && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
                 && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey)
                 && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
-                && Objects.equals(mDebugAdId, trigger.mDebugAdId);
+                && Objects.equals(mDebugAdId, trigger.mDebugAdId)
+                && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin);
     }
 
     @Override
@@ -143,7 +145,8 @@ public class Trigger {
                 mAggregateDeduplicationKeys,
                 mDebugJoinKey,
                 mPlatformAdId,
-                mDebugAdId);
+                mDebugAdId,
+                mRegistrationOrigin);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -343,6 +346,11 @@ public class Trigger {
         return mDebugAdId;
     }
 
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -431,7 +439,7 @@ public class Trigger {
      * @return list of {@link EventTrigger}s
      * @throws JSONException if JSON parsing fails
      */
-    public List<EventTrigger> parseEventTriggers() throws JSONException {
+    public List<EventTrigger> parseEventTriggers(boolean readValue) throws JSONException {
         JSONArray jsonArray = new JSONArray(this.mEventTriggers);
         List<EventTrigger> eventTriggers = new ArrayList<>();
 
@@ -447,6 +455,13 @@ public class Trigger {
             if (!eventTrigger.isNull(EventTriggerContract.PRIORITY)) {
                 eventTriggerBuilder.setTriggerPriority(
                         eventTrigger.getLong(EventTriggerContract.PRIORITY));
+            }
+
+            if (readValue && !eventTrigger.isNull(EventTriggerContract.VALUE)) {
+                eventTriggerBuilder.setTriggerValue(
+                        eventTrigger.getLong(EventTriggerContract.VALUE));
+            } else {
+                eventTriggerBuilder.setTriggerValue(1L);
             }
 
             if (!eventTrigger.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
@@ -682,13 +697,21 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Trigger.Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /** Build the {@link Trigger}. */
         @NonNull
         public Trigger build() {
             Validation.validateNonNull(
                     mBuilding.mAttributionDestination,
                     mBuilding.mEnrollmentId,
-                    mBuilding.mRegistrant);
+                    mBuilding.mRegistrant,
+                    mBuilding.mRegistrationOrigin);
 
             return mBuilding;
         }
@@ -698,6 +721,7 @@ public class Trigger {
     public interface EventTriggerContract {
         String TRIGGER_DATA = "trigger_data";
         String PRIORITY = "priority";
+        String VALUE = "value";
         String DEDUPLICATION_KEY = "deduplication_key";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";

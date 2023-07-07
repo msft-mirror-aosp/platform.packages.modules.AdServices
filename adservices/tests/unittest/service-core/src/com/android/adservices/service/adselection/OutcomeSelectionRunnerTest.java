@@ -343,7 +343,7 @@ public class OutcomeSelectionRunnerTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(idWithBidAndRenderUri.getAdSelectionId())
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(contextualSignals)
+                        .setBuyerContextualSignals(contextualSignals)
                         .setBiddingLogicUri(biddingLogicUri1)
                         .setWinningAdRenderUri(idWithBidAndRenderUri.getRenderUri())
                         .setWinningAdBid(idWithBidAndRenderUri.getBid())

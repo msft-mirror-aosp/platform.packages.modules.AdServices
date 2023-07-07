@@ -19,8 +19,8 @@ package android.adservices.clients.adselection;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
@@ -111,19 +111,12 @@ public class AdSelectionClient {
                 });
     }
 
-    /**
-     * Invokes the {@code reportInteraction} method of {@link AdSelectionManager}, and returns a
-     * Void future
-     *
-     * @hide
-     */
+    /** Invokes {@link AdSelectionManager#reportEvent} and returns a Void future */
     @NonNull
-    public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
-        // TODO(b/274723533): Uncomment this after un-hiding
-/*
+    public ListenableFuture<Void> reportEvent(@NonNull ReportEventRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.reportInteraction(
+                    mAdSelectionManager.reportEvent(
                             request,
                             mExecutor,
                             new OutcomeReceiver<Object, Exception>() {
@@ -137,10 +130,8 @@ public class AdSelectionClient {
                                     completer.setException(error);
                                 }
                             });
-                    return "reportInteraction";
+                    return "reportEvent";
                 });
-*/
-        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /**
@@ -152,8 +143,6 @@ public class AdSelectionClient {
     @NonNull
     public ListenableFuture<Void> updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramRequest request) {
-        // TODO(b/221876775): Uncomment this when un-hiding frequency cap classes
-        /*
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mAdSelectionManager.updateAdCounterHistogram(
@@ -172,8 +161,6 @@ public class AdSelectionClient {
                             });
                     return "updateAdCounterHistogram";
                 });
-        */
-        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /**

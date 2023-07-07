@@ -33,23 +33,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class SourceFixture {
     private SourceFixture() { }
 
     // Assume the field values in this Source.Builder have no relation to the field values in
     // {@link ValidSourceParams}
-    public static Source.Builder getValidSourceBuilder() {
+    public static Source.Builder getMinimalValidSourceBuilder() {
         return new Source.Builder()
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
-                .setRegistrant(ValidSourceParams.REGISTRANT);
+                .setRegistrant(ValidSourceParams.REGISTRANT)
+                .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     // Assume the field values in this Source have no relation to the field values in
     // {@link ValidSourceParams}
     public static Source getValidSource() {
+        return getValidSourceBuilder().build();
+    }
+
+    private static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
@@ -75,7 +81,8 @@ public final class SourceFixture {
                 .setInstallTime(ValidSourceParams.INSTALL_TIME)
                 .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
-                .build();
+                .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
+                .setCoarseEventReportDestinations(true);
     }
 
     public static class ValidSourceParams {
@@ -87,6 +94,7 @@ public final class SourceFixture {
                 List.of(Uri.parse("android-app://com.destination"));
         public static List<Uri> WEB_DESTINATIONS = List.of(Uri.parse("https://destination.com"));
         public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
+        public static final Uri WEB_PUBLISHER = Uri.parse("https://publisher.com");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
         public static final String ENROLLMENT_ID = "enrollment-id";
         public static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
@@ -101,6 +109,8 @@ public final class SourceFixture {
         public static final Long INSTALL_TIME = 100L;
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
+        public static final Uri REGISTRATION_ORIGIN =
+                WebUtil.validUri("https://subdomain.example.test");
 
         public static final String buildAggregateSource() {
             try {
@@ -142,5 +152,106 @@ public final class SourceFixture {
                                     .build())
                     .build();
         }
+    }
+
+    public static ReportSpec getValidReportSpecCountBased() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2]}]";
+        return new ReportSpec(triggerSpecsString, "3");
+    }
+
+    public static ReportSpec getValidReportSpecValueSum() throws JSONException {
+        return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3");
+    }
+
+    public static Source getValidSourceWithFlexEventReport() {
+        try {
+            return getValidSourceBuilder()
+                    .setFlexEventReportSpec(getValidReportSpecCountBased())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public static Source.Builder getValidFullSourceBuilderWithFlexEventReportValueSum() {
+        try {
+            return getValidSourceBuilder()
+                    .setFlexEventReportSpec(getValidReportSpecValueSum());
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    public static Source.Builder getValidSourceBuilderWithFlexEventReportValueSum()
+            throws JSONException {
+        ReportSpec reportSpec = getValidReportSpecValueSum();
+        return getMinimalValidSourceBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
+                .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
+    }
+
+    public static Source.Builder getValidSourceBuilderWithFlexEventReport() throws JSONException {
+        ReportSpec reportSpec = getValidReportSpecCountBased();
+        return getMinimalValidSourceBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
+                .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
+    }
+
+    public static String getTriggerSpecCountEncodedJSONValidBaseline() {
+        return "[{\"trigger_data\": [1, 2, 3],"
+                + "\"event_report_windows\": { "
+                + "\"start_time\": \"0\", "
+                + String.format(
+                        "\"end_times\": [%s, %s, %s]}, ",
+                        TimeUnit.DAYS.toMillis(2),
+                        TimeUnit.DAYS.toMillis(7),
+                        TimeUnit.DAYS.toMillis(30))
+                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_buckets\": [1, 2, 3, 4]}]";
+    }
+
+    public static String getTriggerSpecValueSumEncodedJSONValidBaseline() {
+        return "[{\"trigger_data\": [1, 2],"
+                + "\"event_report_windows\": { "
+                + "\"start_time\": \"0\", "
+                + String.format(
+                        "\"end_times\": [%s, %s]}, ",
+                        TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
+                + "\"summary_window_operator\": \"value_sum\", "
+                + "\"summary_buckets\": [10, 100]}]";
+    }
+
+    public static String getTriggerSpecValueCountJSONTwoTriggerSpecs() {
+        return "[{\"trigger_data\": [1, 2, 3],"
+                + "\"event_report_windows\": { "
+                + "\"start_time\": \"0\", "
+                + String.format(
+                        "\"end_times\": [%s, %s, %s]}, ",
+                        TimeUnit.DAYS.toMillis(2),
+                        TimeUnit.DAYS.toMillis(7),
+                        TimeUnit.DAYS.toMillis(30))
+                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_buckets\": [1, 2, 3, 4]}, "
+                + "{\"trigger_data\": [4, 5, 6, 7],"
+                + "\"event_report_windows\": { "
+                + "\"start_time\": \"0\", "
+                + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
+                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_buckets\": [1,5,7]} "
+                + "]";
     }
 }

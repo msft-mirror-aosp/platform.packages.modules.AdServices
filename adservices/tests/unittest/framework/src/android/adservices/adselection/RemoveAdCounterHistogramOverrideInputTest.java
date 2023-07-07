@@ -88,20 +88,13 @@ public class RemoveAdCounterHistogramOverrideInputTest {
 
         final String expected =
                 String.format(
-                        "RemoveAdCounterHistogramOverrideInput{mAdEventType=%s,"
-                                + " mAdCounterKey='%s', mBuyer=%s}",
+                        "RemoveAdCounterHistogramOverrideInput{mAdEventType=%d,"
+                                + " mAdCounterKey=%d, mBuyer=%s}",
                         FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
                         KeyedFrequencyCapFixture.KEY1,
                         CommonFixture.VALID_BUYER_1);
 
         assertThat(originalInput.toString()).isEqualTo(expected);
-    }
-
-    @Test
-    public void testSetNullAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new RemoveAdCounterHistogramOverrideInput.Builder().setAdCounterKey(null));
     }
 
     @Test
@@ -123,14 +116,17 @@ public class RemoveAdCounterHistogramOverrideInputTest {
     }
 
     @Test
-    public void testBuildUnsetAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new RemoveAdCounterHistogramOverrideInput.Builder()
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                                .setBuyer(CommonFixture.VALID_BUYER_1)
-                                .build());
+    public void testBuildUnsetAdCounterKey_success() {
+        final RemoveAdCounterHistogramOverrideInput originalInput =
+                new RemoveAdCounterHistogramOverrideInput.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .build();
+
+        assertThat(originalInput.getAdEventType())
+                .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
+        assertThat(originalInput.getAdCounterKey()).isEqualTo(0);
+        assertThat(originalInput.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test

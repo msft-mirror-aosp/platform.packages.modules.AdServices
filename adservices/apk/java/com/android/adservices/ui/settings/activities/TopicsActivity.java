@@ -22,6 +22,8 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.settings.activitydelegates.TopicsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.TopicsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
@@ -40,18 +42,40 @@ public class TopicsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+            initFragment();
+        }
+    }
+
+    @Override
+    public void initBeta() {
+        initActivity();
+    }
+
+    @Override
+    public void initGA() {
+        initActivity();
+    }
+
+    @Override
+    public void initU18() {}
+
+    private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container_view, AdServicesSettingsTopicsFragment.class, null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new TopicsActionDelegate(
                         this, new ViewModelProvider(this).get(TopicsViewModel.class));
+    }
+
+    private void initActivity() {
+        setContentView(R.layout.topics_activity);
+        // no need to store since not using
+        new TopicsActivityActionDelegate(
+                this, new ViewModelProvider(this).get(TopicsViewModel.class));
     }
 }

@@ -16,7 +16,7 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -33,6 +33,9 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -57,7 +60,6 @@ import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigF
 import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigOverrider;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -255,7 +257,7 @@ public class MobileDataDownloadFactory {
                         long dataFileGroupBuildId = entry.getDataFileGroup().getBuildId();
                         long bundledModelBuildId =
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH);
+                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
                         if (dataFileGroupBuildId > bundledModelBuildId) {
                             groups.add(entry.getDataFileGroup());
                             LogUtil.d("Added topics classifier file group to MDD");
@@ -272,9 +274,15 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
-                // topics resources should not be downloaded pre-consent
                 .setEnabledSupplier(
                         () -> {
+                            // Topics is permanently disabled for U18 UX.
+                            if (UxStatesManager.getInstance(context).getUx()
+                                    == PrivacySandboxUxCollection.U18_UX) {
+                                return false;
+                            }
+
+                            // Topics resources should not be downloaded pre-consent.
                             if (flags.getGaUxFeatureEnabled()) {
                                 return ConsentManager.getInstance(context)
                                         .getConsent(AdServicesApiType.TOPICS)

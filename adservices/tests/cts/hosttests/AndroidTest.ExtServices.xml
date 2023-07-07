@@ -23,7 +23,7 @@
     <option name="config-descriptor:metadata" key="parameter" value="no_foldable_states" />
     <!-- Needed for correctly being picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices.apex" />
+            value="com.google.android.extservices_sminus.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
@@ -36,6 +36,8 @@
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
@@ -50,4 +52,9 @@
     <!-- Prevent tests from running on Android R- -->
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+
+    <object type="module_controller"
+        class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
+        <option name="mainline-module-package-name" value="com.google.android.extservices"/>
+    </object>
 </configuration>
