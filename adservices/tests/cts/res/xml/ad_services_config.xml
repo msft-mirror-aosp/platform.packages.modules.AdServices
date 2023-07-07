@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <attribution allowAdPartnersToAccess="com.xyz" allowAllToAccess="false" />
+    <attribution allowAllToAccess="true" />
     <custom-audiences allowAllToAccess="true" />
     <topics allowAllToAccess="true" />
 </ad-services-config>

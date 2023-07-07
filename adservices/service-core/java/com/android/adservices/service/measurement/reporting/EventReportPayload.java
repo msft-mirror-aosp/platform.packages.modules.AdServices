@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
+import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
@@ -25,12 +26,16 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * EventReportPayload.
  */
 public final class EventReportPayload {
 
-    private String mAttributionDestination;
+    private List<Uri> mAttributionDestinations;
+    private String mScheduledReportTime;
     private UnsignedLong mSourceEventId;
     @NonNull private UnsignedLong mTriggerData;
     private String mReportId;
@@ -39,10 +44,13 @@ public final class EventReportPayload {
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
 
-    private EventReportPayload() {};
+    private EventReportPayload() {
+        mAttributionDestinations = new ArrayList<>();
+    }
 
     private EventReportPayload(EventReportPayload other) {
-        mAttributionDestination = other.mAttributionDestination;
+        mAttributionDestinations = other.mAttributionDestinations;
+        mScheduledReportTime = other.mScheduledReportTime;
         mSourceEventId = other.mSourceEventId;
         mTriggerData = other.mTriggerData;
         mReportId = other.mReportId;
@@ -58,7 +66,9 @@ public final class EventReportPayload {
     public JSONObject toJson() throws JSONException {
         JSONObject eventPayloadJson = new JSONObject();
 
-        eventPayloadJson.put("attribution_destination", mAttributionDestination);
+        eventPayloadJson.put("attribution_destination",
+                ReportUtil.serializeAttributionDestinations(mAttributionDestinations));
+        eventPayloadJson.put("scheduled_report_time", mScheduledReportTime);
         eventPayloadJson.put("source_event_id", mSourceEventId.toString());
         eventPayloadJson.put("trigger_data", mTriggerData.toString());
         eventPayloadJson.put("report_id", mReportId);
@@ -87,8 +97,17 @@ public final class EventReportPayload {
         /**
          * The attribution destination set on the source.
          */
-        public @NonNull Builder setAttributionDestination(@NonNull String attributionDestination) {
-            mBuilding.mAttributionDestination = attributionDestination;
+        public @NonNull Builder setAttributionDestination(
+                @NonNull List<Uri> attributionDestinations) {
+            mBuilding.mAttributionDestinations = attributionDestinations;
+            return this;
+        }
+
+        /**
+         * The scheduled report time in seconds.
+         */
+        public @NonNull Builder setScheduledReportTime(String scheduledReportTime) {
+            mBuilding.mScheduledReportTime = scheduledReportTime;
             return this;
         }
 

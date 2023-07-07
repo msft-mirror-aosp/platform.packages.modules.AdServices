@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
@@ -31,10 +33,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.util.List;
 
 public class EventReportSenderTest {
 
-    private static final String ATTRIBUTION_DESTINATION = "https://toasters.example";
+    private static final List<Uri> ATTRIBUTION_DESTINATIONS =
+            List.of(Uri.parse("https://toasters.example"));
+    private static final String SCHEDULED_REPORT_TIME = "1675459163";
     private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(12345L);
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(2L);
     private static final String REPORT_ID = "678";
@@ -46,7 +51,8 @@ public class EventReportSenderTest {
      */
     private EventReportPayload createEventReportPayloadExample1() {
         return new EventReportPayload.Builder()
-                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setAttributionDestination(ATTRIBUTION_DESTINATIONS)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
                 .setSourceEventId(SOURCE_EVENT_ID)
                 .setTriggerData(TRIGGER_DATA)
                 .setReportId(REPORT_ID)
@@ -70,7 +76,7 @@ public class EventReportSenderTest {
         Uri reportingOrigin = Uri.parse("https://ad-tech.example");
         JSONObject eventReportJson = createEventReportPayloadExample1().toJson();
 
-        EventReportSender eventReportSender = new EventReportSender();
+        EventReportSender eventReportSender = new EventReportSender(false);
         EventReportSender spyEventReportSender = Mockito.spy(eventReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyEventReportSender)
@@ -81,5 +87,13 @@ public class EventReportSenderTest {
 
         assertEquals(outputStream.toString(), eventReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testDebugReportUriPath() {
+        assertThat(new EventReportSender(false).getReportUriPath())
+                .isEqualTo(EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH);
+        assertThat(new EventReportSender(true).getReportUriPath())
+                .isEqualTo(EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

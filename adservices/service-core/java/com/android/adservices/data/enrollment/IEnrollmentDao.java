@@ -17,6 +17,8 @@
 package com.android.adservices.data.enrollment;
 
 import android.adservices.common.AdTechIdentifier;
+import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -39,7 +41,7 @@ public interface IEnrollmentDao {
      * @param url could be source registration url or trigger registration url.
      * @return the EnrollmentData; Null in case of SQL failure.
      */
-    EnrollmentData getEnrollmentDataFromMeasurementUrl(String url);
+    EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url);
 
     /**
      * Returns the {@link EnrollmentData} with FLEDGE response-based registration URLs that match
@@ -60,6 +62,20 @@ public interface IEnrollmentDao {
      *     empty if none found
      */
     Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs();
+
+    /**
+     * Extracts and returns the {@link AdTechIdentifier} and matching {@link EnrollmentData} from a
+     * given {@link Uri}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' RBR URLs do not share the same
+     * domain. If this does happen, only return the first match in the database.
+     *
+     * @param originalUri the {@link Uri} to extract from
+     * @return a matching {@link Pair} of {@link AdTechIdentifier} and {@link EnrollmentData}, or
+     *     {@code null} if no matches were found
+     */
+    Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+            Uri originalUri);
 
     /**
      * Returns the {@link EnrollmentData} given AdTech SDK Name.

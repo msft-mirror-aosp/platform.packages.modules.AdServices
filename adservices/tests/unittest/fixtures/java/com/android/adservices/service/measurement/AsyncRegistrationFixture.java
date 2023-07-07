@@ -18,29 +18,32 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
+
 import java.util.UUID;
 
 public class AsyncRegistrationFixture {
     private AsyncRegistrationFixture() {}
 
-    public static AsyncRegistration getValidAsyncRegistration() {
+    public static AsyncRegistration.Builder getValidAsyncRegistrationBuilder() {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setEnrollmentId(UUID.randomUUID().toString())
                 .setRegistrationUri(ValidAsyncRegistrationParams.REGISTRATION_URI)
                 .setOsDestination(ValidAsyncRegistrationParams.OS_DESTINATION)
                 .setWebDestination(ValidAsyncRegistrationParams.WEB_DESTINATION)
                 .setVerifiedDestination(ValidAsyncRegistrationParams.VERIFIED_DESTINATION)
                 .setRegistrant(ValidAsyncRegistrationParams.REGISTRANT)
                 .setTopOrigin(ValidAsyncRegistrationParams.TOP_ORIGIN)
-                .setRedirect(ValidAsyncRegistrationParams.REDIRECT)
                 .setSourceType(ValidAsyncRegistrationParams.SOURCE_TYPE)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(ValidAsyncRegistrationParams.RETRY_COUNT)
-                .setLastProcessingTime(System.currentTimeMillis())
-                .setType(ValidAsyncRegistrationParams.TYPE.ordinal())
+                .setType(ValidAsyncRegistrationParams.TYPE)
                 .setDebugKeyAllowed(ValidAsyncRegistrationParams.DEBUG_KEY_ALLOWED)
-                .build();
+                .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID);
+    }
+
+    public static AsyncRegistration getValidAsyncRegistration() {
+        return getValidAsyncRegistrationBuilder().build();
     }
 
     public static class ValidAsyncRegistrationParams {
@@ -52,9 +55,10 @@ public class AsyncRegistrationFixture {
         public static final Uri VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.example");
         public static final Uri TOP_ORIGIN = Uri.parse("android-app://com.example");
-        public static final boolean REDIRECT = true;
         public static final boolean DEBUG_KEY_ALLOWED = true;
         public static final AsyncRegistration.RegistrationType TYPE =
                 AsyncRegistration.RegistrationType.APP_SOURCE;
+        public static final String REGISTRATION_ID = "R1";
+        public static final String PLATFORM_AD_ID = "test-platform-ad-id";
     }
 }

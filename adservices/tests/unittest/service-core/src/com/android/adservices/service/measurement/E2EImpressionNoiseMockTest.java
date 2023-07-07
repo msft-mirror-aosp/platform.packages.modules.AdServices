@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.measurement;
 
-import android.net.Uri;
 
-import com.android.adservices.data.measurement.DatastoreException;
+import android.net.Uri;
+import android.os.RemoteException;
+
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.RegisterSource;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
 import org.json.JSONException;
@@ -53,27 +56,54 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME);
+        return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+    public E2EImpressionNoiseMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mMeasurementDataDeleter,
+                        mMockContentResolver);
+        mAsyncRegistrationQueueRunner =
+                TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.NOISY,
                         sDatastoreManager,
-                        mSourceFetcher,
-                        mTriggerFetcher,
-                        mClickVerifier,
-                        mFlags);
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        mDebugReportApi);
         getExpectedTriggerDataDistributions();
     }
 
     @Override
-    void processEventReports(List<EventReport> eventReports, List<Uri> destinations,
-            List<JSONObject> payloads) throws JSONException {
+    void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
+        super.processAction(sourceRegistration);
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob();
+        }
+    }
+
+    @Override
+    void processActualEventReports(
+            List<EventReport> eventReports, List<Uri> destinations, List<JSONObject> payloads)
+            throws JSONException {
         // Each report-destination × event-ID should have the same count of trigger_data as in the
         // expected output, but the trigger_data value distribution should be different. The test
         // is currently supporting only one reporting job, which batches multiple reports at once,
@@ -114,8 +144,10 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                 }
             }
         }
-        Assert.assertTrue(getTestFailureMessage(
-                "Trigger data distributions were the same"), testPassed);
+        Assert.assertTrue(
+                getTestFailureMessage(
+                        "Trigger data distributions were the same " + getDatastoreState()),
+                testPassed);
     }
 
     private void getExpectedTriggerDataDistributions() {

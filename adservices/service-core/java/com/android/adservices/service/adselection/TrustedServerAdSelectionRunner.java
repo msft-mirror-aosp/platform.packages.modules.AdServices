@@ -22,30 +22,33 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Process;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.common.AdRenderIdValidator;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontendService.BuyerInput;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest.SelectWinningAdRawRequest.ClientType;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdResponse;
+import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.ApiServiceLatencyCalculator;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
@@ -62,6 +65,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.Clock;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +75,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.grpc.Codec;
@@ -82,9 +85,12 @@ import io.grpc.okhttp.OkHttpChannelBuilder;
  * Offload execution to Bidding & Auction services. Sends an umbrella request to the Seller Frontend
  * Service.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String GZIP = new Codec.Gzip().getMessageEncoding(); // "gzip"
-
+    @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final JsFetcher mJsFetcher;
 
     public TrustedServerAdSelectionRunner(
@@ -95,16 +101,16 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
-            int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdRenderIdValidator adRenderIdValidator,
+            @NonNull final DebugReporting debugReporting,
+            int callerUid) {
         super(
                 context,
                 customAudienceDao,
@@ -112,24 +118,23 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
-                consentManager,
                 adServicesLogger,
-                appImportanceFilter,
                 flags,
-                throttlerSupplier,
-                callerUid,
-                fledgeAuthorizationFilter,
-                fledgeAllowListsFilter,
-                apiServiceLatencyCalculator);
+                adSelectionExecutionLogger,
+                adSelectionServiceFilter,
+                adFilterer,
+                frequencyCapAdDataValidator,
+                debugReporting,
+                callerUid);
 
-        CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper =
+        mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
         mJsFetcher =
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
-                        adServicesHttpsClient);
+                        adServicesHttpsClient,
+                        flags);
     }
 
     @VisibleForTesting
@@ -140,18 +145,17 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final ConsentManager consentManager,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
             int callerUid,
-            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final JsFetcher jsFetcher,
-            @NonNull final ApiServiceLatencyCalculator apiServiceLatencyCalculator) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final DebugReporting debugReporting) {
         super(
                 context,
                 customAudienceDao,
@@ -159,19 +163,21 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
-                consentManager,
                 adSelectionIdGenerator,
                 clock,
                 adServicesLogger,
-                appImportanceFilter,
                 flags,
-                throttlerSupplier,
                 callerUid,
-                fledgeAuthorizationFilter,
-                fledgeAllowListsFilter,
-                apiServiceLatencyCalculator);
+                adSelectionServiceFilter,
+                adFilterer,
+                frequencyCapAdDataValidator,
+                adSelectionExecutionLogger,
+                debugReporting);
 
         this.mJsFetcher = jsFetcher;
+        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        this.mCustomAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
     }
 
     /** Prepares request and calls Seller Front-end Service to orchestrate ad selection. */
@@ -346,10 +352,10 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         .setWinningAdRenderUri(winningAdRenderUri)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setBiddingLogicUri(customAudience.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(callerPackageName);
 
-        return new Pair(builder, customAudience);
+        return new Pair<>(builder, customAudience);
     }
 
     private ListenableFuture<Pair<DBAdSelection.Builder, FluentFuture<String>>> fetchBuyerLogicJs(
@@ -358,12 +364,13 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 () -> {
                     DBCustomAudience customAudience = dbAdSelectionAndCAPair.second;
                     FluentFuture<String> buyerDecisionLogic =
-                            mJsFetcher.getBuyerDecisionLogic(
+                            mJsFetcher.getBiddingLogic(
                                     customAudience.getBiddingLogicUri(),
+                                    mCustomAudienceDevOverridesHelper,
                                     customAudience.getOwner(),
                                     customAudience.getBuyer(),
                                     customAudience.getName());
-                    return new Pair(dbAdSelectionAndCAPair.first, buyerDecisionLogic);
+                    return new Pair<>(dbAdSelectionAndCAPair.first, buyerDecisionLogic);
                 });
     }
 
@@ -372,7 +379,11 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
         try {
             String buyerJsLogic = dbAdSelectionAndBuyerLogicJsPair.second.get();
             return new AdSelectionOrchestrationResult(
-                    dbAdSelectionAndBuyerLogicJsPair.first, buyerJsLogic);
+                    dbAdSelectionAndBuyerLogicJsPair.first,
+                    buyerJsLogic,
+                    /*debugReports*/ Collections.emptyList(),
+                    /*winningOutcome*/ null,
+                    /*secondHighestScoredOutcome*/ null);
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException("Could not fetch buyerJsLogic", e);
         }
@@ -399,7 +410,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
 
     @Nullable
     private AdSelectionOrchestrationResult handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, "Ad Selection exceeded time limit");
+        sLogger.e(e, "Ad Selection exceeded time limit");
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 }

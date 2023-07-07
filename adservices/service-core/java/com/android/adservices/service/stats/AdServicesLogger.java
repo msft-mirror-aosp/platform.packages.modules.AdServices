@@ -67,4 +67,38 @@ public interface AdServicesLogger {
      */
     void logUpdateCustomAudienceProcessReportedStats(
             UpdateCustomAudienceProcessReportedStats stats);
+
+    /**
+     * Logs GetTopics API call stats as an {@link
+     * com.android.adservices.service.stats.GetTopicsReportedStats} object.
+     */
+    void logGetTopicsReportedStats(GetTopicsReportedStats stats);
+
+    /**
+     * Logs stats for getTopTopics as an {@link
+     * com.android.adservices.service.stats.EpochComputationGetTopTopicsStats} object.
+     */
+    void logEpochComputationGetTopTopicsStats(EpochComputationGetTopTopicsStats stats);
+
+    /**
+     * Logs classifier stats during epoch computation as an {@link
+     * com.android.adservices.service.stats.EpochComputationClassifierStats} object.
+     */
+    void logEpochComputationClassifierStats(EpochComputationClassifierStats stats);
+
+    /** Logs measurement debug keys stats. */
+    void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats);
+
+    /** Logs measurement AdID match for debug keys stats. */
+    void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats);
+
+    /** Logs measurement attribution stats. */
+    void logMeasurementAttributionStats(MeasurementAttributionStats measurementAttributionStats);
+
+    /** Logs measurement wipeout stats. */
+    void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats);
+
+    /** Logs measurement delayed source registration stats. */
+    void logMeasurementDelayedSourceRegistrationStats(
+            MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
 }

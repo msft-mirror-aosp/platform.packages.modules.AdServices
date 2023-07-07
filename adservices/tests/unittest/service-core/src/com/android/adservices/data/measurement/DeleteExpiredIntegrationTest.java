@@ -16,6 +16,9 @@
 
 package com.android.adservices.data.measurement;
 
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.Flags;
+
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -44,7 +47,9 @@ public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
     }
 
     public void runActionToTest() {
-        DatastoreManagerFactory.getDatastoreManager(sContext)
-                .runInTransaction(IMeasurementDao::deleteExpiredRecords);
+        long earliestValidInsertion =
+                System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
+                .runInTransaction(dao -> dao.deleteExpiredRecords(earliestValidInsertion));
     }
 }

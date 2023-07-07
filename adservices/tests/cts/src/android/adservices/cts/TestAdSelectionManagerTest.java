@@ -36,13 +36,18 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSScriptEngine;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +59,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TestAdSelectionManagerTest extends ForegroundCtsTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -76,12 +82,25 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                     .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                     .build();
 
+    private static final AdSelectionSignals SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
+
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
+    private String mPreviousAppAllowList;
 
     @Before
     public void setup() {
-        assertForegroundActivityStarted();
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        if (SdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        } else {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
 
         mTestAdSelectionClient =
                 new TestAdSelectionClient.Builder()
@@ -96,18 +115,51 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
+    }
+
+    @After
+    public void tearDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+        PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 
     @Test
-    public void testFailsWithInvalidAdSelectionId() throws Exception {
-        LogUtil.i("Calling Report Impression");
+    public void testFailsWithInvalidAdSelectionId() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        sLogger.i("Calling Report Impression");
 
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
+        assertInvalidAdSelectionIdFailsImpressionReporting(adSelectionClient);
+    }
 
+    @Test
+    public void testFailsWithInvalidAdSelectionId_usingGetMethodToCreateManager() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        sLogger.i("Calling Report Impression");
+
+        AdSelectionClient adSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
+        assertInvalidAdSelectionIdFailsImpressionReporting(adSelectionClient);
+    }
+
+    private void assertInvalidAdSelectionIdFailsImpressionReporting(
+            AdSelectionClient adSelectionClient) {
         ReportImpressionRequest input =
                 new ReportImpressionRequest(AD_SELECTION_ID, AD_SELECTION_CONFIG);
 
@@ -123,7 +175,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     }
 
     @Test
-    public void testAddOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testAddOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         AddAdSelectionOverrideRequest request =
@@ -143,7 +195,15 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     }
 
     @Test
-    public void testRemoveOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testAddOverrideFailsWithDebugModeDisabled_usingGetMethodToCreateManager()
+            throws Exception {
+        Assume.assumeFalse(mIsDebugMode);
+        overrideAdSelectionClient();
+        testAddOverrideFailsWithDebugModeDisabled();
+    }
+
+    @Test
+    public void testRemoveOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         RemoveAdSelectionOverrideRequest request =
@@ -162,7 +222,15 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     }
 
     @Test
-    public void testResetAllOverridesFailsWithDebugModeDisabled() throws Exception {
+    public void testRemoveOverrideFailsWithDebugModeDisabled_usingGetMethodToCreateManager()
+            throws Exception {
+        Assume.assumeFalse(mIsDebugMode);
+        overrideAdSelectionClient();
+        testRemoveOverrideFailsWithDebugModeDisabled();
+    }
+
+    @Test
+    public void testResetAllOverridesFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         TestAdSelectionClient testAdSelectionClient =
@@ -170,7 +238,24 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
+        assertResetAllOverridesFailsWithDebugModeDisabled(testAdSelectionClient);
+    }
 
+    @Test
+    public void testResetAllOverridesFailsWithDebugModeDisabled_usingGetMethodToCreateManager() {
+        Assume.assumeFalse(mIsDebugMode);
+
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
+        assertResetAllOverridesFailsWithDebugModeDisabled(testAdSelectionClient);
+    }
+
+    private void assertResetAllOverridesFailsWithDebugModeDisabled(
+            TestAdSelectionClient testAdSelectionClient) {
         ListenableFuture<Void> result =
                 testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
 
@@ -184,19 +269,36 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     }
 
     @Test
-    public void testFailsWithInvalidAdSelectionConfigNoBuyers() throws Exception {
-        LogUtil.i("Calling Ad Selection");
+    public void testFailsWithInvalidAdSelectionConfigNoBuyers() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        AdSelectionClient adSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+        assertNoBuyersConfigFailsAdSelection(adSelectionClient);
+    }
+
+    @Test
+    public void testFailsWithInvalidAdSelectionConfigNoBuyers_usingGetMethodToCreateManager() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        AdSelectionClient adSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
+        assertNoBuyersConfigFailsAdSelection(adSelectionClient);
+    }
+
+    private void assertNoBuyersConfigFailsAdSelection(AdSelectionClient adSelectionClient) {
+        sLogger.i("Calling Ad Selection");
         AdSelectionConfig adSelectionConfigNoBuyers =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER)
                         .setDecisionLogicUri(DECISION_LOGIC_URI)
                         .setCustomAudienceBuyers(new ArrayList<>())
                         .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
-                        .build();
-        AdSelectionClient adSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
         ListenableFuture<AdSelectionOutcome> result =
@@ -209,5 +311,14 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                             result.get(10, TimeUnit.SECONDS);
                         });
         assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private void overrideAdSelectionClient() {
+        mTestAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
     }
 }

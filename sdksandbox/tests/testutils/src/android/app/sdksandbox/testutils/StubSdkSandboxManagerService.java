@@ -16,6 +16,7 @@
 
 package android.app.sdksandbox.testutils;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
@@ -36,10 +37,22 @@ import java.util.List;
  * <p>Extend and override methods as needed for your tests.
  */
 public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
+    private IBinder mAdServicesManager;
+
+    @Override
+    public void registerAppOwnedSdkSandboxInterface(
+            String callingPackageName,
+            AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface,
+            long timeAppCalledSystemServer) {}
+
+    @Override
+    public void unregisterAppOwnedSdkSandboxInterface(
+            String callingPackageName, String name, long timeAppCalledSystemServer) {}
 
     @Override
     public void loadSdk(
             String callingPackageName,
+            IBinder clientApplicationThreadBinder,
             String sdkName,
             long timeAppCalledSystemServer,
             Bundle params,
@@ -60,6 +73,12 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
+
+    @Override
+    public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
+            String callingPackageName, long timeAppCalledSystemServer) {
+        return Collections.emptyList();
+    }
 
     @Override
     public List<SandboxedSdk> getSandboxedSdks(
@@ -91,4 +110,9 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void logLatencyFromSystemServerToApp(String method, int latency) {}
+
+    @Override
+    public IBinder getAdServicesManager() {
+        return mAdServicesManager;
+    }
 }

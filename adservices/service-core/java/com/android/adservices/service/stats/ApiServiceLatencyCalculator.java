@@ -16,29 +16,38 @@
 
 package com.android.adservices.service.stats;
 
-import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 
+import java.util.Objects;
+
 import javax.annotation.concurrent.ThreadSafe;
 
-/** Class for Api Service Latency Calculator. */
+/**
+ * Class for the Api Service Latency Calculator. This class uses a clock that its
+ * clock#elapsedRealtime() should always be monotonic to track the time points of a process. The
+ * {@link ApiServiceLatencyCalculator} constructor will set the {@link
+ * ApiServiceLatencyCalculator#mStartElapsedTimestamp}. Calling {@link
+ * ApiServiceLatencyCalculator#getApiServiceInternalFinalLatencyInMs()} will stop the time
+ * calculator and return the latency for the process by the start and stop elapsed timestamps. Once
+ * the calculator is stopped, the {@link ApiServiceLatencyCalculator#mStopElapsedTimestamp} will not
+ * be changed. Calling {@link ApiServiceLatencyCalculator#getApiServiceElapsedLatencyInMs()} will
+ * not stop the time calculator, only get the time elapsed since the start elapsed timestamp.
+ */
 @ThreadSafe
 public class ApiServiceLatencyCalculator {
-    private final long mBinderElapsedTimestamp;
     private final long mStartElapsedTimestamp;
     private volatile long mStopElapsedTimestamp;
     private volatile boolean mRunning;
     private final Clock mClock;
 
-    public ApiServiceLatencyCalculator(
-            @NonNull CallerMetadata callerMetadata, @NonNull Clock clock) {
-        mBinderElapsedTimestamp = callerMetadata.getBinderElapsedTimestamp();
+    ApiServiceLatencyCalculator(@NonNull Clock clock) {
+        Objects.requireNonNull(clock);
         mClock = clock;
         mStartElapsedTimestamp = mClock.elapsedRealtime();
         mRunning = true;
-        LogUtil.v("ApiServiceLatencyCalculator started.");
+        LogUtil.v("ApiServiceLatencyCalculator has started at %d", mStartElapsedTimestamp);
     }
 
     /**
@@ -59,15 +68,21 @@ public class ApiServiceLatencyCalculator {
         }
     }
 
+    /** @return the calculator's start timestamp since the system boots. */
+    long getStartElapsedTimestamp() {
+        return mStartElapsedTimestamp;
+    }
+
     /**
      * @return the elapsed timestamp since the system boots if the {@link
      *     ApiServiceLatencyCalculator} instance is still running, otherwise the timestamp when it
      *     was stopped.
      */
-    private long getServiceElapsedTimestamp() {
+    long getServiceElapsedTimestamp() {
         if (mRunning) {
             return mClock.elapsedRealtime();
         }
+        LogUtil.v("The ApiServiceLatencyCalculator instance has previously been stopped.");
         return mStopElapsedTimestamp;
     }
 
@@ -77,7 +92,7 @@ public class ApiServiceLatencyCalculator {
      *     ApiServiceLatencyCalculator} and should be used for getting intermediate stage latency of
      *     a API process.
      */
-    public int getApiServiceElapsedLatencyMs() {
+    int getApiServiceElapsedLatencyInMs() {
         return (int) (getServiceElapsedTimestamp() - mStartElapsedTimestamp);
     }
 
@@ -88,20 +103,8 @@ public class ApiServiceLatencyCalculator {
      *     calculator is stopped. It should be used to get the complete process latency of an API
      *     within the server side.
      */
-    public int getApiServiceInternalFinalLatencyMs() {
+    int getApiServiceInternalFinalLatencyInMs() {
         stop();
-        return getApiServiceElapsedLatencyMs();
-    }
-
-    /**
-     * @return the approximate api service overall latency since the api is called at the client
-     *     interface. This method will stop the {@link ApiServiceLatencyCalculator} if still running
-     *     and the returned latency value will no longer change once the calculator is stopped. It
-     *     should be used to get the complete process latency of an API.
-     */
-    public int getApiServiceOverallLatencyMs() {
-        return (int)
-                ((mStartElapsedTimestamp - mBinderElapsedTimestamp) * 2
-                        + getApiServiceInternalFinalLatencyMs());
+        return getApiServiceElapsedLatencyInMs();
     }
 }

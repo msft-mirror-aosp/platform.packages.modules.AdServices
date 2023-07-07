@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -47,7 +48,10 @@ public final class AggregateReportFixture {
                 .setSourceDebugKey(ValidAggregateReportParams.SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
-                .setStatus(EventReport.Status.PENDING);
+                .setStatus(EventReport.Status.PENDING)
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                .setDedupKey(ValidAggregateReportParams.DEDUP_KEY)
+                .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN);
     }
 
     public static AggregateReport getValidAggregateReport() {
@@ -63,6 +67,9 @@ public final class AggregateReportFixture {
         public static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(43254545L);
         public static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(67878545L);
         public static final String ENROLLMENT_ID = "enrollment-id";
+        public static final UnsignedLong DEDUP_KEY = new UnsignedLong(67878545L);
+        public static final Uri REGISTRATION_ORIGIN =
+                WebUtil.validUri("https://subdomain.example.test");
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

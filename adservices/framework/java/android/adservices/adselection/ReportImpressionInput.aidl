@@ -18,7 +18,8 @@ package android.adservices.adselection;
 
 /**
  * This interface defines the input to the reportImpression API.
- * A ReportImpressionInput is a Parcelable object that contains an adSelectionId, an AdSelectionConfig, and a callerPackageName.
+ * A ReportImpressionInput is a Parcelable object that contains an adSelectionId, an
+ * AdSelectionConfig, and a callerPackageName.
  *
  * {@hide}
  */

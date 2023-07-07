@@ -16,9 +16,11 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -27,8 +29,8 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
+import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -38,6 +40,8 @@ import java.io.IOException;
  * model is responsible for serving apps to the apps view and blocked apps view, and interacting
  * with the {@link ConsentManager} that persists and changes the apps data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedAppsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Pair<BlockedAppsViewModelUiEvent, App>> mEventTrigger =

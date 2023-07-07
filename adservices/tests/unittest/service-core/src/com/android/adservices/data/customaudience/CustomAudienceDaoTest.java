@@ -17,7 +17,10 @@
 package com.android.adservices.data.customaudience;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,7 +34,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -39,12 +41,18 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.common.DecisionLogic;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -60,11 +68,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CustomAudienceDaoTest {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
 
-    @Mock PackageManager mPackageManagerMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
 
     private static final Uri DAILY_UPDATE_URI_1 = Uri.parse("https://www.example.com/d1");
     private static final AdSelectionSignals USER_BIDDING_SIGNALS_1 =
@@ -442,6 +452,7 @@ public class CustomAudienceDaoTest {
     private static final String APP_PACKAGE_NAME_1 = "appPackageName1";
     private static final String BIDDING_LOGIC_JS_1 =
             "function test() { return \"hello world_1\"; }";
+    private static final Long BIDDING_LOGIC_JS_VERSION_1 = 1L;
     private static final String TRUSTED_BIDDING_OVERRIDE_DATA_1 = "{\"trusted_bidding_data\":1}";
     public static final DBCustomAudienceOverride DB_CUSTOM_AUDIENCE_OVERRIDE_1 =
             DBCustomAudienceOverride.builder()
@@ -450,12 +461,14 @@ public class CustomAudienceDaoTest {
                     .setName(NAME_1)
                     .setAppPackageName(APP_PACKAGE_NAME_1)
                     .setBiddingLogicJS(BIDDING_LOGIC_JS_1)
+                    .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION_1)
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA_1)
                     .build();
 
     private static final String APP_PACKAGE_NAME_2 = "appPackageName2";
     private static final String BIDDING_LOGIC_JS_2 =
             "function test() { return \"hello world_2\"; }";
+    private static final Long BIDDING_LOGIC_JS_VERSION_2 = 2L;
     private static final String TRUSTED_BIDDING_OVERRIDE_DATA_2 = "{\"trusted_bidding_data\":2}";
     public static final DBCustomAudienceOverride DB_CUSTOM_AUDIENCE_OVERRIDE_2 =
             DBCustomAudienceOverride.builder()
@@ -464,6 +477,7 @@ public class CustomAudienceDaoTest {
                     .setName(NAME_2)
                     .setAppPackageName(APP_PACKAGE_NAME_2)
                     .setBiddingLogicJS(BIDDING_LOGIC_JS_2)
+                    .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION_2)
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA_2)
                     .build();
 
@@ -500,11 +514,13 @@ public class CustomAudienceDaoTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(PackageManagerCompatUtils.class)
                         .initMocks(this)
                         .startMocking();
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
     }
@@ -581,11 +597,17 @@ public class CustomAudienceDaoTest {
 
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
 
-        String biddingLogicJS =
+        DecisionLogic biddingLogicJS =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJS);
+        assertEquals(
+                DecisionLogic.create(
+                        BIDDING_LOGIC_JS_1,
+                        ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                BIDDING_LOGIC_JS_VERSION_1)),
+                biddingLogicJS);
     }
 
     @Test
@@ -594,7 +616,7 @@ public class CustomAudienceDaoTest {
 
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
 
-        String biddingLogicJs1 =
+        DecisionLogic biddingLogicJs1 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
@@ -602,13 +624,19 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
+        assertEquals(
+                DecisionLogic.create(
+                        BIDDING_LOGIC_JS_1,
+                        ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                BIDDING_LOGIC_JS_VERSION_1)),
+                biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
 
         // Persisting with same primary key
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_3);
 
-        String biddingLogicJs3 =
+        DecisionLogic biddingLogicJs3 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
@@ -616,7 +644,7 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(BIDDING_LOGIC_JS_3, biddingLogicJs3);
+        assertEquals(DecisionLogic.create(BIDDING_LOGIC_JS_3, ImmutableMap.of()), biddingLogicJs3);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_3, trustedBiddingData_3);
     }
 
@@ -628,7 +656,7 @@ public class CustomAudienceDaoTest {
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_2, BUYER_2, NAME_2));
 
-        String biddingLogicJs1 =
+        DecisionLogic biddingLogicJs1 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
@@ -636,10 +664,16 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
+        assertEquals(
+                DecisionLogic.create(
+                        BIDDING_LOGIC_JS_1,
+                        ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                BIDDING_LOGIC_JS_VERSION_1)),
+                biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
 
-        String biddingLogicJs2 =
+        DecisionLogic biddingLogicJs2 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
@@ -647,7 +681,13 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
-        assertEquals(BIDDING_LOGIC_JS_2, biddingLogicJs2);
+        assertEquals(
+                DecisionLogic.create(
+                        BIDDING_LOGIC_JS_2,
+                        ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                BIDDING_LOGIC_JS_VERSION_2)),
+                biddingLogicJs2);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_2, trustedBiddingData_2);
     }
 
@@ -968,6 +1008,29 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testGetAllActiveCustomAudienceForServerSideAuctionInactiveCAs() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        DBCustomAudience caWithNullUserBiddingSignals =
+                CUSTOM_AUDIENCE_ACTIVE
+                        .cloneToBuilder()
+                        .setOwner(OWNER_2)
+                        .setBuyer(BUYER_2)
+                        .setName(NAME_2)
+                        .setUserBiddingSignals(null)
+                        .build();
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_ACTIVE, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                caWithNullUserBiddingSignals, DAILY_UPDATE_URI_2);
+        List<DBCustomAudience> result =
+                mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
+                        CURRENT_TIME, TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs());
+        assertThat(result).containsExactly(CUSTOM_AUDIENCE_ACTIVE, caWithNullUserBiddingSignals);
+    }
+
+    @Test
     public void testGetActiveCustomAudienceByBuyersActivatedCAs() {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
@@ -1230,8 +1293,7 @@ public class CustomAudienceDaoTest {
         ApplicationInfo installed_owner_1 = new ApplicationInfo();
         installed_owner_1.packageName = CUSTOM_AUDIENCE_1.getOwner();
         doReturn(Arrays.asList(installed_owner_1))
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any());
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
@@ -1262,12 +1324,15 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getName()));
 
         // Clear the uninstalled app data
-        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
-                new CustomAudienceDao.CustomAudienceStats(null, 1, -1, 1);
+        CustomAudienceStats expectedDisallowedOwnerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(1)
+                        .setTotalOwnerCount(1)
+                        .build();
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        mPackageManagerMock, flagsThatAllowAllApps));
+                        CONTEXT.getPackageManager(), flagsThatAllowAllApps));
 
         // Verify only the uninstalled app data is deleted
         assertEquals(
@@ -1313,8 +1378,7 @@ public class CustomAudienceDaoTest {
         ApplicationInfo installed_owner_2 = new ApplicationInfo();
         installed_owner_2.packageName = CUSTOM_AUDIENCE_2.getOwner();
         doReturn(Arrays.asList(installed_owner_1, installed_owner_2))
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any());
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
@@ -1345,12 +1409,15 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getName()));
 
         // Clear the data for the app not in the allowlist
-        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
-                new CustomAudienceDao.CustomAudienceStats(null, 1, -1, 1);
+        CustomAudienceStats expectedDisallowedOwnerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(1)
+                        .setTotalOwnerCount(1)
+                        .build();
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        mPackageManagerMock, flagsThatAllowOneApp));
+                        CONTEXT.getPackageManager(), flagsThatAllowOneApp));
 
         // Verify only the uninstalled app data is deleted
         assertEquals(
@@ -1394,8 +1461,7 @@ public class CustomAudienceDaoTest {
         ApplicationInfo installed_owner_2 = new ApplicationInfo();
         installed_owner_2.packageName = CUSTOM_AUDIENCE_2.getOwner();
         doReturn(Arrays.asList(installed_owner_2))
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any());
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
@@ -1426,12 +1492,15 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getName()));
 
         // All data should be cleared because neither owner is both allowlisted and installed
-        CustomAudienceDao.CustomAudienceStats expectedDisallowedOwnerStats =
-                new CustomAudienceDao.CustomAudienceStats(null, 2, -1, 2);
+        CustomAudienceStats expectedDisallowedOwnerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(2)
+                        .setTotalOwnerCount(2)
+                        .build();
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        mPackageManagerMock, flagsThatAllowOneApp));
+                        CONTEXT.getPackageManager(), flagsThatAllowOneApp));
 
         // Verify both owners' app data are deleted
         assertNull(
@@ -1454,6 +1523,168 @@ public class CustomAudienceDaoTest {
                         CUSTOM_AUDIENCE_2.getOwner(),
                         CUSTOM_AUDIENCE_2.getBuyer(),
                         CUSTOM_AUDIENCE_2.getName()));
+    }
+
+    @Test
+    public void testDeleteAllDisallowedBuyerCustomAudienceData_enrollmentEnabled() {
+        class FlagsThatEnforceEnrollment implements Flags {
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
+        }
+        Flags flagsThatEnforceEnrollment = new FlagsThatEnforceEnrollment();
+
+        doReturn(flagsThatEnforceEnrollment).when(FlagsFactory::getFlags);
+
+        // Only CA2's buyer is enrolled
+        doReturn(Stream.of(CUSTOM_AUDIENCE_2.getBuyer()).collect(Collectors.toSet()))
+                .when(mEnrollmentDaoMock)
+                .getAllFledgeEnrolledAdTechs();
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // CA1's data should be deleted because it is not enrolled
+        CustomAudienceStats expectedDisallowedBuyerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(1)
+                        .setTotalBuyerCount(1)
+                        .build();
+        assertEquals(
+                expectedDisallowedBuyerStats,
+                mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
+                        mEnrollmentDaoMock, flagsThatEnforceEnrollment));
+
+        // Verify only CA1's app data is deleted
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+    }
+
+    @Test
+    public void testDeleteAllDisallowedBuyerCustomAudienceData_enrollmentDisabledNoDeletion() {
+        class FlagsThatDisableEnrollment implements Flags {
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+        }
+        Flags flagsThatDisableEnrollment = new FlagsThatDisableEnrollment();
+
+        doReturn(flagsThatDisableEnrollment).when(FlagsFactory::getFlags);
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        // CA1's data should be deleted because it is not enrolled, but enrollment is disabled, so
+        // nothing is cleared
+        CustomAudienceStats expectedDisallowedBuyerStats =
+                CustomAudienceStats.builder()
+                        .setTotalCustomAudienceCount(0)
+                        .setTotalBuyerCount(0)
+                        .build();
+        assertEquals(
+                expectedDisallowedBuyerStats,
+                mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
+                        mEnrollmentDaoMock, flagsThatDisableEnrollment));
+
+        // Verify no data is deleted
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+
+        verify(mEnrollmentDaoMock, never()).getAllFledgeEnrolledAdTechs();
     }
 
     @Test
@@ -1646,14 +1877,14 @@ public class CustomAudienceDaoTest {
     }
 
     private void verifyCustomAudienceStats(
-            CustomAudienceDao.CustomAudienceStats customAudienceStats,
+            CustomAudienceStats customAudienceStats,
             String owner,
             int totalCount,
             int perOwnerCount,
             int ownerCount) {
         assertEquals(owner, customAudienceStats.getOwner());
-        assertEquals(totalCount, customAudienceStats.getTotalCount());
-        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCount());
-        assertEquals(ownerCount, customAudienceStats.getOwnerCount());
+        assertEquals(totalCount, customAudienceStats.getTotalCustomAudienceCount());
+        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCustomAudienceCount());
+        assertEquals(ownerCount, customAudienceStats.getTotalOwnerCount());
     }
 }

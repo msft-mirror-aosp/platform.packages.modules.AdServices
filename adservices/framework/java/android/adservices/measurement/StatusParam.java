@@ -30,14 +30,17 @@ import java.util.Objects;
  */
 public final class StatusParam implements Parcelable {
     private final String mAppPackageName;
+    private final String mSdkPackageName;
 
     private StatusParam(@NonNull Builder builder) {
         mAppPackageName = builder.mAppPackageName;
+        mSdkPackageName = builder.mSdkPackageName;
     }
 
     /** Unpack an StatusParam from a Parcel. */
     private StatusParam(Parcel in) {
         mAppPackageName = in.readString();
+        mSdkPackageName = in.readString();
     }
 
     /** Creator for Parcelable (via reflection). */
@@ -64,26 +67,37 @@ public final class StatusParam implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         out.writeString(mAppPackageName);
+        out.writeString(mSdkPackageName);
     }
 
-    /** Caller's package name used for getting the status. */
+    /** Package name of the app used for getting the status. */
     @NonNull
     public String getAppPackageName() {
         return mAppPackageName;
     }
 
+    /** Package name of the sdk used for getting the status. */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkPackageName;
+    }
+
     /** A builder for {@link StatusParam}. */
     public static final class Builder {
-        private String mAppPackageName;
+        private final String mAppPackageName;
+        private final String mSdkPackageName;
 
         /**
          * Builder constructor for {@link StatusParam}.
          *
-         * @param appPackageName caller's package name
+         * @param appPackageName see {@link StatusParam#getAppPackageName()}
+         * @param sdkPackageName see {@link StatusParam#getSdkPackageName()}
          */
-        public Builder(@NonNull String appPackageName) {
+        public Builder(@NonNull String appPackageName, @NonNull String sdkPackageName) {
             Objects.requireNonNull(appPackageName);
+            Objects.requireNonNull(sdkPackageName);
             mAppPackageName = appPackageName;
+            mSdkPackageName = sdkPackageName;
         }
 
         /** Build the StatusParam. */

@@ -23,6 +23,8 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import com.google.common.truth.Truth;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Rule;
@@ -34,6 +36,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class AggregateReportSenderTest {
 
@@ -48,7 +52,7 @@ public class AggregateReportSenderTest {
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
-            + "\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,"
+            + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
 
     private AggregateReportBody createAggregateReportBodyExample1() {
@@ -79,7 +83,7 @@ public class AggregateReportSenderTest {
                 createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
         AggregateReportSender spyAggregateReportSender = Mockito.spy(aggregateReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyAggregateReportSender)
@@ -94,12 +98,21 @@ public class AggregateReportSenderTest {
 
     @Test
     public void testCreateHttpUrlConnection() throws Exception {
-        HttpURLConnection mockConnection = Mockito.mock(HttpURLConnection.class);
+        HttpsURLConnection mockConnection = Mockito.mock(HttpsURLConnection.class);
         URL spyUrl = Mockito.spy(new URL("https://foo"));
         Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
-        HttpURLConnection connection = aggregateReportSender.createHttpUrlConnection(spyUrl);
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
+        HttpsURLConnection connection =
+                (HttpsURLConnection) aggregateReportSender.createHttpUrlConnection(spyUrl);
         assertEquals(mockConnection, connection);
+    }
+
+    @Test
+    public void testDebugReportUriPath() {
+        Truth.assertThat(new AggregateReportSender(false).getReportUriPath())
+                .isEqualTo(AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+        Truth.assertThat(new AggregateReportSender(true).getReportUriPath())
+                .isEqualTo(AggregateReportSender.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

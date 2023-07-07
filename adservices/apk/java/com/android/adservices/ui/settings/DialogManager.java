@@ -17,10 +17,13 @@ package com.android.adservices.ui.settings;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnDismissListener;
+import android.os.Build;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
@@ -34,6 +37,8 @@ import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 /** Creates and displays dialogs for the Privacy Sandbox application. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class DialogManager {
     public static Semaphore sSemaphore = new Semaphore(1);
 
@@ -124,6 +129,11 @@ public class DialogManager {
                 (dialogInterface, buttonId) -> {
                     topicsViewModel.resetTopics();
                     sSemaphore.release();
+                    Toast.makeText(
+                                    context,
+                                    R.string.settingsUI_topics_are_reset,
+                                    Toast.LENGTH_SHORT)
+                            .show();
                 };
         new AlertDialog.Builder(context)
                 .setTitle(R.string.settingsUI_dialog_reset_topic_title)
@@ -199,6 +209,11 @@ public class DialogManager {
                 (dialogInterface, buttonId) -> {
                     try {
                         appsViewModel.resetApps();
+                        Toast.makeText(
+                                        context,
+                                        R.string.settingsUI_apps_are_reset,
+                                        Toast.LENGTH_SHORT)
+                                .show();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -219,7 +234,7 @@ public class DialogManager {
         return (dialogInterface, buttonId) -> sSemaphore.release();
     }
 
-    private static DialogInterface.OnDismissListener getOnDismissListener() {
+    private static OnDismissListener getOnDismissListener() {
         return dialogInterface -> sSemaphore.release();
     }
 }

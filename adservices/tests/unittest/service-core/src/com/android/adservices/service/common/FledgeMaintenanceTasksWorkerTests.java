@@ -16,157 +16,170 @@
 
 package com.android.adservices.service.common;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
-import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.net.Uri;
+import android.adservices.common.CommonFixture;
+import android.adservices.common.KeyedFrequencyCap;
+import android.content.pm.PackageManager;
 
-import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.DBAdSelection;
-import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
-import java.time.Clock;
+import java.time.Instant;
 
 public class FledgeMaintenanceTasksWorkerTests {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
-    private static final Uri BIDDING_LOGIC_URI = Uri.parse("https://biddinglogic.com");
-    private static final Uri EXPIRED_BIDDING_LOGIC_URI =
-            Uri.parse("https://expiredbiddinglogic.com");
-
-    private static final long AD_SELECTION_ID_1 = 12345L;
-    private static final long AD_SELECTION_ID_2 = 23456L;
-
-    private static final DBAdSelection DB_AD_SELECTION =
-            new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
-                    .setContextualSignals("contextualSignals")
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI)
-                    .setWinningAdRenderUri(Uri.parse("https://winningAd.com"))
-                    .setWinningAdBid(5)
-                    .setCreationTimestamp(Clock.systemUTC().instant())
-                    .setCallerPackageName("testPackageName")
-                    .build();
-
-    private static final DBBuyerDecisionLogic DB_BUYER_DECISION_LOGIC =
-            new DBBuyerDecisionLogic.Builder()
-                    .setBuyerDecisionLogicJs("buyerDecisionLogicJS")
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI)
-                    .build();
-
-    private static final DBAdSelection EXPIRED_DB_AD_SELECTION =
-            new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
-                    .setContextualSignals("contextualSignals")
-                    .setBiddingLogicUri(EXPIRED_BIDDING_LOGIC_URI)
-                    .setWinningAdRenderUri(Uri.parse("https://winningAd.com"))
-                    .setWinningAdBid(5)
-                    .setCreationTimestamp(
-                            Clock.systemUTC()
-                                    .instant()
-                                    .minusSeconds(2 * TEST_FLAGS.getAdSelectionExpirationWindowS()))
-                    .setCallerPackageName("testPackageName")
-                    .build();
-
-    private static final DBBuyerDecisionLogic EXPIRED_DB_BUYER_DECISION_LOGIC =
-            new DBBuyerDecisionLogic.Builder()
-                    .setBuyerDecisionLogicJs("buyerDecisionLogicJS")
-                    .setBiddingLogicUri(EXPIRED_BIDDING_LOGIC_URI)
-                    .build();
-
-    private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
+    @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private PackageManager mPackageManagerMock;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
+    private MockitoSession mMockitoSession;
 
     @Before
     public void setup() {
-        mAdSelectionEntryDao =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionDatabase.class)
-                        .build()
-                        .adSelectionEntryDao();
+        mMockitoSession = ExtendedMockito.mockitoSession().initMocks(this).startMocking();
 
-        mFledgeMaintenanceTasksWorker = new FledgeMaintenanceTasksWorker(mAdSelectionEntryDao);
+        mFledgeMaintenanceTasksWorker =
+                new FledgeMaintenanceTasksWorker(
+                        TEST_FLAGS,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+    }
+
+    @After
+    public void teardown() {
+        if (mMockitoSession != null) {
+            mMockitoSession.finishMocking();
+        }
     }
 
     @Test
-    public void testFledgeMaintenanceWorkerDoesNotRemoveValidData() throws Exception {
-        // Add valid and expired ad selections
-        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION);
-
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-
-        // Add valid and expired buyer decision logics
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-
-        // Assert that valid data was not cleared
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-    }
-
-    @Test
-    public void testFledgeMaintenanceWorkerRemovesExpiredData() throws Exception {
-        MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
-
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
-
-        // Add valid and expired ad selections
-        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION);
-        mAdSelectionEntryDao.persistAdSelection(EXPIRED_DB_AD_SELECTION);
-
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionIdExist(
-                        EXPIRED_DB_AD_SELECTION.getAdSelectionId()));
-
-        // Add valid and expired buyer decision logics
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC);
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(EXPIRED_DB_BUYER_DECISION_LOGIC);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-
+    public void testClearExpiredAdSelectionData_removesExpiredData() throws Exception {
         mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
 
-        // Assert expired data was removed
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionIdExist(
-                        EXPIRED_DB_AD_SELECTION.getAdSelectionId()));
-        assertFalse(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        TEST_FLAGS.getAdSelectionExpirationWindowS());
 
-        // Assert that valid data was not cleared
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
+        verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
+    }
 
-        mockitoSession.finishMocking();
+    @Test
+    public void testClearExpiredFrequencyCapHistogramData_adFilteringEnabled_doesMaintenance() {
+        final class FlagsWithAdFilteringFeatureEnabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+
+        verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedBuyerHistogramData(any(EnrollmentDao.class));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedSourceAppHistogramData(
+                        any(PackageManager.class), any(Flags.class));
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void
+            testClearExpiredFrequencyCapHistogramData_enrollmentDisabled_skipsBuyerMaintenance() {
+        final class FlagsWithAdFilteringFeatureEnabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+
+        verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedSourceAppHistogramData(
+                        any(PackageManager.class), any(Flags.class));
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void testClearExpiredFrequencyCapHistogramData_adFilteringDisabled_skipsMaintenance() {
+        final class FlagsWithAdFilteringFeatureDisabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return false;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureDisabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
+
+        verifyNoMoreInteractions(mFrequencyCapDaoMock, mPackageManagerMock);
     }
 }

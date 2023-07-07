@@ -16,22 +16,23 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.FilterMap;
+
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 /**
  * POJO for AggregatableAttributionSource.
  */
 public class AggregatableAttributionSource {
 
-    private Map<String, BigInteger> mAggregatableSource;
-    private AggregateFilterData mAggregateFilterData;
+    private TreeMap<String, BigInteger> mAggregatableSource;
+    private FilterMap mFilterMap;
 
     private AggregatableAttributionSource() {
-        mAggregatableSource = new HashMap<>();
-        mAggregateFilterData = null;
+        mAggregatableSource = new TreeMap<>();
+        mFilterMap = null;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class AggregatableAttributionSource {
         }
         AggregatableAttributionSource attributionSource = (AggregatableAttributionSource) obj;
         return Objects.equals(mAggregatableSource, attributionSource.mAggregatableSource)
-                && Objects.equals(mAggregateFilterData, attributionSource.mAggregateFilterData);
+                && Objects.equals(mFilterMap, attributionSource.mFilterMap);
     }
 
     @Override
@@ -53,15 +54,15 @@ public class AggregatableAttributionSource {
      * Returns aggregatable_source map with key represents the name field in JSON, value represents
      * the id field in JSON.
      */
-    public Map<String, BigInteger> getAggregatableSource() {
+    public TreeMap<String, BigInteger> getAggregatableSource() {
         return mAggregatableSource;
     }
 
     /**
      * Returns aggregate filter data which represents a map in JSONObject.
      */
-    public AggregateFilterData getAggregateFilterData() {
-        return mAggregateFilterData;
+    public FilterMap getFilterMap() {
+        return mFilterMap;
     }
 
     /**
@@ -78,16 +79,16 @@ public class AggregatableAttributionSource {
          * See {@link AggregatableAttributionSource#getAggregatableSource()}.
          */
         public Builder setAggregatableSource(
-                Map<String, BigInteger> aggregatableSource) {
+                TreeMap<String, BigInteger> aggregatableSource) {
             mBuilding.mAggregatableSource = aggregatableSource;
             return this;
         }
 
         /**
-         * See {@link AggregatableAttributionSource#getAggregateFilterData()}.
+         * See {@link AggregatableAttributionSource#getFilterMap()}.
          */
-        public Builder setAggregateFilterData(AggregateFilterData aggregateFilterData) {
-            mBuilding.mAggregateFilterData = aggregateFilterData;
+        public Builder setFilterMap(FilterMap filterMap) {
+            mBuilding.mFilterMap = filterMap;
             return this;
         }
 

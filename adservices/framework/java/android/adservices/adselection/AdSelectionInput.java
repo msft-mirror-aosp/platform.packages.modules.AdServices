@@ -24,7 +24,7 @@ import android.os.Parcelable;
 import java.util.Objects;
 
 /**
- * Represent input params to the reportImpression API.
+ * Represent input params to the RunAdSelectionInput API.
  *
  * @hide
  */

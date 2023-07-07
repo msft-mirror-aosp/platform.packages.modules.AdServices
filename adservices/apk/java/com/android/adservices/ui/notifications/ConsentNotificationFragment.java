@@ -15,15 +15,22 @@
  */
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_ADDITIONAL_INFO_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISMISSED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISPLAYED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_GOT_IT_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_MORE_BUTTON_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_OPT_IN_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_OPT_OUT_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SCROLLED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SCROLLED_TO_BOTTOM;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
 import static com.android.adservices.ui.notifications.ConsentNotificationConfirmationFragment.IS_CONSENT_GIVEN_ARGUMENT_KEY;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,18 +42,24 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.UIStats;
+import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationFragment extends Fragment {
-    public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
+    public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
+
     private boolean mIsEUDevice;
+    private boolean mIsInfoViewExpanded = false;
+
     private @Nullable ScrollToBottomController mScrollToBottomController;
 
     @Override
@@ -57,31 +70,25 @@ public class ConsentNotificationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
-        logLandingPageDisplayed();
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
         setupListeners(savedInstanceState);
     }
 
-    private void logLandingPageDisplayed() {
-        UIStats uiStats =
-                new UIStats.Builder()
-                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
-                        .setRegion(
-                                mIsEUDevice
-                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
-                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
-                        .setAction(
-                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED)
-                        .build();
-        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISMISSED, getContext());
+        if (mScrollToBottomController != null) {
+            mScrollToBottomController.saveInstanceState(savedInstanceState);
+        }
+        savedInstanceState.putBoolean(IS_INFO_VIEW_EXPANDED_KEY, mIsInfoViewExpanded);
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        boolean isEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = NotificationUtil.isEeaDevice(requireActivity(), getContext());
         View rootView;
-        if (isEUDevice) {
+        if (mIsEUDevice) {
             rootView =
                     inflater.inflate(R.layout.consent_notification_fragment_eu, container, false);
         } else {
@@ -92,30 +99,37 @@ public class ConsentNotificationFragment extends Fragment {
 
     private void setupListeners(Bundle savedInstanceState) {
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
+        if (savedInstanceState != null) {
+            setInfoViewState(savedInstanceState.getBoolean(IS_INFO_VIEW_EXPANDED_KEY, false));
+        }
         howItWorksExpander.setOnClickListener(
                 view -> {
-                    View text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
-                    if (text.getVisibility() == View.VISIBLE) {
-                        text.setVisibility(View.GONE);
-                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                0, 0, R.drawable.ic_expand, 0);
-                    } else {
-                        text.setVisibility(View.VISIBLE);
-                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                0, 0, R.drawable.ic_minimize, 0);
-                    }
+                    setInfoViewState(!mIsInfoViewExpanded);
+                    ConsentNotificationActivity.handleAction(
+                            LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
                 });
 
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
+                        ConsentNotificationActivity.handleAction(
+                                LANDING_PAGE_OPT_OUT_CLICKED, getContext());
+
                         // opt-out confirmation activity
                         ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                            ConsentManager.getInstance(requireContext())
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        }
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
                     } else {
+                        ConsentNotificationActivity.handleAction(
+                                LANDING_PAGE_SETTINGS_BUTTON_CLICKED, getContext());
+
                         // go to settings activity
                         Intent intent =
                                 new Intent(requireActivity(), AdServicesSettingsMainActivity.class);
@@ -132,6 +146,23 @@ public class ConsentNotificationFragment extends Fragment {
                 new ScrollToBottomController(
                         scrollView, leftControlButton, rightControlButton, savedInstanceState);
         mScrollToBottomController.bind();
+        // check whether it can scroll vertically and update buttons after layout can be measured
+        scrollView.post(() -> mScrollToBottomController.updateButtonsIfHasScrolledToBottom());
+    }
+
+    private void setInfoViewState(boolean expanded) {
+        View text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
+        TextView expander = requireActivity().findViewById(R.id.how_it_works_expander);
+        if (expanded) {
+            mIsInfoViewExpanded = true;
+            text.setVisibility(View.VISIBLE);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    0, 0, R.drawable.ic_minimize, 0);
+        } else {
+            mIsInfoViewExpanded = false;
+            text.setVisibility(View.GONE);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
+        }
     }
 
     private void startConfirmationFragment(Bundle args) {
@@ -163,7 +194,6 @@ public class ConsentNotificationFragment extends Fragment {
         private final ScrollView mScrollContainer;
         private final Button mLeftControlButton;
         private final Button mRightControlButton;
-
         private boolean mHasScrolledToBottom;
 
         ScrollToBottomController(
@@ -214,15 +244,29 @@ public class ConsentNotificationFragment extends Fragment {
             if (mHasScrolledToBottom) {
                 if (mIsEUDevice) {
                     // opt-in confirmation activity
+                    ConsentNotificationActivity.handleAction(
+                            LANDING_PAGE_OPT_IN_CLICKED, getContext());
+
                     ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance(requireContext())
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                    }
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);
                 } else {
+                    ConsentNotificationActivity.handleAction(
+                            LANDING_PAGE_GOT_IT_CLICKED, getContext());
+
                     // acknowledge and dismiss
                     requireActivity().finish();
                 }
             } else {
+                ConsentNotificationActivity.handleAction(
+                        LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());
+
                 mScrollContainer.smoothScrollTo(
                         0,
                         mScrollContainer.getScrollY()
@@ -233,7 +277,14 @@ public class ConsentNotificationFragment extends Fragment {
         @Override
         public void onScrollChange(
                 View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+            ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED, getContext());
+            updateButtonsIfHasScrolledToBottom();
+        }
+
+        void updateButtonsIfHasScrolledToBottom() {
             if (!mScrollContainer.canScrollVertically(SCROLL_DIRECTION_DOWN)) {
+                ConsentNotificationActivity.handleAction(
+                        LANDING_PAGE_SCROLLED_TO_BOTTOM, getContext());
                 mHasScrolledToBottom = true;
                 updateControlButtons();
             }

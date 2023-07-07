@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
- package android.adservices.common;
+package android.adservices.common;
 
- parcelable IsAdServicesEnabledResult;
+parcelable IsAdServicesEnabledResult;

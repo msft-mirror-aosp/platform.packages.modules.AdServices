@@ -19,10 +19,10 @@ package com.android.adservices.service.measurement.access;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.Process;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 
 import java.util.function.Supplier;
 
@@ -52,7 +52,7 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
             return true;
         }
 
-        if (Process.isSdkSandboxUid(mCallingUid)) {
+        if (ProcessCompatUtils.isSdkSandboxUid(mCallingUid)) {
             LogUtil.d("Foreground check skipped, app running on Sandbox");
             return true;
         }

@@ -22,27 +22,25 @@ android_test {
         "src/com/android/server/adservices/*.java",
         "src/**/*.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["adservices-extended-mockito-defaults"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
         "androidx.test.runner",
         "androidx.test.core",
         "truth-prebuilt",
-        "mockito-target-extended-minus-junit4",
-        "ub-uiautomator",
         "services.core",
+        "framework-adservices.impl",
+        "adservices-test-utility",
         "service-adservices.impl",
+        // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
+        "service-sdksandbox.impl",
     ],
     libs: [
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
-    ],
-    jni_libs: [
-        // Required for ExtendedMockito
-        "libdexmakerjvmtiagent",
-        "libstaticjvmtiagent",
+        "framework-configinfrastructure",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",

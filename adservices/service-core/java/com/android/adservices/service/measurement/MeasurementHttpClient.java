@@ -16,27 +16,28 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.SuppressLint;
+import android.net.Uri;
+
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.util.Web;
 
-import com.google.common.base.Charsets;
-
-import org.json.JSONObject;
-
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Map;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.Objects;
-import java.util.Optional;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Utility class related to network related activities
@@ -59,7 +60,12 @@ public class MeasurementHttpClient {
     public URLConnection setup(@NonNull URL url) throws IOException {
         Objects.requireNonNull(url);
 
-        final URLConnection urlConnection = url.openConnection();
+        final HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
+        if (Web.isLocalhost(Uri.parse(url.toString()))) {
+            LogUtil.d("MeasurementHttpClient::setup : setting unsafe SSL for localhost, URI: %s",
+                    url.toString());
+            urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
+        }
         final Flags flags = FlagsFactory.getFlags();
         urlConnection.setConnectTimeout(flags.getMeasurementNetworkConnectTimeoutMs());
         urlConnection.setReadTimeout(flags.getMeasurementNetworkReadTimeoutMs());
@@ -71,88 +77,27 @@ public class MeasurementHttpClient {
     }
 
     /**
-     * Rest call execution, if an error is encountered before performing the network call or an
-     * {@link IOException} is thrown, an empty {@link Optional} will be returned.
+     * Intentionally bypass SSL certificate verification -- called only when connecting to
+     * localhost.
      */
-    @NonNull
-    public Optional<MeasurementHttpResponse> call(
-            @NonNull String endpoint,
-            @NonNull HttpMethod httpMethod,
-            @Nullable Map<String, String> headers,
-            @Nullable JSONObject payload,
-            boolean followRedirects) {
-        if (endpoint == null || httpMethod == null) {
-            LogUtil.d("Endpoint or http method is empty");
-            return Optional.empty();
-        }
-
-        final URL url;
+    @SuppressLint({"TrustAllX509TrustManager", "CustomX509TrustManager"})
+    private static SSLSocketFactory getUnsafeSslSocketFactory() {
         try {
-            url = new URL(endpoint);
-        } catch (MalformedURLException e) {
-            LogUtil.e(e, "Malformed registration target URL");
-            return Optional.empty();
-        }
-
-        final HttpURLConnection urlConnection;
-        try {
-            urlConnection = (HttpURLConnection) setup(url);
-        } catch (IOException e) {
-            LogUtil.e(e, "Failed to open target URL");
-            return Optional.empty();
-        }
-
-        try {
-
-            urlConnection.setRequestMethod(httpMethod.name());
-
-            if (headers != null && !headers.isEmpty()) {
-                for (Map.Entry<String, String> entry : headers.entrySet()) {
-                    urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
+            TrustManager[] bypassTrustManagers = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) { }
                 }
-            }
-
-            if (payload != null) {
-                urlConnection.setDoOutput(true);
-                try (BufferedOutputStream out =
-                        new BufferedOutputStream(urlConnection.getOutputStream())) {
-                    out.write(payload.toString().getBytes());
-                    out.flush();
-                }
-            }
-
-            urlConnection.setInstanceFollowRedirects(followRedirects);
-
-            int responseCode = urlConnection.getResponseCode();
-            if (responseCode / 100 == 2) {
-                return Optional.of(
-                        new MeasurementHttpResponse.Builder()
-                                .setPayload(convert(urlConnection.getInputStream()))
-                                .setHeaders(urlConnection.getHeaderFields())
-                                .setStatusCode(responseCode)
-                                .build());
-            } else {
-                return Optional.of(
-                        new MeasurementHttpResponse.Builder()
-                                .setPayload(convert(urlConnection.getErrorStream()))
-                                .setHeaders(urlConnection.getHeaderFields())
-                                .setStatusCode(responseCode)
-                                .build());
-            }
-        } catch (IOException e) {
-            LogUtil.e(e, "Failed to get registration response");
-            return Optional.empty();
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-        }
-    }
-
-    private String convert(@NonNull InputStream in) throws IOException {
-        if (in == null) {
+            };
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, bypassTrustManagers, new SecureRandom());
+            return sslContext.getSocketFactory();
+        } catch (Exception e) {
+            LogUtil.e(e, "getUnsafeSslSocketFactory caught exception");
             return null;
         }
-        return new String(in.readAllBytes(), Charsets.UTF_8);
     }
 }

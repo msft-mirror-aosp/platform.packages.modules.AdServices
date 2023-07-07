@@ -45,8 +45,7 @@ public class AdServicesCommonManagerTest {
     private static final String TAG = "AdservicesStatusManagerTest";
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private AdServicesCommonManager mCommonManager =
-            sContext.getSystemService(AdServicesCommonManager.class);
+    private AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
 
     @Test
     public void testStatusManagerNotAuthorized() {

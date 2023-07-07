@@ -17,8 +17,8 @@
 package com.android.sdksandbox;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.app.Service;
+import android.app.sdksandbox.FileUtil;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LogUtil;
@@ -26,6 +26,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +35,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
@@ -44,13 +46,18 @@ import android.util.ArraySet;
 import android.util.Log;
 import android.webkit.WebView;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
+import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -59,11 +66,13 @@ public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
 
+    private final Object mLock = new Object();
     // Mapping from sdk name to its holder
-    @GuardedBy("mHeldSdk")
+    @GuardedBy("mLock")
     private final Map<String, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
 
     private volatile boolean mInitialized;
+    private boolean mCustomizedSdkContextEnabled;
     private Injector mInjector;
     private ISdkSandboxService.Stub mBinder;
 
@@ -86,6 +95,11 @@ public class SdkSandboxServiceImpl extends Service {
         long getCurrentTime() {
             return System.currentTimeMillis();
         }
+
+        @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+        SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
+            return SdkSandboxActivityRegistry.getInstance();
+        }
     }
 
     public SdkSandboxServiceImpl() {
@@ -94,6 +108,13 @@ public class SdkSandboxServiceImpl extends Service {
     @VisibleForTesting
     SdkSandboxServiceImpl(Injector injector) {
         mInjector = injector;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // This prevents the sandbox from restarting. This should be kept in sync with the status
+        // maintained in SdkSandboxServiceProviderImpl.SdkSandboxConnection.
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -114,7 +135,8 @@ public class SdkSandboxServiceImpl extends Service {
      *
      * @param sdkToServiceCallback for initialization of {@link SdkSandboxLocalSingleton}
      */
-    public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+    public void initialize(
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
         enforceCallerIsSystemServer();
 
         if (mInitialized) {
@@ -122,12 +144,39 @@ public class SdkSandboxServiceImpl extends Service {
             return;
         }
 
+        mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
+
         SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
 
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
-        LogUtil.d(TAG, "Sandbox initialized");
+        LogUtil.d(
+                TAG,
+                "Sandbox initialized. isCustomizedSdkContextEnabled: "
+                        + isCustomizedSdkContextEnabled);
+    }
+
+    /** Computes the storage of the shared and SDK storage for an app */
+    public void computeSdkStorage(
+            List<String> sharedPaths, List<String> sdkPaths, IComputeSdkStorageCallback callback) {
+        // Start the handler thread.
+        BackgroundThread.getExecutor()
+                .execute(
+                        () -> {
+                            final int sharedStorageKb =
+                                    FileUtil.getStorageInKbForPaths(sharedPaths);
+                            final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+
+                            try {
+                                callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
+                            } catch (RemoteException e) {
+                                LogUtil.d(
+                                        TAG,
+                                        "Error while calling computeSdkStorage in sandbox: "
+                                                + e.getMessage());
+                            }
+                        });
     }
 
     /** Loads SDK. */
@@ -136,41 +185,40 @@ public class SdkSandboxServiceImpl extends Service {
             ApplicationInfo applicationInfo,
             String sdkName,
             String sdkProviderClassName,
-            String sdkCeDataDir,
-            String sdkDeDataDir,
+            ApplicationInfo customizedApplicationInfo,
             Bundle params,
             ILoadSdkInSandboxCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
-        final long token = Binder.clearCallingIdentity();
-        try {
-            loadSdkInternal(
-                    callingPackageName,
-                    applicationInfo,
-                    sdkName,
-                    sdkProviderClassName,
-                    sdkCeDataDir,
-                    sdkDeDataDir,
-                    params,
+
+        if (!mInitialized) {
+            sendLoadError(
                     callback,
+                    ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR,
+                    "Sandbox was not properly initialized",
                     sandboxLatencyInfo);
-        } finally {
-            Binder.restoreCallingIdentity(token);
+            return;
         }
+        loadSdkInternal(
+                callingPackageName,
+                applicationInfo,
+                sdkName,
+                sdkProviderClassName,
+                customizedApplicationInfo,
+                params,
+                callback,
+                sandboxLatencyInfo);
     }
 
     /** Unloads SDK. */
     public void unloadSdk(
             String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
-        final long token = Binder.clearCallingIdentity();
-        try {
-            sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
-            unloadSdkInternal(sdkName);
-            sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
+
+        sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
+        unloadSdkInternal(sdkName);
+        sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
+
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
         try {
             callback.onUnloadSdk(sandboxLatencyInfo);
@@ -294,7 +342,7 @@ public class SdkSandboxServiceImpl extends Service {
 
     @Override
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        synchronized (mHeldSdk) {
+        synchronized (mLock) {
             // TODO(b/211575098): Use IndentingPrintWriter for better formatting
             if (mHeldSdk.isEmpty()) {
                 writer.println("mHeldSdk is empty");
@@ -323,12 +371,11 @@ public class SdkSandboxServiceImpl extends Service {
             @NonNull ApplicationInfo applicationInfo,
             @NonNull String sdkName,
             @NonNull String sdkProviderClassName,
-            @Nullable String sdkCeDataDir,
-            @Nullable String sdkDeDataDir,
+            @NonNull ApplicationInfo customizedApplicationInfo,
             @NonNull Bundle params,
             @NonNull ILoadSdkInSandboxCallback callback,
             @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
-        synchronized (mHeldSdk) {
+        synchronized (mLock) {
             if (mHeldSdk.containsKey(sdkName)) {
                 sendLoadError(
                         callback,
@@ -339,34 +386,37 @@ public class SdkSandboxServiceImpl extends Service {
             }
         }
 
-        ClassLoader loader = getClassLoader(applicationInfo);
-        SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
+        Context baseContext;
+        try {
+            baseContext = createBaseContext(customizedApplicationInfo);
+        } catch (PackageManager.NameNotFoundException e) {
+            sendLoadError(
+                    callback,
+                    ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
+                    "Package name not found " + sdkName + ". errorMsg: " + e.getMessage(),
+                    sandboxLatencyInfo);
+            return;
+        }
 
-        // We want to ensure that SandboxedSdkContext.getSystemService() will return different
-        // instances for different SandboxedSdkContext contexts, so that different SDKs
-        // running in the same sdk sandbox process don't share the same manager instance.
-        // Because SandboxedSdkContext is a ContextWrapper, it delegates the getSystemService()
-        // call to its base context. If we use an application context here as a base context
-        // when creating an instance of SandboxedSdkContext it will mean that all instances of
-        // SandboxedSdkContext will return the same manager instances.
+        final ClassLoader loader =
+                mCustomizedSdkContextEnabled
+                        ? baseContext.getClassLoader()
+                        : getClassLoader(applicationInfo);
 
-        // In order to create per-SandboxedSdkContext instances in getSystemService, each
-        // SandboxedSdkContext needs to have use ContextImpl as a base context. The ContextImpl
-        // is hidden, so we can't instantiate it directly. However, the
-        // createCredentialProtectedStorageContext() will always create a new ContextImpl
-        // object, which is why we are using it as a base context when creating an instance of
-        // SandboxedSdkContext.
-        // TODO(b/242889021): make this detail internal to SandboxedSdkContext
-        Context ctx = mInjector.getContext().createCredentialProtectedStorageContext();
         SandboxedSdkContext sandboxedSdkContext =
                 new SandboxedSdkContext(
-                        ctx,
+                        baseContext,
                         loader,
                         callingPackageName,
                         applicationInfo,
                         sdkName,
-                        sdkCeDataDir,
-                        sdkDeDataDir);
+                        customizedApplicationInfo.credentialProtectedDataDir,
+                        customizedApplicationInfo.deviceProtectedDataDir,
+                        mCustomizedSdkContextEnabled);
+
+        final SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
+        SdkHolderToSdkSandboxServiceCallbackImpl sdkHolderToSdkSandboxServiceCallback =
+                new SdkHolderToSdkSandboxServiceCallbackImpl(sdkName, sandboxedSdkHolder);
         sandboxedSdkHolder.init(
                 params,
                 callback,
@@ -374,18 +424,54 @@ public class SdkSandboxServiceImpl extends Service {
                 loader,
                 sandboxedSdkContext,
                 mInjector,
-                sandboxLatencyInfo);
-        synchronized (mHeldSdk) {
-            mHeldSdk.put(sdkName, sandboxedSdkHolder);
+                sandboxLatencyInfo,
+                sdkHolderToSdkSandboxServiceCallback);
+    }
+
+    /**
+     * Create a new instance of ContextImpl to be used for SandboxedSdkContext.
+     *
+     * <p>We want to ensure that SandboxedSdkContext.getSystemService() will return different
+     * instances for different SandboxedSdkContext contexts, so that different SDKs running in the
+     * same sdk sandbox process don't share the same manager instance. Because SandboxedSdkContext
+     * is a ContextWrapper, it delegates the getSystemService() call to its base context. If we use
+     * an application context here as a base context when creating an instance of
+     * SandboxedSdkContext it will mean that all instances of SandboxedSdkContext will return the
+     * same manager instances.
+     *
+     * <p>This method ensures we return a new instance of ContextImpl.
+     */
+    private Context createBaseContext(ApplicationInfo customizedInfo)
+            throws PackageManager.NameNotFoundException {
+
+        // In order to create per-SandboxedSdkContext instances in getSystemService, each
+        // SandboxedSdkContext needs to have its own instance of ContextImpl as a base context. The
+        // instance should have sdk-specific information infused so that system services get the
+        // correct information from the base context.
+        // customizedInfo has already been infused with sdk-specific information on the server-side.
+        if (SdkLevel.isAtLeastU() && mCustomizedSdkContextEnabled) {
+            // Context.CONTEXT_INCLUDE_CODE ensures SDK code is loaded in sandbox process along with
+            // its class loaders. There is a security check to ensure an app loads code that belongs
+            // to it only, but the check can be bypassed using Context.Context_IGNORE_SECURITY.
+            int flag = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+
+            return mInjector.getContext().createContextForSdkInSandbox(customizedInfo, flag);
+        } else {
+            return mInjector.getContext().createCredentialProtectedStorageContext();
         }
     }
 
     private void unloadSdkInternal(@NonNull String sdkName) {
-        synchronized (mHeldSdk) {
+        synchronized (mLock) {
             SandboxedSdkHolder sandboxedSdkHolder = mHeldSdk.get(sdkName);
             if (sandboxedSdkHolder != null) {
                 sandboxedSdkHolder.unloadSdk();
                 mHeldSdk.remove(sdkName);
+                if (SdkLevel.isAtLeastU()) {
+                    mInjector
+                            .getSdkSandboxActivityRegistry()
+                            .unregisterAllActivityHandlersForSdk(sdkName);
+                }
             }
         }
     }
@@ -412,9 +498,23 @@ public class SdkSandboxServiceImpl extends Service {
 
     final class SdkSandboxServiceDelegate extends ISdkSandboxService.Stub {
         @Override
-        public void initialize(@NonNull ISdkToServiceCallback sdkToServiceCallback) {
+        public void initialize(
+                @NonNull ISdkToServiceCallback sdkToServiceCallback,
+                boolean isCustomizedSdkContextEnabled) {
             Objects.requireNonNull(sdkToServiceCallback, "sdkToServiceCallback should not be null");
-            SdkSandboxServiceImpl.this.initialize(sdkToServiceCallback);
+            SdkSandboxServiceImpl.this.initialize(
+                    sdkToServiceCallback, isCustomizedSdkContextEnabled);
+        }
+
+        @Override
+        public void computeSdkStorage(
+                @NonNull List<String> sharedPaths,
+                @NonNull List<String> sdkPaths,
+                @NonNull IComputeSdkStorageCallback callback) {
+            Objects.requireNonNull(sharedPaths, "sharedPaths should not be null");
+            Objects.requireNonNull(sdkPaths, "sdkPaths should not be null");
+            Objects.requireNonNull(callback, "callback should not be null");
+            SdkSandboxServiceImpl.this.computeSdkStorage(sharedPaths, sdkPaths, callback);
         }
 
         @Override
@@ -423,8 +523,7 @@ public class SdkSandboxServiceImpl extends Service {
                 @NonNull ApplicationInfo applicationInfo,
                 @NonNull String sdkName,
                 @NonNull String sdkProviderClassName,
-                @Nullable String sdkCeDataDir,
-                @Nullable String sdkDeDataDir,
+                @NonNull ApplicationInfo customizedApplicationInfo,
                 @NonNull Bundle params,
                 @NonNull ILoadSdkInSandboxCallback callback,
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
@@ -435,6 +534,8 @@ public class SdkSandboxServiceImpl extends Service {
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
             Objects.requireNonNull(sdkName, "sdkName should not be null");
             Objects.requireNonNull(sdkProviderClassName, "sdkProviderClassName should not be null");
+            Objects.requireNonNull(
+                    customizedApplicationInfo, "customized applicationInfo should not be null");
             Objects.requireNonNull(params, "params should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
             if (TextUtils.isEmpty(sdkProviderClassName)) {
@@ -446,8 +547,7 @@ public class SdkSandboxServiceImpl extends Service {
                     applicationInfo,
                     sdkName,
                     sdkProviderClassName,
-                    sdkCeDataDir,
-                    sdkDeDataDir,
+                    customizedApplicationInfo,
                     params,
                     callback,
                     sandboxLatencyInfo);
@@ -476,6 +576,31 @@ public class SdkSandboxServiceImpl extends Service {
         public void isDisabled(@NonNull ISdkSandboxDisabledCallback callback) {
             Objects.requireNonNull(callback, "callback should not be null");
             SdkSandboxServiceImpl.this.isDisabled(callback);
+        }
+    }
+
+    /**
+     * Interface for {@link SandboxedSdkHolder} to indicate that the SDK has loaded successfully.
+     */
+    interface SdkHolderToSdkSandboxServiceCallback {
+        void onSuccess();
+    }
+
+    private class SdkHolderToSdkSandboxServiceCallbackImpl
+            implements SdkHolderToSdkSandboxServiceCallback {
+        private final SandboxedSdkHolder mHolder;
+        private final String mSdkName;
+
+        SdkHolderToSdkSandboxServiceCallbackImpl(String sdkName, SandboxedSdkHolder holder) {
+            mSdkName = sdkName;
+            mHolder = holder;
+        }
+
+        @Override
+        public void onSuccess() {
+            synchronized (SdkSandboxServiceImpl.this.mLock) {
+                mHeldSdk.put(mSdkName, mHolder);
+            }
         }
     }
 }

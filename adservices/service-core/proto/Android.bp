@@ -39,7 +39,7 @@ java_library {
         ":libprotobuf-internal-protos",
     ],
     static_libs: ["libprotobuf-java-lite"],
-    apex_available: ["com.android.adservices"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
 }
 
 // Generate gRPC client code
@@ -67,9 +67,8 @@ genrule {
 // Package into java_library to reference in "static_libs" in "adservices-service-core"
 java_library {
     name: "adservices-grpclib-lite",
-    min_sdk_version: "33",
-    apex_available: ["com.android.adservices"],
-    host_supported: true,
+    min_sdk_version: "30",
+    apex_available: ["com.android.adservices", "com.android.extservices"],
     srcs: [
         ":seller-frontend-service-stub-lite",
         ":adservices-proto",

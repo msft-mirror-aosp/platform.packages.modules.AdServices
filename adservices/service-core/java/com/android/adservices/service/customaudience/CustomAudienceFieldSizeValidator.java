@@ -23,6 +23,8 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.Validator;
@@ -71,11 +73,16 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
             "Single custom audience ads count should not exceed %d, the provided data size is %d";
 
     @NonNull private final Flags mFlags;
+    // Process stable flag value.
+    private final boolean mIsFilteringEnabled;
+    private final boolean mIsAdRenderIdEnabled;
 
     public CustomAudienceFieldSizeValidator(@NonNull Flags flags) {
         Objects.requireNonNull(flags);
 
         mFlags = flags;
+        mIsFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        mIsAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
     }
 
     /**
@@ -178,6 +185,12 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
     }
 
     private int getAdsSize(List<AdData> ads) {
-        return ads.stream().map(DBAdData::fromServiceObject).mapToInt(DBAdData::size).sum();
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                        mIsFilteringEnabled, mIsAdRenderIdEnabled);
+        return ads.stream()
+                .map(ad -> adDataConversionStrategy.fromServiceObject(ad).build())
+                .mapToInt(DBAdData::size)
+                .sum();
     }
 }

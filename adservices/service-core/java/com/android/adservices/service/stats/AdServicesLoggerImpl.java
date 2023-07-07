@@ -104,4 +104,47 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
             UpdateCustomAudienceProcessReportedStats stats) {
         mStatsdAdServicesLogger.logUpdateCustomAudienceProcessReportedStats(stats);
     }
+
+    @Override
+    public void logGetTopicsReportedStats(GetTopicsReportedStats stats) {
+        mStatsdAdServicesLogger.logGetTopicsReportedStats(stats);
+    }
+
+    @Override
+    public void logEpochComputationGetTopTopicsStats(EpochComputationGetTopTopicsStats stats) {
+        mStatsdAdServicesLogger.logEpochComputationGetTopTopicsStats(stats);
+    }
+
+    @Override
+    public void logEpochComputationClassifierStats(EpochComputationClassifierStats stats) {
+        mStatsdAdServicesLogger.logEpochComputationClassifierStats(stats);
+    }
+
+    @Override
+    public void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats) {
+        mStatsdAdServicesLogger.logMeasurementDebugKeysMatch(stats);
+    }
+
+    @Override
+    public void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats) {
+        mStatsdAdServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+    }
+
+    @Override
+    public void logMeasurementAttributionStats(
+            MeasurementAttributionStats measurementAttributionStats) {
+        mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
+    }
+
+    @Override
+    public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
+        mStatsdAdServicesLogger.logMeasurementWipeoutStats(measurementWipeoutStats);
+    }
+
+    @Override
+    public void logMeasurementDelayedSourceRegistrationStats(
+            MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats) {
+        mStatsdAdServicesLogger.logMeasurementDelayedSourceRegistrationStats(
+                measurementDelayedSourceRegistrationStats);
+    }
 }

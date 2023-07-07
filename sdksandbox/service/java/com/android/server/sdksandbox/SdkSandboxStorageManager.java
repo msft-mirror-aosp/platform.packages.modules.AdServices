@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.LogUtil;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -46,13 +47,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * Helper class to handle all logics related to sdk data
+ *
+ * @hide
  */
-class SdkSandboxStorageManager {
+public class SdkSandboxStorageManager {
     private static final String TAG = "SdkSandboxManager";
 
     private final Context mContext;
@@ -96,6 +100,7 @@ class SdkSandboxStorageManager {
      * package.
      */
     public void onPackageAddedOrUpdated(CallingInfo callingInfo) {
+        LogUtil.d(TAG, "Preparing SDK data on package added or update for: " + callingInfo);
         synchronized (mLock) {
             reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
@@ -114,6 +119,7 @@ class SdkSandboxStorageManager {
     }
 
     public void prepareSdkDataOnLoad(CallingInfo callingInfo) {
+        LogUtil.d(TAG, "Preparing SDK data on load for: " + callingInfo);
         synchronized (mLock) {
             reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
@@ -135,6 +141,37 @@ class SdkSandboxStorageManager {
         }
     }
 
+    public List<StorageDirInfo> getSdkStorageDirInfo(CallingInfo callingInfo) {
+        final StorageDirInfo packageDirInfo = getSdkDataPackageDirInfo(callingInfo);
+        if (packageDirInfo == null) {
+            // TODO(b/238164644): SdkSandboxManagerService should fail loadSdk
+            return new ArrayList<>();
+        }
+
+        final List<StorageDirInfo> sdkStorageDirInfos = new ArrayList<>();
+
+        synchronized (mLock) {
+            final SubDirectories ceSubDirs = new SubDirectories(packageDirInfo.getCeDataDir());
+            final SubDirectories deSubDirs = new SubDirectories(packageDirInfo.getDeDataDir());
+
+            /**
+             * Getting the SDKs name with deSubDir only assuming that ceSubDirs and deSubDirs have
+             * the same list of SDKs
+             */
+            final ArrayList<String> sdkNames = deSubDirs.getSdkNames();
+            int sdkNamesSize = sdkNames.size();
+
+            for (int i = 0; i < sdkNamesSize; i++) {
+                final String sdkCeSubDirPath =
+                        ceSubDirs.getSdkSubDir(sdkNames.get(i), /*fullPath=*/ true);
+                final String sdkDeSubDirPath =
+                        deSubDirs.getSdkSubDir(sdkNames.get(i), /*fullPath=*/ true);
+                sdkStorageDirInfos.add(new StorageDirInfo(sdkCeSubDirPath, sdkDeSubDirPath));
+            }
+            return sdkStorageDirInfos;
+        }
+    }
+
     public StorageDirInfo getInternalStorageDirInfo(CallingInfo callingInfo, String subDirName) {
         final StorageDirInfo packageDirInfo = getSdkDataPackageDirInfo(callingInfo);
         if (packageDirInfo == null) {
@@ -147,6 +184,33 @@ class SdkSandboxStorageManager {
             final String ceSubDirPath = ceSubDirs.getInternalSubDir(subDirName, /*fullPath=*/ true);
             final String deSubDirPath = deSubDirs.getInternalSubDir(subDirName, /*fullPath=*/ true);
             return new StorageDirInfo(ceSubDirPath, deSubDirPath);
+        }
+    }
+
+    public List<StorageDirInfo> getInternalStorageDirInfo(CallingInfo callingInfo) {
+        final StorageDirInfo packageDirInfo = getSdkDataPackageDirInfo(callingInfo);
+        if (packageDirInfo == null) {
+            // TODO(b/238164644): SdkSandboxManagerService should fail loadSdk
+            return new ArrayList<>();
+        }
+
+        final List<StorageDirInfo> internalStorageDirInfos = new ArrayList<>();
+
+        synchronized (mLock) {
+            final SubDirectories ceSubDirs = new SubDirectories(packageDirInfo.getCeDataDir());
+            final SubDirectories deSubDirs = new SubDirectories(packageDirInfo.getDeDataDir());
+
+            List<String> internalSubDirNames =
+                    Arrays.asList(SubDirectories.SHARED_DIR, SubDirectories.SANDBOX_DIR);
+
+            for (int i = 0; i < 2; i++) {
+                final String sdkCeSubDirPath =
+                        ceSubDirs.getInternalSubDir(internalSubDirNames.get(i), /*fullPath=*/ true);
+                final String sdkDeSubDirPath =
+                        deSubDirs.getInternalSubDir(internalSubDirNames.get(i), /*fullPath=*/ true);
+                internalStorageDirInfos.add(new StorageDirInfo(sdkCeSubDirPath, sdkDeSubDirPath));
+            }
+            return internalStorageDirInfos;
         }
     }
 
@@ -190,6 +254,7 @@ class SdkSandboxStorageManager {
                                 + "). However client app doesn't depend on any SDKs. Only "
                                 + "creating \"shared\" sdk sandbox data sub directory");
             } else {
+                Log.i(TAG, "No SDKs used. Skipping SDK data reconcilation for " + callingInfo);
                 return;
             }
         }
@@ -239,11 +304,14 @@ class SdkSandboxStorageManager {
                         /*previousAppId=*/ -1,
                         /*seInfo=*/ "default",
                         flags);
+                Log.i(TAG, "SDK data reconciled for " + callingInfo);
             } catch (Exception e) {
                 // We will retry when sdk gets loaded
                 Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
                         + String.join(", ", subDirNames) + " error: " + e.getMessage());
             }
+        } else {
+            Log.i(TAG, "Skipping SDK data reconcilation for " + callingInfo);
         }
     }
 
@@ -403,8 +471,8 @@ class SdkSandboxStorageManager {
             + "/sdksandbox";
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    String getSdkDataPackageDirectory(
+    /** Fetches the SDK data package directory based on the arguments */
+    public String getSdkDataPackageDirectory(
             @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
         return getSdkDataRootDirectory(volumeUuid, userId, isCeData) + "/" + packageName;
     }
@@ -423,12 +491,13 @@ class SdkSandboxStorageManager {
      *
      * <p>This class helps in organizing the sdk-subdirectories in groups so that they are easier to
      * process.
+     *
+     * @hide
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static class SubDirectories {
+    public static class SubDirectories {
 
-        static final String SHARED_DIR = "shared";
-        static final String SANDBOX_DIR = "sandbox";
+        public static final String SHARED_DIR = "shared";
+        public static final String SANDBOX_DIR = "sandbox";
         static final ArraySet<String> INTERNAL_SUBDIRS =
                 new ArraySet(Arrays.asList(SHARED_DIR, SANDBOX_DIR));
 
@@ -522,6 +591,14 @@ class SdkSandboxStorageManager {
             }
 
             return result;
+        }
+
+        public ArrayList<String> getSdkNames() {
+            ArrayList<String> sdkNames = new ArrayList<>();
+            for (int i = 0; i < mSdkSubDirs.size(); i++) {
+                sdkNames.add(mSdkSubDirs.keyAt(i));
+            }
+            return sdkNames;
         }
 
         private String getOrGenerateSdkSubDir(String sdkName) {
@@ -686,22 +763,39 @@ class SdkSandboxStorageManager {
      *
      * <p>Every sdk sub-directory has two data directories. One is credentially encrypted storage
      * and another is device encrypted.
+     *
+     * @hide
      */
-    static class StorageDirInfo {
+    public static class StorageDirInfo {
         @Nullable final String mCeData;
         @Nullable final String mDeData;
 
-        StorageDirInfo(@Nullable String ceDataPath, @Nullable String deDataPath) {
+        public StorageDirInfo(@Nullable String ceDataPath, @Nullable String deDataPath) {
             mCeData = ceDataPath;
             mDeData = deDataPath;
         }
 
-        @Nullable String getCeDataDir() {
+        @Nullable
+        public String getCeDataDir() {
             return mCeData;
         }
 
-        @Nullable String getDeDataDir() {
+        @Nullable
+        public String getDeDataDir() {
             return mDeData;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof StorageDirInfo)) return false;
+            StorageDirInfo that = (StorageDirInfo) o;
+            return mCeData.equals(that.mCeData) && mDeData.equals(that.mDeData);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mCeData, mDeData);
         }
     }
 }

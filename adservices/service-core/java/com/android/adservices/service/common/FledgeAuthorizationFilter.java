@@ -25,9 +25,15 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -35,7 +41,10 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Verify caller of FLEDGE API has the permission of performing certain behaviour. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class FledgeAuthorizationFilter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final PackageManager mPackageManager;
     @NonNull private final EnrollmentDao mEnrollmentDao;
     @NonNull private final AdServicesLogger mAdServicesLogger;
@@ -76,17 +85,17 @@ public class FledgeAuthorizationFilter {
             throws CallerMismatchException {
         Objects.requireNonNull(callingPackageName);
 
-        LogUtil.v(
+        sLogger.v(
                 "Asserting package name \"%s\" is valid for uid %d",
                 callingPackageName, callingUid);
 
         String[] packageNamesForUid = mPackageManager.getPackagesForUid(callingUid);
         for (String packageNameForUid : packageNamesForUid) {
-            LogUtil.v("Candidate package name \"%s\"", packageNameForUid);
+            sLogger.v("Candidate package name \"%s\"", packageNameForUid);
             if (callingPackageName.equals(packageNameForUid)) return;
         }
 
-        LogUtil.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
+        sLogger.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
         mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_UNAUTHORIZED, 0);
         throw new CallerMismatchException();
     }
@@ -102,7 +111,7 @@ public class FledgeAuthorizationFilter {
             throws SecurityException {
         Objects.requireNonNull(context);
         if (!PermissionHelper.hasCustomAudiencesPermission(context)) {
-            LogUtil.v("Permission not declared by caller in API %d", apiNameLoggingId);
+            sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
             throw new SecurityException(
@@ -135,7 +144,7 @@ public class FledgeAuthorizationFilter {
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
 
         if (enrollmentData == null) {
-            LogUtil.v(
+            sLogger.v(
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
@@ -144,10 +153,95 @@ public class FledgeAuthorizationFilter {
 
         if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                 context, appPackageName, enrollmentData.getEnrollmentId())) {
-            LogUtil.v(
+            sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
                     appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        // Check if enrollment is in blocklist.
+        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            sLogger.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
+                            + " API %d",
+                    appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+    }
+
+    /**
+     * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
+     * the ad tech is enrolled and authorized to perform the operation for the package.
+     *
+     * @param context API service context
+     * @param appPackageName the package name to check against
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param apiNameLoggingId the logging ID of the API being called
+     * @return an {@link AdTechIdentifier} which is allowed to perform the operation
+     * @throws AdTechNotAllowedException if the ad tech is not authorized to perform the operation
+     */
+    @NonNull
+    public AdTechIdentifier getAndAssertAdTechFromUriAllowed(
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            @NonNull Uri uriForAdTech,
+            int apiNameLoggingId)
+            throws AdTechNotAllowedException {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(uriForAdTech);
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(uriForAdTech);
+
+        if (enrollmentResult == null) {
+            sLogger.v(
+                    "Enrollment data match not found for URI \"%s\" while calling API %d",
+                    uriForAdTech, apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        AdTechIdentifier adTechIdentifier = enrollmentResult.first;
+        EnrollmentData enrollmentData = enrollmentResult.second;
+
+        if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                        context, appPackageName, enrollmentData.getEnrollmentId())
+                || PhFlags.getInstance()
+                        .isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            sLogger.v(
+                    "App package name \"%s\" with ad tech identifier \"%s\" from URI \"%s\" not"
+                            + " authorized to call API %d",
+                    appPackageName, adTechIdentifier.toString(), uriForAdTech, apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+
+        return adTechIdentifier;
+    }
+
+    /**
+     * Check if a certain ad tech is enrolled for FLEDGE.
+     *
+     * @param adTechIdentifier the ad tech to check against
+     * @param apiNameLoggingId the id of the api being called
+     * @throws AdTechNotAllowedException if the ad tech is not enrolled in FLEDGE
+     */
+    public void assertAdTechEnrolled(
+            @NonNull AdTechIdentifier adTechIdentifier, int apiNameLoggingId)
+            throws AdTechNotAllowedException {
+        Objects.requireNonNull(adTechIdentifier);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
+
+        if (enrollmentData == null) {
+            sLogger.v(
+                    "Enrollment data match not found for ad tech \"%s\" while calling API %d",
+                    adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
             throw new AdTechNotAllowedException();
         }

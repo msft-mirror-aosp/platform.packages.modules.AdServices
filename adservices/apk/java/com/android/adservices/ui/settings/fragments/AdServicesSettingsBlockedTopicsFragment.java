@@ -16,12 +16,14 @@
 
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -29,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.delegates.BlockedTopicsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
@@ -37,6 +40,8 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
 import java.util.function.Function;
 
 /** Fragment for the blocked topics view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
 
     @Override
@@ -76,12 +81,22 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         View noBlockedTopicsMessage = rootView.findViewById(R.id.no_blocked_topics_message);
+        View noBlockedTopicsGaMessage = rootView.findViewById(R.id.no_blocked_topics_ga_message);
         viewModel
                 .getBlockedTopics()
-                .observe(getViewLifecycleOwner(), blockedTopicsList -> {
-                    noBlockedTopicsMessage.setVisibility(
-                            blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
-                    adapter.notifyDataSetChanged();
-                });
+                .observe(
+                        getViewLifecycleOwner(),
+                        blockedTopicsList -> {
+                            if (!FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+                                noBlockedTopicsGaMessage.setVisibility(View.GONE);
+                                noBlockedTopicsMessage.setVisibility(
+                                        blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            } else {
+                                noBlockedTopicsMessage.setVisibility(View.GONE);
+                                noBlockedTopicsGaMessage.setVisibility(
+                                        blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            }
+                            adapter.notifyDataSetChanged();
+                        });
     }
 }

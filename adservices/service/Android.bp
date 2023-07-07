@@ -34,12 +34,19 @@ java_sdk_library {
     min_sdk_version: "Tiramisu",
     permitted_packages: ["com.android.server.adservices"],
     libs: [
+        "framework-configinfrastructure",
         "framework-adservices.impl",
+        // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
+        "service-sdksandbox.impl",
+    ],
+    static_libs: [
+        "modules-utils-preconditions",
     ],
     defaults: [
         "framework-system-server-module-defaults",
         "framework-system-server-module-optimize-defaults",
     ],
+    jarjar_rules: "jarjar-rules.txt",
     visibility: [
         "//packages/modules/AdServices/tests:__subpackages__",
     ],

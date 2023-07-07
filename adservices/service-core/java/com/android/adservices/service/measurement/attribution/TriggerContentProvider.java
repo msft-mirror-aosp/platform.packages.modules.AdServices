@@ -22,13 +22,17 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.Trigger;
+import com.android.modules.utils.build.SdkLevel;
 
 /**
  * ContentProvider for monitoring changes to {@link Trigger}.
  */
 public class TriggerContentProvider extends ContentProvider {
-    public static final String AUTHORITY = "com.android.adservices.provider.trigger";
-    public static final Uri TRIGGER_URI =  Uri.parse("content://" + AUTHORITY);
+    public static final String AUTHORITY =
+            SdkLevel.isAtLeastT()
+                    ? "com.android.adservices.provider.trigger"
+                    : "com.android.ext.adservices.provider.trigger";
+    public static final Uri TRIGGER_URI = Uri.parse("content://" + AUTHORITY);
 
     @Override
     public boolean onCreate() {

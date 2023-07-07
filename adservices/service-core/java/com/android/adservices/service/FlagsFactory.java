@@ -54,6 +54,21 @@ public class FlagsFactory {
             public boolean getDisableFledgeEnrollmentCheck() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeRegisterAdBeaconEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getMeasurementFlexibleEventReportingApiEnabled() {
+                return true;
+            }
         };
     }
 }

@@ -16,36 +16,39 @@
 
 package com.android.adservices.data.consent;
 
+import static com.android.adservices.data.consent.AppConsentDao.DATASTORE_KEY_SEPARATOR;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,25 +57,29 @@ import java.util.List;
 import java.util.Set;
 
 public class AppConsentDaoTest {
-    @Rule public final MockitoRule rule = MockitoJUnit.rule();
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final PackageManager mPackageManager = mContext.getPackageManager();
     private AppConsentDao mAppConsentDao;
 
     @Spy
     private BooleanFileDatastore mDatastoreSpy =
             new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
 
-    @Mock private PackageManager mPackageManagerMock;
+    private MockitoSession mMockitoSession;
 
     @Before
     public void setup() throws IOException {
-        mAppConsentDao = new AppConsentDao(mDatastoreSpy, mPackageManagerMock);
+        mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(PackageManagerCompatUtils.class)
+                        .initMocks(this)
+                        .startMocking();
+        mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
     }
 
     @After
     public void teardown() throws IOException {
         mDatastoreSpy.clear();
+        mMockitoSession.finishMocking();
     }
 
     @Test
@@ -87,42 +94,34 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testGetUidForInstalledPackageNameWithRealTestNameSuccess()
-            throws PackageManager.NameNotFoundException {
+    public void testGetUidForInstalledPackageNameWithRealTestNameSuccess() {
         int expectedUid = mContext.getApplicationInfo().uid;
-        int testUid =
-                AppConsentDao.getUidForInstalledPackageName(
-                        mPackageManager, mContext.getPackageName());
+        int testUid = mAppConsentDao.getUidForInstalledPackageName(mContext.getPackageName());
         assertEquals(expectedUid, testUid);
     }
 
     @Test
     public void testGetUidForInstalledPackageNameWithFakePackageNameThrows() {
-        assertThrows(
-                PackageManager.NameNotFoundException.class,
-                () ->
-                        AppConsentDao.getUidForInstalledPackageName(
-                                mPackageManager, AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                mAppConsentDao.getUidForInstalledPackageName(
+                                        AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+        assertTrue(exception.getCause() instanceof PackageManager.NameNotFoundException);
     }
 
     @Test
-    public void testPackageNameToDatastoreKeySuccess() throws PackageManager.NameNotFoundException {
-        doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
-
+    public void testPackageNameToDatastoreKeySuccess() {
+        mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         assertEquals(
                 AppConsentDaoFixture.APP10_DATASTORE_KEY,
                 mAppConsentDao.toDatastoreKey(AppConsentDaoFixture.APP10_PACKAGE_NAME));
     }
 
     @Test
-    public void testNotFoundPackageNameToDatastoreKeyThrows()
-            throws PackageManager.NameNotFoundException {
-        doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME), any());
-
+    public void testNotFoundPackageNameToDatastoreKeyThrows() {
+        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -178,13 +177,9 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testDatastoreKeyConversion() throws PackageManager.NameNotFoundException {
-        doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
-        doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+    public void testDatastoreKeyConversion() {
+        mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
         // Package name to datastore key and back to package name
         String convertedDatastoreKey =
@@ -203,14 +198,9 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testSetConsentForAppSuccess()
-            throws IOException, PackageManager.NameNotFoundException {
-        doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
-        doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+    public void testSetConsentForAppSuccess() throws IOException {
+        mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
         assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
@@ -229,12 +219,8 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testSetConsentForNotFoundAppThrows()
-            throws PackageManager.NameNotFoundException, IOException {
-        doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME), any());
-
+    public void testSetConsentForNotFoundAppThrows() throws IOException {
+        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -245,14 +231,9 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testSetConsentForAppIfNewWithNewKeysSuccess()
-            throws IOException, PackageManager.NameNotFoundException {
-        doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
-        doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+    public void testSetConsentForAppIfNewWithNewKeysSuccess() throws IOException {
+        mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
         assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
@@ -275,14 +256,9 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testSetConsentForAppIfNewWithExistingKeysUsesOldValues()
-            throws IOException, PackageManager.NameNotFoundException {
-        doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
-        doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+    public void testSetConsentForAppIfNewWithExistingKeysUsesOldValues() throws IOException {
+        mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
         mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
         mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
@@ -304,12 +280,8 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testSetConsentForNotFoundAppIfNewThrows()
-            throws PackageManager.NameNotFoundException, IOException {
-        doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME), any());
-
+    public void testSetConsentForNotFoundAppIfNewThrows() throws IOException {
+        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -320,14 +292,9 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testIsConsentRevokedForAppSuccess()
-            throws IOException, PackageManager.NameNotFoundException {
-        doReturn(AppConsentDaoFixture.APP10_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
-        doReturn(AppConsentDaoFixture.APP20_UID)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+    public void testIsConsentRevokedForAppSuccess() throws IOException {
+        mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
         assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         assertFalse(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME));
@@ -352,12 +319,8 @@ public class AppConsentDaoTest {
     }
 
     @Test
-    public void testIsConsentRevokedForNotFoundAppThrows()
-            throws PackageManager.NameNotFoundException, IOException {
-        doThrow(PackageManager.NameNotFoundException.class)
-                .when(mPackageManagerMock)
-                .getPackageUid(eq(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME), any());
-
+    public void testIsConsentRevokedForNotFoundAppThrows() throws IOException {
+        mockThrowExceptionOnGetPackageUid(AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME);
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -384,8 +347,7 @@ public class AppConsentDaoTest {
                                 .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
                                 .build());
         doReturn(applicationsInstalled)
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         final Set<String> knownAppsWithConsent = mAppConsentDao.getKnownAppsWithConsent();
 
@@ -405,8 +367,7 @@ public class AppConsentDaoTest {
         mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
         List<ApplicationInfo> applicationsInstalled = new ArrayList<>();
         doReturn(applicationsInstalled)
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         final Set<String> knownAppsWithConsent = mAppConsentDao.getKnownAppsWithConsent();
 
@@ -432,8 +393,7 @@ public class AppConsentDaoTest {
                                 .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
                                 .build());
         doReturn(applicationsInstalled)
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         final Set<String> appsWithRevokedConsent = mAppConsentDao.getAppsWithRevokedConsent();
 
@@ -453,8 +413,7 @@ public class AppConsentDaoTest {
         mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
         List<ApplicationInfo> applicationsInstalled = new ArrayList<>();
         doReturn(applicationsInstalled)
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         final Set<String> appsWithRevokedConsent = mAppConsentDao.getAppsWithRevokedConsent();
 
@@ -495,8 +454,7 @@ public class AppConsentDaoTest {
                                 .setPackageName(AppConsentDaoFixture.APP30_PACKAGE_NAME)
                                 .build());
         doReturn(applicationsInstalled)
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         mAppConsentDao.clearKnownAppsWithConsent();
 
@@ -545,5 +503,65 @@ public class AppConsentDaoTest {
                                 null, AppConsentDaoFixture.APP10_UID));
 
         verify(mDatastoreSpy).initialize();
+    }
+
+    @Test
+    public void testClearAllConsentForUninstalledApp() throws IOException {
+        final String app20User10PackageName =
+                AppConsentDaoFixture.APP20_PACKAGE_NAME
+                        + DATASTORE_KEY_SEPARATOR
+                        + AppConsentDaoFixture.APP10_UID;
+
+        // Ensure that a different package name that begins with the one being uninstalled isn't
+        // removed from the store.
+        final String app20PackageNameAsPrefix =
+                AppConsentDaoFixture.APP20_PACKAGE_NAME
+                        + "test"
+                        + DATASTORE_KEY_SEPARATOR
+                        + AppConsentDaoFixture.APP10_UID;
+
+        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.put(app20User10PackageName, false);
+        mDatastoreSpy.put(app20PackageNameAsPrefix, true);
+
+        mAppConsentDao.clearConsentForUninstalledApp(AppConsentDaoFixture.APP20_PACKAGE_NAME);
+
+        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.get(app20User10PackageName));
+        assertNotNull(mDatastoreSpy.get(app20PackageNameAsPrefix));
+
+        verify(mDatastoreSpy).initialize();
+        verify(mDatastoreSpy).removeByPrefix(any());
+    }
+
+    @Test
+    public void testClearAllConsentForUninstalledAppWithInvalidArgsThrows() throws IOException {
+        assertThrows(
+                NullPointerException.class,
+                () -> mAppConsentDao.clearConsentForUninstalledApp(null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> mAppConsentDao.clearConsentForUninstalledApp(""));
+        verify(mDatastoreSpy, never()).initialize();
+    }
+
+    private void mockPackageUid(@NonNull String packageName, int packageUid) {
+        doReturn(packageUid)
+                .when(
+                        () ->
+                                PackageManagerCompatUtils.getPackageUid(
+                                        any(), eq(packageName), anyInt()));
+    }
+
+    private void mockThrowExceptionOnGetPackageUid(@NonNull String packageName) {
+        doThrow(PackageManager.NameNotFoundException.class)
+                .when(
+                        () ->
+                                PackageManagerCompatUtils.getPackageUid(
+                                        any(), eq(packageName), anyInt()));
     }
 }

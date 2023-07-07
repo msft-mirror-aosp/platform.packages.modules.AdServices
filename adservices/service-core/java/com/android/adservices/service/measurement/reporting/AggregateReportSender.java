@@ -32,14 +32,32 @@ public class AggregateReportSender extends MeasurementReportSender {
     public static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
             ".well-known/attribution-reporting/report-aggregate-attribution";
 
+    @VisibleForTesting
+    public static final String DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-attribution";
+
+    private String mReportUriPath;
+
+    public AggregateReportSender(boolean isDebugReport) {
+        this.mReportUriPath = AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        if (isDebugReport) {
+            this.mReportUriPath = DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        }
+    }
+
+    /** The report uri path. */
+    @VisibleForTesting
+    public String getReportUriPath() {
+        return mReportUriPath;
+    }
+
     /**
      * Given a String reportingOrigin, returns the URL Object
      * of the URL to send the POST request to.
      */
     URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
-        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain,
-                AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain, mReportUriPath);
         return new URL(reportingFullUrl.toString());
     }
 }

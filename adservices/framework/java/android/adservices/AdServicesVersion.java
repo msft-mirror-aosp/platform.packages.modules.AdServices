@@ -20,6 +20,8 @@ import android.annotation.SuppressLint;
 
 /**
  * This class specifies the current version of the AdServices API.
+ *
+ * @removed
  */
 public class AdServicesVersion {
 
@@ -30,12 +32,12 @@ public class AdServicesVersion {
 
     /**
      * The API version of this AdServices API.
-     * This vaviable need to be initialized in  static {} , otherwise javac
-     * would inline these constants and they won't be updatable.
      */
     @SuppressLint("CompileTimeConstant")
     public static final int API_VERSION;
 
+    // This variable needs to be initialized in static {} , otherwise javac
+    // would inline these constants and they won't be updatable.
     static {
         API_VERSION = 2;
     }

@@ -31,13 +31,13 @@ public class BaseUriExtractorTest {
     @Test
     public void testGetBaseUri() {
         assertEquals(BaseUriExtractor
-                        .getBaseUri(Uri.parse("https://www.example.com/abc")).toString(),
-                "https://www.example.com");
+                        .getBaseUri(Uri.parse("https://www.example.test/abc")).toString(),
+                "https://www.example.test");
         assertEquals(BaseUriExtractor
                         .getBaseUri(Uri.parse("android-app://com.example.sample")).toString(),
                 "android-app://com.example.sample");
         assertEquals(BaseUriExtractor
-                        .getBaseUri(Uri.parse("https://www.example.com:8080/abc")).toString(),
-                "https://www.example.com:8080");
+                        .getBaseUri(Uri.parse("https://www.example.test:8080/abc")).toString(),
+                "https://www.example.test:8080");
     }
 }

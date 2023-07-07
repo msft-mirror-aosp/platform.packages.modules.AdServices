@@ -32,6 +32,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -130,9 +131,17 @@ public class AppImportanceFilter {
     public void assertCallerIsInForeground(
             @NonNull String appPackageName, int apiNameIdForLogging, @Nullable String sdkName)
             throws WrongCallingApplicationStateException {
+        if (!SdkLevel.isAtLeastT()) {
+            // For T+, we check whether the app package is running in the foreground
+            // by declaring the PACKAGE_USAGE_STATS permission, which does not exist for the
+            // ExtServices module (used for S-). Hence, we omit the foreground check for S-. We
+            // may decide to add an alternative foreground check implementation later (b/263823628).
+            return;
+        }
         int importance = mActivityManager.getPackageImportance(appPackageName);
-        LogUtil.v("Package %s has importance %d comparing with threshold of %d.",
-                  appPackageName, importance, mImportanceThresholdSupplier.get());
+        LogUtil.v(
+                "Package %s has importance %d comparing with threshold of %d.",
+                appPackageName, importance, mImportanceThresholdSupplier.get());
         if (importance > mImportanceThresholdSupplier.get()) {
             LogUtil.v(
                     "Application importance failed for app %s with importance %d greater"
@@ -162,9 +171,17 @@ public class AppImportanceFilter {
     public void assertCallerIsInForeground(
             int appUid, int apiNameLoggingId, @Nullable String sdkName)
             throws WrongCallingApplicationStateException {
+        if (!SdkLevel.isAtLeastT()) {
+            // For T+, we check whether the calling UID is running in the foreground
+            // by declaring the PACKAGE_USAGE_STATS permission, which does not exist for the
+            // ExtServices module (used for S-). Hence, we omit the foreground check for S-. We
+            // may decide to add an alternative foreground check implementation later (b/263823628).
+            return;
+        }
         int importance = mActivityManager.getUidImportance(appUid);
-        LogUtil.v("Process %d has importance %d comparing with threshold of %d.",
-                  appUid, importance, mImportanceThresholdSupplier.get());
+        LogUtil.v(
+                "Process %d has importance %d comparing with threshold of %d.",
+                appUid, importance, mImportanceThresholdSupplier.get());
         if (importance > mImportanceThresholdSupplier.get()) {
             LogUtil.v(
                     "Application importance failed for app with UID %d "

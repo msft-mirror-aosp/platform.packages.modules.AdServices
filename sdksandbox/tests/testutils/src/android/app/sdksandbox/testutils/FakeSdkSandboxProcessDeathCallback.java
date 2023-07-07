@@ -18,22 +18,31 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.SdkSandboxManager;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 public class FakeSdkSandboxProcessDeathCallback
         implements SdkSandboxManager.SdkSandboxProcessDeathCallback {
-    public volatile boolean sandboxDeathDetected;
-
-    public FakeSdkSandboxProcessDeathCallback() {
-        sandboxDeathDetected = false;
-    }
+    private CountDownLatch mLatch = new CountDownLatch(1);
 
     @Override
     public void onSdkSandboxDied() {
-        sandboxDeathDetected = true;
+        mLatch.countDown();
     }
 
-    public boolean isSdkSandboxDeathDetected() throws InterruptedException {
-        // Wait 5 seconds to determine whether sandbox death is ever detected.
-        Thread.sleep(5000);
-        return sandboxDeathDetected;
+    /**
+     * Returns {@code true} if the sandbox death callback is invoked within 5 seconds, {@code false}
+     * otherwise.
+     */
+    public boolean waitForSandboxDeath() throws InterruptedException {
+        return mLatch.await(5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Resets the latch used to wait for death callbacks, to enable testing multiple death events
+     * for the same callback object.
+     */
+    public void resetLatch() {
+        mLatch = new CountDownLatch(1);
     }
 }
