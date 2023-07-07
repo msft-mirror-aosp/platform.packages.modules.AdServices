@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnScrollChangeListener;
@@ -49,6 +50,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -56,7 +58,6 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaFragment extends Fragment {
-    public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_TOPICS_INFO_VIEW_EXPANDED_KEY = "is_topics_info_view_expanded";
     private boolean mIsEUDevice;
     private boolean mIsInfoViewExpanded = false;
@@ -87,8 +88,7 @@ public class ConsentNotificationGaFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = NotificationUtil.isEeaDevice(requireActivity(), getContext());
         View rootView;
         if (mIsEUDevice) {
             rootView =
@@ -102,6 +102,7 @@ public class ConsentNotificationGaFragment extends Fragment {
     }
 
     private void setupListeners(Bundle savedInstanceState) {
+        // set up how it works expander
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
         if (savedInstanceState != null) {
             setInfoViewState(
@@ -114,6 +115,11 @@ public class ConsentNotificationGaFragment extends Fragment {
                             LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
                 });
 
+        // set up privacy policy link movement
+        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+                .setMovementMethod(LinkMovementMethod.getInstance());
+
+        // set up left control button and right control button
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
         leftControlButton.setOnClickListener(
                 view -> {

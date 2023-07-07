@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -67,6 +67,17 @@ public abstract class AdSelectionEntryDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
+
+    /**
+     * Add an ad selection override for Buyers' decision logic
+     *
+     * @param buyersDecisionLogicOverride is an override for the ad_selection_buyer_logic_overrides
+     *     If a {@link DBBuyerDecisionOverride} object with the {@code adSelectionConfigId} already
+     *     exists, this will replace the existing object.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    public abstract void persistBuyersDecisionLogicOverride(
+            List<DBBuyerDecisionOverride> buyersDecisionLogicOverride);
 
     /**
      * Adds a list of registered ad interactions to the table registered_ad_interactions
@@ -135,7 +146,7 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -158,9 +169,11 @@ public abstract class AdSelectionEntryDao {
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
                 + " winning_ad_bid,ad_selection.creation_timestamp as"
                 + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
-                + " buyer_decision_logic_js FROM ad_selection LEFT JOIN buyer_decision_logic ON"
-                + " ad_selection.bidding_logic_uri = buyer_decision_logic.bidding_logic_uri WHERE"
-                + " ad_selection.ad_selection_id = :adSelectionId")
+                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id ="
+                + " :adSelectionId")
     public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
@@ -184,9 +197,11 @@ public abstract class AdSelectionEntryDao {
                 + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
-                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
-                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) ")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
@@ -211,9 +226,11 @@ public abstract class AdSelectionEntryDao {
                 + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
                 + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
                 + " ad_selection.creation_timestamp as creation_timestamp,"
-                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
-                + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
+                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
+                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(
             List<Long> adSelectionIds, String callerPackageName);
@@ -246,6 +263,20 @@ public abstract class AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
+     * Get ad selection buyer decision logic override by its unique key and the package name of the
+     * app that created the override.
+     *
+     * @return ad selection override result if exists.
+     */
+    @Query(
+            "SELECT * FROM ad_selection_buyer_logic_overrides WHERE"
+                    + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
+                    + " :appPackageName")
+    @Nullable
+    public abstract List<DBBuyerDecisionOverride> getBuyersDecisionLogicOverride(
+            String adSelectionConfigId, String appPackageName);
+
+    /**
      * Gets the interaction reporting uri that was registered with the primary key combination of
      * {@code adSelectionId}, {@code interactionKey}, and {@code destination}.
      *
@@ -259,7 +290,7 @@ public abstract class AdSelectionEntryDao {
     public abstract Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
@@ -269,7 +300,7 @@ public abstract class AdSelectionEntryDao {
      *     the ad selection, or {@code null} if no match is found
      */
     @Query(
-            "SELECT custom_audience_signals_buyer, ad_counter_keys FROM ad_selection "
+            "SELECT custom_audience_signals_buyer, ad_counter_int_keys FROM ad_selection "
                     + "WHERE ad_selection_id = :adSelectionId "
                     + "AND caller_package_name = :callerPackageName")
     @Nullable
@@ -308,6 +339,18 @@ public abstract class AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
+     * Clean up buyer decision logic override data by its {@code adSelectionConfigId}
+     *
+     * @param adSelectionConfigId is the {@code adSelectionConfigId} to identify the data entries to
+     *     be removed from the ad_selection_overrides table.
+     */
+    @Query(
+            "DELETE FROM ad_selection_buyer_logic_overrides WHERE ad_selection_config_id = "
+                    + ":adSelectionConfigId AND app_package_name = :appPackageName")
+    public abstract void removeBuyerDecisionLogicOverrideByIdAndPackageName(
+            String adSelectionConfigId, String appPackageName);
+
+    /**
      * Clean up buyer_decision_logic entries in batch if the bidding_logic_uri no longer exists in
      * the table ad_selection.
      */
@@ -321,6 +364,12 @@ public abstract class AdSelectionEntryDao {
     /** Clean up all ad selection override data */
     @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
     public abstract void removeAllAdSelectionOverrides(String appPackageName);
+
+    /** Clean up all buyers' decision logic data */
+    @Query(
+            "DELETE FROM ad_selection_buyer_logic_overrides WHERE  app_package_name ="
+                    + " :appPackageName")
+    public abstract void removeAllBuyerDecisionOverrides(String appPackageName);
 
     /**
      * Checks if there is a row in the ad selection data with the unique combination of
@@ -438,8 +487,7 @@ public abstract class AdSelectionEntryDao {
             "SELECT COUNT(*) FROM registered_ad_interactions WHERE ad_selection_id ="
                     + " :adSelectionId AND destination = :reportingDestination")
     public abstract long getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
-            long adSelectionId,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+            long adSelectionId, @ReportEventRequest.ReportingDestination int reportingDestination);
 
     /**
      * Inserts a list of {@link DBRegisteredAdInteraction}s into the database, enforcing these

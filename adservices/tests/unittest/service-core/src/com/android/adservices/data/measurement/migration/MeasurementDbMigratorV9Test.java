@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -91,11 +92,15 @@ public class MeasurementDbMigratorV9Test extends MeasurementDbMigratorTestBase {
         getTestSubject().performMigration(db, 8, 9);
 
         // Assertion
-        MigrationTestHelper.verifyDataInDb(db, fakeData, ImmutableMap.of(
-                MeasurementTables.SourceContract.TABLE,
-                List.of(
-                        MeasurementTablesDeprecated.SourceContract.APP_DESTINATION,
-                        MeasurementTablesDeprecated.SourceContract.WEB_DESTINATION)));
+        MigrationTestHelper.verifyDataInDb(
+                db,
+                fakeData,
+                ImmutableMap.of(
+                        MeasurementTables.SourceContract.TABLE,
+                        Set.of(
+                                MeasurementTablesDeprecated.SourceContract.APP_DESTINATION,
+                                MeasurementTablesDeprecated.SourceContract.WEB_DESTINATION)),
+                Map.of());
 
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 30));

@@ -16,19 +16,19 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -57,6 +57,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -66,15 +67,20 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class InteractionReporter {
-    public static final String CALLER_PACKAGE_NAME_MISMATCH =
-            "Caller package name does not match name used in ad selection";
+    public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
+            "Could not find a match in the database for this adSelectionId and callerPackageName!";
+    public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED =
+            "Interaction data max size exceeded!";
+    public static final String INTERACTION_KEY_SIZE_MAX_EXCEEDED =
+            "Interaction key max size exceeded!";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final int LOGGING_API_NAME =
+            AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
-    @ReportInteractionRequest.ReportingDestination
+    @ReportEventRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
             new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
 
-    @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -86,7 +92,6 @@ public class InteractionReporter {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     public InteractionReporter(
-            @NonNull Context context,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ExecutorService lightweightExecutorService,
@@ -96,7 +101,6 @@ public class InteractionReporter {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -106,7 +110,6 @@ public class InteractionReporter {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
 
-        mContext = context;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -148,13 +151,28 @@ public class InteractionReporter {
                                                         .getEnforceForegroundStatusForFledgeReportInteraction(),
                                                 true,
                                                 mCallerUid,
-                                                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                                LOGGING_API_NAME,
                                                 Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
                                         Preconditions.checkArgument(
                                                 mAdSelectionEntryDao
                                                         .doesAdSelectionMatchingCallerPackageNameExist(
                                                                 adSelectionId, callerPackageName),
-                                                CALLER_PACKAGE_NAME_MISMATCH);
+                                                NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+                                        Preconditions.checkArgument(
+                                                inputParams
+                                                                .getInteractionKey()
+                                                                .getBytes(StandardCharsets.UTF_8)
+                                                                .length
+                                                        <= mFlags
+                                                                .getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB(),
+                                                INTERACTION_KEY_SIZE_MAX_EXCEEDED);
+                                        Preconditions.checkArgument(
+                                                inputParams
+                                                                .getInteractionData()
+                                                                .getBytes(StandardCharsets.UTF_8)
+                                                                .length
+                                                        <= REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B,
+                                                INTERACTION_DATA_SIZE_MAX_EXCEEDED);
                                     } finally {
                                         sLogger.v("Completed filtering and validation.");
                                         Trace.endSection();
@@ -200,9 +218,7 @@ public class InteractionReporter {
                             public void onSuccess(List<Void> result) {
                                 sLogger.d("Report Interaction succeeded!");
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                                        AdServicesStatusUtils.STATUS_SUCCESS,
-                                        0);
+                                        LOGGING_API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
                             }
 
                             @Override
@@ -212,12 +228,12 @@ public class InteractionReporter {
                                         "Report Interaction failure encountered during reporting!");
                                 if (t instanceof IOException) {
                                     mAdServicesLogger.logFledgeApiCallStats(
-                                            AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                            LOGGING_API_NAME,
                                             AdServicesStatusUtils.STATUS_IO_ERROR,
                                             0);
                                 } else {
                                     mAdServicesLogger.logFledgeApiCallStats(
-                                            AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                            LOGGING_API_NAME,
                                             AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
                                             0);
                                 }
@@ -229,7 +245,7 @@ public class InteractionReporter {
     private FluentFuture<List<Uri>> getReportingUris(ReportInteractionInput inputParams) {
         return fetchReportingUris(inputParams)
                 .transformAsync(
-                        reportingUris -> filterReportingUris(inputParams, reportingUris),
+                        reportingUris -> filterReportingUris(reportingUris),
                         mLightweightExecutorService);
     }
 
@@ -245,7 +261,7 @@ public class InteractionReporter {
                 mBackgroundExecutorService.submit(
                         () -> {
                             List<Uri> resultingReportingUris = new ArrayList<>();
-                            for (@ReportInteractionRequest.ReportingDestination
+                            for (@ReportEventRequest.ReportingDestination
                             int destination : POSSIBLE_DESTINATIONS) {
                                 if (bitExists(destination, destinationsBitField)) {
                                     if (mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
@@ -262,8 +278,7 @@ public class InteractionReporter {
                         }));
     }
 
-    private FluentFuture<List<Uri>> filterReportingUris(
-            ReportInteractionInput inputParams, List<Uri> reportingUris) {
+    private FluentFuture<List<Uri>> filterReportingUris(List<Uri> reportingUris) {
         return FluentFuture.from(
                 mLightweightExecutorService.submit(
                         () -> {
@@ -271,16 +286,13 @@ public class InteractionReporter {
                                 return reportingUris;
                             } else {
                                 // Do enrollment check and only add Uris that pass enrollment
-                                String callerPackageName = inputParams.getCallerPackageName();
                                 ArrayList<Uri> validatedUris = new ArrayList<>();
 
                                 for (Uri uri : reportingUris) {
                                     try {
-                                        mFledgeAuthorizationFilter.assertAdTechAllowed(
-                                                mContext,
-                                                callerPackageName,
+                                        mFledgeAuthorizationFilter.assertAdTechEnrolled(
                                                 AdTechIdentifier.fromString(uri.getHost()),
-                                                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                                                LOGGING_API_NAME);
                                         validatedUris.add(uri);
                                     } catch (
                                             FledgeAuthorizationFilter.AdTechNotAllowedException
@@ -337,16 +349,15 @@ public class InteractionReporter {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(LOGGING_API_NAME, resultCode, 0);
         }
 
         invokeFailure(callback, resultCode, t.getMessage());
     }
 
     private boolean bitExists(
-            @ReportInteractionRequest.ReportingDestination int bit,
-            @ReportInteractionRequest.ReportingDestination int bitSet) {
+            @ReportEventRequest.ReportingDestination int bit,
+            @ReportEventRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
     }
 

@@ -57,7 +57,7 @@ public class DbHelperV1 extends DbHelper {
                     + " INTEGER, "
                     + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME
                     + " INTEGER, "
                     + MeasurementTables.AsyncRegistrationContract.TYPE
                     + " INTEGER "

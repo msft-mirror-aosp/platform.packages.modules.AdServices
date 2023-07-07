@@ -19,7 +19,11 @@ package com.android.adservices.service.common;
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 
 /**
  * AdServicesApi permission helper. This class provides helper methods to check for permissions that
@@ -30,52 +34,57 @@ import android.content.pm.PackageManager;
 public final class PermissionHelper {
     private PermissionHelper() {}
 
-    private static boolean checkSdkPermission(
-            @NonNull Context context, @NonNull String sdkName, @NonNull String perm) {
-        return context.getPackageManager().checkPermission(perm, sdkName)
+    private static boolean checkSdkSandboxPermission(
+            @NonNull Context context, @NonNull String permission, int sandboxCallingUid) {
+        final String callingPackage = context.getPackageManager().getNameForUid(sandboxCallingUid);
+        return context.getPackageManager().checkPermission(permission, callingPackage)
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    /** @return {@code true} if the caller has the permission to invoke Topics APIs. */
-    public static boolean hasTopicsPermission(
-            @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
+    /**
+     * @return {@code true} if the caller has the permission to invoke Topics APIs.
+     */
+    public static boolean hasTopicsPermission(@NonNull Context context, int callingUid) {
         boolean callerPerm =
                 context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_TOPICS)
                         == PackageManager.PERMISSION_GRANTED;
-        // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
+        // Note: Checking permission declared by Sdk Sandbox package is only for accounting
         // purposes and should not be used as a security measure.
-        if (useSandboxCheck) {
+        if (ProcessCompatUtils.isSdkSandboxUid(callingUid)) {
             return callerPerm
-                    && checkSdkPermission(
-                            context, sdkName, AdServicesPermissions.ACCESS_ADSERVICES_TOPICS);
+                    && checkSdkSandboxPermission(
+                            context, AdServicesPermissions.ACCESS_ADSERVICES_TOPICS, callingUid);
         }
         return callerPerm;
     }
 
-    /** @return {@code true} if the caller has the permission to invoke AdID APIs. */
+    /**
+     * @return {@code true} if the caller has the permission to invoke AdID APIs.
+     */
     public static boolean hasAdIdPermission(
-            @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
+            @NonNull Context context, @NonNull String appPackageName, int callingUid) {
+        final boolean callerPerm =
+                hasPermission(
+                        context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_AD_ID);
 
-        boolean callerPerm =
-                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_AD_ID)
-                        == PackageManager.PERMISSION_GRANTED;
-        // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
+        // Note: Checking permission declared by Sdk Sandbox package is only for accounting
         // purposes and should not be used as a security measure.
-        if (useSandboxCheck) {
+        if (ProcessCompatUtils.isSdkSandboxUid(callingUid)) {
             return callerPerm
-                    && checkSdkPermission(
-                            context, sdkName, AdServicesPermissions.ACCESS_ADSERVICES_AD_ID);
+                    && checkSdkSandboxPermission(
+                            context, AdServicesPermissions.ACCESS_ADSERVICES_AD_ID, callingUid);
         }
         return callerPerm;
     }
 
-    /** @return {@code true} if the caller has the permission to invoke Attribution APIs. */
-    public static boolean hasAttributionPermission(@NonNull Context context) {
+    /**
+     * @return {@code true} if the caller has the permission to invoke Attribution APIs.
+     */
+    public static boolean hasAttributionPermission(
+            @NonNull Context context, @NonNull String appPackageName) {
         // TODO(b/236267953): Add check for SDK permission.
-        int status =
-                context.checkCallingOrSelfPermission(
-                        AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION);
-        return status == PackageManager.PERMISSION_GRANTED;
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION);
     }
 
     /** @return {@code true} if the caller has the permission to invoke Custom Audiences APIs. */
@@ -104,5 +113,27 @@ public final class PermissionHelper {
         int status =
                 context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_STATE);
         return status == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private static boolean hasPermission(
+            @NonNull Context context, @NonNull String packageName, @NonNull String permission) {
+        try {
+            // Check requested permission using {@link PackageManager#getPackageInfo(String, int)}
+            // instead of {@link Context#checkCallingOrSelfPermission(String)} due to b/287329430
+            final PackageInfo packageInfo =
+                    context.getPackageManager()
+                            .getPackageInfo(packageName, PackageManager.GET_PERMISSIONS);
+
+            for (String requestedPermission : packageInfo.requestedPermissions) {
+                if (requestedPermission.equals(permission)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.d(
+                    "Package %s not found while requesting permission %s", packageName, permission);
+            return false;
+        }
     }
 }

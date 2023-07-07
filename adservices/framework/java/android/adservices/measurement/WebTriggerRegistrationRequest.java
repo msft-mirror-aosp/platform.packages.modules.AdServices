@@ -28,6 +28,8 @@ import java.util.Objects;
 
 /** Class to hold input to measurement trigger registration calls from web context. */
 public final class WebTriggerRegistrationRequest implements Parcelable {
+    private static final int WEB_TRIGGER_PARAMS_MAX_COUNT = 20;
+
     /** Creator for Paracelable (via reflection). */
     @NonNull
     public static final Parcelable.Creator<WebTriggerRegistrationRequest> CREATOR =
@@ -125,8 +127,11 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
          */
         public Builder(@NonNull List<WebTriggerParams> webTriggerParams, @NonNull Uri destination) {
             Objects.requireNonNull(webTriggerParams);
-            if (webTriggerParams.isEmpty()) {
-                throw new IllegalArgumentException("web trigger params list is empty");
+            if (webTriggerParams.isEmpty()
+                    || webTriggerParams.size() > WEB_TRIGGER_PARAMS_MAX_COUNT) {
+                throw new IllegalArgumentException(
+                        "web trigger params size is not within bounds, size: "
+                                + webTriggerParams.size());
             }
 
             Objects.requireNonNull(destination);
@@ -135,6 +140,7 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
             }
             mWebTriggerParams = webTriggerParams;
             mDestination = destination;
+
         }
 
         /** Pre-validates parameters and builds {@link WebTriggerRegistrationRequest}. */

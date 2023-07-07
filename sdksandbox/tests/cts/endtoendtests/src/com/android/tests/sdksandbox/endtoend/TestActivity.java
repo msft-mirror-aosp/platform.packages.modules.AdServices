@@ -17,5 +17,28 @@
 package com.android.tests.sdksandbox.endtoend;
 
 import android.app.Activity;
+import android.os.Bundle;
+import android.os.RemoteException;
 
-public class TestActivity extends Activity {}
+import com.android.ctssdkprovider.IActivityStarter;
+
+public class TestActivity extends Activity {
+
+    private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null && extras.containsKey(ACTIVITY_STARTER_KEY)) {
+            IActivityStarter activityStarter =
+                    (IActivityStarter) extras.getBinder(ACTIVITY_STARTER_KEY);
+            try {
+                activityStarter.onActivityResumed();
+            } catch (RemoteException e) {
+                throw new IllegalStateException("Failed to notify activityStarter onResume.");
+            }
+        }
+    }
+}

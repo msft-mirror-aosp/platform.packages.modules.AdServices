@@ -23,6 +23,7 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
@@ -44,12 +45,13 @@ android_test {
 }
 
 android_test {
-    name: "CtsExtAdIdEndToEndTest",
+    name: "CtsAdExtServicesAdIdEndToEndTest",
     srcs: [
         "src/**/*.java",
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
@@ -67,7 +69,6 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "31",
     max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
 }

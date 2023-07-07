@@ -70,6 +70,7 @@ android_library {
         "androidx.room_room-runtime",
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
+        "framework-configinfrastructure",
         "framework-sdksandbox.impl",
         "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
@@ -81,18 +82,22 @@ android_library {
         "androidx.appsearch_appsearch",
         "androidx.appsearch_appsearch-platform-storage",
         "cbor-java",
-        "guava",
         "mobile_data_downloader_lib",
         "modules-utils-preconditions",
         "tflite_support_classifiers_java",
         "mobile_data_downloader_lib",
         "androidx.webkit_webkit",
         "androidx.javascriptengine_javascriptengine",
+        "adservices-cobalt",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
         "modules-utils-build",
     ],
+    jarjar_rules: "jarjar-rules.txt",
     apex_available: ["com.android.adservices", "com.android.extservices"],
+    lint: {
+        extra_check_modules: ["BackCompatLintChecker"],
+    },
 }
 
 cc_library_shared {
@@ -105,10 +110,10 @@ cc_library_shared {
         "-Wno-unused-parameter",
         "-Wno-unused-but-set-variable",
     ],
-    srcs: ["jni/cpp/hpke_jni.cpp"],
+    srcs: ["jni/cpp/hpke_jni.cpp", "jni/cpp/ohttp_jni.cpp"],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
     header_libs: [ "jni_headers"  ],
-    shared_libs: ["libcrypto"],
+    shared_libs: ["libcrypto", "liblog"],
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

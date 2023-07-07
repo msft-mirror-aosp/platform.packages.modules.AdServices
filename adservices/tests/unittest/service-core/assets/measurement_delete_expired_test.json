@@ -154,63 +154,6 @@
       }
     },
     {
-      "name": "1 delivered EventReport and 1 non-expired EventReport",
-      "input": {
-        "sources": [],
-        "source_destinations": [
-        ],
-        "triggers": [],
-        "event_reports": [
-          {
-            "id": "delivered1",
-            "sourceEventId": 1,
-            "attributionDestination": "https://www.example2.test/d1",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 1,
-            "reportTime": 8640000002,
-            "triggerPriority": 101,
-            "sourceType": "navigation"
-          },
-          {
-            "id": "young1",
-            "sourceEventId": 1,
-            "attributionDestination": "https://www.example2.test/d1",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 33203622330000,
-            "triggerPriority": 101,
-            "sourceType": "navigation"
-          }
-        ],
-        "attributions": []
-      },
-      "output": {
-        "sources": [],
-        "source_destinations": [
-        ],
-        "triggers": [],
-        "event_reports": [
-          {
-            "id": "young1",
-            "sourceEventId": 1,
-            "attributionDestination": "https://www.example2.test/d1",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 33203622330000,
-            "triggerPriority": 101,
-            "sourceType": "navigation"
-          }
-        ],
-        "attributions": []
-      }
-    },
-    {
       "name": "Expired Aggregate Reports by report time & delivery",
       "input": {
         "aggregate_reports": [

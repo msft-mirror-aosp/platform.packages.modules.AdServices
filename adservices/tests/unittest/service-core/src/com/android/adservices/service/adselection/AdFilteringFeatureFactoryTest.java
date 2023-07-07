@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -27,6 +29,8 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -82,6 +86,26 @@ public class AdFilteringFeatureFactoryTest {
         assertTrue(
                 adFilteringFeatureFactory.getAdCounterKeyCopier()
                         instanceof AdCounterKeyCopierNoOpImpl);
+    }
+
+    @Test
+    public void testGetFrequencyCapAdDataValidatorFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithAdSelectionFilteringEnabled());
+        assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
+                .isInstanceOf(FrequencyCapAdDataValidatorImpl.class);
+    }
+
+    @Test
+    public void testGetFrequencyCapAdDataValidatorFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+        assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
+                .isInstanceOf(FrequencyCapAdDataValidatorNoOpImpl.class);
     }
 
     private static class FlagsWithAdSelectionFilteringDisabled implements Flags {

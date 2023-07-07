@@ -121,6 +121,10 @@ public class ReportImpressionScriptEngineTest {
                     .setInteractionReportingUri(HOVER_URI)
                     .build();
 
+    // Only used for setup, so no need to use the real impl for now
+    private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
+            new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
+
     @Before
     public void setUp() {
         // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
@@ -135,7 +139,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
         final ReportingScriptResult result =
                 callReportingEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'results': {'result':"
@@ -149,7 +153,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
@@ -167,7 +171,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
@@ -259,8 +263,9 @@ public class ReportImpressionScriptEngineTest {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "const beacons = {'click': 'https://domain.com/click', 'hover': "
+                        + "'https://domain.com/hover'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
                         + "'reporting_uri': 'https://domain.com/reporting' } };\n"
@@ -297,8 +302,9 @@ public class ReportImpressionScriptEngineTest {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "const beacons = {'click': 'https://domain.com/click', 'hover': "
+                        + "'https://domain.com/hover'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
                         + "'reporting_uri': 'https://domain.com/reporting' } };\n"
@@ -322,106 +328,199 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    public void testReportResultSuccessfulCaseWithCallingRegisterAdBeaconWithSamePair()
-            throws Exception {
+    public void testReportResultFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
-                        + "{\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
-                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                        + " {\n"
+                        + "const beacons = {{'hi'}: 'https://domain.com/click'};\n"
+                        + "registerAdBeacon(beacons); return {'status': 0, 'results':"
+                        + " {'signals_for_buyer': '{\"seller\":\"' + ad_selection_config.seller +"
+                        + " '\"}', 'reporting_uri': 'https://domain.com/reporting' } };\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         double bid = 5;
 
-        final SellerReportingResult result =
-                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, mContextualSignals);
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
 
-        assertEquals(REPORTING_URI, result.getReportingUri());
-
-        assertThat(
-                        AdSelectionSignals.fromString(
-                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
-                .isEqualTo(result.getSignalsForBuyer());
-
-        assertEquals(2, result.getInteractionReportingUris().size());
-
-        assertThat(
-                        ImmutableList.of(
-                                CLICK_EVENT_URI_REGISTRATION_INFO,
-                                CLICK_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getInteractionReportingUris());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    public void testReportResultSuccessfulCaseSkipsInvalidEventType() throws Exception {
+    public void testReportResultFailsInvalidInteractionReportingUriType() throws Exception {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                        + " {\n"
+                        + "const beacons = {'click': 1};\n"
+                        + "registerAdBeacon(beacons); return {'status': 0, 'results':"
+                        + " {'signals_for_buyer': '{\"seller\":\"' + ad_selection_config.seller +"
+                        + " '\"}', 'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testReportResultFailsWhenRegisterAdBeaconCalledMoreThanOnce() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
                     + " {\n"
-                    + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                    + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
-                    + "    registerAdBeacon({'eventType':'invalidEventType'},"
-                    + " 'https://domain.com/view');\n"
-                    + " return {'status': 0, 'results': {'signals_for_buyer': '{\"seller\":\"' +"
+                    + "const beacons_1 = {'click': ''https://domain.com/click''};\n"
+                    + "const beacons_2 = {'hover': ''https://domain.com/hober''};\n"
+                    + "registerAdBeacon(beacons_1);registerAdBeacon(beacons_2); return {'status':"
+                    + " 0, 'results': {'signals_for_buyer': '{\"seller\":\"' +"
                     + " ad_selection_config.seller + '\"}', 'reporting_uri':"
                     + " 'https://domain.com/reporting' } };\n"
                     + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         double bid = 5;
 
-        final SellerReportingResult result =
-                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, mContextualSignals);
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
 
-        assertEquals(REPORTING_URI, result.getReportingUri());
-
-        assertThat(
-                        AdSelectionSignals.fromString(
-                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
-                .isEqualTo(result.getSignalsForBuyer());
-
-        assertEquals(2, result.getInteractionReportingUris().size());
-
-        assertThat(
-                        ImmutableList.of(
-                                CLICK_EVENT_URI_REGISTRATION_INFO,
-                                HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getInteractionReportingUris());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    public void testReportResultSuccessfulCaseSkipsInvalidEventUri() throws Exception {
+    public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Null() throws Exception {
         String jsScript =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
-                        + "{\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
-                        + "    registerAdBeacon('view', {'uri':'https://domain.com/view'});\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
-                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                        + " {\n"
+                        + "registerAdBeacon(null); return {'status': 0, 'results':"
+                        + " {'signals_for_buyer': '{\"seller\":\"' + ad_selection_config.seller +"
+                        + " '\"}', 'reporting_uri': 'https://domain.com/reporting' } };\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         double bid = 5;
 
-        final SellerReportingResult result =
-                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, mContextualSignals);
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
 
-        assertEquals(REPORTING_URI, result.getReportingUri());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
 
-        assertThat(
-                        AdSelectionSignals.fromString(
-                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
-                .isEqualTo(result.getSignalsForBuyer());
+    @Test
+    public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Int() throws Exception {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                    + " {\n"
+                    + "registerAdBeacon(1); return {'status': 0, 'results': {'signals_for_buyer':"
+                    + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', 'reporting_uri':"
+                    + " 'https://domain.com/reporting' } };\n"
+                    + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
 
-        assertEquals(2, result.getInteractionReportingUris().size());
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
 
-        assertThat(
-                        ImmutableList.of(
-                                CLICK_EVENT_URI_REGISTRATION_INFO,
-                                HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getInteractionReportingUris());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__String()
+            throws Exception {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                        + " {\n"
+                        + "registerAdBeacon('hi'); return {'status': 0, 'results':"
+                        + " {'signals_for_buyer': '{\"seller\":\"' + ad_selection_config.seller +"
+                        + " '\"}', 'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Array()
+            throws Exception {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                        + " {\n"
+                        + "registerAdBeacon(['hi']); return {'status': 0, 'results':"
+                        + " {'signals_for_buyer': '{\"seller\":\"' + ad_selection_config.seller +"
+                        + " '\"}', 'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -462,9 +561,9 @@ public class ReportImpressionScriptEngineTest {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
-                        + "    registerAdBeacon('hold', 'https://domain.com/hold');\n"
+                        + "const beacons = {'click': 'https://domain.com/click', 'hover': "
+                        + "'https://domain.com/hover', 'view': 'https://domain.com/view'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
                         + "'reporting_uri': 'https://domain.com/reporting' } };\n"
@@ -661,8 +760,9 @@ public class ReportImpressionScriptEngineTest {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "const beacons = {'click': 'https://domain.com/click', 'hover': "
+                        + "'https://domain.com/hover'};\n"
+                        + "registerAdBeacon(beacons);"
                         + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
                         + ".com/reporting' }};\n"
                         + "}";
@@ -695,8 +795,9 @@ public class ReportImpressionScriptEngineTest {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "const beacons = {'click': 'https://domain.com/click', 'hover': "
+                        + "'https://domain.com/hover'};\n"
+                        + "registerAdBeacon(beacons);"
                         + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
                         + ".com/reporting' }};\n"
                         + "}";
@@ -719,97 +820,169 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    public void testReportWinSuccessfulCaseWithCallingRegisterAdBeaconWithSamePair()
-            throws Exception {
+    public void testReportWinFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
+                        + "const beacons = {{'hi'}: 'https://domain.com/click'};\n"
+                        + "registerAdBeacon(beacons); return {'status': 0, 'results':"
                         + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
                         + ".com/reporting' }};\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        final BuyerReportingResult result =
-                reportWin(
-                        jsScript,
-                        adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
-                        mSignalsForBuyer,
-                        adSelectionConfig.getSellerSignals(),
-                        mCustomAudienceSignals);
-        assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getInteractionReportingUris().size());
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
 
-        assertThat(
-                        ImmutableList.of(
-                                CLICK_EVENT_URI_REGISTRATION_INFO,
-                                CLICK_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getInteractionReportingUris());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    public void testReportWinSuccessfulCaseSkipsInvalidEventType() throws Exception {
+    public void testReportWinFailsInvalidInteractionReportingUriType() throws Exception {
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "const beacons = {'click': 1};\n"
+                        + "registerAdBeacon(beacons); return {'status': 0, 'results':"
+                        + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
+                        + ".com/reporting' }};\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testReportWinFailsWhenRegisterAdBeaconCalledMoreThanOnce() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer"
-                        + " ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
-                        + "    registerAdBeacon({'eventType':'invalidEventType'},"
-                        + " 'https://domain.com/view');\n"
-                        + "    return {'status': 0, 'results': {'reporting_uri':"
-                        + " 'https://domain.com/reporting' }};\n"
-                        + "}";
+                    + " ,contextual_signals, custom_audience_signals) {\n"
+                    + "const beacons_1 = {'click': ''https://domain.com/click''};\n"
+                    + "const beacons_2 = {'hover': ''https://domain.com/hober''};\n"
+                    + "registerAdBeacon(beacons_1);registerAdBeacon(beacons_2); return {'status':  "
+                    + "  return {'status': 0, 'results': {'reporting_uri':"
+                    + " 'https://domain.com/reporting' }};\n"
+                    + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        final BuyerReportingResult result =
-                reportWin(
-                        jsScript,
-                        adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
-                        mSignalsForBuyer,
-                        adSelectionConfig.getSellerSignals(),
-                        mCustomAudienceSignals);
-        assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getInteractionReportingUris().size());
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
 
-        assertThat(
-                        ImmutableList.of(
-                                CLICK_EVENT_URI_REGISTRATION_INFO,
-                                HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getInteractionReportingUris());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    public void testReportWinSuccessfulCaseSkipsInvalidEventUri() throws Exception {
+    public void testFailsWhenRegisterAdBeaconInputNotAnObject__Null() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
-                        + "    registerAdBeacon('view', {'uri':'https://domain.com/view'});\n"
+                        + "registerAdBeacon(null);"
                         + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
                         + ".com/reporting' }};\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
-        final BuyerReportingResult result =
-                reportWin(
-                        jsScript,
-                        adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
-                        mSignalsForBuyer,
-                        adSelectionConfig.getSellerSignals(),
-                        mCustomAudienceSignals);
-        assertEquals(REPORTING_URI, result.getReportingUri());
 
-        assertEquals(2, result.getInteractionReportingUris().size());
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
 
-        assertThat(
-                        ImmutableList.of(
-                                CLICK_EVENT_URI_REGISTRATION_INFO,
-                                HOVER_EVENT_URI_REGISTRATION_INFO))
-                .containsExactlyElementsIn(result.getInteractionReportingUris());
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testFailsWhenRegisterAdBeaconInputNotAnObject__Int() throws Exception {
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "registerAdBeacon(1);"
+                        + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
+                        + ".com/reporting' }};\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testFailsWhenRegisterAdBeaconInputNotAnObject__Array() throws Exception {
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "registerAdBeacon(['hi']);"
+                        + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
+                        + ".com/reporting' }};\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
+
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -847,9 +1020,9 @@ public class ReportImpressionScriptEngineTest {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
-                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
-                        + "    registerAdBeacon('hold', 'https://domain.com/hold');\n"
+                        + "const beacons = {'click': 'https://domain.com/click', 'hover': "
+                        + "'https://domain.com/hover', 'view': 'https://domain.com/view'};\n"
+                        + "registerAdBeacon(beacons);"
                         + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
                         + ".com/reporting' }};\n"
                         + "}";

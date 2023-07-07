@@ -21,10 +21,13 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 
 import java.time.Clock;
 
-/** Factory for implementations of the {@link AdFilterer} interface */
+/** Factory for implementations of the ad filtering feature interfaces. */
 public final class AdFilteringFeatureFactory {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -71,6 +74,21 @@ public final class AdFilteringFeatureFactory {
             return new AdCounterKeyCopierImpl();
         } else {
             return new AdCounterKeyCopierNoOpImpl();
+        }
+    }
+
+    /**
+     * Gets the {@link FrequencyCapAdDataValidator} implementation to use, dependent on whether the
+     * ad filtering feature is enabled.
+     *
+     * @return a {@link FrequencyCapAdDataValidatorImpl} instance if the ad filtering feature is
+     *     enabled, or a {@link FrequencyCapAdDataValidatorNoOpImpl} instance otherwise
+     */
+    public FrequencyCapAdDataValidator getFrequencyCapAdDataValidator() {
+        if (mIsFledgeAdSelectionFilteringEnabled) {
+            return new FrequencyCapAdDataValidatorImpl();
+        } else {
+            return new FrequencyCapAdDataValidatorNoOpImpl();
         }
     }
 }

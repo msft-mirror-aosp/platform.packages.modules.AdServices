@@ -40,6 +40,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -103,6 +104,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     /**
      * @param adSelectionEntryDao DAO to access ad selection storage
@@ -126,6 +128,7 @@ public class OutcomeSelectionRunner {
             @NonNull final Context context,
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -136,6 +139,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(adCounterKeyCopier);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -146,12 +150,16 @@ public class OutcomeSelectionRunner {
         mContext = context;
         mFlags = flags;
 
+        boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
         mAdOutcomeSelector =
                 new AdOutcomeSelectorImpl(
                         new AdSelectionScriptEngine(
                                 mContext,
                                 flags::getEnforceIsolateMaxHeapSize,
-                                flags::getIsolateMaxHeapSizeBytes),
+                                flags::getIsolateMaxHeapSizeBytes,
+                                adCounterKeyCopier,
+                                new DebugReportingScriptDisabledStrategy(),
+                                cpcBillingEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -160,6 +168,7 @@ public class OutcomeSelectionRunner {
                         mFlags);
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     @VisibleForTesting
@@ -199,6 +208,7 @@ public class OutcomeSelectionRunner {
         mAdOutcomeSelector = adOutcomeSelector;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     /**
@@ -453,7 +463,9 @@ public class OutcomeSelectionRunner {
 
         AdSelectionFromOutcomesConfigValidator validator =
                 new AdSelectionFromOutcomesConfigValidator(
-                        mAdSelectionEntryDao, inputParams.getCallerPackageName());
+                        mAdSelectionEntryDao,
+                        inputParams.getCallerPackageName(),
+                        mPrebuiltLogicGenerator);
         validator.validate(inputParams.getAdSelectionFromOutcomesConfig());
     }
 

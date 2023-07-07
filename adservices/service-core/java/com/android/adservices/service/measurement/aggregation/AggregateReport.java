@@ -60,6 +60,7 @@ public class AggregateReport {
     private String mSourceId;
     private String mTriggerId;
     private UnsignedLong mDedupKey;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -96,6 +97,7 @@ public class AggregateReport {
         mSourceDebugKey = null;
         mTriggerDebugKey = null;
         mDedupKey = null;
+        mRegistrationOrigin = null;
     }
 
     @Override
@@ -119,7 +121,8 @@ public class AggregateReport {
                 && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
                 && Objects.equals(mSourceId, aggregateReport.mSourceId)
                 && Objects.equals(mTriggerId, aggregateReport.mTriggerId)
-                && Objects.equals(mDedupKey, aggregateReport.mDedupKey);
+                && Objects.equals(mDedupKey, aggregateReport.mDedupKey)
+                && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin);
     }
 
     @Override
@@ -139,7 +142,8 @@ public class AggregateReport {
                 mTriggerDebugKey,
                 mSourceId,
                 mTriggerId,
-                mDedupKey);
+                mDedupKey,
+                mRegistrationOrigin);
     }
 
     /**
@@ -236,6 +240,11 @@ public class AggregateReport {
     @Nullable
     public UnsignedLong getDedupKey() {
         return mDedupKey;
+    }
+
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
     }
 
     /**
@@ -419,6 +428,14 @@ public class AggregateReport {
             mAttributionReport.mDedupKey = dedupKey;
             return this;
         }
+
+        /** See {@link AggregateReport#getRegistrationOrigin()} ()} */
+        @NonNull
+        public AggregateReport.Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mAttributionReport.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /**
          * Build the {@link AggregateReport}.
          */

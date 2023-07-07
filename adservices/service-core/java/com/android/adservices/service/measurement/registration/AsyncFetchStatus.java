@@ -16,25 +16,50 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 /** POJO for storing source and trigger fetcher status */
 public class AsyncFetchStatus {
     public enum ResponseStatus {
+        UNKNOWN,
         SUCCESS,
         SERVER_UNAVAILABLE,
         NETWORK_ERROR,
-        PARSING_ERROR,
-        INVALID_ENROLLMENT
+        INVALID_URL
     }
 
-    private ResponseStatus mStatus;
+    public enum EntityStatus {
+        UNKNOWN,
+        SUCCESS,
+        HEADER_MISSING,
+        HEADER_ERROR,
+        PARSING_ERROR,
+        VALIDATION_ERROR,
+        INVALID_ENROLLMENT,
+        STORAGE_ERROR
+    }
+
+    private ResponseStatus mResponseStatus;
+
+    private EntityStatus mEntityStatus;
+
+    @Nullable private Long mResponseSize;
+
+    @Nullable private Long mRegistrationDelay;
+
+    private boolean mIsRedirectError;
 
     public AsyncFetchStatus() {
-        mStatus = ResponseStatus.SERVER_UNAVAILABLE;
+        mResponseStatus = ResponseStatus.UNKNOWN;
+        mEntityStatus = EntityStatus.UNKNOWN;
+        mIsRedirectError = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
-    public ResponseStatus getStatus() {
-        return mStatus;
+    public ResponseStatus getResponseStatus() {
+        return mResponseStatus;
     }
 
     /**
@@ -43,7 +68,58 @@ public class AsyncFetchStatus {
      * @param status a {@link ResponseStatus} that is used up the call stack to determine errors in
      *     the Ad tech server during source and trigger fetching.
      */
-    public void setStatus(ResponseStatus status) {
-        mStatus = status;
+    public void setResponseStatus(ResponseStatus status) {
+        mResponseStatus = status;
+    }
+
+    /** Get entity status */
+    public EntityStatus getEntityStatus() {
+        return mEntityStatus;
+    }
+
+    /** Set entity status */
+    public void setEntityStatus(EntityStatus entityStatus) {
+        mEntityStatus = entityStatus;
+    }
+
+    /** Get response header size. */
+    public Optional<Long> getResponseSize() {
+        return Optional.ofNullable(mResponseSize);
+    }
+
+    /** Set response header size. */
+    public void setResponseSize(Long responseSize) {
+        mResponseSize = responseSize;
+    }
+
+    /** Get registration delay. */
+    public Optional<Long> getRegistrationDelay() {
+        return Optional.ofNullable(mRegistrationDelay);
+    }
+
+    /** Set registration delay. */
+    public void setRegistrationDelay(Long registrationDelay) {
+        mRegistrationDelay = registrationDelay;
+    }
+
+    /** Get redirect error status. */
+    public boolean isRedirectError() {
+        return mIsRedirectError;
+    }
+
+    /** Set redirect error status. */
+    public void setRedirectError(boolean isRedirectError) {
+        mIsRedirectError = isRedirectError;
+    }
+
+    /** Returns true if request is successful. */
+    public boolean isRequestSuccess() {
+        return mResponseStatus == ResponseStatus.SUCCESS;
+    }
+
+    /** Returns true if request can be retried. */
+    public boolean canRetry() {
+        return mResponseStatus == ResponseStatus.NETWORK_ERROR
+                || mResponseStatus == ResponseStatus.SERVER_UNAVAILABLE;
     }
 }

@@ -35,7 +35,9 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -63,6 +65,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.Clock;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +107,9 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdRenderIdValidator adRenderIdValidator,
+            @NonNull final DebugReporting debugReporting,
             int callerUid) {
         super(
                 context,
@@ -117,6 +123,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
                 adFilterer,
+                frequencyCapAdDataValidator,
+                debugReporting,
                 callerUid);
 
         mCustomAudienceDevOverridesHelper =
@@ -125,7 +133,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        adServicesHttpsClient);
+                        adServicesHttpsClient,
+                        flags);
     }
 
     @VisibleForTesting
@@ -143,8 +152,10 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             int callerUid,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final JsFetcher jsFetcher,
-            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final DebugReporting debugReporting) {
         super(
                 context,
                 customAudienceDao,
@@ -159,7 +170,9 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 callerUid,
                 adSelectionServiceFilter,
                 adFilterer,
-                adSelectionExecutionLogger);
+                frequencyCapAdDataValidator,
+                adSelectionExecutionLogger,
+                debugReporting);
 
         this.mJsFetcher = jsFetcher;
         DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
@@ -339,7 +352,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         .setWinningAdRenderUri(winningAdRenderUri)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setBiddingLogicUri(customAudience.getBiddingLogicUri())
-                        .setContextualSignals("{}")
+                        .setBuyerContextualSignals("{}")
                         .setCallerPackageName(callerPackageName);
 
         return new Pair<>(builder, customAudience);
@@ -366,7 +379,11 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
         try {
             String buyerJsLogic = dbAdSelectionAndBuyerLogicJsPair.second.get();
             return new AdSelectionOrchestrationResult(
-                    dbAdSelectionAndBuyerLogicJsPair.first, buyerJsLogic);
+                    dbAdSelectionAndBuyerLogicJsPair.first,
+                    buyerJsLogic,
+                    /*debugReports*/ Collections.emptyList(),
+                    /*winningOutcome*/ null,
+                    /*secondHighestScoredOutcome*/ null);
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException("Could not fetch buyerJsLogic", e);
         }

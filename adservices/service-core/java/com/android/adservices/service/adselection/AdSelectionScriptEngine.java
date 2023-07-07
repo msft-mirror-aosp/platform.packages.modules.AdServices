@@ -30,6 +30,8 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.net.Uri;
+import android.webkit.URLUtil;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -44,6 +46,7 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -101,6 +104,12 @@ public class AdSelectionScriptEngine {
     public static final String GENERATE_BID_FUNCTION_NAME = "generateBid";
     public static final String SCORE_AD_FUNCTION_NAME = "scoreAd";
     public static final String USER_SIGNALS_ARG_NAME = "__rb_user_signals";
+    public static final String AD_SCORE_FIELD_NAME = "score";
+    public static final String DEBUG_REPORTING_WIN_URI_FIELD_NAME = "debug_reporting_win_uri";
+    public static final String DEBUG_REPORTING_LOSS_URI_FIELD_NAME = "debug_reporting_loss_uri";
+    public static final String DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME = "rejectReason";
+    public static final String AD_COST_FIELD_NAME = "adCost";
+    public static final int NUM_BITS_STOCHASTIC_ROUNDING = 8;
     /**
      * Template for the iterative invocation function. The two tokens to expand are the list of
      * parameters and the invocation of the actual per-ad function.
@@ -126,9 +135,16 @@ public class AdSelectionScriptEngine {
                     + "     status = -1;\n"
                     + "   } \n"
                     + "   if (status != 0) break;\n"
+                    + "   script_result.debug_reporting_win_uri = "
+                    + DebugReportingEnabledScriptStrategy.WIN_URI_GLOBAL_VARIABLE
+                    + ";\n"
+                    + "   script_result.debug_reporting_loss_uri = "
+                    + DebugReportingEnabledScriptStrategy.LOSS_URI_GLOBAL_VARIABLE
+                    + ";\n"
+                    + DebugReportingEnabledScriptStrategy.RESET_SCRIPT
                     + "   results.push(script_result);\n"
                     + "  }\n"
-                    + "  return { 'status': status, 'results': results};\n"
+                    + "  return {'status': status, 'results': results};\n"
                     + "};";
 
     /**
@@ -151,7 +167,7 @@ public class AdSelectionScriptEngine {
                     + "    // invalid script\n"
                     + "    status = -1;\n"
                     + "  }\n"
-                    + "  return { 'status': status, 'results': results};\n"
+                    + "  return {'status': status, 'results': results};\n"
                     + "};";
 
     public static final String AD_SELECTION_GENERATE_BID_JS_V3 =
@@ -165,12 +181,22 @@ public class AdSelectionScriptEngine {
                     + "        'ad' in script_result &&\n"
                     + "        'bid' in script_result &&\n"
                     + "        'render' in script_result) {\n"
-                    + "        results = [{'ad': script_result.ad,'bid': script_result.bid},];\n"
+                    + "        results = [{"
+                    + "           'ad': script_result.ad,\n"
+                    + "           'bid': script_result.bid,\n"
+                    + "           'adCost': script_result.adCost,\n"
+                    + "           'debug_reporting_win_uri': "
+                    + DebugReportingEnabledScriptStrategy.WIN_URI_GLOBAL_VARIABLE
+                    + ",\n"
+                    + "           'debug_reporting_loss_uri': "
+                    + DebugReportingEnabledScriptStrategy.LOSS_URI_GLOBAL_VARIABLE
+                    + ",\n"
+                    + "        }];\n"
                     + "    } else {\n"
                     + "        // invalid script\n"
                     + "        status = -1;\n"
                     + "    }\n"
-                    + "    return { 'status': status, 'results': results };\n"
+                    + "    return {'status': status, 'results': results};\n"
                     + "};";
 
     public static final String CHECK_FUNCTIONS_EXIST_JS =
@@ -208,14 +234,25 @@ public class AdSelectionScriptEngine {
     private final Executor mExecutor = MoreExecutors.directExecutor();
     private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
+    private final AdWithBidArgumentUtil mAdWithBidArgumentUtil;
+    private final AdDataArgumentUtil mAdDataArgumentUtil;
+    private final DebugReportingScriptStrategy mDebugReportingScript;
+    private final boolean mCpcBillingEnabled;
 
     public AdSelectionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
-            Supplier<Long> maxHeapSizeBytesSupplier) {
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            AdCounterKeyCopier adCounterKeyCopier,
+            DebugReportingScriptStrategy debugReportingScript,
+            boolean cpcBillingEnabled) {
         mJsEngine = JSScriptEngine.getInstance(context);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
+        mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
+        mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
+        mDebugReportingScript = debugReportingScript;
+        mCpcBillingEnabled = cpcBillingEnabled;
     }
 
     /**
@@ -224,7 +261,7 @@ public class AdSelectionScriptEngine {
      *     empty list if the script fails for any reason.
      * @throws JSONException If any of the signals is not a valid JSON object.
      */
-    public ListenableFuture<List<AdWithBid>> generateBids(
+    public ListenableFuture<List<GenerateBidResult>> generateBids(
             @NonNull String generateBidJS,
             @NonNull List<AdData> ads,
             @NonNull AdSelectionSignals auctionSignals,
@@ -254,7 +291,7 @@ public class AdSelectionScriptEngine {
                                         trustedBiddingSignals.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                CustomAudienceBiddingSignalsArgumentUtil.asScriptArgument(
                                         CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME,
                                         customAudienceSignals))
                         .build();
@@ -262,7 +299,7 @@ public class AdSelectionScriptEngine {
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
         for (AdData currAd : ads) {
             // Ads are going to be in an array their individual name is ignored.
-            adDataArguments.add(AdDataArgument.asScriptArgument("ignored", currAd));
+            adDataArguments.add(mAdDataArgumentUtil.asScriptArgument("ignored", currAd));
         }
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
 
@@ -274,10 +311,11 @@ public class AdSelectionScriptEngine {
                                         signals,
                                         this::callGenerateBid),
                                 result -> {
-                                    List<AdWithBid> bids = handleGenerateBidsOutput(result);
+                                    List<GenerateBidResult> bidsResults =
+                                            handleGenerateBidsOutput(result);
                                     runAdBiddingPerCAExecutionLogger.endGenerateBids();
                                     Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
-                                    return bids;
+                                    return bidsResults;
                                 },
                                 mExecutor))
                 .catchingAsync(
@@ -305,7 +343,7 @@ public class AdSelectionScriptEngine {
      * @throws JSONException If any of the signals is not a valid JSON object.
      */
     @NonNull
-    public ListenableFuture<List<AdWithBid>> generateBidsV3(
+    public ListenableFuture<List<GenerateBidResult>> generateBidsV3(
             @NonNull String generateBidJS,
             @NonNull DBCustomAudience customAudience,
             @NonNull AdSelectionSignals auctionSignals,
@@ -338,10 +376,10 @@ public class AdSelectionScriptEngine {
                         runAuctionScriptGenerateBidV3(
                                 generateBidJS, signals, this::callGenerateBidV3),
                         result -> {
-                            List<AdWithBid> bids = handleGenerateBidsOutput(result);
+                            List<GenerateBidResult> bidResults = handleGenerateBidsOutput(result);
                             runAdBiddingPerCAExecutionLogger.endGenerateBids();
                             Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
-                            return bids;
+                            return bidResults;
                         },
                         mExecutor));
     }
@@ -351,7 +389,7 @@ public class AdSelectionScriptEngine {
      *     and the set of signals. Will return an empty list if the script fails for any reason.
      * @throws JSONException If any of the data is not a valid JSON object.
      */
-    public ListenableFuture<List<Double>> scoreAds(
+    public ListenableFuture<List<ScoreAdResult>> scoreAds(
             @NonNull String scoreAdJS,
             @NonNull List<AdWithBid> adsWithBid,
             @NonNull AdSelectionConfig adSelectionConfig,
@@ -372,7 +410,7 @@ public class AdSelectionScriptEngine {
         ImmutableList<JSScriptArgument> args =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
-                                AdSelectionConfigArgument.asScriptArgument(
+                                AdSelectionConfigArgumentUtil.asScriptArgument(
                                         adSelectionConfig, AUCTION_CONFIG_ARG_NAME))
                         .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals.toString()))
                         .add(
@@ -381,7 +419,7 @@ public class AdSelectionScriptEngine {
                                         trustedScoringSignals.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceScoringSignalsArgument.asScriptArgument(
+                                CustomAudienceScoringSignalsArgumentUtil.asScriptArgument(
                                         CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME,
                                         customAudienceSignalsList))
                         .build();
@@ -390,7 +428,7 @@ public class AdSelectionScriptEngine {
         for (AdWithBid currAdWithBid : adsWithBid) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adWithBidArguments.add(
-                    AdWithBidArgument.asScriptArgument(
+                    mAdWithBidArgumentUtil.asScriptArgument(
                             SCRIPT_ARGUMENT_NAME_IGNORED, currAdWithBid));
         }
         // Start scoreAds script execution process.
@@ -432,7 +470,7 @@ public class AdSelectionScriptEngine {
         for (AdSelectionIdWithBidAndRenderUri curr : adSelectionIdWithBidAndRenderUris) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adSelectionIdWithBidArguments.add(
-                    SelectAdsFromOutcomesArgument.asScriptArgument(
+                    SelectAdsFromOutcomesArgumentUtil.asScriptArgument(
                             SCRIPT_ARGUMENT_NAME_IGNORED, curr));
         }
         ImmutableList<JSScriptArgument> advertArgs = adSelectionIdWithBidArguments.build();
@@ -446,54 +484,93 @@ public class AdSelectionScriptEngine {
 
     /**
      * Parses the output from the invocation of the {@code generateBid} JS function on a list of ads
-     * and convert it to a list of {@link AdWithBid} objects. The script output has been pre-parsed
-     * into an {@link AuctionScriptResult} object that will contain the script status code and the
-     * list of ads. The method will return an empty list of ads if the status code is not {@link
-     * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
+     * and convert it to a list of {@link GenerateBidResult} objects. The script output has been
+     * pre-parsed into an {@link AuctionScriptResult} object that will contain the script status
+     * code and the list of ads. The method will return an empty list of ads if the status code is
+     * not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS
+     * response.
      */
-    private List<AdWithBid> handleGenerateBidsOutput(AuctionScriptResult batchBidResult) {
+    private List<GenerateBidResult> handleGenerateBidsOutput(AuctionScriptResult batchBidResult) {
+        ImmutableList.Builder<GenerateBidResult> results = ImmutableList.builder();
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
             sLogger.v("Bid script failed, returning empty result.");
             return ImmutableList.of();
-        } else {
-            try {
-                ImmutableList.Builder<AdWithBid> result = ImmutableList.builder();
-                for (int i = 0; i < batchBidResult.results.length(); i++) {
-                    result.add(
-                            AdWithBidArgument.parseJsonResponse(
-                                    batchBidResult.results.optJSONObject(i)));
-                }
-                return result.build();
-            } catch (IllegalArgumentException e) {
-                sLogger.w(
-                        e,
-                        "Invalid ad with bid returned by a generateBid script. Returning empty"
-                                + " list of ad with bids.");
-                return ImmutableList.of();
-            }
         }
+
+        try {
+            for (int i = 0; i < batchBidResult.results.length(); i++) {
+                JSONObject json = batchBidResult.results.optJSONObject(i);
+                AdWithBid adWithBid = mAdWithBidArgumentUtil.parseJsonResponse(json);
+                Uri debugReportingWinUri =
+                        extractValidUri(json.optString(DEBUG_REPORTING_WIN_URI_FIELD_NAME, ""));
+                Uri debugReportingLossUri =
+                        extractValidUri(json.optString(DEBUG_REPORTING_LOSS_URI_FIELD_NAME, ""));
+
+                GenerateBidResult.Builder generateBidResultBuilder =
+                        GenerateBidResult.builder()
+                                .setAdWithBid(adWithBid)
+                                .setWinDebugReportUri(debugReportingWinUri)
+                                .setLossDebugReportUri(debugReportingLossUri);
+
+                if (mCpcBillingEnabled) {
+                    double adCost = json.optDouble(AD_COST_FIELD_NAME);
+                    if (!Double.isNaN(adCost) && !Double.isInfinite(adCost)) {
+                        BuyerContextualSignals buyerContextualSignals =
+                                BuyerContextualSignals.builder()
+                                        .setAdCost(new AdCost(adCost, NUM_BITS_STOCHASTIC_ROUNDING))
+                                        .build();
+                        generateBidResultBuilder.setBuyerContextualSignals(buyerContextualSignals);
+                    }
+                }
+                results.add(generateBidResultBuilder.build());
+            }
+        } catch (IllegalArgumentException e) {
+            sLogger.w(
+                    e,
+                    "Invalid ad with bid returned by a generateBid script. Returning empty"
+                            + " list of ad with bids.");
+            return ImmutableList.of();
+        }
+
+        return results.build();
     }
 
     /**
      * Parses the output from the invocation of the {@code scoreAd} JS function on a list of ad with
      * associated bids {@link Double}. The script output has been pre-parsed into an {@link
-     * AuctionScriptResult} object that will contain the script status code and the list of scores.
+     * AuctionScriptResult} object that will contain the script sstatus code and the list of scores.
      * The method will return an empty list of ads if the status code is not {@link
      * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      */
-    private List<Double> handleScoreAdsOutput(
+    private List<ScoreAdResult> handleScoreAdsOutput(
             AuctionScriptResult batchBidResult,
             AdSelectionExecutionLogger adSelectionExecutionLogger) {
-        ImmutableList.Builder<Double> result = ImmutableList.builder();
+        ImmutableList.Builder<ScoreAdResult> result = ImmutableList.builder();
+
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
             sLogger.v("Scoring script failed, returning empty result.");
         } else {
             for (int i = 0; i < batchBidResult.results.length(); i++) {
                 // If the output of the score for this advert is invalid JSON or doesn't have a
                 // score we are dropping the advert by scoring it with 0.
-                result.add(batchBidResult.results.optJSONObject(i).optDouble("score", 0.0));
+                JSONObject json = batchBidResult.results.optJSONObject(i);
+                Double score = json.optDouble(AD_SCORE_FIELD_NAME, 0.0);
+                Uri debugReportingWinUri =
+                        extractValidUri(json.optString(DEBUG_REPORTING_WIN_URI_FIELD_NAME, ""));
+                Uri debugReportingLossUri =
+                        extractValidUri(json.optString(DEBUG_REPORTING_LOSS_URI_FIELD_NAME, ""));
+                String sellerRejectReason =
+                        json.optString(DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME, "");
+                result.add(
+                        ScoreAdResult.builder()
+                                .setAdScore(score)
+                                .setSellerRejectReason(sellerRejectReason)
+                                .setWinDebugReportUri(debugReportingWinUri)
+                                .setLossDebugReportUri(debugReportingLossUri)
+                                .build());
             }
         }
+
         adSelectionExecutionLogger.endScoreAds();
         return result.build();
     }
@@ -533,7 +610,7 @@ public class AdSelectionScriptEngine {
             JSONObject resultOutcomeJson = scriptResults.results.getJSONObject(0);
             // Use Long class to parse from string
             return Long.valueOf(
-                    resultOutcomeJson.optString(SelectAdsFromOutcomesArgument.ID_FIELD_NAME));
+                    resultOutcomeJson.optString(SelectAdsFromOutcomesArgumentUtil.ID_FIELD_NAME));
         } catch (JSONException e) {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
             sLogger.v(errorMsg);
@@ -568,7 +645,7 @@ public class AdSelectionScriptEngine {
         try {
             return transform(
                     callAuctionScript(
-                            jsScript,
+                            mDebugReportingScript.wrapIterativeJs(jsScript),
                             ads,
                             otherArgs,
                             auctionFunctionCallGenerator,
@@ -588,7 +665,7 @@ public class AdSelectionScriptEngine {
         try {
             return transform(
                     callAuctionScript(
-                            jsScript,
+                            mDebugReportingScript.wrapGenerateBidsV3Js(jsScript),
                             args,
                             auctionFunctionCallGenerator,
                             AD_SELECTION_GENERATE_BID_JS_V3),
@@ -666,7 +743,7 @@ public class AdSelectionScriptEngine {
     }
 
     // TODO(b/260786980) remove the patch added to make bidding JS backward compatible
-    private ListenableFuture<List<AdWithBid>> handleBackwardIncompatibilityScenario(
+    private ListenableFuture<List<GenerateBidResult>> handleBackwardIncompatibilityScenario(
             String generateBidJS,
             List<JSScriptArgument> signals,
             List<JSScriptArgument> adDataArguments,
@@ -685,9 +762,9 @@ public class AdSelectionScriptEngine {
         return transform(
                 biddingResult,
                 result -> {
-                    List<AdWithBid> bids = handleGenerateBidsOutput(result);
+                    List<GenerateBidResult> bidResults = handleGenerateBidsOutput(result);
                     runAdBiddingPerCAExecutionLogger.endGenerateBids();
-                    return bids;
+                    return bidResults;
                 },
                 mExecutor);
     }
@@ -895,9 +972,9 @@ public class AdSelectionScriptEngine {
                         String.format(
                                 "%s.%s, %s.%s",
                                 AD_VAR_NAME,
-                                AdWithBidArgument.AD_FIELD_NAME,
+                                AdWithBidArgumentUtil.AD_FIELD_NAME,
                                 AD_VAR_NAME,
-                                AdWithBidArgument.BID_FIELD_NAME));
+                                AdWithBidArgumentUtil.BID_FIELD_NAME));
         for (JSScriptArgument currArg : otherArgs) {
             callArgs.append(String.format(",%s", currArg.name()));
         }
@@ -925,7 +1002,7 @@ public class AdSelectionScriptEngine {
     JSScriptArgument translateCustomAudience(DBCustomAudience customAudience) throws JSONException {
         ImmutableList.Builder<JSScriptArgument> adsArg = ImmutableList.builder();
         for (DBAdData ad : customAudience.getAds()) {
-            adsArg.add(AdDataArgument.asRecordArgument("ignored", ad));
+            adsArg.add(mAdDataArgumentUtil.asRecordArgument("ignored", ad));
         }
         // TODO(b/273357664): Verify with product on the set of fields we want to include.
         return recordArg(
@@ -934,5 +1011,12 @@ public class AdSelectionScriptEngine {
                 stringArg("name", customAudience.getName()),
                 jsonArg("userBiddingSignals", customAudience.getUserBiddingSignals()),
                 arrayArg("ads", adsArg.build()));
+    }
+
+    private static Uri extractValidUri(String uriString) {
+        if (Strings.isNullOrEmpty(uriString) || !URLUtil.isValidUrl(uriString)) {
+            return Uri.EMPTY;
+        }
+        return Uri.parse(uriString);
     }
 }

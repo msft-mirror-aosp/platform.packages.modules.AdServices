@@ -29,7 +29,7 @@ java_library {
         "androidx.test.rules",
         "androidx.test.runner",
         "platform-test-rules",
-        "ub-uiautomator",
+        "androidx.test.uiautomator_uiautomator",
         "common-platform-scenarios",
         "platform-test-options",
         "androidx.media_media",

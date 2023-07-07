@@ -42,21 +42,33 @@ public abstract class AdScoringOutcome {
     @Nullable
     public abstract CustomAudienceSignals getCustomAudienceSignals();
 
+    /**
+     * @return data for event-level debug reporting.
+     */
+    @Nullable
+    public abstract DebugReport getDebugReport();
+
     /** @return uri that corresponds to the logic for Ad bidding, reporting */
-    public abstract Uri getDecisionLogicUri();
+    public abstract Uri getBiddingLogicUri();
 
     /** @return the downloaded decision logic JS */
     @Nullable
-    public abstract String getDecisionLogicJs();
+    public abstract String getBiddingLogicJs();
 
     /**
      * @return boolean if decision logic has been downloaded or not. Helps optimize network calls by
      *     downloading the logic only when needed
      */
-    public abstract boolean getDecisionLogicJsDownloaded();
+    public abstract boolean isBiddingLogicJsDownloaded();
 
     /** @return buyer associated with the ad */
     public abstract AdTechIdentifier getBuyer();
+
+    /**
+     * @return Buyer contextual signals that are used for reporting
+     */
+    @Nullable
+    public abstract BuyerContextualSignals getBuyerContextualSignals();
 
     /**
      * @return generic builder
@@ -64,8 +76,9 @@ public abstract class AdScoringOutcome {
     static Builder builder() {
         return new AutoValue_AdScoringOutcome.Builder()
                 .setCustomAudienceSignals(null)
-                .setDecisionLogicJs("")
-                .setDecisionLogicJsDownloaded(false);
+                .setBiddingLogicJs("")
+                .setBiddingLogicJsDownloaded(false)
+                .setBuyerContextualSignals(null);
     }
 
     @AutoValue.Builder
@@ -74,13 +87,17 @@ public abstract class AdScoringOutcome {
 
         abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
 
-        abstract Builder setDecisionLogicUri(Uri decisionLogicUri);
+        abstract Builder setDebugReport(DebugReport debugReport);
 
-        abstract Builder setDecisionLogicJs(String decisionLogicJs);
+        abstract Builder setBiddingLogicUri(Uri decisionLogicUri);
 
-        abstract Builder setDecisionLogicJsDownloaded(boolean decisionLogicJsDownloaded);
+        abstract Builder setBiddingLogicJs(String decisionLogicJs);
+
+        abstract Builder setBiddingLogicJsDownloaded(boolean decisionLogicJsDownloaded);
 
         abstract Builder setBuyer(AdTechIdentifier buyer);
+
+        abstract Builder setBuyerContextualSignals(BuyerContextualSignals buyerContextualSignals);
 
         abstract AdScoringOutcome build();
     }

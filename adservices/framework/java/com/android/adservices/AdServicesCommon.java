@@ -64,7 +64,15 @@ public class AdServicesCommon {
 
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
     // The AdExtServices APK package name suffix is android.ext.services.
-    private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices";
+    public static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
+
+    /** The package name suffix of the ExtServices APK on R/S */
+    public static final String ADEXTSERVICES_PACKAGE_NAME_SUFFIX = "android.ext.services";
+
+    /**
+     * Suffix for the ExtServices APEX Package name. Used to figure out the installed apex version.
+     */
+    public static final String EXTSERVICES_APEX_NAME_SUFFIX = "android.extservices";
 
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(
@@ -90,8 +98,8 @@ public class AdServicesCommon {
         }
 
         // On T+ devices, only use the service that comes from AdServices APK. The package name of
-        // AdService is com.[google.]android.adservices while the package name of AdExtServices APK
-        // is com.[google.]android.ext.adservices.
+        // AdService is com.[google.]android.adservices.api while the package name of ExtServices
+        // APK is com.[google.]android.ext.services.
         ServiceInfo serviceInfo = null;
 
         // We have already checked if there are 0 OR more than 2 services returned.
@@ -105,7 +113,7 @@ public class AdServicesCommon {
                                 .get(0)
                                 .serviceInfo
                                 .packageName
-                                .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                     serviceInfo = intentResolveInfos.get(0).serviceInfo;
                 } else if (intentResolveInfos.get(1) != null
                         && intentResolveInfos.get(1).serviceInfo != null
@@ -114,7 +122,7 @@ public class AdServicesCommon {
                                 .get(1)
                                 .serviceInfo
                                 .packageName
-                                .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                     serviceInfo = intentResolveInfos.get(1).serviceInfo;
                 }
                 break;

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.ganotifications;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DISMISS_NOTIFICATION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED;
@@ -23,6 +25,7 @@ import static com.android.adservices.ui.notifications.ConsentNotificationActivit
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationTrigger.NOTIFICATION_ID;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Intent;
@@ -39,9 +42,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -70,12 +76,27 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
                 ConsentManager.getInstance(requireContext()).getConsent(AdServicesApiType.TOPICS);
         mTopicsOptIn = topicsConsent != null ? topicsConsent.isGiven() : false;
 
+        dismissNotificationIfNeeded();
+
         ConsentManager.getInstance(requireContext())
                 .enable(requireContext(), AdServicesApiType.FLEDGE);
         ConsentManager.getInstance(requireContext())
                 .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         return inflater.inflate(
                 R.layout.consent_notification_fledge_measurement_fragment_eu, container, false);
+    }
+
+    private void dismissNotificationIfNeeded() {
+        try {
+            NotificationManagerCompat notificationManager =
+                    NotificationManagerCompat.from(requireContext());
+            notificationManager.cancel(NOTIFICATION_ID);
+        } catch (Exception e) {
+            LogUtil.e(e.toString());
+            ErrorLogUtil.e(e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DISMISS_NOTIFICATION_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
+        }
     }
 
     @Override

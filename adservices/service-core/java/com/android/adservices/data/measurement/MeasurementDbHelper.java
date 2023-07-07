@@ -30,6 +30,14 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV10;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV11;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV12;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV13;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV14;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV15;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV16;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV17;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV18;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
@@ -48,7 +56,7 @@ import java.util.stream.Stream;
 public class MeasurementDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "adservices_msmt.db";
 
-    public static final int CURRENT_DATABASE_VERSION = 10;
+    public static final int CURRENT_DATABASE_VERSION = 18;
     public static final int OLD_DATABASE_FINAL_VERSION = 6;
 
     private static MeasurementDbHelper sSingleton = null;
@@ -123,7 +131,15 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                 new MeasurementDbMigratorV7(),
                 new MeasurementDbMigratorV8(),
                 new MeasurementDbMigratorV9(),
-                new MeasurementDbMigratorV10());
+                new MeasurementDbMigratorV10(),
+                new MeasurementDbMigratorV11(),
+                new MeasurementDbMigratorV12(),
+                new MeasurementDbMigratorV13(),
+                new MeasurementDbMigratorV14(mDbHelper),
+                new MeasurementDbMigratorV15(mDbHelper),
+                new MeasurementDbMigratorV16(),
+                new MeasurementDbMigratorV17(),
+                new MeasurementDbMigratorV18());
     }
 
     private boolean hasAllV6MeasurementTables(SQLiteDatabase db) {

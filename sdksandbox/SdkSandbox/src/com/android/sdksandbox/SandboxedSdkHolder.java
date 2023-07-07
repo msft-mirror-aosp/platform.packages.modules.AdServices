@@ -150,9 +150,9 @@ class SandboxedSdkHolder {
             SandboxedSdk sandboxedSdk, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
         try {
+            mHolderToSdkSandboxServiceCallback.onSuccess();
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(
                     sandboxedSdk, new SdkSandboxCallbackImpl(), sandboxLatencyInfo);
-            mHolderToSdkSandboxServiceCallback.onSuccess();
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkSuccess: " + e);
         }

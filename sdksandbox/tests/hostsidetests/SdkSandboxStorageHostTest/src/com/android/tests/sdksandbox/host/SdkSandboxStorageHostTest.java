@@ -22,19 +22,20 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
+import android.app.sdksandbox.hosttestutils.AwaitUtils;
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
-import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -53,7 +54,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private boolean mWasRoot;
 
-    private static final String CODE_PROVIDER_APK = "StorageTestCodeProvider.apk";
     private static final String TEST_APP_STORAGE_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_STORAGE_APK = "SdkSandboxStorageTestApp.apk";
     private static final String TEST_APP_STORAGE_V2_NO_SDK =
@@ -65,12 +65,13 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
     private static final long WAIT_FOR_RECONCILE_MS = 30000;
-    // Time to wait after installing a package to process package_added broadcast
-    private static final long WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST = 2000;
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
+
+    private DeviceSdkLevel mDeviceSdkLevel;
 
     /**
      * Runs the given phase of a test by calling into the device.
@@ -93,7 +94,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // sdk sandbox is added.
         mWasRoot = getDevice().isAdbRoot();
         getDevice().enableAdbRoot();
+        assumeTrue(mDeviceSupportUtils.isSdkSandboxSupported());
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
     }
 
     @After
@@ -172,6 +175,62 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getDevice().isDirectory(deSdkSandboxDataRootPath)).isFalse();
     }
 
+    @Test
+    public void testSdkSandboxDataMirrorAppDirectory_IsCreatedOnInstall() throws Exception {
+        // Sandbox data isolation fixes are in U+.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
+        final String cePath = getSdkDataMirrorPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePath = getSdkDataMirrorPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+
+        assertThat(getDevice().isDirectory(cePath)).isFalse();
+        assertThat(getDevice().isDirectory(dePath)).isFalse();
+        installPackage(TEST_APP_STORAGE_APK);
+        assertThat(getDevice().isDirectory(cePath)).isTrue();
+        assertThat(getDevice().isDirectory(dePath)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDataMirrorDirectory_IsVolumeSpecific() throws Exception {
+        // Sandbox data isolation fixes are in U+.
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+        installPackage(TEST_APP_STORAGE_APK);
+
+        String mirrorCeVolPath;
+        String mirrorDeVolPath;
+        try {
+            final String uuid = mAdoptableUtils.createNewVolume();
+
+            mirrorCeVolPath = "/data_mirror/misc_ce/" + uuid;
+            mirrorDeVolPath = "/data_mirror/misc_de/" + uuid;
+            final String mirrorCeVolPackagePath =
+                    mirrorCeVolPath + "/0/sdksandbox/" + TEST_APP_STORAGE_PACKAGE;
+            final String mirrorDeVolPackagePath =
+                    mirrorDeVolPath + "/0/sdksandbox/" + TEST_APP_STORAGE_PACKAGE;
+
+            assertThat(getDevice().isDirectory(mirrorCeVolPath)).isTrue();
+            assertThat(getDevice().isDirectory(mirrorDeVolPath)).isTrue();
+            assertThat(getDevice().isDirectory(mirrorCeVolPackagePath)).isFalse();
+            assertThat(getDevice().isDirectory(mirrorDeVolPackagePath)).isFalse();
+
+            // Move package to the newly created volume
+            assertSuccess(
+                    getDevice()
+                            .executeShellCommand(
+                                    "pm move-package " + TEST_APP_STORAGE_PACKAGE + " " + uuid));
+
+            assertThat(getDevice().isDirectory(mirrorCeVolPackagePath)).isTrue();
+            assertThat(getDevice().isDirectory(mirrorDeVolPackagePath)).isTrue();
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+
+        assertThat(getDevice().isDirectory(mirrorCeVolPath)).isFalse();
+        assertThat(getDevice().isDirectory(mirrorDeVolPath)).isFalse();
+    }
+
     /**
      * Verify that {@code /data/misc_{ce,de}/<user-id>/sdksandbox} is not accessible by apps
      */
@@ -199,6 +258,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify directory is created
         assertThat(getDevice().isDirectory(cePath)).isTrue();
@@ -614,9 +674,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
 
@@ -636,9 +694,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app on new user
         installPackage(TEST_APP_STORAGE_APK);
 
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
-
         assertThat(getDevice().isDirectory(ceAppPath)).isTrue();
         assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
@@ -650,9 +705,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify that shared storage exist
         final String sharedCePath =
@@ -678,9 +731,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirEmpty()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Now delete the sdk data sub-dirs so that package directory is empty
         final String cePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
@@ -716,9 +767,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirMissing()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         final String cePackagePath =
                 getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
@@ -770,9 +819,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_ReuseExistingRandomSuffixInReconcile()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         final String cePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
@@ -877,9 +924,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify that per-sdk storage exist
         final String perSdkStorage =
@@ -951,6 +996,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Create a new adoptable storage where we will be moving our installed package
         try {
@@ -1018,6 +1064,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Create a new adoptable storage where we will be moving our installed package
         try {
@@ -1090,6 +1137,18 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             return String.format(
                     "/%s/user_de/%d/%s", getDataDirectory(volumeUuid), userId, packageName);
         }
+    }
+
+    private String getSdkDataMirrorRootPath(int userId, boolean isCeData) {
+        if (isCeData) {
+            return String.format("/data_mirror/misc_ce/null/%d/sdksandbox", userId);
+        } else {
+            return String.format("/data_mirror/misc_de/null/%d/sdksandbox", userId);
+        }
+    }
+
+    private String getSdkDataMirrorPackagePath(int userId, String packageName, boolean isCeData) {
+        return String.format("%s/%s", getSdkDataMirrorRootPath(userId, isCeData), packageName);
     }
 
     private String getDataDirectory(@Nullable String volumeUuid) {
@@ -1251,10 +1310,17 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 .isFalse();
     }
 
-    private static class DeviceLockUtils {
+    private void waitForSdkDirectoryCreatedForUser(int userId) throws Exception {
+        final String sharedDir =
+                getSdkDataInternalPath(userId, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
+        waitForDirectoryCreated(sharedDir);
+    }
 
-        private static final String FBE_MODE_EMULATED = "emulated";
-        private static final String FBE_MODE_NATIVE = "native";
+    private void waitForDirectoryCreated(String path) throws Exception {
+        AwaitUtils.waitFor(() -> getDevice().isDirectory(path), path + " wasn't created");
+    }
+
+    private static class DeviceLockUtils {
 
         private final BaseHostJUnit4Test mTest;
 
@@ -1264,8 +1330,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         public void rebootToLockedDevice() throws Exception {
             // Setup screenlock
-            mTest.getDevice().executeShellCommand(
-                    "settings put global require_password_to_decrypt 0");
             mTest.getDevice().executeShellCommand("locksettings set-disabled false");
             String response = mTest.getDevice().executeShellCommand("locksettings set-pin 1234");
             if (!response.contains("1234")) {
@@ -1281,16 +1345,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             Thread.sleep(15000);
 
             // Follow DirectBootHostTest, reboot system into known state with keys ejected
-            if (isFbeModeEmulated()) {
-                final String res = mTest.getDevice().executeShellCommand("sm set-emulate-fbe true");
-                if (res != null && res.contains("Emulation not supported")) {
-                    throw new AssumptionViolatedException("FBE emulation is not supported");
-                }
-                mTest.getDevice().waitForDeviceNotAvailable(30000);
-                mTest.getDevice().waitForDeviceOnline(120000);
-            } else {
-                mTest.getDevice().rebootUntilOnline();
-            }
+            mTest.getDevice().rebootUntilOnline();
             waitForBootCompleted(mTest.getDevice());
         }
 
@@ -1300,17 +1355,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 unlockDevice();
                 mTest.getDevice().executeShellCommand("locksettings clear --old 1234");
                 mTest.getDevice().executeShellCommand("locksettings set-disabled true");
-                mTest.getDevice().executeShellCommand(
-                        "settings delete global require_password_to_decrypt");
             } finally {
                 // Get ourselves back into a known-good state
-                if (isFbeModeEmulated()) {
-                    mTest.getDevice().executeShellCommand("sm set-emulate-fbe false");
-                    mTest.getDevice().waitForDeviceNotAvailable(30000);
-                    mTest.getDevice().waitForDeviceOnline();
-                } else {
-                    mTest.getDevice().rebootUntilOnline();
-                }
+                mTest.getDevice().rebootUntilOnline();
                 mTest.getDevice().waitForDeviceAvailable();
             }
         }
@@ -1324,22 +1371,5 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             } catch (Exception ignore) {
             }
         }
-
-        private boolean isFbeModeEmulated() throws Exception {
-            String mode = "unknown";
-            for (int i = 0; i < 2; i++) {
-                mode = mTest.getDevice().executeShellCommand("sm get-fbe-mode").trim();
-                if (mode.equals(FBE_MODE_EMULATED)) {
-                    return true;
-                } else if (mode.equals(FBE_MODE_NATIVE)) {
-                    return false;
-                }
-                // Sometimes mount service takes time to get ready
-                Thread.sleep(5000);
-            }
-            fail("Unknown FBE mode: " + mode);
-            return false;
-        }
-
     }
 }

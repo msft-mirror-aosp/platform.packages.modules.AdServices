@@ -17,17 +17,22 @@
 package com.android.adservices.data.measurement.migration;
 
 import android.content.ContentValues;
+import android.net.Uri;
 
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 public class ContentValueFixtures {
+
+    public static final Uri REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
 
     public static class AsyncRegistrationValues {
         public static final String ID = "async_registration_id";
@@ -36,7 +41,7 @@ public class ContentValueFixtures {
         public static final String OS_DESTINATION = "android-app://com.os.destination";
         public static final String VERIFIED_DESTINATION = "android-app://com.verified.destination";
         public static final String TOP_ORIGIN = "android-app://com.top.origin";
-        public static final long REDIRECT = AsyncRegistration.RedirectType.DAISY_CHAIN;
+        public static final long REDIRECT = 2;
         public static final long INPUT_EVENT = 1;
         public static final String REGISTRANT = "android-app://com.registrant";
         public static final long SCHEDULED_TIME = 8640000000L;
@@ -46,7 +51,7 @@ public class ContentValueFixtures {
 
         // Added in V3.
         public static final String ENROLLMENT_ID = "enrollment-id";
-        public static final long REDIRECT_TYPE = AsyncRegistration.RedirectType.DAISY_CHAIN;
+        public static final long REDIRECT_TYPE = 2;
         public static final long REDIRECT_COUNT = 10;
         public static final long SOURCE_TYPE = Source.SourceType.NAVIGATION.ordinal();
         public static final long REQUEST_TIME = 8660000000L;
@@ -55,6 +60,9 @@ public class ContentValueFixtures {
 
         // Added in V6.
         public static final String REGISTRATION_ID = "registration_id";
+
+        // Added in V13.
+        public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
     }
 
     public static class SourceValues {
@@ -99,6 +107,24 @@ public class ContentValueFixtures {
         public static final String SHARED_AGGREGATION_KEY = "shared_aggregation_key";
         public static final long INSTALL_TIME = 8660000000L;
         public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
+
+        // Added in V12.
+        public static final String TRIGGER_SPECS = "sample_trigger_specs";
+        public static final int COARSE_EVENT_REPORT_DESTINATIONS = 1;
+
+        // Added in V13.
+        public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
+        public static final String DEBUG_AD_ID = "sample_debug_ad_id";
+
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+
+        // Added in V15
+        public static final int MAX_BUCKET_INCREMENTS = 3;
+        public static final String EVENT_ATTRIBUTION_STATUS =
+                "{\"trigger_id\": 123,\"priority\": 10, \"value\": 2}";
+
+        public static final String PRIVACY_PARAMETERS = "{\"flip_probability\":0.0023}";
     }
 
     public static class SourceDestinationValues {
@@ -161,6 +187,13 @@ public class ContentValueFixtures {
         public static final String AGGREGATABLE_DEDUPLICATION_KEYS =
                 "aggregatable_deduplication_keys";
         public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
+
+        // Added in V13.
+        public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
+        public static final String DEBUG_AD_ID = "sample_debug_ad_id";
+
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class AttributionValues {
@@ -201,6 +234,8 @@ public class ContentValueFixtures {
         public static final String SOURCE_ID_V3 = "source_id";
         public static final String TRIGGER_ID = "trigger_id";
         public static final long DEBUG_REPORT_STATUS = 4;
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class AggregateReportValues {
@@ -225,6 +260,8 @@ public class ContentValueFixtures {
 
         // Added in V9
         public static final UnsignedLong DEDUP_KEY = new UnsignedLong(12L);
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -240,6 +277,8 @@ public class ContentValueFixtures {
         public static final String TYPE = "source-noised";
         public static final String BODY = "{\"source_event_id\":\"123\"}";
         public static final String ENROLLMENT_ID = "enrollment_id";
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+        public static final String REFERENCE_ID = "reference_id";
     }
 
     public static class XnaIgnoredSourcesValues {
@@ -284,7 +323,7 @@ public class ContentValueFixtures {
                 MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
                 AsyncRegistrationValues.RETRY_COUNT);
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
+                MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME,
                 AsyncRegistrationValues.LAST_PROCESSING_TIME);
         asyncRegistration.put(
                 MeasurementTables.AsyncRegistrationContract.TYPE, AsyncRegistrationValues.TYPE);
@@ -307,13 +346,13 @@ public class ContentValueFixtures {
 
         // Add columns.
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
+                MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID,
                 AsyncRegistrationValues.ENROLLMENT_ID);
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
+                MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE,
                 AsyncRegistrationValues.REDIRECT_TYPE);
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
+                MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT,
                 AsyncRegistrationValues.REDIRECT_COUNT);
         asyncRegistration.put(
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
@@ -345,6 +384,52 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAsyncRegistrationContentValuesV8() {
         return generateAsyncRegistrationContentValuesV7();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV9() {
+        return generateAsyncRegistrationContentValuesV8();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV10() {
+        return generateAsyncRegistrationContentValuesV9();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV11() {
+        ContentValues asyncRegistration = generateAsyncRegistrationContentValuesV10();
+        asyncRegistration.remove(MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID);
+        asyncRegistration.remove(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE);
+        asyncRegistration.remove(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT);
+        asyncRegistration.remove(
+                MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME);
+        return asyncRegistration;
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV12() {
+        return generateAsyncRegistrationContentValuesV11();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV13() {
+        ContentValues asyncRegistration = generateAsyncRegistrationContentValuesV12();
+        asyncRegistration.put(
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                AsyncRegistrationValues.PLATFORM_AD_ID);
+        return asyncRegistration;
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV14() {
+        return generateAsyncRegistrationContentValuesV13();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV15() {
+        return generateAsyncRegistrationContentValuesV14();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV16() {
+        return generateAsyncRegistrationContentValuesV15();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV17() {
+        return generateAsyncRegistrationContentValuesV16();
     }
 
     public static ContentValues generateSourceContentValuesV1() {
@@ -458,6 +543,66 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateSourceContentValuesV10() {
+        return generateSourceContentValuesV9();
+    }
+
+    public static ContentValues generateSourceContentValuesV11() {
+        return generateSourceContentValuesV10();
+    }
+
+    public static ContentValues generateSourceContentValuesV12() {
+        ContentValues values = generateSourceContentValuesV11();
+        values.put(MeasurementTables.SourceContract.TRIGGER_SPECS, SourceValues.TRIGGER_SPECS);
+        values.put(
+                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
+                SourceValues.MAX_BUCKET_INCREMENTS);
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV13() {
+        ContentValues values = generateSourceContentValuesV12();
+        values.put(MeasurementTables.SourceContract.PLATFORM_AD_ID, SourceValues.PLATFORM_AD_ID);
+        values.put(MeasurementTables.SourceContract.DEBUG_AD_ID, SourceValues.DEBUG_AD_ID);
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV14() {
+        ContentValues values = generateSourceContentValuesV13();
+        values.put(
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                SourceValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV15() {
+        return generateSourceContentValuesV14();
+    }
+
+    public static ContentValues generateSourceContentValuesV16() {
+        ContentValues values = generateSourceContentValuesV15();
+        values.put(
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                SourceValues.COARSE_EVENT_REPORT_DESTINATIONS);
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV17() {
+        ContentValues values = generateSourceContentValuesV16();
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV18() {
+        ContentValues values = generateSourceContentValuesV17();
+        values.put(
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                SourceValues.EVENT_ATTRIBUTION_STATUS);
+        values.put(
+                MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
+                SourceValues.PRIVACY_PARAMETERS);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -468,6 +613,38 @@ public class ContentValueFixtures {
                 SourceDestinationValues.DESTINATION_TYPE);
 
         return sourceDestination;
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV10() {
+        return generateSourceDestinationContentValuesV9();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV11() {
+        return generateSourceDestinationContentValuesV10();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV12() {
+        return generateSourceDestinationContentValuesV11();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV13() {
+        return generateSourceDestinationContentValuesV12();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV14() {
+        return generateSourceDestinationContentValuesV13();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV15() {
+        return generateSourceDestinationContentValuesV14();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV16() {
+        return generateSourceDestinationContentValuesV15();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV17() {
+        return generateSourceDestinationContentValuesV16();
     }
 
     public static ContentValues generateTriggerContentValuesV1() {
@@ -551,6 +728,49 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateTriggerContentValuesV9() {
+        return generateTriggerContentValuesV8();
+    }
+
+    public static ContentValues generateTriggerContentValuesV10() {
+        return generateTriggerContentValuesV9();
+    }
+
+    public static ContentValues generateTriggerContentValuesV11() {
+        return generateTriggerContentValuesV10();
+    }
+
+    public static ContentValues generateTriggerContentValuesV12() {
+        return generateTriggerContentValuesV11();
+    }
+
+    public static ContentValues generateTriggerContentValuesV13() {
+        ContentValues values = generateTriggerContentValuesV12();
+        values.put(MeasurementTables.TriggerContract.PLATFORM_AD_ID, TriggerValues.PLATFORM_AD_ID);
+        values.put(MeasurementTables.TriggerContract.DEBUG_AD_ID, TriggerValues.DEBUG_AD_ID);
+        return values;
+    }
+
+    public static ContentValues generateTriggerContentValuesV14() {
+        ContentValues values = generateTriggerContentValuesV13();
+        values.put(
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                TriggerValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    public static ContentValues generateTriggerContentValuesV15() {
+        return generateTriggerContentValuesV14();
+    }
+
+    public static ContentValues generateTriggerContentValuesV16() {
+        return generateTriggerContentValuesV15();
+    }
+
+    public static ContentValues generateTriggerContentValuesV17() {
+        return generateTriggerContentValuesV16();
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -604,6 +824,42 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAttributionContentValuesV8() {
         return generateAttributionContentValuesV7();
+    }
+
+    public static ContentValues generateAttributionContentValuesV9() {
+        return generateAttributionContentValuesV7();
+    }
+
+    public static ContentValues generateAttributionContentValuesV10() {
+        return generateAttributionContentValuesV9();
+    }
+
+    public static ContentValues generateAttributionContentValuesV11() {
+        return generateAttributionContentValuesV10();
+    }
+
+    public static ContentValues generateAttributionContentValuesV12() {
+        return generateAttributionContentValuesV11();
+    }
+
+    public static ContentValues generateAttributionContentValuesV13() {
+        return generateAttributionContentValuesV12();
+    }
+
+    public static ContentValues generateAttributionContentValuesV14() {
+        return generateAttributionContentValuesV13();
+    }
+
+    public static ContentValues generateAttributionContentValuesV15() {
+        return generateAttributionContentValuesV14();
+    }
+
+    public static ContentValues generateAttributionContentValuesV16() {
+        return generateAttributionContentValuesV15();
+    }
+
+    public static ContentValues generateAttributionContentValuesV17() {
+        return generateAttributionContentValuesV16();
     }
 
     public static ContentValues generateEventReportContentValuesV1() {
@@ -684,6 +940,47 @@ public class ContentValueFixtures {
 
     public static ContentValues generateEventReportContentValuesV8() {
         return generateEventReportContentValuesV7();
+    }
+
+    public static ContentValues generateEventReportContentValuesV9() {
+        return generateEventReportContentValuesV8();
+    }
+
+    public static ContentValues generateEventReportContentValuesV10() {
+        return generateEventReportContentValuesV9();
+    }
+
+    public static ContentValues generateEventReportContentValuesV11() {
+        return generateEventReportContentValuesV10();
+    }
+
+    public static ContentValues generateEventReportContentValuesV12() {
+        return generateEventReportContentValuesV11();
+    }
+
+    public static ContentValues generateEventReportContentValuesV13() {
+        return generateEventReportContentValuesV12();
+    }
+
+    public static ContentValues generateEventReportContentValuesV14() {
+        ContentValues eventReport = generateEventReportContentValuesV13();
+
+        eventReport.put(
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                EventReportValues.REGISTRATION_ORIGIN.toString());
+        return eventReport;
+    }
+
+    public static ContentValues generateEventReportContentValuesV15() {
+        return generateEventReportContentValuesV14();
+    }
+
+    public static ContentValues generateEventReportContentValuesV16() {
+        return generateEventReportContentValuesV15();
+    }
+
+    public static ContentValues generateEventReportContentValuesV17() {
+        return generateEventReportContentValuesV16();
     }
 
     public static ContentValues generateAggregateReportContentValuesV1() {
@@ -769,6 +1066,41 @@ public class ContentValueFixtures {
         return aggregateReport;
     }
 
+    public static ContentValues generateAggregateReportContentValuesV11() {
+        return generateAggregateReportContentValuesV10();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV12() {
+        return generateAggregateReportContentValuesV11();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV13() {
+        return generateAggregateReportContentValuesV12();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV14() {
+        ContentValues aggregateReport = generateAggregateReportContentValuesV13();
+
+        // Add columns.
+        aggregateReport.put(
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                AggregateReportValues.REGISTRATION_ORIGIN.toString());
+
+        return aggregateReport;
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV15() {
+        return generateAggregateReportContentValuesV14();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV16() {
+        return generateAggregateReportContentValuesV15();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV17() {
+        return generateAggregateReportContentValuesV16();
+    }
+
     public static ContentValues generateAggregateEncryptionKeyContentValuesV1() {
         ContentValues aggregateEncryptionKey = new ContentValues();
 
@@ -809,6 +1141,42 @@ public class ContentValueFixtures {
         return generateAggregateEncryptionKeyContentValuesV7();
     }
 
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV9() {
+        return generateAggregateEncryptionKeyContentValuesV7();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV10() {
+        return generateAggregateEncryptionKeyContentValuesV9();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV11() {
+        return generateAggregateEncryptionKeyContentValuesV10();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV12() {
+        return generateAggregateEncryptionKeyContentValuesV11();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV13() {
+        return generateAggregateEncryptionKeyContentValuesV12();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV14() {
+        return generateAggregateEncryptionKeyContentValuesV13();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV15() {
+        return generateAggregateEncryptionKeyContentValuesV14();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV16() {
+        return generateAggregateEncryptionKeyContentValuesV15();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV17() {
+        return generateAggregateEncryptionKeyContentValuesV16();
+    }
+
     public static ContentValues generateDebugReportContentValuesV3() {
         ContentValues debugReport = new ContentValues();
 
@@ -834,6 +1202,47 @@ public class ContentValueFixtures {
         return generateDebugReportContentValuesV7();
     }
 
+    public static ContentValues generateDebugReportContentValuesV9() {
+        return generateDebugReportContentValuesV8();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV10() {
+        return generateDebugReportContentValuesV9();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV11() {
+        return generateDebugReportContentValuesV10();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV12() {
+        return generateDebugReportContentValuesV11();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV13() {
+        return generateDebugReportContentValuesV12();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV14() {
+        return generateDebugReportContentValuesV13();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV15() {
+        ContentValues debugReport = generateDebugReportContentValuesV14();
+        debugReport.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                DebugReportValues.REGISTRATION_ORIGIN.toString());
+
+        return debugReport;
+    }
+
+    public static ContentValues generateDebugReportContentValuesV16() {
+        return generateDebugReportContentValuesV15();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV17() {
+        return generateDebugReportContentValuesV16();
+    }
+
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {
         ContentValues values = new ContentValues();
         values.put(
@@ -852,5 +1261,41 @@ public class ContentValueFixtures {
 
     public static ContentValues generateXnaIgnoredSourcesContentValuesV8() {
         return generateXnaIgnoredSourcesContentValuesV7();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV9() {
+        return generateXnaIgnoredSourcesContentValuesV8();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV10() {
+        return generateXnaIgnoredSourcesContentValuesV9();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV11() {
+        return generateXnaIgnoredSourcesContentValuesV10();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV12() {
+        return generateXnaIgnoredSourcesContentValuesV11();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV13() {
+        return generateXnaIgnoredSourcesContentValuesV12();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV14() {
+        return generateXnaIgnoredSourcesContentValuesV13();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV15() {
+        return generateXnaIgnoredSourcesContentValuesV14();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV16() {
+        return generateXnaIgnoredSourcesContentValuesV15();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV17() {
+        return generateXnaIgnoredSourcesContentValuesV16();
     }
 }

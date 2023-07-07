@@ -25,6 +25,7 @@ import android.os.Trace;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DecisionLogic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -66,7 +67,8 @@ public class JsFetcher {
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull Flags flags) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -74,7 +76,7 @@ public class JsFetcher {
         mBackgroundExecutorService = backgroundExecutorService;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
     }
 
     /**
@@ -231,8 +233,8 @@ public class JsFetcher {
     }
 
     /**
-     * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
-     * present, otherwise fetch from server. Make use of caching optional.
+     * Fetch the buyer decision logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Make use of caching optional.
      *
      * @return buyer decision logic
      */
@@ -250,6 +252,72 @@ public class JsFetcher {
                         .transform(this::toDecisionLogic, mLightweightExecutorService);
 
         return resolveJsScriptSource(jsOverrideFuture, outcomeLogicRequest)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            sLogger.e(
+                                    e,
+                                    "Exception encountered when fetching outcome selection logic");
+                            throw new IllegalStateException(MISSING_OUTCOME_SELECTION_LOGIC);
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Fetch the seller reporting logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Make use of caching optional.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getSellerReportingLogic(
+            @NonNull final AdServicesHttpClientRequest sellerReportingLogicRequest,
+            @NonNull final AdSelectionDevOverridesHelper adSelectionDevOverridesHelper,
+            @NonNull AdSelectionConfig adSelectionConfig) {
+        sLogger.v("Fetching Seller reporting logic");
+        FluentFuture<DecisionLogic> jsOverrideFuture =
+                FluentFuture.from(
+                                mBackgroundExecutorService.submit(
+                                        () ->
+                                                adSelectionDevOverridesHelper
+                                                        .getDecisionLogicOverride(
+                                                                adSelectionConfig)))
+                        .transform(this::toDecisionLogic, mLightweightExecutorService);
+
+        return resolveJsScriptSource(jsOverrideFuture, sellerReportingLogicRequest)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            sLogger.e(
+                                    e,
+                                    "Exception encountered when fetching outcome selection logic");
+                            throw new IllegalStateException(MISSING_OUTCOME_SELECTION_LOGIC);
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Fetch the seller reporting logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Make use of caching optional.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getBuyerReportingLogic(
+            @NonNull final AdServicesHttpClientRequest sellerReportingLogicRequest,
+            @NonNull final CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name) {
+        sLogger.v("Fetching Buyer reporting logic");
+        FluentFuture<DecisionLogic> jsOverrideFuture =
+                FluentFuture.from(
+                        mBackgroundExecutorService.submit(
+                                () ->
+                                        customAudienceDevOverridesHelper.getBiddingLogicOverride(
+                                                owner, buyer, name)));
+
+        return resolveJsScriptSource(jsOverrideFuture, sellerReportingLogicRequest)
                 .transform(DecisionLogic::getPayload, mLightweightExecutorService)
                 .catching(
                         Exception.class,
