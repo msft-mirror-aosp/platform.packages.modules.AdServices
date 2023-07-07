@@ -54,6 +54,11 @@ public interface SdkSandboxServiceProvider {
     String SANDBOX_PROCESS_NAME_SUFFIX = "_sdk_sandbox";
 
     /**
+     * Fixed suffix appended to instrumented app process name to create its sandbox process name.
+     */
+    String SANDBOX_INSTR_PROCESS_NAME_SUFFIX = "_sdk_sandbox_instr";
+
+    /**
      * Bind to and establish a connection with SdkSandbox service.
      *
      * @param callingInfo represents the calling app.
@@ -137,4 +142,13 @@ public interface SdkSandboxServiceProvider {
      */
     @NonNull
     String toSandboxProcessName(@NonNull String packageName);
+
+    /**
+     * Returns name of the sdk sandbox process that corresponds to the given client app.
+     *
+     * @param packageName app package name.
+     * @return name of the sdk sandbox process to be instrumented
+     */
+    @NonNull
+    String toSandboxProcessNameForInstrumentation(@NonNull String packageName);
 }
