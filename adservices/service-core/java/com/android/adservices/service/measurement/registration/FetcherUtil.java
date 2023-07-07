@@ -30,11 +30,13 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.AdIdEncryption;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -80,6 +83,34 @@ class FetcherUtil {
      */
     static boolean isSuccess(int responseCode) {
         return (responseCode / 100) == 2;
+    }
+
+    /** Validates both string type and unsigned long parsing */
+    public static Optional<UnsignedLong> extractUnsignedLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!(maybeValue instanceof String)) {
+                return Optional.empty();
+            }
+            return Optional.of(new UnsignedLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LogUtil.d(e, "extractUnsignedLong: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    /** Validates both string type and long parsing */
+    public static Optional<Long> extractLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!(maybeValue instanceof String)) {
+                return Optional.empty();
+            }
+            return Optional.of(Long.parseLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LogUtil.d(e, "extractLong: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
     }
 
     /**

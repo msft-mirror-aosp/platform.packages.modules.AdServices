@@ -121,12 +121,12 @@ public class AsyncSourceFetcher {
         UnsignedLong eventId = new UnsignedLong(0L);
         if (!json.isNull(SourceHeaderContract.SOURCE_EVENT_ID)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Object maybeEventId = json.get(SourceHeaderContract.SOURCE_EVENT_ID);
-                if (!(maybeEventId instanceof String)) {
+                Optional<UnsignedLong> maybeEventId =
+                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.SOURCE_EVENT_ID);
+                if (!maybeEventId.isPresent()) {
                     return false;
                 }
-                // Registration will be rejected if parsing unsigned long throws.
-                eventId = new UnsignedLong((String) maybeEventId);
+                eventId = maybeEventId.get();
             } else {
                 try {
                     eventId = new UnsignedLong(
@@ -140,14 +140,14 @@ public class AsyncSourceFetcher {
         long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                if (!(json.get(SourceHeaderContract.EXPIRY) instanceof String)) {
+                Optional<UnsignedLong> maybeExpiry =
+                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.EXPIRY);
+                if (!maybeExpiry.isPresent()) {
                     return false;
                 }
-                // Registration will be rejected if parsing unsigned long throws.
                 UnsignedLong expiryUnsigned =
                         extractValidNumberInRange(
-                                new UnsignedLong(json.getString(
-                                        SourceHeaderContract.EXPIRY)),
+                                maybeExpiry.get(),
                                 new UnsignedLong(
                                         MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                                 new UnsignedLong(
@@ -171,14 +171,14 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
             long eventReportWindow;
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                if (!(json.get(SourceHeaderContract.EVENT_REPORT_WINDOW) instanceof String)) {
+                Optional<UnsignedLong> maybeEventReportWindow = FetcherUtil.extractUnsignedLong(
+                        json, SourceHeaderContract.EVENT_REPORT_WINDOW);
+                if (!maybeEventReportWindow.isPresent()) {
                     return false;
                 }
-                // Registration will be rejected if parsing unsigned long throws.
                 UnsignedLong eventReportWindowUnsigned =
                         extractValidNumberInRange(
-                                new UnsignedLong(json.getString(
-                                        SourceHeaderContract.EVENT_REPORT_WINDOW)),
+                                        maybeEventReportWindow.get(),
                                 new UnsignedLong(
                                         mFlags.getMeasurementMinimumEventReportWindowInSeconds()),
                                 new UnsignedLong(
@@ -199,15 +199,16 @@ public class AsyncSourceFetcher {
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                if (!(json.get(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)
-                          instanceof String)) {
+                Optional<UnsignedLong> maybeAggregatableReportWindow =
+                        FetcherUtil.extractUnsignedLong(
+                                json, SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW);
+                if (!maybeAggregatableReportWindow.isPresent()) {
                     return false;
                 }
                 // Registration will be rejected if parsing unsigned long throws.
                 UnsignedLong aggregateReportWindowUnsigned =
                         extractValidNumberInRange(
-                                new UnsignedLong(json.getString(
-                                        SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
+                                maybeAggregatableReportWindow.get(),
                                 new UnsignedLong(
                                         MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                                 new UnsignedLong(
@@ -231,11 +232,16 @@ public class AsyncSourceFetcher {
                 sourceEventTime + TimeUnit.SECONDS.toMillis(aggregateReportWindow));
 
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
-            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()
-                    && !(json.get(SourceHeaderContract.PRIORITY) instanceof String)) {
-                return false;
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<Long> maybePriority =
+                        FetcherUtil.extractLong(json, SourceHeaderContract.PRIORITY);
+                if (!maybePriority.isPresent()) {
+                    return false;
+                }
+                builder.setPriority(maybePriority.get());
+            } else {
+                builder.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
             }
-            builder.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
         }
 
         if (!json.isNull(SourceHeaderContract.DEBUG_REPORTING)) {
@@ -243,13 +249,10 @@ public class AsyncSourceFetcher {
         }
         if (!json.isNull(SourceHeaderContract.DEBUG_KEY)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Object maybeDebugKey = json.get(SourceHeaderContract.DEBUG_KEY);
-                if (maybeDebugKey instanceof String) {
-                    try {
-                        builder.setDebugKey(new UnsignedLong((String) maybeDebugKey));
-                    } catch (NumberFormatException e) {
-                        LogUtil.e(e, "parseCommonSourceParams: parsing debug key failed");
-                    }
+                Optional<UnsignedLong> maybeDebugKey =
+                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.DEBUG_KEY);
+                if (maybeDebugKey.isPresent()) {
+                    builder.setDebugKey(maybeDebugKey.get());
                 }
             } else {
                 try {
