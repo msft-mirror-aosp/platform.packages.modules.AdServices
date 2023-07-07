@@ -38,7 +38,7 @@ public class ReportSpecUtil {
         String DEDUP_KEY = "dedup_key";
         String TRIGGER_DATA = "trigger_data";
         String FLIP_PROBABILITY = "flip_probability";
-        String END_TIME = "end_times";
+        String END_TIMES = "end_times";
         String START_TIME = "start_time";
         String SUMMARY_WINDOW_OPERATOR = "summary_window_operator";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
@@ -66,16 +66,16 @@ public class ReportSpecUtil {
             // No competing condition.
             return new Pair<>(new ArrayList<>(), bucketIncrements);
         }
-        long currentTime = System.currentTimeMillis();
+        long triggerTime = proposedEventReport.getTriggerTime();
         reportSpec.insertAttributedTrigger(proposedEventReport);
         List<EventReport> pendingEventReports =
                 currentReports.stream()
-                        .filter((r) -> r.getReportTime() > currentTime)
+                        .filter((r) -> r.getReportTime() > triggerTime)
                         .collect(Collectors.toList());
         int numDeliveredReport =
                 (int)
                         currentReports.stream()
-                                .filter((r) -> r.getReportTime() <= currentTime)
+                                .filter((r) -> r.getReportTime() <= triggerTime)
                                 .count();
 
         for (EventReport report : currentReports) {

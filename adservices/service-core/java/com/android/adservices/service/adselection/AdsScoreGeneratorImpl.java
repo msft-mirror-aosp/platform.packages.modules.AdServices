@@ -500,6 +500,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .setCustomAudienceName(signals.getName())
                 .setCustomAudienceBuyer(signals.getBuyer())
                 .setSeller(adSelectionConfig.getSeller())
+                .setSellerRejectReason(adScore.getSellerRejectReason())
                 .build();
     }
 
