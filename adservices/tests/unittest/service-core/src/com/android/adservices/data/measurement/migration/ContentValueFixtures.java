@@ -555,7 +555,7 @@ public class ContentValueFixtures {
         ContentValues values = generateSourceContentValuesV11();
         values.put(MeasurementTables.SourceContract.TRIGGER_SPECS, SourceValues.TRIGGER_SPECS);
         values.put(
-                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
+                MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS,
                 SourceValues.MAX_BUCKET_INCREMENTS);
         return values;
     }
