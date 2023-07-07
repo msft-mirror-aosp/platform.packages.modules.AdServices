@@ -17,6 +17,7 @@
 package com.android.adservices.data.topics;
 
 import android.annotation.NonNull;
+import android.app.adservices.topics.TopicParcel;
 
 import com.android.internal.annotations.Immutable;
 
@@ -93,5 +94,19 @@ public abstract class Topic {
         /** Build a Topic instance */
         @NonNull
         public abstract Topic build();
+    }
+
+    /**
+     * Return the parcel for this topic.
+     *
+     * @hide
+     */
+    @NonNull
+    public TopicParcel convertTopicToTopicParcel() {
+        return new TopicParcel.Builder()
+                .setTopicId(getTopic())
+                .setTaxonomyVersion(getTaxonomyVersion())
+                .setModelVersion(getModelVersion())
+                .build();
     }
 }

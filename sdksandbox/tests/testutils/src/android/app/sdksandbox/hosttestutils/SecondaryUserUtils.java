@@ -36,6 +36,10 @@ public class SecondaryUserUtils {
         mTest = test;
     }
 
+    public boolean isMultiUserSupported() throws Exception {
+        return mTest.getDevice().isMultiUserSupported();
+    }
+
     public int createAndStartSecondaryUser() throws Exception {
         if (mSecondaryUserId != -1) {
             throw new IllegalStateException("Cannot create secondary user, it already exists");
@@ -69,6 +73,17 @@ public class SecondaryUserUtils {
                 waitForUserDataDeletion(userBeingRemoved);
             }
         }
+    }
+
+    public void switchToSecondaryUser() throws Exception {
+        mTest.getDevice().switchUser(mSecondaryUserId);
+        for (int i = 0; i < NUMBER_OF_POLLS; ++i) {
+            if (mTest.getDevice().getCurrentUser() == mSecondaryUserId) {
+                return;
+            }
+            Thread.sleep(POLL_INTERVAL_IN_MILLIS);
+        }
+        fail("Could not switch to user " + mSecondaryUserId);
     }
 
     private void waitForUserDataDeletion(int userId) throws Exception {

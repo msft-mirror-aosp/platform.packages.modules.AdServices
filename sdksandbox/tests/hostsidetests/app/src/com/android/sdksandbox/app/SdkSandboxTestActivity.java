@@ -30,6 +30,10 @@ public class SdkSandboxTestActivity extends Activity {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        if (icicle != null) {
+            // Only load SDKs when Activity created, not restored.
+            return;
+        }
 
         SdkSandboxManager sdkSandboxManager =
                 getApplicationContext().getSystemService(SdkSandboxManager.class);

@@ -33,7 +33,11 @@ public interface HttpCache {
      * @param body response for the url
      * @param requestPropertiesMap original connection's properties
      */
-    void put(URL url, String body, Map<String, List<String>> requestPropertiesMap);
+    void put(
+            URL url,
+            String body,
+            Map<String, List<String>> requestPropertiesMap,
+            Map<String, List<String>> responseHeaders);
 
     /** @return no of entries cached */
     long getCachedEntriesCount();

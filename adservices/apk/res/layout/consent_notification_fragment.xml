@@ -162,14 +162,10 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="12dp"
-            android:paddingBottom="32dp"
+            style="@style/NotificationButtonContainer"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:orientation="horizontal">
+            app:layout_constraintStart_toStartOf="parent">
             <Button
                 android:id="@+id/leftControlButton"
                 style="@style/MainStyle.PrimaryButtonVariant"

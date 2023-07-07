@@ -16,27 +16,32 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.settingslib.widget.MainSwitchBar;
 
 /**
- * View model for the main view of the AdServices Settings App. This view model is responsible
- * for serving consent to the main view, and interacting with the {@link ConsentManager} that
- * persists the user consent data in a storage.
+ * View model for the main view of the AdServices Settings App. This view model is responsible for
+ * serving consent to the main view, and interacting with the {@link ConsentManager} that persists
+ * the user consent data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();
     private final MutableLiveData<Boolean> mAdServicesConsent;
@@ -63,10 +68,10 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     /**
-     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsMainFragment}
-     * as a Switch value.
+     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsMainActivity} as
+     * a Switch value.
      *
-     * @return {@link mAdServicesConsent} indicates if user has consented to PP API usage.
+     * @return {@link #mAdServicesConsent} indicates if user has consented to PP API usage.
      */
     public MutableLiveData<Boolean> getConsent() {
         return mAdServicesConsent;
@@ -84,6 +89,11 @@ public class MainViewModel extends AndroidViewModel {
             mConsentManager.disable(getApplication());
         }
         mAdServicesConsent.postValue(getConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance(getApplication())
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
     }
 
     /** Returns an observable but immutable event enum representing an view action on UI. */

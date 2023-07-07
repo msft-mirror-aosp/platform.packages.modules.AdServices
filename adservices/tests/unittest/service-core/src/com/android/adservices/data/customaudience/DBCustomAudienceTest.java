@@ -19,6 +19,7 @@ package com.android.adservices.data.customaudience;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -31,6 +32,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
+
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -45,16 +48,93 @@ public class DBCustomAudienceTest {
     private static final Duration DEFAULT_EXPIRE_IN =
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
 
+    private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+
     @Test
     public void testFromServiceObject_success() {
         assertEquals(
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build(),
                 DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
+    }
+
+    @Test
+    public void testFromServiceObject_successNoFilters() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
+    }
+
+    @Test
+    public void testFromServiceObject_successNoRenderId() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .setAds(
+                                List.of(
+                                        DBAdDataFixture.getValidDbAdDataBuilder()
+                                                .setAdFilters(null)
+                                                .setAdCounterKeys(ImmutableSet.of())
+                                                .setAdRenderId(null)
+                                                .build()))
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setAds(
+                                        List.of(
+                                                AdDataFixture.getValidAdDataBuilderByBuyer(
+                                                                CommonFixture.VALID_BUYER_1, 0)
+                                                        .setAdFilters(null)
+                                                        .setAdCounterKeys(ImmutableSet.of())
+                                                        .setAdRenderId("render-id")
+                                                        .build()))
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, false)));
+    }
+
+    @Test
+    public void testFromServiceObject_successWIthRenderId() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setAds(
+                                List.of(
+                                        DBAdDataFixture.getValidDbAdDataBuilder()
+                                                .setAdFilters(null)
+                                                .setAdCounterKeys(ImmutableSet.of())
+                                                .setAdRenderId("render-id")
+                                                .build()))
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setAds(
+                                        List.of(
+                                                AdDataFixture.getValidAdDataBuilderByBuyer(
+                                                                CommonFixture.VALID_BUYER_1, 0)
+                                                        .setAdFilters(null)
+                                                        .setAdCounterKeys(ImmutableSet.of())
+                                                        .setAdRenderId("render-id")
+                                                        .build()))
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -66,7 +146,8 @@ public class DBCustomAudienceTest {
                                 null,
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                                DEFAULT_EXPIRE_IN));
+                                DEFAULT_EXPIRE_IN,
+                                AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -80,7 +161,8 @@ public class DBCustomAudienceTest {
                                         .build(),
                                 null,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                                DEFAULT_EXPIRE_IN));
+                                DEFAULT_EXPIRE_IN,
+                                AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -94,7 +176,8 @@ public class DBCustomAudienceTest {
                                         .build(),
                                 CustomAudienceFixture.VALID_OWNER,
                                 null,
-                                DEFAULT_EXPIRE_IN));
+                                DEFAULT_EXPIRE_IN,
+                                AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -108,6 +191,22 @@ public class DBCustomAudienceTest {
                                         .build(),
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                                null,
+                                AD_DATA_CONVERSION_STRATEGY));
+    }
+
+    @Test
+    public void testFromServiceObject_nullConversionStrategy() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        DBCustomAudience.fromServiceObject(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .build(),
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                                DEFAULT_EXPIRE_IN,
                                 null));
     }
 
@@ -119,12 +218,14 @@ public class DBCustomAudienceTest {
                         .setAds(null)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setAds(null)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -134,14 +235,16 @@ public class DBCustomAudienceTest {
                         .setActivationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(
                                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
                                                 200))
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -151,12 +254,14 @@ public class DBCustomAudienceTest {
                         .setActivationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setActivationTime(null)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test
@@ -167,12 +272,14 @@ public class DBCustomAudienceTest {
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plus(DEFAULT_EXPIRE_IN))
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
                                 .setExpirationTime(null)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY));
     }
 
     @Test

@@ -20,11 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.test.mock.MockContext;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 /** Unit tests for {@link SandboxedSdkContextUtils} */
@@ -41,6 +43,7 @@ public final class SandboxedSdkContextUtilsTest {
 
     @Test
     public void testGetAsSandboxedSdkContext_inputIsSandboxedSdkContext() {
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
         Context context = ApplicationProvider.getApplicationContext();
         Context sandboxedSdkContext =
                 new SandboxedSdkContext(

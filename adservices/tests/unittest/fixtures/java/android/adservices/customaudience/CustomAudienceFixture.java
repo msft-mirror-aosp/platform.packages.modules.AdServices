@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
@@ -68,7 +69,16 @@ public final class CustomAudienceFixture {
             CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 72);
 
     public static final AdSelectionSignals VALID_USER_BIDDING_SIGNALS =
-            AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
+            AdSelectionSignals.fromString("{\"valid\":\"yep\",\"opaque\":\"definitely\"}");
+
+    public static Uri getValidFetchUriByBuyer(AdTechIdentifier buyer, String token) {
+        boolean hasToken = token != null && !token.isEmpty();
+        return CommonFixture.getUri(buyer, "/ca" + (hasToken ? "?token=" + token : ""));
+    }
+
+    public static Uri getValidFetchUriByBuyer(AdTechIdentifier buyer) {
+        return getValidFetchUriByBuyer(buyer, null);
+    }
 
     public static Uri getValidDailyUpdateUriByBuyer(AdTechIdentifier buyer) {
         return CommonFixture.getUri(buyer, "/update");
@@ -90,5 +100,43 @@ public final class CustomAudienceFixture {
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
+    }
+
+    public static CustomAudience.Builder getValidBuilderWithSubdomainsForBuyer(
+            AdTechIdentifier buyer) {
+        return getValidBuilderForBuyer(buyer)
+                .setBiddingLogicUri(
+                        CommonFixture.getUriWithValidSubdomain(buyer.toString(), "/bidding/logic"))
+                .setDailyUpdateUri(
+                        CommonFixture.getUriWithValidSubdomain(buyer.toString(), "/dailyupdate"))
+                .setTrustedBiddingData(
+                        new TrustedBiddingData.Builder()
+                                .setTrustedBiddingUri(
+                                        CommonFixture.getUriWithValidSubdomain(
+                                                buyer.toString(), "/trustedbidding"))
+                                .setTrustedBiddingKeys(
+                                        TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                .build())
+                .setAds(
+                        Arrays.asList(
+                                AdDataFixture.getValidAdDataWithSubdomainBuilderByBuyer(buyer, 0)
+                                        .build(),
+                                AdDataFixture.getValidAdDataWithSubdomainBuilderByBuyer(buyer, 1)
+                                        .build()));
+    }
+
+    // TODO(b/266837113) Merge with getValidBuilderForBuyer once filters are unhidden
+    public static CustomAudience.Builder getValidBuilderForBuyerFilters(AdTechIdentifier buyer) {
+        return new CustomAudience.Builder()
+                .setBuyer(buyer)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(AdDataFixture.getValidFilterAdsByBuyer(buyer));
     }
 }

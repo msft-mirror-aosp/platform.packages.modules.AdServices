@@ -20,6 +20,7 @@ import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBO
 import android.annotation.NonNull;
 import android.annotation.SystemService;
 import android.app.Activity;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
@@ -87,6 +88,26 @@ public class SdkSandboxController {
         mSdkSandboxLocalSingleton = SdkSandboxLocalSingleton.getExistingInstance();
         mSdkSandboxActivityRegistry = SdkSandboxActivityRegistry.getInstance();
         return this;
+    }
+
+    /**
+     * Fetches all {@link AppOwnedSdkSandboxInterface} that are registered by the app.
+     *
+     * @return List of {@link AppOwnedSdkSandboxInterface} containing all currently registered
+     *     AppOwnedSdkSandboxInterface.
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context
+     */
+    public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        enforceSandboxedSdkContextInitialization();
+        try {
+            return mSdkSandboxLocalSingleton
+                    .getSdkToServiceCallback()
+                    .getAppOwnedSdkSandboxInterfaces(
+                            ((SandboxedSdkContext) mContext).getClientPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
     }
 
     /**
@@ -179,6 +200,18 @@ public class SdkSandboxController {
         enforceSandboxedSdkContextInitialization();
 
         mSdkSandboxActivityRegistry.unregister(sdkSandboxActivityHandler);
+    }
+
+    /**
+     * Returns the package name of the client app.
+     *
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
+     */
+    @NonNull
+    public String getClientPackageName() {
+        enforceSandboxedSdkContextInitialization();
+        return ((SandboxedSdkContext) mContext).getClientPackageName();
     }
 
     private void enforceSandboxedSdkContextInitialization() {

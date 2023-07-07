@@ -45,6 +45,9 @@ public class Throttler {
         // Key to throttle Join Custom Audience API
         FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
 
+        // Key to throttle Fetch Custom Audience API
+        FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+
         // Key to throttle Leave Custom Audience API
         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
 
@@ -56,6 +59,17 @@ public class Throttler {
 
         // Key to throttle Select Ads API
         FLEDGE_API_SELECT_ADS,
+
+        // Key to throttle Get Ad Selection Data API
+        FLEDGE_API_GET_AD_SELECTION_DATA,
+        // Key to throttle Persist Ad Selection Result API
+        FLEDGE_API_PERSIST_AD_SELECTION_RESULT,
+
+        // Key to throttle Set App Install Advertisers API
+        FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
+
+        // Key to throttle FLEDGE updateAdCounterHistogram API
+        FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,
 
         // Key to throttle Measurement Deletion Registration API
         MEASUREMENT_API_DELETION_REGISTRATION,
@@ -155,6 +169,9 @@ public class Throttler {
         final double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
         final double registerWebSource =
                 flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        final double registerTrigger = flags.getMeasurementRegisterTriggerRequestPermitsPerSecond();
+        final double registerWebTrigger =
+                flags.getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         final double topicsApiAppRequestPermitsPerSecond =
                 flags.getTopicsApiAppRequestPermitsPerSecond();
         final double topicsApiSdkRequestPermitsPerSecond =
@@ -170,14 +187,16 @@ public class Throttler {
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_IMPRESSIONS, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_INTERACTION, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_SELECT_ADS, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM, defaultPermitsPerSecond);
 
         mRateLimitPerApiMap.put(
                 ApiKey.MEASUREMENT_API_DELETION_REGISTRATION, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_SOURCE, registerSource);
-        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_TRIGGER, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_TRIGGER, registerTrigger);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE, registerWebSource);
-        mRateLimitPerApiMap.put(
-                ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER, registerWebTrigger);
 
         mRateLimitPerApiMap.put(
                 ApiKey.TOPICS_API_APP_PACKAGE_NAME, topicsApiAppRequestPermitsPerSecond);

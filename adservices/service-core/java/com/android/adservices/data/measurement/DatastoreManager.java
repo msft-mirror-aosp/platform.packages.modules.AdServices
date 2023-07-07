@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
+
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -88,10 +89,12 @@ public abstract class DatastoreManager {
             result = Optional.ofNullable(execute.apply(measurementDao));
         } catch (DatastoreException ex) {
             result = Optional.empty();
+            safePrintDataStoreVersion();
             LogUtil.e(ex, "DatastoreException thrown during transaction");
             transaction.rollback();
         } catch (Exception ex) {
             // Catch all exceptions for rollback
+            safePrintDataStoreVersion();
             LogUtil.e(ex, "Unhandled exception thrown during transaction");
             transaction.rollback();
             throw ex;
@@ -114,4 +117,17 @@ public abstract class DatastoreManager {
             return true;
         }).orElse(false);
     }
+
+    /** Prints the underlying data store version catching exceptions it can raise. */
+    private void safePrintDataStoreVersion() {
+        try {
+            LogUtil.w("Underlying datastore version: " + getDataStoreVersion());
+        } catch (Exception e) {
+            // If fetching data store version throws an exception, skip printing the DB version.
+            LogUtil.e(e, "Failed to print data store version.");
+        }
+    }
+
+    /** Returns the version the underlying data store is at. E.g. user version of the DB. */
+    protected abstract int getDataStoreVersion();
 }

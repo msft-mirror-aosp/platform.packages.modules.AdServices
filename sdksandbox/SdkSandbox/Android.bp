@@ -51,7 +51,14 @@ java_library {
     ],
     static_libs: [
         "modules-utils-backgroundthread",
+        "modules-utils-build",
     ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
+}
+
+prebuilt_etc {
+    name: "com.android.adservices.sdksandbox.xml",
+    sub_dir: "permissions",
+    src: "com.android.adservices.sdksandbox.xml",
 }
 
 android_app {
@@ -82,4 +89,5 @@ android_app {
             "com.android.server.sdksandbox.**",
         ],
     },
+    required: ["com.android.adservices.sdksandbox.xml"],
 }

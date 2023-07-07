@@ -20,10 +20,11 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static com.google.common.truth.Truth.assertThat;
 
 import android.os.SystemClock;
-import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.Until;
+
+import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject2;
+import androidx.test.uiautomator.Until;
 
 import java.io.IOException;
 
@@ -31,12 +32,12 @@ import java.io.IOException;
 public class SdkSandboxTestHelper {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
-    private static final long UI_NAVIGATION_WAIT_MS = 1000;
+    private static final long UI_NAVIGATION_WAIT_MS = 5000;
     private static final long UI_WAIT_LOADSDK_MS = 500;
     private static final long UI_RETRIES_WAIT_LOADSDK = 10;
     private static final String SANDBOX_TEST_CLIENT_APP = "com.android.sdksandboxclient";
-    private static final String LOAD_BUTTON = "load_code_button";
-    private static final String RENDER_BUTTON = "request_surface_button";
+    private static final String LOAD_BUTTON = "load_sdks_button";
+    private static final String RENDER_BUTTON = "new_banner_ad_button";
 
     /** Open sandbox client test app using shell command line. */
     public void openClientApp() throws Exception {
@@ -66,12 +67,12 @@ public class SdkSandboxTestHelper {
         assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDKs");
     }
 
-    /** Remote render ad on sandbox client test app by clicking request surface button. */
+    /** Remote render ad on sandbox client test app by clicking banner ad button. */
     public void remoteRenderAd() {
-        if (getRequestSurfaceButton() != null) {
-            getRequestSurfaceButton().click();
+        if (getNewBannerAdButton() != null) {
+            getNewBannerAdButton().click();
         } else {
-            throw new RuntimeException("Did not find 'Load Surface Package' button.");
+            throw new RuntimeException("Did not find 'New Banner Ad' button.");
         }
     }
 
@@ -85,7 +86,7 @@ public class SdkSandboxTestHelper {
                 UI_NAVIGATION_WAIT_MS);
     }
 
-    private UiObject2 getRequestSurfaceButton() {
+    private UiObject2 getNewBannerAdButton() {
         return sUiDevice.wait(
                 Until.findObject(By.res(SANDBOX_TEST_CLIENT_APP, RENDER_BUTTON)),
                 UI_NAVIGATION_WAIT_MS);

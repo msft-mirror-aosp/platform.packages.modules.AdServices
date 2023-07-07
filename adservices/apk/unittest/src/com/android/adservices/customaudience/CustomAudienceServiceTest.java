@@ -19,10 +19,10 @@ package com.android.adservices.customaudience;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -104,7 +104,7 @@ public class CustomAudienceServiceTest {
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         ExtendedMockito.doReturn(true)
-                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         CustomAudienceService customAudienceServiceSpy =
@@ -118,7 +118,7 @@ public class CustomAudienceServiceTest {
         assertNotNull(binder);
 
         verify(mConsentManagerMock).getConsent();
-        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
@@ -151,7 +151,7 @@ public class CustomAudienceServiceTest {
                 .when(mConsentManagerMock)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
         ExtendedMockito.doReturn(true)
-                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         CustomAudienceService customAudienceServiceSpy =
@@ -166,7 +166,7 @@ public class CustomAudienceServiceTest {
 
         verify(mConsentManagerMock, never()).getConsent();
         verify(mConsentManagerMock).getConsent(eq(AdServicesApiType.FLEDGE));
-        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 

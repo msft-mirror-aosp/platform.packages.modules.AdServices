@@ -25,6 +25,11 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
+
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
         <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
         <option name="run-command" value="setprop debug.adservices.fledge_select_ads_kill_switch false" />
@@ -44,10 +49,15 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-    </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
-        <option name="force-skip-system-props" value="true" />
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
+
+        <!-- Disable Register Ad Beacon Feature -->
+        <option name="run-command" value="setprop debug.adservices.fledge_register_ad_beacon_enabled false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >

@@ -27,6 +27,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -130,11 +131,32 @@ public class SdkSandboxActivityRegistry {
                 throw new IllegalArgumentException(
                         "There is no registered SdkSandboxActivityHandler to notify");
             }
-            if (handlerInfo.isActivityCreated()) {
-                throw new IllegalArgumentException("Activity is already created for this handler");
-            }
             handlerInfo.getHandler().onActivityCreated(activity);
-            handlerInfo.setActivityCreated(true);
+        }
+    }
+
+    /**
+     * Unregisters all {@link SdkSandboxActivityHandler} instances that are registered by the passed
+     * SDK.
+     *
+     * <p>This is expected to be called by the system when an SDK is unloaded to free memory.
+     *
+     * @param sdkName the name of the SDK to unregister its registered handlers
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public void unregisterAllActivityHandlersForSdk(@NonNull String sdkName) {
+        synchronized (mMapsLock) {
+            Iterator<Map.Entry<SdkSandboxActivityHandler, HandlerInfo>> iter =
+                    mHandlerToHandlerInfoMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<SdkSandboxActivityHandler, HandlerInfo> handlerEntry = iter.next();
+                HandlerInfo handlerInfo = handlerEntry.getValue();
+                if (handlerInfo.getSdkName().equals(sdkName)) {
+                    IBinder handlerToken = handlerInfo.getToken();
+                    iter.remove();
+                    mTokenToHandlerInfoMap.remove(handlerToken);
+                }
+            }
         }
     }
 
@@ -148,7 +170,6 @@ public class SdkSandboxActivityRegistry {
         private final SdkSandboxActivityHandler mHandler;
         private final IBinder mToken;
 
-        private volatile boolean mIsActivityCreated;
 
         HandlerInfo(String sdkName, SdkSandboxActivityHandler handler, IBinder token) {
             this.mSdkName = sdkName;
@@ -169,14 +190,6 @@ public class SdkSandboxActivityRegistry {
         @NonNull
         public IBinder getToken() {
             return mToken;
-        }
-
-        public boolean isActivityCreated() {
-            return mIsActivityCreated;
-        }
-
-        public void setActivityCreated(boolean activityCreated) {
-            mIsActivityCreated = activityCreated;
         }
     }
 }

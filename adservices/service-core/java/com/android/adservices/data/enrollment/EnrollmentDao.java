@@ -25,12 +25,15 @@ import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
@@ -46,17 +49,28 @@ import java.util.Set;
 public class EnrollmentDao implements IEnrollmentDao {
 
     private static EnrollmentDao sSingleton;
-    private final DbHelper mDbHelper;
+    private final SharedDbHelper mDbHelper;
     private final Context mContext;
+    private final Flags mFlags;
     @VisibleForTesting static final String ENROLLMENT_SHARED_PREF = "adservices_enrollment";
     @VisibleForTesting static final String IS_SEEDED = "is_seeded";
 
     @VisibleForTesting
-    public EnrollmentDao(Context context, DbHelper dbHelper) {
+    public EnrollmentDao(Context context, SharedDbHelper dbHelper, Flags flags) {
+        this(context, dbHelper, flags, flags.isEnableEnrollmentTestSeed());
+    }
+
+    @VisibleForTesting
+    public EnrollmentDao(
+            Context context, SharedDbHelper dbHelper, Flags flags, boolean enableTestSeed) {
+        // performSeed is needed to force seeding in tests that do not have DEVICE_CONFIG
+        // permissions
         mContext = context;
         mDbHelper = dbHelper;
-        // TODO: move this to be called when the enrollment download job is scheduled.
-        seed();
+        mFlags = flags;
+        if (enableTestSeed) {
+            seed();
+        }
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
@@ -64,7 +78,11 @@ public class EnrollmentDao implements IEnrollmentDao {
     public static EnrollmentDao getInstance(@NonNull Context context) {
         synchronized (EnrollmentDao.class) {
             if (sSingleton == null) {
-                sSingleton = new EnrollmentDao(context, DbHelper.getInstance(context));
+                sSingleton =
+                        new EnrollmentDao(
+                                context,
+                                SharedDbHelper.getInstance(context),
+                                FlagsFactory.getFlags());
             }
             return sSingleton;
         }
@@ -90,7 +108,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
-                edit.apply();
+                if (!edit.commit()) {
+                    // TODO(b/280579966): Add logging using CEL.
+                    LogUtil.e(
+                            "Saving shared preferences - %s , %s failed",
+                            ENROLLMENT_SHARED_PREF, IS_SEEDED);
+                }
             }
         }
     }
@@ -100,7 +123,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean(IS_SEEDED, false);
-        edit.apply();
+        if (!edit.commit()) {
+            // TODO(b/280579966): Add logging using CEL.
+            LogUtil.e(
+                    "Saving shared preferences - %s , %s failed",
+                    ENROLLMENT_SHARED_PREF, IS_SEEDED);
+        }
     }
 
     @Override
@@ -132,7 +160,9 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
-        Optional<Uri> registrationBaseUri = Web.topPrivateDomainSchemeAndPath(url);
+        boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
+        Optional<Uri> registrationBaseUri =
+                originMatch ? Web.originAndScheme(url) : Web.topPrivateDomainAndScheme(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (!registrationBaseUri.isPresent() || db == null) {
             return null;
@@ -142,12 +172,14 @@ public class EnrollmentDao implements IEnrollmentDao {
                 getAttributionUrlSelection(
                                 EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_SOURCE_REGISTRATION_URL,
-                                registrationBaseUri.get())
+                                registrationBaseUri.get(),
+                                /* isSiteMatch = */ !originMatch)
                         + " OR "
                         + getAttributionUrlSelection(
                                 EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_TRIGGER_REGISTRATION_URL,
-                                registrationBaseUri.get());
+                                registrationBaseUri.get(),
+                                /* isSiteMatch = */ !originMatch);
 
         try (Cursor cursor =
                 db.query(
@@ -167,9 +199,13 @@ public class EnrollmentDao implements IEnrollmentDao {
             while (cursor.moveToNext()) {
                 EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
                 if (validateAttributionUrl(
-                                data.getAttributionSourceRegistrationUrl(), registrationBaseUri)
+                                data.getAttributionSourceRegistrationUrl(),
+                                registrationBaseUri,
+                                originMatch)
                         || validateAttributionUrl(
-                                data.getAttributionTriggerRegistrationUrl(), registrationBaseUri)) {
+                                data.getAttributionTriggerRegistrationUrl(),
+                                registrationBaseUri,
+                                originMatch)) {
                     return data;
                 }
             }
@@ -177,10 +213,22 @@ public class EnrollmentDao implements IEnrollmentDao {
         }
     }
 
+    /**
+     * Validates enrollment urls returned by selection query by matching its scheme + first
+     * subdomain to that of registration uri.
+     *
+     * @param enrolledUris : urls returned by selection query
+     * @param registrationBaseUri : registration base url
+     * @return : true if validation is success
+     */
     private boolean validateAttributionUrl(
-            List<String> enrolledUris, Optional<Uri> registrationBaseUri) {
+            List<String> enrolledUris, Optional<Uri> registrationBaseUri, boolean originMatch) {
+        // This match is needed to avoid matching .co in registration url to .com in enrolled url
         for (String uri : enrolledUris) {
-            Optional<Uri> enrolledBaseUri = Web.topPrivateDomainSchemeAndPath(Uri.parse(uri));
+            Optional<Uri> enrolledBaseUri =
+                    originMatch
+                            ? Web.originAndScheme(Uri.parse(uri))
+                            : Web.topPrivateDomainAndScheme(Uri.parse(uri));
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }
@@ -188,18 +236,29 @@ public class EnrollmentDao implements IEnrollmentDao {
         return false;
     }
 
-    private String getAttributionUrlSelection(String field, Uri baseUri) {
-        return String.format(
-                Locale.ENGLISH,
-                "(%1$s LIKE %2$s OR %1$s LIKE %3$s)",
-                field,
-                DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"),
-                DatabaseUtils.sqlEscapeString(
-                        baseUri.getScheme()
-                                + "://%."
-                                + baseUri.getEncodedAuthority()
-                                + baseUri.getPath()
-                                + "%"));
+    private String getAttributionUrlSelection(String field, Uri baseUri, boolean isSiteMatch) {
+        String selectionQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        "(%1$s LIKE %2$s)",
+                        field,
+                        DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"));
+
+        if (isSiteMatch) {
+            // site match needs to also match https://%.host.com
+            selectionQuery +=
+                    String.format(
+                            Locale.ENGLISH,
+                            "OR (%1$s LIKE %2$s)",
+                            field,
+                            DatabaseUtils.sqlEscapeString(
+                                    "%"
+                                            + baseUri.getScheme()
+                                            + "://%."
+                                            + baseUri.getEncodedAuthority()
+                                            + "%"));
+        }
+        return selectionQuery;
     }
 
     @Override
@@ -308,6 +367,90 @@ public class EnrollmentDao implements IEnrollmentDao {
                     enrolledAdTechIdentifiers.size());
 
             return enrolledAdTechIdentifiers;
+        }
+    }
+
+    @Override
+    @Nullable
+    public Pair<AdTechIdentifier, EnrollmentData>
+            getEnrollmentDataForFledgeByMatchingAdTechIdentifier(Uri originalUri) {
+        if (originalUri == null) {
+            return null;
+        }
+
+        String originalUriHost = originalUri.getHost();
+        if (originalUriHost == null || originalUriHost.isEmpty()) {
+            return null;
+        }
+
+        // Instead of searching through all enrollment rows, narrow the search by searching only
+        //  the rows with FLEDGE RBR URLs which may match the TLD
+        String[] subdomains = originalUriHost.split("\\.");
+        if (subdomains.length < 1) {
+            return null;
+        }
+
+        String topLevelDomain = subdomains[subdomains.length - 1];
+
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " LIKE '%"
+                                + topLevelDomain
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for URI \"%s\" with top level domain \"%s\"",
+                        originalUri, topLevelDomain);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching URI \"%s\" with top level domain \"%s\"",
+                    cursor.getCount(), originalUri, topLevelDomain);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                for (String rbrUriString :
+                        potentialMatch.getRemarketingResponseBasedRegistrationUrl()) {
+                    try {
+                        // Make sure the URI can be parsed and the parsed host matches the ad tech
+                        String rbrUriHost = Uri.parse(rbrUriString).getHost();
+                        if (originalUriHost.equalsIgnoreCase(rbrUriHost)
+                                || originalUriHost
+                                        .toLowerCase(Locale.ENGLISH)
+                                        .endsWith("." + rbrUriHost.toLowerCase(Locale.ENGLISH))) {
+                            LogUtil.v(
+                                    "Found positive match RBR URL \"%s\" for given URI \"%s\"",
+                                    rbrUriString, originalUri);
+
+                            // AdTechIdentifiers are currently expected to only contain eTLD+1
+                            return new Pair<>(
+                                    AdTechIdentifier.fromString(rbrUriHost), potentialMatch);
+                        }
+                    } catch (IllegalArgumentException exception) {
+                        LogUtil.v(
+                                "Error while matching URI %s to FLEDGE RBR URI %s; skipping URI. "
+                                        + "Error message: %s",
+                                originalUri, rbrUriString, exception.getMessage());
+                    }
+                }
+            }
+
+            return null;
         }
     }
 

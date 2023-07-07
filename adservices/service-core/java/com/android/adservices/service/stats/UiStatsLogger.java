@@ -18,27 +18,67 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__ACTION_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_CONFIRMATION_PAGE_DISMISSED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_DISMISSED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_GOT_IT_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_MORE_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_OPT_IN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SCROLLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SCROLLED_TO_BOTTOM;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_LANDING_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_REQUESTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_GOT_IT_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_MORE_INFO_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_SETTINGS_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_MORE_INFO_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_ADDITIONAL_INFO_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISMISSED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_GOT_IT_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_MORE_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_OPT_IN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED_TO_BOTTOM;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MEASUREMENT_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MEASUREMENT_OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_CONFIRMATION_PAGE_GOT_IT_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_CONFIRMATION_PAGE_SETTINGS_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__TOPICS_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__TOPICS_OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__STATE_UNSPECIFIED;
@@ -51,22 +91,240 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_IN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
 
 import android.content.Context;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 
 /** Logger for UiStats. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class UiStatsLogger {
-
     private static AdServicesLoggerImpl sLogger = AdServicesLoggerImpl.getInstance();
+
+    /** Logs that a notification was displayed. */
+    public static void logNotificationDisplayed(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_DISPLAYED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISPLAYED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the more button on the landing page was displayed. */
+    public static void logLandingPageMoreButtonClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_MORE_BUTTON_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_MORE_BUTTON_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the additional info dropdown on the landing page was displayed. */
+    public static void logLandingPageAdditionalInfoClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_ADDITIONAL_INFO_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user scrolled the landing page. */
+    public static void logLandingPageScrolled(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SCROLLED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user scrolled to the bottom of the landing page. */
+    public static void logLandingPageScrolledToBottom(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SCROLLED_TO_BOTTOM
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED_TO_BOTTOM);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user clicked the setting button on the landing page. */
+    public static void logLandingPageSettingsButtonClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_SETTINGS_BUTTON_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SETTINGS_BUTTON_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user dismissed the landing page. */
+    public static void logLandingPageDismissed(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_DISMISSED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISMISSED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user clicked the got it button on the landing page. */
+    public static void logLandingPageGotItButtonClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_GOT_IT_BUTTON_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_GOT_IT_BUTTON_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user opt-in from the landing page. */
+    public static void logLandingPageOptIn(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_OPT_IN
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_OPT_IN);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user opt-out from the landing page. */
+    public static void logLandingPageOptOut(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_OPT_OUT
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_OPT_OUT);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user clicked settings on the opt-in confirmation page. */
+    public static void logOptInConfirmationPageSettingsClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_SETTINGS_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_CONFIRMATION_PAGE_SETTINGS_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user clicked settings on the opt-out confirmation page. */
+    public static void logOptOutConfirmationPageSettingsClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user clicked got it on the opt-in confirmation page. */
+    public static void logOptInConfirmationPageGotItClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_GOT_IT_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_CONFIRMATION_PAGE_GOT_IT_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user clicked got it on the opt-out confirmation page. */
+    public static void logOptOutConfirmationPageGotItClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** GA only. Logs that the user clicked more info on the opt-in confirmation page. */
+    public static void logOptInConfirmationPageMoreInfoClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_IN_CONFIRMATION_PAGE_MORE_INFO_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** GA only. Logs that the user clicked more info on the opt-out confirmation page. */
+    public static void logOptOutConfirmationPageMoreInfoClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_OPT_OUT_CONFIRMATION_PAGE_MORE_INFO_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that the user dismissed the confirmation page. */
+    public static void logConfirmationPageDismissed(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_CONFIRMATION_PAGE_DISMISSED
+                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISMISSED);
+
+        sLogger.logUIStats(uiStats);
+    }
 
     /** Logs that a notification was requested. */
     public static void logRequestedNotification(@NonNull Context context) {
@@ -112,24 +370,6 @@ public class UiStatsLogger {
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
                         ? AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_NOTIFICATION_CONFIRMATION_PAGE_DISPLAYED
                         : AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISPLAYED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
-    /** Logs that a user has reset the measurement feature. */
-    public static void logResetMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
-    /** Logs that a user has opened the measurement page. */
-    public static void logManageMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
 
         sLogger.logUIStats(uiStats);
     }
@@ -182,6 +422,96 @@ public class UiStatsLogger {
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage topics button. */
+    public static void logManageTopicsSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage apps button. */
+    public static void logManageAppsSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset topics button. */
+    public static void logResetTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset apps button. */
+    public static void logResetAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked block topic button. */
+    public static void logBlockTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked unblock topic button. */
+    public static void logUnblockTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked block app button. */
+    public static void logBlockAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked unblock app button. */
+    public static void logUnblockAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage measurement button. */
+    public static void logManageMeasurementSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset measurement button. */
+    public static void logResetMeasurementSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
 
         sLogger.logUIStats(uiStats);
     }
@@ -278,12 +608,54 @@ public class UiStatsLogger {
         }
     }
 
+    private static int getUx(@NonNull Context context) {
+        return switch (UxStatesManager.getInstance(context).getUx()) {
+            case U18_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+            case GA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+            case BETA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+            default -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
+        };
+    }
+
+    private static int getEnrollmentChannel(@NonNull Context context) {
+        PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
+                UxStatesManager.getInstance(context).getEnrollmentChannel();
+        if (enrollmentChannel == GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
+                || enrollmentChannel
+                        == BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
+                || enrollmentChannel
+                        == U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel
+                        == GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
+                || enrollmentChannel
+                        == BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
+                || enrollmentChannel
+                        == U18UxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
+        } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                || enrollmentChannel == BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                || enrollmentChannel == U18UxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
+        } else if (enrollmentChannel
+                == GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
+        } else if (enrollmentChannel == U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
+        }
+        return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
+    }
+
     private static UIStats getBaseUiStats(@NonNull Context context) {
         return new UIStats.Builder()
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context))
-                .setAdIdState(getDefaultAdIdState(context))
+                .setDefaultAdIdState(getDefaultAdIdState(context))
+                .setUx(getUx(context))
+                .setEnrollmentChannel(getEnrollmentChannel(context))
                 .build();
     }
 
@@ -292,7 +664,9 @@ public class UiStatsLogger {
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context, apiType))
-                .setAdIdState(getDefaultAdIdState(context))
+                .setDefaultAdIdState(getDefaultAdIdState(context))
+                .setUx(getUx(context))
+                .setEnrollmentChannel(getEnrollmentChannel(context))
                 .build();
     }
 }

@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DBCustomAudienceFixture {
+    private static final String AD_URI_PREFIX = "http://www.domain.com/adverts/123/";
+    public static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS =
+            getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1).build();
 
     public static DBCustomAudience.Builder getValidBuilderByBuyer(AdTechIdentifier buyer) {
         return new DBCustomAudience.Builder()
@@ -42,6 +45,56 @@ public class DBCustomAudienceFixture {
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
+    }
+
+    public static DBCustomAudience.Builder getValidBuilderByBuyer(
+            AdTechIdentifier buyer, String name) {
+        return new DBCustomAudience.Builder()
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(buyer)
+                .setName(name)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
+    }
+
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithAdRenderId(
+            AdTechIdentifier buyer, String name) {
+        return new DBCustomAudience.Builder()
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(buyer)
+                .setName(name)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(buyer));
+    }
+
+    public static DBCustomAudience.Builder getValidBuilderByBuyerNoFilters(AdTechIdentifier buyer) {
+        return new DBCustomAudience.Builder()
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(buyer)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerNoFilters(buyer));
     }
 
     public static List<DBCustomAudience> getListOfBuyersCustomAudiences(

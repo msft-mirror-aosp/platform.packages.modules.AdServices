@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 
+import android.Manifest;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.content.ComponentName;
 import android.content.Context;
@@ -65,6 +66,13 @@ public class SdkSandboxServiceProviderImplUnitTest {
         mAmLocal = Mockito.spy(ActivityManagerLocal.class);
         ExtendedMockito.doReturn(mAmLocal)
                 .when(() -> LocalManagerRegistry.getManager(ActivityManagerLocal.class));
+
+        // Required for Context#registerReceiverForAllUsers and reading DeviceConfig.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.INTERACT_ACROSS_USERS_FULL,
+                        Manifest.permission.READ_DEVICE_CONFIG);
 
         mServiceProvider = new SdkSandboxServiceProviderImpl(mSpyContext);
         mCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
@@ -154,14 +162,24 @@ public class SdkSandboxServiceProviderImplUnitTest {
     public void testSandboxDiedWhileBound() throws Exception {
         bindService(mCallingInfo, mServiceConnection);
         mServiceProvider.onSandboxDeath(mCallingInfo);
-        // If the sandbox died while bound, it will restart and its status should be pending create.
-        assertEquals(
-                mServiceProvider.getSandboxStatusForApp(mCallingInfo),
-                SdkSandboxServiceProvider.CREATE_PENDING);
 
-        // Verify that binding cannot happen again.
-        bindService(mCallingInfo, mServiceConnection);
-        verifyBindServiceInvocation(1);
+        if (SdkLevel.isAtLeastU()) {
+            // If the sandbox died while bound, it will not restart in U+ and its status should be
+            // non-existent.
+            assertEquals(
+                    mServiceProvider.getSandboxStatusForApp(mCallingInfo),
+                    SdkSandboxServiceProvider.NON_EXISTENT);
+        } else {
+            // In T, the sandbox will restart if it died while bound, and its status should be
+            // pending create.
+            assertEquals(
+                    mServiceProvider.getSandboxStatusForApp(mCallingInfo),
+                    SdkSandboxServiceProvider.CREATE_PENDING);
+
+            // Verify that binding cannot happen again.
+            bindService(mCallingInfo, mServiceConnection);
+            verifyBindServiceInvocation(1);
+        }
     }
 
     @Test
@@ -209,6 +227,14 @@ public class SdkSandboxServiceProviderImplUnitTest {
         // Do nothing while binding the sandbox to prevent extra processes being created.
         if (SdkLevel.isAtLeastU()) {
             Mockito.lenient()
+                    .doReturn(new ComponentName("", ""))
+                    .when(mAmLocal)
+                    .startSdkSandboxService(
+                            Mockito.any(),
+                            Mockito.anyInt(),
+                            Mockito.anyString(),
+                            Mockito.anyString());
+            Mockito.lenient()
                     .doReturn(shouldBindSucceed)
                     .when(mAmLocal)
                     .bindSdkSandboxService(
@@ -218,7 +244,7 @@ public class SdkSandboxServiceProviderImplUnitTest {
                             Mockito.any(),
                             Mockito.anyString(),
                             Mockito.anyString(),
-                            Mockito.anyInt());
+                            Mockito.eq(0));
         } else {
             Mockito.lenient()
                     .doReturn(shouldBindSucceed)

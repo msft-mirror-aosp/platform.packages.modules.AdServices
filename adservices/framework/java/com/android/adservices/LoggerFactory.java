@@ -19,7 +19,6 @@ package com.android.adservices;
 import android.util.Log;
 
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Logger factory to create logger for logging to logcat with the various logcat tags.
@@ -32,23 +31,44 @@ public class LoggerFactory {
     public static final String TOPICS_TAG = "adservices.topics";
     public static final String FLEDGE_TAG = "adservices.fledge";
     public static final String MEASUREMENT_TAG = "adservices.measurement";
+    public static final String UI_TAG = "adservices.ui";
+    public static final String ADID_TAG = "adservices.adid";
+    public static final String APPSETID_TAG = "adservices.appsetid";
 
-    private static final ConcurrentHashMap<String, Logger> LOGGERS = new ConcurrentHashMap<>();
+    private static final Logger sLogger = new Logger(TAG);
+    private static final Logger sTopicsLogger = new Logger(TOPICS_TAG);
+    private static final Logger sFledgeLogger = new Logger(FLEDGE_TAG);
+    private static final Logger sMeasurementLogger = new Logger(MEASUREMENT_TAG);
+    private static final Logger sUILogger = new Logger(UI_TAG);
+    private static final Logger sAdIDLogger = new Logger(ADID_TAG);
+    private static final Logger sAppSetIDLogger = new Logger(APPSETID_TAG);
 
     public static Logger getLogger() {
-        return LOGGERS.computeIfAbsent(TAG, ignored -> new Logger(TAG));
+        return sLogger;
     }
 
     public static Logger getTopicsLogger() {
-        return LOGGERS.computeIfAbsent(TAG, ignored -> new Logger(TOPICS_TAG));
+        return sTopicsLogger;
     }
 
     public static Logger getFledgeLogger() {
-        return LOGGERS.computeIfAbsent(TAG, ignored -> new Logger(FLEDGE_TAG));
+        return sFledgeLogger;
     }
 
     public static Logger getMeasurementLogger() {
-        return LOGGERS.computeIfAbsent(TAG, ignored -> new Logger(MEASUREMENT_TAG));
+        return sMeasurementLogger;
+    }
+
+    public static Logger getUILogger() {
+        return sUILogger;
+    }
+
+    public static Logger getAdIDLogger() {
+        return sAdIDLogger;
+    }
+
+    public static Logger getAppSetIDLogger() {
+        return sAppSetIDLogger;
     }
 
     /**

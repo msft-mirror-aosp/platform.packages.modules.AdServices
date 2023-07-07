@@ -28,8 +28,8 @@ import org.json.JSONException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 /**
  * Class used to generate AggregateReport using AggregatableAttributionSource and
@@ -62,7 +62,7 @@ public class AggregatePayloadGenerator {
         AggregatableAttributionTrigger attributionTrigger = aggregateAttributionTrigger.get();
 
         FilterMap sourceFilterMap = attributionSource.getFilterMap();
-        Map<String, BigInteger> aggregateSourceMap =
+        TreeMap<String, BigInteger> aggregateSourceMap =
                 attributionSource.getAggregatableSource();
         for (AggregateTriggerData triggerData : attributionTrigger.getTriggerData()) {
             Optional<List<FilterMap>> filterSet = triggerData.getFilterSet();
@@ -104,7 +104,7 @@ public class AggregatePayloadGenerator {
         }
 
         List<AggregateHistogramContribution> contributions = new ArrayList<>();
-        for (String id : aggregateSourceMap.keySet()) {
+        for (String id : aggregateSourceMap.navigableKeySet()) {
             if (!attributionTrigger.getValues().containsKey(id)) {
                 continue;
             }

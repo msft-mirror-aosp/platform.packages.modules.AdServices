@@ -148,6 +148,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
 
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+        mAdoptableUtils.enableVirtualDisk();
         installPackage(APP_APK);
         installPackage(APP_2_APK);
 

@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_JOB_ID;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,6 +33,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -50,19 +51,23 @@ public final class DebugReportingJobService extends JobService {
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public boolean onStartJob(JobParameters params) {
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling DebugReportingJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
         boolean isDebugReportApi = params.getExtras().getBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API);
 
-        LogUtil.d("DebugReportingJobService.onStartJob: ");
+        LogUtil.d("DebugReportingJobService.onStartJob: isDebugReportApi " + isDebugReportApi);
         sBlockingExecutor.execute(
                 () -> {
                     sendReports(isDebugReportApi);
@@ -115,7 +120,7 @@ public final class DebugReportingJobService extends JobService {
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler, isDebugReportApi);
-            LogUtil.d("Scheduled DebugReportingJobService");
+            LogUtil.d("Scheduled DebugReportingJobService: isDebugReportApi " + isDebugReportApi);
         } else {
             LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
         }
@@ -143,10 +148,12 @@ public final class DebugReportingJobService extends JobService {
             new DebugReportingJobHandler(enrollmentDao, datastoreManager)
                     .performScheduledPendingReports();
         } else {
-            new EventReportingJobHandler(enrollmentDao, datastoreManager)
+            new EventReportingJobHandler(
+                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
                     .setIsDebugInstance(true)
                     .performScheduledPendingReportsInWindow(0, 0);
-            new AggregateReportingJobHandler(enrollmentDao, datastoreManager)
+            new AggregateReportingJobHandler(
+                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
                     .setIsDebugInstance(true)
                     .performScheduledPendingReportsInWindow(0, 0);
         }
@@ -154,9 +161,9 @@ public final class DebugReportingJobService extends JobService {
 
     private static int getJobId(boolean isDebugReportApi) {
         if (isDebugReportApi) {
-            return MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
+            return MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
         } else {
-            return MEASUREMENT_DEBUG_REPORT_JOB_ID;
+            return MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
         }
     }
 

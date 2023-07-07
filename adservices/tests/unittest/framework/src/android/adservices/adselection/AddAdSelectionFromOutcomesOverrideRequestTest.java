@@ -34,9 +34,9 @@ public class AddAdSelectionFromOutcomesOverrideRequestTest {
                 new AddAdSelectionFromOutcomesOverrideRequest(
                         AD_SELECTION_FROM_OUTCOMES_CONFIG, SELECTION_LOGIC_JS, SELECTION_SIGNALS);
 
-        assertThat(request.getSelectionLogicJs()).isEqualTo(SELECTION_LOGIC_JS);
-        assertThat(request.getAdSelectionConfig())
+        assertThat(request.getOutcomeSelectionLogicJs()).isEqualTo(SELECTION_LOGIC_JS);
+        assertThat(request.getAdSelectionFromOutcomesConfig())
                 .isEqualTo(AD_SELECTION_FROM_OUTCOMES_CONFIG);
-        assertThat(request.getSelectionSignals()).isEqualTo(SELECTION_SIGNALS);
+        assertThat(request.getOutcomeSelectionTrustedSignals()).isEqualTo(SELECTION_SIGNALS);
     }
 }

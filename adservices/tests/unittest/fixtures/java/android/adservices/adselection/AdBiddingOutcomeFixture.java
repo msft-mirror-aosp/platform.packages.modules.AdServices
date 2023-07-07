@@ -22,6 +22,7 @@ import android.net.Uri;
 import android.util.Pair;
 
 import com.android.adservices.service.adselection.AdBiddingOutcome;
+import com.android.adservices.service.adselection.BuyerContextualSignals;
 import com.android.adservices.service.adselection.CustomAudienceBiddingInfo;
 
 import java.util.List;
@@ -47,13 +48,44 @@ public class AdBiddingOutcomeFixture {
                 .setCustomAudienceBiddingInfo(
                         CustomAudienceBiddingInfo.builder()
                                 .setBiddingLogicUri(
-                                        CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URI)
+                                        CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(
+                                                buyer))
                                 .setBuyerDecisionLogicJs(
                                         CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
                                 .setCustomAudienceSignals(
                                         CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
                                                 .setBuyer(buyer)
                                                 .build())
+                                .build());
+    }
+
+    public static AdBiddingOutcome.Builder anAdBiddingOutcomeBuilderWithBuyerContextualSignals(
+            AdTechIdentifier buyer, Double bid, BuyerContextualSignals buyerContextualSignals) {
+
+        final AdData adData =
+                new AdData.Builder()
+                        .setRenderUri(
+                                new Uri.Builder()
+                                        .path("valid.example.com/testing/hello/" + buyer.toString())
+                                        .build())
+                        .setMetadata("{'example': 'metadata', 'valid': true}")
+                        .build();
+        final double testBid = bid;
+
+        return AdBiddingOutcome.builder()
+                .setAdWithBid(new AdWithBid(adData, testBid))
+                .setCustomAudienceBiddingInfo(
+                        CustomAudienceBiddingInfo.builder()
+                                .setBiddingLogicUri(
+                                        CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(
+                                                buyer))
+                                .setBuyerDecisionLogicJs(
+                                        CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
+                                .setCustomAudienceSignals(
+                                        CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                                                .setBuyer(buyer)
+                                                .build())
+                                .setBuyerContextualSignals(buyerContextualSignals)
                                 .build());
     }
 

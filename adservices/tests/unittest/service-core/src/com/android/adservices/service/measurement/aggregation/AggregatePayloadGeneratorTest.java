@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /** Unit tests for {@link AggregatePayloadGenerator} */
@@ -52,7 +53,7 @@ public final class AggregatePayloadGeneratorTest {
     public void testGenerateAttributionReport_twoContributions_filterSetMatches()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -121,7 +122,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -146,7 +147,7 @@ public final class AggregatePayloadGeneratorTest {
     public void testGenerateAttributionReport_twoContributions_filterSetDoesNotMatch()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -214,7 +215,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -238,7 +239,7 @@ public final class AggregatePayloadGeneratorTest {
     @Test
     public void testGenerateAttributionReport_twoContributions_success() throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -285,7 +286,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -307,10 +308,79 @@ public final class AggregatePayloadGeneratorTest {
     }
 
     @Test
+    public void testGenerateAttributionReport_ordersByAggregationKeyIds() throws JSONException {
+        // Build AggregatableAttributionSource.
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("conversion_subdomain",
+                Collections.singletonList("electronics.megastore"));
+        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
+        sourceFilterMap.put("ctid", Collections.singletonList("id"));
+        FilterMap sourceFilter =  new FilterMap.Builder()
+                .setAttributionFilterMap(sourceFilterMap).build();
+        AggregatableAttributionSource attributionSource =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .setFilterMap(sourceFilter).build();
+
+        // Build AggregatableAttributionTrigger.
+        List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        // Apply this key_piece to "campaignCounts".
+        Map<String, List<String>> triggerDataFilter1 = new HashMap<>();
+        triggerDataFilter1.put("product", Collections.singletonList("1234"));
+        triggerDataFilter1.put("ctid", Collections.singletonList("id"));
+        Map<String, List<String>> triggerDataNotFilter1 = new HashMap<>();
+        triggerDataNotFilter1.put("product", Collections.singletonList("100"));
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(1024L))
+                        .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
+                        .setFilterSet(List.of(new FilterMap.Builder()
+                                .setAttributionFilterMap(triggerDataFilter1).build()))
+                        .setNotFilterSet(List.of(new FilterMap.Builder()
+                                .setAttributionFilterMap(triggerDataNotFilter1).build())).build());
+        // Apply this key_piece to "geoValue".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(2688L))
+                        .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
+                        .build());
+
+        Map<String, Integer> values = new HashMap<>();
+        values.put("campaignCounts", 32768);
+        values.put("geoValue", 1664);
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValues(values).build();
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableAttributionSource(attributionSource)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
+                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+        assertTrue(aggregateHistogramContributions.isPresent());
+        List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
+
+        assertEquals(contributions.size(), 2);
+        assertEquals(BigInteger.valueOf(1369L), contributions.get(0).getKey());
+        assertEquals(32768, contributions.get(0).getValue());
+        assertEquals(BigInteger.valueOf(2693L), contributions.get(1).getKey());
+        assertEquals(1664, contributions.get(1).getValue());
+    }
+
+    @Test
     public void testGenerateAttributionReport_matchingKeyOnlyInTriggerValues()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
         aggregatableSource.put("thirdSource", BigInteger.valueOf(101L));
@@ -360,7 +430,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -387,7 +457,7 @@ public final class AggregatePayloadGeneratorTest {
     @Test
     public void testGenerateAttributionReportMoreTriggerDataSuccessfully() throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -450,7 +520,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -474,7 +544,7 @@ public final class AggregatePayloadGeneratorTest {
     @Test
     public void testGenerateAttributionReportWithHighBits() throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(4L).shiftLeft(63));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
         sourceFilterMap.put("conversion_subdomain",
@@ -508,7 +578,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -529,7 +599,7 @@ public final class AggregatePayloadGeneratorTest {
     @Test
     public void testGenerateAttributionReportBinaryOrsKeys() throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(2L)
                 .shiftLeft(63).add(BigInteger.valueOf(2L)));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -564,7 +634,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -585,7 +655,7 @@ public final class AggregatePayloadGeneratorTest {
     @Test
     public void generateAttributionReport_xnaBitMap_binaryOrsKeys() throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put(
                 "campaignCounts", BigInteger.valueOf(2L).shiftLeft(63).add(BigInteger.valueOf(2L)));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -630,7 +700,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -661,7 +731,7 @@ public final class AggregatePayloadGeneratorTest {
     public void generateAttributionReport_xnaBitMapPresentForSomeKeys_binaryOrsKeys()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put(
                 "campaignCounts", BigInteger.valueOf(2L).shiftLeft(63).add(BigInteger.valueOf(2L)));
         aggregatableSource.put(
@@ -720,7 +790,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -757,7 +827,7 @@ public final class AggregatePayloadGeneratorTest {
     public void generateAttributionReport_xnaBitMapWithoutBitmapping_doesNonXnaCalculation()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put(
                 "campaignCounts", BigInteger.valueOf(2L).shiftLeft(63).add(BigInteger.valueOf(2L)));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -802,7 +872,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -831,7 +901,7 @@ public final class AggregatePayloadGeneratorTest {
     public void generateAttributionReport_xnaBitMapWithoutAdtechNetwork_doesNonXnaCalculation()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put(
                 "campaignCounts", BigInteger.valueOf(2L).shiftLeft(63).add(BigInteger.valueOf(2L)));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -873,7 +943,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -904,7 +974,7 @@ public final class AggregatePayloadGeneratorTest {
     public void generateAttributionReport_xnaBitMapWithoutOffset_fallbackToZeroOffset()
             throws JSONException {
         // Build AggregatableAttributionSource.
-        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put(
                 "campaignCounts", BigInteger.valueOf(2L).shiftLeft(63).add(BigInteger.valueOf(2L)));
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -946,7 +1016,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())

@@ -16,12 +16,15 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -30,6 +33,9 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -40,6 +46,7 @@ import com.google.android.downloader.UrlEngine;
 import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownloadBuilder;
+import com.google.android.libraries.mobiledatadownload.TimeSource;
 import com.google.android.libraries.mobiledatadownload.downloader.FileDownloader;
 import com.google.android.libraries.mobiledatadownload.downloader.offroad.ExceptionHandler;
 import com.google.android.libraries.mobiledatadownload.downloader.offroad.Offroad2FileDownloader;
@@ -53,7 +60,6 @@ import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigF
 import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigOverrider;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -69,6 +75,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
     private static SynchronousFileStorage sSynchronousFileStorage;
@@ -94,7 +102,19 @@ public class MobileDataDownloadFactory {
                 SynchronousFileStorage fileStorage = getFileStorage(context);
                 FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
                 NetworkUsageMonitor networkUsageMonitor =
-                        new NetworkUsageMonitor(context, System::currentTimeMillis);
+                        new NetworkUsageMonitor(
+                                context,
+                            new TimeSource() {
+                                @Override
+                                public long currentTimeMillis() {
+                                    return System.currentTimeMillis();
+                                }
+
+                                @Override
+                                public long elapsedRealtimeNanos() {
+                                    return SystemClock.elapsedRealtimeNanos();
+                                }
+                            });
 
                 sSingletonMdd =
                         MobileDataDownloadBuilder.newBuilder()
@@ -237,7 +257,7 @@ public class MobileDataDownloadFactory {
                         long dataFileGroupBuildId = entry.getDataFileGroup().getBuildId();
                         long bundledModelBuildId =
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH);
+                                        context, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
                         if (dataFileGroupBuildId > bundledModelBuildId) {
                             groups.add(entry.getDataFileGroup());
                             LogUtil.d("Added topics classifier file group to MDD");
@@ -254,9 +274,15 @@ public class MobileDataDownloadFactory {
 
         return ManifestFileGroupPopulator.builder()
                 .setContext(context)
-                // topics resources should not be downloaded pre-consent
                 .setEnabledSupplier(
                         () -> {
+                            // Topics is permanently disabled for U18 UX.
+                            if (UxStatesManager.getInstance(context).getUx()
+                                    == PrivacySandboxUxCollection.U18_UX) {
+                                return false;
+                            }
+
+                            // Topics resources should not be downloaded pre-consent.
                             if (flags.getGaUxFeatureEnabled()) {
                                 return ConsentManager.getInstance(context)
                                         .getConsent(AdServicesApiType.TOPICS)

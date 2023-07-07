@@ -31,6 +31,9 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -42,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 /** Tests for {@link ConsentManager} */
 public class ConsentManagerTest {
@@ -268,7 +272,7 @@ public class ConsentManagerTest {
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // First, the notification displayed is false.
         assertThat(consentManager.wasNotificationDisplayed()).isFalse();
-        consentManager.recordNotificationDisplayed();
+        consentManager.recordNotificationDisplayed(true);
 
         assertThat(consentManager.wasNotificationDisplayed()).isTrue();
     }
@@ -279,31 +283,9 @@ public class ConsentManagerTest {
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // First, the notification displayed is false.
         assertThat(consentManager.wasGaUxNotificationDisplayed()).isFalse();
-        consentManager.recordGaUxNotificationDisplayed();
+        consentManager.recordGaUxNotificationDisplayed(true);
 
         assertThat(consentManager.wasGaUxNotificationDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testTopicsConsentPageDisplayed() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isFalse();
-        consentManager.recordTopicsConsentPageDisplayed();
-
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testFledgeAndMsmtConsentPageDisplayed() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the fledge consent page displayed is false.
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        consentManager.recordFledgeAndMsmtConsentPageDisplayed();
-
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
     }
 
     @Test
@@ -320,6 +302,118 @@ public class ConsentManagerTest {
         assertThat(consentManager.deleteUserDirectory(new File(userDirectoryPath))).isTrue();
 
         assertThat(Files.exists(packageDir)).isFalse();
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToTrue() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToFalse() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(-1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(-1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToUnknown() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(0);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
+    }
+
+    @Test
+    public void testSetCurrentPrivacySandboxFeature() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are false in the beginning.
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+    }
+
+    @Test
+    public void uxConformanceTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(consentManager.getUx())
+                .isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
+
+        Stream.of(PrivacySandboxUxCollection.values())
+                .forEach(
+                        ux -> {
+                            consentManager.setUx(ux.toString());
+                            assertThat(consentManager.getUx()).isEqualTo(ux.toString());
+                        });
     }
 
     @Test
@@ -340,5 +434,77 @@ public class ConsentManagerTest {
                                 new File(BASE_DIR + userIdentifierNotPresent)))
                 .isFalse();
         assertThat(Files.exists(packageDir)).isTrue();
+    }
+
+    @Test
+    public void isAdIdEnabledTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isAdIdEnabled()).isFalse();
+        consentManager.setAdIdEnabled(true);
+
+        assertThat(consentManager.isAdIdEnabled()).isTrue();
+    }
+
+    @Test
+    public void isU18AccountTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isU18Account()).isFalse();
+        consentManager.setU18Account(true);
+
+        assertThat(consentManager.isU18Account()).isTrue();
+    }
+
+    @Test
+    public void isEntryPointEnabledTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isEntryPointEnabled()).isFalse();
+        consentManager.setEntryPointEnabled(true);
+
+        assertThat(consentManager.isEntryPointEnabled()).isTrue();
+    }
+
+    @Test
+    public void isAdultAccountTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isAdultAccount()).isFalse();
+        consentManager.setAdultAccount(true);
+
+        assertThat(consentManager.isAdultAccount()).isTrue();
+    }
+
+    @Test
+    public void wasU18NotificationDisplayedTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.wasU18NotificationDisplayed()).isFalse();
+        consentManager.setU18NotificationDisplayed(true);
+
+        assertThat(consentManager.wasU18NotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void enrollmentChannelConformanceTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(consentManager.getEnrollmentChannel()).isEqualTo(null);
+
+        Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                .forEach(
+                        channel -> {
+                            consentManager.setEnrollmentChannel(channel.toString());
+                            assertThat(consentManager.getEnrollmentChannel())
+                                    .isEqualTo(channel.toString());
+                        });
     }
 }

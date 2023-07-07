@@ -19,6 +19,7 @@ package com.android.adservices.service.common.cache;
 import android.content.Context;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.BinderFlagReader;
 
 import java.net.URL;
 import java.util.List;
@@ -34,7 +35,8 @@ public class CacheProviderFactory {
      */
     public static HttpCache create(Context context, Flags flags) {
         CacheEntryDao cacheEntryDao = CacheDatabase.getInstance(context).getCacheEntryDao();
-        if (flags.getFledgeHttpCachingEnabled() && cacheEntryDao != null) {
+        if (BinderFlagReader.readFlag(flags::getFledgeHttpCachingEnabled)
+                && cacheEntryDao != null) {
             return new FledgeHttpCache(
                     cacheEntryDao,
                     flags.getFledgeHttpCacheMaxAgeSeconds(),
@@ -63,7 +65,11 @@ public class CacheProviderFactory {
 
         /** puts nothing into the cache */
         @Override
-        public void put(URL url, String body, Map<String, List<String>> requestPropertiesMap) {}
+        public void put(
+                URL url,
+                String body,
+                Map<String, List<String>> requestPropertiesMap,
+                Map<String, List<String>> responseHeaders) {}
 
         /** @return 0 */
         @Override

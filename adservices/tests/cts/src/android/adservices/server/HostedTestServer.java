@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.google.android.adservices.cts.server;
+package android.adservices.server;
 
 import android.net.Uri;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * A HostedTestServer instance is an interface to a dynamically configurable test server hosted
@@ -81,11 +82,13 @@ import com.google.common.collect.Multimap;
  * implementation detail and different versions could vary.
  */
 public class HostedTestServer implements AutoCloseable {
+    private static final String TAG = "HostedTestServer";
 
     private Uri mBaseUri;
     private String mSessionId;
     private String mSecret;
     private Multimap<MatchingHttpRequest, MockHttpResponse> mHttpMocks;
+    private HostedTestServerClient mClient;
     protected boolean mHasChangedSinceLastSync;
 
     /**
@@ -95,12 +98,13 @@ public class HostedTestServer implements AutoCloseable {
      *     the root path over a supported protocol.
      * @return current instance of {@link HostedTestServer}.
      */
-    public HostedTestServer atBaseUri(Uri baseUri) {
+    public static HostedTestServer atBaseUri(Uri baseUri) {
         HostedTestServer server = new HostedTestServer();
         Preconditions.checkNotNull(baseUri);
         if (isValidBaseUri(baseUri)) {
             server.mBaseUri = baseUri;
-        }
+            server.mHasChangedSinceLastSync = true;
+    }
         return server;
     }
 
@@ -114,7 +118,8 @@ public class HostedTestServer implements AutoCloseable {
     public HostedTestServer withSessionId(String sessionId) {
         if (isValidSessionId(sessionId)) {
             this.mSessionId = sessionId;
-        }
+            this.mHasChangedSinceLastSync = true;
+    }
         return this;
     }
 
@@ -128,7 +133,8 @@ public class HostedTestServer implements AutoCloseable {
     public HostedTestServer withSecret(String secret) {
         if (isValidSecret(secret)) {
             this.mSecret = secret;
-        }
+            this.mHasChangedSinceLastSync = true;
+    }
         return this;
     }
 
@@ -150,11 +156,30 @@ public class HostedTestServer implements AutoCloseable {
      *
      * @return current instance of {@link HostedTestServer}.
      */
-    public HostedTestServer syncToServer() {
-        if (!mHasChangedSinceLastSync) {
-            // TODO(cambr): Do not sync if state has not changed.
-            return this;
+    public HostedTestServer syncToServer() throws IOException {
+        if (mClient == null) {
+            mClient = new HostedTestServerClient(mBaseUri, mSessionId);
+    }
+
+        if (!isValid()) {
+            // throw new UnsupportedOperationException("HostedTestServer is not in a valid state.");
         }
+
+        if (mHasChangedSinceLastSync) {
+            try {
+                mClient.clearAllMocks();
+                for (Map.Entry<MatchingHttpRequest, MockHttpResponse> entry :
+                        mHttpMocks.entries()) {
+                    if (entry.getValue() == null) {
+                        continue;
+                    }
+                    mClient.setMock(entry.getKey(), entry.getValue());
+        }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+    }
+
         return this;
     }
 
@@ -170,7 +195,9 @@ public class HostedTestServer implements AutoCloseable {
         return isValidBaseUri(mBaseUri)
                 && isValidSessionId(mSessionId)
                 && isValidSecret(mSecret)
-                && hasValidMocks(mHttpMocks);
+                && hasValidMocks(mHttpMocks)
+                && mClient != null
+                && mClient.isValid();
     }
 
     @Override
@@ -182,20 +209,22 @@ public class HostedTestServer implements AutoCloseable {
     /** Get captured request and response pairs. */
     public ImmutableMultimap<CapturedHttpRequest, CapturedHttpResponse>
             getRequestAndResponseList() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("not yet implemented");
     }
 
     protected void addMock(MatchingHttpRequest request, MockHttpResponse response) {
         mHasChangedSinceLastSync = true;
         if (mHttpMocks == null) {
             mHttpMocks = ArrayListMultimap.create();
-        }
+    }
         mHttpMocks.put(request, response);
     }
 
     protected void clearMocks() {
         mHasChangedSinceLastSync = true;
-        mHttpMocks.clear();
+        if (mHttpMocks != null) {
+            mHttpMocks.clear();
+    }
     }
 
     private static boolean hasValidMocks(Multimap<MatchingHttpRequest, MockHttpResponse> mocks) {
@@ -244,6 +273,6 @@ public class HostedTestServer implements AutoCloseable {
             if (mRequest != null) {
                 HostedTestServer.this.addMock(mRequest, mResponse);
             }
-        }
+    }
     }
 }

@@ -107,8 +107,8 @@ public interface SdkSandboxManagerLocal {
      *
      * @param intentFilter the intentFilter to check.
      * @param flags flags that the ActivityManagerService.registerReceiver method was called with.
-     * @param onlyProtectedBroadcasts true if all actions in {@code intentFilter} are protected
-     *     broadcasts
+     * @param onlyProtectedBroadcasts true if all actions in {@link android.content.IntentFilter}
+     *     are protected broadcasts
      * @return true if sandbox is allowed to register a broadcastReceiver, otherwise false.
      */
     boolean canRegisterBroadcastReceiver(
@@ -160,11 +160,12 @@ public interface SdkSandboxManagerLocal {
      */
     boolean isInstrumentationRunning(@NonNull String clientAppPackageName, int clientAppUid);
 
+    // TODO(b/282239822): Remove this workaround on Android VIC
     /**
      * Register the AdServicesManager System Service
      *
      * @param iBinder The AdServicesManagerService Binder.
      * @hide
      */
-    void registerAdServicesManagerService(IBinder iBinder);
+    void registerAdServicesManagerService(IBinder iBinder, boolean published);
 }

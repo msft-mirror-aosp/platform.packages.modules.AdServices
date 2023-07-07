@@ -94,9 +94,12 @@ public class SingletonRunner<T> {
                                         },
                                         AdServicesExecutors.getLightWeightExecutor());
             }
-        }
 
-        return mRunningTaskResult;
+            // Returning the value of mRunningTaskResult from inside the critical region
+            // to avoid returning null if the runner completes so early that it is actually
+            // resetting the mRunningTaskResult in this instance.
+            return mRunningTaskResult;
+        }
     }
 
     private void signalWorkIsComplete() {

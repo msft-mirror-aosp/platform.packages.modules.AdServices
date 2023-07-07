@@ -16,7 +16,8 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.service.AdServicesConfig.MAINTENANCE_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -27,11 +28,16 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -42,7 +48,10 @@ import java.util.List;
 import java.util.Objects;
 
 /** Maintenance job to clean up. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class MaintenanceJobService extends JobService {
+    private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();
 
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
 
@@ -55,18 +64,32 @@ public final class MaintenanceJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        LogUtil.d("MaintenanceJobService.onStartJob");
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling MaintenanceJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+        }
 
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()
-                && FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+
+        LogUtil.d("MaintenanceJobService.onStartJob");
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(MAINTENANCE_JOB_ID);
+
+        if (flags.getTopicsKillSwitch() && flags.getFledgeSelectAdsKillSwitch()) {
             LogUtil.e(
                     "Both Topics and Select Ads are disabled, skipping and cancelling"
                             + " MaintenanceJobService");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         ListenableFuture<Void> appReconciliationFuture;
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+        if (flags.getTopicsKillSwitch()) {
             LogUtil.d("Topics API is disabled, skipping Topics Job");
             appReconciliationFuture = Futures.immediateFuture(null);
         } else {
@@ -77,8 +100,8 @@ public final class MaintenanceJobService extends JobService {
         }
 
         ListenableFuture<Void> fledgeMaintenanceTasksFuture;
-        if (FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
-            LogUtil.d("SelectAds API is disabled, skipping SelectAds Job");
+        if (flags.getFledgeSelectAdsKillSwitch()) {
+            LogUtil.d("Ad Selection API is disabled, skipping Ad Selection Maintenance Job");
             fledgeMaintenanceTasksFuture = Futures.immediateFuture(null);
         } else {
             fledgeMaintenanceTasksFuture =
@@ -95,15 +118,25 @@ public final class MaintenanceJobService extends JobService {
                 new FutureCallback<List<Void>>() {
                     @Override
                     public void onSuccess(List<Void> result) {
+                        boolean shouldRetry = false;
+                        AdservicesJobServiceLogger.getInstance(MaintenanceJobService.this)
+                                .recordJobFinished(
+                                        MAINTENANCE_JOB_ID, /* isSuccessful= */ true, shouldRetry);
+
                         LogUtil.d("PP API jobs are done!");
-                        jobFinished(params, /* wantsReschedule = */ false);
+                        jobFinished(params, shouldRetry);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
+                        boolean shouldRetry = false;
+                        AdservicesJobServiceLogger.getInstance(MaintenanceJobService.this)
+                                .recordJobFinished(
+                                        MAINTENANCE_JOB_ID, /* isSuccessful= */ false, shouldRetry);
+
                         LogUtil.e(
                                 t, "Failed to handle MaintenanceJobService: " + params.getJobId());
-                        jobFinished(params, /* wantsReschedule = */ false);
+                        jobFinished(params, shouldRetry);
                     }
                 },
                 directExecutor());
@@ -113,7 +146,14 @@ public final class MaintenanceJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("MaintenanceJobService.onStopJob");
-        return false;
+
+        // Tell JobScheduler not to reschedule the job because it's unknown at this stage if the
+        // execution is completed or not to avoid executing the task twice.
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MAINTENANCE_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     @VisibleForTesting
@@ -144,8 +184,9 @@ public final class MaintenanceJobService extends JobService {
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getTopicsKillSwitch()
-                && FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
+        Flags flags = FlagsFactory.getFlags();
+
+        if (flags.getTopicsKillSwitch() && flags.getFledgeSelectAdsKillSwitch()) {
             LogUtil.e(
                     "Both Topics and Select Ads are disabled, skipping scheduling"
                             + " MaintenanceJobService");
@@ -158,8 +199,8 @@ public final class MaintenanceJobService extends JobService {
             return false;
         }
 
-        long flagsMaintenanceJobPeriodMs = FlagsFactory.getFlags().getMaintenanceJobPeriodMs();
-        long flagsMaintenanceJobFlexMs = FlagsFactory.getFlags().getMaintenanceJobFlexMs();
+        long flagsMaintenanceJobPeriodMs = flags.getMaintenanceJobPeriodMs();
+        long flagsMaintenanceJobFlexMs = flags.getMaintenanceJobFlexMs();
 
         JobInfo job = jobScheduler.getPendingJob(MAINTENANCE_JOB_ID);
         // Skip to reschedule the job if there is same scheduled job with same parameters.
@@ -169,7 +210,7 @@ public final class MaintenanceJobService extends JobService {
 
             if (flagsMaintenanceJobPeriodMs == maintenanceJobPeriodMs
                     && flagsMaintenanceJobFlexMs == maintenanceJobFlexMs) {
-                LogUtil.i(
+                LogUtil.d(
                         "Maintenance Job Service has been scheduled with same parameters, skip"
                                 + " rescheduling!");
                 return false;
@@ -180,8 +221,17 @@ public final class MaintenanceJobService extends JobService {
         return true;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
-        this.getSystemService(JobScheduler.class).cancel(MAINTENANCE_JOB_ID);
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(MAINTENANCE_JOB_ID);
+        }
+
+        if (doRecord) {
+            AdservicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(MAINTENANCE_JOB_ID, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.
@@ -202,5 +252,7 @@ public final class MaintenanceJobService extends JobService {
     private void doAdSelectionDataMaintenanceTasks() {
         LogUtil.v("Performing Ad Selection maintenance tasks");
         getFledgeMaintenanceTasksWorker().clearExpiredAdSelectionData();
+        getFledgeMaintenanceTasksWorker()
+                .clearInvalidFrequencyCapHistogramData(this.getPackageManager());
     }
 }

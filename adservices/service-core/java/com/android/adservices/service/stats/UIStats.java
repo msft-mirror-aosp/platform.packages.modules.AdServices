@@ -26,7 +26,9 @@ public class UIStats {
     private int mRegion;
     private int mAction;
     private int mDefaultConsent;
-    private int mAdIdState;
+    private int mDefaultAdIdState;
+    private int mUx;
+    private int mEnrollmentChannel;
 
     public UIStats() {}
 
@@ -40,12 +42,21 @@ public class UIStats {
                 && mRegion == uiStats.getRegion()
                 && mAction == uiStats.getAction()
                 && mDefaultConsent == uiStats.getDefaultConsent()
-                && mAdIdState == uiStats.getAdIdState();
+                && mDefaultAdIdState == uiStats.getDefaultAdIdState()
+                && mUx == uiStats.getUx()
+                && mEnrollmentChannel == uiStats.getEnrollmentChannel();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mRegion, mAction);
+        return Objects.hash(
+                mCode,
+                mRegion,
+                mAction,
+                mDefaultConsent,
+                mDefaultAdIdState,
+                mUx,
+                mEnrollmentChannel);
     }
 
     @NonNull
@@ -69,8 +80,18 @@ public class UIStats {
     }
 
     @NonNull
-    public int getAdIdState() {
-        return mAdIdState;
+    public int getDefaultAdIdState() {
+        return mDefaultAdIdState;
+    }
+
+    @NonNull
+    public int getUx() {
+        return mUx;
+    }
+
+    @NonNull
+    public int getEnrollmentChannel() {
+        return mEnrollmentChannel;
     }
 
     public void setRegion(int region) {
@@ -85,8 +106,16 @@ public class UIStats {
         mDefaultConsent = defaultConsent;
     }
 
-    public void setAdIdState(int adIdState) {
-        mAdIdState = adIdState;
+    public void setDefaultAdIdState(int defaultAdIdState) {
+        mDefaultAdIdState = defaultAdIdState;
+    }
+
+    public void setUx(int ux) {
+        mUx = ux;
+    }
+
+    public int setEnrollmentChannel() {
+        return mEnrollmentChannel;
     }
 
     @Override
@@ -100,8 +129,12 @@ public class UIStats {
                 + mAction
                 + ", mDefaultConsent="
                 + mDefaultConsent
-                + ", mAdIdState="
-                + mAdIdState
+                + ", mDefaultAdIdState="
+                + mDefaultAdIdState
+                + ", mUx="
+                + mUx
+                + mEnrollmentChannel
+                + ", mEnrollmentChannel="
                 + '}';
     }
 
@@ -113,31 +146,45 @@ public class UIStats {
             mBuilding = new UIStats();
         }
 
-        /** See {@link UIStats#getCode()} . */
+        /** See {@link UIStats#getCode()}. */
         public @NonNull UIStats.Builder setCode(int code) {
             mBuilding.mCode = code;
             return this;
         }
 
-        /** See {@link UIStats#getRegion()} . */
+        /** See {@link UIStats#getRegion()}. */
         public @NonNull UIStats.Builder setRegion(int region) {
             mBuilding.mRegion = region;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getAction()}. */
         public @NonNull UIStats.Builder setAction(int action) {
             mBuilding.mAction = action;
             return this;
         }
-        /** See {@link UIStats#getAction()} . */
+
+        /** See {@link UIStats#getDefaultConsent()}. */
         public @NonNull UIStats.Builder setDefaultConsent(int defaultConsent) {
             mBuilding.mDefaultConsent = defaultConsent;
             return this;
         }
-        /** See {@link UIStats#getAction()} . */
-        public @NonNull UIStats.Builder setAdIdState(int adIdState) {
-            mBuilding.mAdIdState = adIdState;
+
+        /** See {@link UIStats#getDefaultAdIdState()}. */
+        public @NonNull UIStats.Builder setDefaultAdIdState(int defaultAdIdState) {
+            mBuilding.mDefaultAdIdState = defaultAdIdState;
+            return this;
+        }
+
+        /** See {@link UIStats#getUx()}. */
+        public @NonNull UIStats.Builder setUx(int ux) {
+            mBuilding.mUx = ux;
+            return this;
+        }
+
+        /** See {@link UIStats#getEnrollmentChannel()}. */
+        public @NonNull UIStats.Builder setEnrollmentChannel(int enrollmentChannel) {
+            mBuilding.mEnrollmentChannel = enrollmentChannel;
             return this;
         }
 

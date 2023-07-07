@@ -69,6 +69,13 @@ public interface SdkSandboxServiceProvider {
     void unbindService(CallingInfo callingInfo);
 
     /**
+     * Kills the sandbox for the given app.
+     *
+     * @param callingInfo app for which the sandbox kill is being requested.
+     */
+    void stopSandboxService(CallingInfo callingInfo);
+
+    /**
      * Return {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise {@code
      * null}.
      */
@@ -103,6 +110,13 @@ public interface SdkSandboxServiceProvider {
      * @param callingInfo represents the app for which the sandbox service has died.
      */
     void onSandboxDeath(CallingInfo callingInfo);
+
+    /**
+     * Returns true if the sandbox is currently bound for the given app.
+     *
+     * @param callingInfo app for which the sandbox bound status is being requested.
+     */
+    boolean isSandboxBoundForApp(CallingInfo callingInfo);
 
     /**
      * Returns the status of the sandbox for the given app.

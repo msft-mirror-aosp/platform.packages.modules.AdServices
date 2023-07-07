@@ -38,6 +38,7 @@ android_test {
         "androidx.test.ext.junit",
         "truth-prebuilt",
         "modules-utils-build",
+        "SdkSandboxTestUtils",
     ],
     test_suites: [
         "cts",

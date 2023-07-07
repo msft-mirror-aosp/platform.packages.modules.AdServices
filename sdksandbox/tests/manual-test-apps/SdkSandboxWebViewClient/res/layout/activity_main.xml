@@ -31,14 +31,16 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/load_sdk" />
+            android:text="@string/load_sdk"
+            android:textAllCaps="false"/>
 
         <Button
             android:id="@+id/request_surface_button"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/request_surface_package" />
+            android:text="@string/request_surface_package"
+            android:textAllCaps="false"/>
 
         <LinearLayout
             android:id="@+id/url_input_field"
@@ -61,7 +63,8 @@
                 android:layout_width="wrap_content"
                 android:layout_alignParentRight="true"
                 style="?android:attr/buttonBarButtonStyle"
-                android:text="@string/submit_url" />
+                android:text="@string/submit_url"
+                android:textAllCaps="false" />
 
         </LinearLayout>
 

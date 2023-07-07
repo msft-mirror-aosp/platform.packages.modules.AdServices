@@ -16,15 +16,20 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdTechIdentifier;
+import android.annotation.Nullable;
+import android.net.Uri;
+
+import com.android.adservices.data.adselection.CustomAudienceSignals;
+
 import com.google.auto.value.AutoValue;
 
 /**
- * Represents outcome of the scoring, with Ads their score and their Custom Audience information
- * selection process.
+ * Represents outcome of the scoring, with Ads their score and their Custom Audience information or
+ * Contextual Information gathered during the selection process.
  *
- * The ads and their scores are used to decide the winner for Ad Selection. The Custom audience
- * information is used on reporting
- *
+ * <p>The ads and their scores are used to decide the winner for Ad Selection. The Custom audience
+ * information and contextual information is used during reporting
  */
 @AutoValue
 public abstract class AdScoringOutcome {
@@ -33,23 +38,67 @@ public abstract class AdScoringOutcome {
      */
     public abstract AdWithScore getAdWithScore();
 
+    /** @return signals associated with Custom Audience */
+    @Nullable
+    public abstract CustomAudienceSignals getCustomAudienceSignals();
+
     /**
-     * @return CA bidding info chained from bidding and used for reporting
+     * @return data for event-level debug reporting.
      */
-    public abstract CustomAudienceBiddingInfo getCustomAudienceBiddingInfo();
+    @Nullable
+    public abstract DebugReport getDebugReport();
+
+    /** @return uri that corresponds to the logic for Ad bidding, reporting */
+    public abstract Uri getBiddingLogicUri();
+
+    /** @return the downloaded decision logic JS */
+    @Nullable
+    public abstract String getBiddingLogicJs();
+
+    /**
+     * @return boolean if decision logic has been downloaded or not. Helps optimize network calls by
+     *     downloading the logic only when needed
+     */
+    public abstract boolean isBiddingLogicJsDownloaded();
+
+    /** @return buyer associated with the ad */
+    public abstract AdTechIdentifier getBuyer();
+
+    /**
+     * @return Buyer contextual signals that are used for reporting
+     */
+    @Nullable
+    public abstract BuyerContextualSignals getBuyerContextualSignals();
 
     /**
      * @return generic builder
      */
     static Builder builder() {
-        return new AutoValue_AdScoringOutcome.Builder();
+        return new AutoValue_AdScoringOutcome.Builder()
+                .setCustomAudienceSignals(null)
+                .setBiddingLogicJs("")
+                .setBiddingLogicJsDownloaded(false)
+                .setBuyerContextualSignals(null);
     }
 
     @AutoValue.Builder
     abstract static class Builder {
         abstract Builder setAdWithScore(AdWithScore adWithScore);
-        abstract Builder setCustomAudienceBiddingInfo(
-                CustomAudienceBiddingInfo customAudienceBiddingInfo);
+
+        abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
+
+        abstract Builder setDebugReport(DebugReport debugReport);
+
+        abstract Builder setBiddingLogicUri(Uri decisionLogicUri);
+
+        abstract Builder setBiddingLogicJs(String decisionLogicJs);
+
+        abstract Builder setBiddingLogicJsDownloaded(boolean decisionLogicJsDownloaded);
+
+        abstract Builder setBuyer(AdTechIdentifier buyer);
+
+        abstract Builder setBuyerContextualSignals(BuyerContextualSignals buyerContextualSignals);
+
         abstract AdScoringOutcome build();
     }
 }

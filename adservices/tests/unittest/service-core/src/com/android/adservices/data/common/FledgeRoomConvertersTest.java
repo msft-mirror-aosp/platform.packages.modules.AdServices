@@ -16,19 +16,26 @@
 
 package com.android.adservices.data.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
+import com.google.common.collect.ImmutableSet;
+
+import org.json.JSONArray;
 import org.junit.Test;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 public class FledgeRoomConvertersTest {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
@@ -90,5 +97,69 @@ public class FledgeRoomConvertersTest {
                 FledgeRoomConverters.deserializeAdSelectionSignals(serializedIdentifier);
 
         assertEquals(adSelectionSignals, deserializedIdentifier);
+    }
+
+    @Test
+    public void testSerializeNullStringSet() {
+        assertThat(FledgeRoomConverters.serializeStringSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeNullStringSet() {
+        assertThat(FledgeRoomConverters.deserializeStringSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeMangledStringSet() {
+        assertThat(FledgeRoomConverters.deserializeStringSet("This is not a JSON string")).isNull();
+    }
+
+    @Test
+    public void testSerializeDeserializeStringSet() {
+        final ImmutableSet<String> originalSet = ImmutableSet.of("one", "two", "three");
+
+        String serializedStringSet = FledgeRoomConverters.serializeStringSet(originalSet);
+        Set<String> deserializeStringSet =
+                FledgeRoomConverters.deserializeStringSet(serializedStringSet);
+
+        assertThat(deserializeStringSet).containsExactlyElementsIn(originalSet);
+    }
+
+    @Test
+    public void testSerializeNullIntegerSet() {
+        assertThat(FledgeRoomConverters.serializeIntegerSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeNullIntegerSet() {
+        assertThat(FledgeRoomConverters.deserializeIntegerSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeMangledIntegerSet() {
+        assertThat(FledgeRoomConverters.deserializeIntegerSet("This is not a JSON string"))
+                .isNull();
+    }
+
+    @Test
+    public void testSerializeDeserializeIntegerSet() {
+        final String serializedIntegerSet =
+                FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
+        final Set<Integer> deserializeIntegerSet =
+                FledgeRoomConverters.deserializeIntegerSet(serializedIntegerSet);
+
+        assertThat(deserializeIntegerSet)
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
+    }
+
+    @Test
+    public void testSerializeDeserializeIntegerSet_invalidIntegerSkipped() {
+        final String serializedIntegerSet =
+                new JSONArray(AdDataFixture.getAdCounterKeys()).put("invalid").toString();
+        final Set<Integer> deserializeIntegerSet =
+                FledgeRoomConverters.deserializeIntegerSet(serializedIntegerSet);
+
+        assertThat(deserializeIntegerSet)
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 }

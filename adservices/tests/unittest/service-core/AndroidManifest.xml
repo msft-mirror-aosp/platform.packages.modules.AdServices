@@ -24,7 +24,6 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_APP_INSTALL" />
 
     <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
@@ -52,6 +51,11 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <!-- FLEDGE Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
         <!-- Topics Epoch/Maintenance Service Job. Must be defined here in order to schedule them in
         job scheduler. -->
         <service android:name=
@@ -71,6 +75,7 @@
             "com.android.adservices.download.MddJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <uses-library android:name="android.ext.adservices" android:required="false" />
     </application>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"

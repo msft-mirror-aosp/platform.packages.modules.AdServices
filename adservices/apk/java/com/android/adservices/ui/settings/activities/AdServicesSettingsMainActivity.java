@@ -15,14 +15,17 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.settings.activitydelegates.MainActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
@@ -30,6 +33,8 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     public static final String FROM_NOTIFICATION_KEY = "FROM_NOTIFICATION";
     private MainActionDelegate mActionDelegate;
@@ -55,20 +60,53 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         // create the ResourcesLoader.
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            // apply to activity context as well since activity context has been created already.
+            OTAResourcesManager.applyOTAResources(this, false);
         }
-        super.onCreate(savedInstanceState);
         UiStatsLogger.logSettingsPageDisplayed(getApplication());
+        super.onCreate(savedInstanceState);
+        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+            initMainFragment();
+        }
+    }
+
+    private void initMainFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container_view, AdServicesSettingsMainFragment.class, null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new MainActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (FlagsFactory.getFlags().getU18UxEnabled()) {
+            initWithUx(this, getApplicationContext());
+        }
+    }
+
+    @Override
+    public void initBeta() {
+        initMainActivity(R.layout.main_activity);
+    }
+
+    @Override
+    public void initGA() {
+        initMainActivity(R.layout.main_activity);
+    }
+
+    @Override
+    public void initU18() {
+        initMainActivity(R.layout.main_u18_activity);
+    }
+
+    private void initMainActivity(int layoutResID) {
+        setContentView(layoutResID);
+        // no need to store since not using
+        new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }

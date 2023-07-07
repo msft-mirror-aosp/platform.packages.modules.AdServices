@@ -76,7 +76,7 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
                 new AggregateEncryptionKeyManager(datastoreManager, mFetcher, mClock,
                         MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);

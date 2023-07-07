@@ -32,7 +32,8 @@ import android.net.Uri;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -99,12 +100,20 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, ALL_KEYS))))
                 .thenReturn(
                         Futures.immediateFuture(
-                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1)).toString()));
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1))
+                                                        .toString())
+                                        .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2))))
                 .thenReturn(
                         Futures.immediateFuture(
-                                new JSONObject(ImmutableMap.of(KEY_2, VALUE_2)).toString()));
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                new JSONObject(ImmutableMap.of(KEY_2, VALUE_2))
+                                                        .toString())
+                                        .build()));
         Map<Uri, JSONObject> result =
                 mTrustedBiddingDataFetcher
                         .getTrustedBiddingDataForBuyer(
@@ -141,7 +150,11 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1))))
                 .thenReturn(
                         Futures.immediateFuture(
-                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1)).toString()));
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1))
+                                                        .toString())
+                                        .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2))))
                 .thenReturn(Futures.immediateFailedFuture(new Exception()));
@@ -178,10 +191,18 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1))))
                 .thenReturn(
                         Futures.immediateFuture(
-                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1)).toString()));
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1))
+                                                        .toString())
+                                        .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2))))
-                .thenReturn(Futures.immediateFuture("not A VALID JSON{{}"));
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody("not A VALID JSON{{}")
+                                        .build()));
 
         Map<Uri, JSONObject> result =
                 mTrustedBiddingDataFetcher
@@ -218,8 +239,18 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2))))
                 .thenReturn(
                         Futures.immediateFuture(
-                                new JSONObject(ImmutableMap.of(KEY_2, VALUE_2)).toString()));
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                new JSONObject(ImmutableMap.of(KEY_2, VALUE_2))
+                                                        .toString())
+                                        .build()));
 
+        AdServicesHttpClientResponse temp =
+                AdServicesHttpClientResponse.builder()
+                        .setResponseBody(new JSONObject(ImmutableMap.of(KEY_2, VALUE_2)).toString())
+                        .build();
+
+        assertEquals(temp.getResponseHeaders(), ImmutableMap.of());
         Map<Uri, JSONObject> result =
                 mTrustedBiddingDataFetcher
                         .getTrustedBiddingDataForBuyer(

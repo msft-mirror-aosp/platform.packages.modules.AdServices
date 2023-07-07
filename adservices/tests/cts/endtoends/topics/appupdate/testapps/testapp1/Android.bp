@@ -23,12 +23,20 @@ android_app {
     srcs: [
        "java/**/*.java",
     ],
+    libs: [
+        "android.ext.adservices",
+    ],
+    optional_uses_libs: ["android.ext.adservices"],
+    // TODO(b/269145496): Remove dex_preopt: false.
+    dex_preopt: {
+        enabled: false,
+    },
     static_libs: [
         "adservices-clients",
         "androidx.concurrent_concurrent-futures",
     ],
     resource_dirs: ["res"],
     platform_apis: true,
-    min_sdk_version: "33",
+    min_sdk_version: "31",
     target_sdk_version: "33",
 }

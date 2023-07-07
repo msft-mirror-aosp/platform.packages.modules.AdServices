@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 
 import android.annotation.NonNull;
 import android.content.BroadcastReceiver;
@@ -25,16 +29,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.WipeoutStatus;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -43,6 +56,8 @@ import java.util.concurrent.Executor;
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
  * service when package install/uninstalls occur.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class PackageChangedReceiver extends BroadcastReceiver {
 
     /**
@@ -66,47 +81,108 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     private static final int DEFAULT_PACKAGE_UID = -1;
+    private static boolean sFilteringEnabled;
+
+    private static final Object LOCK = new Object();
 
     /** Enable the PackageChangedReceiver */
-    public static boolean enableReceiver(@NonNull Context context) {
-        try {
-            context.getPackageManager()
-                    .setComponentEnabledSetting(
-                            new ComponentName(context, PackageChangedReceiver.class),
-                            COMPONENT_ENABLED_STATE_ENABLED,
-                            PackageManager.DONT_KILL_APP);
-        } catch (IllegalArgumentException e) {
-            LogUtil.e("enableService failed for %s", context.getPackageName());
-            return false;
-        }
-        return true;
+    public static boolean enableReceiver(@NonNull Context context, @NonNull Flags flags) {
+        return changeReceiverState(context, flags, COMPONENT_ENABLED_STATE_ENABLED);
     }
 
+    /** Disable the PackageChangedReceiver */
+    public static boolean disableReceiver(@NonNull Context context, @NonNull Flags flags) {
+        return changeReceiverState(context, flags, COMPONENT_ENABLED_STATE_DISABLED);
+    }
+
+    private static boolean changeReceiverState(
+            @NonNull Context context, @NonNull Flags flags, int state) {
+        synchronized (LOCK) {
+            sFilteringEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
+            try {
+                context.getPackageManager()
+                        .setComponentEnabledSetting(
+                                new ComponentName(context, PackageChangedReceiver.class),
+                                state,
+                                PackageManager.DONT_KILL_APP);
+            } catch (IllegalArgumentException e) {
+                LogUtil.e("enableService failed for %s", context.getPackageName());
+                return false;
+            }
+            return true;
+        }
+    }
+
+    /**
+     * This receiver will be used for both T+ and S-. For T+, the AdServices System Service will
+     * listen to the system broadcasts and rebroadcast to this receiver. For S-, since we don't have
+     * AdServices in System Service, we have to listen to system broadcasts directly. Note: This is
+     * best effort since AdServices process is not a persistent process, so any processing that
+     * happens here should be verified in a background job. TODO(b/263904417): Register for
+     * PACKAGE_ADDED receiver for S-.
+     */
     @Override
     public void onReceive(Context context, Intent intent) {
         LogUtil.d("PackageChangedReceiver received a broadcast: " + intent.getAction());
-        switch (intent.getAction()) {
-            case PACKAGE_CHANGED_BROADCAST:
-                Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
-                int packageUid = intent.getIntExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
-                switch (intent.getStringExtra(ACTION_KEY)) {
-                    case PACKAGE_FULLY_REMOVED:
-                        measurementOnPackageFullyRemoved(context, packageUri);
-                        topicsOnPackageFullyRemoved(context, packageUri);
-                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
-                        consentOnPackageFullyRemoved(context, packageUri, packageUid);
-                        break;
-                    case PACKAGE_ADDED:
-                        measurementOnPackageAdded(context, packageUri);
-                        topicsOnPackageAdded(context, packageUri);
-                        break;
-                    case PACKAGE_DATA_CLEARED:
-                        measurementOnPackageDataCleared(context, packageUri);
-                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
-                        break;
-                }
-                break;
+
+        // On T+, this should never be executed from ext services module
+        String packageName = context.getPackageName();
+        if (SdkLevel.isAtLeastT()
+                && packageName != null
+                && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.d(
+                    "Aborting attempt to receive in PackageChangedReceiver on T+ for"
+                            + " ExtServices");
+            return;
         }
+        synchronized (LOCK) {
+            Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
+            int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+            switch (intent.getAction()) {
+                    // The broadcast is received from the system. On S- devices, we do this because
+                    // there is no service running in the system server.
+                case Intent.ACTION_PACKAGE_FULLY_REMOVED:
+                    handlePackageFullyRemoved(context, packageUri, packageUid);
+                    break;
+                case Intent.ACTION_PACKAGE_DATA_CLEARED:
+                    handlePackageDataCleared(context, packageUri);
+                    break;
+                    // The broadcast is received from the system service. On T+ devices, we do this
+                    // so
+                    // that the PP API process is not woken up if the flag is disabled.
+                case PACKAGE_CHANGED_BROADCAST:
+                    switch (intent.getStringExtra(ACTION_KEY)) {
+                        case PACKAGE_FULLY_REMOVED:
+                            handlePackageFullyRemoved(context, packageUri, packageUid);
+                            break;
+                        case PACKAGE_ADDED:
+                            handlePackageAdded(context, packageUri);
+                            break;
+                        case PACKAGE_DATA_CLEARED:
+                            handlePackageDataCleared(context, packageUri);
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void handlePackageFullyRemoved(Context context, Uri packageUri, int packageUid) {
+        measurementOnPackageFullyRemoved(context, packageUri);
+        topicsOnPackageFullyRemoved(context, packageUri);
+        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
+        consentOnPackageFullyRemoved(context, packageUri, packageUid);
+    }
+
+    private void handlePackageAdded(Context context, Uri packageUri) {
+        measurementOnPackageAdded(context, packageUri);
+        topicsOnPackageAdded(context, packageUri);
+    }
+
+    private void handlePackageDataCleared(Context context, Uri packageUri) {
+        measurementOnPackageDataCleared(context, packageUri);
+        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
     }
 
     @VisibleForTesting
@@ -119,6 +195,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+
+        // Log wipeout event triggered by request to uninstall package on device
+        WipeoutStatus wipeoutStatus = new WipeoutStatus();
+        wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNINSTALL);
+        logWipeoutStats(wipeoutStatus);
     }
 
     @VisibleForTesting
@@ -133,6 +214,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () -> {
                     MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
                 });
+
+        // Log wipeout event triggered by request (from Android) to delete data of package on device
+        WipeoutStatus wipeoutStatus = new WipeoutStatus();
+        wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CLEAR_DATA);
+        logWipeoutStats(wipeoutStatus);
     }
 
     @VisibleForTesting
@@ -187,6 +273,20 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
+        if (sFilteringEnabled) {
+            LogUtil.d("Deleting app install data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .appInstallDao()
+                                    .deleteByPackageName(packageUri.toString()));
+            LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .frequencyCapDao()
+                                    .deleteHistogramDataBySourceApp(packageUri.toString()));
+        }
     }
 
     /**
@@ -264,5 +364,26 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
         return CustomAudienceDatabase.getInstance(context);
+    }
+
+    /**
+     * Returns an instance of the {@link SharedStorageDatabase}.
+     *
+     * <p>This is split out for testing/mocking purposes only, since the {@link
+     * SharedStorageDatabase} is abstract and therefore unmockable.
+     */
+    @VisibleForTesting
+    SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        return SharedStorageDatabase.getInstance(context);
+    }
+
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementWipeoutStats(
+                        new MeasurementWipeoutStats.Builder()
+                                .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .build());
     }
 }

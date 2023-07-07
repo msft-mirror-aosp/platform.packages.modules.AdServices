@@ -23,7 +23,7 @@ import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import com.google.auto.value.AutoValue;
 
@@ -33,6 +33,7 @@ import org.json.JSONObject;
 /** POJO to represent an {@code InteractionKey:Uri} pairing */
 @AutoValue
 public abstract class InteractionUriRegistrationInfo {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static String EXPECTED_STRUCTURE_MISMATCH =
             "InteractionUriRegistrationInfo does not match expected structure!";
 
@@ -66,7 +67,7 @@ public abstract class InteractionUriRegistrationInfo {
                                             jsonObject, INTERACTION_REPORTING_URI_ARG_NAME)))
                     .build();
         } catch (JSONException e) {
-            LogUtil.v(String.format("Unexpected object structure: %s", jsonObject));
+            sLogger.v(String.format("Unexpected object structure: %s", jsonObject));
             throw new IllegalArgumentException(EXPECTED_STRUCTURE_MISMATCH);
         }
     }

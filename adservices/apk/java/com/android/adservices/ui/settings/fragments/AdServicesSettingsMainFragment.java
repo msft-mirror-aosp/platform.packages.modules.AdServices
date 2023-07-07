@@ -15,12 +15,14 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -34,7 +36,10 @@ import com.android.settingslib.widget.MainSwitchBar;
 import java.util.Objects;
 
 /** Fragment for the main view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMainFragment extends Fragment {
+
     public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
             "getConsent method failed. Will not change consent value in view model.";
     public static final String PRIVACY_SANDBOX_BETA_SWITCH_KEY = "privacy_sandbox_beta_switch";
@@ -75,17 +80,14 @@ public class AdServicesSettingsMainFragment extends Fragment {
         MainSwitchBar mainSwitchBar =
                 Objects.requireNonNull(requireView().findViewById(R.id.main_switch_bar));
 
-
         View privacySandboxControls = requireView().findViewById(R.id.privacy_sandbox_controls);
         model.getConsent()
                 .observe(
                         getViewLifecycleOwner(),
                         consentGiven -> {
                             mainSwitchBar.setChecked(consentGiven);
-                            privacySandboxControls.setVisibility(consentGiven
-                                    ? View.VISIBLE
-                                    : View.GONE);
+                            privacySandboxControls.setVisibility(
+                                    consentGiven ? View.VISIBLE : View.GONE);
                         });
     }
-
 }

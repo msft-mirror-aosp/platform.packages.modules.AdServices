@@ -15,18 +15,21 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 
 /** Fragment for the Measurement view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMeasurementFragment extends Fragment {
 
     @Override
@@ -36,7 +39,8 @@ public class AdServicesSettingsMeasurementFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+    public void onResume() {
+        super.onResume();
         initActionListeners();
     }
 

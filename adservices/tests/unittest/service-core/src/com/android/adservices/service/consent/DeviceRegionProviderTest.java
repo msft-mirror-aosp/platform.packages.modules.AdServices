@@ -40,6 +40,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.util.Locale;
 
 @SmallTest
 public class DeviceRegionProviderTest {
@@ -64,6 +65,7 @@ public class DeviceRegionProviderTest {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // return the default EEA countries list for most test cases
         doReturn(Flags.UI_EEA_COUNTRIES).when(mMockFlags).getUiEeaCountries();
+        Locale.setDefault(Locale.US);
     }
 
     @After
@@ -114,6 +116,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isGbDeviceTrue() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("gb").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -124,6 +127,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isChDeviceTrue() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("ch").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -134,6 +138,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isEuDeviceTrue() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -144,6 +149,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void isEuDeviceFalse() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -154,6 +160,7 @@ public class DeviceRegionProviderTest {
 
     @Test
     public void noSimCardInstalledTest() {
+        doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -175,6 +182,84 @@ public class DeviceRegionProviderTest {
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(null).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_isEeaDeviceNoSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_isEeaDeviceUsSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_isEeaDeviceGbSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_notEeaDeviceUsSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(false).when(mMockFlags).isEeaDevice();
+
+        doReturn("us").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_notEeaDeviceChSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(false).when(mMockFlags).isEeaDevice();
+
+        doReturn("ch").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_gbFlagNoSim() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+
+        doReturn("").when(mTelephonyManager).getSimCountryIso();
+        doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
+        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
         assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
     }
@@ -212,5 +297,50 @@ public class DeviceRegionProviderTest {
     @Test
     public void invalidEeaCountriesStringTest_missingComma() {
         assertThat(DeviceRegionProvider.isValidEeaCountriesString("PLGB")).isFalse();
+    }
+
+    @Test
+    public void invalidEeaCountriesStringTest_nullString_arabicAffectedLocale() {
+        Locale.setDefault(new Locale("ar", ""));
+        assertThat(DeviceRegionProvider.isValidEeaCountriesString(null)).isFalse();
+    }
+
+    @Test
+    public void invalidEeaCountriesStringTest_emptyString_arabicAffectedLocale() {
+        Locale.setDefault(new Locale("ar", ""));
+        assertThat(DeviceRegionProvider.isValidEeaCountriesString(" ")).isFalse();
+    }
+
+    @Test
+    public void validEeaCountriesStringTest_singleCountry_arabicAffectedLocale() {
+        Locale.setDefault(new Locale("ar", ""));
+        assertThat(DeviceRegionProvider.isValidEeaCountriesString("PL")).isTrue();
+    }
+
+    @Test
+    public void validEeaCountriesStringTest_multipleCountries_arabicAffectedLocale() {
+        Locale.setDefault(new Locale("ar", ""));
+        assertThat(DeviceRegionProvider.isValidEeaCountriesString("PL,GB,CH")).isTrue();
+    }
+
+    @Test
+    public void invalidEeaCountriesStringTest_extraComma_arabicAffectedLocale() {
+        Locale.setDefault(new Locale("ar", ""));
+        assertThat(DeviceRegionProvider.isValidEeaCountriesString("US,")).isFalse();
+    }
+
+    @Test
+    public void invalidEeaCountriesStringTest_missingComma_arabicAffectedLocale() {
+        Locale.setDefault(new Locale("ar", ""));
+        assertThat(DeviceRegionProvider.isValidEeaCountriesString("PLGB")).isFalse();
+    }
+
+    @Test
+    public void eeaCountriesForAllLocales_defaultList() {
+        for (Locale locale : Locale.getAvailableLocales()) {
+            Locale.setDefault(locale);
+            assertThat(DeviceRegionProvider.isValidEeaCountriesString(Flags.UI_EEA_COUNTRIES))
+                    .isTrue();
+        }
     }
 }

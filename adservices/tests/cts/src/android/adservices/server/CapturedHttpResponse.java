@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.adservices.cts.server;
+package android.adservices.server;
 
 import com.google.auto.value.AutoValue;
 
