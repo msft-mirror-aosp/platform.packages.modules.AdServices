@@ -21,6 +21,8 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -29,7 +31,6 @@ import java.util.Objects;
 public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadFormatter {
     public static final int VERSION = 0;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final int[] AVAILABLE_BUCKET_SIZES_IN_KB = new int[] {0, 1, 2, 4, 8, 16, 32, 64};
 
     @VisibleForTesting
     static final String PAYLOAD_SIZE_EXCEEDS_LIMIT = "Payload exceeds maximum size of 64KB";
@@ -37,12 +38,11 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
     private static final String DATA_SIZE_MISMATCH =
             "Data size extracted from padded bytes is longer than the rest of the data";
 
-    private static final int DATA_SIZE_PADDING_LENGTH_BYTE = 4;
-    @NonNull private final ByteBuffer mDataSizeBytesBuffer;
+    @VisibleForTesting
+    static final ImmutableList<Integer> AVAILABLE_BUCKET_SIZES_IN_BYTES =
+            ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 
-    public AuctionServerPayloadFormatterV0() {
-        mDataSizeBytesBuffer = ByteBuffer.allocate(DATA_SIZE_PADDING_LENGTH_BYTE);
-    }
+    @VisibleForTesting static final int DATA_SIZE_PADDING_LENGTH_BYTE = 4;
 
     /**
      * Creates the payload of size [1KB, 2KB, 4KB, 8KB, 16KB, 32KB, 64KB]. If the payload is greater
@@ -67,28 +67,25 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
         byte[] data = unformattedData.getData();
 
         // Empty payload to fill in
-        byte[] payload = new byte[getPayloadBucketSize(data.length)];
+        byte[] payload = new byte[getPayloadBucketSizeInBytes(data.length)];
 
         // Fill in
         payload[0] = AuctionServerPayloadFormatter.getMetaInfoByte(compressorVersion, VERSION);
-        sLogger.v("Meta info byte added: " + payload[0]);
-        byte[] dataSizeBytes = mDataSizeBytesBuffer.putInt(data.length).array();
+        sLogger.v("Meta info byte added: %d", payload[0]);
+
+        byte[] dataSizeBytes =
+                ByteBuffer.allocate(DATA_SIZE_PADDING_LENGTH_BYTE).putInt(data.length).array();
         System.arraycopy(
                 dataSizeBytes, 0, payload, META_INFO_LENGTH_BYTE, DATA_SIZE_PADDING_LENGTH_BYTE);
         sLogger.v(
-                "Data size bytes are added: "
-                        + Arrays.toString(dataSizeBytes)
-                        + " for size: "
-                        + data.length);
+                "Data size bytes are added: %s for size: %d",
+                Arrays.toString(dataSizeBytes), data.length);
         System.arraycopy(
                 data,
                 0,
                 payload,
                 META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE,
                 data.length);
-
-        // Clear the buffer in-case the formatter is used again.
-        mDataSizeBytesBuffer.clear();
 
         return FormattedData.create(payload);
     }
@@ -116,22 +113,18 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
         return UnformattedData.create(data);
     }
 
-    private int getPayloadBucketSize(int dataLength) {
+    private int getPayloadBucketSizeInBytes(int dataLength) {
         int payloadSize = META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE + dataLength;
 
-        // Check if sizeInBytes exceeds 64KB limit
         // TODO(b/285182469): Implement payload size management
-        if (payloadSize > MAXIMUM_PAYLOAD_SIZE_IN_BYTES) {
-            sLogger.e(PAYLOAD_SIZE_EXCEEDS_LIMIT);
-            throw new IllegalArgumentException(PAYLOAD_SIZE_EXCEEDS_LIMIT);
-        }
-
-        // Convert B to KB and round up if necessary
-        int sizeInKB = (payloadSize + 1023) >> 10; // Equivalent to (sizeInBytes + 1023) / 1024
-
-        int bucketSizeKB = Arrays.binarySearch(AVAILABLE_BUCKET_SIZES_IN_KB, sizeInKB);
-
-        // Convert KB back to B
-        return bucketSizeKB << 10; // Equivalent to bucketSizeKB * 1024
+        return AVAILABLE_BUCKET_SIZES_IN_BYTES.stream()
+                .filter(bucketSize -> bucketSize >= payloadSize)
+                .mapToInt(i -> i)
+                .min()
+                .orElseThrow(
+                        () -> {
+                            sLogger.e(PAYLOAD_SIZE_EXCEEDS_LIMIT);
+                            return new IllegalStateException(PAYLOAD_SIZE_EXCEEDS_LIMIT);
+                        });
     }
 }
