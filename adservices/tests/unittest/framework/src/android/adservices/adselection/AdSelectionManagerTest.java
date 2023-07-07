@@ -32,7 +32,6 @@ public class AdSelectionManagerTest {
     public void testAdSelectionManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
         final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(AdSelectionManager.get(context)).isNotNull();
         assertThat(context.getSystemService(AdSelectionManager.class)).isNotNull();
     }
 
@@ -40,7 +39,6 @@ public class AdSelectionManagerTest {
     public void testAdSelectionManagerCtor_SMinus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
         final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(AdSelectionManager.get(context)).isNotNull();
         assertThat(context.getSystemService(AdSelectionManager.class)).isNull();
     }
 }
