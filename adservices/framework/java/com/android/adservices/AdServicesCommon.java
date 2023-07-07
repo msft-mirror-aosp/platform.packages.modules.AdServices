@@ -98,8 +98,8 @@ public class AdServicesCommon {
         }
 
         // On T+ devices, only use the service that comes from AdServices APK. The package name of
-        // AdService is com.[google.]android.adservices while the package name of AdExtServices APK
-        // is com.[google.]android.ext.adservices.
+        // AdService is com.[google.]android.adservices.api while the package name of ExtServices
+        // APK is com.[google.]android.ext.services.
         ServiceInfo serviceInfo = null;
 
         // We have already checked if there are 0 OR more than 2 services returned.
@@ -113,7 +113,7 @@ public class AdServicesCommon {
                                 .get(0)
                                 .serviceInfo
                                 .packageName
-                                .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                     serviceInfo = intentResolveInfos.get(0).serviceInfo;
                 } else if (intentResolveInfos.get(1) != null
                         && intentResolveInfos.get(1).serviceInfo != null
@@ -122,7 +122,7 @@ public class AdServicesCommon {
                                 .get(1)
                                 .serviceInfo
                                 .packageName
-                                .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                     serviceInfo = intentResolveInfos.get(1).serviceInfo;
                 }
                 break;

@@ -111,6 +111,7 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -2181,20 +2182,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
         ComponentName component = intent.getComponent();
-        if (component == null) {
-            failStartOrBindService(intent);
-        }
-        String componentPackageName = component.getPackageName();
-        if (componentPackageName == null) {
-            failStartOrBindService(intent);
-        }
-        if (componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
-                || componentPackageName.equals(getAdServicesPackageName())) {
-            return;
+
+        if (component != null) {
+            String componentPackageName = component.getPackageName();
+            if ((componentPackageName != null)
+                    && (componentPackageName.equals(
+                                    WebViewUpdateService.getCurrentWebViewPackageName())
+                            || componentPackageName.equals(getAdServicesPackageName()))) {
+                return;
+            }
         }
 
         if (requestAllowedPerAllowlist(
-                intent.getAction(), componentPackageName, component.getClassName())) {
+                intent.getAction(),
+                intent.getPackage(),
+                /*componentClassName=*/ (component == null) ? null : component.getClassName(),
+                /*componentPackageName=*/ (component == null)
+                        ? null
+                        : component.getPackageName())) {
             return;
         }
 
@@ -2503,7 +2508,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private boolean requestAllowedPerAllowlist(
-            String intentAction, String packageName, String className) {
+            String action,
+            String packageName,
+            String componentClassName,
+            String componentPackageName) {
         // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
         AllowedServices allowedServices =
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
@@ -2518,16 +2526,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
             if (doesInputMatchWildcardPattern(
-                            allowedService.getIntentAction(),
-                            intentAction,
+                            allowedService.getAction(), action, /*matchOnNullInput=*/ true)
+                    && doesInputMatchWildcardPattern(
+                            allowedService.getPackageName(),
+                            packageName,
                             /*matchOnNullInput=*/ true)
                     && doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
-                            className,
+                            componentClassName,
                             /*matchOnNullInput=*/ true)
                     && doesInputMatchWildcardPattern(
                             allowedService.getComponentPackageName(),
-                            packageName,
+                            componentPackageName,
                             /*matchOnNullInput=*/ true)) {
                 return true;
             }
@@ -2658,14 +2668,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
                 return;
             }
-            if (intent.getAction() != null) {
-                if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
-                    throw new SecurityException(
-                            "Intent "
-                                    + intent.getAction()
-                                    + " may not be started from an SDK sandbox uid.");
-                }
+
+            if (intent.getAction() == null) {
+                return;
             }
+
+            // TODO(b/289991549): Configure allowlist using DeviceConfig
+            final ArrayList<String> allowedActions =
+                    new ArrayList<>(
+                            Arrays.asList(
+                                    Intent.ACTION_VIEW,
+                                    Intent.ACTION_DIAL,
+                                    Intent.ACTION_EDIT,
+                                    Intent.ACTION_INSERT));
+
+            if (allowedActions.contains(intent.getAction())) {
+                return;
+            }
+            throw new SecurityException(
+                    "Intent "
+                            + intent.getAction()
+                            + " may not be started from an SDK sandbox uid.");
         }
 
         @Override

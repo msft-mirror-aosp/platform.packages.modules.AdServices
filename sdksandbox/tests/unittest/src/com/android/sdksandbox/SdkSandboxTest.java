@@ -107,8 +107,7 @@ public class SdkSandboxTest {
                     new SharedPreferencesKey("empty", SharedPreferencesKey.KEY_TYPE_STRING));
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
-    private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO =
-            new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+    private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
     private static boolean sCustomizedSdkContextEnabled;
     private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
@@ -506,6 +505,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_loadSdk_success() throws Exception {
+        SANDBOX_LATENCY_INFO.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
@@ -548,6 +548,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_unloadSdk_success() throws Exception {
+        SANDBOX_LATENCY_INFO.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 

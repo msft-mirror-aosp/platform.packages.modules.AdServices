@@ -85,13 +85,13 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
             if (packageName == null
                     || packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                 // Running within the AdServices package, so don't do anything.
-                LogUtil.d("Running within AdServices package, not changing scheduled job state");
+                LogUtil.e("Running within AdServices package, not changing scheduled job state");
                 return;
             }
 
             JobScheduler scheduler = context.getSystemService(JobScheduler.class);
             if (scheduler == null) {
-                LogUtil.d("Could not retrieve JobScheduler instance, so not cancelling jobs");
+                LogUtil.e("Could not retrieve JobScheduler instance, so not cancelling jobs");
                 return;
             }
 
@@ -174,7 +174,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
         Objects.requireNonNull(components);
         Objects.requireNonNull(adServicesPackageName);
-        if (adServicesPackageName.contains(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+        if (adServicesPackageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
             throw new IllegalStateException(
                     "Components for package with AdServices APK package suffix should not be "
                             + "updated!");

@@ -1395,7 +1395,7 @@ public final class MeasurementServiceImplTest {
 
     private void updateDevContextDenied(boolean denied) {
         if (denied) {
-            when(mDevContextFilter.createDevContext())
+            when(mDevContextFilter.createDevContextFromCallingUid(anyInt()))
                     .thenReturn(DevContext.createForDevOptionsDisabled());
         }
     }

@@ -162,10 +162,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     public void sendLoadCodeSuccessful() throws RemoteException {
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         mLoadSdkInSandboxCallback.onLoadSdkSuccess(
-                new SandboxedSdk(new Binder()),
-                mManagerToSdkCallback,
-                new SandboxLatencyInfo(mTimeSystemServerCalledSandbox));
+                new SandboxedSdk(new Binder()), mManagerToSdkCallback, sandboxLatencyInfo);
     }
 
     public void sendLoadCodeSuccessfulWithSandboxLatencies() throws RemoteException {
@@ -184,14 +184,15 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     public void sendLoadCodeError() throws Exception {
         Class<?> clz = Class.forName("android.app.sdksandbox.LoadSdkException");
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         LoadSdkException exception =
                 (LoadSdkException)
                         clz.getConstructor(Integer.TYPE, String.class)
                                 .newInstance(
                                         SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
                                         "Internal error");
-        mLoadSdkInSandboxCallback.onLoadSdkError(
-                exception, new SandboxLatencyInfo(mTimeSystemServerCalledSandbox));
+        mLoadSdkInSandboxCallback.onLoadSdkError(exception, sandboxLatencyInfo);
     }
 
     public void sendSurfacePackageReady(SandboxLatencyInfo sandboxLatencyInfo)
@@ -229,8 +230,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     private SandboxLatencyInfo createSandboxLatencyInfo() {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(mTimeSystemServerCalledSandbox);
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mTimeSystemServerCalledSandbox);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 mTimeSandboxReceivedCallFromSystemServer);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(mTimeSandboxCalledSdk);

@@ -168,6 +168,10 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux BETA_UX");
+
         ApkTestUtil.launchSettingViewGivenUx(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT, "BETA_UX");
 

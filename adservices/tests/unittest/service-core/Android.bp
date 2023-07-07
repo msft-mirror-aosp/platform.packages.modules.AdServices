@@ -28,12 +28,6 @@ android_test {
         // Exclude Mobile Data Download Test. This test need network connection and download files.
         // This will run in a separate test suite.
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
-        // TODO(b/288229684) : Renable OHTTP tests once JNI crashes are fixed
-        "src/jni/java/com/android/adservices/ohttp/**/*.java",
-        "src/com/android/adservices/data/adselection/DBEncryptionContextTest.java",
-        "src/com/android/adservices/data/adselection/EncryptionContextDaoTest.java",
-        "src/com/android/adservices/service/adselection/encryption/AuctionEncryptionKeyParserTest.java",
-        "src/com/android/adservices/service/adselection/encryption/JoinEncryptionKeyParserTest.java",
     ],
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
@@ -177,12 +171,6 @@ android_test {
         // Exclude Mobile Data Download Test. This test need network connection and download files.
         // This will run in a separate test suite.
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
-        // TODO(b/288229684) : Renable OHTTP tests once JNI crashes are fixed
-        "src/jni/java/com/android/adservices/ohttp/**/*.java",
-        "src/com/android/adservices/data/adselection/DBEncryptionContextTest.java",
-        "src/com/android/adservices/data/adselection/EncryptionContextDaoTest.java",
-        "src/com/android/adservices/service/adselection/encryption/AuctionEncryptionKeyParserTest.java",
-        "src/com/android/adservices/service/adselection/encryption/JoinEncryptionKeyParserTest.java",
     ],
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",

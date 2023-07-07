@@ -78,6 +78,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Executor;
@@ -138,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mDumpSandboxButton;
     private Button mNewFullScreenAd;
     private Button mNewAppWebviewButton;
+    private Button mReleaseAllSurfaceControlViewHostButton;
 
     private SurfaceView mInScrollBannerView;
     private SurfaceView mBottomBannerView;
@@ -145,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
     private SandboxedSdk mSandboxedSdk;
     private SharedPreferences mSharedPreferences;
     private final Stack<SdkSandboxProcessDeathCallback> mDeathCallbacks = new Stack<>();
+    private final Queue<SurfacePackage> mSurfacePackages = new LinkedList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -188,6 +192,8 @@ public class MainActivity extends AppCompatActivity {
 
         mResetPreferencesButton = findViewById(R.id.reset_preferences_button);
         mLoadSdksButton = findViewById(R.id.load_sdks_button);
+        mReleaseAllSurfaceControlViewHostButton = findViewById(R.id.release_all_scvh_button);
+
         mDeathCallbackAddButton = findViewById(R.id.add_death_callback_button);
         mDeathCallbackRemoveButton = findViewById(R.id.remove_death_callback_button);
 
@@ -205,6 +211,7 @@ public class MainActivity extends AppCompatActivity {
 
         registerResetPreferencesButton();
         registerLoadSdksButton();
+        registerReleaseAllSurfaceControlViewHost();
         registerAddDeathCallbackButton();
         registerRemoveDeathCallbackButton();
 
@@ -297,6 +304,24 @@ public class MainActivity extends AppCompatActivity {
         outState.putBoolean(SDKS_LOADED_KEY, mSdksLoaded);
         outState.putParcelable(SANDBOXED_SDK_KEY, mSandboxedSdk);
         outState.putInt(DEATH_CALLBACKS_COUNT_KEY, mDeathCallbacks.size());
+    }
+
+    private void registerReleaseAllSurfaceControlViewHost() {
+        mReleaseAllSurfaceControlViewHostButton.setOnClickListener(
+                v -> {
+                    synchronized (mSurfacePackages) {
+                        if (mSurfacePackages.isEmpty()) {
+                            logAndDisplayMessage(INFO, "No SCVH to release.");
+                            return;
+                        }
+                        while (!mSurfacePackages.isEmpty()) {
+                            mSurfacePackages.poll().notifyDetachedFromWindow();
+                        }
+                        mInScrollBannerView.setVisibility(View.INVISIBLE);
+                        mBottomBannerView.setVisibility(View.INVISIBLE);
+                        logAndDisplayMessage(INFO, "All SurfaceControlViewHost Released.");
+                    }
+                });
     }
 
     private void registerAddDeathCallbackButton() {
@@ -946,6 +971,7 @@ public class MainActivity extends AppCompatActivity {
                         SurfacePackage surfacePackage =
                                 result.getParcelable(EXTRA_SURFACE_PACKAGE, SurfacePackage.class);
                         mSurfaceView.setChildSurfacePackage(surfacePackage);
+                        mSurfacePackages.add(surfacePackage);
                         mSurfaceView.setVisibility(View.VISIBLE);
                     });
             logAndDisplayMessage(INFO, "Rendered surface view");

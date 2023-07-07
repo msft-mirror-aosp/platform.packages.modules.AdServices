@@ -534,6 +534,8 @@ public final class PhFlags implements Flags {
 
     public static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
+    static final String KEY_DEBUG_UX = "debug_ux";
+
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
@@ -2792,14 +2794,17 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getDebugUx() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES, /* flagName */ KEY_DEBUG_UX, /* defaultValue */ DEBUG_UX);
+    }
+
+    @Override
     public boolean getToggleSpeedBumpEnabled() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_UI_TOGGLE_SPEED_BUMP_ENABLED,
-                        /* defaultValue */ TOGGLE_SPEED_BUMP_ENABLED));
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_TOGGLE_SPEED_BUMP_ENABLED,
+                /* defaultValue */ TOGGLE_SPEED_BUMP_ENABLED);
     }
 
     @Override
@@ -2916,6 +2921,7 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println("\t" + KEY_DEBUG_UX + " = " + getDebugUx());
         writer.println(
                 "\t" + KEY_ENABLE_AD_SERVICES_SYSTEM_API + " = " + getEnableAdServicesSystemApi());
         writer.println("\t" + KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());

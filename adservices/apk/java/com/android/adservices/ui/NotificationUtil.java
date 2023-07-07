@@ -48,12 +48,9 @@ public class NotificationUtil {
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()) {
             return Stream.of(PrivacySandboxUxCollection.values())
                     .filter(
-                            ux ->
-                                    ux.toString()
-                                            .equals(
-                                                    fragmentActivity
-                                                            .getIntent()
-                                                            .getStringExtra("ux")))
+                            ux -> {
+                                return ux.toString().equals(FlagsFactory.getFlags().getDebugUx());
+                            })
                     .findFirst()
                     .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
         } else {

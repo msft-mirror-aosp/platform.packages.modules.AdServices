@@ -26,9 +26,11 @@ import android.net.Uri;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 
 public class DebugReportProcessorTest {
 
@@ -330,8 +332,11 @@ public class DebugReportProcessorTest {
     }
 
     @Test
-    public void multiBuyerWonSession_returnsOtherWinningBid() {
-        Uri lossUri = Uri.parse("https://example.com/reportLoss?wb=${highestScoringOtherBid}");
+    public void multiBuyerWonSession_returnsOtherWinningBidOnlyForWinner() {
+        Uri winUri = Uri.parse("https://google.com/reportWin?hob=${highestScoringOtherBid}");
+        Uri lossUri = Uri.parse("https://google.com/reportLoss?hob=${highestScoringOtherBid}");
+        Uri lossUriForOtherAdTech =
+                Uri.parse("https://example.com/reportLoss?hob=${highestScoringOtherBid}");
         PostAuctionSignals signals =
                 newDefaultPostAuctionSignals()
                         .setWinningBuyer(AD_TECH_IDENTIFIER_2)
@@ -339,37 +344,82 @@ public class DebugReportProcessorTest {
                         .setSecondHighestScoredBid(AD_BID_2)
                         .setSecondHighestScoredBuyer(AD_TECH_IDENTIFIER_2)
                         .build();
-        DebugReport debugReport =
+        DebugReport winDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(winUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .build();
+        DebugReport lossDebugReport =
                 DebugReport.builder()
                         .setLossDebugReportUri(lossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_3)
+                        .build();
+        DebugReport lossDebugReportDifferentBuyer =
+                DebugReport.builder()
+                        .setLossDebugReportUri(lossUriForOtherAdTech)
                         .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
                         .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                         .build();
 
-        List<Uri> uris = DebugReportProcessor.getUrisFromAdAuction(List.of(debugReport), signals);
+        List<Uri> uris =
+                DebugReportProcessor.getUrisFromAdAuction(
+                        List.of(winDebugReport, lossDebugReport, lossDebugReportDifferentBuyer),
+                        signals);
 
-        Uri actualUri = Objects.requireNonNull(uris).get(0);
-        assertEquals(Uri.parse("https://example.com/reportLoss?wb=2.0"), actualUri);
+        Set<Uri> expectedUris = new HashSet<>();
+        expectedUris.add(Uri.parse("https://google.com/reportWin?hob=" + AD_BID_2));
+        expectedUris.add(Uri.parse("https://google.com/reportLoss?hob=0.0"));
+        expectedUris.add(Uri.parse("https://example.com/reportLoss?hob=0.0"));
+        assertEquals(3, uris.size());
+        Set<Uri> actualUris = new HashSet<>(uris);
+        assertEquals(expectedUris, actualUris);
     }
 
     @Test
-    public void singleBuyerLostSession_returnsMadeOtherWinningBid() {
-        Uri winUri = Uri.parse("https://example.com/reportWin?wb=${madeHighestScoringOtherBid}");
+    public void singleBuyerLostSession_returnsMadeOtherWinningBidOnlyForWinner() {
+        Uri winUri = Uri.parse("https://example.com/reportWin?m-hob=${madeHighestScoringOtherBid}");
+        Uri lossUri =
+                Uri.parse("https://example.com/reportLoss?m-hob=${madeHighestScoringOtherBid}");
+        Uri lossUriOtherBuyer =
+                Uri.parse("https://google.com/reportLoss?m-hob=${madeHighestScoringOtherBid}");
         PostAuctionSignals signals =
                 newDefaultPostAuctionSignals()
                         .setSecondHighestScoredBid(AD_BID_2)
                         .setSecondHighestScoredBuyer(AD_TECH_IDENTIFIER_1)
                         .build();
-        DebugReport debugReport =
+        DebugReport winDebugReport =
                 DebugReport.builder()
                         .setWinDebugReportUri(winUri)
                         .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
                         .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                         .build();
+        DebugReport lossDebugReport =
+                DebugReport.builder()
+                        .setLossDebugReportUri(lossUri)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_1)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_2)
+                        .build();
+        DebugReport lossDebugReportForOtherBuyer =
+                DebugReport.builder()
+                        .setLossDebugReportUri(lossUriOtherBuyer)
+                        .setCustomAudienceBuyer(AD_TECH_IDENTIFIER_2)
+                        .setCustomAudienceName(CUSTOM_AUDIENCE_NAME_3)
+                        .build();
 
-        List<Uri> uris = DebugReportProcessor.getUrisFromAdAuction(List.of(debugReport), signals);
+        List<Uri> uris =
+                DebugReportProcessor.getUrisFromAdAuction(
+                        List.of(winDebugReport, lossDebugReport, lossDebugReportForOtherBuyer),
+                        signals);
 
-        assertThat(uris).containsExactly(Uri.parse("https://example.com/reportWin?wb=true"));
+        Set<Uri> expectedUris = new HashSet<>();
+        expectedUris.add(Uri.parse("https://example.com/reportWin?m-hob=true"));
+        expectedUris.add(Uri.parse("https://example.com/reportLoss?m-hob=false"));
+        expectedUris.add(Uri.parse("https://google.com/reportLoss?m-hob=false"));
+        assertEquals(3, uris.size());
+        Set<Uri> actualUris = new HashSet<>(uris);
+        assertEquals(expectedUris, actualUris);
     }
 
     @Test

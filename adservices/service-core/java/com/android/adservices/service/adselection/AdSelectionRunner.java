@@ -35,6 +35,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
+import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
@@ -131,6 +132,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdServicesLogger mAdServicesLogger;
     @NonNull protected final Flags mFlags;
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
+    @NonNull protected final DebugReporting mDebugReporting;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
@@ -161,6 +163,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final DebugReporting debugReporting,
             final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -172,6 +175,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -193,6 +197,7 @@ public abstract class AdSelectionRunner {
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mDebugReporting = debugReporting;
     }
 
     @VisibleForTesting
@@ -211,7 +216,8 @@ public abstract class AdSelectionRunner {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
+            @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
+            @NonNull final DebugReporting debugReporting) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -225,6 +231,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -245,6 +252,7 @@ public abstract class AdSelectionRunner {
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mDebugReporting = debugReporting;
     }
 
     /**
@@ -471,15 +479,40 @@ public abstract class AdSelectionRunner {
                 orchestrateAdSelection(
                         adSelectionConfigInput, callerPackageName, buyerCustomAudience);
 
-        AsyncFunction<AdSelectionOrchestrationResult, DBAdSelection> saveResultToPersistence =
-                adSelectionAndJs ->
-                        persistAdSelection(
-                                adSelectionAndJs.mDbAdSelectionBuilder,
-                                adSelectionAndJs.mBuyerDecisionLogicJs,
-                                callerPackageName);
+        AsyncFunction<
+                        AdSelectionOrchestrationResult,
+                        Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+                saveResultToPersistence =
+                        adSelectionAndJs -> persistAdSelection(adSelectionAndJs, callerPackageName);
 
-        return FluentFuture.from(dbAdSelection)
-                .transformAsync(saveResultToPersistence, mLightweightExecutorService)
+        ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+                resultAfterPersistence =
+                        Futures.transformAsync(
+                                dbAdSelection,
+                                saveResultToPersistence,
+                                mLightweightExecutorService);
+
+        if (mDebugReporting.isEnabled()) {
+            Futures.addCallback(
+                    resultAfterPersistence,
+                    new FutureCallback<Pair<DBAdSelection, AdSelectionOrchestrationResult>>() {
+                        @Override
+                        public void onSuccess(
+                                Pair<DBAdSelection, AdSelectionOrchestrationResult> result) {
+                            // Send debug reports after persisting results in non critical path.
+                            sendDebugReports(result.second);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            sLogger.v("Failed to send debug reports");
+                        }
+                    },
+                    mLightweightExecutorService);
+        }
+
+        return FluentFuture.from(resultAfterPersistence)
+                .transform(savedResultPair -> savedResultPair.first, mLightweightExecutorService)
                 .withTimeout(
                         mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
@@ -552,10 +585,10 @@ public abstract class AdSelectionRunner {
                 .size();
     }
 
-    private ListenableFuture<DBAdSelection> persistAdSelection(
-            @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
-            @NonNull String buyerDecisionLogicJS,
-            @NonNull String callerPackageName) {
+    private ListenableFuture<Pair<DBAdSelection, AdSelectionOrchestrationResult>>
+            persistAdSelection(
+                    @NonNull AdSelectionOrchestrationResult adSelectionOrchestrationResult,
+                    @NonNull String callerPackageName) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION);
         return mBackgroundExecutorService.submit(
                 () -> {
@@ -566,21 +599,23 @@ public abstract class AdSelectionRunner {
                     }
                     sLogger.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
                     DBAdSelection dbAdSelection;
-                    dbAdSelectionBuilder
+                    adSelectionOrchestrationResult
+                            .mDbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
-                    dbAdSelection = dbAdSelectionBuilder.build();
+                    dbAdSelection = adSelectionOrchestrationResult.mDbAdSelectionBuilder.build();
                     mAdSelectionExecutionLogger.startPersistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
-                                    .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
+                                    .setBuyerDecisionLogicJs(
+                                            adSelectionOrchestrationResult.mBuyerDecisionLogicJs)
                                     .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
                     mAdSelectionExecutionLogger.endPersistAdSelection();
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION, traceCookie);
-                    return dbAdSelection;
+                    return Pair.create(dbAdSelection, adSelectionOrchestrationResult);
                 });
     }
 
@@ -622,14 +657,35 @@ public abstract class AdSelectionRunner {
                 .build();
     }
 
+    private void sendDebugReports(AdSelectionOrchestrationResult result) {
+        AdScoringOutcome topScoringAd = result.mWinningOutcome;
+        AdScoringOutcome secondScoringAd = result.mSecondHighestScoredOutcome;
+        DebugReportSenderStrategy sender = mDebugReporting.getSenderStrategy();
+        sender.batchEnqueue(
+                DebugReportProcessor.getUrisFromAdAuction(
+                        result.mDebugReports,
+                        PostAuctionSignals.create(topScoringAd, secondScoringAd)));
+        sender.flush();
+    }
+
     static class AdSelectionOrchestrationResult {
-        DBAdSelection.Builder mDbAdSelectionBuilder;
-        String mBuyerDecisionLogicJs;
+        @NonNull final DBAdSelection.Builder mDbAdSelectionBuilder;
+        final String mBuyerDecisionLogicJs;
+        @NonNull final List<DebugReport> mDebugReports;
+        @Nullable final AdScoringOutcome mWinningOutcome;
+        @Nullable final AdScoringOutcome mSecondHighestScoredOutcome;
 
         AdSelectionOrchestrationResult(
-                DBAdSelection.Builder dbAdSelectionBuilder, String buyerDecisionLogicJs) {
+                @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
+                String buyerDecisionLogicJs,
+                @NonNull List<DebugReport> debugReports,
+                @Nullable AdScoringOutcome winningOutcome,
+                @Nullable AdScoringOutcome secondHighestScoredOutcome) {
             this.mDbAdSelectionBuilder = dbAdSelectionBuilder;
             this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
+            this.mDebugReports = debugReports;
+            this.mWinningOutcome = winningOutcome;
+            this.mSecondHighestScoredOutcome = secondHighestScoredOutcome;
         }
     }
 }

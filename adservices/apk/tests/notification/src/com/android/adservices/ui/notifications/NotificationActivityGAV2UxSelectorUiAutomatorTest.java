@@ -160,6 +160,7 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
     private void startActivity(boolean isEUActivity) {
         ShellUtils.runShellCommand(
                 "device_config put adservices consent_notification_activity_debug_mode true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux GA_UX");
 
         String notificationPackage = NOTIFICATION_PACKAGE;
         Intent intent = new Intent(notificationPackage);

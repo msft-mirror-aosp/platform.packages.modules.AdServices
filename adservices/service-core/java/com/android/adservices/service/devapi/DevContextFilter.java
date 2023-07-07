@@ -76,26 +76,38 @@ public class DevContextFilter {
      *     transaction.
      */
     public DevContext createDevContext() throws IllegalStateException {
-        int callingAppUid = SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
-        return createDevContext(callingAppUid);
+        return createDevContextFromCallingUid(Binder.getCallingUidOrThrow());
+    }
+
+    /**
+     * Creates a {@link DevContext} for a given Binder calling UID.
+     *
+     * @param callingUid The Binder calling UID.
+     * @return A dev context specifying if the developer options are enabled for this API call or a
+     *     context with developer options disabled if there is any error retrieving info for the
+     *     calling application.
+     */
+    public DevContext createDevContextFromCallingUid(int callingUid) {
+        return createDevContext(SdkRuntimeUtil.getCallingAppUid(callingUid));
     }
 
     /**
      * Creates a {@link DevContext} for a given app UID.
      *
-     * @param callingUid The UID of the caller APP.
+     * @param callingAppUid The UID of the caller APP.
      * @return A dev context specifying if the developer options are enabled for this API call or a
      *     context with developer options disabled if there is any error retrieving info for the
      *     calling application.
      */
     @VisibleForTesting
-    public DevContext createDevContext(int callingUid) {
+    public DevContext createDevContext(int callingAppUid) {
         if (!isDeveloperMode()) {
             return DevContext.createForDevOptionsDisabled();
         }
 
         try {
-            String callingAppPackage = mAppPackageNameRetriever.getAppPackageNameForUid(callingUid);
+            String callingAppPackage =
+                    mAppPackageNameRetriever.getAppPackageNameForUid(callingAppUid);
             LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
             if (!isDebuggable(callingAppPackage)) {
                 LogUtil.v("Non debuggable, ignoring");
@@ -110,7 +122,7 @@ public class DevContextFilter {
             LogUtil.w(
                     "Unable to retrieve the package name for UID %d. Creating a DevContext with "
                             + "developer options disabled.",
-                    callingUid);
+                    callingAppUid);
             return DevContext.createForDevOptionsDisabled();
         }
     }
