@@ -17,11 +17,21 @@
 package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.EpochComputationClassifierStats;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
+import com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
+import com.android.adservices.service.topics.CacheManager;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
 
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +50,8 @@ import javax.annotation.concurrent.NotThreadSafe;
  *
  * <p>This class is not thread safe.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @NotThreadSafe
 public class PrecomputedClassifier implements Classifier {
 
@@ -48,20 +60,31 @@ public class PrecomputedClassifier implements Classifier {
     private static final String MODEL_ASSET_FIELD = "tflite_model";
     private static final String LABELS_ASSET_FIELD = "labels_topics";
     private static final String ASSET_VERSION_FIELD = "asset_version";
+    private static final String VERSION_INFO_FIELD = "version_info";
+    private static final String BUILD_ID_FIELD = "build_id";
 
     private final ModelManager mModelManager;
+    private final CacheManager mCacheManager;
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
     private ImmutableList<Integer> mLabels;
     // The app topics map Map<App, List<Topic>>
     private Map<String, List<Integer>> mAppTopics = new HashMap<>();
+    private List<Integer> mBlockedTopicIds;
     private long mModelVersion;
     private long mLabelsVersion;
+    private int mBuildId;
+    private final AdServicesLogger mLogger;
 
-    PrecomputedClassifier(@NonNull ModelManager modelManager) {
+    PrecomputedClassifier(
+            @NonNull ModelManager modelManager,
+            @NonNull CacheManager cacheManager,
+            @NonNull AdServicesLogger logger) {
         mModelManager = modelManager;
+        mCacheManager = cacheManager;
         mLoaded = false;
+        mLogger = logger;
     }
 
     @NonNull
@@ -76,10 +99,36 @@ public class PrecomputedClassifier implements Classifier {
         for (String app : apps) {
             if (app != null && !app.isEmpty()) {
                 List<Integer> topicIds = mAppTopics.getOrDefault(app, ImmutableList.of());
-                List<Topic> topics =
-                        topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+                ImmutableList.Builder<Integer> topicIdsToReturn = ImmutableList.builder();
+                ImmutableList.Builder<Topic> topicsToReturn = ImmutableList.builder();
 
-                appsToClassifiedTopics.put(app, topics);
+                for (int topicId : topicIds) {
+                    if (mBlockedTopicIds.contains(topicId)) {
+                        continue;
+                    }
+                    topicIdsToReturn.add(topicId);
+                    topicsToReturn.add(createTopic(topicId));
+                }
+
+                // Log atom for getTopTopics call.
+                mLogger.logEpochComputationClassifierStats(
+                        EpochComputationClassifierStats.builder()
+                                .setTopicIds(topicIdsToReturn.build())
+                                .setBuildId(mBuildId)
+                                .setAssetVersion(Long.toString(mModelVersion))
+                                .setClassifierType(ClassifierType.PRECOMPUTED_CLASSIFIER)
+                                .setOnDeviceClassifierStatus(
+                                        OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                .setPrecomputedClassifierStatus(
+                                        topicIds.isEmpty()
+                                                ? PrecomputedClassifierStatus
+                                                        .PRECOMPUTED_CLASSIFIER_STATUS_FAILURE
+                                                : PrecomputedClassifierStatus
+                                                        .PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
+                                .build());
+
+                appsToClassifiedTopics.put(app, topicsToReturn.build());
             }
         }
         return appsToClassifiedTopics;
@@ -97,7 +146,7 @@ public class PrecomputedClassifier implements Classifier {
         }
 
         return CommonClassifierHelper.getTopTopics(
-                appTopics, mLabels, new Random(), numberOfTopTopics, numberOfRandomTopics);
+                appTopics, mLabels, new Random(), numberOfTopTopics, numberOfRandomTopics, mLogger);
     }
 
     long getModelVersion() {
@@ -127,6 +176,12 @@ public class PrecomputedClassifier implements Classifier {
         mLabels = mModelManager.retrieveLabels();
         mAppTopics = mModelManager.retrieveAppClassificationTopics();
 
+        // Load blocked topic IDs.
+        mBlockedTopicIds =
+                mCacheManager.getTopicsWithRevokedConsent().stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toList());
+
         // Load classifier assets metadata.
         ImmutableMap<String, ImmutableMap<String, String>> classifierAssetsMetadata =
                 mModelManager.retrieveClassifierAssetsMetadata();
@@ -136,7 +191,7 @@ public class PrecomputedClassifier implements Classifier {
         mLabelsVersion =
                 Long.parseLong(
                         classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
-
+        mBuildId = Ints.saturatedCast(mModelManager.getBuildId());
         mLoaded = true;
     }
 

@@ -25,7 +25,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.1'
+        classpath 'com.android.tools.build:gradle:7.2.2'
     }
 }
 apply plugin: 'com.android.application'
@@ -34,7 +34,7 @@ android {
     compileSdkVersion 33
     defaultConfig {
         targetSdkVersion 33
-        minSdkVersion 33
+        minSdkVersion 31
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,6 +44,7 @@ android {
             java.srcDirs = [
                     'java',
                     '../service-core/java',
+                    '../service/java',
                     '../framework/java',
                     '../../../../../external/guava/guava/src',
                     '../../../../../frameworks/base/packages/SettingsLib/' +
@@ -54,6 +55,9 @@ android {
                     '../../../../../frameworks/base/packages/SettingsLib/' +
                             'MainSwitchPreference/src',
                     '../../../../../out/soong/.intermediates/packages/modules/AdServices/adservices/service-core/statslog-adservices-java-gen/gen',
+                    '../../../../../external/dexmaker/dexmaker-mockito-inline-extended/src/main/java',
+                    '../../../../../external/mockito/src/main/java',
+                    '../../../../../external/mobile-data-download/java',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
@@ -63,6 +67,9 @@ android {
                     'android/os/*.java',
                     'com/android/settingslib/collapsingtoolbar/**/*.java',
                     'com/android/adservices/service/stats/*.java',
+                    'com/android/dx/mockito/**/*.java',
+                    'org/mockito/**/*.java',
+                    'com/google/android/libraries/mobiledatadownload/**/*.java',
             ]))
             res.srcDirs = [
                     'res',
@@ -83,6 +90,10 @@ android {
             java.srcDirs = [
                 'tests/src',
                 'unittest/src',
+                'tests/notification/src',
+                'tests/settings/src',
+                'tests/settingsgaota/src',
+                'tests/util/java',
             ]
             java.setIncludes(new HashSet([
                 'com/android/adservices/ui/**/*.java',
@@ -96,6 +107,8 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.0'
     implementation 'com.android.support.constraint:constraint-layout:2.0.4'
     implementation files('../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/1.0.1/truth-1.0.1.jar')
+    // at least one compilation needs to be run (e.g. aidegen .)
+    implementation files('../../../../../out/target/common/obj/JAVA_LIBRARIES/mobile-data-download-java-proto-lite_intermediates/classes.jar')
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
 

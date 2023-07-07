@@ -18,6 +18,7 @@ package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
@@ -34,6 +35,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebSourceRegistrationRequestTest {
@@ -84,17 +87,14 @@ public class WebSourceRegistrationRequestTest {
     }
 
     @Test
-    public void build_withMissingOsAndWebDestination_throwsException() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new WebSourceRegistrationRequest.Builder(
-                                        SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
-                                .setInputEvent(INPUT_KEY_EVENT)
-                                .setVerifiedDestination(VERIFIED_DESTINATION)
-                                .setAppDestination(null)
-                                .setWebDestination(null)
-                                .build());
+    public void build_withMissingOsAndWebDestination_DoesNotThrowException() {
+        assertNotNull(
+                new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
+                        .setInputEvent(INPUT_KEY_EVENT)
+                        .setVerifiedDestination(VERIFIED_DESTINATION)
+                        .setAppDestination(null)
+                        .setWebDestination(null)
+                        .build());
     }
 
     @Test
@@ -127,6 +127,14 @@ public class WebSourceRegistrationRequestTest {
                 NullPointerException.class,
                 () ->
                         new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, null)
+                                .setInputEvent(INPUT_KEY_EVENT)
+                                .build());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new WebSourceRegistrationRequest.Builder(
+                                        generateWebSourceParamsList(21), TOP_ORIGIN_URI)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .build());
     }
@@ -182,5 +190,15 @@ public class WebSourceRegistrationRequestTest {
         assertEquals(
                 INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) request.getInputEvent()).getKeyCode());
         assertEquals(VERIFIED_DESTINATION, request.getVerifiedDestination());
+    }
+
+    private static List<WebSourceParams> generateWebSourceParamsList(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(
+                        i ->
+                                new WebSourceParams.Builder(REGISTRATION_URI_1)
+                                        .setDebugKeyAllowed(true)
+                                        .build())
+                .collect(Collectors.toList());
     }
 }

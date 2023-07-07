@@ -17,7 +17,11 @@
 package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.content.AttributionSource;
@@ -34,34 +38,48 @@ import java.util.Map;
 public final class RegisterTrigger implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
+    // Used in interop tests
+    public final String mDestination;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
+    public final boolean mArDebugPermission;
 
     public RegisterTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
                 TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
 
         AttributionSource attributionSource = getAttributionSource(
-                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
+                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
+                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT));
+
+        mDestination = regParamsJson.optString(TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
-                new RegistrationRequest.Builder()
-                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
-                        .setTopOriginUri(
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse(
                                         regParamsJson.getString(
-                                                TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
-                        .setRegistrationUri(
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                        .setPackageName(attributionSource.getPackageName())
+                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                attributionSource.getPackageName(),
+                                /* sdkPackageName = */ "")
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = hasTriggerDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
+        mArDebugPermission = hasArDebugPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
+    @Override
     public long getComparable() {
         return mTimestamp;
+    }
+
+    public String getDestination() {
+        return mDestination;
     }
 }

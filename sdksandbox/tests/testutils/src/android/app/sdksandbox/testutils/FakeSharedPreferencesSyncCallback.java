@@ -18,15 +18,10 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 public class FakeSharedPreferencesSyncCallback extends ISharedPreferencesSyncCallback.Stub {
-    private CountDownLatch mSyncDataLatch = new CountDownLatch(1);
-
     boolean mOnSandboxStartCalled = false;
-
     boolean mOnErrorCalled = false;
+    private WaitableCountDownLatch mSyncDataLatch = new WaitableCountDownLatch(5);
     private int mErrorCode;
     private String mErrorMsg;
 
@@ -45,40 +40,27 @@ public class FakeSharedPreferencesSyncCallback extends ISharedPreferencesSyncCal
     }
 
     public boolean hasSandboxStarted() {
-        waitForLatch(mSyncDataLatch);
+        mSyncDataLatch.waitForLatch();
         return mOnSandboxStartCalled;
     }
 
     public boolean hasError() {
-        waitForLatch(mSyncDataLatch);
+        mSyncDataLatch.waitForLatch();
         return mOnErrorCalled;
     }
 
     public int getErrorCode() {
-        waitForLatch(mSyncDataLatch);
+        mSyncDataLatch.waitForLatch();
         return mErrorCode;
     }
 
     public String getErrorMsg() {
-        waitForLatch(mSyncDataLatch);
+        mSyncDataLatch.waitForLatch();
         return mErrorMsg;
     }
 
     public void resetLatch() {
-        mSyncDataLatch = new CountDownLatch(1);
+        mSyncDataLatch = new WaitableCountDownLatch(5);
     }
 
-    private void waitForLatch(CountDownLatch latch) {
-        try {
-            // Wait for callback to be called
-            final int waitTime = 5;
-            if (!latch.await(waitTime, TimeUnit.SECONDS)) {
-                throw new IllegalStateException(
-                        "Callback not called within " + waitTime + " seconds");
-            }
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(
-                    "Interrupted while waiting on callback: " + e.getMessage());
-        }
-    }
 }

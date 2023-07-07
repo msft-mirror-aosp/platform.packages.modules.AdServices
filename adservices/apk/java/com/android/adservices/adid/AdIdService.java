@@ -26,6 +26,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdServiceImpl;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 
@@ -62,6 +63,7 @@ public class AdIdService extends Service {
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
+                            Throttler.getInstance(FlagsFactory.getFlags()),
                             appImportanceFilter);
         }
     }

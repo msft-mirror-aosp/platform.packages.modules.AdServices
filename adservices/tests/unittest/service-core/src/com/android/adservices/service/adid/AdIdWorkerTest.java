@@ -46,7 +46,7 @@ public class AdIdWorkerTest {
 
         AdIdWorker spyWorker =
                 Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.when(spyWorker.getService()).thenReturn(mInterface);
+        Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAdId(
                 "testPackageName",
@@ -72,12 +72,11 @@ public class AdIdWorkerTest {
     @Test
     public void testGetAdIdOnError() throws Exception {
         mTestSuccess = false;
-
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
         AdIdWorker spyWorker =
                 Mockito.spy(AdIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
-        Mockito.when(spyWorker.getService()).thenReturn(mInterface);
+        Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAdId(
                 "testPackageName",

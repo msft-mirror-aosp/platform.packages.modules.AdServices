@@ -16,6 +16,21 @@
 
 package com.android.adservices.data.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_BLOCKED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_OLD_EPOCH_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOP_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_SDK_USAGE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_USAGE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_RETURNED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.content.Context;
@@ -24,8 +39,9 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -40,7 +56,21 @@ import java.util.Set;
 
 /** Data Access Object for the Topics API. */
 public class TopicsDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static TopicsDao sSingleton;
+    private static final Object SINGLETON_LOCK = new Object();
+
+    // Defined constants for error codes which have very long names
+    private static final int TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE;
+    private static final int TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE;
+    private static final int TOPICS_RECORD_RETURNED_TOPICS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_RETURNED_TOPICS_FAILURE;
+    private static final int TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE;
+    private static final int TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE;
 
     // TODO(b/227393493): Should support a test to notify if new table is added.
     private static final String[] ALL_TOPICS_TABLES = {
@@ -53,6 +83,7 @@ public class TopicsDao {
         TopicsTables.TopTopicsContract.TABLE,
         TopicsTables.BlockedTopicsContract.TABLE,
         TopicsTables.EpochOriginContract.TABLE,
+        TopicsTables.TopicContributorsContract.TABLE
     };
 
     private final DbHelper mDbHelper; // Used in tests.
@@ -70,7 +101,7 @@ public class TopicsDao {
     /** Returns an instance of the TopicsDAO given a context. */
     @NonNull
     public static TopicsDao getInstance(@NonNull Context context) {
-        synchronized (TopicsDao.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton = new TopicsDao(DbHelper.getInstance(context));
             }
@@ -84,7 +115,6 @@ public class TopicsDao {
      * @param epochId the epoch ID to persist
      * @param appClassificationTopicsMap Map of app -> classified topics
      */
-    @VisibleForTesting
     public void persistAppClassificationTopics(
             long epochId, @NonNull Map<String, List<Topic>> appClassificationTopicsMap) {
         Objects.requireNonNull(appClassificationTopicsMap);
@@ -116,7 +146,11 @@ public class TopicsDao {
                             /* nullColumnHack */ null,
                             values);
                 } catch (SQLException e) {
-                    LogUtil.e("Failed to persist classified Topics. Exception : " + e.getMessage());
+                    sLogger.e("Failed to persist classified Topics. Exception : " + e.getMessage());
+                    ErrorLogUtil.e(
+                            e,
+                            TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 }
             }
         }
@@ -128,7 +162,6 @@ public class TopicsDao {
      * @param epochId the epoch ID to retrieve
      * @return {@link Map} a map of app -> topics
      */
-    @VisibleForTesting
     @NonNull
     public Map<String, List<Topic>> retrieveAppClassificationTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -193,7 +226,6 @@ public class TopicsDao {
      * @param epochId ID of current epoch
      * @param topTopics the topics list to persist into DB
      */
-    @VisibleForTesting
     public void persistTopTopics(long epochId, @NonNull List<Topic> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
@@ -224,7 +256,11 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.TopTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to persist Top Topics. Exception : " + e.getMessage());
+            sLogger.e("Failed to persist Top Topics. Exception : " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOP_TOPICS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -235,7 +271,6 @@ public class TopicsDao {
      * @param epochId the epochId to retrieve the top topics.
      * @return {@link List} a {@link List} of {@link Topic}
      */
-    @VisibleForTesting
     @NonNull
     public List<Topic> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -338,8 +373,13 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.UsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record App-Sdk usage history." + e.getMessage());
+            sLogger.e("Failed to record App-Sdk usage history." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_SDK_USAGE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
+
     }
 
     /**
@@ -365,7 +405,11 @@ public class TopicsDao {
             db.insert(
                     TopicsTables.AppUsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record App Only usage history." + e.getMessage());
+            sLogger.e("Failed to record App Only usage history." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_USAGE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -392,7 +436,7 @@ public class TopicsDao {
 
         try (Cursor cursor =
                 db.query(
-                        /* distinct = */ true,
+                        /* distinct= */ true,
                         TopicsTables.UsageHistoryContract.TABLE,
                         projection,
                         selection,
@@ -547,7 +591,11 @@ public class TopicsDao {
                             /* nullColumnHack */ null,
                             values);
                 } catch (SQLException e) {
-                    LogUtil.e(e, "Failed to record can learn topic.");
+                    sLogger.e(e, "Failed to record can learn topic.");
+                    ErrorLogUtil.e(
+                            e,
+                            TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 }
             }
         }
@@ -564,7 +612,6 @@ public class TopicsDao {
      * @param numberOfLookBackEpochs Look back numberOfLookBackEpochs.
      * @return {@link Map} a Map<Topic, Set<Caller>> where Caller = App or Sdk.
      */
-    @VisibleForTesting
     @NonNull
     public Map<Topic, Set<String>> retrieveCallerCanLearnTopicsMap(
             long epochId, int numberOfLookBackEpochs) {
@@ -597,7 +644,7 @@ public class TopicsDao {
 
         try (Cursor cursor =
                 db.query(
-                        /* distinct = */ true,
+                        /* distinct= */ true,
                         TopicsTables.CallerCanLearnTopicsContract.TABLE,
                         projection,
                         selection,
@@ -640,6 +687,7 @@ public class TopicsDao {
     }
 
     // TODO(b/236759629): Add a validation to ensure same topic for an app.
+
     /**
      * Persist the Apps, Sdks returned topics to DB.
      *
@@ -673,7 +721,11 @@ public class TopicsDao {
                         /* nullColumnHack */ null,
                         values);
             } catch (SQLException e) {
-                LogUtil.e(e, "Failed to record returned topic.");
+                sLogger.e(e, "Failed to record returned topic.");
+                ErrorLogUtil.e(
+                        e,
+                        TOPICS_RECORD_RETURNED_TOPICS_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
     }
@@ -748,7 +800,7 @@ public class TopicsDao {
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
                 long modelVersion =
-                        cursor.getInt(
+                        cursor.getLong(
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.ReturnedTopicContract.MODEL_VERSION));
                 int topicId =
@@ -786,7 +838,11 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.BlockedTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record blocked topic." + e.getMessage());
+            sLogger.e("Failed to record blocked topic." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -831,7 +887,11 @@ public class TopicsDao {
         try {
             db.delete(TopicsTables.BlockedTopicsContract.TABLE, whereClause, whereArgs);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record blocked topic." + e.getMessage());
+            sLogger.e("Failed to delete blocked topic." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_BLOCKED_TOPICS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -850,7 +910,7 @@ public class TopicsDao {
 
         try (Cursor cursor =
                 db.query(
-                        /* distinct = */ true,
+                        /* distinct= */ true,
                         TopicsTables.BlockedTopicsContract.TABLE, // The table to query
                         null, // Get all columns (null for all)
                         null, // Select all columns (null for all)
@@ -903,7 +963,11 @@ public class TopicsDao {
         try {
             db.delete(tableName, deletion, deletionArgs);
         } catch (SQLException e) {
-            LogUtil.e(e, "Failed to delete old epochs' data.");
+            sLogger.e(e, "Failed to delete old epochs' data.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_OLD_EPOCH_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -924,7 +988,15 @@ public class TopicsDao {
         try {
             for (String table : ALL_TOPICS_TABLES) {
                 if (!tablesToExclude.contains(table)) {
-                    db.delete(table, /* whereClause = */ null, /* whereArgs = */ null);
+                    try {
+                        db.delete(table, /* whereClause= */ null, /* whereArgs= */ null);
+                    } catch (SQLException e) {
+                        sLogger.e("Failed to delete %s table for Topics." + e.getMessage(), table);
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                    }
                 }
             }
 
@@ -936,40 +1008,129 @@ public class TopicsDao {
     }
 
     /**
-     * Erase all data in a table that associates with a certain application
+     * Delete by column for the given values. Allow passing in multiple tables with their
+     * corresponding column names to delete by.
      *
-     * @param tableName the table to remove data from
-     * @param appColumnName the column name in the table that represents the name of an application
-     * @param appNames a {@link List} of apps to wipe out data for
+     * @param tableNamesAndColumnNamePairs the tables and corresponding column names to remove
+     *     entries from
+     * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
+     *     {@code columnNameToDeleteFrom}
      */
-    public void deleteAppFromTable(
-            @NonNull String tableName,
-            @NonNull String appColumnName,
-            @NonNull List<String> appNames) {
-        Objects.requireNonNull(tableName);
-        Objects.requireNonNull(appColumnName);
-        Objects.requireNonNull(appNames);
+    public void deleteFromTableByColumn(
+            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
+            @NonNull List<String> valuesToDelete) {
+        Objects.requireNonNull(tableNamesAndColumnNamePairs);
+        Objects.requireNonNull(valuesToDelete);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null || appNames.isEmpty()) {
+        // If valuesToDelete is empty, do nothing.
+        if (db == null || valuesToDelete.isEmpty()) {
             return;
         }
 
-        // Construct the "IN" part of SQL Query
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("(?");
-        for (int i = 0; i < appNames.size() - 1; i++) {
-            stringBuilder.append(",?");
+        for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+            String tableName = tableAndColumnNamePair.first;
+            String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+
+            // Construct the "IN" part of SQL Query
+            StringBuilder whereClauseBuilder = new StringBuilder();
+            whereClauseBuilder.append("(?");
+            for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                whereClauseBuilder.append(",?");
+            }
+            whereClauseBuilder.append(')');
+
+            String whereClause = columnNameToDeleteFrom + " IN " + whereClauseBuilder;
+            String[] whereArgs = valuesToDelete.toArray(new String[0]);
+
+            try {
+                db.delete(tableName, whereClause, whereArgs);
+            } catch (SQLException e) {
+                sLogger.e(
+                        e,
+                        String.format(
+                                "Failed to delete %s in table %s.", valuesToDelete, tableName));
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            }
         }
-        stringBuilder.append(')');
+    }
 
-        String whereClause = appColumnName + " IN " + stringBuilder;
-        String[] whereArgs = appNames.toArray(new String[0]);
+    /**
+     * Delete an entry from tables if the value in the column of this entry exists in the given
+     * values.
+     *
+     * <p>Similar to deleteEntriesFromTableByColumn but only delete entries that satisfy the equal
+     * condition.
+     *
+     * @param tableNamesAndColumnNamePairs the tables and corresponding column names to remove
+     *     entries from
+     * @param valuesToDelete a {@link List} of values to delete if the entry has such value in
+     *     {@code columnNameToDeleteFrom}
+     * @param equalConditionColumnName the column name of the equal condition
+     * @param equalConditionColumnValue the value in {@code equalConditionColumnName} of the equal
+     *     condition
+     * @param isStringEqualConditionColumnValue whether the value of {@code
+     *     equalConditionColumnValue} is a string
+     */
+    public void deleteEntriesFromTableByColumnWithEqualCondition(
+            @NonNull List<Pair<String, String>> tableNamesAndColumnNamePairs,
+            @NonNull List<String> valuesToDelete,
+            @NonNull String equalConditionColumnName,
+            @NonNull String equalConditionColumnValue,
+            boolean isStringEqualConditionColumnValue) {
+        Objects.requireNonNull(tableNamesAndColumnNamePairs);
+        Objects.requireNonNull(valuesToDelete);
+        Objects.requireNonNull(equalConditionColumnName);
+        Objects.requireNonNull(equalConditionColumnValue);
 
-        try {
-            db.delete(tableName, whereClause, whereArgs);
-        } catch (SQLException e) {
-            LogUtil.e(e, String.format("Failed to delete %s in table %s.", appNames, tableName));
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        // If valuesToDelete is empty, do nothing.
+        if (db == null || valuesToDelete.isEmpty()) {
+            return;
+        }
+
+        for (Pair<String, String> tableAndColumnNamePair : tableNamesAndColumnNamePairs) {
+            String tableName = tableAndColumnNamePair.first;
+            String columnNameToDeleteFrom = tableAndColumnNamePair.second;
+
+            // Construct the "IN" part of SQL Query
+            StringBuilder whereClauseBuilder = new StringBuilder();
+            whereClauseBuilder.append("(?");
+            for (int i = 0; i < valuesToDelete.size() - 1; i++) {
+                whereClauseBuilder.append(",?");
+            }
+            whereClauseBuilder.append(')');
+
+            // Add equal condition to sql query. If the value is a string, bound it with single
+            // quotes.
+            String whereClause =
+                    columnNameToDeleteFrom
+                            + " IN "
+                            + whereClauseBuilder
+                            + " AND "
+                            + equalConditionColumnName
+                            + " = ";
+            if (isStringEqualConditionColumnValue) {
+                whereClause += "'" + equalConditionColumnValue + "'";
+            } else {
+                whereClause += equalConditionColumnValue;
+            }
+
+            try {
+                db.delete(tableName, whereClause, valuesToDelete.toArray(new String[0]));
+            } catch (SQLException e) {
+                sLogger.e(
+                        e,
+                        String.format(
+                                "Failed to delete %s in table %s.", valuesToDelete, tableName));
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            }
         }
     }
 
@@ -990,7 +1151,7 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.EpochOriginContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to persist epoch origin." + e.getMessage());
+            sLogger.e("Failed to persist epoch origin." + e.getMessage());
         }
     }
 
@@ -1033,5 +1194,128 @@ public class TopicsDao {
         }
 
         return origin;
+    }
+
+    /**
+     * Persist topic to contributor mappings to the database. In an epoch, an app is a contributor
+     * to a topic if the app has called Topics API in this epoch and is classified to the topic.
+     *
+     * @param epochId the epochId
+     * @param topicToContributorsMap a {@link Map} of topic to a @{@link Set} of its contributor
+     *     apps.
+     */
+    public void persistTopicContributors(
+            long epochId, @NonNull Map<Integer, Set<String>> topicToContributorsMap) {
+        Objects.requireNonNull(topicToContributorsMap);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        for (Map.Entry<Integer, Set<String>> topicToContributors :
+                topicToContributorsMap.entrySet()) {
+            Integer topicId = topicToContributors.getKey();
+
+            for (String app : topicToContributors.getValue()) {
+                ContentValues values = new ContentValues();
+                values.put(TopicsTables.TopicContributorsContract.EPOCH_ID, epochId);
+                values.put(TopicsTables.TopicContributorsContract.TOPIC, topicId);
+                values.put(TopicsTables.TopicContributorsContract.APP, app);
+
+                try {
+                    db.insert(
+                            TopicsTables.TopicContributorsContract.TABLE,
+                            /* nullColumnHack */ null,
+                            values);
+                } catch (SQLException e) {
+                    sLogger.e(e, "Failed to persist topic contributors.");
+                    ErrorLogUtil.e(
+                            e,
+                            TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieve topic to contributor mappings from database. In an epoch, an app is a contributor to
+     * a topic if the app has called Topics API in this epoch and is classified to the topic.
+     *
+     * @param epochId the epochId
+     * @return a {@link Map} of topic to its contributors
+     */
+    @NonNull
+    public Map<Integer, Set<String>> retrieveTopicToContributorsMap(long epochId) {
+        Map<Integer, Set<String>> topicToContributorsMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return topicToContributorsMap;
+        }
+
+        String[] projection = {
+            TopicsTables.TopicContributorsContract.EPOCH_ID,
+            TopicsTables.TopicContributorsContract.TOPIC,
+            TopicsTables.TopicContributorsContract.APP
+        };
+
+        String selection = TopicsTables.TopicContributorsContract.EPOCH_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(epochId)};
+
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.TopicContributorsContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        selection, // The columns for the WHERE clause
+                        selectionArgs, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
+            if (cursor == null) {
+                return topicToContributorsMap;
+            }
+
+            while (cursor.moveToNext()) {
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopicContributorsContract.APP));
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopicContributorsContract.TOPIC));
+
+                topicToContributorsMap.putIfAbsent(topicId, new HashSet<>());
+                topicToContributorsMap.get(topicId).add(app);
+            }
+        }
+
+        return topicToContributorsMap;
+    }
+
+    /**
+     * Delete all entries from a table.
+     *
+     * @param tableName the table to delete entries from
+     */
+    public void deleteAllEntriesFromTable(@NonNull String tableName) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        try {
+            db.delete(tableName, /* whereClause */ "", /* whereArgs */ new String[0]);
+        } catch (SQLException e) {
+            sLogger.e(
+                    "Failed to delete all entries from table %s. Error: %s",
+                    tableName, e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+        }
     }
 }

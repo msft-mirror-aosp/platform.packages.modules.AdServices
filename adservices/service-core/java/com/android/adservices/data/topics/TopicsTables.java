@@ -37,8 +37,9 @@ public final class TopicsTables {
         String TOPIC = "topic";
     }
 
-    // Table Create Statement for the Topics Epoch table
-    private static final String CREATE_TABLE_TOPICS_TAXONOMY =
+    /** Table Create Statement for the Topics Epoch table */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_TOPICS_TAXONOMY =
             "CREATE TABLE "
                     + TaxonomyContract.TABLE
                     + "("
@@ -57,7 +58,6 @@ public final class TopicsTables {
      * computation, the ML Classifier will generate topics for each app that uses the Topics API in
      * the epoch.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface AppClassificationTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "app_classification_topics";
         String ID = "_id";
@@ -68,8 +68,9 @@ public final class TopicsTables {
         String TOPIC = "topic";
     }
 
-    // Create Statement for the returned Topics table
-    private static final String CREATE_TABLE_APP_CLASSIFICATION_TOPICS =
+    /** Create Statement for the returned Topics table */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_APP_CLASSIFICATION_TOPICS =
             "CREATE TABLE "
                     + AppClassificationTopicsContract.TABLE
                     + "("
@@ -91,7 +92,6 @@ public final class TopicsTables {
      * This table has callers and which topics they can learn. Caller can be either (1) app in case
      * the app called the Topics API directly. (2) sdk in case the sdk called the Topics API.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface CallerCanLearnTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "caller_can_learn_topic";
         String ID = "_id";
@@ -102,8 +102,9 @@ public final class TopicsTables {
         String MODEL_VERSION = "model_version";
     }
 
-    // Create Statement for the Caller Learned Topic table.
-    private static final String CREATE_TABLE_CALLER_CAN_LEARN_TOPICS =
+    /** Create Statement for the Caller Learned Topic table. */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_CALLER_CAN_LEARN_TOPICS =
             "CREATE TABLE "
                     + CallerCanLearnTopicsContract.TABLE
                     + "("
@@ -142,8 +143,9 @@ public final class TopicsTables {
         String MODEL_VERSION = "model_version";
     }
 
-    // Table Create Statement for the Top Topics table
-    private static final String CREATE_TABLE_TOP_TOPICS =
+    /** Table Create Statement for the Top Topics table */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_TOP_TOPICS =
             "CREATE TABLE "
                     + TopTopicsContract.TABLE
                     + "("
@@ -173,7 +175,6 @@ public final class TopicsTables {
      * The returned topic for the app or for the sdk. Note: for App usages directly without any SDK,
      * the SDK Name is set to empty string.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface ReturnedTopicContract {
         String TABLE = TOPICS_TABLE_PREFIX + "returned_topics";
         String ID = "_id";
@@ -185,8 +186,9 @@ public final class TopicsTables {
         String TOPIC = "topic";
     }
 
-    // Create Statement for the returned Topics table
-    private static final String CREATE_TABLE_RETURNED_TOPIC =
+    /** Create Statement for the returned Topics table */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_RETURNED_TOPIC =
             "CREATE TABLE "
                     + ReturnedTopicContract.TABLE
                     + "("
@@ -210,7 +212,6 @@ public final class TopicsTables {
      * Table to store the app/sdk usage history. Whenever an app or sdk calls the Topics API, one
      * entry will be generated with the timestamp.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface UsageHistoryContract {
         String TABLE = TOPICS_TABLE_PREFIX + "usage_history";
         String EPOCH_ID = "epoch_id";
@@ -218,8 +219,9 @@ public final class TopicsTables {
         String SDK = "sdk";
     }
 
-    // Create Statement for the Usage History table
-    private static final String CREATE_TABLE_USAGE_HISTORY =
+    /** Create Statement for the Usage History table */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_USAGE_HISTORY =
             "CREATE TABLE "
                     + UsageHistoryContract.TABLE
                     + "("
@@ -235,7 +237,6 @@ public final class TopicsTables {
      * Table to store history for app only Whenever an app calls the Topics API, one entry will be
      * generated.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface AppUsageHistoryContract {
         String TABLE = TOPICS_TABLE_PREFIX + "app_usage_history";
         String ID = "_id";
@@ -243,8 +244,9 @@ public final class TopicsTables {
         String APP = "app";
     }
 
-    // Create Statement for the Usage History App Only table
-    private static final String CREATE_TABLE_APP_USAGE_HISTORY =
+    /** Create Statement for the Usage History App Only table */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_APP_USAGE_HISTORY =
             "CREATE TABLE "
                     + AppUsageHistoryContract.TABLE
                     + "("
@@ -257,7 +259,6 @@ public final class TopicsTables {
                     + ")";
 
     /** Table to store all blocked {@link Topic}s. Blocked topics are controlled by user. */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface BlockedTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "blocked";
         String ID = "_id";
@@ -266,8 +267,9 @@ public final class TopicsTables {
         String TOPIC = "topic";
     }
 
-    // Create Statement for the blocked topics table.
-    private static final String CREATE_TABLE_BLOCKED_TOPICS =
+    /** Create Statement for the blocked topics table. */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_BLOCKED_TOPICS =
             "CREATE TABLE "
                     + BlockedTopicsContract.TABLE
                     + "("
@@ -291,11 +293,14 @@ public final class TopicsTables {
         String ORIGIN = "origin";
     }
 
-    // At the first time inserting a record, it won't persist one_row_check field so that this first
-    // entry will have one_row_check = 1. Therefore, further persisting is not allowed as primary
-    // key cannot be duplicated value and one_row_check is constrained to only equal to 1 to forbid
-    // any increment.
-    private static final String CREATE_TABLE_EPOCH_ORIGIN =
+    /**
+     * At the first time inserting a record, it won't persist one_row_check field so that this first
+     * entry will have one_row_check = 1. Therefore, further persisting is not allowed as primary
+     * key cannot be duplicated value and one_row_check is constrained to only equal to 1 to forbid
+     * any increment.
+     */
+    @VisibleForTesting
+    public static final String CREATE_TABLE_EPOCH_ORIGIN =
             "CREATE TABLE "
                     + EpochOriginContract.TABLE
                     + "("
@@ -308,7 +313,34 @@ public final class TopicsTables {
                     + " = 1) "
                     + ")";
 
-    // Consolidated list of create statements for all tables.
+    /**
+     * Table to store classified topic to apps mapping. In an epoch, an app is a contributor to a
+     * topic if the app has called Topics API in this epoch and is classified to the topic.
+     */
+    public interface TopicContributorsContract {
+        String TABLE = TOPICS_TABLE_PREFIX + "topic_contributors";
+        String ID = "_id";
+        String EPOCH_ID = "epoch_id";
+        String TOPIC = "topic";
+        String APP = "app";
+    }
+
+    /** The SQLite query to create topic_contributors table if it doesn't exist */
+    public static final String CREATE_TABLE_TOPIC_CONTRIBUTORS =
+            "CREATE TABLE IF NOT EXISTS "
+                    + TopicContributorsContract.TABLE
+                    + "("
+                    + TopicContributorsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + TopicContributorsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + TopicContributorsContract.TOPIC
+                    + " INTEGER NOT NULL, "
+                    + AppUsageHistoryContract.APP
+                    + " TEXT NOT NULL"
+                    + ")";
+
+    /** Consolidated list of create statements for all tables. */
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
                     Arrays.asList(
@@ -320,7 +352,16 @@ public final class TopicsTables {
                             CREATE_TABLE_APP_USAGE_HISTORY,
                             CREATE_TABLE_CALLER_CAN_LEARN_TOPICS,
                             CREATE_TABLE_BLOCKED_TOPICS,
-                            CREATE_TABLE_EPOCH_ORIGIN));
+                            CREATE_TABLE_EPOCH_ORIGIN,
+                            CREATE_TABLE_TOPIC_CONTRIBUTORS));
+    // TODO(b/227393493): Should support a test if new table is added.
+    // *******************************************************************************************
+    // * NOTE: Please check below steps before adding a new table:
+    // * 1) TopicsDao -> ALL_TOPICS_TABLES: User Consent to clear all tables
+    // * 2) EpochManager -> TABLE_INFO_FOR_EPOCH_GARBAGE_COLLECTION: GC for dat of old epochs.
+    // * 3) AppUpdateManager -> TABLE_INFO_TO_ERASE_APP_DATA: clear app data for app uninstallation
+    // * 4) DbHelper -> onUpgrade: Handle any new schema change
+    // *******************************************************************************************
 
     // Private constructor to prevent instantiation.
     private TopicsTables() {}

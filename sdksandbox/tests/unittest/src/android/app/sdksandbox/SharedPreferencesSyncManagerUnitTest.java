@@ -37,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,6 +90,23 @@ public class SharedPreferencesSyncManagerUnitTest {
         final SharedPreferencesSyncManager manager2 =
                 SharedPreferencesSyncManager.getInstance(mContext, mSdkSandboxManagerService);
         assertThat(manager1).isSameInstanceAs(manager2);
+
+        Context mockContext = Mockito.mock(Context.class);
+        Mockito.when(mockContext.getPackageName()).thenReturn(mContext.getPackageName());
+        final SharedPreferencesSyncManager manager3 =
+                SharedPreferencesSyncManager.getInstance(mockContext, mSdkSandboxManagerService);
+        assertThat(manager1).isSameInstanceAs(manager3);
+    }
+
+    @Test
+    public void test_sharedPreferencesSyncManager_isSingletonPerPackage() throws Exception {
+        final SharedPreferencesSyncManager manager1 =
+                SharedPreferencesSyncManager.getInstance(mContext, mSdkSandboxManagerService);
+
+        Context mockContext = Mockito.mock(Context.class);
+        final SharedPreferencesSyncManager manager2 =
+                SharedPreferencesSyncManager.getInstance(mockContext, mSdkSandboxManagerService);
+        assertThat(manager1).isNotSameInstanceAs(manager2);
     }
 
     @Test
@@ -119,6 +137,18 @@ public class SharedPreferencesSyncManagerUnitTest {
         mSyncManager.removeSharedPreferencesSyncKeys(Set.of("foo"));
 
         assertThat(mSyncManager.getSharedPreferencesSyncKeys()).containsExactly("bar");
+    }
+
+    @Test
+    public void test_removeKeys_updateSentForRemoval() throws Exception {
+        mSyncManager.addSharedPreferencesSyncKeys(KEYS_TO_SYNC);
+
+        // Remove key
+        mSyncManager.removeSharedPreferencesSyncKeys(Set.of(KEY_TO_UPDATE));
+
+        final SharedPreferencesUpdate update = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(update.getData().keySet()).doesNotContain(Set.of(KEY_TO_UPDATE));
+        assertThat(update.getKeysInUpdate()).containsExactly(KEY_WITH_TYPE_TO_UPDATE);
     }
 
     @Test

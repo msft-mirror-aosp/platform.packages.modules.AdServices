@@ -16,43 +16,50 @@
 
 package com.android.adservices.service.measurement;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Set;
 
 public class EventTriggerTest {
-    private static JSONObject sFilterData1;
-    private static JSONObject sFilterData2;
-    private static JSONObject sNotFilterData1;
-    private static JSONObject sNotFilterData2;
+    private static JSONObject sFilterMap1;
+    private static JSONObject sFilterMap2;
+    private static JSONObject sNotFilterMap1;
+    private static JSONObject sNotFilterMap2;
 
     static {
         try {
-            sFilterData1 =
+            sFilterMap1 =
                     new JSONObject(
                             "{\n"
                                     + "    \"source_type\": [\"navigation\"],\n"
                                     + "    \"key_1\": [\"value_1\"] \n"
                                     + "   }\n");
-            sFilterData2 =
+            sFilterMap2 =
                     new JSONObject(
                             "{\n"
                                     + "    \"source_type\": [\"EVENT\"],\n"
                                     + "    \"key_1\": [\"value_1\"] \n"
                                     + "   }\n");
-            sNotFilterData1 =
+            sNotFilterMap1 =
                     new JSONObject(
                             "{\n"
                                     + "    \"not_source_type\": [\"EVENT\"],\n"
                                     + "    \"not_key_1\": [\"value_1\"] \n"
                                     + "   }\n");
-            sNotFilterData2 =
+            sNotFilterMap2 =
                     new JSONObject(
                             "{\n"
                                     + "    \"not_source_type\": [\"navigation\"],\n"
@@ -65,43 +72,47 @@ public class EventTriggerTest {
 
     @Test
     public void testDefaults() throws Exception {
-        EventTrigger eventTrigger = new EventTrigger.Builder().build();
+        EventTrigger eventTrigger = new EventTrigger.Builder(new UnsignedLong(0L)).build();
         assertEquals(0L, eventTrigger.getTriggerPriority());
-        assertNull(eventTrigger.getTriggerData());
+        assertNotNull(eventTrigger.getTriggerData());
         assertNull(eventTrigger.getDedupKey());
-        assertFalse(eventTrigger.getFilterData().isPresent());
-        assertFalse(eventTrigger.getNotFilterData().isPresent());
+        assertFalse(eventTrigger.getFilterSet().isPresent());
+        assertFalse(eventTrigger.getNotFilterSet().isPresent());
     }
 
     @Test
     public void test_equals_pass() throws Exception {
         EventTrigger eventTrigger1 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(1L)
-                        .setTriggerData(101L)
-                        .setDedupKey(1001L)
-                        .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
-                                        .build())
-                        .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
-                                        .build())
+                        .setTriggerValue(100L)
+                        .setDedupKey(new UnsignedLong(1001L))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sFilterMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sNotFilterMap1)
+                                                .build()))
                         .build();
         EventTrigger eventTrigger2 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(1L)
-                        .setTriggerData(101L)
-                        .setDedupKey(1001L)
-                        .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
-                                        .build())
-                        .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
-                                        .build())
+                        .setTriggerValue(100L)
+                        .setDedupKey(new UnsignedLong(1001L))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sFilterMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sNotFilterMap1)
+                                                .build()))
                         .build();
 
         assertEquals(eventTrigger1, eventTrigger2);
@@ -110,39 +121,46 @@ public class EventTriggerTest {
     @Test
     public void test_equals_fail() throws Exception {
         assertNotEquals(
-                new EventTrigger.Builder().setTriggerPriority(1L).build(),
-                new EventTrigger.Builder().setTriggerPriority(2L).build());
+                new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerPriority(1L).build(),
+                new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerPriority(2L).build());
         assertNotEquals(
-                new EventTrigger.Builder().setTriggerData(1L).build(),
-                new EventTrigger.Builder().setTriggerData(2L).build());
+                new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerValue(100L).build(),
+                new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerValue(120L).build());
         assertNotEquals(
-                new EventTrigger.Builder().setDedupKey(1L).build(),
-                new EventTrigger.Builder().setDedupKey(2L).build());
+                new EventTrigger.Builder(new UnsignedLong(1L)).build(),
+                new EventTrigger.Builder(new UnsignedLong(2L)).build());
         assertNotEquals(
-                new EventTrigger.Builder()
-                        .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
-                                        .build())
+                new EventTrigger.Builder(new UnsignedLong(0L))
+                        .setDedupKey(new UnsignedLong(1L))
                         .build(),
-                new EventTrigger.Builder()
-                        .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData2)
-                                        .build())
+                new EventTrigger.Builder(new UnsignedLong(0L))
+                        .setDedupKey(new UnsignedLong(2L))
                         .build());
         assertNotEquals(
-                new EventTrigger.Builder()
-                        .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
-                                        .build())
+                new EventTrigger.Builder(new UnsignedLong(0L))
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
+                                        .build()))
                         .build(),
-                new EventTrigger.Builder()
-                        .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData2)
-                                        .build())
+                new EventTrigger.Builder(new UnsignedLong(0L))
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap2)
+                                        .build()))
+                        .build());
+        assertNotEquals(
+                new EventTrigger.Builder(new UnsignedLong(0L))
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
+                                        .build()))
+                        .build(),
+                new EventTrigger.Builder(new UnsignedLong(0L))
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap2)
+                                        .build()))
                         .build());
     }
 
@@ -161,18 +179,17 @@ public class EventTriggerTest {
     public void testHashCode_notEquals() throws Exception {
         EventTrigger eventTrigger1 = createExample();
         EventTrigger eventTrigger2 =
-                new EventTrigger.Builder()
+                new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(2L)
-                        .setTriggerData(101L)
-                        .setDedupKey(1001L)
-                        .setFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sFilterData1)
-                                        .build())
-                        .setNotFilter(
-                                new AggregateFilterData.Builder()
-                                        .buildAggregateFilterData(sNotFilterData1)
-                                        .build())
+                        .setDedupKey(new UnsignedLong(1001L))
+                        .setFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sFilterMap1)
+                                        .build()))
+                        .setNotFilterSet(List.of(
+                                new FilterMap.Builder()
+                                        .buildFilterData(sNotFilterMap1)
+                                        .build()))
                         .build();
         Set<EventTrigger> eventTriggerSet1 = Set.of(eventTrigger1);
         Set<EventTrigger> eventTriggerSet2 = Set.of(eventTrigger2);
@@ -181,19 +198,29 @@ public class EventTriggerTest {
         assertNotEquals(eventTriggerSet1, eventTriggerSet2);
     }
 
+    @Test
+    public void eventTriggerBuilder_nullTriggerData_fail() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new EventTrigger.Builder(null)
+                                .setTriggerPriority(124L)
+                                .setDedupKey(new UnsignedLong(101L))
+                                .build());
+    }
+
     private EventTrigger createExample() throws JSONException {
-        return new EventTrigger.Builder()
+        return new EventTrigger.Builder(new UnsignedLong(101L))
                 .setTriggerPriority(1L)
-                .setTriggerData(101L)
-                .setDedupKey(1001L)
-                .setFilter(
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(sFilterData1)
-                                .build())
-                .setNotFilter(
-                        new AggregateFilterData.Builder()
-                                .buildAggregateFilterData(sNotFilterData1)
-                                .build())
+                .setDedupKey(new UnsignedLong(1001L))
+                .setFilterSet(List.of(
+                        new FilterMap.Builder()
+                                .buildFilterData(sFilterMap1)
+                                .build()))
+                .setNotFilterSet(List.of(
+                        new FilterMap.Builder()
+                                .buildFilterData(sNotFilterMap1)
+                                .build()))
                 .build();
     }
 }

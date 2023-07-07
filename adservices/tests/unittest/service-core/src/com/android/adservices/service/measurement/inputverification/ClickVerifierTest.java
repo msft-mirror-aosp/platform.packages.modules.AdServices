@@ -24,6 +24,7 @@ import android.hardware.input.InputManager;
 import android.view.InputEvent;
 import android.view.MotionEvent;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -39,12 +40,13 @@ public final class ClickVerifierTest {
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
     @Mock private InputManager mInputManager;
+    @Mock private Flags mFlags;
     private ClickVerifier mClickVerifier;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        mClickVerifier = new ClickVerifier(mInputManager);
+        mClickVerifier = new ClickVerifier(mInputManager, mFlags);
     }
 
     @Test
@@ -62,11 +64,14 @@ public final class ClickVerifierTest {
     @Test
     public void testInputEventInsideTimeRangeReturnsTrue() {
         InputEvent eventInsideRange = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+
         assertThat(
                         mClickVerifier.isInputEventWithinValidTimeRange(
-                                FlagsFactory.getFlagsForTest()
-                                        .getMeasurementRegistrationInputEventValidWindowMs(),
-                                eventInsideRange))
+                                registerTimestamp, eventInsideRange))
                 .isTrue();
     }
 
@@ -81,7 +86,23 @@ public final class ClickVerifierTest {
                         0,
                         0,
                         0);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
         assertThat(mClickVerifier.isInputEventVerifiableBySystem(inputEvent)).isFalse();
+    }
+
+    @Test
+    public void testInputEvent_verifyByInputEventFlagDisabled_Verified() {
+        InputEvent inputEvent =
+                MotionEvent.obtain(
+                        266L,
+                        FlagsFactory.getFlagsForTest()
+                                .getMeasurementRegistrationInputEventValidWindowMs(),
+                        MotionEvent.ACTION_DOWN,
+                        24.3f,
+                        46.7f,
+                        0);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
+        assertThat(mClickVerifier.isInputEventVerifiableBySystem(inputEvent)).isTrue();
     }
 }

@@ -22,15 +22,11 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
-import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
-import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
-import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,39 +34,23 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.TreeMap;
 
 /**
  * POJO for Source.
  */
 public class Source {
 
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
-
-    /** Multiplier is 1, when only one destination needs to be considered. */
-    public static final int SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 1;
-
-    /**
-     * Double-folds the number of states in order to allocate half to app destination and half to
-     * web destination for fake reports generation.
-     */
-    public static final int DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER = 2;
-
     private String mId;
-    private long mEventId;
+    private UnsignedLong mEventId;
     private Uri mPublisher;
     @EventSurfaceType private int mPublisherType;
-    private Uri mAppDestination;
-    private Uri mWebDestination;
+    private List<Uri> mAppDestinations;
+    private List<Uri> mWebDestinations;
     private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
@@ -78,25 +58,44 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<Long> mDedupKeys;
+    private long mEventReportWindow;
+    private long mAggregatableReportWindow;
+    private List<UnsignedLong> mAggregateReportDedupKeys;
+    private List<UnsignedLong> mEventReportDedupKeys;
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
-    private @Nullable Long mDebugKey;
+    @Nullable private UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
-    private String mAggregateFilterData;
+    private boolean mIsDebugReporting;
+    private String mFilterDataString;
+    private FilterMap mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
-    private AggregatableAttributionSource mAggregatableAttributionSource;
+    private Optional<AggregatableAttributionSource> mAggregatableAttributionSource;
+    private boolean mAdIdPermission;
+    private boolean mArDebugPermission;
+    @Nullable private String mRegistrationId;
+    @Nullable private String mSharedAggregationKeys;
+    @Nullable private Long mInstallTime;
+    @Nullable private String mParentId;
+    @Nullable private String mDebugJoinKey;
+    @Nullable private ReportSpec mFlexEventReportSpec;
+    @Nullable private String mTriggerSpecsString;
+    @Nullable private String mMaxBucketIncrementsString;
+    @Nullable private String mEventAttributionStatusString;
+    @Nullable private String mPrivacyParametersString;
+    @Nullable private String mPlatformAdId;
+    @Nullable private String mDebugAdId;
+    private Uri mRegistrationOrigin;
+    private boolean mCoarseEventReportDestinations;
 
-    @IntDef(value = {
-            Status.ACTIVE,
-            Status.IGNORED,
-    })
+    @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
         int ACTIVE = 0;
         int IGNORED = 1;
+        int MARKED_TO_DELETE = 2;
     }
 
     @IntDef(value = {
@@ -120,7 +119,7 @@ public class Source {
         private final String mValue;
 
         SourceType(String value) {
-            this.mValue = value;
+            mValue = value;
         }
 
         public String getValue() {
@@ -129,25 +128,27 @@ public class Source {
     }
 
     private Source() {
-        mDedupKeys = new ArrayList<>();
+        mEventReportDedupKeys = new ArrayList<>();
+        mAggregateReportDedupKeys = new ArrayList<>();
         mStatus = Status.ACTIVE;
         mSourceType = SourceType.EVENT;
         // Making this default explicit since it anyway would occur on an uninitialised int field.
         mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
         mIsInstallAttributed = false;
+        mIsDebugReporting = false;
     }
 
     /** Class for storing fake report data. */
     public static class FakeReport {
-        private final long mTriggerData;
+        private final UnsignedLong mTriggerData;
         private final long mReportingTime;
-        private final Uri mDestination;
+        private final List<Uri> mDestinations;
 
-        public FakeReport(long triggerData, long reportingTime, Uri destination) {
-            this.mTriggerData = triggerData;
-            this.mReportingTime = reportingTime;
-            this.mDestination = destination;
+        public FakeReport(UnsignedLong triggerData, long reportingTime, List<Uri> destinations) {
+            mTriggerData = triggerData;
+            mReportingTime = reportingTime;
+            mDestinations = destinations;
         }
 
         @Override
@@ -155,83 +156,27 @@ public class Source {
             if (this == o) return true;
             if (!(o instanceof FakeReport)) return false;
             FakeReport that = (FakeReport) o;
-            return mTriggerData == that.mTriggerData
+            return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
-                    && Objects.equals(mDestination, that.mDestination);
+                    && Objects.equals(mDestinations, that.mDestinations);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTriggerData, mReportingTime, mDestination);
+            return Objects.hash(mTriggerData, mReportingTime, mDestinations);
         }
 
         public long getReportingTime() {
             return mReportingTime;
         }
 
-        public long getTriggerData() {
+        public UnsignedLong getTriggerData() {
             return mTriggerData;
         }
 
-        public Uri getDestination() {
-            return mDestination;
+        public List<Uri> getDestinations() {
+            return mDestinations;
         }
-    }
-
-    ImpressionNoiseParams getImpressionNoiseParams() {
-        int destinationMultiplier =
-                (mAppDestination != null && mWebDestination != null)
-                        ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
-                        : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
-
-        return new ImpressionNoiseParams(
-                getMaxReportCountInternal(isInstallDetectionEnabled()),
-                getTriggerDataCardinality(),
-                getReportingWindowCountForNoising(),
-                destinationMultiplier);
-    }
-
-    private ImmutableList<Long> getEarlyReportingWindows(boolean installState) {
-        long[] earlyWindows;
-        if (installState) {
-            earlyWindows = mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-        } else {
-            earlyWindows = mSourceType == SourceType.EVENT
-                    ? PrivacyParams.EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
-                    : PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-        }
-
-        List<Long> windowList = new ArrayList<>();
-
-        for (long windowDelta : earlyWindows) {
-            long window = mEventTime + windowDelta;
-            if (mExpiryTime <= window) {
-                continue;
-            }
-            windowList.add(window);
-        }
-        return ImmutableList.copyOf(windowList);
-    }
-
-    /**
-     * Return reporting time by index for noising based on the index
-     *
-     * @param windowIndex index of the reporting window for which
-     * @return reporting time in milliseconds
-     */
-    public long getReportingTimeForNoising(int windowIndex) {
-        List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
-        return windowIndex < windowList.size()
-                ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
-                mExpiryTime + ONE_HOUR_IN_MILLIS;
-    }
-
-    @VisibleForTesting
-    int getReportingWindowCountForNoising() {
-        // Early Count + expiry
-        return getEarlyReportingWindows(isInstallDetectionEnabled()).size() + 1;
     }
 
     /**
@@ -241,63 +186,15 @@ public class Source {
     public int getTriggerDataCardinality() {
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
-                : PrivacyParams.NAVIGATION_TRIGGER_DATA_CARDINALITY;
+                : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**
-     * Max reports count based on conversion destination type and installation state.
-     *
-     * @param destinationType conversion destination type
-     * @return maximum number of reports allowed
+     * @return the flex event report specifications
      */
-    public int getMaxReportCount(@NonNull @EventSurfaceType int destinationType) {
-        boolean isInstallCase =
-                destinationType == EventSurfaceType.APP && mIsInstallAttributed;
-        return getMaxReportCountInternal(isInstallCase);
-    }
-
-    private int getMaxReportCountInternal(boolean isInstallCase) {
-        if (isInstallCase) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
-        }
-        return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS
-                : PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
-    }
-
-    /** @return Probability of selecting random state for attribution */
-    public double getRandomAttributionProbability() {
-        // Both destinations are set and install attribution is supported
-        if (mWebDestination != null && isInstallDetectionEnabled()) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-        }
-
-        // Both destinations are set but install attribution isn't supported
-        if (mAppDestination != null && mWebDestination != null) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                    : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-        }
-
-        // App destination is set and install attribution is supported
-        if (isInstallDetectionEnabled()) {
-            return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY :
-                    PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
-        }
-
-        // One of the destinations is available without install attribution support
-        return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_NOISE_PROBABILITY
-                : PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAppDestination != null;
+    @Nullable
+    public ReportSpec getFlexEventReportSpec() {
+        return mFlexEventReportSpec;
     }
 
     @Override
@@ -306,27 +203,42 @@ public class Source {
             return false;
         }
         Source source = (Source) obj;
-        return Objects.equals(mId, source.mId)
-                && Objects.equals(mPublisher, source.mPublisher)
+        return Objects.equals(mPublisher, source.mPublisher)
                 && mPublisherType == source.mPublisherType
-                && Objects.equals(mAppDestination, source.mAppDestination)
-                && Objects.equals(mWebDestination, source.mWebDestination)
+                && areEqualNullableDestinations(mAppDestinations, source.mAppDestinations)
+                && areEqualNullableDestinations(mWebDestinations, source.mWebDestinations)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
+                && mEventReportWindow == source.mEventReportWindow
+                && mAggregatableReportWindow == source.mAggregatableReportWindow
                 && mEventTime == source.mEventTime
-                && mEventId == source.mEventId
+                && mAdIdPermission == source.mAdIdPermission
+                && mArDebugPermission == source.mArDebugPermission
+                && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
-                && Objects.equals(mDedupKeys, source.mDedupKeys)
+                && Objects.equals(mEventReportDedupKeys, source.mEventReportDedupKeys)
+                && Objects.equals(mAggregateReportDedupKeys, source.mAggregateReportDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
-                && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
+                && mIsDebugReporting == source.mIsDebugReporting
+                && Objects.equals(mFilterDataString, source.mFilterDataString)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
-                        mAggregatableAttributionSource, source.mAggregatableAttributionSource);
+                        mAggregatableAttributionSource, source.mAggregatableAttributionSource)
+                && Objects.equals(mRegistrationId, source.mRegistrationId)
+                && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
+                && Objects.equals(mParentId, source.mParentId)
+                && Objects.equals(mInstallTime, source.mInstallTime)
+                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey)
+                && Objects.equals(mPlatformAdId, source.mPlatformAdId)
+                && Objects.equals(mDebugAdId, source.mDebugAdId)
+                && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
+                && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
+                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
     }
 
     @Override
@@ -335,88 +247,49 @@ public class Source {
                 mId,
                 mPublisher,
                 mPublisherType,
-                mAppDestination,
-                mWebDestination,
+                mAppDestinations,
+                mWebDestinations,
                 mEnrollmentId,
                 mPriority,
                 mStatus,
                 mExpiryTime,
+                mEventReportWindow,
+                mAggregatableReportWindow,
                 mEventTime,
                 mEventId,
                 mSourceType,
-                mDedupKeys,
-                mAggregateFilterData,
+                mEventReportDedupKeys,
+                mAggregateReportDedupKeys,
+                mFilterDataString,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
-                mDebugKey);
+                mDebugKey,
+                mAdIdPermission,
+                mArDebugPermission,
+                mRegistrationId,
+                mSharedAggregationKeys,
+                mInstallTime,
+                mDebugJoinKey,
+                mPlatformAdId,
+                mDebugAdId,
+                mRegistrationOrigin,
+                mDebugJoinKey,
+                mFlexEventReportSpec,
+                mCoarseEventReportDestinations);
     }
 
-    /**
-     * Calculates the reporting time based on the {@link Trigger} time, {@link Source}'s expiry and
-     * trigger destination type.
-     *
-     * @return the reporting time
-     */
-    public long getReportingTime(long triggerTime, @EventSurfaceType int destinationType) {
-        if (triggerTime < mEventTime) {
-            return -1;
-        }
-
-        // Cases where source could have both web and app destinations, there if the trigger
-        // destination is an app and it was installed, then installState should be considered true.
-        boolean isAppInstalled =
-                destinationType == EventSurfaceType.APP && mIsInstallAttributed;
-        List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
-        for (Long window: reportingWindows) {
-            if (triggerTime < window) {
-                return window + ONE_HOUR_IN_MILLIS;
-            }
-        }
-        return mExpiryTime + ONE_HOUR_IN_MILLIS;
-    }
-
-    @VisibleForTesting
-    void setAttributionMode(@AttributionMode int attributionMode) {
+    public void setAttributionMode(@AttributionMode int attributionMode) {
         mAttributionMode = attributionMode;
     }
 
     /**
-     * Assign attribution mode based on random rate and generate fake reports if needed. Should only
-     * be called for a new Source.
+     * Retrieve the attribution destinations corresponding to their destination type.
      *
-     * @return fake reports to be stored in the datastore.
+     * @return a list of Uris.
      */
-    public List<FakeReport> assignAttributionModeAndGenerateFakeReports() {
-        Random rand = new Random();
-        double value = rand.nextDouble();
-        if (value > getRandomAttributionProbability()) {
-            mAttributionMode = AttributionMode.TRUTHFULLY;
-            return Collections.emptyList();
-        }
-
-        List<FakeReport> fakeReports;
-        if (isVtcDualDestinationModeWithPostInstallEnabled()) {
-            // Source is 'EVENT' type, both app and web destination are set and install exclusivity
-            // window is provided. Pick one of the static reporting states randomly.
-            fakeReports = generateVtcDualDestinationPostInstallFakeReports();
-        } else {
-            // There will at least be one (app or web) destination available
-            ImpressionNoiseParams noiseParams = getImpressionNoiseParams();
-            fakeReports =
-                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
-                            .stream()
-                            .map(
-                                    reportConfig ->
-                                            new FakeReport(
-                                                    reportConfig[0],
-                                                    getReportingTimeForNoising(reportConfig[1]),
-                                                    resolveFakeReportDestination(reportConfig[2])))
-                            .collect(Collectors.toList());
-        }
-
-        mAttributionMode = fakeReports.isEmpty() ? AttributionMode.NEVER : AttributionMode.FALSELY;
-        return fakeReports;
+    public List<Uri> getAttributionDestinations(@EventSurfaceType int destinationType) {
+        return destinationType == EventSurfaceType.APP ? mAppDestinations : mWebDestinations;
     }
 
     /**
@@ -429,7 +302,7 @@ public class Source {
     /**
      * Identifier provided by the registrant.
      */
-    public long getEventId() {
+    public UnsignedLong getEventId() {
         return mEventId;
     }
 
@@ -458,16 +331,16 @@ public class Source {
         return mPublisherType;
     }
 
-    /** Uri for the {@link Trigger}'s app destination. */
+    /** Uris for the {@link Trigger}'s app destinations. */
     @Nullable
-    public Uri getAppDestination() {
-        return mAppDestination;
+    public List<Uri> getAppDestinations() {
+        return mAppDestinations;
     }
 
-    /** Uri for the {@link Trigger}'s web destination. */
+    /** Uris for the {@link Trigger}'s web destinations. */
     @Nullable
-    public Uri getWebDestination() {
-        return mWebDestination;
+    public List<Uri> getWebDestinations() {
+        return mWebDestinations;
     }
 
     /**
@@ -477,13 +350,24 @@ public class Source {
         return mSourceType;
     }
 
-    /** Time when {@link Source} will expiry. */
+    /** Time when {@link Source} will expire. */
     public long getExpiryTime() {
         return mExpiryTime;
     }
 
+    /** Time when {@link Source} event report window will expire. */
+    public long getEventReportWindow() {
+        return mEventReportWindow;
+    }
+
+    /** Time when {@link Source} aggregate report window will expire. */
+    public long getAggregatableReportWindow() {
+        return mAggregatableReportWindow;
+    }
+
     /** Debug key of {@link Source}. */
-    public @Nullable Long getDebugKey() {
+    @Nullable
+    public UnsignedLong getDebugKey() {
         return mDebugKey;
     }
 
@@ -494,11 +378,24 @@ public class Source {
         return mEventTime;
     }
 
-    /**
-     * List of dedup keys for the attributed {@link Trigger}.
-     */
-    public List<Long> getDedupKeys() {
-        return mDedupKeys;
+    /** Is Ad ID Permission Enabled. */
+    public boolean hasAdIdPermission() {
+        return mAdIdPermission;
+    }
+
+    /** Is Ar Debug Permission Enabled. */
+    public boolean hasArDebugPermission() {
+        return mArDebugPermission;
+    }
+
+    /** List of dedup keys for the attributed {@link Trigger}. */
+    public List<UnsignedLong> getEventReportDedupKeys() {
+        return mEventReportDedupKeys;
+    }
+
+    /** List of dedup keys used for generating Aggregate Reports. */
+    public List<UnsignedLong> getAggregateReportDedupKeys() {
+        return mAggregateReportDedupKeys;
     }
 
     /** Current status of the {@link Source}. */
@@ -541,22 +438,46 @@ public class Source {
         return mIsInstallAttributed;
     }
 
+    /** Is Ad Tech Opt-in to Debug Reporting {@link Source}. */
+    public boolean isDebugReporting() {
+        return mIsDebugReporting;
+    }
+
+    /**
+     * Check whether the parameter of flexible event API is valid or not. Currently, only max
+     * information gain is check because of the computation is complicated. Other straightforward
+     * value errors will be show in the debug log using LogUtil
+     *
+     * @return whether the parameters of flexible are valid
+     */
+    public boolean isFlexEventApiValueValid() {
+        if (mFlexEventReportSpec == null) {
+            // the source doesn't not use flexible event report api. It is always valid
+            return true;
+        }
+        double informationGainThreshold = Double.MIN_VALUE;
+        if (mSourceType == SourceType.EVENT) {
+            informationGainThreshold =
+                    PrivacyParams.getMaxFlexibleEventInformationGainEventSource();
+        } else if (mSourceType == SourceType.NAVIGATION) {
+            informationGainThreshold =
+                    PrivacyParams.getMaxFlexibleEventInformationGainNavigationSource();
+        }
+        if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
-     * JSONObject in Attribution-Reporting-Register-Source header.
-     * Example:
-     * Attribution-Reporting-Register-Source: {
-     *   // some other fields.
-     *   "filter_data" : {
-     *    "conversion_subdomain": ["electronics.megastore"],
-     *    "product": ["1234", "2345"],
-     *    "ctid": ["id"],
-     *    ......
-     * }
-     * }
+     * JSONObject in Attribution-Reporting-Register-Source header. Example:
+     * Attribution-Reporting-Register-Source: { // some other fields. "filter_data" : {
+     * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "2345"], "ctid":
+     * ["id"], ...... } }
      */
-    public String getAggregateFilterData() {
-        return mAggregateFilterData;
+    public String getFilterDataString() {
+        return mFilterDataString;
     }
 
     /**
@@ -590,13 +511,138 @@ public class Source {
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
-    public AggregatableAttributionSource getAggregatableAttributionSource() {
+    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
+            throws JSONException {
+        if (mAggregatableAttributionSource == null) {
+            if (mAggregateSource == null) {
+                mAggregatableAttributionSource = Optional.empty();
+                return mAggregatableAttributionSource;
+            }
+            JSONObject jsonObject = new JSONObject(mAggregateSource);
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+            for (String key : jsonObject.keySet()) {
+                // Remove "0x" prefix.
+                String hexString = jsonObject.getString(key).substring(2);
+                BigInteger bigInteger = new BigInteger(hexString, 16);
+                aggregateSourceMap.put(key, bigInteger);
+            }
+            AggregatableAttributionSource aggregatableAttributionSource =
+                    new AggregatableAttributionSource.Builder()
+                            .setAggregatableSource(aggregateSourceMap)
+                            .setFilterMap(getFilterData())
+                            .build();
+            mAggregatableAttributionSource = Optional.of(aggregatableAttributionSource);
+        }
+
         return mAggregatableAttributionSource;
+    }
+
+    /** Returns the registration id. */
+    @Nullable
+    public String getRegistrationId() {
+        return mRegistrationId;
+    }
+
+    /**
+     * Returns the shared aggregation keys of the source as a unique list of strings. Example:
+     * [“campaignCounts”]
+     */
+    @Nullable
+    public String getSharedAggregationKeys() {
+        return mSharedAggregationKeys;
+    }
+
+    /** Returns the install time of the source which is the same value as event time. */
+    @Nullable
+    public Long getInstallTime() {
+        return mInstallTime;
+    }
+
+    /**
+     * Returns join key that should be matched with trigger's join key at the time of generating
+     * reports.
+     */
+    @Nullable
+    public String getDebugJoinKey() {
+        return mDebugJoinKey;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
+     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
+     * generating reports.
+     */
+    @Nullable
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+     * enrollment ID, to be matched with an app trigger's {@link Trigger#getPlatformAdId()} value at
+     * the time of generating reports.
+     */
+    @Nullable
+    public String getDebugAdId() {
+        return mDebugAdId;
+    }
+
+    /**
+     * Indicates whether event report for this source should be generated with the destinations
+     * where the conversion occurred or merge app and web destinations. Set to true of both app and
+     * web destination should be merged into the array of event report.
+     */
+    public boolean getCoarseEventReportDestinations() {
+        return mCoarseEventReportDestinations;
+    }
+
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
+    /** Returns trigger specs */
+    public String getTriggerSpecs() {
+        return mTriggerSpecsString;
+    }
+
+    /** Returns max bucket increments */
+    public String getMaxBucketIncrements() {
+        return mMaxBucketIncrementsString;
+    }
+
+    /** Returns event attribution status of current source */
+    public String getEventAttributionStatus() {
+        return mEventAttributionStatusString;
+    }
+
+    /** Returns privacy parameters */
+    public String getPrivacyParameters() {
+        return mPrivacyParametersString;
+    }
+
+    /** See {@link Source#getAppDestinations()} */
+    public void setAppDestinations(@Nullable List<Uri> appDestinations) {
+        mAppDestinations = appDestinations;
+    }
+
+    /** See {@link Source#getWebDestinations()} */
+    public void setWebDestinations(@Nullable List<Uri> webDestinations) {
+        mWebDestinations = webDestinations;
     }
 
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
+    }
+
+    /**
+     * @return if it's a derived source, returns the ID of the source it was created from. If it is
+     *     null, it is an original source.
+     */
+    @Nullable
+    public String getParentId() {
+        return mParentId;
     }
 
     /**
@@ -614,75 +660,58 @@ public class Source {
     }
 
     /**
-     * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
-     * data string in Source.
+     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
+     * for source type.
      */
-    public Optional<AggregatableAttributionSource> parseAggregateSource()
-            throws JSONException, NumberFormatException {
-        if (this.mAggregateSource == null) {
-            return Optional.empty();
+    public FilterMap getFilterData() throws JSONException {
+        if (mFilterData != null) {
+            return mFilterData;
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateSource);
-        Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            String id = jsonObject.getString("id");
-            // Remove "0x" prefix.
-            String hexString = jsonObject.getString("key_piece").substring(2);
-            BigInteger bigInteger = new BigInteger(hexString, 16);
-            aggregateSourceMap.put(id, bigInteger);
+
+        if (mFilterDataString == null || mFilterDataString.isEmpty()) {
+            mFilterData = new FilterMap.Builder().build();
+        } else {
+            mFilterData =
+                    new FilterMap.Builder()
+                            .buildFilterData(new JSONObject(mFilterDataString))
+                            .build();
         }
-        AggregatableAttributionSource.Builder asBuilder =
-                new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap);
-        if (this.mAggregateFilterData != null) {
-            asBuilder.setAggregateFilterData(
-                    new AggregateFilterData.Builder()
-                            .buildAggregateFilterData(new JSONObject(this.mAggregateFilterData))
-                            .build());
-        }
-        return Optional.of(asBuilder.build());
+        mFilterData
+                .getAttributionFilterMap()
+                .put("source_type", Collections.singletonList(mSourceType.getValue()));
+        return mFilterData;
     }
 
-    private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
-        int[][][] fakeReportsConfig =
-                ImpressionNoiseUtil.DUAL_DESTINATION_POST_INSTALL_FAKE_REPORT_CONFIG;
-        int randomIndex = new Random().nextInt(fakeReportsConfig.length);
-        int[][] reportsConfig = fakeReportsConfig[randomIndex];
-        return Arrays.stream(reportsConfig)
-                .map(
-                        reportConfig ->
-                                new FakeReport(
-                                        reportConfig[0],
-                                        getReportingTimeForNoising(reportConfig[1]),
-                                        resolveFakeReportDestination(reportConfig[2])))
-                .collect(Collectors.toList());
+    /** Returns true if the source has app destination(s), false otherwise. */
+    public boolean hasAppDestinations() {
+        return mAppDestinations != null && mAppDestinations.size() > 0;
     }
 
-    private boolean isVtcDualDestinationModeWithPostInstallEnabled() {
-        return mSourceType == SourceType.EVENT
-                && mWebDestination != null
-                && isInstallDetectionEnabled();
+    /** Returns true if the source has web destination(s), false otherwise. */
+    public boolean hasWebDestinations() {
+        return mWebDestinations != null && mWebDestinations.size() > 0;
     }
 
-    /**
-     * Either both app and web destinations can be available or one of them will be available. When
-     * both destinations are available, we double the number of states at noise generation to be
-     * able to randomly choose one of them for fake report creation. We don't add the multiplier
-     * when only one of them is available. In that case, choose the one that's non-null.
-     *
-     * @param destinationIdentifier destination identifier, can be 0 (app) or 1 (web)
-     * @return app or web destination {@link Uri}
-     */
-    private Uri resolveFakeReportDestination(int destinationIdentifier) {
-        if (mAppDestination != null && mWebDestination != null) {
-            // It could be a direct destinationIdentifier == 0 check, but
-            return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
-                    ? mAppDestination
-                    : mWebDestination;
+    private static boolean areEqualNullableDestinations(List<Uri> destinations,
+            List<Uri> otherDestinations) {
+        if (destinations == null && otherDestinations == null) {
+            return true;
+        } else if (destinations == null || otherDestinations == null) {
+            return false;
+        } else {
+            return ImmutableMultiset.copyOf(destinations).equals(
+                    ImmutableMultiset.copyOf(otherDestinations));
         }
+    }
 
-        return mAppDestination != null ? mAppDestination : mWebDestination;
+    /** Build the flexible event report API from the raw string */
+    public void buildFlexibleEventReportApi() throws JSONException {
+        mFlexEventReportSpec =
+                new ReportSpec(
+                        mTriggerSpecsString,
+                        mMaxBucketIncrementsString,
+                        mEventAttributionStatusString,
+                        mPrivacyParametersString);
     }
 
     /**
@@ -694,17 +723,64 @@ public class Source {
             mBuilding = new Source();
         }
 
+        /**
+         * Copy builder.
+         *
+         * @param copyFrom copy from source
+         * @return copied source
+         */
+        public static Builder from(Source copyFrom) {
+            Builder builder = new Builder();
+            builder.setId(copyFrom.mId);
+            builder.setRegistrationId(copyFrom.mRegistrationId);
+            builder.setAggregateSource(copyFrom.mAggregateSource);
+            builder.setExpiryTime(copyFrom.mExpiryTime);
+            builder.setAppDestinations(copyFrom.mAppDestinations);
+            builder.setWebDestinations(copyFrom.mWebDestinations);
+            builder.setSharedAggregationKeys(copyFrom.mSharedAggregationKeys);
+            builder.setEventId(copyFrom.mEventId);
+            builder.setRegistrant(copyFrom.mRegistrant);
+            builder.setEventTime(copyFrom.mEventTime);
+            builder.setPublisher(copyFrom.mPublisher);
+            builder.setPublisherType(copyFrom.mPublisherType);
+            builder.setInstallCooldownWindow(copyFrom.mInstallCooldownWindow);
+            builder.setInstallAttributed(copyFrom.mIsInstallAttributed);
+            builder.setInstallAttributionWindow(copyFrom.mInstallAttributionWindow);
+            builder.setSourceType(copyFrom.mSourceType);
+            builder.setAdIdPermission(copyFrom.mAdIdPermission);
+            builder.setAggregateContributions(copyFrom.mAggregateContributions);
+            builder.setArDebugPermission(copyFrom.mArDebugPermission);
+            builder.setAttributionMode(copyFrom.mAttributionMode);
+            builder.setDebugKey(copyFrom.mDebugKey);
+            builder.setEventReportDedupKeys(copyFrom.mEventReportDedupKeys);
+            builder.setAggregateReportDedupKeys(copyFrom.mAggregateReportDedupKeys);
+            builder.setEventReportWindow(copyFrom.mEventReportWindow);
+            builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
+            builder.setEnrollmentId(copyFrom.mEnrollmentId);
+            builder.setFilterData(copyFrom.mFilterDataString);
+            builder.setInstallTime(copyFrom.mInstallTime);
+            builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
+            builder.setPriority(copyFrom.mPriority);
+            builder.setStatus(copyFrom.mStatus);
+            builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
+            builder.setPlatformAdId(copyFrom.mPlatformAdId);
+            builder.setDebugAdId(copyFrom.mDebugAdId);
+            builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
+            builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
+            return builder;
+        }
+
         /** See {@link Source#getId()}. */
         @NonNull
         public Builder setId(@NonNull String id) {
-            Validation.validateNonNull(id);
             mBuilding.mId = id;
             return this;
         }
 
         /** See {@link Source#getEventId()}. */
         @NonNull
-        public Builder setEventId(long eventId) {
+        public Builder setEventId(UnsignedLong eventId) {
             mBuilding.mEventId = eventId;
             return this;
         }
@@ -724,25 +800,47 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAppDestination()}. */
-        public Builder setAppDestination(Uri appDestination) {
-            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
-            mBuilding.mAppDestination = appDestination;
-            return this;
-        }
-
-        /** See {@link Source#getWebDestination()}. */
+        /** See {@link Source#getAppDestinations()}. */
         @NonNull
-        public Builder setWebDestination(@Nullable Uri webDestination) {
-            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
-            mBuilding.mWebDestination = webDestination;
+        public Builder setAppDestinations(@Nullable List<Uri> appDestinations) {
+            Optional.ofNullable(appDestinations).ifPresent(uris -> {
+                Validation.validateNotEmpty(uris);
+                if (uris.size() > 1) {
+                    throw new IllegalArgumentException("Received more than one app destination");
+                }
+                Validation.validateUri(uris.toArray(new Uri[0]));
+            });
+            mBuilding.mAppDestinations = appDestinations;
             return this;
         }
 
-        /** See {@link Source#getEnrollmentId()} ()}. */
+        /** See {@link Source#getWebDestinations()}. */
+        @NonNull
+        public Builder setWebDestinations(@Nullable List<Uri> webDestinations) {
+            Optional.ofNullable(webDestinations).ifPresent(uris -> {
+                Validation.validateNotEmpty(uris);
+                Validation.validateUri(uris.toArray(new Uri[0]));
+            });
+            mBuilding.mWebDestinations = webDestinations;
+            return this;
+        }
+
+        /** See {@link Source#getEnrollmentId()}. */
         @NonNull
         public Builder setEnrollmentId(@NonNull String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
+        /** See {@link Source#hasAdIdPermission()} */
+        public Source.Builder setAdIdPermission(boolean adIdPermission) {
+            mBuilding.mAdIdPermission = adIdPermission;
+            return this;
+        }
+
+        /** See {@link Source#hasArDebugPermission()} */
+        public Source.Builder setArDebugPermission(boolean arDebugPermission) {
+            mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
 
@@ -761,6 +859,22 @@ public class Source {
             return this;
         }
 
+        /**
+         * See {@link Source#getEventReportWindow()}.
+         */
+        public Builder setEventReportWindow(long eventReportWindow) {
+            mBuilding.mEventReportWindow = eventReportWindow;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregatableReportWindow()}.
+         */
+        public Builder setAggregatableReportWindow(long aggregateReportWindow) {
+            mBuilding.mAggregatableReportWindow = aggregateReportWindow;
+            return this;
+        }
+
         /** See {@link Source#getPriority()}. */
         @NonNull
         public Builder setPriority(long priority) {
@@ -768,9 +882,15 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDebugKey()} ()}. */
-        public Builder setDebugKey(@Nullable Long debugKey) {
+        /** See {@link Source#getDebugKey()}. */
+        public Builder setDebugKey(@Nullable UnsignedLong debugKey) {
             mBuilding.mDebugKey = debugKey;
+            return this;
+        }
+
+        /** See {@link Source#isDebugReporting()}. */
+        public Builder setIsDebugReporting(boolean isDebugReporting) {
+            mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
@@ -782,10 +902,18 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDedupKeys()}. */
+        /** See {@link Source#getEventReportDedupKeys()}. */
         @NonNull
-        public Builder setDedupKeys(@Nullable List<Long> dedupKeys) {
-            mBuilding.mDedupKeys = dedupKeys;
+        public Builder setEventReportDedupKeys(@Nullable List<UnsignedLong> mEventReportDedupKeys) {
+            mBuilding.mEventReportDedupKeys = mEventReportDedupKeys;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateReportDedupKeys()}. */
+        @NonNull
+        public Builder setAggregateReportDedupKeys(
+                @NonNull List<UnsignedLong> mAggregateReportDedupKeys) {
+            mBuilding.mAggregateReportDedupKeys = mAggregateReportDedupKeys;
             return this;
         }
 
@@ -832,13 +960,14 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAggregateFilterData()}. */
-        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
-            mBuilding.mAggregateFilterData = aggregateFilterData;
+        /** See {@link Source#getFilterDataString()}. */
+        public Builder setFilterData(@Nullable String filterMap) {
+            mBuilding.mFilterDataString = filterMap;
             return this;
         }
 
         /** See {@link Source#getAggregateSource()} */
+        @NonNull
         public Builder setAggregateSource(@Nullable String aggregateSource) {
             mBuilding.mAggregateSource = aggregateSource;
             return this;
@@ -851,27 +980,133 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getRegistrationId()} */
+        @NonNull
+        public Builder setRegistrationId(@Nullable String registrationId) {
+            mBuilding.mRegistrationId = registrationId;
+            return this;
+        }
+
+        /** See {@link Source#getSharedAggregationKeys()} */
+        @NonNull
+        public Builder setSharedAggregationKeys(@Nullable String sharedAggregationKeys) {
+            mBuilding.mSharedAggregationKeys = sharedAggregationKeys;
+            return this;
+        }
+
+        /** See {@link Source#getInstallTime()} */
+        @NonNull
+        public Builder setInstallTime(@Nullable Long installTime) {
+            mBuilding.mInstallTime = installTime;
+            return this;
+        }
+
+        /** See {@link Source#getParentId()} */
+        @NonNull
+        public Builder setParentId(@Nullable String parentId) {
+            mBuilding.mParentId = parentId;
+            return this;
+        }
+
         /** See {@link Source#getAggregatableAttributionSource()} */
         @NonNull
         public Builder setAggregatableAttributionSource(
                 @Nullable AggregatableAttributionSource aggregatableAttributionSource) {
-            mBuilding.mAggregatableAttributionSource = aggregatableAttributionSource;
+            mBuilding.mAggregatableAttributionSource =
+                    Optional.ofNullable(aggregatableAttributionSource);
             return this;
         }
 
-        /**
-         * Build the {@link Source}.
-         */
+        /** See {@link Source#getDebugJoinKey()} */
+        @NonNull
+        public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+            mBuilding.mDebugJoinKey = debugJoinKey;
+            return this;
+        }
+
+        /** See {@link Source#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mBuilding.mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link Source#getDebugAdId()} */
+        @NonNull
+        public Builder setDebugAdId(@Nullable String debugAdId) {
+            mBuilding.mDebugAdId = debugAdId;
+            return this;
+        }
+
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Source#getFlexEventReportSpec()} */
+        @NonNull
+        public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
+            mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+            return this;
+        }
+
+        /** See {@link Source#getFlexEventReportSpec()} */
+        @NonNull
+        public Builder buildInitialFlexEventReportSpec() throws JSONException {
+            mBuilding.mFlexEventReportSpec =
+                    new ReportSpec(
+                            mBuilding.mTriggerSpecsString, mBuilding.mMaxBucketIncrementsString);
+            return this;
+        }
+
+        /** See {@link Source#getCoarseEventReportDestinations()} */
+        @NonNull
+        public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
+            mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;
+            return this;
+        }
+
+        /** See {@link Source#getTriggerSpecs()} */
+        @NonNull
+        public Builder setTriggerSpecs(@Nullable String triggerSpecs) {
+            mBuilding.mTriggerSpecsString = triggerSpecs;
+            return this;
+        }
+
+        /** See {@link Source#getMaxBucketIncrements()} */
+        @NonNull
+        public Builder setMaxBucketIncrements(@Nullable String maxBucketIncrements) {
+            mBuilding.mMaxBucketIncrementsString = maxBucketIncrements;
+            return this;
+        }
+
+        /** See {@link Source#getEventAttributionStatus()} */
+        @NonNull
+        public Builder setEventAttributionStatus(@Nullable String eventAttributionStatus) {
+            mBuilding.mEventAttributionStatusString = eventAttributionStatus;
+            return this;
+        }
+
+        /** See {@link Source#getPrivacyParameters()} */
+        @NonNull
+        public Builder setPrivacyParameters(@Nullable String privacyParameters) {
+            mBuilding.mPrivacyParametersString = privacyParameters;
+            return this;
+        }
+
+        /** Build the {@link Source}. */
+        @NonNull
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
                     mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
-                    mBuilding.mSourceType);
-
-            if (mBuilding.mAppDestination == null && mBuilding.mWebDestination == null) {
-                throw new IllegalArgumentException("At least one destination is required");
-            }
+                    mBuilding.mSourceType,
+                    mBuilding.mAggregateReportDedupKeys,
+                    mBuilding.mEventReportDedupKeys,
+                    mBuilding.mRegistrationOrigin);
 
             return mBuilding;
         }

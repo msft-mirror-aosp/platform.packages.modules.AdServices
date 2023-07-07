@@ -16,16 +16,35 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 /**
  * A wrapper class to expose a constructor for AttributionJobHandler in testing.
  */
 public class AttributionJobHandlerWrapper {
-    private AttributionJobHandler mAttributionJobHandler;
+    private final AttributionJobHandler mAttributionJobHandler;
 
-    public AttributionJobHandlerWrapper(DatastoreManager datastoreManager) {
-        this.mAttributionJobHandler = new AttributionJobHandler(datastoreManager);
+    public AttributionJobHandlerWrapper(
+            DatastoreManager datastoreManager,
+            Flags flags,
+            DebugReportApi debugReportApi,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler,
+            AdServicesLogger logger) {
+        this.mAttributionJobHandler =
+                new AttributionJobHandler(
+                        datastoreManager,
+                        flags,
+                        debugReportApi,
+                        eventReportWindowCalcDelegate,
+                        sourceNoiseHandler,
+                        logger);
     }
 
     public boolean performPendingAttributions() {

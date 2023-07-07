@@ -16,10 +16,12 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -27,6 +29,7 @@ import java.util.Objects;
 
 /** FLEDGE Security filter for {@link AllowLists}. */
 public class FledgeAllowListsFilter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Flags mFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
@@ -52,11 +55,10 @@ public class FledgeAllowListsFilter {
             throws AppNotAllowedException {
         Objects.requireNonNull(appPackageName);
         if (!AllowLists.isPackageAllowListed(mFlags.getPpapiAppAllowList(), appPackageName)) {
-            LogUtil.v(
+            sLogger.v(
                     "App package name \"%s\" not authorized to call API %d",
                     appPackageName, apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
             throw new AppNotAllowedException();
         }
     }

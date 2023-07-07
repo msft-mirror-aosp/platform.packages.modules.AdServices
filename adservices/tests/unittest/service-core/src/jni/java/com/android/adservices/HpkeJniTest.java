@@ -16,6 +16,8 @@
 
 package com.android.adservices;
 
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,9 +29,8 @@ public class HpkeJniTest {
     private static final byte[] sPlaintext = "plaintext".getBytes();
     private static final byte[] sCiphertext =
             decode("0Ie+jDZ/Hznx1IrIkS06V+kAHuD5RsybXWwrKRIbGEL5TJT4/HYny2SHfWbeXxMydwvS0FEZqvzs");
-    private static final byte[] sPublicKey = decode("rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=");
-    private static final byte[] sPrivateKey =
-            decode("f86EzLmGaVmc+PwjJk5ADPE4ijQvliWf0CQyY/Zyy7I=");
+    private static final byte[] sPublicKey = AggregateCryptoFixture.getPublicKey();
+    private static final byte[] sPrivateKey = AggregateCryptoFixture.getPrivateKey();
 
     @Test
     public void testHpkeEncrypt_Success() {

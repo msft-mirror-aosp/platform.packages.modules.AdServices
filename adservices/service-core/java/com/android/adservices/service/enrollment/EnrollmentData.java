@@ -16,13 +16,20 @@
 
 package com.android.adservices.service.enrollment;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /** POJO for Adtech EnrollmentData, store the data download using MDD. */
 public class EnrollmentData {
+    @VisibleForTesting public static String SEPARATOR = " ";
 
     private String mEnrollmentId;
     private String mCompanyId;
@@ -119,6 +126,19 @@ public class EnrollmentData {
         return mEncryptionKeyUrl;
     }
 
+    /**
+     * Returns the given {@code input} as a list of values split by the separator value used for all
+     * enrollment data.
+     */
+    @NonNull
+    public static List<String> splitEnrollmentInputToList(@Nullable String input) {
+        if (input == null || input.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.asList(input.trim().split(SEPARATOR));
+    }
+
     /** Builder for {@link EnrollmentData}. */
     public static final class Builder {
         private final EnrollmentData mBuilding;
@@ -147,7 +167,7 @@ public class EnrollmentData {
 
         /** See {@link EnrollmentData#getSdkNames()} */
         public Builder setSdkNames(String sdkNames) {
-            mBuilding.mSdkNames = Arrays.asList(sdkNames.split(" "));
+            mBuilding.mSdkNames = splitEnrollmentInputToList(sdkNames);
             return this;
         }
 
@@ -162,7 +182,7 @@ public class EnrollmentData {
         public Builder setAttributionSourceRegistrationUrl(
                 String attributionSourceRegistrationUrl) {
             mBuilding.mAttributionSourceRegistrationUrl =
-                    Arrays.asList(attributionSourceRegistrationUrl.split(" "));
+                    splitEnrollmentInputToList(attributionSourceRegistrationUrl);
             return this;
         }
 
@@ -177,7 +197,7 @@ public class EnrollmentData {
         public Builder setAttributionTriggerRegistrationUrl(
                 String attributionTriggerRegistrationUrl) {
             mBuilding.mAttributionTriggerRegistrationUrl =
-                    Arrays.asList(attributionTriggerRegistrationUrl.split(" "));
+                    splitEnrollmentInputToList(attributionTriggerRegistrationUrl);
             return this;
         }
 
@@ -189,7 +209,8 @@ public class EnrollmentData {
 
         /** See {@link EnrollmentData#getAttributionReportingUrl()}. */
         public Builder setAttributionReportingUrl(String attributionReportingUrl) {
-            mBuilding.mAttributionReportingUrl = Arrays.asList(attributionReportingUrl.split(" "));
+            mBuilding.mAttributionReportingUrl =
+                    splitEnrollmentInputToList(attributionReportingUrl);
             return this;
         }
 
@@ -205,7 +226,7 @@ public class EnrollmentData {
         public Builder setRemarketingResponseBasedRegistrationUrl(
                 String remarketingResponseBasedRegistrationUrl) {
             mBuilding.mRemarketingResponseBasedRegistrationUrl =
-                    Arrays.asList(remarketingResponseBasedRegistrationUrl.split(" "));
+                    splitEnrollmentInputToList(remarketingResponseBasedRegistrationUrl);
             return this;
         }
 
@@ -217,7 +238,7 @@ public class EnrollmentData {
 
         /** See {@link EnrollmentData#getEncryptionKeyUrl()}. */
         public Builder setEncryptionKeyUrl(String encryptionKeyUrl) {
-            mBuilding.mEncryptionKeyUrl = Arrays.asList(encryptionKeyUrl.split(" "));
+            mBuilding.mEncryptionKeyUrl = splitEnrollmentInputToList(encryptionKeyUrl);
             return this;
         }
 

@@ -15,11 +15,15 @@
  */
 
 package com.android.adservices.data.measurement;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
 
 import android.net.Uri;
 
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
@@ -45,28 +49,38 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                 AbstractDbIntegrationTest.getTestCasesFrom(inputStream, null);
 
         // Add a non-expired Source.
-        long insideExpiredWindow = System.currentTimeMillis()
-                - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS / 2;
+        long insideExpiredWindow =
+                System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS / 2;
 
         Source source =
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
-                        .setAppDestination(Uri.parse("android-app://com.example.app/aD"))
-                        .setPublisher(Uri.parse("https://example.com/aS"))
+                        .setPublisher(Uri.parse("https://example.test/aS"))
                         .setId("non-expired")
-                        .setEventId(2L)
+                        .setEventId(new UnsignedLong(2L))
                         .setPriority(3L)
                         .setEventTime(insideExpiredWindow)
                         .setExpiryTime(5L)
                         .setStatus(Source.Status.ACTIVE)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://example1.test-registration.test"))
+                        .build();
+
+        SourceDestination sourceDest =
+                new SourceDestination.Builder()
+                        .setSourceId(source.getId())
+                        .setDestination("android-app://com.destination")
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         for (Object[] testCase : testCases) {
             // input
             ((DbState) testCase[0]).mSourceList.add(source);
+            ((DbState) testCase[0]).mSourceDestinationList.add(sourceDest);
             // output
             ((DbState) testCase[1]).mSourceList.add(source);
+            ((DbState) testCase[1]).mSourceDestinationList.add(sourceDest);
         }
 
         return testCases;
@@ -76,11 +90,13 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
     // test, although it's ostensibly unused by this constructor.
     public DeleteExpiredDynamicIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
-        this.mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        this.mDatastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
     }
 
     public void runActionToTest() {
-        mDatastoreManager.runInTransaction(IMeasurementDao::deleteExpiredRecords);
+        long earliestValidInsertion =
+                System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(earliestValidInsertion));
     }
-
 }

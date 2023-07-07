@@ -18,6 +18,7 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
@@ -30,8 +31,6 @@ import java.util.Objects;
  *
  * <p>SDK has to implement this abstract class to generate an entry point for SDK sandbox to be able
  * to call it through.
- *
- * <p>Note: All APIs defined in this class are not stable and subject to change.
  */
 public abstract class SandboxedSdkProvider {
     private Context mContext;

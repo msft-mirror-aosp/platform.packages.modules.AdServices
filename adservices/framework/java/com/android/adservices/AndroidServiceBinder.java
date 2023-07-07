@@ -98,7 +98,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                     LogUtil.e("Failed to find AdServices service");
                     return null;
                 }
-                final Intent intent = new Intent().setComponent(componentName);
+                final Intent intent = new Intent(mServiceIntentAction).setComponent(componentName);
 
                 LogUtil.d("bindService: " + mServiceIntentAction);
 
@@ -108,17 +108,26 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
                 // We use Runnable::run so that the callback is called on a binder thread.
                 // Otherwise we'd use the main thread, which could cause a deadlock.
-                final boolean success =
-                        mContext.bindService(intent, BIND_FLAGS, Runnable::run, mServiceConnection);
-                if (!success) {
-                    LogUtil.e("Failed to bindService: " + intent);
+                try {
+                    final boolean success =
+                            mContext.bindService(
+                                    intent, BIND_FLAGS, Runnable::run, mServiceConnection);
+                    if (!success) {
+                        LogUtil.e("Failed to bindService: " + intent);
+                        mServiceConnection = null;
+                        return null;
+                    } else {
+                        LogUtil.d("bindService() started...");
+                    }
+                } catch (Exception e) {
+                    LogUtil.e(
+                            "Caught unexpected exception during service binding: "
+                                    + e.getMessage());
                     mServiceConnection = null;
                     return null;
-                } else {
-                    LogUtil.d("bindService() succeeded...");
                 }
             } else {
-                LogUtil.d("bindService() already pending...");
+                LogUtil.d("There is already a pending connection!");
             }
         }
 
@@ -155,27 +164,21 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             LogUtil.d("onServiceDisconnected " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
 
         @Override
         public void onBindingDied(ComponentName name) {
             LogUtil.d("onBindingDied " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
 
         @Override
         public void onNullBinding(ComponentName name) {
-            LogUtil.e("onNullBinding shouldn't happen: " + mServiceIntentAction);
-            synchronized (mLock) {
-                mService = null;
-            }
+            LogUtil.e("onNullBinding " + mServiceIntentAction);
+            unbindFromService();
             mConnectionCountDownLatch.countDown();
         }
     }
@@ -199,40 +202,22 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         final List<ResolveInfo> resolveInfos =
                 mContext.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            LogUtil.e(
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + mServiceIntentAction);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            LogUtil.e(
-                    "Found multiple services (%1$s) for the same intent action (%2$s)",
-                    mServiceIntentAction, resolveInfos.toString());
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
+        final ServiceInfo serviceInfo =
+                AdServicesCommon.resolveAdServicesService(resolveInfos, mServiceIntentAction);
         if (serviceInfo == null) {
             LogUtil.e("Failed to find serviceInfo for adServices service");
             return null;
         }
-        // TODO Bug:240679755
-        // If the action == ACTION_ADID_PROVIDER_SERVICE, add permissions
-        // check on returned serviceInfo for signature permissions.
         return new ComponentName(serviceInfo.packageName, serviceInfo.name);
     }
 
     @Override
     public void unbindFromService() {
         synchronized (mLock) {
-            if (mService == null || mServiceConnection == null) {
-                return; // Nothing to release.
+            if (mServiceConnection != null) {
+                LogUtil.d("unbinding...");
+                mContext.unbindService(mServiceConnection);
             }
-
-            LogUtil.d("unbinding...");
-            mContext.unbindService(mServiceConnection);
             mServiceConnection = null;
             mService = null;
         }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import com.android.adservices.service.Flags;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -45,14 +47,8 @@ public final class PrivacyParams {
     public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;
 
     /**
-     * Maximum attributions per rate limit window.
-     * Rate limit unit: (Source Site, Destination Site, Reporting Site, Window).
-     */
-    public static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
-     * 28 days.
+     * 30 days.
      */
     public static final long RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
 
@@ -110,7 +106,7 @@ public final class PrivacyParams {
      * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
      * available on the source.
      */
-    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.017022D;
+    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218D;
 
     /**
      * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
@@ -133,11 +129,15 @@ public final class PrivacyParams {
     /**
      * Trigger data cardinality for 'Navigation' {@link Source} attribution.
      */
-    public static final int NAVIGATION_TRIGGER_DATA_CARDINALITY = 8;
+    private static final int NAVIGATION_TRIGGER_DATA_CARDINALITY = 8;
+
+    public static int getNavigationTriggerDataCardinality() {
+        return NAVIGATION_TRIGGER_DATA_CARDINALITY;
+    }
 
     /** Min expiration value in seconds for attribution reporting register source. */
     public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
-            TimeUnit.DAYS.toSeconds(2);
+            TimeUnit.DAYS.toSeconds(1);
 
     /**
      * Max expiration value in seconds for attribution reporting register source. This value is also
@@ -149,7 +149,7 @@ public final class PrivacyParams {
     /**
      * Minimum limit of duration to determine attribution for a verified installation.
      */
-    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(2);
+    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(1);
 
     /**
      * Maximum limit of duration to determine attribution for a verified installation.
@@ -166,6 +166,9 @@ public final class PrivacyParams {
      */
     public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
+    /** Minimum time window after which reporting origin can be migrated */
+    public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
     /**
      * L1, the maximum sum of the contributions (values) across all buckets for a given source
      * event.
@@ -178,24 +181,73 @@ public final class PrivacyParams {
     /** Amount of bytes allocated for aggregate histogram value */
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
-    /**
-     * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
-     */
-    public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
-            10;
+    /** Minimum time an aggregate report is delayed after trigger */
+    public static final long AGGREGATE_REPORT_MIN_DELAY = TimeUnit.MINUTES.toMillis(10L);
+
+    /** Maximum time an aggregate report is delayed after trigger */
+    public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(50L);
 
     /**
-     * Max distinct advertisers with pending impressions per
-     * { Publisher X Enrollment X TimePeriod }.
+     * Max distinct web destinations in a source registration.
      */
-    public static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
-            100;
+    public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
 
     /**
      * Max distinct enrollments with source registration per
      * { Publisher X Advertiser X TimePeriod }.
      */
-    public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
+    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
+
+    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
+        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
+    }
+
+    private static final int MAX_FLEXIBLE_EVENT_REPORTS = 20;
+
+    public static int getMaxFlexibleEventReports() {
+        return MAX_FLEXIBLE_EVENT_REPORTS;
+    }
+
+    private static final int MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY = 8;
+
+    public static int getMaxFlexibleEventTriggerDataCardinality() {
+        return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
+    }
+
+    private static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
+
+    public static int getMaxFlexibleEventReportingWindows() {
+        return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
+    }
+
+    private static final int PRIVACY_EPSILON = 14;
+
+    public static int getPrivacyEpsilon() {
+        return PRIVACY_EPSILON;
+    }
+
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
+
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE =
+            1.5849266D;
+
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE =
+            11.4617280D;
+
+    /**
+     * Maximum early reporting windows configured through {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS} or {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
+     */
+    public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
+
+    public static double getMaxFlexibleEventInformationGainEventSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_EVENT_SOURCE;
+    }
+
+    public static double getMaxFlexibleEventInformationGainNavigationSource() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN_NAVIGATION_SOURCE;
+    }
 
     private PrivacyParams() {
     }

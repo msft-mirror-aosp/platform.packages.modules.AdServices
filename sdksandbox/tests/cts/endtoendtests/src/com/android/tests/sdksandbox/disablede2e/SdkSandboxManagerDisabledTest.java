@@ -59,13 +59,13 @@ public class SdkSandboxManagerDisabledTest {
     @Test
     public void testSdkSandboxDisabledErrorCode() throws Exception {
         DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_SDK_SANDBOX, "disable_sdk_sandbox", "true", false);
+                DeviceConfig.NAMESPACE_ADSERVICES, "disable_sdk_sandbox", "true", false);
         // Allow time for DeviceConfig change to propagate
         Thread.sleep(1000);
-        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final String sdkName = "com.android.ctssdkprovider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
     }

@@ -41,10 +41,10 @@ public class DBAdSelectionOverrideTest {
                         .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                         .build();
 
-        assertEquals(dbAdSelectionOverride.getAdSelectionConfigId(), AD_SELECTION_CONFIG_ID);
-        assertEquals(dbAdSelectionOverride.getAppPackageName(), APP_PACKAGE_NAME);
-        assertEquals(dbAdSelectionOverride.getDecisionLogicJS(), DECISION_LOGIC_JS);
-        assertEquals(dbAdSelectionOverride.getTrustedScoringSignals(), TRUSTED_SCORING_SIGNALS);
+        assertEquals(AD_SELECTION_CONFIG_ID, dbAdSelectionOverride.getAdSelectionConfigId());
+        assertEquals(APP_PACKAGE_NAME, dbAdSelectionOverride.getAppPackageName());
+        assertEquals(DECISION_LOGIC_JS, dbAdSelectionOverride.getDecisionLogicJS());
+        assertEquals(TRUSTED_SCORING_SIGNALS, dbAdSelectionOverride.getTrustedScoringSignals());
     }
 
     @Test

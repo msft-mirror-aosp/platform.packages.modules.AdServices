@@ -20,6 +20,8 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 
@@ -34,9 +36,9 @@ public final class AggregateReportFixture {
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
 
-    // Assume the field values in this AggregateReport have no relation to the field
+    // Assume the field values in this AggregateReport.Builder have no relation to the field
     // values in {@link ValidAggregateReportParams}
-    public static AggregateReport getValidAggregateReport() {
+    public static AggregateReport.Builder getValidAggregateReportBuilder() {
         return new AggregateReport.Builder()
                 .setPublisher(ValidAggregateReportParams.PUBLISHER)
                 .setAttributionDestination(ValidAggregateReportParams.ATTRIBUTION_DESTINATION)
@@ -47,7 +49,13 @@ public final class AggregateReportFixture {
                 .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
                 .setStatus(EventReport.Status.PENDING)
-                .build();
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                .setDedupKey(ValidAggregateReportParams.DEDUP_KEY)
+                .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN);
+    }
+
+    public static AggregateReport getValidAggregateReport() {
+        return getValidAggregateReportBuilder().build();
     }
 
     public static class ValidAggregateReportParams {
@@ -56,9 +64,12 @@ public final class AggregateReportFixture {
                 Uri.parse("android-app://com.destination");
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
-        public static final long SOURCE_DEBUG_KEY = 43254545L;
-        public static final long TRIGGER_DEBUG_KEY = 67878545L;
+        public static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(43254545L);
+        public static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(67878545L);
         public static final String ENROLLMENT_ID = "enrollment-id";
+        public static final UnsignedLong DEDUP_KEY = new UnsignedLong(67878545L);
+        public static final Uri REGISTRATION_ORIGIN =
+                WebUtil.validUri("https://subdomain.example.test");
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

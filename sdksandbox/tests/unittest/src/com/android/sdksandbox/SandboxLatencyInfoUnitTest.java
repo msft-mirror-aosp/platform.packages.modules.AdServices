@@ -173,8 +173,8 @@ public class SandboxLatencyInfoUnitTest {
     }
 
     private SandboxLatencyInfo getSandboxLatencyObjectWithAllFieldsSet() {
-        final SandboxLatencyInfo sandboxLatencyInfo =
-                new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
         sandboxLatencyInfo.setTimeSandboxCalledSdk(TIME_SANDBOX_CALLED_SDK);

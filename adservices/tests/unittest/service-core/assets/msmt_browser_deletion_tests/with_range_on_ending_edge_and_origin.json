@@ -7,10 +7,10 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
-        "appDestination": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733602,
         "expiryTime": 1648665733611,
+        "eventReportWindow": 1648665733611,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -20,10 +20,10 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
-        "appDestination": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
+        "eventReportWindow": 1648665733615,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -33,13 +33,30 @@
         "eventId": 3,
         "sourceType": "navigation",
         "publisher": "android-app://com.site3.siteNotMatch",
-        "appDestination": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733602,
         "expiryTime": 1648665733611,
+        "eventReportWindow": 1648665733611,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "source_destinations": [
+      {
+        "sourceId": "S1",
+        "destination": "android-app://com.site2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S2",
+        "destination": "android-app://com.site2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S3",
+        "destination": "android-app://com.site2",
+        "destinationType": 0
       }
     ],
     "triggers": [
@@ -104,7 +121,7 @@
     "event_reports": [
       {
         "id": "E1",
-        "sourceId": 1,
+        "sourceEventId": 1,
         "attributionDestination": "android-app://com.site.deleteCandidate",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -112,11 +129,13 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T1"
       },
       {
         "id": "E2",
-        "sourceId": 1,
+        "sourceEventId": 1,
         "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -124,11 +143,13 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S1",
+        "triggerId": "T2"
       },
       {
         "id": "E3",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "android-app://com.site.doNotDelete",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -136,11 +157,13 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S2",
+        "triggerId": "T2"
       },
       {
         "id": "E4",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "android-app://com.site.deleteCandidate",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -148,11 +171,13 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S2",
+        "triggerId": "T1"
       },
       {
         "id": "E5",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "android-app://com.site.deleteCandidate",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -160,7 +185,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S3",
+        "triggerId": "T3"
       }
     ],
     "attributions": [
@@ -172,7 +199,10 @@
         "destinationOrigin": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733602,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "triggerId": "ignored1648665733602",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S1",
+        "triggerId": "T1"
       },
       {
         "id": "A2",
@@ -182,7 +212,10 @@
         "destinationOrigin": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "triggerId": "ignored1648665733605",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S2",
+        "triggerId": "T2"
       },
       {
         "id": "A3",
@@ -192,7 +225,10 @@
         "destinationOrigin": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733602,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "triggerId": "ignored1648665733602",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S3",
+        "triggerId": "T3"
       }
     ]
   },
@@ -203,10 +239,10 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
-        "appDestination": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
+        "eventReportWindow": 1648665733615,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -216,13 +252,25 @@
         "eventId": 3,
         "sourceType": "navigation",
         "publisher": "android-app://com.site3.siteNotMatch",
-        "appDestination": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733602,
         "expiryTime": 1648665733611,
+        "eventReportWindow": 1648665733611,
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "source_destinations": [
+      {
+        "sourceId": "S2",
+        "destination": "android-app://com.site2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S3",
+        "destination": "android-app://com.site2",
+        "destinationType": 0
       }
     ],
     "triggers": [
@@ -268,7 +316,7 @@
     "event_reports": [
       {
         "id": "E3",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "android-app://com.site.doNotDelete",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -276,11 +324,13 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S2",
+        "triggerId": "T2"
       },
       {
         "id": "E5",
-        "sourceId": 2,
+        "sourceEventId": 2,
         "attributionDestination": "android-app://com.site.deleteCandidate",
         "enrollmentId": "enrollment-id",
         "triggerData": 2,
@@ -288,7 +338,9 @@
         "status": 0,
         "reportTime": -1,
         "triggerPriority": 101,
-        "sourceType": "navigation"
+        "sourceType": "navigation",
+        "sourceId": "S3",
+        "triggerId": "T3"
       }
     ],
     "attributions": [
@@ -300,7 +352,10 @@
         "destinationOrigin": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "triggerId": "ignored1648665733605",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S2",
+        "triggerId": "T2"
       },
       {
         "id": "A3",
@@ -310,12 +365,15 @@
         "destinationOrigin": "android-app://com.site2",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733602,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "triggerId": "ignored1648665733602",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "sourceId": "S3",
+        "triggerId": "T3"
       }
     ]
   },
   "param": {
-    "registrant": "android-app://com.registrant.deleteCandidate",
+    "registrant": "com.registrant.deleteCandidate",
     "start": 1648665733600,
     "end": 1648665733602,
     "origins": ["android-app://com.site.deleteCandidate"],

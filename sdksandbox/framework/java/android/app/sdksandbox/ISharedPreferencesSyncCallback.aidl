@@ -19,6 +19,7 @@ package android.app.sdksandbox;
 /** @hide */
 interface ISharedPreferencesSyncCallback {
     const int SANDBOX_NOT_AVAILABLE = 1;
+    const int PREFERENCES_SYNC_INTERNAL_ERROR = 2;
 
     void onSandboxStart();
     void onError(int errorCode, in String errorMsg);

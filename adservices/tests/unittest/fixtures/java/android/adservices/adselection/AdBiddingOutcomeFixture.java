@@ -19,9 +19,14 @@ package android.adservices.adselection;
 import android.adservices.common.AdData;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.adselection.AdBiddingOutcome;
+import com.android.adservices.service.adselection.BuyerContextualSignals;
 import com.android.adservices.service.adselection.CustomAudienceBiddingInfo;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class AdBiddingOutcomeFixture {
 
@@ -29,11 +34,13 @@ public class AdBiddingOutcomeFixture {
             AdTechIdentifier buyer, Double bid) {
 
         final AdData adData =
-                new AdData(
-                        new Uri.Builder()
-                                .path("valid.example.com/testing/hello/" + buyer.toString())
-                                .build(),
-                        "{'example': 'metadata', 'valid': true}");
+                new AdData.Builder()
+                        .setRenderUri(
+                                new Uri.Builder()
+                                        .path("valid.example.com/testing/hello/" + buyer.toString())
+                                        .build())
+                        .setMetadata("{'example': 'metadata', 'valid': true}")
+                        .build();
         final double testBid = bid;
 
         return AdBiddingOutcome.builder()
@@ -41,7 +48,8 @@ public class AdBiddingOutcomeFixture {
                 .setCustomAudienceBiddingInfo(
                         CustomAudienceBiddingInfo.builder()
                                 .setBiddingLogicUri(
-                                        CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URI)
+                                        CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(
+                                                buyer))
                                 .setBuyerDecisionLogicJs(
                                         CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
                                 .setCustomAudienceSignals(
@@ -51,4 +59,43 @@ public class AdBiddingOutcomeFixture {
                                 .build());
     }
 
+    public static AdBiddingOutcome.Builder anAdBiddingOutcomeBuilderWithBuyerContextualSignals(
+            AdTechIdentifier buyer, Double bid, BuyerContextualSignals buyerContextualSignals) {
+
+        final AdData adData =
+                new AdData.Builder()
+                        .setRenderUri(
+                                new Uri.Builder()
+                                        .path("valid.example.com/testing/hello/" + buyer.toString())
+                                        .build())
+                        .setMetadata("{'example': 'metadata', 'valid': true}")
+                        .build();
+        final double testBid = bid;
+
+        return AdBiddingOutcome.builder()
+                .setAdWithBid(new AdWithBid(adData, testBid))
+                .setCustomAudienceBiddingInfo(
+                        CustomAudienceBiddingInfo.builder()
+                                .setBiddingLogicUri(
+                                        CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(
+                                                buyer))
+                                .setBuyerDecisionLogicJs(
+                                        CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
+                                .setCustomAudienceSignals(
+                                        CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                                                .setBuyer(buyer)
+                                                .build())
+                                .setBuyerContextualSignals(buyerContextualSignals)
+                                .build());
+    }
+
+    public static List<AdBiddingOutcome> getListOfAdBiddingOutcomes(
+            List<Pair<AdTechIdentifier, Double>> buyersAndBids) {
+        return buyersAndBids.stream()
+                .map(
+                        a ->
+                                AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(a.first, a.second)
+                                        .build())
+                .collect(Collectors.toList());
+    }
 }

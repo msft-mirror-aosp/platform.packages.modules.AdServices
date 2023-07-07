@@ -1,6 +1,14 @@
 {
-   "mainline-presubmit": [
+  "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
+    {
+      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    },
     {
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
@@ -23,7 +31,7 @@
       "name": "SdkSandboxShellHostTest[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest[com.google.android.adservices.apex]"
+      "name": "BroadcastRestrictionsHostTest[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
@@ -34,18 +42,51 @@
       ]
     },
     {
+      "name": "SdkSandboxMetricsHostTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxPerfScenarioTests[com.google.android.adservices.apex]"
     }
   ],
   "mainline-postsubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
     {
+      "name": "CtsSdkSandboxHostSideTests",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    },
+    {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests"
@@ -66,7 +107,10 @@
       "name": "SdkSandboxShellHostTest"
     },
     {
-      "name": "SdkSandboxRestrictionsHostTest"
+      "name": "BroadcastRestrictionsHostTest"
+    },
+    {
+      "name": "ContentProviderRestrictionsHostTest"
     },
     {
       "name": "SdkSandboxStorageHostTest",
@@ -77,12 +121,44 @@
       ]
     },
     {
+      "name": "SdkSandboxMetricsHostTest"
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests"
+    },
+    {
+      "name": "SdkSandboxPerfScenarioTests"
+    },
+    {
+      "name": "SdkSandboxTestUtilsExampleTest"
     }
   ],
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
+    },
+    {
+      "name": "CtsSdkSandboxHostSideTests"
+    },
+    {
+      "name": "SdkSandboxUiTests"
+    }
+  ],
+  "sdksandbox-postsubmit": [
+    {
+      "name": "CtsContentTestCases"
+    },
+    {
+      "name": "CtsDisplayTestCases"
+    },
+    {
+      "name": "CtsInputMethodTestCases"
+    },
+    {
+      "name": "CtsMediaAudioTestCases"
+    },
+    {
+      "name": "CtsOsTestCases"
     }
   ]
 }

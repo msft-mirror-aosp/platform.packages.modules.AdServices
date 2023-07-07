@@ -26,14 +26,17 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.reporting.DebugReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /** Helper class for SQLite operations. */
 public class SqliteObjectMapper {
-
     /**
      * Create {@link EventReport} object from SQLite datastore.
      */
@@ -41,18 +44,27 @@ public class SqliteObjectMapper {
         EventReport.Builder builder = new EventReport.Builder();
         setTextColumn(cursor, MeasurementTables.EventReportContract.ID,
                 builder::setId);
-        setLongColumn(cursor, MeasurementTables.EventReportContract.SOURCE_ID,
-                builder::setSourceId);
+        setUnsignedLongColumn(
+                cursor,
+                MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
+                builder::setSourceEventId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 builder::setTriggerPriority);
         setIntColumn(cursor, MeasurementTables.EventReportContract.STATUS,
                 builder::setStatus);
-        setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DATA,
+        setIntColumn(
+                cursor,
+                MeasurementTables.EventReportContract.DEBUG_REPORT_STATUS,
+                builder::setDebugReportStatus);
+        setUnsignedLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DATA,
                 builder::setTriggerData);
-        setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
+        setUnsignedLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
                 builder::setTriggerDedupKey);
-        setUriColumn(cursor, MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                builder::setAttributionDestination);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                (destinations) ->
+                        builder.setAttributionDestinations(destinationsStringToList(destinations)));
         setTextColumn(cursor, MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
@@ -63,25 +75,32 @@ public class SqliteObjectMapper {
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setDoubleColumn(cursor, MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 builder::setRandomizedTriggerRate);
-        setLongColumn(
+        setUnsignedLongColumn(
                 cursor,
                 MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
                 builder::setSourceDebugKey);
-        setLongColumn(
+        setUnsignedLongColumn(
                 cursor,
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
                 builder::setTriggerDebugKey);
+        setTextColumn(
+                cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
+        setTextColumn(
+                cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
-    /**
-     * Create {@link Source} object from SQLite datastore.
-     */
+    /** Create {@link Source} object from SQLite datastore. */
     static Source constructSourceFromCursor(Cursor cursor) {
         Source.Builder builder = new Source.Builder();
         setTextColumn(cursor, MeasurementTables.SourceContract.ID,
                 builder::setId);
-        setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_ID,
+        setUnsignedLongColumn(cursor, MeasurementTables.SourceContract.EVENT_ID,
                 builder::setEventId);
         setLongColumn(cursor, MeasurementTables.SourceContract.PRIORITY,
                 builder::setPriority);
@@ -91,26 +110,26 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,
                 builder::setPublisherType);
-        setUriColumn(
-                cursor,
-                MeasurementTables.SourceContract.APP_DESTINATION,
-                builder::setAppDestination);
-        setUriColumn(
-                cursor,
-                MeasurementTables.SourceContract.WEB_DESTINATION,
-                builder::setWebDestination);
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
                 builder::setExpiryTime);
+        setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_REPORT_WINDOW,
+                builder::setEventReportWindow);
+        setLongColumn(cursor, MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW,
+                builder::setAggregatableReportWindow);
         setLongColumn(cursor, MeasurementTables.SourceContract.EVENT_TIME,
                 builder::setEventTime);
-        setTextColumn(cursor, MeasurementTables.SourceContract.DEDUP_KEYS,
-                (concatArray) ->  builder.setDedupKeys(Arrays.stream(concatArray.split(","))
-                        .map(String::trim)
-                        .filter(not(String::isEmpty))
-                        .map(Long::parseLong)
-                        .collect(Collectors.toList())));
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
+                (concatArray) ->
+                        builder.setEventReportDedupKeys(dedupKeysStringToList(concatArray)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                (concatArray) ->
+                        builder.setAggregateReportDedupKeys(dedupKeysStringToList(concatArray)));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
                 builder::setStatus);
         setUriColumn(cursor, MeasurementTables.SourceContract.REGISTRANT,
@@ -124,12 +143,62 @@ public class SqliteObjectMapper {
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
         setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
-                builder::setAggregateFilterData);
+                builder::setFilterData);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
         setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 builder::setAggregateContributions);
-        setLongColumn(cursor, MeasurementTables.SourceContract.DEBUG_KEY, builder::setDebugKey);
+        setUnsignedLongColumn(cursor, MeasurementTables.SourceContract.DEBUG_KEY,
+                builder::setDebugKey);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.DEBUG_REPORTING,
+                builder::setIsDebugReporting);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.AD_ID_PERMISSION,
+                builder::setAdIdPermission);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.AR_DEBUG_PERMISSION,
+                builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
+                builder::setSharedAggregationKeys);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ID,
+                builder::setRegistrationId);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
+        setLongColumn(
+                cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.PLATFORM_AD_ID, builder::setPlatformAdId);
+        setTextColumn(cursor, MeasurementTables.SourceContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                builder::setCoarseEventReportDestinations);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
+                builder::setMaxBucketIncrements);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                builder::setEventAttributionStatus);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
+                builder::setPrivacyParameters);
         return builder.build();
     }
 
@@ -158,8 +227,45 @@ public class SqliteObjectMapper {
                 builder::setAggregateTriggerData);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
+                builder::setAggregateDeduplicationKeys);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.DEBUG_KEY, builder::setDebugKey);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.NOT_FILTERS,
+                builder::setNotFilters);
+        setUnsignedLongColumn(cursor, MeasurementTables.TriggerContract.DEBUG_KEY,
+                builder::setDebugKey);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.DEBUG_REPORTING,
+                builder::setIsDebugReporting);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AD_ID_PERMISSION,
+                builder::setAdIdPermission);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AR_DEBUG_PERMISSION,
+                builder::setArDebugPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG,
+                builder::setAttributionConfig);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
+                builder::setAdtechBitMapping);
+        setTextColumn(
+                cursor, MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
+        setTextColumn(
+                cursor, MeasurementTables.TriggerContract.PLATFORM_AD_ID, builder::setPlatformAdId);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -184,16 +290,29 @@ public class SqliteObjectMapper {
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS,
+                builder::setDebugReportStatus);
         setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
                 builder::setApiVersion);
-        setLongColumn(
+        setUnsignedLongColumn(
                 cursor,
                 MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
                 builder::setSourceDebugKey);
-        setLongColumn(
+        setUnsignedLongColumn(
                 cursor,
                 MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
                 builder::setTriggerDebugKey);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.SOURCE_ID, builder::setSourceId);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
+        setUnsignedLongColumn(
+                cursor, MeasurementTables.AggregateReport.DEDUP_KEY, builder::setDedupKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -213,13 +332,112 @@ public class SqliteObjectMapper {
         return builder.build();
     }
 
+    /** Create {@link DebugReport} object from SQLite datastore. */
+    static DebugReport constructDebugReportFromCursor(Cursor cursor) {
+        DebugReport.Builder builder = new DebugReport.Builder();
+        setTextColumn(cursor, MeasurementTables.DebugReportContract.ID, builder::setId);
+        setTextColumn(cursor, MeasurementTables.DebugReportContract.TYPE, builder::setType);
+        setTextColumn(cursor, MeasurementTables.DebugReportContract.BODY, builder::setBody);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REFERENCE_ID,
+                builder::setReferenceId);
+
+        return builder.build();
+    }
+
+    /** Create {@link AsyncRegistration} object from SQLite datastore. */
+    public static AsyncRegistration constructAsyncRegistration(Cursor cursor) {
+        AsyncRegistration.Builder builder = new AsyncRegistration.Builder();
+        setTextColumn(cursor, MeasurementTables.AsyncRegistrationContract.ID, builder::setId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
+                builder::setWebDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.OS_DESTINATION,
+                builder::setOsDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
+                builder::setRegistrationUri);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION,
+                builder::setVerifiedDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
+                builder::setTopOrigin);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
+                (enumValue) ->
+                        builder.setSourceType(
+                                enumValue == null ? null : Source.SourceType.values()[enumValue]));
+        setUriColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                builder::setRegistrant);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME,
+                builder::setRequestTime);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
+                builder::setRetryCount);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                (enumValue) ->
+                        builder.setType(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRegistration.RegistrationType.values()[enumValue]));
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
+                builder::setDebugKeyAllowed);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION,
+                builder::setAdIdPermission);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
+                builder::setRegistrationId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                builder::setPlatformAdId);
+        return builder.build();
+    }
+
+    static List<Uri> destinationsStringToList(String destinations) {
+        return Arrays.stream(destinations.split(" "))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(destination -> Uri.parse(destination))
+                .collect(Collectors.toList());
+    }
+
     private static <BuilderType> void setUriColumn(Cursor cursor, String column, Function<Uri,
             BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getString, (x) -> setter.apply(Uri.parse(x)));
     }
 
-    private static <BuilderType> void setIntColumn(Cursor cursor, String column,
-                                                   Function<Integer, BuilderType> setter) {
+    private static <BuilderType> void setIntColumn(
+            Cursor cursor, String column, Function<Integer, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getInt, setter);
     }
 
@@ -231,6 +449,12 @@ public class SqliteObjectMapper {
     private static <BuilderType> void setLongColumn(Cursor cursor, String column,
                                                     Function<Long, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getLong, setter);
+    }
+
+    private static <BuilderType> void setUnsignedLongColumn(Cursor cursor, String column,
+                                                    Function<UnsignedLong, BuilderType> setter) {
+        setColumnValue(cursor, column, cursor::getLong, signedLong ->
+                setter.apply(new UnsignedLong(signedLong)));
     }
 
     private static <BuilderType> void setTextColumn(Cursor cursor, String column,
@@ -250,5 +474,13 @@ public class SqliteObjectMapper {
         if (index > -1 && !cursor.isNull(index)) {
             setter.apply(getColVal.apply(index));
         }
+    }
+
+    private static List<UnsignedLong> dedupKeysStringToList(String concatArray) {
+        return Arrays.stream(concatArray.split(","))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(UnsignedLong::new)
+                .collect(Collectors.toList());
     }
 }

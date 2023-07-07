@@ -33,6 +33,11 @@ import java.util.Objects;
  * {@link DBCustomAudience} object.
  */
 public class CustomAudienceSignals {
+
+    // TODO(b/276333013) : Refactor the Ad Selection result to avoid using special contextual CA
+    public static final String CONTEXTUAL_CA_NAME = "CONTEXTUAL_CA";
+    public static final int EXPIRATION_OFFSET_TWO_WEEKS = 2 * 7 * 24 * 60;
+
     @ColumnInfo(name = "owner")
     @NonNull
     private final String mOwner;

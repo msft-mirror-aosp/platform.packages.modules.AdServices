@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.settings.viewadatpors;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,11 +32,11 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
-import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 
 import com.google.common.collect.ImmutableList;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * ViewAdapter to handle data binding for the list of {@link App}s on {@link
@@ -43,14 +44,19 @@ import java.util.Objects;
  * AdServicesSettingsBlockedAppsFragment}.
  */
 public class AppsListViewAdapter extends RecyclerView.Adapter {
-
-    private final AppsViewModel mViewModel;
+    private final Context mContext;
+    private final Function<App, View.OnClickListener> mGetOnclickListener;
     private final LiveData<ImmutableList<App>> mAppsList;
     private final boolean mIsBlockedAppsList;
 
-    public AppsListViewAdapter(AppsViewModel viewModel, boolean isBlockedAppsList) {
-        mViewModel = viewModel;
-        mAppsList = isBlockedAppsList ? viewModel.getBlockedApps() : viewModel.getApps();
+    public AppsListViewAdapter(
+            Context context,
+            LiveData<ImmutableList<App>> appsList,
+            Function<App, View.OnClickListener> getOnclickListener,
+            boolean isBlockedAppsList) {
+        mContext = context;
+        mAppsList = appsList;
+        mGetOnclickListener = getOnclickListener;
         mIsBlockedAppsList = isBlockedAppsList;
     }
 
@@ -58,15 +64,18 @@ public class AppsListViewAdapter extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         final View view = LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);
-        return new AppsViewHolder(view);
+        return new com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter
+                .AppsViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        ((AppsViewHolder) holder)
+        ((com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter.AppsViewHolder)
+                        holder)
                 .initAppItem(
+                        mContext,
+                        mGetOnclickListener,
                         Objects.requireNonNull(mAppsList.getValue()).get(position),
-                        mViewModel,
                         mIsBlockedAppsList);
     }
 
@@ -82,7 +91,6 @@ public class AppsListViewAdapter extends RecyclerView.Adapter {
 
     /** ViewHolder to display the text for an app item */
     public static class AppsViewHolder extends RecyclerView.ViewHolder {
-
         private final TextView mAppTextView;
         private final Button mOptionButtonView;
         private final ImageView mImageView;
@@ -94,32 +102,28 @@ public class AppsListViewAdapter extends RecyclerView.Adapter {
             mImageView = itemView.findViewById(R.id.app_icon);
         }
 
-        /** Set the human readable string for the app and listener for block app logic. */
-        public void initAppItem(App app, AppsViewModel viewModel, boolean mIsBlockedAppsListItem) {
-            prepareAppName(app, viewModel);
-            prepareAppImageView(app, viewModel);
+        /** Set the human readable string for the app and listener for block/unblock app logic. */
+        public void initAppItem(
+                Context context,
+                Function<App, View.OnClickListener> getOnclickListener,
+                App app,
+                boolean mIsBlockedAppsListItem) {
+            prepareAppName(app, context);
+            prepareAppImageView(app, context);
             if (mIsBlockedAppsListItem) {
                 mOptionButtonView.setText(R.string.settingsUI_unblock_app_title);
-                mOptionButtonView.setOnClickListener(
-                        view -> {
-                            viewModel.restoreAppConsentButtonClickHandler(app);
-                        });
             } else {
                 mOptionButtonView.setText(R.string.settingsUI_block_app_title);
-                mOptionButtonView.setOnClickListener(
-                        view -> {
-                            viewModel.revokeAppConsentButtonClickHandler(app);
-                        });
             }
+            mOptionButtonView.setOnClickListener(getOnclickListener.apply(app));
         }
 
-        private void prepareAppName(App app, AppsViewModel viewModel) {
-            mAppTextView.setText(
-                    app.getAppDisplayName(viewModel.getApplication().getPackageManager()));
+        private void prepareAppName(App app, Context context) {
+            mAppTextView.setText(app.getAppDisplayName(context.getPackageManager()));
         }
 
-        private void prepareAppImageView(App app, AppsViewModel viewModel) {
-            Drawable appIcon = app.getAppIcon(viewModel.getApplication().getApplicationContext());
+        private void prepareAppImageView(App app, Context context) {
+            Drawable appIcon = app.getAppIcon(context);
             if (appIcon != null) {
                 mImageView.setImageDrawable(appIcon);
             }

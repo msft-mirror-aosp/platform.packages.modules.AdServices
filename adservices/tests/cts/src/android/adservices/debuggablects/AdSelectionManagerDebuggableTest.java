@@ -20,16 +20,19 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
-import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.os.Process;
 
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,22 +54,27 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
 
-    private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
 
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
+    private String mPreviousAppAllowList;
 
     @Before
     public void setup() {
-        assertForegroundActivityStarted();
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
-        mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
+        if (SdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        } else {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
+
         mTestAdSelectionClient =
                 new TestAdSelectionClient.Builder()
                         .setContext(sContext)
@@ -80,6 +88,17 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
+    }
+
+    @After
+    public void tearDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
@@ -138,12 +157,6 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
     @Test
     public void testResetAllOverridesSucceeds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        AdSelectionClient adSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
 
         ListenableFuture<Void> result =
                 mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();

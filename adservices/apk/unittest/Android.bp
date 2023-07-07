@@ -42,12 +42,51 @@ android_test {
         "android.test.base",
         "android.test.mock.stubs",
         "framework-adservices.impl",
+        "framework-annotations-lib",
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
         "mts-adservices",
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
+}
+
+android_test {
+    name: "AdExtServicesApkUnitTests",
+    srcs: [
+        "src/**/*.java",
+        ":adservicesapk-filegroup",
+    ],
+    certificate: "platform",
+    privileged: true,
+    defaults: ["modules-utils-testable-device-config-defaults"],
+    sdk_version: "module_current",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    static_libs: [
+        "adservices-assets",
+        "adservices-service-core",
+        "androidx.fragment_fragment",
+        "androidx.room_room-runtime",
+        "androidx.test.espresso.contrib",
+        "androidx.test.ext.junit",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "truth-prebuilt",
+    ],
+    libs: [
+    	"android.ext.adservices",
+        "android.test.base",
+        "android.test.mock.stubs",
+        "framework-annotations-lib",
+    ],
+    test_suites: [
+        "general-tests",
+        "mts-extservices",
+    ],
+    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    instrumentation_for: "ExtServices-sminus",
+    test_config: "AndroidTest.ExtServices.xml",
 }

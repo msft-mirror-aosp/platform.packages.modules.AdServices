@@ -16,23 +16,28 @@
 
 package com.android.adservices.service.measurement;
 
-import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import android.annotation.NonNull;
 
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Validation;
+
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Event trigger containing trigger data, priority, de-deup key and filters info. */
 public class EventTrigger {
-    private Long mTriggerData;
+    @NonNull private UnsignedLong mTriggerData;
     private long mTriggerPriority;
-    private Long mDedupKey;
-    private Optional<AggregateFilterData> mFilter;
-    private Optional<AggregateFilterData> mNotFilter;
+    private long mTriggerValue;
+    private UnsignedLong mDedupKey;
+    private Optional<List<FilterMap>> mFilterSet;
+    private Optional<List<FilterMap>> mNotFilterSet;
 
     private EventTrigger() {
-        mFilter = Optional.empty();
-        mNotFilter = Optional.empty();
+        mFilterSet = Optional.empty();
+        mNotFilterSet = Optional.empty();
     }
 
     @Override
@@ -43,18 +48,25 @@ public class EventTrigger {
         EventTrigger eventTrigger = (EventTrigger) obj;
         return Objects.equals(mTriggerData, eventTrigger.mTriggerData)
                 && mTriggerPriority == eventTrigger.mTriggerPriority
+                && mTriggerValue == eventTrigger.mTriggerValue
                 && Objects.equals(mDedupKey, eventTrigger.mDedupKey)
-                && Objects.equals(mFilter, eventTrigger.mFilter)
-                && Objects.equals(mNotFilter, eventTrigger.mNotFilter);
+                && Objects.equals(mFilterSet, eventTrigger.mFilterSet)
+                && Objects.equals(mNotFilterSet, eventTrigger.mNotFilterSet);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mTriggerPriority, mDedupKey, mFilter, mNotFilter);
+        return Objects.hash(
+                mTriggerData,
+                mTriggerPriority,
+                mTriggerValue,
+                mDedupKey,
+                mFilterSet,
+                mNotFilterSet);
     }
 
     /** Returns trigger_data for the event. */
-    public Long getTriggerData() {
+    public UnsignedLong getTriggerData() {
         return mTriggerData;
     }
 
@@ -63,33 +75,34 @@ public class EventTrigger {
         return mTriggerPriority;
     }
 
+    /** Trigger value. */
+    public long getTriggerValue() {
+        return mTriggerValue;
+    }
+
     /** De-deuplication key.. */
-    public Long getDedupKey() {
+    public UnsignedLong getDedupKey() {
         return mDedupKey;
     }
 
     /** Filters that should match with source's. */
-    public Optional<AggregateFilterData> getFilterData() {
-        return mFilter;
+    public Optional<List<FilterMap>> getFilterSet() {
+        return mFilterSet;
     }
 
     /** Filters that should not match with source's. */
-    public Optional<AggregateFilterData> getNotFilterData() {
-        return mNotFilter;
+    public Optional<List<FilterMap>> getNotFilterSet() {
+        return mNotFilterSet;
     }
 
     /** Builder for {@link AggregatableAttributionTrigger}. */
     public static final class Builder {
         private final EventTrigger mBuilding;
 
-        public Builder() {
+        public Builder(@NonNull UnsignedLong triggerData) {
+            Validation.validateNonNull(triggerData);
             mBuilding = new EventTrigger();
-        }
-
-        /** See {@link EventTrigger#getTriggerData()}. */
-        public EventTrigger.Builder setTriggerData(Long triggerData) {
             mBuilding.mTriggerData = triggerData;
-            return this;
         }
 
         /** See {@link EventTrigger#getTriggerPriority()}. */
@@ -98,21 +111,27 @@ public class EventTrigger {
             return this;
         }
 
+        /** See {@link EventTrigger#getTriggerValue()}. */
+        public EventTrigger.Builder setTriggerValue(Long value) {
+            mBuilding.mTriggerValue = value;
+            return this;
+        }
+
         /** See {@link EventTrigger#getDedupKey()}. */
-        public EventTrigger.Builder setDedupKey(Long dedupKey) {
+        public EventTrigger.Builder setDedupKey(UnsignedLong dedupKey) {
             mBuilding.mDedupKey = dedupKey;
             return this;
         }
 
-        /** See {@link EventTrigger#getFilterData()}. */
-        public EventTrigger.Builder setFilter(AggregateFilterData filterData) {
-            mBuilding.mFilter = Optional.ofNullable(filterData);
+        /** See {@link EventTrigger#getFilterSet()}. */
+        public EventTrigger.Builder setFilterSet(List<FilterMap> filterSet) {
+            mBuilding.mFilterSet = Optional.ofNullable(filterSet);
             return this;
         }
 
-        /** See {@link EventTrigger#getNotFilterData()} ()}. */
-        public EventTrigger.Builder setNotFilter(AggregateFilterData notFilterData) {
-            mBuilding.mNotFilter = Optional.ofNullable(notFilterData);
+        /** See {@link EventTrigger#getNotFilterSet()}. */
+        public EventTrigger.Builder setNotFilterSet(List<FilterMap> notFilterSet) {
+            mBuilding.mNotFilterSet = Optional.ofNullable(notFilterSet);
             return this;
         }
 

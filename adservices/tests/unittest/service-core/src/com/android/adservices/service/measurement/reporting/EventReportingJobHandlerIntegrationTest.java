@@ -16,12 +16,14 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.net.Uri;
+
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
-import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,15 +35,11 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 /** Integration tests for {@link EventReportingJobHandler} */
 @RunWith(Parameterized.class)
 public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
-    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.com"))
-            .build();
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
 
@@ -70,17 +68,16 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
     public void runActionToTest() {
         final Integer returnCode = (Integer) get("responseCode");
         final String action = (String) get("action");
-        final boolean isEnrolled = get("notEnrolled") == null;
+        final String registration_origin = (String) get("registration_origin");
 
-        Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
-                .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(new EventReportingJobHandler(mEnrollmentDao, datastoreManager));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.any(), Mockito.any());
+                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), Mockito.any());
         } catch (IOException e) {
             Assert.fail();
         }
@@ -98,7 +95,9 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                 final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
                 final String id = (String) get("id");
                 Assert.assertEquals(
-                        "Event report failed.", result, spyReportingService.performReport(id));
+                        "Event report failed.",
+                        result,
+                        spyReportingService.performReport(id, new ReportingStatus()));
                 break;
         }
     }
