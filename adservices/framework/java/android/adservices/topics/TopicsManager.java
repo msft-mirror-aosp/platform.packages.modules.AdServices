@@ -37,7 +37,7 @@ import android.text.TextUtils;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.ArrayList;
@@ -55,6 +55,7 @@ import java.util.concurrent.Executor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class TopicsManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     /**
      * Constant that represents the service name for {@link TopicsManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -227,7 +228,7 @@ public final class TopicsManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "RemoteException");
+            sLogger.e(e, "RemoteException");
             callback.onError(e);
         }
     }

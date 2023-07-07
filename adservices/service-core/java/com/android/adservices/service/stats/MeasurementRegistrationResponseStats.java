@@ -27,12 +27,22 @@ public class MeasurementRegistrationResponseStats {
     private final int mRegistrationType;
     private final long mResponseSize;
     private final String mAdTechDomain;
+    private final int mInteractionType;
+    private final int mSurfaceType;
+    private final int mRegistrationStatus;
+    private final int mFailureType;
+    private final long mRegistrationDelay;
 
     private MeasurementRegistrationResponseStats(Builder builder) {
         mCode = builder.mCode;
         mRegistrationType = builder.mRegistrationType;
         mResponseSize = builder.mResponseSize;
         mAdTechDomain = builder.mAdTechDomain;
+        mInteractionType = builder.mInteractionType;
+        mSurfaceType = builder.mSurfaceType;
+        mRegistrationStatus = builder.mRegistrationStatus;
+        mFailureType = builder.mFailureType;
+        mRegistrationDelay = builder.mRegistrationDelay;
     }
 
     @Override
@@ -43,12 +53,26 @@ public class MeasurementRegistrationResponseStats {
         return mCode == that.mCode
                 && mRegistrationType == that.mRegistrationType
                 && mResponseSize == that.mResponseSize
-                && Objects.equals(mAdTechDomain, that.mAdTechDomain);
+                && Objects.equals(mAdTechDomain, that.mAdTechDomain)
+                && mInteractionType == that.mInteractionType
+                && mSurfaceType == that.mSurfaceType
+                && mRegistrationStatus == that.mRegistrationStatus
+                && mFailureType == that.mFailureType
+                && mRegistrationDelay == that.mRegistrationDelay;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mRegistrationType, mResponseSize, mAdTechDomain);
+        return Objects.hash(
+                mCode,
+                mRegistrationType,
+                mResponseSize,
+                mAdTechDomain,
+                mInteractionType,
+                mSurfaceType,
+                mRegistrationStatus,
+                mFailureType,
+                mRegistrationDelay);
     }
 
     @Override
@@ -62,6 +86,16 @@ public class MeasurementRegistrationResponseStats {
                 + mResponseSize
                 + ", mAdTechDomain='"
                 + mAdTechDomain
+                + ", mInteractionType="
+                + mInteractionType
+                + ", mSurfaceType="
+                + mSurfaceType
+                + ", mRegistrationStatus="
+                + mRegistrationStatus
+                + ", mFailureType="
+                + mFailureType
+                + ", mRegistrationDelay="
+                + mRegistrationDelay
                 + '}';
     }
 
@@ -82,17 +116,55 @@ public class MeasurementRegistrationResponseStats {
         return mAdTechDomain;
     }
 
+    public int getInteractionType() {
+        return mInteractionType;
+    }
+
+    public int getSurfaceType() {
+        return mSurfaceType;
+    }
+
+    public int getRegistrationStatus() {
+        return mRegistrationStatus;
+    }
+
+    public int getFailureType() {
+        return mFailureType;
+    }
+
+    public long getRegistrationDelay() {
+        return mRegistrationDelay;
+    }
+
     /** Builder for {@link MeasurementRegistrationResponseStats}. */
     public static final class Builder {
         private final int mCode;
         private final int mRegistrationType;
         private final long mResponseSize;
         private String mAdTechDomain;
+        private final int mInteractionType;
+        private final int mSurfaceType;
+        private final int mRegistrationStatus;
+        private final int mFailureType;
+        private final long mRegistrationDelay;
 
-        public Builder(int code, int registrationType, long responseSize) {
+        public Builder(
+                int code,
+                int registrationType,
+                long responseSize,
+                int interactionType,
+                int surfaceType,
+                int registrationStatus,
+                int failureType,
+                long registrationDelay) {
             mCode = code;
             mRegistrationType = registrationType;
             mResponseSize = responseSize;
+            mInteractionType = interactionType;
+            mSurfaceType = surfaceType;
+            mRegistrationStatus = registrationStatus;
+            mFailureType = failureType;
+            mRegistrationDelay = registrationDelay;
         }
 
         /** See {@link MeasurementRegistrationResponseStats#getAdTechDomain()} . */

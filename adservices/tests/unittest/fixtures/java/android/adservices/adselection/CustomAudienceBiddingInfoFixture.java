@@ -16,8 +16,13 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+
+import com.android.adservices.service.adselection.AdCost;
+import com.android.adservices.service.adselection.BuyerContextualSignals;
 
 public class CustomAudienceBiddingInfoFixture {
 
@@ -27,6 +32,11 @@ public class CustomAudienceBiddingInfoFixture {
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                     + ") {;\n"
                     + "}";
+
+    public static final BuyerContextualSignals BUYER_CONTEXTUAL_SIGNALS =
+            BuyerContextualSignals.builder()
+                    .setAdCost(new AdCost(1.0, NUM_BITS_STOCHASTIC_ROUNDING))
+                    .build();
 
     public static Uri getValidBiddingLogicUri(String buyer) {
         return Uri.parse(String.format(VALID_BIDDING_LOGIC_URI_FORMAT, buyer));

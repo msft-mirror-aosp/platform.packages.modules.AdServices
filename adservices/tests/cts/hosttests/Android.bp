@@ -34,10 +34,14 @@ java_test_host {
     static_libs: [
         "cts-statsd-atom-host-test-utils",
     ],
+    data: [
+        ":CtsAdservicesHostTestApp",
+    ],
+    per_testcase_directory: true,
 }
 
 java_test_host {
-    name: "CtsExtAdServicesHostTests",
+    name: "CtsAdExtServicesHostTests",
     defaults: ["cts_defaults"],
     srcs: ["src/**/*.java"],
     // tag this module as a cts test artifact

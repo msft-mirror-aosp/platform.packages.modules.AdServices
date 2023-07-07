@@ -16,8 +16,6 @@
 
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.ui.notifications.ConsentNotificationFragment.IS_EU_DEVICE_ARGUMENT_KEY;
-
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -36,6 +34,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
@@ -89,16 +89,21 @@ public class ConsentNotificationTrigger {
                     ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
         }
         if (gaUxFeatureEnabled) {
-            consentManager.recordGaUxNotificationDisplayed();
+            consentManager.recordGaUxNotificationDisplayed(true);
         }
-        consentManager.recordNotificationDisplayed();
+        consentManager.recordNotificationDisplayed(true);
     }
 
     @NonNull
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
         Notification notification;
-        if (gaUxFeatureEnabled) {
+        if (FlagsFactory.getFlags().getU18UxEnabled()
+                && UxStatesManager.getInstance(context)
+                        .getUx()
+                        .equals(PrivacySandboxUxCollection.U18_UX)) {
+            notification = getU18ConsentNotification(context);
+        } else if (gaUxFeatureEnabled) {
             if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
                 notification = getGaV2ConsentNotification(context, isEuDevice);
             } else {
@@ -159,30 +164,34 @@ public class ConsentNotificationTrigger {
     private static Notification getGaV2ConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
-        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        String bigText =
+                isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_ga_content_eu_v2)
+                        : context.getString(R.string.notificationUI_notification_ga_content_v2);
+
         NotificationCompat.BigTextStyle textStyle =
-                new NotificationCompat.BigTextStyle()
-                        .bigText(
-                                isEuDevice
-                                        ? context.getString(
-                                        R.string.notificationUI_notification_ga_content_eu_v2)
-                                        : context.getString(
-                                        R.string.notificationUI_notification_ga_content_v2));
+                new NotificationCompat.BigTextStyle().bigText(bigText);
+
+        String contentTitle =
+                context.getString(
+                        isEuDevice
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2);
+        String contentText =
+                context.getString(
+                        isEuDevice
+                                ? R.string.notificationUI_notification_ga_content_eu_v2
+                                : R.string.notificationUI_notification_ga_content_v2);
+
         NotificationCompat.Builder notification =
                 new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(R.drawable.ic_info_icon)
-                        .setContentTitle(
-                                context.getString(
-                                        isEuDevice
-                                                ? R.string.notificationUI_notification_ga_title_eu_v2
-                                                : R.string.notificationUI_notification_ga_title_v2))
-                        .setContentText(
-                                context.getString(
-                                        isEuDevice
-                                                ? R.string.notificationUI_notification_ga_content_eu_v2
-                                                : R.string.notificationUI_notification_ga_content_v2))
+                        .setContentTitle(contentTitle)
+                        .setContentText(contentText)
                         .setStyle(textStyle)
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
@@ -199,7 +208,7 @@ public class ConsentNotificationTrigger {
     private static Notification getGaConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
-        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.BigTextStyle textStyle =
@@ -244,7 +253,7 @@ public class ConsentNotificationTrigger {
     private static Notification getConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
-        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
                         context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
@@ -268,6 +277,34 @@ public class ConsentNotificationTrigger {
                                 isEuDevice
                                         ? R.string.notificationUI_notification_content_eu
                                         : R.string.notificationUI_notification_content))
+                .setStyle(textStyle)
+                .setPriority(NOTIFICATION_PRIORITY)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build();
+    }
+
+    /**
+     * Returns a {@link NotificationCompat.Builder} which can be used to display consent
+     * notification to U18 users.
+     *
+     * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
+     */
+    private static Notification getU18ConsentNotification(@NonNull Context context) {
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(
+                        context, /* requestCode= */ 1, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.BigTextStyle textStyle =
+                new NotificationCompat.BigTextStyle()
+                        .bigText(
+                                context.getString(
+                                        R.string.notificationUI_u18_notification_content));
+        return new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_info_icon)
+                .setContentTitle(context.getString(R.string.notificationUI_u18_notification_title))
+                .setContentText(context.getString(R.string.notificationUI_u18_notification_content))
                 .setStyle(textStyle)
                 .setPriority(NOTIFICATION_PRIORITY)
                 .setAutoCancel(true)

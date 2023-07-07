@@ -22,6 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.LimitExceededException;
 
@@ -29,6 +30,8 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 
@@ -74,16 +77,35 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
-     * Asserts that the calling app, FLEDGE APIs and the Privacy Sandbox have user consent.
+     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
      *
-     * @param callerPackageName String package name that uniquely identifies an installed
-     *     application that has used a FLEDGE API
-     * @throws ConsentManager.RevokedConsentException if the app or FLEDGE or the Privacy Sandbox do
-     *     not have user consent
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
      */
-    protected void assertCallerHasUserConsent(String callerPackageName)
+    protected void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
+        AdServicesApiConsent userConsent;
+        if (mFlags.getGaUxFeatureEnabled()) {
+            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+        } else {
+            userConsent = mConsentManager.getConsent();
+        }
+        if (!userConsent.isGiven()) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+    }
+
+    /**
+     * Asserts caller has user consent to use FLEDGE APIs in the calling app and persists consent
+     * for.
+     *
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     */
+    protected void assertAndPersistCallerHasUserConsentForApp(String callerPackageName)
             throws ConsentManager.RevokedConsentException {
-        mConsentManager.assertFledgeCallerHasUserConsent(callerPackageName);
+        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName)) {
+            throw new ConsentManager.RevokedConsentException();
+        }
     }
 
     /**
@@ -108,6 +130,22 @@ public abstract class AbstractFledgeServiceFilter {
     protected void assertCallerPackageName(String callerPackageName, int callerUid, int apiName)
             throws FledgeAuthorizationFilter.CallerMismatchException {
         mFledgeAuthorizationFilter.assertCallingPackageName(callerPackageName, callerUid, apiName);
+    }
+
+    /**
+     * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
+     * the ad tech is enrolled and authorized to perform the operation for the package.
+     *
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param callerPackageName the package name to check against
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     */
+    protected AdTechIdentifier getAndAssertAdTechFromUriAllowed(
+            String callerPackageName, Uri uriForAdTech, int apiName)
+            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        return mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
+                mContext, callerPackageName, uriForAdTech, apiName);
     }
 
     /**

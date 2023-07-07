@@ -47,7 +47,7 @@ public class MigrationTestHelper {
         EmptySqliteOpenHelper dbHelper = new EmptySqliteOpenHelper(context, dbName);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         for (String createStatement :
-                MeasurementDbSchemaTrail.getCreateTableStatementsByVersion(version).values()) {
+                MeasurementDbSchemaTrail.getCreateTableStatementsByVersion(version)) {
             db.execSQL(createStatement);
         }
 

@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings.delegates;
 import android.content.Intent;
 import android.icu.text.MessageFormat;
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
@@ -26,7 +27,8 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
@@ -45,16 +47,14 @@ import java.util.Map;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class MainActionDelegate extends BaseActionDelegate {
+public class MainActionDelegate {
     private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;
     private final MainViewModel mMainViewModel;
 
     public MainActionDelegate(
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
-        super(mainSettingsActivity);
         mAdServicesSettingsMainActivity = mainSettingsActivity;
         mMainViewModel = mainViewModel;
-
         listenToMainViewModelUiEvents();
     }
 
@@ -70,29 +70,37 @@ public class MainActionDelegate extends BaseActionDelegate {
                                 mMainViewModel.setConsent(true);
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showOptOutDialog(
-                                            mAdServicesSettingsMainActivity, mMainViewModel);
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showOptOutDialogFragment(
+                                                mAdServicesSettingsMainActivity, mMainViewModel);
+                                    } else {
+                                        DialogManager.showOptOutDialog(
+                                                mAdServicesSettingsMainActivity, mMainViewModel);
+                                    }
                                 } else {
                                     mMainViewModel.setConsent(false);
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_APPS_SELECTED);
+                                UiStatsLogger.logManageAppsSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_TOPICS_SELECTED);
+                                UiStatsLogger.logManageTopicsSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 TopicsActivity.class));
                                 break;
                             case DISPLAY_MEASUREMENT_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_MEASUREMENT_SELECTED);
+                                UiStatsLogger.logManageMeasurementSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
@@ -140,6 +148,14 @@ public class MainActionDelegate extends BaseActionDelegate {
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
         configureSubtitles(fragment);
+        configureLearnMore(fragment);
+    }
+
+    private void configureLearnMore(AdServicesSettingsMainFragment fragment) {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            ((TextView) fragment.requireView().findViewById(R.id.main_view_ga_footer_learn_more))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        }
     }
 
     private void setLayoutVisibility(int[] layoutList, int visibility) {

@@ -17,8 +17,7 @@
 package com.android.adservices.helpers;
 
 import com.android.helpers.LatencyHelper;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.BufferedReader;
 import java.io.IOException;

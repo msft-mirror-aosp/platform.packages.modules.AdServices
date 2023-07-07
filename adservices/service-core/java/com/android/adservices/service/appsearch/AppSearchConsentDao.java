@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.appsearch;
 
+import android.annotation.NonNull;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -35,7 +36,7 @@ import java.util.concurrent.Executor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
-public class AppSearchConsentDao extends AppSearchDao {
+class AppSearchConsentDao extends AppSearchDao {
     /**
      * Identifier of the Consent Document; must be unique within the Document's `namespace`. This is
      * the row ID for consent data. It is a combination of user ID and api type.
@@ -49,8 +50,9 @@ public class AppSearchConsentDao extends AppSearchDao {
     @Document.Namespace private final String mNamespace;
 
     /**
-     * API type for this consent. Possible values are CONSENT, CONSENT-FLEDGE, CONSENT-MEASUREMENT
-     * and CONSENT-TOPICS.
+     * API type for this consent. Possible values are a) CONSENT, CONSENT-FLEDGE,
+     * CONSENT-MEASUREMENT, CONSENT-TOPICS, b) DEFAULT_CONSENT, TOPICS_DEFAULT_CONSENT,
+     * FLEDGE_DEFAULT_CONSENT, MEASUREMENT_DEFAULT_CONSENT and c) DEFAULT_AD_ID_STATE.
      */
     @Document.StringProperty(indexingType = StringPropertyConfig.INDEXING_TYPE_EXACT_TERMS)
     private final String mApiType;
@@ -131,6 +133,11 @@ public class AppSearchConsentDao extends AppSearchDao {
         return mConsent.equals("true");
     }
 
+    /** Returns the row ID that should be unique for the consent namespace. */
+    public static String getRowId(@NonNull String uid, @NonNull String apiType) {
+        return uid + "_" + apiType;
+    }
+
     /**
      * Converts the DAO to a string.
      *
@@ -175,18 +182,21 @@ public class AppSearchConsentDao extends AppSearchDao {
      * @param apiType the API type for the query.
      * @return whether the row is consented for this user ID and apiType.
      */
-    public static boolean readConsentData(
-            ListenableFuture<GlobalSearchSession> searchSession,
-            Executor executor,
-            String userId,
-            String apiType) {
+    static boolean readConsentData(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId,
+            @NonNull String apiType) {
+        Objects.requireNonNull(searchSession);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(userId);
+        Objects.requireNonNull(apiType);
+
+        String query = getQuery(userId, apiType);
         AppSearchConsentDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchConsentDao.class,
-                        searchSession,
-                        executor,
-                        getQuery(userId, apiType));
-        LogUtil.d("AppSearch consent data read: " + dao + " [" + userId + ":" + apiType + "]");
+                        AppSearchConsentDao.class, searchSession, executor, NAMESPACE, query);
+        LogUtil.d("AppSearch app consent data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return false;
         }

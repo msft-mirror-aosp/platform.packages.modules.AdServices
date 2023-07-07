@@ -32,8 +32,7 @@ import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 

@@ -18,6 +18,8 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__ACTION_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_IN_SELECTED;
@@ -53,7 +55,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED_TO_BOTTOM;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MEASUREMENT_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MEASUREMENT_OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISABLED;
@@ -68,9 +72,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__TOPICS_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__TOPICS_OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__STATE_UNSPECIFIED;
@@ -83,14 +91,18 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_IN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_OUT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT_FF;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT_FF;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_UNSUPPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
 
 import android.content.Context;
 import android.os.Build;
@@ -99,10 +111,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 
 /** Logger for UiStats. */
 // TODO(b/269798827): Enable for R.
@@ -358,24 +374,6 @@ public class UiStatsLogger {
         sLogger.logUIStats(uiStats);
     }
 
-    /** Logs that a user has reset the measurement feature. */
-    public static void logResetMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
-    /** Logs that a user has opened the measurement page. */
-    public static void logManageMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
     /** Logs user opt-in action for PP API. */
     public static void logOptInSelected(@NonNull Context context) {
         UIStats uiStats = getBaseUiStats(context);
@@ -424,6 +422,96 @@ public class UiStatsLogger {
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage topics button. */
+    public static void logManageTopicsSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage apps button. */
+    public static void logManageAppsSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset topics button. */
+    public static void logResetTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset apps button. */
+    public static void logResetAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked block topic button. */
+    public static void logBlockTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked unblock topic button. */
+    public static void logUnblockTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked block app button. */
+    public static void logBlockAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked unblock app button. */
+    public static void logUnblockAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage measurement button. */
+    public static void logManageMeasurementSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset measurement button. */
+    public static void logResetMeasurementSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
 
         sLogger.logUIStats(uiStats);
     }
@@ -520,31 +608,44 @@ public class UiStatsLogger {
         }
     }
 
-    private static int getPrivacySandboxFeatureType(@NonNull Context context) {
-        if (!FlagsFactory.getFlags().isUiFeatureTypeLoggingEnabled()) {
-            return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
-        }
+    private static int getUx(@NonNull Context context) {
+        return switch (UxStatesManager.getInstance(context).getUx()) {
+            case U18_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+            case GA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+            case BETA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+            default -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
+        };
+    }
 
-        PrivacySandboxFeatureType featureType =
-                ConsentManager.getInstance(context).getCurrentPrivacySandboxFeature();
-        if (featureType == null) {
-            return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
+    private static int getEnrollmentChannel(@NonNull Context context) {
+        PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
+                UxStatesManager.getInstance(context).getEnrollmentChannel();
+        if (enrollmentChannel == GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
+                || enrollmentChannel
+                        == BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
+                || enrollmentChannel
+                        == U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel
+                        == GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
+                || enrollmentChannel
+                        == BetaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
+                || enrollmentChannel
+                        == U18UxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
+        } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                || enrollmentChannel == BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
+                || enrollmentChannel == U18UxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
+        } else if (enrollmentChannel
+                == GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
+        } else if (enrollmentChannel == U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
         }
-
-        switch (featureType) {
-            case PRIVACY_SANDBOX_FIRST_CONSENT_FF:
-                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT_FF;
-            case PRIVACY_SANDBOX_RECONSENT_FF:
-                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT_FF;
-            case PRIVACY_SANDBOX_FIRST_CONSENT:
-                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT;
-            case PRIVACY_SANDBOX_RECONSENT:
-                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT;
-            case PRIVACY_SANDBOX_UNSUPPORTED:
-                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_UNSUPPORTED;
-            default:
-                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
-        }
+        return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSUPPORTED_CHANNEL;
     }
 
     private static UIStats getBaseUiStats(@NonNull Context context) {
@@ -553,7 +654,8 @@ public class UiStatsLogger {
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context))
                 .setDefaultAdIdState(getDefaultAdIdState(context))
-                .setPrivacySandboxFeatureType(getPrivacySandboxFeatureType(context))
+                .setUx(getUx(context))
+                .setEnrollmentChannel(getEnrollmentChannel(context))
                 .build();
     }
 
@@ -563,7 +665,8 @@ public class UiStatsLogger {
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context, apiType))
                 .setDefaultAdIdState(getDefaultAdIdState(context))
-                .setPrivacySandboxFeatureType(getPrivacySandboxFeatureType(context))
+                .setUx(getUx(context))
+                .setEnrollmentChannel(getEnrollmentChannel(context))
                 .build();
     }
 }

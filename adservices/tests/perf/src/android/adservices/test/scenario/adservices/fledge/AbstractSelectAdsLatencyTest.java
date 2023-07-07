@@ -100,8 +100,14 @@ public class AbstractSelectAdsLatencyTest {
     @Rule
     public RuleChain rules =
             RuleChain.outerRule(
+                            // CleanPackageRule should not execute after each test method because
+                            // there's a chance it interferes with ShowmapSnapshotListener snapshot
+                            // at the end of the test, impacting collection of memory metrics for
+                            // AdServices process.
                             new CleanPackageRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
+                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
+                                    /* clearOnStarting = */ true,
+                                    /* clearOnFinished = */ false))
                     .around(
                             new KillAppsRule(
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
@@ -111,11 +117,6 @@ public class AbstractSelectAdsLatencyTest {
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
         sCustomAudiences = new ArrayList<>();
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @AfterClass

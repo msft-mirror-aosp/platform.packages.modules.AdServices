@@ -28,6 +28,8 @@ import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Objects;
@@ -44,13 +46,13 @@ public class AdvertisingCustomAudienceClient {
     private final Context mContext;
     private final Executor mExecutor;
 
-    private AdvertisingCustomAudienceClient(@NonNull Context context, @NonNull Executor executor) {
+    private AdvertisingCustomAudienceClient(
+            @NonNull Context context,
+            @NonNull Executor executor,
+            @NonNull CustomAudienceManager customAudienceManager) {
         mContext = context;
         mExecutor = executor;
-        mCustomAudienceManager =
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        ? mContext.getSystemService(CustomAudienceManager.class)
-                        : CustomAudienceManager.get(context);
+        mCustomAudienceManager = customAudienceManager;
     }
 
     /** Gets the context. */
@@ -129,6 +131,7 @@ public class AdvertisingCustomAudienceClient {
     public static final class Builder {
         private Context mContext;
         private Executor mExecutor;
+        private boolean mUseGetMethodToCreateManagerInstance;
 
         /** Empty-arg constructor with an empty body for Builder */
         public Builder() {
@@ -154,13 +157,39 @@ public class AdvertisingCustomAudienceClient {
             return this;
         }
 
+        /**
+         * Sets whether to use the CustomAudienceManager.get(context) method explicitly.
+         *
+         * @param value flag indicating whether to use the CustomAudienceManager.get(context) method
+         *     explicitly. Default is {@code false}.
+         */
+        @VisibleForTesting
+        @NonNull
+        public Builder setUseGetMethodToCreateManagerInstance(boolean value) {
+            mUseGetMethodToCreateManagerInstance = value;
+            return this;
+        }
+
         /** Builds a {@link AdvertisingCustomAudienceClient} instance */
         @NonNull
         public AdvertisingCustomAudienceClient build() {
             Objects.requireNonNull(mContext);
             Objects.requireNonNull(mExecutor);
 
-            return new AdvertisingCustomAudienceClient(mContext, mExecutor);
+            CustomAudienceManager customAudienceManager = createCustomAudienceManager();
+            return new AdvertisingCustomAudienceClient(mContext, mExecutor, customAudienceManager);
+        }
+
+        @NonNull
+        private CustomAudienceManager createCustomAudienceManager() {
+            if (mUseGetMethodToCreateManagerInstance) {
+                return CustomAudienceManager.get(mContext);
+            }
+
+            // By default, use getSystemService for T+ and get(context) for S-.
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    ? mContext.getSystemService(CustomAudienceManager.class)
+                    : CustomAudienceManager.get(mContext);
         }
     }
 }

@@ -28,7 +28,6 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -53,10 +52,22 @@ public class AggregateReportingJobHandler {
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
 
+    private ReportingStatus.UploadMethod mUploadMethod;
+
     AggregateReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
+    }
+
+    AggregateReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            ReportingStatus.UploadMethod uploadMethod) {
+        mEnrollmentDao = enrollmentDao;
+        mDatastoreManager = datastoreManager;
+        mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
+        mUploadMethod = uploadMethod;
     }
 
     @VisibleForTesting
@@ -113,10 +124,23 @@ public class AggregateReportingJobHandler {
 
         if (keys.size() == pendingAggregateReportIdsInWindow.size()) {
             for (int i = 0; i < pendingAggregateReportIdsInWindow.size(); i++) {
+                ReportingStatus reportingStatus = new ReportingStatus();
                 final String aggregateReportId = pendingAggregateReportIdsInWindow.get(i);
                 @AdServicesStatusUtils.StatusCode
-                int result = performReport(aggregateReportId, keys.get(i));
-                logReportingStats(result);
+                int result = performReport(aggregateReportId, keys.get(i), reportingStatus);
+
+                if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
+                    reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
+                } else {
+                    reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                }
+
+                if (mUploadMethod != null) {
+                    reportingStatus.setUploadMethod(mUploadMethod);
+                }
+                if (!mIsDebugInstance) {
+                    logReportingStats(reportingStatus);
+                }
             }
         } else {
             LogUtil.w("The number of keys do not align with the number of reports");
@@ -133,7 +157,8 @@ public class AggregateReportingJobHandler {
      * @return success
      */
     @AdServicesStatusUtils.StatusCode
-    synchronized int performReport(String aggregateReportId, AggregateEncryptionKey key) {
+    synchronized int performReport(
+            String aggregateReportId, AggregateEncryptionKey key, ReportingStatus reportingStatus) {
         Optional<AggregateReport> aggregateReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
@@ -147,24 +172,18 @@ public class AggregateReportingJobHandler {
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
             LogUtil.d("Debugging status is not pending");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         if (!mIsDebugInstance && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
-            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
-                    aggregateReport.getEnrollmentId(), mEnrollmentDao);
-            if (!reportingOrigin.isPresent()) {
-                // We do not know here what the cause is of the failure to retrieve the reporting
-                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
-                LogUtil.d("Report origin not present");
-                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            }
-            JSONObject aggregateReportJsonBody = createReportJsonPayload(
-                    aggregateReport, reportingOrigin.get(), key);
-            int returnCode = makeHttpPostRequest(reportingOrigin.get(), aggregateReportJsonBody);
-
+            Uri reportingOrigin = aggregateReport.getRegistrationOrigin();
+            JSONObject aggregateReportJsonBody =
+                    createReportJsonPayload(aggregateReport, reportingOrigin, key);
+            int returnCode = makeHttpPostRequest(reportingOrigin, aggregateReportJsonBody);
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
                 boolean success =
@@ -179,14 +198,22 @@ public class AggregateReportingJobHandler {
                                     }
                                 });
 
-                return success
-                        ? AdServicesStatusUtils.STATUS_SUCCESS
-                        : AdServicesStatusUtils.STATUS_IO_ERROR;
+                if (success) {
+                    long deliveryTime = System.currentTimeMillis();
+                    reportingStatus.setReportingDelay(
+                            deliveryTime - aggregateReport.getScheduledReportTime());
+                    return AdServicesStatusUtils.STATUS_SUCCESS;
+                } else {
+                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
+                    return AdServicesStatusUtils.STATUS_IO_ERROR;
+                }
             } else {
+                reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
@@ -225,13 +252,19 @@ public class AggregateReportingJobHandler {
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
     }
 
-    private void logReportingStats(int resultCode) {
+    private void logReportingStats(ReportingStatus reportingStatus) {
+        if (!reportingStatus.getReportingDelay().isPresent()) {
+            reportingStatus.setReportingDelay(0L);
+        }
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementReports(
                         new MeasurementReportsStats.Builder()
                                 .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
                                 .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE)
-                                .setResultCode(resultCode)
+                                .setResultCode(reportingStatus.getUploadStatus().ordinal())
+                                .setFailureType(reportingStatus.getFailureStatus().ordinal())
+                                .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
+                                .setReportingDelay(reportingStatus.getReportingDelay().get())
                                 .build());
     }
 }
