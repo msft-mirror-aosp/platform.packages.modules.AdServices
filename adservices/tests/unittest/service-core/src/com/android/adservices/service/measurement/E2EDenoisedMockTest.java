@@ -64,6 +64,7 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mDebugReportApi);
+                        mDebugReportApi,
+                        mFlags);
     }
 }
