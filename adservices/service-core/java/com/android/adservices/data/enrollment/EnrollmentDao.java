@@ -97,16 +97,22 @@ public class EnrollmentDao implements IEnrollmentDao {
     boolean isSeeded() {
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-        return prefs.getBoolean(IS_SEEDED, false);
+        boolean isSeeded = prefs.getBoolean(IS_SEEDED, false);
+        LogUtil.v("Persisted enrollment database seed status: %s", isSeeded);
+        return isSeeded;
     }
 
     @VisibleForTesting
     void seed() {
+        LogUtil.v("Seeding enrollment database");
+
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
                 success = success && insert(enrollment);
             }
+
+            LogUtil.v("Enrollment database seed insertion status: %s", success);
 
             if (success) {
                 SharedPreferences prefs =
@@ -121,9 +127,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                 }
             }
         }
+
+        LogUtil.v("Enrollment database seeding complete");
     }
 
     private void unSeed() {
+        LogUtil.v("Clearing enrollment database seed status");
+
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
