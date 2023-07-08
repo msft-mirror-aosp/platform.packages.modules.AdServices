@@ -243,11 +243,12 @@ public class AdServicesHttpsClient {
             for (Map.Entry<String, String> entry : request.getRequestProperties().entrySet()) {
                 urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
             }
-            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
-            inputStream = new BufferedInputStream(urlConnection.getInputStream());
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
+            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
             int responseCode = urlConnection.getResponseCode();
+            LogUtil.v("Received %s response status code.", responseCode);
             if (isSuccessfulResponse(responseCode)) {
+                inputStream = new BufferedInputStream(urlConnection.getInputStream());
                 String responseBody =
                         fromInputStream(inputStream, urlConnection.getContentLengthLong());
                 Map<String, List<String>> responseHeadersMap =
@@ -415,6 +416,8 @@ public class AdServicesHttpsClient {
 
     private void throwError(final HttpsURLConnection urlConnection, int responseCode)
             throws IOException {
+        LogUtil.v("Error occurred while executing HTTP request.");
+
         // Default values for AdServiceNetworkException fields.
         @AdServicesNetworkException.ErrorCode
         int errorCode = AdServicesNetworkException.ERROR_OTHER;
@@ -427,10 +430,9 @@ public class AdServicesHttpsClient {
                 errorCode = AdServicesNetworkException.ERROR_REDIRECTION;
                 break;
             case 4:
+                // If an HTTP 429 response code was received, extract the retry-after duration
                 if (responseCode == 429) {
-                    // TODO(b/287137921): Investigate HTTP 429 failure and add tests for the
-                    // retryAfter field.
-                    // If an HTTP 429 response code was received, extract the retry-after duration.
+                    errorCode = AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS;
                     String headerValue = urlConnection.getHeaderField(RETRY_AFTER_HEADER_FIELD);
                     if (headerValue != null) {
                         // TODO(b/282017541): Add a maximum allowed retry-after duration.
@@ -443,18 +445,26 @@ public class AdServicesHttpsClient {
             case 5:
                 errorCode = AdServicesNetworkException.ERROR_SERVER;
         }
+        LogUtil.v("Received %s error status code.", responseCode);
 
         // TODO(b/287146167): Investigate why getErrorStream is null when using the MockWebServer
         //  and corresponding tests.
         // Extract message from the server, if any.
         InputStream errorStream = urlConnection.getErrorStream();
-        if (!Objects.isNull(errorStream)) {
-            serverResponse =
-                    fromInputStream(
-                            urlConnection.getErrorStream(), urlConnection.getContentLengthLong());
+        long contentLength = urlConnection.getContentLengthLong();
+        if (!Objects.isNull(errorStream) && contentLength > 0) {
+            LogUtil.v("Error stream exists with %s length.", contentLength);
+            serverResponse = fromInputStream(urlConnection.getErrorStream(), contentLength);
+            LogUtil.v("Received %s from server as response.", serverResponse);
         }
 
         // Throw the appropriate AdServicesNetworkException exception.
+        LogUtil.e(
+                "Throwing the following AdServicesNetworkException:\n"
+                        + " Error code: %s\n"
+                        + " Error message: %s\n"
+                        + " Retry after: %s",
+                errorCode, serverResponse, retryAfterDuration);
         if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
             throw new AdServicesNetworkException(errorCode, serverResponse);
         } else {

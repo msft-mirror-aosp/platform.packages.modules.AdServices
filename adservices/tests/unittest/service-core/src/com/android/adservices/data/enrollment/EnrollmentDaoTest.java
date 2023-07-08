@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.enrollment;
 
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -25,12 +26,18 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -38,8 +45,10 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,6 +56,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -250,6 +261,27 @@ public class EnrollmentDaoTest {
 
         // Check unseeded.
         assertFalse(mEnrollmentDao.isSeeded());
+    }
+
+    @Test
+    public void testDeleteAllDoesNotThrowException() {
+        SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+        MockitoSession mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ErrorLogUtil.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        EnrollmentDao enrollmentDao = new EnrollmentDao(sContext, helper, mMockFlags);
+        when(helper.safeGetWritableDatabase()).thenReturn(db);
+        when(db.delete(eq(EnrollmentTables.EnrollmentDataContract.TABLE), eq(null), eq(null)))
+                .thenThrow(SQLiteException.class);
+
+        boolean result = enrollmentDao.deleteAll();
+        assertFalse(result);
+        mStaticMockSession.finishMocking();
     }
 
     @Test

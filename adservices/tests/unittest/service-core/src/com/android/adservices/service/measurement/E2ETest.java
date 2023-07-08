@@ -333,11 +333,22 @@ public abstract class E2ETest {
             throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
-        String[] testDirectoryList = assetManager.list(testDirName);
-        for (String testFile : testDirectoryList) {
-            inputStreams.add(assetManager.open(testDirName + "/" + testFile));
+        List<String> dirPathList = new ArrayList<>(Collections.singletonList(testDirName));
+        List<String> testFileList = new ArrayList<>();
+        while (dirPathList.size() > 0) {
+            testDirName = dirPathList.remove(0);
+            String[] testAssets = assetManager.list(testDirName);
+            for (String testAsset : testAssets) {
+                if (testAsset.endsWith(".json")) {
+                    inputStreams.add(assetManager.open(testDirName + "/" + testAsset));
+                    testFileList.add(testAsset);
+                } else {
+                    dirPathList.add(testDirName + "/" + testAsset);
+                }
+            }
         }
-        return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
+        return getTestCasesFrom(
+                inputStreams, testFileList.stream().toArray(String[]::new), preprocessor);
     }
 
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {

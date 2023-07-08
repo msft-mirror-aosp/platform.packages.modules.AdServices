@@ -32,7 +32,6 @@ public interface AuctionServerPayloadFormatter {
     LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     int ONE_BYTE_IN_BITS = 8;
     int BYTES_CONVERSION_FACTOR = 1024;
-    int MAXIMUM_PAYLOAD_SIZE_IN_BYTES = 64 * BYTES_CONVERSION_FACTOR;
     int PAYLOAD_FORMAT_VERSION_LENGTH_BITS = 3;
     int COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS = 5;
     int META_INFO_LENGTH_BYTE =
