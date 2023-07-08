@@ -121,10 +121,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         if (isThrottled(topicsParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
-        // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
         final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
-        final String sdkPackageName = topicsParam.getSdkPackageName();
 
         // We need to save the Calling Uid before offloading to the background executor. Otherwise,
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
@@ -132,11 +130,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         final int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
-        // Note: The permission check uses sdk package name since PackageManager checks if the
-        // permission is declared in the manifest of that package name.
-        boolean hasTopicsPermission =
-                PermissionHelper.hasTopicsPermission(
-                        mContext, ProcessCompatUtils.isSdkSandboxUid(callingUid), sdkPackageName);
+        // Note: The permission check uses sdk sandbox calling package name since PackageManager
+        // checks if the permission is declared in the manifest of that package name.
+        boolean hasTopicsPermission = PermissionHelper.hasTopicsPermission(mContext, callingUid);
 
         sBackgroundExecutor.execute(
                 () -> {

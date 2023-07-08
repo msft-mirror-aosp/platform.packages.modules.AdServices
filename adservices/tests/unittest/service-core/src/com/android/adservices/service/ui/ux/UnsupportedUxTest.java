@@ -23,7 +23,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.impl.UnsupportedUx;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;

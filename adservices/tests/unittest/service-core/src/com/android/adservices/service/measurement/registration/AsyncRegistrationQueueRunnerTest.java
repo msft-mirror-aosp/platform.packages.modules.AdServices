@@ -19,6 +19,7 @@ import static com.android.adservices.service.measurement.attribution.TriggerCont
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -75,6 +76,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.truth.Truth;
 
+import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -94,6 +96,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -118,7 +121,7 @@ public class AsyncRegistrationQueueRunnerTest {
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
     private static final Source SOURCE_1 =
-            SourceFixture.getValidSourceBuilder()
+            SourceFixture.getMinimalValidSourceBuilder()
                     .setEventId(new UnsignedLong(1L))
                     .setPublisher(APP_TOP_ORIGIN)
                     .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
@@ -1559,7 +1562,7 @@ public class AsyncRegistrationQueueRunnerTest {
         int fakeReportsCount = 2;
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
@@ -1610,7 +1613,7 @@ public class AsyncRegistrationQueueRunnerTest {
         int fakeReportsCount = 2;
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(null)
                                 .setWebDestinations(
                                         SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
@@ -1659,7 +1662,7 @@ public class AsyncRegistrationQueueRunnerTest {
         int fakeReportsCount = 2;
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
@@ -1724,7 +1727,7 @@ public class AsyncRegistrationQueueRunnerTest {
         // Setup
         Source source =
                 spy(
-                        SourceFixture.getValidSourceBuilder()
+                        SourceFixture.getMinimalValidSourceBuilder()
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
@@ -1775,7 +1778,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1784,14 +1788,16 @@ public class AsyncRegistrationQueueRunnerTest {
         when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(Integer.valueOf(0));
-        asyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                SOURCE_1,
-                SOURCE_1.getPublisher(),
-                EventSurfaceType.APP,
-                mMeasurementDao,
-                mDebugReportApi);
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
 
         // Assertions
+        assertTrue(status);
         verify(mMeasurementDao, times(2))
                 .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
@@ -1812,7 +1818,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1851,7 +1858,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         // Execution
         when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
@@ -1884,7 +1892,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         // Execution
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
@@ -1915,7 +1924,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
@@ -1953,7 +1963,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1992,7 +2003,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2030,7 +2042,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
@@ -2060,7 +2073,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
@@ -2090,7 +2104,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
 
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(0L);
@@ -2163,7 +2178,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncTriggerFetcher,
                                 datastoreManager,
                                 mDebugReportApi,
-                                mSourceNoiseHandler));
+                                mSourceNoiseHandler,
+                                mFlags));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.webSourceRegistrationRequest(
@@ -2194,6 +2210,477 @@ public class AsyncRegistrationQueueRunnerTest {
                                 null)) {
             Assert.assertFalse(cursor.moveToNext());
         }
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiValidNav_pass()
+            throws DatastoreException, JSONException {
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        // setup
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxEventLevelReports(2)
+                        .buildInitialFlexEventReportSpec(mFlags)
+                        .build();
+
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertTrue(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiInvalidEventExceedMaxInfoGain_fail()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}]\n";
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxEventLevelReports(3)
+                        .buildInitialFlexEventReportSpec(mFlags)
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_fail()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(3)
+                        .setEventReportWindows(
+                                "{ 'end_times': [3600, 7200, 14400, 28800, 57600, 115200]}")
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_pass()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(1)
+                        .setEventReportWindows("{ 'end_times': [3600]}")
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertTrue(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiValidV1ParamsNavExceedMaxInfoGain_fail()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(14),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 5, 6]}]\n";
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxEventLevelReports(4)
+                        .buildInitialFlexEventReportSpec(mFlags)
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiValidV1ParamsNavNearBoundary_pass()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxEventLevelReports(3)
+                        .buildInitialFlexEventReportSpec(mFlags)
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertTrue(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiV1ParamEventNearBoundary_pass()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]\n";
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setTriggerSpecs(triggerSpecsString)
+                        .setMaxEventLevelReports(1)
+                        .buildInitialFlexEventReportSpec(mFlags)
+                        .build();
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi,
+                                mSourceNoiseHandler,
+                                mFlags));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
+        assertTrue(status);
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {
@@ -2316,7 +2803,8 @@ public class AsyncRegistrationQueueRunnerTest {
                         mAsyncTriggerFetcher,
                         new FakeDatastoreManager(),
                         mDebugReportApi,
-                        mSourceNoiseHandler));
+                        mSourceNoiseHandler,
+                        mFlags));
     }
 
     private static void emptyTables(SQLiteDatabase db) {

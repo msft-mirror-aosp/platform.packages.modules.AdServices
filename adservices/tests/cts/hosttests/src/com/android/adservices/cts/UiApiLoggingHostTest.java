@@ -36,7 +36,6 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
 import com.android.tradefed.testtype.IDeviceTest;
 
-
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -65,12 +64,11 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
     private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
 
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
-            "com.google.android.ext.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
-            "com.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;
+    private static final int ANDROID_T_API_LEVEL = 33;
     private int mApiLevel;
     private String mTargetPackage;
     private String mTargetPackageAosp;
@@ -94,14 +92,13 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
         disableGlobalKillSwitch();
-
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck(/* enrolmentCheckFlag */ "1");
         stopPacakageAPI();
         mApiLevel = getDevice().getApiLevel();
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (mApiLevel < 33) {
+        if (mApiLevel < ANDROID_T_API_LEVEL) {
             mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
             mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
             setFlags();
@@ -117,7 +114,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
             return;
         }
         disableMddBackgroundTasks(false);
-        if (mApiLevel < 33) {
+        if (mApiLevel < ANDROID_T_API_LEVEL) {
             resetFlagsToDefault();
         }
         stopPacakageAPI();
@@ -131,6 +128,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
 
+        rebootIfSMinus();
         startSettingMainActivity(mTargetPackage, device, /* isAosp */ false);
 
         // Fetch a list of happened log events and their data
@@ -156,6 +154,16 @@ public class UiApiLoggingHostTest implements IDeviceTest {
                 .isEqualTo(
                         AdServicesSettingsUsageReported.AdServiceSettingsName
                                 .PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED);
+    }
+
+    private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
+        if (mApiLevel < ANDROID_T_API_LEVEL) {
+            ITestDevice device = getDevice();
+            device.reboot();
+            device.waitForDeviceAvailable();
+            // Sleep 30s to wait for AdExtBootCompletedReceiver execution
+            Thread.sleep(30000 /* ms */);
+        }
     }
 
     private void startSettingMainActivity(String apiName, ITestDevice device, boolean isAosp)
@@ -205,6 +213,8 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     public void setFlags() throws DeviceNotAvailableException {
+        disableMendelSync();
+        setAdServicesEnabled(true);
         setEnableBackCompatFlag(true);
         setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
         setConsentSourceOfTruth(APPSEARCH_ONLY);
@@ -216,11 +226,26 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     public void resetFlagsToDefault() throws DeviceNotAvailableException {
+        setAdServicesEnabled(false);
         setEnableBackCompatFlag(false);
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setEnableAppSearchConsentData(false);
         setMeasurementRollbackDeleteKillSwitch(false);
+        enableMendelSync();
+    }
+
+    private void disableMendelSync() throws DeviceNotAvailableException {
+        getDevice().executeShellCommand("device_config set_sync_disabled_for_tests persistent");
+    }
+
+    private void enableMendelSync() throws DeviceNotAvailableException {
+        getDevice().executeShellCommand("device_config set_sync_disabled_for_tests none");
+    }
+
+    private void setAdServicesEnabled(boolean isEnabled) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand("device_config put adservices adservice_enabled " + isEnabled);
     }
 
     private void setEnableBackCompatFlag(boolean isEnabled) throws DeviceNotAvailableException {

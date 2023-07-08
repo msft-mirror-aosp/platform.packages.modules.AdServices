@@ -52,6 +52,8 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -259,14 +261,14 @@ public class AppSearchConsentManagerTest {
 
     @Test
     public void testRecordNotificationDisplayed() {
-        mAppSearchConsentManager.recordNotificationDisplayed();
-        verify(mAppSearchConsentWorker).recordNotificationDisplayed();
+        mAppSearchConsentManager.recordNotificationDisplayed(true);
+        verify(mAppSearchConsentWorker).recordNotificationDisplayed(true);
     }
 
     @Test
     public void testRecordGaUxNotificationDisplayed() {
-        mAppSearchConsentManager.recordGaUxNotificationDisplayed();
-        verify(mAppSearchConsentWorker).recordGaUxNotificationDisplayed();
+        mAppSearchConsentManager.recordGaUxNotificationDisplayed(true);
+        verify(mAppSearchConsentWorker).recordGaUxNotificationDisplayed(true);
     }
 
     @Test
@@ -461,7 +463,7 @@ public class AppSearchConsentManagerTest {
                         mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertThat(result).isTrue();
         verify(mDatastore).put(eq(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), eq(true));
-        verify(mAdServicesManager).recordNotificationDisplayed();
+        verify(mAdServicesManager).recordNotificationDisplayed(true);
         verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
         verify(mEditor)
                 .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
@@ -492,7 +494,7 @@ public class AppSearchConsentManagerTest {
         assertThat(result).isTrue();
 
         verify(mDatastore).put(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
-        verify(mAdServicesManager).recordGaUxNotificationDisplayed();
+        verify(mAdServicesManager).recordGaUxNotificationDisplayed(true);
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME1), eq(false));
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME2), eq(false));
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME3), eq(true));
@@ -672,5 +674,59 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.wasU18NotificationDisplayed()).thenReturn(false);
         assertThat(mAppSearchConsentManager.wasU18NotificationDisplayed()).isFalse();
         verify(mAppSearchConsentWorker).wasU18NotificationDisplayed();
+    }
+
+    @Test
+    public void getUxTest() {
+        mAppSearchConsentManager.getUx();
+        verify(mAppSearchConsentWorker).getUx();
+    }
+
+    @Test
+    public void setUxTest() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            mAppSearchConsentManager.setUx(ux);
+            verify(mAppSearchConsentWorker).setUx(ux);
+        }
+    }
+
+    @Test
+    public void getEnrollmentChannelTest() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            mAppSearchConsentManager.getEnrollmentChannel(ux);
+            verify(mAppSearchConsentWorker).getEnrollmentChannel(ux);
+        }
+    }
+
+    @Test
+    public void setEnrollmentChannelTest() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                mAppSearchConsentManager.setEnrollmentChannel(ux, channel);
+                verify(mAppSearchConsentWorker).setEnrollmentChannel(ux, channel);
+            }
+        }
+    }
+
+    @Test
+    public void uxConformanceTest() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            doReturn(ux).when(mAppSearchConsentWorker).getUx();
+            mAppSearchConsentManager.setUx(ux);
+            assertThat(mAppSearchConsentManager.getUx()).isEqualTo(ux);
+        }
+    }
+
+    @Test
+    public void enrollmentChannelConformanceTest() {
+        for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
+            for (PrivacySandboxEnrollmentChannelCollection channel :
+                    ux.getEnrollmentChannelCollection()) {
+                doReturn(channel).when(mAppSearchConsentWorker).getEnrollmentChannel(ux);
+                mAppSearchConsentManager.setEnrollmentChannel(ux, channel);
+                assertThat(mAppSearchConsentManager.getEnrollmentChannel(ux)).isEqualTo(channel);
+            }
+        }
     }
 }

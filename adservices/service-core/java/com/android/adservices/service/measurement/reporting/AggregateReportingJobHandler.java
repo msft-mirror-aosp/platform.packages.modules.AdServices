@@ -138,7 +138,9 @@ public class AggregateReportingJobHandler {
                 if (mUploadMethod != null) {
                     reportingStatus.setUploadMethod(mUploadMethod);
                 }
-                logReportingStats(reportingStatus);
+                if (!mIsDebugInstance) {
+                    logReportingStats(reportingStatus);
+                }
             }
         } else {
             LogUtil.w("The number of keys do not align with the number of reports");

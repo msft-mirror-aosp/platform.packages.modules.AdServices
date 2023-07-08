@@ -17,6 +17,8 @@ package com.android.ctssdkprovider;
 import android.os.IBinder;
 
 interface IActivityStarter {
-    void startActivity(IBinder token);
-    void activityStartedSuccessfully();
+    void startSdkSandboxActivity(IBinder token);
+    void onActivityResumed();
+    void onLeftActivityResumed();
+
 }

@@ -182,10 +182,10 @@ public final class PrivacyParams {
     public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
 
     /** Minimum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_MIN_REPORT_DELAY = TimeUnit.MINUTES.toMillis(10L);
+    public static final long AGGREGATE_REPORT_MIN_DELAY = TimeUnit.MINUTES.toMillis(10L);
 
     /** Maximum time an aggregate report is delayed after trigger */
-    public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
+    public static final long AGGREGATE_REPORT_DELAY_SPAN = TimeUnit.MINUTES.toMillis(50L);
 
     /**
      * Max distinct web destinations in a source registration.
@@ -202,34 +202,13 @@ public final class PrivacyParams {
         return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
     }
 
-    private static final int MAX_FLEXIBLE_EVENT_REPORTS = 20;
-
-    public static int getMaxFlexibleEventReports() {
-        return MAX_FLEXIBLE_EVENT_REPORTS;
-    }
-
-    private static final int MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY = 8;
-
-    public static int getMaxFlexibleEventTriggerDataCardinality() {
-        return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
-    }
-
-    private static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
-
-    public static int getMaxFlexibleEventReportingWindows() {
-        return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
-    }
-
     private static final int PRIVACY_EPSILON = 14;
 
     public static int getPrivacyEpsilon() {
         return PRIVACY_EPSILON;
     }
 
-    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
-
-    // place holder for future change
-    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001D;
 
     /**
      * Maximum early reporting windows configured through {@link
@@ -237,10 +216,6 @@ public final class PrivacyParams {
      * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
      */
     public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
-
-    public static double getMaxFlexibleEventInformationGain() {
-        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
-    }
 
     private PrivacyParams() {
     }

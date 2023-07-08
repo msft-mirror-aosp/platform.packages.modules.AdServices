@@ -16,6 +16,8 @@
 
 package com.android.adservices.ui.settingsga;
 
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Matchers.any;
@@ -47,6 +49,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -60,7 +63,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
-
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -76,6 +78,7 @@ public class SettingsActivityUiAutomatorTest {
     private MockitoSession mStaticMockSession;
     private ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
+    @Mock UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
@@ -88,6 +91,7 @@ public class SettingsActivityUiAutomatorTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(ConsentManager.class)
+                        .spyStatic(UxStatesManager.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -152,6 +156,13 @@ public class SettingsActivityUiAutomatorTest {
 
         doNothing().when(mConsentManager).enable(any(Context.class));
         doNothing().when(mConsentManager).disable(any(Context.class));
+
+        // Mock BETA_UX for testing.
+        ExtendedMockito.doReturn(mUxStatesManager)
+                .when(() -> UxStatesManager.getInstance(any(Context.class)));
+        doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(BETA_UX).when(mUxStatesManager).getUx();
+
         startActivityFromHomeAndCheckMainSwitch();
     }
 
@@ -346,6 +357,12 @@ public class SettingsActivityUiAutomatorTest {
     @Test
     public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if (!appsTitle.exists()) {
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
         UiObject blockAppText =
@@ -383,6 +400,12 @@ public class SettingsActivityUiAutomatorTest {
     @Test
     public void unblockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if (!appsTitle.exists()) {
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
@@ -416,6 +439,14 @@ public class SettingsActivityUiAutomatorTest {
     @Test
     public void resetAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        // perform a gentle swipe so scroll won't miss the text close to the
+        // bottom of the current screen.
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if (!appsTitle.exists()) {
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
@@ -510,8 +541,6 @@ public class SettingsActivityUiAutomatorTest {
     /**
      * Test for the Button to show blocked topics when the list of Topics is Empty The Button should
      * be disabled if blocked topics is empty
-     *
-     * @throws UiObjectNotFoundException
      */
     @Test
     public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {

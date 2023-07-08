@@ -14,29 +14,45 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.collection;
 
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
+import com.android.adservices.service.ui.ux.impl.BetaUx;
+import com.android.adservices.service.ui.ux.impl.GaUx;
+import com.android.adservices.service.ui.ux.impl.U18Ux;
+import com.android.adservices.service.ui.ux.impl.UnsupportedUx;
+
 /** Collection of privacy sandbox UXs, ordered by their priority. */
 @RequiresApi(Build.VERSION_CODES.S)
 public enum PrivacySandboxUxCollection {
-    UNSUPPORTED_UX(0, new UnsupportedUx()),
+    UNSUPPORTED_UX(
+            /* priority= */ 0,
+            new UnsupportedUx(),
+            new PrivacySandboxEnrollmentChannelCollection[0]),
 
-    GA_UX(1, new GaUx()),
+    U18_UX(/* priority= */ 1, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
 
-    U18_UX(2, new U18Ux()),
+    GA_UX(/* priority= */ 2, new GaUx(), GaUxEnrollmentChannelCollection.values()),
 
-    BETA_UX(3, new BetaUx());
+    BETA_UX(/* priority= */ 3, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
 
     private final int mPriority;
     private final PrivacySandboxUx mUx;
+    private final PrivacySandboxEnrollmentChannelCollection[] mEcc;
 
-    PrivacySandboxUxCollection(int priority, PrivacySandboxUx ux) {
+    PrivacySandboxUxCollection(
+            int priority, PrivacySandboxUx ux, PrivacySandboxEnrollmentChannelCollection[] ecc) {
         mPriority = priority;
         mUx = ux;
+        mEcc = ecc;
     }
 
     public int getPriority() {
@@ -45,5 +61,9 @@ public enum PrivacySandboxUxCollection {
 
     public PrivacySandboxUx getUx() {
         return mUx;
+    }
+
+    public PrivacySandboxEnrollmentChannelCollection[] getEnrollmentChannelCollection() {
+        return mEcc;
     }
 }

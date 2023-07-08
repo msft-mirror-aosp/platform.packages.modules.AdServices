@@ -23,6 +23,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import android.net.Uri;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
@@ -30,7 +32,6 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,7 +59,7 @@ public class SourceNoiseHandlerTest {
     public void fakeReports_eventSourceDualDestPostInstallMode_generatesFromStaticReportStates() {
         long expiry = System.currentTimeMillis();
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setEventReportWindow(expiry)
@@ -92,7 +93,7 @@ public class SourceNoiseHandlerTest {
     }
 
     @Test
-    public void fakeReports_flexEventReport_generatesFromStaticReportStates() throws JSONException {
+    public void fakeReports_flexEventReport_generatesFromStaticReportStates() {
         Source source = SourceFixture.getValidSourceWithFlexEventReport();
         // Force increase the probability of random attribution.
         doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
@@ -121,7 +122,7 @@ public class SourceNoiseHandlerTest {
     public void impressionNoiseParamGeneration() {
         long eventTime = System.currentTimeMillis();
         Source eventSource30dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
@@ -135,7 +136,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(eventSource30dExpiry));
 
         Source eventSource7dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
@@ -149,7 +150,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(eventSource7dExpiry));
 
         Source eventSource2dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
@@ -163,7 +164,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(eventSource2dExpiry));
 
         Source navigationSource30dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
@@ -177,7 +178,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(navigationSource30dExpiry));
 
         Source navigationSource7dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
@@ -191,7 +192,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(navigationSource7dExpiry));
 
         Source navigationSource2dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
@@ -206,11 +207,97 @@ public class SourceNoiseHandlerTest {
     }
 
     @Test
+    public void impressionNoiseParamGeneration_flexLiteAPI() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        long eventTime = System.currentTimeMillis();
+        Source eventSource2Windows =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setMaxEventLevelReports(2)
+                        .setEventReportWindows("{ 'end_times': [3600, 7200]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 2,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(eventSource2Windows));
+
+        Source eventSource2Windows2Destinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setWebDestinations(List.of(Uri.parse("https://example.test")))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setMaxEventLevelReports(2)
+                        .setEventReportWindows("{ 'end_times': [3600, 7200]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 2,
+                        /* destinationMultiplier */ 2),
+                mSourceNoiseHandler.getImpressionNoiseParams(eventSource2Windows2Destinations));
+
+        Source eventSource1Window =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setMaxEventLevelReports(2)
+                        .setEventReportWindows("{'end_times': [3600]}")
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 1,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(eventSource1Window));
+
+        Source navigationSource3Windows =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setMaxEventLevelReports(3)
+                        .setEventReportWindows("{'end_times': [3600, 7200, 86400]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 3,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(navigationSource3Windows));
+
+        Source navigationSource2Window =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
+                        .setMaxEventLevelReports(3)
+                        .setEventReportWindows("{'end_times': [3600, 7200]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 2,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(navigationSource2Window));
+    }
+
+    @Test
     public void impressionNoiseParamGeneration_withInstallAttribution() {
         long eventTime = System.currentTimeMillis();
 
         Source eventSource30dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -226,7 +313,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(eventSource30dExpiry));
 
         Source eventSource7dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -242,7 +329,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(eventSource7dExpiry));
 
         Source eventSource2dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -258,7 +345,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(eventSource2dExpiry));
 
         Source navigationSource30dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -274,7 +361,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(navigationSource30dExpiry));
 
         Source navigationSource7dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -290,7 +377,7 @@ public class SourceNoiseHandlerTest {
                 mSourceNoiseHandler.getImpressionNoiseParams(navigationSource7dExpiry));
 
         Source navigationSource2dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
                         .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
@@ -305,7 +392,7 @@ public class SourceNoiseHandlerTest {
                         /* destinationMultiplier */ 1),
                 mSourceNoiseHandler.getImpressionNoiseParams(navigationSource2dExpiry));
         Source eventSourceWith2Destinations30dExpiry =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
@@ -328,7 +415,7 @@ public class SourceNoiseHandlerTest {
         long expiry = System.currentTimeMillis();
         // Single (App) destination, EVENT type
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
@@ -339,7 +426,7 @@ public class SourceNoiseHandlerTest {
 
         // Single (App) destination, NAVIGATION type
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
@@ -350,7 +437,7 @@ public class SourceNoiseHandlerTest {
 
         // Single (Web) destination, EVENT type
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiry)
                         .setAppDestinations(null)
@@ -360,7 +447,7 @@ public class SourceNoiseHandlerTest {
 
         // Single (Web) destination, NAVIGATION type
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiry)
                         .setAppDestinations(null)
@@ -370,7 +457,7 @@ public class SourceNoiseHandlerTest {
 
         // Both destinations set, EVENT type
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiry)
                         .setAppDestinations(
@@ -381,7 +468,7 @@ public class SourceNoiseHandlerTest {
 
         // Both destinations set, NAVIGATION type
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiry)
                         .setAppDestinations(
@@ -392,7 +479,7 @@ public class SourceNoiseHandlerTest {
 
         // App destination with cooldown window
         verifyAlgorithmicFakeReportGeneration(
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventReportWindow(expiry)
                         .setAppDestinations(

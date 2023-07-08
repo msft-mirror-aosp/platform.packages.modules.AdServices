@@ -16,7 +16,9 @@
 
 package com.android.adservices.data.enrollment;
 
+
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,19 +26,29 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,6 +56,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -148,6 +162,24 @@ public class EnrollmentDaoTest {
                     .setEncryptionKeyUrl(Arrays.asList("https://4test.com/keys"))
                     .build();
 
+    private static final EnrollmentData ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("6")
+                    .setCompanyId("1006")
+                    .setSdkNames("6sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://6test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://6test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://6test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(
+                            Arrays.asList(
+                                    CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "")
+                                            .toString(),
+                                    CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "")
+                                            .toString()))
+                    .setEncryptionKeyUrl(Arrays.asList("https://6test.com/keys"))
+                    .build();
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -229,6 +261,27 @@ public class EnrollmentDaoTest {
 
         // Check unseeded.
         assertFalse(mEnrollmentDao.isSeeded());
+    }
+
+    @Test
+    public void testDeleteAllDoesNotThrowException() {
+        SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+        MockitoSession mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ErrorLogUtil.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        EnrollmentDao enrollmentDao = new EnrollmentDao(sContext, helper, mMockFlags);
+        when(helper.safeGetWritableDatabase()).thenReturn(db);
+        when(db.delete(eq(EnrollmentTables.EnrollmentDataContract.TABLE), eq(null), eq(null)))
+                .thenThrow(SQLiteException.class);
+
+        boolean result = enrollmentDao.deleteAll();
+        assertFalse(result);
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -672,6 +725,84 @@ public class EnrollmentDaoTest {
                 .containsExactly(
                         AdTechIdentifier.fromString("1test.com"),
                         AdTechIdentifier.fromString("2test.com"));
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_nullUri() {
+        assertWithMessage("Returned enrollment pair")
+                .that(mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(null))
+                .isNull();
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_emptyUri() {
+        assertWithMessage("Returned enrollment pair")
+                .that(
+                        mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                                Uri.EMPTY))
+                .isNull();
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_noMatchFound() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        Uri nonMatchingUri =
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/path/for/resource");
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(nonMatchingUri);
+
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_matchesHostExactly() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        Uri exactMatchUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/path/for/resource");
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(exactMatchUri);
+
+        assertWithMessage("Returned EnrollmentData")
+                .that(enrollmentResult.second)
+                .isEqualTo(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        assertWithMessage("Returned AdTechIdentifier")
+                .that(enrollmentResult.first)
+                .isEqualTo(CommonFixture.VALID_BUYER_1);
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_matchesHostSubdomain() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        Uri subdomainMatchUri =
+                CommonFixture.getUriWithValidSubdomain(
+                        CommonFixture.VALID_BUYER_2.toString(), "/path/for/resource");
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        subdomainMatchUri);
+
+        assertWithMessage("Returned EnrollmentData")
+                .that(enrollmentResult.second)
+                .isEqualTo(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        assertWithMessage("Returned AdTechIdentifier")
+                .that(enrollmentResult.first)
+                .isEqualTo(CommonFixture.VALID_BUYER_2);
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_nonMatchingSubstring() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        // Note this URI is missing a "." separating the prefix from the expected host
+        Uri nonMatchingSubstringUri =
+                CommonFixture.getUri(
+                        "prefixstring" + CommonFixture.VALID_BUYER_2, "/path/for/resource");
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        nonMatchingSubstringUri);
+
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
     }
 
     @Test

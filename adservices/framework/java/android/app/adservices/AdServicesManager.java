@@ -49,6 +49,9 @@ import java.util.Objects;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesManager {
+
+    public static final String AD_SERVICES_SYSTEM_SERVICE = "adservices_manager";
+
     @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
 
@@ -111,9 +114,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordNotificationDisplayed();
+            mService.recordNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -138,9 +141,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordGaUxNotificationDisplayed() {
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordGaUxNotificationDisplayed();
+            mService.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -588,6 +591,46 @@ public final class AdServicesManager {
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
         try {
             mService.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getUx() {
+        try {
+            return mService.getUx();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setUx(String ux) {
+        try {
+            mService.setUx(ux);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getEnrollmentChannel() {
+        try {
+            return mService.getEnrollmentChannel();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        try {
+            mService.setEnrollmentChannel(enrollmentChannel);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

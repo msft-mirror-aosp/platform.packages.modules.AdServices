@@ -64,6 +64,16 @@ public class FlagsFactory {
             public boolean getFledgeAdSelectionFilteringEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeFetchCustomAudienceEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getMeasurementFlexibleEventReportingApiEnabled() {
+                return true;
+            }
         };
     }
 }

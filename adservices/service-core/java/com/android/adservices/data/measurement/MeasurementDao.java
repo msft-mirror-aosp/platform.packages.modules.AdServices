@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -47,6 +48,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
@@ -406,6 +408,27 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 source.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                source.getCoarseEventReportDestinations());
+        if (source.getFlexEventReportSpec() != null) {
+            values.put(
+                    MeasurementTables.SourceContract.TRIGGER_SPECS,
+                    source.getFlexEventReportSpec().encodeTriggerSpecsToJSON());
+            values.put(
+                    MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                    source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
+            values.put(
+                    MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
+                    source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
+        }
+        values.put(
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
+                source.getMaxEventLevelReports());
+        values.put(
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
+                source.getEventReportWindows());
+
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -612,6 +635,26 @@ class MeasurementDao implements IMeasurementDao {
                                 sourceIds.toArray(new String[0]));
         if (rows != sourceIds.size()) {
             throw new DatastoreException("Source status update failed.");
+        }
+    }
+
+    @Override
+    public void updateSourceAttributedTriggers(@NonNull String sourceId, ReportSpec reportSpec)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                reportSpec.encodeTriggerStatusToJSON().toString());
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.SourceContract.TABLE,
+                                values,
+                                MeasurementTables.SourceContract.ID + " = ?",
+                                new String[] {sourceId});
+        if (rows != 1) {
+            throw new DatastoreException("Source  event attribution status update failed.");
         }
     }
 
@@ -1448,6 +1491,57 @@ class MeasurementDao implements IMeasurementDao {
                 SqliteObjectMapper::constructEventReportFromCursor);
     }
 
+    @Override
+    public List<String> fetchMatchingSourcesFlexibleEventApi(@NonNull List<String> triggerIds)
+            throws DatastoreException {
+        List<String> sourceIds = new ArrayList<>();
+        if (triggerIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        String unionQuery =
+                generateUnionQueryFromTriggerIds(
+                        triggerIds,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS);
+
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "SELECT DISTINCT %s FROM (%s)",
+                                        MeasurementTables.SourceContract.ID,
+                                        unionQuery),
+                                null)) {
+            while (cursor.moveToNext()) {
+                String sourceId =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(MeasurementTables.SourceContract.ID));
+                sourceIds.add(sourceId);
+            }
+        }
+        return sourceIds;
+    }
+
+    @VisibleForTesting
+    public static String generateUnionQueryFromTriggerIds(
+            List<String> triggerIds, String tableName, String columnName) {
+        List<String> queries =
+                triggerIds.stream()
+                        .map(
+                                triggerId ->
+                                        "SELECT * FROM "
+                                                + tableName
+                                                + " WHERE "
+                                                + String.format(
+                                                        "%1$s LIKE '%2$s'",
+                                                        columnName,
+                                                        String.format("%%\"%s\"%%", triggerId)))
+                        .collect(Collectors.toList());
+        return String.join(" UNION ", queries);
+    }
+
     private String getUriValueList(List<Uri> uriList) {
         // Construct query, as list of all packages present on the device
         StringBuilder valueList = new StringBuilder("(");
@@ -1960,7 +2054,7 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertDebugReport(DebugReport debugReport) throws DatastoreException {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
         values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
@@ -1968,6 +2062,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
                 debugReport.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.DebugReportContract.REFERENCE_ID, debugReport.getReferenceId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2169,9 +2265,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + MeasurementTables.XnaIgnoredSourcesContract.TABLE
                                 + " where "
                                 + MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID
-                                + " IN ("
-                                + delimitedXnaEnrollmentIds
-                                + ")"
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(triggerEnrollmentId)
                                 + ")",
                         MeasurementTables.SourceContract.REGISTRATION_ID
                                 + " NOT IN "

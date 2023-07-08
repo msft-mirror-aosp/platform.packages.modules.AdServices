@@ -31,6 +31,7 @@ public final class DebugReport {
     private final JSONObject mBody;
     private final String mEnrollmentId;
     private final Uri mRegistrationOrigin;
+    private final String mReferenceId;
 
     /** Create a new debug report object. */
     private DebugReport(
@@ -38,12 +39,14 @@ public final class DebugReport {
             @NonNull String type,
             @NonNull JSONObject body,
             @NonNull String enrollmentId,
-            @NonNull Uri registrationOrigin) {
+            @NonNull Uri registrationOrigin,
+            @Nullable String referenceId) {
         mId = id;
         mType = type;
         mBody = body;
         mEnrollmentId = enrollmentId;
         mRegistrationOrigin = registrationOrigin;
+        mReferenceId = referenceId;
     }
 
     @Override
@@ -55,12 +58,13 @@ public final class DebugReport {
         return Objects.equals(mType, key.mType)
                 && Objects.equals(mBody, key.mBody)
                 && Objects.equals(mEnrollmentId, key.mEnrollmentId)
-                && Objects.equals(mRegistrationOrigin, key.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, key.mRegistrationOrigin)
+                && Objects.equals(mReferenceId, key.mReferenceId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mType, mBody, mEnrollmentId, mRegistrationOrigin);
+        return Objects.hash(mType, mBody, mEnrollmentId, mRegistrationOrigin, mReferenceId);
     }
 
     /** Unique identifier for the {@link DebugReport}. */
@@ -86,6 +90,10 @@ public final class DebugReport {
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
     }
+    /** Reference ID for grouping reports. */
+    public String getReferenceId() {
+        return mReferenceId;
+    }
 
     /** Generate the JSON serialization of the debug report payload. */
     public JSONObject toPayloadJson() throws JSONException {
@@ -102,6 +110,7 @@ public final class DebugReport {
         private JSONObject mBody;
         private String mEnrollmentId;
         private Uri mRegistrationOrigin;
+        private String mReferenceId;
 
         public Builder() {}
 
@@ -147,12 +156,20 @@ public final class DebugReport {
             return this;
         }
 
+        /** See {@link DebugReport#getReferenceId()} ()}. */
+        @NonNull
+        public Builder setReferenceId(String referenceId) {
+            mReferenceId = referenceId;
+            return this;
+        }
+
         /** Build the DebugReport. */
         public @NonNull DebugReport build() {
             if (mType == null || mBody == null) {
                 throw new IllegalArgumentException("Uninitialized fields");
             }
-            return new DebugReport(mId, mType, mBody, mEnrollmentId, mRegistrationOrigin);
+            return new DebugReport(
+                    mId, mType, mBody, mEnrollmentId, mRegistrationOrigin, mReferenceId);
         }
     }
 }

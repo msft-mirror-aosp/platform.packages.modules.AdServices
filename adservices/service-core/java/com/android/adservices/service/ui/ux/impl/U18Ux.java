@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.impl;
 
 import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
 
@@ -23,10 +23,15 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
 
-/** The privacy sandbox Beta UX that are released along with the other Beta features. */
+import com.google.errorprone.annotations.Immutable;
+
+/** The privacy sandbox U18 UX. */
 @RequiresApi(Build.VERSION_CODES.S)
+@Immutable
 public class U18Ux implements PrivacySandboxUx {
 
     /** Whether a user is eligible for the privacy sandbox U18 UX. */
@@ -35,14 +40,10 @@ public class U18Ux implements PrivacySandboxUx {
     }
 
     /** Enroll user through one of the available U18 UX enrollment channels if needed. */
-    public void selectEnrollmentChannel(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284172919): Add enrollment logic.
-    }
-
-    /** Select one of the available U18 UX modes for the user. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284175944): Add mode logic.
+    public void handleEnrollment(
+            PrivacySandboxEnrollmentChannel enrollmentChannel,
+            Context context,
+            ConsentManager consentManager) {
+        enrollmentChannel.enroll(context, consentManager);
     }
 }

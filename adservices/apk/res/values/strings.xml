@@ -15,6 +15,8 @@
 -->
 <!-- IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Name of the AdExtServices app that is deployed on S-. -->
+    <string name="app_name" translatable="false">Android Services Library</string>
     <!-- Title of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesTopics">access AdServices Topics API</string>
     <!-- Description of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
@@ -549,10 +551,32 @@
     <string name="settingsUI_dialog_reset_app_positive_text" translatable="false">@string/settingsUI_dialog_reset_topic_positive_text</string>
     <!-- Info text for toast displayed after apps are reset. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_are_reset">App data was reset</string>
-    <!-- Text for the speed bump of resetting ad topics.[CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_topics_opt_out_title">Reset all topics?</string>
-    <!-- Text for the speed bump of resetting app-suggested ads data .[CHAR LIMIT=NONE] -->
-    <string name="settingsUI_dialog_apps_opt_out_title">Reset ads suggested by apps?</string>
+    <!-- Text for speedbump dialog title of turning on switch of topics.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_topics_opt_in_title">Ad topics is on</string>
+    <!-- Text for speedbump dialog message of turning on switch of topics.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_topics_opt_in_message">Android will start noting topics of interest, but it may take a while for your first topics to appear.</string>
+    <!-- Text for the speedbump title of turning off the switch of ad topics.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_topics_opt_out_title">Turn off ad topics?</string>
+    <!-- Text for the speedbump message of turning off the switch of ad topics.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_topics_opt_out_message">This list of topics will be deleted. Android won’t note topics of interest anymore, but you may still see relevant ads.</string>
+    <!-- Text for speedbump dialog title of turning on switch of apps.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_apps_opt_in_title">App-suggested ads is on</string>
+    <!-- Text for speedbump dialog message of turning on switch of apps.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_apps_opt_in_message">Apps may start suggesting ads. You’ll see a list of apps once they start suggesting ads.</string>
+    <!-- Text for the speedbump dialog of turning off the switch of app-suggested ads.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_apps_opt_out_title">Turn off app-suggested ads?</string>
+    <!-- Text for speedbump dialog message of turning off switch of apps.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_apps_opt_out_message">All ad suggestion data will be deleted. Apps won’t be able to suggest ads anymore, but you may still see relevant ads.</string>
+    <!-- Text for speedbump dialog title of turning on switch of measurement.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_measurement_opt_in_title">Ad measurement is on</string>
+    <!-- Text for speedbump dialog message of turning on switch of measurement.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_measurement_opt_in_message">Android can share only very limited information with apps to help apps measure the performance of their ads.</string>
+    <!-- Text for speedbump dialog title of turning off switch of measurement.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_measurement_opt_out_title">Turn off ad measurement?</string>
+    <!-- Text for speedbump dialog message of turning off switch of measurement.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_measurement_opt_out_message">All pending ad measurement reports will be deleted and no new reports will be generated or shared.</string>
+    <!-- Text for dialog button to acknowledge and dismiss dialog.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_acknowledge" translatable="false">@string/notificationUI_right_control_button_text</string>
     <!--    TODO (b/265360122): remove these strings of the speed bump of resetting ad measurement -->
     <!--    title for button to reset ads measurement. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_measurement_title" translatable="false">Clear data for Ads measurement?</string>
@@ -595,13 +619,12 @@
     <string name="settingsUI_subtitle_consent_on">On</string>
     <!-- Text for the any subtitle in the settings UI showing whose consent is Off.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_subtitle_consent_off">Off</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" translatable="false">Turn off measurement?</string>
 
     <!-- Settings App UI topics view strings for GA UX ****************************************************-->
     <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_ga_title" translatable="false">@string/settingsUI_topics_ga_title</string>
     <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.</string>
+    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.\n\nWhile this feature can be turned on, you may not see a list of topics until this feature is fully available and apps start using it.</string>
     <!-- Text for the toggle in the topics page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_switch_title">Allow ad topics</string>
     <!-- Text for the button to open blocked topics view. [CHAR LIMIT=NONE] -->
@@ -617,7 +640,7 @@
     <!-- Text for the toggle in the apps page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_switch_title">Allow app-suggested ads</string>
     <!-- Sub title text of the apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.</string>
+    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
     <!-- Text for the button to open blocked apps fragment  [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_apps_ga_title">Apps you blocked</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
@@ -631,13 +654,13 @@
 
     <!-- U18 Notification Card *************************************************************-->
     <!-- Text for the title of the U18 notification card in notification center. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_u18_notification_title">New ads privacy feature available</string>
+    <string name="notificationUI_u18_notification_title">New ads privacy feature now available</string>
     <!-- Text for the content of the U18 notification card in notification center. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_u18_notification_content">Only very limited info is shared between apps to help measure ad performance</string>
 
     <!-- U18 Notification Activity *********************************************************-->
     <!-- Text for the title of the explainer for the ad measurement section of the U18 notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_u18_header_title" translatable="false">@string/notificationUI_header_ga_title_v2</string>
+    <string name="notificationUI_u18_header_title" translatable="false">@string/notificationUI_u18_notification_title</string>
     <!-- Text for the body of the explainer for the ad measurement section of the U18 notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_u18_body1">We’re launching a new ad privacy feature called ad measurement. Android shares only very limited information between apps, such as when an ad was shown to you, to help apps measure the performance of ads.</string>
     <!-- Text for the body of the explainer for the ad measurement section of the U18 notification landing page. This also includes a link to a privacy policy page [CHAR LIMIT=NONE] -->

@@ -36,9 +36,11 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /** Unit tests for {@link AdServicesParcelableUtil}. */
 @SmallTest
@@ -258,6 +260,56 @@ public class AdServicesParcelableUtilTest {
                 ImmutableSet.copyOf(AdServicesParcelableUtil.readStringSetFromParcel(targetParcel));
 
         assertThat(setFromParcel).containsExactlyElementsIn(originalSet);
+    }
+
+    @Test
+    public void testWriteIntegerSetToParcel_nullParcelThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () -> AdServicesParcelableUtil.writeIntegerSetToParcel(null, new HashSet<>()));
+    }
+
+    @Test
+    public void testWriteIntegerSetToParcel_nullSetThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () -> AdServicesParcelableUtil.writeIntegerSetToParcel(Parcel.obtain(), null));
+    }
+
+    @Test
+    public void testReadIntegerSetFromParcel_nullParcelThrows() {
+        assertThrows(
+                "Null Parcel should have thrown NPE",
+                NullPointerException.class,
+                () -> AdServicesParcelableUtil.readIntegerSetFromParcel(null));
+    }
+
+    @Test
+    public void testWriteIntegerSetToParcelThenRead_success() {
+        final ImmutableSet<Integer> originalSet = ImmutableSet.of(1, 2);
+        Parcel targetParcel = Parcel.obtain();
+
+        AdServicesParcelableUtil.writeIntegerSetToParcel(targetParcel, originalSet);
+        targetParcel.setDataPosition(0);
+        final ImmutableSet<Integer> setFromParcel =
+                ImmutableSet.copyOf(
+                        AdServicesParcelableUtil.readIntegerSetFromParcel(targetParcel));
+
+        assertThat(setFromParcel).containsExactlyElementsIn(originalSet);
+    }
+
+    @Test
+    public void testWriteIntegerSetToParcelThenRead_nullValueSkippedSuccess() {
+        final Set<Integer> originalSet = new HashSet<>(Arrays.asList(1, null, 2));
+        Parcel targetParcel = Parcel.obtain();
+
+        AdServicesParcelableUtil.writeIntegerSetToParcel(targetParcel, originalSet);
+        targetParcel.setDataPosition(0);
+        final Set<Integer> setFromParcel =
+                AdServicesParcelableUtil.readIntegerSetFromParcel(targetParcel);
+
+        assertThat(setFromParcel).doesNotContain(null);
+        assertThat(setFromParcel).containsExactly(1, 2);
     }
 
     @Test

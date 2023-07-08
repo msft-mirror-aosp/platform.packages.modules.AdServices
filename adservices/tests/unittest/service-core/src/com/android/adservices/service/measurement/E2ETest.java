@@ -333,11 +333,22 @@ public abstract class E2ETest {
             throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
-        String[] testDirectoryList = assetManager.list(testDirName);
-        for (String testFile : testDirectoryList) {
-            inputStreams.add(assetManager.open(testDirName + "/" + testFile));
+        List<String> dirPathList = new ArrayList<>(Collections.singletonList(testDirName));
+        List<String> testFileList = new ArrayList<>();
+        while (dirPathList.size() > 0) {
+            testDirName = dirPathList.remove(0);
+            String[] testAssets = assetManager.list(testDirName);
+            for (String testAsset : testAssets) {
+                if (testAsset.endsWith(".json")) {
+                    inputStreams.add(assetManager.open(testDirName + "/" + testAsset));
+                    testFileList.add(testAsset);
+                } else {
+                    dirPathList.add(testDirName + "/" + testAsset);
+                }
+            }
         }
-        return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
+        return getTestCasesFrom(
+                inputStreams, testFileList.stream().toArray(String[]::new), preprocessor);
     }
 
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
@@ -1212,11 +1223,13 @@ public abstract class E2ETest {
         } while (t <= lastTriggerTime);
 
         // Account for edge case of t between lastTriggerTime and the latter's max report delay.
-        if (t <= lastTriggerTime + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY) {
+        long aggregateReportMaxDelay = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
+                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
+        if (t <= lastTriggerTime + aggregateReportMaxDelay) {
             // t must be greater than lastTriggerTime so adding max report
             // delay should be beyond the report delay for lastTriggerTime.
             aggregateReportingJobActions.add(new AggregateReportingJob(t
-                    + PrivacyParams.AGGREGATE_MAX_REPORT_DELAY));
+                    + aggregateReportMaxDelay));
         }
 
         actions.addAll(aggregateReportingJobActions);

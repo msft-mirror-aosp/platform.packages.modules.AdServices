@@ -14,6 +14,9 @@
 
 package com.android.ctssdkprovider;
 
+import android.os.Bundle;
+
+import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 
 interface ICtsSdkProviderApi {
@@ -23,7 +26,10 @@ interface ICtsSdkProviderApi {
     int getContextHashCode(boolean useApplicationContext);
     void testStoragePaths();
     int getProcessImportance();
-    void startActivity(IActivityStarter callback);
+    void startSandboxActivityDirectlyByAction();
+    void startSandboxActivityDirectlyByComponent();
+    IActivityActionExecutor startActivity(IActivityStarter callback, in Bundle extras);
+    String getPackageName();
     String getOpPackageName();
-    void startActivityAfterUnregisterHandler(IActivityStarter callback);
+    String getClientPackageName();
 }

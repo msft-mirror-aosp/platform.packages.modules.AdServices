@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 /** Helper class for SQLite operations. */
 public class SqliteObjectMapper {
-
     /**
      * Create {@link EventReport} object from SQLite datastore.
      */
@@ -182,6 +181,28 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 builder::setRegistrationOrigin);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                builder::setCoarseEventReportDestinations);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
+        setIntColumn(
+                cursor,
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
+                builder::setMaxEventLevelReports);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
+                builder::setEventAttributionStatus);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
+                builder::setPrivacyParameters);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
+                builder::setEventReportWindows);
         return builder.build();
     }
 
@@ -329,6 +350,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
                 builder::setRegistrationOrigin);
+        setTextColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REFERENCE_ID,
+                builder::setReferenceId);
 
         return builder.build();
     }

@@ -27,6 +27,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -34,16 +35,19 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
 import android.provider.DeviceConfig;
 import android.view.SurfaceControlViewHost;
 
+import androidx.annotation.RequiresApi;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
 
@@ -103,10 +107,10 @@ public class SdkSandboxTest {
                     new SharedPreferencesKey("empty", SharedPreferencesKey.KEY_TYPE_STRING));
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
-    private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO =
-            new SandboxLatencyInfo(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+    private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
     private static boolean sCustomizedSdkContextEnabled;
+    private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
 
     private Context mContext;
     private InjectorForTest mInjector;
@@ -132,6 +136,12 @@ public class SdkSandboxTest {
         Context getContext() {
             return mContext;
         }
+
+        @Override
+        @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+        SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
+            return sSdkSandboxActivityRegistry;
+        }
     }
 
     @BeforeClass
@@ -145,6 +155,7 @@ public class SdkSandboxTest {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
         sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+        sSdkSandboxActivityRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance());
     }
 
     @Before
@@ -201,8 +212,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -217,8 +227,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -276,8 +285,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback1,
                 SANDBOX_LATENCY_INFO);
@@ -289,8 +297,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback2,
                 SANDBOX_LATENCY_INFO);
@@ -310,8 +317,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -343,8 +349,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -386,8 +391,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 callback,
                 SANDBOX_LATENCY_INFO);
@@ -501,6 +505,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_loadSdk_success() throws Exception {
+        SANDBOX_LATENCY_INFO.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
@@ -517,8 +522,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -544,6 +548,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_unloadSdk_success() throws Exception {
+        SANDBOX_LATENCY_INFO.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
@@ -565,8 +570,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -590,6 +594,10 @@ public class SdkSandboxTest {
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
         assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+        if (SdkLevel.isAtLeastU()) {
+            Mockito.verify(sSdkSandboxActivityRegistry)
+                    .unregisterAllActivityHandlersForSdk(SDK_NAME);
+        }
     }
 
     @Test
@@ -613,8 +621,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -690,8 +697,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 params,
                 mCallback,
                 SANDBOX_LATENCY_INFO);
@@ -703,8 +709,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 mCallback,
                 SANDBOX_LATENCY_INFO);

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import android.adservices.exceptions.AdServicesNetworkException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -51,10 +52,10 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -68,13 +69,14 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class AdServicesHttpsClient {
 
-    private final int mConnectTimeoutMs;
-    private final int mReadTimeoutMs;
-    private final long mMaxBytes;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
     // Setting default max content size to 1024 * 1024 which is ~ 1MB
     private static final long DEFAULT_MAX_BYTES = 1048576;
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
+    private static final String RETRY_AFTER_HEADER_FIELD = "Retry-After";
+    private final int mConnectTimeoutMs;
+    private final int mReadTimeoutMs;
+    private final long mMaxBytes;
     private final ListeningExecutorService mExecutorService;
     private final UriConverter mUriConverter;
     private final HttpCache mCache;
@@ -241,11 +243,12 @@ public class AdServicesHttpsClient {
             for (Map.Entry<String, String> entry : request.getRequestProperties().entrySet()) {
                 urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
             }
-            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
-            inputStream = new BufferedInputStream(urlConnection.getInputStream());
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
+            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
             int responseCode = urlConnection.getResponseCode();
+            LogUtil.v("Received %s response status code.", responseCode);
             if (isSuccessfulResponse(responseCode)) {
+                inputStream = new BufferedInputStream(urlConnection.getInputStream());
                 String responseBody =
                         fromInputStream(inputStream, urlConnection.getContentLengthLong());
                 Map<String, List<String>> responseHeadersMap =
@@ -413,28 +416,59 @@ public class AdServicesHttpsClient {
 
     private void throwError(final HttpsURLConnection urlConnection, int responseCode)
             throws IOException {
-        InputStream errorStream = urlConnection.getErrorStream();
-        if (!Objects.isNull(errorStream)) {
-            String errorMessage =
-                    fromInputStream(
-                            urlConnection.getErrorStream(), urlConnection.getContentLengthLong());
-            String exceptionMessage =
-                    String.format(
-                            Locale.US,
-                            "Server returned an error with code %d and message:" + " %s",
-                            responseCode,
-                            errorMessage);
+        LogUtil.v("Error occurred while executing HTTP request.");
 
-            LogUtil.d(exceptionMessage);
-            throw new IOException(exceptionMessage);
+        // Default values for AdServiceNetworkException fields.
+        @AdServicesNetworkException.ErrorCode
+        int errorCode = AdServicesNetworkException.ERROR_OTHER;
+        Duration retryAfterDuration = AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
+        String serverResponse = null;
+
+        // Assign a relevant error code to the HTTP response code.
+        switch (responseCode / 100) {
+            case 3:
+                errorCode = AdServicesNetworkException.ERROR_REDIRECTION;
+                break;
+            case 4:
+                // If an HTTP 429 response code was received, extract the retry-after duration
+                if (responseCode == 429) {
+                    errorCode = AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS;
+                    String headerValue = urlConnection.getHeaderField(RETRY_AFTER_HEADER_FIELD);
+                    if (headerValue != null) {
+                        // TODO(b/282017541): Add a maximum allowed retry-after duration.
+                        retryAfterDuration = Duration.ofMillis(Long.parseLong(headerValue));
+                    }
+                } else {
+                    errorCode = AdServicesNetworkException.ERROR_CLIENT;
+                }
+                break;
+            case 5:
+                errorCode = AdServicesNetworkException.ERROR_SERVER;
+        }
+        LogUtil.v("Received %s error status code.", responseCode);
+
+        // TODO(b/287146167): Investigate why getErrorStream is null when using the MockWebServer
+        //  and corresponding tests.
+        // Extract message from the server, if any.
+        InputStream errorStream = urlConnection.getErrorStream();
+        long contentLength = urlConnection.getContentLengthLong();
+        if (!Objects.isNull(errorStream) && contentLength > 0) {
+            LogUtil.v("Error stream exists with %s length.", contentLength);
+            serverResponse = fromInputStream(urlConnection.getErrorStream(), contentLength);
+            LogUtil.v("Received %s from server as response.", serverResponse);
+        }
+
+        // Throw the appropriate AdServicesNetworkException exception.
+        LogUtil.e(
+                "Throwing the following AdServicesNetworkException:\n"
+                        + " Error code: %s\n"
+                        + " Error message: %s\n"
+                        + " Retry after: %s",
+                errorCode, serverResponse, retryAfterDuration);
+        if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
+            throw new AdServicesNetworkException(errorCode, serverResponse);
         } else {
-            String exceptionMessage =
-                    String.format(
-                            Locale.US,
-                            "Server returned an error with code %d and null" + " message",
-                            responseCode);
-            LogUtil.d(exceptionMessage);
-            throw new IOException(exceptionMessage);
+            throw new AdServicesNetworkException(errorCode, retryAfterDuration, serverResponse);
         }
     }
 
@@ -539,7 +573,6 @@ public class AdServicesHttpsClient {
 
         @Override
         public void close() throws IOException {
-            LogUtil.d("Closing HTTPS connection and streams");
             maybeClose(mURLConnection.getInputStream());
             maybeClose(mURLConnection.getErrorStream());
             maybeDisconnect(mURLConnection);

@@ -149,31 +149,82 @@ public final class EnrollmentTest {
     }
 
     @Test
-    public void testMaybeGetReportingOrigin_success() {
-        when(mEnrollmentDao.getEnrollmentData(eq(ENROLLMENT_ID))).thenReturn(ENROLLMENT);
+    public void testMaybeGetEnrollmentId_localhost_success() {
+        String localhost = "https://localhost";
+        String localhostWithPort = localhost + ":5678";
+        String localhostWithPortAndPath = localhostWithPort + "/path";
+        String localhostWithPortAndPathAndParams = localhostWithPort + "/path?param=2";
+        String localhostWithPath = localhost + "/path";
+        String localhostWithPathAndParams = localhostWithPath + "/path?param=2";
 
         assertEquals(
-                Optional.of(Uri.parse("https://origin1.test")),
-                Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhost), PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPort), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPortAndPath), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPortAndPathAndParams), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPath), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
     }
 
     @Test
-    public void testMaybeGetReportingOrigin_enrollmentDataNull() {
-        when(mEnrollmentDao.getEnrollmentData(eq(ENROLLMENT_ID))).thenReturn(null);
+    public void testMaybeGetEnrollmentId_localhostIp_success() {
+        String localhostIp = "https://127.0.0.1";
+        String localhostIpWithPort = localhostIp + ":5678";
+        String localhostIpWithPortAndPath = localhostIpWithPort + "/path";
+        String localhostIpWithPortAndPathAndParams = localhostIpWithPort + "/path?param=2";
+        String localhostIpWithPath = localhostIp + "/path";
+        String localhostIpWithPathAndParams = localhostIpWithPath + "/path?param=2";
 
         assertEquals(
-                Optional.empty(),
-                Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
-    }
-
-    @Test
-    public void testMaybeGetReportingOrigin_attributionReportingUrlEmpty() {
-        EnrollmentData enrollment = new EnrollmentData.Builder().build();
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(Uri.parse(ENROLLMENT_ID))))
-                .thenReturn(enrollment);
-
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIp), PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
         assertEquals(
-                Optional.empty(),
-                Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPort), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPortAndPath), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPortAndPathAndParams), PACKAGE_NAME,
+                        mEnrollmentDao, sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPath), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
     }
 }

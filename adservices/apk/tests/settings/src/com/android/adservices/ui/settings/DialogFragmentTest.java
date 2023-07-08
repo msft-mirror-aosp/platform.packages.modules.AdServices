@@ -196,6 +196,11 @@ public class DialogFragmentTest {
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         assertThat(consentSwitch.exists()).isTrue();
 
+        // guarantee in on state
+        if (!consentSwitch.isChecked()) {
+            consentSwitch.click();
+        }
+
         // click switch
         consentSwitch.click();
         UiObject dialogTitle =
@@ -326,6 +331,14 @@ public class DialogFragmentTest {
     @Test
     public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        // perform a gentle swipe so scroll won't miss the text close to the
+        // bottom of the current screen.
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if(!appsTitle.exists()){
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
         UiObject blockAppText =
@@ -363,6 +376,12 @@ public class DialogFragmentTest {
     @Test
     public void unblockAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if(!appsTitle.exists()){
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
@@ -396,6 +415,12 @@ public class DialogFragmentTest {
     @Test
     public void resetAppDialogTest() throws UiObjectNotFoundException, IOException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
+        if(!appsTitle.exists()){
+            ApkTestUtil.gentleSwipe(sDevice);
+        }
+
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 

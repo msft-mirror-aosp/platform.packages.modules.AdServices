@@ -16,6 +16,9 @@
 
 package com.android.adservices.data.enrollment;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.ContentValues;
 import android.content.Context;
@@ -24,13 +27,16 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -91,16 +97,22 @@ public class EnrollmentDao implements IEnrollmentDao {
     boolean isSeeded() {
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-        return prefs.getBoolean(IS_SEEDED, false);
+        boolean isSeeded = prefs.getBoolean(IS_SEEDED, false);
+        LogUtil.v("Persisted enrollment database seed status: %s", isSeeded);
+        return isSeeded;
     }
 
     @VisibleForTesting
     void seed() {
+        LogUtil.v("Seeding enrollment database");
+
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
                 success = success && insert(enrollment);
             }
+
+            LogUtil.v("Enrollment database seed insertion status: %s", success);
 
             if (success) {
                 SharedPreferences prefs =
@@ -115,9 +127,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                 }
             }
         }
+
+        LogUtil.v("Enrollment database seeding complete");
     }
 
     private void unSeed() {
+        LogUtil.v("Clearing enrollment database seed status");
+
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
@@ -371,6 +387,90 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
+    public Pair<AdTechIdentifier, EnrollmentData>
+            getEnrollmentDataForFledgeByMatchingAdTechIdentifier(Uri originalUri) {
+        if (originalUri == null) {
+            return null;
+        }
+
+        String originalUriHost = originalUri.getHost();
+        if (originalUriHost == null || originalUriHost.isEmpty()) {
+            return null;
+        }
+
+        // Instead of searching through all enrollment rows, narrow the search by searching only
+        //  the rows with FLEDGE RBR URLs which may match the TLD
+        String[] subdomains = originalUriHost.split("\\.");
+        if (subdomains.length < 1) {
+            return null;
+        }
+
+        String topLevelDomain = subdomains[subdomains.length - 1];
+
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " LIKE '%"
+                                + topLevelDomain
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for URI \"%s\" with top level domain \"%s\"",
+                        originalUri, topLevelDomain);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching URI \"%s\" with top level domain \"%s\"",
+                    cursor.getCount(), originalUri, topLevelDomain);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                for (String rbrUriString :
+                        potentialMatch.getRemarketingResponseBasedRegistrationUrl()) {
+                    try {
+                        // Make sure the URI can be parsed and the parsed host matches the ad tech
+                        String rbrUriHost = Uri.parse(rbrUriString).getHost();
+                        if (originalUriHost.equalsIgnoreCase(rbrUriHost)
+                                || originalUriHost
+                                        .toLowerCase(Locale.ENGLISH)
+                                        .endsWith("." + rbrUriHost.toLowerCase(Locale.ENGLISH))) {
+                            LogUtil.v(
+                                    "Found positive match RBR URL \"%s\" for given URI \"%s\"",
+                                    rbrUriString, originalUri);
+
+                            // AdTechIdentifiers are currently expected to only contain eTLD+1
+                            return new Pair<>(
+                                    AdTechIdentifier.fromString(rbrUriHost), potentialMatch);
+                        }
+                    } catch (IllegalArgumentException exception) {
+                        LogUtil.v(
+                                "Error while matching URI %s to FLEDGE RBR URI %s; skipping URI. "
+                                        + "Error message: %s",
+                                originalUri, rbrUriString, exception.getMessage());
+                    }
+                }
+            }
+
+            return null;
+        }
+    }
+
+    @Override
+    @Nullable
     public EnrollmentData getEnrollmentDataFromSdkName(String sdkName) {
         if (sdkName.contains(" ") || sdkName.contains(",")) {
             return null;
@@ -459,6 +559,10 @@ public class EnrollmentDao implements IEnrollmentDao {
                     new String[] {enrollmentId});
         } catch (SQLException e) {
             LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return false;
         }
         return true;
@@ -481,6 +585,12 @@ public class EnrollmentDao implements IEnrollmentDao {
             unSeed();
             // Mark the transaction successful.
             db.setTransactionSuccessful();
+        } catch (SQLiteException e) {
+            LogUtil.e("Failed to perform delete all on EnrollmentData" + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         } finally {
             db.endTransaction();
         }

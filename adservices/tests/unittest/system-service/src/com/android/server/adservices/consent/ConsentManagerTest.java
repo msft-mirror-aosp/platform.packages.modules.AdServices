@@ -31,7 +31,9 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -43,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 /** Tests for {@link ConsentManager} */
 public class ConsentManagerTest {
@@ -269,7 +272,7 @@ public class ConsentManagerTest {
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // First, the notification displayed is false.
         assertThat(consentManager.wasNotificationDisplayed()).isFalse();
-        consentManager.recordNotificationDisplayed();
+        consentManager.recordNotificationDisplayed(true);
 
         assertThat(consentManager.wasNotificationDisplayed()).isTrue();
     }
@@ -280,7 +283,7 @@ public class ConsentManagerTest {
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // First, the notification displayed is false.
         assertThat(consentManager.wasGaUxNotificationDisplayed()).isFalse();
-        consentManager.recordGaUxNotificationDisplayed();
+        consentManager.recordGaUxNotificationDisplayed(true);
 
         assertThat(consentManager.wasGaUxNotificationDisplayed()).isTrue();
     }
@@ -336,7 +339,7 @@ public class ConsentManagerTest {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
-        // All bits are fall in the beginning.
+        // All bits are false in the beginning.
         assertThat(
                         consentManager.isPrivacySandboxFeatureEnabled(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
@@ -394,6 +397,23 @@ public class ConsentManagerTest {
                         consentManager.isPrivacySandboxFeatureEnabled(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
                 .isEqualTo(false);
+    }
+
+    @Test
+    public void uxConformanceTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(consentManager.getUx())
+                .isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
+
+        Stream.of(PrivacySandboxUxCollection.values())
+                .forEach(
+                        ux -> {
+                            consentManager.setUx(ux.toString());
+                            assertThat(consentManager.getUx()).isEqualTo(ux.toString());
+                        });
     }
 
     @Test
@@ -469,5 +489,22 @@ public class ConsentManagerTest {
         consentManager.setU18NotificationDisplayed(true);
 
         assertThat(consentManager.wasU18NotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void enrollmentChannelConformanceTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(consentManager.getEnrollmentChannel()).isEqualTo(null);
+
+        Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                .forEach(
+                        channel -> {
+                            consentManager.setEnrollmentChannel(channel.toString());
+                            assertThat(consentManager.getEnrollmentChannel())
+                                    .isEqualTo(channel.toString());
+                        });
     }
 }

@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Odblokovat"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Zájmy, které jste zablokovali"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Resetovat všechny zájmy"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentálně tu nejsou žádné zájmy"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Momentálně nejsou k dispozici žádná témata"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Momentálně tu nejsou žádné zájmy."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Momentálně tu nejsou žádná témata.\nDalší informace o "<a href="https://support.google.com/android?p=ad_privacy">"tématech reklam"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta verze ochrany soukromí v reklamách na Androidu přináší nové funkce, pomocí nichž vám mohou aplikace zobrazovat reklamy, které se vám budou líbit. Tyto technologie nevyužívají identifikátory zařízení.\n\nAndroid může odhadovat, jaké druhy reklam by vás mohly zajímat, a tyto zájmy dočasně ukládat do zařízení. Aplikace vám tak budou moci zobrazovat relevantní reklamy, aniž by sledovaly vaši aktivitu na webech a v aplikacích ostatních vývojářů."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nemáte žádné zablokované zájmy"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Zobrazit zablokované aplikace"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetovat zájmy odhadnuté aplikacemi"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Zájmy vám momentálně negenerují žádné aplikace"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Momentálně tu nejsou žádné aplikace"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Momentálně tu nejsou žádné aplikace. \nDalší informace o "<a href="https://support.google.com/android?p=ad_privacy">"reklamách navrhovaných aplikací"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Beta verze ochrany soukromí v reklamách na Androidu přináší nové funkce, pomocí nichž vám mohou aplikace zobrazovat reklamy, které se vám budou líbit. Tyto technologie nevyužívají identifikátory zařízení.\n\nAplikace mohou odhadovat, jaké druhy reklam by vás mohly zajímat, a tyto zájmy dočasně ukládat do zařízení. Aplikace vám tak budou moci zobrazovat relevantní reklamy, aniž by sledovaly vaši aktivitu na webech a v aplikacích ostatních vývojářů."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nemáte žádné zablokované aplikace"</string>
@@ -187,40 +187,46 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Resetovat reklamy navrhované aplikacemi?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data o návrzích reklam z aplikací na vašem seznamu budou smazána a aplikace budou v budoucnu navrhovat nové reklamy. Související reklamy se vám však mohou zobrazovat i nadále."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Data aplikací byla resetována"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Resetovat všechna témata?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Resetovat reklamy navrhované aplikacemi?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Témata reklam jsou zapnutá"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android začne zaznamenávat témata zájmu, ale zobrazení prvních témat může chvíli trvat."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Vypnout témata reklam?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Tento seznam témat bude smazán. Android už nebude zaznamenávat témata zájmu, ale stále se vám mohou zobrazovat relevantní reklamy."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Reklamy navrhované aplikací jsou zapnuté"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplikace mohou začít navrhovat reklamy. Jakmile začnou, zobrazí se vám seznam aplikací."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Vypnout reklamy navrhované aplikací?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Veškerá data o návrzích reklam budou smazána. Aplikace už nebudou moci navrhovat reklamy, ale stále se vám mohou zobrazovat relevantní reklamy."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Měření reklam je zapnuto"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Systém Android může s aplikacemi sdílet jen velmi omezené informace, aby aplikacím pomohl měřit výkon reklam."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Vypnout měření reklam?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Všechny rozpracované přehledy měření reklam budou smazány a již nebudou vygenerovány ani sdíleny žádné nové přehledy."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Ochrana soukromí v reklamách"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Témata reklam"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamy navrhované aplikacemi"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android zaznamenává témata, která vás podle nedávno použitých aplikací a frekvence používání zajímají."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikace mohou také určit, co se vám líbí, podle toho, jak je používáte."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikace, které používáte, mohou Android požádat o informace, které jim pomohou měřit výkon reklam. Android aplikacím umožňuje shromažďovat omezené typy dat."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Další informace o "<a href="https://support.google.com/android?p=ad_privacy">"ochraně soukromí v reklamách na Androidu"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Zapnuto / počet témat: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Zapnuto / # téma}few{Zapnuto / # témata}many{Zapnuto / # tématu}other{Zapnuto / # témat}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Zapnuto / počet aplikací: <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Zapnuto / # aplikace}few{Zapnuto / # aplikace}many{Zapnuto / # aplikace}other{Zapnuto / # aplikací}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Zapnuto"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Vypnuto"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Témata zájmu vycházejí z aplikací, které jste v poslední době používali, a aplikace je používají k zobrazování personalizovaných reklam.\n\nMůžete zablokovat témata, která s aplikacemi nechcete sdílet. Android také témata pravidelně automaticky maže."</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="2539452210063311377">"Témata zájmu vycházejí z aplikací, které jste v poslední době používali, a aplikace je používají k zobrazování personalizovaných reklam.\n\nMůžete zablokovat témata, která s aplikacemi nechcete sdílet. Android také témata pravidelně automaticky maže.\n\nI když tuto funkci lze zapnout, seznam témat se začne zobrazovat až poté, co tato funkce bude plně dostupná a aplikace ji začnou používat."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Povolit témata reklam"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Témata reklam, která jste zablokovali"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Resetovat všechna témata reklam"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android zaznamenává témata, která vás podle aplikací použitých během posledních několika týdnů zajímají.\n\nAplikace, kterou použijete později, může Android požádat o témata k personalizaci reklam. Android jí sdělí až tři témata, přičemž chrání vaši identitu a informace o používání aplikací.\n\nAndroid témata pravidelně automaticky maže. Při dalším používání aplikací se téma může v seznamu znovu objevit. Případně můžete zablokovat témata, která Android s aplikacemi nemá sdílet.\n\nReklamy zobrazované v aplikacích mohou být personalizovány v závislosti na tomto nastavení, nastavení reklam navrhovaných aplikacemi, nastavení vašeho inzertního ID a na tom, zda aplikace personalizuje reklamy."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Povolit reklamy navrhované aplikacemi"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Aplikace, které používáte, mohou určit, co se vám líbí, a navrhovat reklamy v jiných aplikacích.\n\nGenerování návrhů můžete aplikacím zablokovat. Android data navrhovaná aplikacemi také pravidelně automaticky maže."</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1869320244600600364">"Aplikace, které používáte, mohou určit, co se vám líbí, a navrhovat reklamy v jiných aplikacích.\n\nGenerování návrhů můžete aplikacím zablokovat. Android data navrhovaná aplikacemi také pravidelně automaticky maže.\n\nI když tuto funkci lze zapnout, seznam aplikací se začne zobrazovat až poté, co tato funkce bude plně dostupná a aplikace ji začnou používat."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokované aplikace"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetovat data navrhovaná aplikacemi"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Je běžné, že si aplikace, které používáte, pamatují věci, které vás zajímají, aby vám mohly přizpůsobit prostředí. Aplikace mohou také ukládat informace o vašich tématech v systému Android. \n\nPokud například používáte aplikaci k tréninku na maraton, aplikace může určit, že se zajímáte o běžecké boty. Když později použijete jinou aplikaci, může se vám v ní zobrazit reklama na běžecké boty navržená první aplikací.\n\nData navrhovaná aplikacemi systém Android pravidelně automaticky maže. Aplikace, kterou použijete znovu, se může v seznamu opět objevit. Můžete také zakázat, aby vám konkrétní aplikace navrhovala reklamy.\n\nReklamy zobrazované v aplikacích mohou být personalizovány v závislosti na tomto nastavení, nastavení témat reklam, nastavení vašeho inzertního ID a na tom, zda aplikace personalizuje reklamy."</string>
-    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
-    <skip />
-    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
-    <skip />
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Je k dispozici nová funkce ochrany soukromí u reklam"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Mezi aplikacemi jsou sdíleny jen velmi omezené informace, které umožňují měřit výkon reklam"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Spouštíme novou funkci ochrany soukromí v reklamách nazvanou „měření reklam“. Systém Android sdílí mezi aplikacemi pouze velmi omezené informace (například že vám byla zobrazena reklama), aby aplikace mohly měřit výkon reklam."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"V nastavení ochrany soukromí u reklam můžete provést změny."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikace, které používáte, mohou Android požádat o informace k měření výkonu reklam. Android aplikacím umožňuje shromažďovat jen omezené typy dat."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Barevná ilustrace symbolů představujících zájmy jako hudba, zprávy a sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Barevná ilustrace zámku v kruhu"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Malá černobílá ilustrace čtverce z devíti teček"</string>
@@ -626,7 +632,7 @@
     <string name="topic10399" msgid="2126280752064021308">"Basketbal"</string>
     <string name="topic10400" msgid="5440499529264277027">"Bowling"</string>
     <string name="topic10401" msgid="166689951236922024">"Box"</string>
-    <string name="topic10402" msgid="2451339788231007479">"Roztleskávačky"</string>
+    <string name="topic10402" msgid="2451339788231007479">"Roztleskávání"</string>
     <string name="topic10403" msgid="6455478521804717635">"Univerzitní sport"</string>
     <string name="topic10404" msgid="5261583496913118024">"Kriket"</string>
     <string name="topic10405" msgid="482477447879117820">"Na kole"</string>

@@ -24,7 +24,9 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -32,6 +34,7 @@ import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceCl
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
@@ -42,7 +45,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
@@ -69,7 +71,9 @@ public class PermissionsNoPermTest {
     @Before
     public void setup() {
         if (!SdkLevel.isAtLeastT()) {
-            overridePpapiAppAllowList();
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
     }
@@ -77,20 +81,9 @@ public class PermissionsNoPermTest {
     @After
     public void tearDown() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
-            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-    }
-
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
-    }
-
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
     }
 
     @Test
@@ -255,13 +248,11 @@ public class PermissionsNoPermTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-// TODO(b/274723533): Uncomment after un-hiding the API
-/*
     @Test
-    public void testPermissionNotRequested_reportInteraction() {
+    public void testPermissionNotRequested_reportEvent() {
         long adSelectionId = 1;
-        String interactionKey = "click";
-        String interactionData = "{\"key\":\"value\"}";
+        String eventKey = "click";
+        String eventData = "{\"key\":\"value\"}";
 
         AdSelectionClient mAdSelectionClient =
                 new AdSelectionClient.Builder()
@@ -269,21 +260,21 @@ public class PermissionsNoPermTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        ReportInteractionRequest request =
-                new ReportInteractionRequest(
-                        adSelectionId,
-                        interactionKey,
-                        interactionData,
-                        ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER
-                                | ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER);
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                adSelectionId,
+                                eventKey,
+                                eventData,
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                        | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .build();
 
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> mAdSelectionClient.reportInteraction(request).get());
+                        () -> mAdSelectionClient.reportEvent(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
-*/
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideAdSelectionConfigRemoteInfo() {
@@ -359,8 +350,6 @@ public class PermissionsNoPermTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-    // TODO(b/221876775): Unhide for frequency cap mainline promotion
-    /*
     @Test
     public void testPermissionNotRequested_updateAdCounterHistogram() {
         long adSelectionId = 1;
@@ -372,10 +361,10 @@ public class PermissionsNoPermTest {
                         .build();
 
         UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                new UpdateAdCounterHistogramRequest.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                AdTechIdentifier.fromString("test.com"))
                         .build();
         ExecutionException exception =
                 assertThrows(
@@ -384,5 +373,4 @@ public class PermissionsNoPermTest {
 
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
-    */
 }

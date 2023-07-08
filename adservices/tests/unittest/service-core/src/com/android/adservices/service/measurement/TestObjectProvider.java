@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -40,17 +42,15 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.mockito.stubbing.Answer;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 class TestObjectProvider {
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
-
     @IntDef(
             value = {
                 Type.DENOISED,
@@ -69,7 +69,8 @@ class TestObjectProvider {
                 flags,
                 new DebugReportApi(ApplicationProvider.getApplicationContext(), flags),
                 new EventReportWindowCalcDelegate(flags),
-                new SourceNoiseHandler(flags));
+                new SourceNoiseHandler(flags),
+                AdServicesLoggerImpl.getInstance());
     }
 
     static MeasurementImpl getMeasurementImpl(
@@ -91,7 +92,8 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            Flags flags) {
         SourceNoiseHandler sourceNoiseHandler =
                 spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
@@ -108,7 +110,8 @@ class TestObjectProvider {
                         return Collections.singletonList(
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
-                                        source.getExpiryTime() + ONE_HOUR_IN_MILLIS,
+                                        source.getExpiryTime()
+                                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                                         source.getAppDestinations()));
                     };
             doAnswer(answerSourceEventReports)
@@ -122,6 +125,7 @@ class TestObjectProvider {
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
-                sourceNoiseHandler);
+                sourceNoiseHandler,
+                flags);
     }
 }

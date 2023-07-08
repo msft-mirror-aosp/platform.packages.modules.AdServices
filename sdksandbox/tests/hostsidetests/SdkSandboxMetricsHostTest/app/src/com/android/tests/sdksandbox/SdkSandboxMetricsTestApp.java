@@ -79,6 +79,7 @@ public class SdkSandboxMetricsTestApp {
     @Test
     public void testSdkCanAccessSdkSandboxExitReasons() throws Exception {
         mRule.getScenario();
+        final long timeStampBeforeCrash = System.currentTimeMillis();
         generateSdkSandboxCrash();
 
         // Restart the SDK sandbox
@@ -92,11 +93,13 @@ public class SdkSandboxMetricsTestApp {
         assertThat(info).isNotNull();
         assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
         assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
+        assertThat(info.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
     }
 
     @Test
     public void testAppWithDumpPermissionCanAccessSdkSandboxExitReasons() throws Exception {
         mRule.getScenario();
+        final long timeStampBeforeCrash = System.currentTimeMillis();
         generateSdkSandboxCrash();
 
         final ActivityManager am = mContext.getSystemService(ActivityManager.class);
@@ -109,6 +112,7 @@ public class SdkSandboxMetricsTestApp {
         assertThat(info).isNotNull();
         assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
         assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
+        assertThat(info.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
     }
 
     @Test

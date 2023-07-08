@@ -29,6 +29,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -131,6 +132,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
     }
 
+    @Ignore("b/275299487")
     @Test
     public void testSandboxIsCreatedPerUser() throws Exception {
         assumeTrue(getDevice().isMultiUserSupported());
@@ -145,7 +147,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(APP_PACKAGE + '\n');
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
-        getDevice().switchUser(secondaryUserId);
+        mUserUtils.switchToSecondaryUser();
 
         // Should still see an app/sdk sandbox running.
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
@@ -234,6 +236,26 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
             waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
         }
+    }
+
+    @Test
+    public void testAppOwnedSdkSandboxInterfaceRemoval_AppDies() throws Exception {
+        startActivity(APP_SHARED_PACKAGE, APP_SHARED_ACTIVITY);
+        assertThat(
+                        runDeviceTests(
+                                APP_SHARED_2_PACKAGE,
+                                "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
+                                "testRegisterAppOwedSdkSandboxInterfacesBeforeAppDeath"))
+                .isTrue();
+
+        // APP_SHARED_2_PACKAGE dies after running device-side tests.
+        waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
+        assertThat(
+                        runDeviceTests(
+                                APP_SHARED_2_PACKAGE,
+                                "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
+                                "testGetAppOwedSdkSandboxInterfacesOnAppDeath"))
+                .isTrue();
     }
 
     @Test
