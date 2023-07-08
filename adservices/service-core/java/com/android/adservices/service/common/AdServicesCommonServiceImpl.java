@@ -90,11 +90,18 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
-                        reconsentIfNeededForEU();
+
+                        // TO-DO (b/286664178): remove the block after API is fully ramped up.
+                        if (!mFlags.getEnableAdServicesSystemApi()) {
+                            // Reconsent is already handled by the enableAdServices API.
+                            reconsentIfNeededForEU();
+                        }
+
                         boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
                         if (mFlags.isBackCompatActivityFeatureEnabled()) {
                             isAdServicesEnabled &=
-                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
+                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(
+                                            mContext);
                         }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
