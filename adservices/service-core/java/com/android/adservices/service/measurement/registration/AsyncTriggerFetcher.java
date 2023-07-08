@@ -372,12 +372,12 @@ public class AsyncTriggerFetcher {
                 UnsignedLong triggerData = new UnsignedLong(0L);
                 if (!eventTriggerDatum.isNull("trigger_data")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Object maybeTriggerData = eventTriggerDatum.get("trigger_data");
-                        if (!(maybeTriggerData instanceof String)) {
+                        Optional<UnsignedLong> maybeTriggerData =
+                                FetcherUtil.extractUnsignedLong(eventTriggerDatum, "trigger_data");
+                        if (!maybeTriggerData.isPresent()) {
                             return Optional.empty();
                         }
-                        // Registration will be rejected if parsing unsigned long throws.
-                        triggerData = new UnsignedLong((String) maybeTriggerData);
+                        triggerData = maybeTriggerData.get();
                     } else {
                         try {
                             triggerData = new UnsignedLong(
@@ -390,13 +390,12 @@ public class AsyncTriggerFetcher {
                 validEventTriggerDatum.put("trigger_data", triggerData);
                 if (!eventTriggerDatum.isNull("priority")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Object maybePriority = eventTriggerDatum.get("priority");
-                        if (!(maybePriority instanceof String)) {
+                        Optional<Long> maybePriority =
+                                FetcherUtil.extractLong(eventTriggerDatum, "priority");
+                        if (!maybePriority.isPresent()) {
                             return Optional.empty();
                         }
-                        // Registration will be rejected if parsing long throws.
-                        validEventTriggerDatum.put("priority", String.valueOf(
-                                Long.parseLong((String) maybePriority)));
+                        validEventTriggerDatum.put("priority", String.valueOf(maybePriority.get()));
                     } else {
                         try {
                             validEventTriggerDatum.put("priority", String.valueOf(
@@ -406,15 +405,33 @@ public class AsyncTriggerFetcher {
                         }
                     }
                 }
-                if (!eventTriggerDatum.isNull("deduplication_key")) {
+                if (!eventTriggerDatum.isNull("value")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                        Object maybeDedupKey = eventTriggerDatum.get("deduplication_key");
-                        if (!(maybeDedupKey instanceof String)) {
+                        Optional<Long> maybeValue =
+                                FetcherUtil.extractLong(eventTriggerDatum, "value");
+                        if (!maybeValue.isPresent()) {
                             return Optional.empty();
                         }
-                        // Registration will be rejected if parsing unsigned long throws.
-                        validEventTriggerDatum.put("deduplication_key", new UnsignedLong(
-                                (String) maybeDedupKey));
+                        validEventTriggerDatum.put("value", String.valueOf(maybeValue.get()));
+                    } else {
+                        try {
+                            validEventTriggerDatum.put(
+                                    "value",
+                                    String.valueOf(
+                                            Long.parseLong(eventTriggerDatum.getString("value"))));
+                        } catch (NumberFormatException e) {
+                            LogUtil.d(e, "getValidEventTriggerData: parsing value failed.");
+                        }
+                    }
+                }
+                if (!eventTriggerDatum.isNull("deduplication_key")) {
+                    if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                        Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
+                                eventTriggerDatum, "deduplication_key");
+                        if (!maybeDedupKey.isPresent()) {
+                            return Optional.empty();
+                        }
+                        validEventTriggerDatum.put("deduplication_key", maybeDedupKey.get());
                     } else {
                         try {
                             validEventTriggerDatum.put("deduplication_key", new UnsignedLong(
@@ -572,18 +589,12 @@ public class AsyncTriggerFetcher {
 
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                 if (!deduplicationKeyObj.isNull("deduplication_key")) {
-                    Object maybeDedupKey = deduplicationKeyObj.get("deduplication_key");
-                    if (!(maybeDedupKey instanceof String)) {
+                    Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
+                            deduplicationKeyObj, "deduplication_key");
+                    if (!maybeDedupKey.isPresent()) {
                         return Optional.empty();
                     }
-                    try {
-                        Long.parseUnsignedLong((String) maybeDedupKey);
-                    } catch (NumberFormatException e) {
-                        LogUtil.d(e, "Aggregate deduplication key: parsing deduplication_key failed"
-                                + ". %s", maybeDedupKey);
-                        return Optional.empty();
-                    }
-                    aggregateDedupKey.put("deduplication_key", (String) maybeDedupKey);
+                    aggregateDedupKey.put("deduplication_key", maybeDedupKey.get().toString());
                 }
             } else {
                 String deduplicationKey = deduplicationKeyObj.optString("deduplication_key");

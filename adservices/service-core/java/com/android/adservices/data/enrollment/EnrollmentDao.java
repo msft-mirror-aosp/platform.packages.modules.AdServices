@@ -16,6 +16,9 @@
 
 package com.android.adservices.data.enrollment;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.ContentValues;
 import android.content.Context;
@@ -24,6 +27,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -32,6 +36,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -92,16 +97,22 @@ public class EnrollmentDao implements IEnrollmentDao {
     boolean isSeeded() {
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-        return prefs.getBoolean(IS_SEEDED, false);
+        boolean isSeeded = prefs.getBoolean(IS_SEEDED, false);
+        LogUtil.v("Persisted enrollment database seed status: %s", isSeeded);
+        return isSeeded;
     }
 
     @VisibleForTesting
     void seed() {
+        LogUtil.v("Seeding enrollment database");
+
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
                 success = success && insert(enrollment);
             }
+
+            LogUtil.v("Enrollment database seed insertion status: %s", success);
 
             if (success) {
                 SharedPreferences prefs =
@@ -116,9 +127,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                 }
             }
         }
+
+        LogUtil.v("Enrollment database seeding complete");
     }
 
     private void unSeed() {
+        LogUtil.v("Clearing enrollment database seed status");
+
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
@@ -544,6 +559,10 @@ public class EnrollmentDao implements IEnrollmentDao {
                     new String[] {enrollmentId});
         } catch (SQLException e) {
             LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return false;
         }
         return true;
@@ -566,6 +585,12 @@ public class EnrollmentDao implements IEnrollmentDao {
             unSeed();
             // Mark the transaction successful.
             db.setTransactionSuccessful();
+        } catch (SQLiteException e) {
+            LogUtil.e("Failed to perform delete all on EnrollmentData" + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         } finally {
             db.endTransaction();
         }

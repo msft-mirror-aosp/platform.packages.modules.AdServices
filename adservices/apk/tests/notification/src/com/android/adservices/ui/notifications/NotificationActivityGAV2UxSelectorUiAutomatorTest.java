@@ -88,6 +88,7 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled false");
     }
 
     @Test

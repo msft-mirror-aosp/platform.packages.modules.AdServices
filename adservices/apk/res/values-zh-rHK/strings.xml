@@ -120,7 +120,7 @@
     <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android 推出新方法，限制應用程式在顯示個人化廣告時取得的個人資料。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  應用程式建議的廣告可讓應用程式向你顯示相關廣告，並同時保護你的身分，以及與應用程式使用情況相關的資料。你使用的應用程式可根據你的活動，在其他應用程式中建議相關廣告。你可在私隱權設定中查看應用程式清單，並封鎖不希望建議廣告的應用程式。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  廣告評估功能讓各個應用程式分享特定類型的資料 (例如一天中向使用者放送廣告的時段)，以瞭解廣告成效。"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"系統可根據你在此裝置上使用某應用程式時的活動建議廣告。"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"系統可根據你在此裝置上使用某個應用程式時的活動建議廣告。"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"開啟其他廣告私隱功能"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android 亦提供全新私隱功能，讓你更全面掌握看到的廣告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"廣告主題協助應用程式向你顯示相關廣告，並同時保護你的身分，以及與應用程式使用情況相關的資料。Android 可根據你最近使用過的應用程式，得知你感興趣的主題。你日後使用的應用程式可要求 Android 提供相關主題，以向你顯示更相關的廣告。"</string>
@@ -222,7 +222,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"你已封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式通常會記住你感興趣的項目，以便為你提供個人化體驗。應用程式亦會儲存你在 Android 中的相關主題資料。\n\n例如，如果你使用關於馬拉松訓練的應用程式，該應用程式便可能會判斷你對跑步鞋有興趣。如果你日後使用其他應用程式，該應用程式就可以根據第一個應用程式建議的感興趣項目，向你顯示跑步鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。如你再次使用應用程式，該應用程式便可能會再次在清單中顯示。你亦可禁止應用程式為你建議廣告。\n\n你在應用程式中看到的廣告可能是個人化廣告，視乎此設定、廣告主題設定、你的廣告 ID 設定，以及你使用的應用程式是否將廣告個人化而定。"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"全新廣告私隱功能現已推出"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"新廣告私隱功能現已推出"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"應用程式之間只會分享非常有限的資料，以協助應用程式評估廣告成效"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我們即將推出名為「廣告成效評估」的全新廣告私隱功能。Android 只會在應用程式之間分享非常有限的資料，例如何時放送廣告，為協助應用程式評估廣告成效。"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"你可前往「廣告私隱權設定」作出變更。"</string>

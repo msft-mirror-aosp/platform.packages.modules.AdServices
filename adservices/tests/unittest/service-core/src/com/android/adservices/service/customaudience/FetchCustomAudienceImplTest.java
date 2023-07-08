@@ -850,6 +850,10 @@ public class FetchCustomAudienceImplTest {
             mCountDownLatch = countDownLatch;
         }
 
+        public boolean isSuccess() {
+            return mIsSuccess;
+        }
+
         @Override
         public void onSuccess() {
             LogUtil.v("Reporting success to FetchCustomAudienceTestCallback.");
