@@ -53,6 +53,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.UxEngine;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -77,6 +78,7 @@ public class AdServicesCommonServiceImplTest {
     @Mock private Context mContext;
     @Mock private PackageManager mPackageManager;
     @Mock private UxEngine mUxEngine;
+    @Mock private UxStatesManager mUxStatesManager;
     @Mock private SharedPreferences mSharedPreferences;
     @Mock private SharedPreferences.Editor mEditor;
     @Mock private ConsentManager mConsentManager;
@@ -96,14 +98,17 @@ public class AdServicesCommonServiceImplTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(PermissionHelper.class)
+                        .spyStatic(UxStatesManager.class)
                         .mockStatic(PackageManagerCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         doReturn(true).when(mFlags).getAdServicesEnabled();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance(any()));
         doNothing()
                 .when(
                         () ->
@@ -141,7 +146,8 @@ public class AdServicesCommonServiceImplTest {
     @Test
     public void getAdserviceStatusTest() throws InterruptedException {
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         // Calling get adservice status, init set the flag to true, expect to return true
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
@@ -169,7 +175,8 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mFlags).isBackCompatActivityFeatureEnabled();
 
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
         // Calling get adservice status, set the activity to enabled, expect to return true
