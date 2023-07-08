@@ -16,40 +16,30 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.AdWithBid;
-import android.net.Uri;
-
-import androidx.annotation.Nullable;
+import android.annotation.NonNull;
 
 import com.google.auto.value.AutoValue;
 
+import org.json.JSONObject;
+
 @AutoValue
-abstract class GenerateBidResult {
-    abstract AdWithBid getAdWithBid();
+abstract class TrustedBiddingResponse {
+    @NonNull
+    abstract JSONObject getBody();
 
-    @Nullable
-    abstract Uri getWinDebugReportUri();
+    @NonNull
+    abstract JSONObject getHeaders();
 
-    @Nullable
-    abstract Uri getLossDebugReportUri();
-
-    @Nullable
-    abstract AdCost getAdCost();
-
-    static Builder builder() {
-        return new AutoValue_GenerateBidResult.Builder();
+    static TrustedBiddingResponse.Builder builder() {
+        return new AutoValue_TrustedBiddingResponse.Builder();
     }
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setAdWithBid(AdWithBid adWithBid);
+        public abstract Builder setBody(@NonNull JSONObject body);
 
-        abstract Builder setWinDebugReportUri(Uri winDebugReportUri);
+        public abstract Builder setHeaders(@NonNull JSONObject headers);
 
-        abstract Builder setLossDebugReportUri(Uri lossDebugReportUri);
-
-        abstract Builder setAdCost(AdCost adCost);
-
-        abstract GenerateBidResult build();
+        abstract TrustedBiddingResponse build();
     }
 }
