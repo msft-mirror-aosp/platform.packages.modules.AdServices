@@ -70,6 +70,15 @@ public class AdServicesPermissions {
             "android.permission.MODIFY_ADSERVICES_STATE";
 
     /**
+     * The permission that lets it modify AdService's enablement state modification API on S-.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String MODIFY_ADSERVICES_STATE_COMPAT =
+            "android.permission.MODIFY_ADSERVICES_STATE_COMPAT";
+
+    /**
      * The permission that lets it access AdService's enablement state modification API.
      *
      * @hide
@@ -77,6 +86,15 @@ public class AdServicesPermissions {
     @SystemApi
     public static final String ACCESS_ADSERVICES_STATE =
             "android.permission.ACCESS_ADSERVICES_STATE";
+
+    /**
+     * The permission that lets it access AdService's enablement state modification API on S-.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String ACCESS_ADSERVICES_STATE_COMPAT =
+            "android.permission.ACCESS_ADSERVICES_STATE_COMPAT";
 
     /**
      * The permission needed to call AdServicesManager APIs
