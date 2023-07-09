@@ -339,16 +339,24 @@ public abstract class E2ETest {
             testDirName = dirPathList.remove(0);
             String[] testAssets = assetManager.list(testDirName);
             for (String testAsset : testAssets) {
-                if (testAsset.endsWith(".json")) {
+                if (isDirectory(testDirName + "/" + testAsset)) {
+                    dirPathList.add(testDirName + "/" + testAsset);
+                } else {
                     inputStreams.add(assetManager.open(testDirName + "/" + testAsset));
                     testFileList.add(testAsset);
-                } else {
-                    dirPathList.add(testDirName + "/" + testAsset);
                 }
             }
         }
         return getTestCasesFrom(
                 inputStreams, testFileList.stream().toArray(String[]::new), preprocessor);
+    }
+
+    private static boolean isDirectory(String testAssetName) throws IOException {
+        String[] assetList = sContext.getAssets().list(testAssetName);
+        if (assetList.length > 0) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
