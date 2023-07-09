@@ -27,10 +27,10 @@ import java.math.RoundingMode;
 import java.security.SecureRandom;
 
 /** Generator for private index observation noise. */
-final class PrivacyGenerator {
+public final class PrivacyGenerator {
     private final SecureRandom mSecureRandom;
 
-    PrivacyGenerator(SecureRandom secureRandom) {
+    public PrivacyGenerator(SecureRandom secureRandom) {
         this.mSecureRandom = secureRandom;
     }
 

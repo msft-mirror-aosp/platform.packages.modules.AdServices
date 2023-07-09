@@ -104,7 +104,17 @@ public class GaUxNotificationTriggerTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                mCallback);
+                new OutcomeReceiver<>() {
+                    @Override
+                    public void onResult(Boolean result) {
+                        assertThat(result).isFalse();
+                    }
+
+                    @Override
+                    public void onError(Exception exception) {
+                        Assert.fail();
+                    }
+                });
 
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);

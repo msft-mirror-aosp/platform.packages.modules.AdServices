@@ -171,6 +171,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLB
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
@@ -188,6 +189,12 @@ import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_RE
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_LITE_API_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -209,6 +216,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATION_
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
@@ -396,6 +404,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
@@ -416,6 +425,12 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -437,6 +452,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_REGISTR
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
@@ -480,6 +496,7 @@ import static com.android.adservices.service.PhFlags.KEY_UI_TOGGLE_SPEED_BUMP_EN
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
@@ -5719,23 +5736,6 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetFlexibleEventReportingAPIEnabled() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMeasurementFlexibleEventReportingApiEnabled())
-                .isEqualTo(MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
-
-        final boolean phOverridingValue = false;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ true);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementFlexibleEventReportingApiEnabled()).isFalse();
-    }
-
-    @Test
     public void testIsBackCompatActivityFeatureEnabled() {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -5850,6 +5850,24 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementEnableAraParsingAlignmentV1() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementEnableAraParsingAlignmentV1())
+                .isEqualTo(MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1);
+
+        final boolean phOverridingValue = false;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementEnableAraParsingAlignmentV1()).isFalse();
+    }
+
+    @Test
     public void testGetMeasurementEnableVtcConfigurableMaxEventReports() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMeasurementEnableVtcConfigurableMaxEventReports())
@@ -5883,6 +5901,151 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementVtcConfigurableMaxEventReportsCount()).isEqualTo(3);
+    }
+
+    @Test
+    public void testGetFlexibleEventReportingAPIEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexibleEventReportingApiEnabled())
+                .isEqualTo(MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
+        final boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementFlexibleEventReportingApiEnabled()).isTrue();
+    }
+
+    @Test
+    public void testGetFlexLiteAPIEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexLiteAPIEnabled())
+                .isEqualTo(MEASUREMENT_FLEX_LITE_API_ENABLED);
+
+        final boolean phOverridingValue = false;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementFlexLiteAPIEnabled()).isFalse();
+    }
+
+    @Test
+    public void testGetMeasurementFlexAPIMaxInformationGainEvent() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexAPIMaxInformationGainEvent())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+
+        final float phOverridingValue = 6.4f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertEquals(
+                phFlags.getMeasurementFlexAPIMaxInformationGainEvent(),
+                phOverridingValue,
+                0.000000001f);
+    }
+
+    @Test
+    public void testGetMeasurementFlexAPIMaxInformationGainNavigation() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexAPIMaxInformationGainNavigation())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+
+        final float phOverridingValue = 6.4f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertEquals(
+                phFlags.getMeasurementFlexAPIMaxInformationGainNavigation(),
+                phOverridingValue,
+                0.000000001f);
+    }
+
+    @Test
+    public void testGetMeasurementFlexAPIMaxEventReports() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexAPIMaxEventReports())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS);
+
+        final int phOverridingValue = 7;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementFlexAPIMaxEventReports()).isEqualTo(7);
+    }
+
+    @Test
+    public void testGetMeasurementFlexAPIMaxEventReportWindows() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexAPIMaxEventReportWindows())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS);
+
+        final int phOverridingValue = 8;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementFlexAPIMaxEventReportWindows()).isEqualTo(8);
+    }
+
+    @Test
+    public void testGetMeasurementFlexAPIMaxTriggerDataCardinality() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexAPIMaxTriggerDataCardinality())
+                .isEqualTo(MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY);
+
+        final int phOverridingValue = 11;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementFlexAPIMaxTriggerDataCardinality()).isEqualTo(11);
+    }
+
+    @Test
+    public void testGetMeasurementMinimumEventReportWindowInSeconds() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementMinimumEventReportWindowInSeconds())
+                .isEqualTo(MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS);
+
+        final long phOverridingValue = 7200L;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementMinimumEventReportWindowInSeconds()).isEqualTo(7200);
     }
 
     @Test
