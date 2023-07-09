@@ -299,6 +299,9 @@
     },
     {
       "name": "LegacyAdServicesGaUxCtsRootTest"
+    },
+    {
+      "name": "AdServicesGaUxDebugChannelCtsRootTest"
     }
   ],
   "postsubmit": [
@@ -307,6 +310,15 @@
     },
     {
       "name": "CtsAdServicesHostTests"
+    },
+    {
+      "name": "AdServicesBetaUxCtsRootTest"
+    },
+    {
+      "name": "LegacyAdServicesGaUxCtsRootTest"
+    },
+    {
+      "name": "AdServicesGaUxDebugChannelCtsRootTest"
     }
   ]
 }
