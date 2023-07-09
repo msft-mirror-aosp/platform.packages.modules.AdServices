@@ -120,20 +120,47 @@ public class AsyncSourceFetcher {
         long sourceEventTime = asyncRegistration.getRequestTime();
         UnsignedLong eventId = new UnsignedLong(0L);
         if (!json.isNull(SourceHeaderContract.SOURCE_EVENT_ID)) {
-            try {
-                eventId = new UnsignedLong(json.getString(SourceHeaderContract.SOURCE_EVENT_ID));
-            } catch (NumberFormatException e) {
-                LogUtil.d(e, "parseCommonSourceParams: parsing source_event_id failed.");
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<UnsignedLong> maybeEventId =
+                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.SOURCE_EVENT_ID);
+                if (!maybeEventId.isPresent()) {
+                    return false;
+                }
+                eventId = maybeEventId.get();
+            } else {
+                try {
+                    eventId = new UnsignedLong(
+                            json.getString(SourceHeaderContract.SOURCE_EVENT_ID));
+                } catch (NumberFormatException e) {
+                    LogUtil.d(e, "parseCommonSourceParams: parsing source_event_id failed.");
+                }
             }
         }
         builder.setEventId(eventId);
         long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
-            expiry =
-                    extractValidNumberInRange(
-                            json.getLong(SourceHeaderContract.EXPIRY),
-                            MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                            MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<UnsignedLong> maybeExpiry =
+                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.EXPIRY);
+                if (!maybeExpiry.isPresent()) {
+                    return false;
+                }
+                UnsignedLong expiryUnsigned =
+                        extractValidNumberInRange(
+                                maybeExpiry.get(),
+                                new UnsignedLong(
+                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                new UnsignedLong(
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                // Relies on expiryUnsigned not using the 64th bit.
+                expiry = expiryUnsigned.getValue();
+            } else {
+                expiry =
+                        extractValidNumberInRange(
+                                json.getLong(SourceHeaderContract.EXPIRY),
+                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            }
             if (asyncRegistration.getSourceType() == Source.SourceType.EVENT) {
                 expiry = roundSecondsToWholeDays(expiry);
             }
@@ -142,25 +169,62 @@ public class AsyncSourceFetcher {
         }
         builder.setExpiryTime(sourceEventTime + TimeUnit.SECONDS.toMillis(expiry));
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
-            long eventReportWindow =
-                    Math.min(
-                            expiry,
-                            extractValidNumberInRange(
-                                    json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
-                                    mFlags.getMeasurementMinimumEventReportWindowInSeconds(),
-                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+            long eventReportWindow;
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<UnsignedLong> maybeEventReportWindow = FetcherUtil.extractUnsignedLong(
+                        json, SourceHeaderContract.EVENT_REPORT_WINDOW);
+                if (!maybeEventReportWindow.isPresent()) {
+                    return false;
+                }
+                UnsignedLong eventReportWindowUnsigned =
+                        extractValidNumberInRange(
+                                        maybeEventReportWindow.get(),
+                                new UnsignedLong(
+                                        mFlags.getMeasurementMinimumEventReportWindowInSeconds()),
+                                new UnsignedLong(
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                // Relies on eventReportWindowUnsigned not using the 64th bit.
+                eventReportWindow = min(expiry, eventReportWindowUnsigned.getValue());
+            } else {
+                eventReportWindow =
+                        Math.min(
+                                expiry,
+                                extractValidNumberInRange(
+                                        json.getLong(SourceHeaderContract.EVENT_REPORT_WINDOW),
+                                        mFlags.getMeasurementMinimumEventReportWindowInSeconds(),
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+            }
             builder.setEventReportWindow(TimeUnit.SECONDS.toMillis(eventReportWindow));
         }
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
-            aggregateReportWindow =
-                    min(
-                            expiry,
-                            extractValidNumberInRange(
-                                    json.getLong(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
-                                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
-
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<UnsignedLong> maybeAggregatableReportWindow =
+                        FetcherUtil.extractUnsignedLong(
+                                json, SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW);
+                if (!maybeAggregatableReportWindow.isPresent()) {
+                    return false;
+                }
+                // Registration will be rejected if parsing unsigned long throws.
+                UnsignedLong aggregateReportWindowUnsigned =
+                        extractValidNumberInRange(
+                                maybeAggregatableReportWindow.get(),
+                                new UnsignedLong(
+                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                new UnsignedLong(
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+                // Relies on aggregateReportWindowUnsigned not using the 64th bit.
+                aggregateReportWindow = min(expiry, aggregateReportWindowUnsigned.getValue());
+            } else {
+                aggregateReportWindow =
+                        min(
+                                expiry,
+                                extractValidNumberInRange(
+                                        json.getLong(
+                                                SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW),
+                                        MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
+            }
         } else {
             aggregateReportWindow = expiry;
         }
@@ -168,18 +232,35 @@ public class AsyncSourceFetcher {
                 sourceEventTime + TimeUnit.SECONDS.toMillis(aggregateReportWindow));
 
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
-            builder.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<Long> maybePriority =
+                        FetcherUtil.extractLong(json, SourceHeaderContract.PRIORITY);
+                if (!maybePriority.isPresent()) {
+                    return false;
+                }
+                builder.setPriority(maybePriority.get());
+            } else {
+                builder.setPriority(json.getLong(SourceHeaderContract.PRIORITY));
+            }
         }
 
         if (!json.isNull(SourceHeaderContract.DEBUG_REPORTING)) {
             builder.setIsDebugReporting(json.optBoolean(SourceHeaderContract.DEBUG_REPORTING));
         }
         if (!json.isNull(SourceHeaderContract.DEBUG_KEY)) {
-            try {
-                builder.setDebugKey(
-                        new UnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
-            } catch (NumberFormatException e) {
-                LogUtil.e(e, "parseCommonSourceParams: parsing debug key failed");
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                Optional<UnsignedLong> maybeDebugKey =
+                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.DEBUG_KEY);
+                if (maybeDebugKey.isPresent()) {
+                    builder.setDebugKey(maybeDebugKey.get());
+                }
+            } else {
+                try {
+                    builder.setDebugKey(
+                            new UnsignedLong(json.getString(SourceHeaderContract.DEBUG_KEY)));
+                } catch (NumberFormatException e) {
+                    LogUtil.e(e, "parseCommonSourceParams: parsing debug key failed");
+                }
             }
         }
         if (!json.isNull(SourceHeaderContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
@@ -207,12 +288,26 @@ public class AsyncSourceFetcher {
         }
         // This "filter_data" field is used to generate reports.
         if (!json.isNull(SourceHeaderContract.FILTER_DATA)) {
-            if (!FetcherUtil.areValidAttributionFilters(
-                    json.optJSONObject(SourceHeaderContract.FILTER_DATA))) {
-                LogUtil.d("Source filter-data is invalid.");
-                return false;
+            if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                JSONObject maybeFilterData = json.optJSONObject(SourceHeaderContract.FILTER_DATA);
+                if (maybeFilterData != null && maybeFilterData.has("source_type")) {
+                    LogUtil.d("Source filter-data includes 'source_type' key.");
+                    return false;
+                }
+                if (!FetcherUtil.areValidAttributionFilters(maybeFilterData)) {
+                    LogUtil.d("Source filter-data is invalid.");
+                    return false;
+                }
+                builder.setFilterData(maybeFilterData.toString());
+            } else {
+                if (!FetcherUtil.areValidAttributionFilters(
+                        json.optJSONObject(SourceHeaderContract.FILTER_DATA))) {
+                    LogUtil.d("Source filter-data is invalid.");
+                    return false;
+                }
+                builder.setFilterData(
+                        json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
             }
-            builder.setFilterData(json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
         }
 
         Uri appUri = null;
@@ -587,9 +682,13 @@ public class AsyncSourceFetcher {
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
-        } catch (JSONException | IllegalArgumentException e) {
-            LogUtil.d(e, "AsyncSourceFetcher: Invalid JSON");
+        } catch (JSONException e) {
+            LogUtil.d(e, "AsyncSourceFetcher: invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
+            return Optional.empty();
+        } catch (IllegalArgumentException e) {
+            LogUtil.d(e, "AsyncSourceFetcher: illegal argument");
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }
     }
@@ -701,7 +800,7 @@ public class AsyncSourceFetcher {
                 return false;
             }
             String keyPiece = aggregationKeys.optString(id);
-            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece)) {
+            if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece, mFlags)) {
                 LogUtil.d("SourceFetcher: aggregation key-piece is invalid. %s", keyPiece);
                 return false;
             }

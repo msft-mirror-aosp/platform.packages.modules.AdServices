@@ -53,6 +53,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.UxEngine;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 import java.util.concurrent.Executor;
 
@@ -69,12 +70,15 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     public final String ADSERVICES_STATUS_SHARED_PREFERENCE = "AdserviceStatusSharedPreference";
     private final Context mContext;
     private final UxEngine mUxEngine;
+    private final UxStatesManager mUxStatesManager;
     private final Flags mFlags;
 
-    public AdServicesCommonServiceImpl(Context context, Flags flags, UxEngine uxEngine) {
+    public AdServicesCommonServiceImpl(
+            Context context, Flags flags, UxEngine uxEngine, UxStatesManager uxStatesManager) {
         mContext = context;
         mFlags = flags;
         mUxEngine = uxEngine;
+        mUxStatesManager = uxStatesManager;
     }
 
     @Override
@@ -90,11 +94,18 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
-                        reconsentIfNeededForEU();
+
+                        // TO-DO (b/286664178): remove the block after API is fully ramped up.
+                        if (!mFlags.getEnableAdServicesSystemApi()) {
+                            // Reconsent is already handled by the enableAdServices API.
+                            reconsentIfNeededForEU();
+                        }
+
                         boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
                         if (mFlags.isBackCompatActivityFeatureEnabled()) {
                             isAdServicesEnabled &=
-                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
+                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(
+                                            mContext);
                         }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()

@@ -2629,6 +2629,14 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
 
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraParsingAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
