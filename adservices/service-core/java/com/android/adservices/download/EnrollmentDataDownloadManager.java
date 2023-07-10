@@ -64,6 +64,9 @@ public class EnrollmentDataDownloadManager {
     private static final String DOWNLOADED_ENROLLMENT_DATA_FILE_ID = "adtech_enrollment_data.csv";
     private static final String ENROLLMENT_FILE_READ_STATUS_SHARED_PREFERENCES =
             "enrollment_data_read_status";
+    @VisibleForTesting static final String ENROLLMENT_SHARED_PREF = "adservices_enrollment";
+    @VisibleForTesting static final String BUILD_ID = "build_id";
+    @VisibleForTesting static final String FILE_GROUP_STATUS = "file_group_status";
 
     @VisibleForTesting
     EnrollmentDataDownloadManager(Context context, Flags flags) {
@@ -207,6 +210,9 @@ public class EnrollmentDataDownloadManager {
                 LogUtil.d("MDD has not downloaded the Enrollment Data Files yet.");
                 return null;
             }
+
+            // store file group status and build id in shared preference for logging purposes
+            commitFileGroupDataToSharedPref(fileGroup);
             String fileGroupBuildId = String.valueOf(fileGroup.getBuildId());
             ClientFile enrollmentDataFile = null;
             for (ClientFile file : fileGroup.getFileList()) {
@@ -219,6 +225,28 @@ public class EnrollmentDataDownloadManager {
         } catch (ExecutionException | InterruptedException e) {
             LogUtil.e(e, "Unable to load MDD file group.");
             return null;
+        }
+    }
+
+    private void commitFileGroupDataToSharedPref(ClientFileGroup fileGroup) {
+        Long buildId = fileGroup.getBuildId();
+        ClientFileGroup.Status fileGroupStatus = fileGroup.getStatus();
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        if (buildId != null) {
+            edit.putInt(BUILD_ID, buildId.intValue());
+        }
+        if (fileGroupStatus != null) {
+            edit.putInt(FILE_GROUP_STATUS, fileGroupStatus.getNumber());
+        }
+        if (buildId != null || fileGroupStatus != null) {
+            if (!edit.commit()) {
+                // TODO(b/280579966): Add logging using CEL.
+                LogUtil.e(
+                        "Saving shared preferences - %s , %s and %s failed",
+                        ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
+            }
         }
     }
 }

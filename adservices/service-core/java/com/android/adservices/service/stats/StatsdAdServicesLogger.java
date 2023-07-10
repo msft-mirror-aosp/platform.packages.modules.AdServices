@@ -22,6 +22,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
@@ -385,6 +389,38 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                     stats.getRegion(),
                     stats.getMigrationStatus().getMigrationStatusValue());
         }
+    }
+
+    /** log method for read/write status of enrollment data. */
+    public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENROLLMENT_DATA_STORED, mType, mIsSuccessful, mBuildId);
+    }
+
+    /** log method for status of enrollment matching queries. */
+    public void logEnrollmentMatchStats(boolean mIsSuccessful, int mBuildId) {
+        AdServicesStatsLog.write(AD_SERVICES_ENROLLMENT_MATCHED, mIsSuccessful, mBuildId);
+    }
+
+    /** log method for status of enrollment downloads. */
+    public void logEnrollmentFileDownloadStats(boolean mIsSuccessful, int mBuildId) {
+        AdServicesStatsLog.write(AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED, mIsSuccessful, mBuildId);
+    }
+
+    /** log method for enrollment-related status_caller_not_found errors. */
+    public void logEnrollmentFailedStats(
+            int mBuildId,
+            int mDataFileGroupStatus,
+            int mEnrollmentRecordCountInTable,
+            String mQueryParameter,
+            int mErrorCause) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENROLLMENT_FAILED,
+                mBuildId,
+                mDataFileGroupStatus,
+                mEnrollmentRecordCountInTable,
+                mQueryParameter,
+                mErrorCause);
     }
 
     @NonNull

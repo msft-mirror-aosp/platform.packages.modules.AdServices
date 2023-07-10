@@ -17,6 +17,10 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
@@ -43,6 +47,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -673,6 +678,105 @@ public class StatsdAdServicesLoggerTest {
                                 eq(true),
                                 eq(uniqueAdIdValue),
                                 eq(uniqueAdIdLimit));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentData_success() {
+        int transactionTypeEnumValue =
+                EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.ordinal();
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyBoolean(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentDataStats(transactionTypeEnumValue, true, 100);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_DATA_STORED),
+                                eq(transactionTypeEnumValue),
+                                eq(true),
+                                eq(100));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentMatch_success() {
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyBoolean(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentMatchStats(true, 100);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_MATCHED), eq(true), eq(100));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentFileDownload_success() {
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyBoolean(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentFileDownloadStats(true, 100);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED), eq(true), eq(100));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentFailed_success() {
+        int dataFileGroupStatusEnumValue =
+                EnrollmentStatus.DataFileGroupStatus.PENDING_CUSTOM_VALIDATION.ordinal();
+        int errorCauseEnumValue =
+                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.ordinal();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentFailedStats(
+                100, dataFileGroupStatusEnumValue, 10, "SomeSdkName", errorCauseEnumValue);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_FAILED),
+                                eq(100),
+                                eq(dataFileGroupStatusEnumValue),
+                                eq(10),
+                                eq("SomeSdkName"),
+                                eq(errorCauseEnumValue));
 
         ExtendedMockito.verify(writeInvocation);
 
