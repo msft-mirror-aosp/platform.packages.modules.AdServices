@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.gaux;
+package com.android.adservices.tests.ui.gaux.debugchannel;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class GaUxNotificationTriggerTest {
+public class GaUxConsentNotificationDebugChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -58,8 +58,6 @@ public class GaUxNotificationTriggerTest {
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        // TO-DO (b/271567864): grant the permission in our apk code and remove this in the future.
-        // Grant runtime permission to the AOSP adservices app.
         UiUtils.enableNotificationPermission();
 
         mCommonManager = AdServicesCommonManager.get(sContext);
@@ -69,7 +67,7 @@ public class GaUxNotificationTriggerTest {
         UiUtils.enableConsentDebugMode();
 
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
