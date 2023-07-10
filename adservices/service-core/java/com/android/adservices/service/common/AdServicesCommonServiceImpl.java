@@ -95,18 +95,22 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
 
+                        boolean isAdServicesEnabled =
+                                mFlags.getAdServicesEnabled();
+                        if (mFlags.isBackCompatActivityFeatureEnabled()) {
+                            isAdServicesEnabled &=
+                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
+                        }
+
                         // TO-DO (b/286664178): remove the block after API is fully ramped up.
                         if (!mFlags.getEnableAdServicesSystemApi()) {
                             // Reconsent is already handled by the enableAdServices API.
                             reconsentIfNeededForEU();
+                        } else {
+                            // PS entry point should be hidden from unenrolled users.
+                            isAdServicesEnabled &= mUxStatesManager.isEnrolledUser();
                         }
 
-                        boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
-                        if (mFlags.isBackCompatActivityFeatureEnabled()) {
-                            isAdServicesEnabled &=
-                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(
-                                            mContext);
-                        }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
                                         .setAdServicesEnabled(isAdServicesEnabled)
