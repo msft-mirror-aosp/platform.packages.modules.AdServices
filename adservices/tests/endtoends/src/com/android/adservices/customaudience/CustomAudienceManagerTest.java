@@ -76,11 +76,11 @@ public class CustomAudienceManagerTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
         // Disable API throttling
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
-        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
     }
 
     @After
