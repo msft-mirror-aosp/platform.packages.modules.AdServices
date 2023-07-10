@@ -907,6 +907,14 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
+    ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
+
+    /** Returns available bucket sizes for auction server payloads. */
+    default ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
+        return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
+    }
+
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
 
     /**
