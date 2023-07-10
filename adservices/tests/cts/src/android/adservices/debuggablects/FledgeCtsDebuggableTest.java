@@ -349,6 +349,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
@@ -411,8 +412,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
 
-        // Set disable seed enrollment to false
-        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         // Make sure the flags are picked up cold
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
