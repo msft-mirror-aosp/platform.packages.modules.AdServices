@@ -64,14 +64,16 @@ public class AsyncRegistrationQueueRunner {
     private final ContentResolver mContentResolver;
     private final DebugReportApi mDebugReportApi;
     private final SourceNoiseHandler mSourceNoiseHandler;
+    private final Flags mFlags;
 
     private AsyncRegistrationQueueRunner(Context context) {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mAsyncSourceFetcher = new AsyncSourceFetcher(context);
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mContentResolver = context.getContentResolver();
-        mDebugReportApi = new DebugReportApi(context, FlagsFactory.getFlags());
-        mSourceNoiseHandler = new SourceNoiseHandler(FlagsFactory.getFlags());
+        mFlags = FlagsFactory.getFlags();
+        mDebugReportApi = new DebugReportApi(context, mFlags);
+        mSourceNoiseHandler = new SourceNoiseHandler(mFlags);
     }
 
     @VisibleForTesting
@@ -81,13 +83,15 @@ public class AsyncRegistrationQueueRunner {
             AsyncTriggerFetcher asyncTriggerFetcher,
             DatastoreManager datastoreManager,
             DebugReportApi debugReportApi,
-            SourceNoiseHandler sourceNoiseHandler) {
+            SourceNoiseHandler sourceNoiseHandler,
+            Flags flags) {
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
         mContentResolver = contentResolver;
         mDebugReportApi = debugReportApi;
         mSourceNoiseHandler = sourceNoiseHandler;
+        mFlags = flags;
     }
 
     /**
@@ -105,9 +109,8 @@ public class AsyncRegistrationQueueRunner {
 
     /** Processes records in the AsyncRegistration Queue table. */
     public void runAsyncRegistrationQueueWorker() {
-        Flags flags = FlagsFactory.getFlags();
-        int recordServiceLimit = flags.getMeasurementMaxRegistrationsPerJobInvocation();
-        int retryLimit = flags.getMeasurementMaxRetriesPerRegistrationRequest();
+        int recordServiceLimit = mFlags.getMeasurementMaxRegistrationsPerJobInvocation();
+        int retryLimit = mFlags.getMeasurementMaxRetriesPerRegistrationRequest();
 
         Set<Uri> failedOrigins = new HashSet<>();
         for (int i = 0; i < recordServiceLimit; i++) {
@@ -315,7 +318,7 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
-        if (!source.isFlexEventApiValueValid()) {
+        if (!source.hasValidInformationGain(FlagsFactory.getFlags())) {
             debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
             return false;
         }

@@ -315,7 +315,7 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
-                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS
                     + " INTEGER "
                     + ")";
 
@@ -385,7 +385,7 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
-                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS
                     + " INTEGER, "
                     + SourceContract.PLATFORM_AD_ID
                     + " TEXT, "
@@ -459,7 +459,7 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
-                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS
                     + " INTEGER, "
                     + SourceContract.PLATFORM_AD_ID
                     + " TEXT, "
@@ -535,7 +535,7 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
-                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS
                     + " INTEGER, "
                     + SourceContract.PLATFORM_AD_ID
                     + " TEXT, "
@@ -613,7 +613,7 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
-                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS
                     + " INTEGER, "
                     + SourceContract.PLATFORM_AD_ID
                     + " TEXT, "
@@ -626,6 +626,90 @@ public class MeasurementDbSchemaTrail {
                     + SourceContract.EVENT_ATTRIBUTION_STATUS
                     + " TEXT, "
                     + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT "
+                    + ")";
+
+    public static final String CREATE_TABLE_SOURCE_V19 =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_SPECS
+                    + " TEXT, "
+                    + SourceContract.MAX_EVENT_LEVEL_REPORTS
+                    + " INTEGER, "
+                    + SourceContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + SourceContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + SourceContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + SourceContract.COARSE_EVENT_REPORT_DESTINATIONS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_ATTRIBUTION_STATUS
+                    + " TEXT, "
+                    + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT, "
+                    + SourceContract.EVENT_REPORT_WINDOWS
                     + " TEXT "
                     + ")";
 
@@ -1600,6 +1684,12 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV19() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV18());
+        createStatements.put(SourceContract.TABLE, CREATE_TABLE_SOURCE_V19);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -1655,6 +1745,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV17();
     }
 
+    private static Map<String, String> getCreateIndexesV19() {
+        return getCreateIndexesV18();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -1670,6 +1764,7 @@ public class MeasurementDbSchemaTrail {
                     .put(16, getCreateStatementByTableV16().values())
                     .put(17, getCreateStatementByTableV17().values())
                     .put(18, getCreateStatementByTableV18().values())
+                    .put(19, getCreateStatementByTableV19().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -1687,6 +1782,7 @@ public class MeasurementDbSchemaTrail {
                     .put(16, getCreateIndexesV16().values())
                     .put(17, getCreateIndexesV17().values())
                     .put(18, getCreateIndexesV18().values())
+                    .put(19, getCreateIndexesV19().values())
                     .build();
 
     /**

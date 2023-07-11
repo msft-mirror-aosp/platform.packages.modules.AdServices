@@ -16,72 +16,151 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatter.MAXIMUM_PAYLOAD_SIZE_IN_BYTES;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.DATA_SIZE_PADDING_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.PAYLOAD_SIZE_EXCEEDS_LIMIT;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.BYTES_CONVERSION_FACTOR;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
+import com.android.adservices.service.Flags;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
-@RunWith(Parameterized.class)
 public class AuctionServerPayloadFormatterV0Test {
     private static final int VALID_COMPRESSOR_VERSION = 0;
-    private static final int EXPECTED_META_INFO_BYTE =
+    private static final byte EXPECTED_META_INFO_BYTE =
             0; // both formatter and compressor versions are 0
-    private static final int DATA_START = 5;
+    private static final int DATA_START = META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE;
+    private static final int MAXIMUM_PAYLOAD_SIZE_IN_BYTES =
+            Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES.stream().max(Integer::compare).get();
     private AuctionServerPayloadFormatterV0 mAuctionServerPayloadFormatterV0;
 
-    @Parameter public byte[] data;
-
-    @Parameter(1)
-    public int expectedSizeInBytes;
-
-    @Parameters
-    public static Collection<Object[]> data() {
-        return List.of(
-                new Object[] {new byte[] {}, 8 /*bytes*/},
-                new Object[] {new byte[] {2, 3, 5, 7, 11, 13}, 16 /*bytes*/},
-                new Object[] {new byte[] {2, 3, 5, 7, 11, 13, 15, 17, 19, 23, 29}, 16 /*bytes*/},
-                new Object[] {
-                    new byte[] {2, 3, 5, 7, 11, 13, 15, 17, 19, 23, 29, 31}, 32 /*bytes*/
-                },
-                new Object[] {new byte[MAXIMUM_PAYLOAD_SIZE_IN_BYTES + 1], -1});
+    private static byte[] getRandomByteArray(int size) {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] result = new byte[size];
+        secureRandom.nextBytes(result);
+        return result;
     }
 
     @Before
     public void setup() {
-        mAuctionServerPayloadFormatterV0 = new AuctionServerPayloadFormatterV0();
+        mAuctionServerPayloadFormatterV0 =
+                new AuctionServerPayloadFormatterV0(
+                        Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
     }
 
     @Test
-    public void testDataPadding_returnsPaddedData_success() {
-        AuctionServerPayloadFormatter.UnformattedData input =
-                AuctionServerPayloadFormatter.UnformattedData.create(data);
+    public void testEmptyInput_roundupToMinimumBucketSize_success() {
+        testDataPaddingAndDispadding(new byte[] {}, 1024);
+    }
 
-        if (expectedSizeInBytes > 0) {
-            AuctionServerPayloadFormatter.FormattedData formatted =
-                    mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
-            Assert.assertEquals(EXPECTED_META_INFO_BYTE, formatted.getData()[0]);
-            Assert.assertArrayEquals(
-                    data,
-                    Arrays.copyOfRange(formatted.getData(), DATA_START, DATA_START + data.length));
-            AuctionServerPayloadFormatter.UnformattedData unformattedData =
-                    mAuctionServerPayloadFormatterV0.extract(formatted);
-            Assert.assertArrayEquals(data, unformattedData.getData());
-        } else {
-            ThrowingRunnable runnable =
-                    () -> mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
-            Assert.assertThrows(
-                    PAYLOAD_SIZE_EXCEEDS_LIMIT, IllegalArgumentException.class, runnable);
+    @Test
+    public void testInputSmallerThanMinimumBucketSize_roundupToMinimum_success() {
+        testDataPaddingAndDispadding(new byte[] {2, 3, 4}, 1024);
+    }
+
+    @Test
+    public void testInputSmallerThenABucketSize_roundUpToUseSmallestAvailableBucket_success() {
+        testDataPaddingAndDispadding(
+                getRandomByteArray(3 * BYTES_CONVERSION_FACTOR), 4 * BYTES_CONVERSION_FACTOR);
+    }
+
+    @Test
+    public void testInputEqualToAvailableBucketSize_useThatSize_success() {
+        testDataPaddingAndDispadding(
+                getRandomByteArray(
+                        4 * BYTES_CONVERSION_FACTOR
+                                - META_INFO_LENGTH_BYTE
+                                - DATA_SIZE_PADDING_LENGTH_BYTE),
+                4 * BYTES_CONVERSION_FACTOR);
+    }
+
+    @Test
+    public void testInputLargerThanABucketSize_roundUpToUseSmallestAvailableBucketSize_success() {
+        testDataPaddingAndDispadding(
+                getRandomByteArray(4 * BYTES_CONVERSION_FACTOR), 8 * BYTES_CONVERSION_FACTOR);
+    }
+
+    @Test
+    public void testInputSizeEqualToLargestAvailableBucketSize_useTheBucket_success() {
+        testDataPaddingAndDispadding(
+                getRandomByteArray(
+                        MAXIMUM_PAYLOAD_SIZE_IN_BYTES
+                                - META_INFO_LENGTH_BYTE
+                                - DATA_SIZE_PADDING_LENGTH_BYTE),
+                MAXIMUM_PAYLOAD_SIZE_IN_BYTES);
+    }
+
+    @Test
+    public void testReuseFormatter() {
+        testDataPaddingAndDispadding(
+                getRandomByteArray(4 * BYTES_CONVERSION_FACTOR), 8 * BYTES_CONVERSION_FACTOR);
+        testDataPaddingAndDispadding(
+                getRandomByteArray(
+                        4 * BYTES_CONVERSION_FACTOR
+                                - META_INFO_LENGTH_BYTE
+                                - DATA_SIZE_PADDING_LENGTH_BYTE),
+                4 * BYTES_CONVERSION_FACTOR);
+    }
+
+    @Test
+    public void testInputSizeLargerThenLargestBucket_throwISE() {
+        AuctionServerPayloadUnformattedData input =
+                AuctionServerPayloadUnformattedData.create(
+                        getRandomByteArray(MAXIMUM_PAYLOAD_SIZE_IN_BYTES));
+        ThrowingRunnable runnable =
+                () -> mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
+        Assert.assertThrows(PAYLOAD_SIZE_EXCEEDS_LIMIT, IllegalStateException.class, runnable);
+    }
+
+    public void testDataPaddingAndDispadding(byte[] data, int expectedSizeInBytes) {
+        AuctionServerPayloadUnformattedData input =
+                AuctionServerPayloadUnformattedData.create(data);
+
+        AuctionServerPayloadFormattedData formatted =
+                mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
+        AuctionServerPayloadUnformattedData unformattedData =
+                mAuctionServerPayloadFormatterV0.extract(formatted);
+
+        assertArrayEquals(
+                "Formatted data not un-formatted correctly.", data, unformattedData.getData());
+
+        validateFormattedData(data, expectedSizeInBytes, formatted);
+    }
+
+    private void validateFormattedData(
+            byte[] data, int expectedSizeInBytes, AuctionServerPayloadFormattedData formatted) {
+        assertEquals(
+                "data length (bucket size) mismatch.",
+                expectedSizeInBytes,
+                formatted.getData().length);
+        assertEquals("meta info byte mismatch.", EXPECTED_META_INFO_BYTE, formatted.getData()[0]);
+        assertEquals(
+                "data size bytes mismatch.",
+                data.length,
+                ByteBuffer.wrap(
+                                formatted.getData(),
+                                META_INFO_LENGTH_BYTE,
+                                DATA_SIZE_PADDING_LENGTH_BYTE)
+                        .getInt());
+        assertArrayEquals(
+                "Original data and packed data mismatch.",
+                data,
+                Arrays.copyOfRange(formatted.getData(), DATA_START, DATA_START + data.length));
+
+        for (int i = META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE + data.length;
+                i < expectedSizeInBytes;
+                i++) {
+            assertEquals("padding bytes not set to zero", (byte) 0, formatted.getData()[i]);
         }
     }
 }

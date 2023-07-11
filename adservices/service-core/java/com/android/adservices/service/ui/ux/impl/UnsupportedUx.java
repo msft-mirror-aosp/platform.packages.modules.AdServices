@@ -47,8 +47,4 @@ public class UnsupportedUx implements PrivacySandboxUx {
             PrivacySandboxEnrollmentChannel enrollmentChannel,
             Context context,
             ConsentManager consentManager) {}
-
-    /** No mode should be available for Unsupported UX. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {}
 }

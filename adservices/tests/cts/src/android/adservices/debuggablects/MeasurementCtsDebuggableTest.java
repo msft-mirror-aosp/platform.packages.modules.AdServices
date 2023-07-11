@@ -125,8 +125,7 @@ public class MeasurementCtsDebuggableTest {
         executeRegisterWebTrigger();
         executeAttribution();
         executeAggregateReporting();
-        // TODO (b/288332990) make min event report delay configurable.
-        // executeEventReporting();
+        executeEventReporting();
     }
 
     private static UiDevice getUiDevice() {
@@ -331,12 +330,9 @@ public class MeasurementCtsDebuggableTest {
         executeJob(ATTRIBUTION_REPORTING_JOB_ID);
     }
 
-    // TODO (b/288332990) make min event report delay configurable.
-    /*
     private void executeEventReportingJob() {
         executeJob(EVENT_REPORTING_JOB_ID);
     }
-    */
 
     private void executeAggregateReportingJob() {
         executeJob(AGGREGATE_REPORTING_JOB_ID);
@@ -463,8 +459,6 @@ public class MeasurementCtsDebuggableTest {
         }
     }
 
-    // TODO (b/288332990) make min event report delay configurable.
-    /*
     private void executeEventReporting() {
         final MockResponse mockResponse = createEventReportUploadResponse();
         final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse, mockResponse);
@@ -480,7 +474,6 @@ public class MeasurementCtsDebuggableTest {
             shutdownServer(mockWebServer);
         }
     }
-    */
 
     private void executeAggregateReporting() {
         final MockResponse aggregateReportMockResponse = createAggregateReportUploadResponse();
@@ -588,6 +581,10 @@ public class MeasurementCtsDebuggableTest {
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
+                + "measurement_min_event_report_delay_millis 0");
+
+        getUiDevice().executeShellCommand(
+                "device_config put adservices "
                 + "measurement_enable_configurable_aggregate_report_delay true");
 
         getUiDevice().executeShellCommand(
@@ -659,6 +656,10 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows null");
+
+        getUiDevice().executeShellCommand(
+                "device_config put adservices "
+                + "measurement_min_event_report_delay_millis null");
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "

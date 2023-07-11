@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.gaux;
+package com.android.adservices.tests.ui.gaux.alreadyenrolledchannel;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,6 +29,8 @@ import androidx.test.uiautomator.UiDevice;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
+import com.google.common.util.concurrent.SettableFuture;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -40,7 +42,7 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class GaUxNotificationTriggerTest {
+public class GaUxAlreadyEnrolledChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -53,21 +55,15 @@ public class GaUxNotificationTriggerTest {
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        UiUtils.enableNotificationPermission();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        // TO-DO (b/271567864): grant the permission in our apk code and remove this in the future.
-        // Grant runtime permission to the AOSP adservices app.
-        UiUtils.enableNotificationPermission();
-
         mCommonManager = AdServicesCommonManager.get(sContext);
 
-        // consent debug mode is turned on for this test class as we only care about the
-        // first trigger (API call).
-        UiUtils.enableConsentDebugMode();
-
+        // General purpose callback used for expected success calls.
         mCallback =
                 new OutcomeReceiver<Boolean, Exception>() {
                     @Override
@@ -81,21 +77,10 @@ public class GaUxNotificationTriggerTest {
                     }
                 };
 
-        mDevice.pressHome();
-    }
+        // Reset consent and thereby AdServices data before each test.
+        UiUtils.refreshConsentResetToken();
 
-    @After
-    public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
-        mDevice.pressHome();
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-    }
-
-    /** Verify that the API returns false when API is disabled. */
-    @Test
-    public void testApiDisabled() throws Exception {
-        UiUtils.turnOffEnableAdsServicesAPI();
+        SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -104,12 +89,29 @@ public class GaUxNotificationTriggerTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                mCallback);
+                new OutcomeReceiver<Boolean, Exception>() {
+                    @Override
+                    public void onResult(Boolean result) {
+                        responseFuture.set(result);
+                    }
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                    @Override
+                    public void onError(Exception exception) {
+                        responseFuture.setException(exception);
+                    }
+                });
 
-        UiUtils.turnOnEnableAdsServicesAPI();
+        Boolean response = responseFuture.get();
+        assertThat(response).isTrue();
+
+        mDevice.pressHome();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) return;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     /** Verify that entry point disabled can not trigger consent notification. */
@@ -159,17 +161,25 @@ public class GaUxNotificationTriggerTest {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
-        mCommonManager.enableAdServices(
+        AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                mCallback);
+                        .build();
+
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+
+        // Notifications should not be shown twice.
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
     }
 
     /**
@@ -180,17 +190,25 @@ public class GaUxNotificationTriggerTest {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
-        mCommonManager.enableAdServices(
+        AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                mCallback);
+                        .build();
+
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+
+        // Notifications should not be shown twice.
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ true);
     }
 
     /**
@@ -201,17 +219,25 @@ public class GaUxNotificationTriggerTest {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
-        mCommonManager.enableAdServices(
+        AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                mCallback);
+                        .build();
+
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+
+        // Notifications should not be shown twice.
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ true);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
@@ -220,16 +246,24 @@ public class GaUxNotificationTriggerTest {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
-        mCommonManager.enableAdServices(
+        AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                mCallback);
+                        .build();
+
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+
+        // Notifications should not be shown twice.
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ true);
     }
 }

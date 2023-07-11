@@ -16,7 +16,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.android.adservices.tests.ui.gaux.notificationtrigger">
+          package="com.android.adservices.tests.ui.gaux.debugchannel">
 
     <application>
     </application>

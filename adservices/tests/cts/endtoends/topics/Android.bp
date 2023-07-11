@@ -62,6 +62,6 @@ android_test {
     max_sdk_version: "32",
     manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdExtServicesEndToEndTests.xml",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
 }
 
