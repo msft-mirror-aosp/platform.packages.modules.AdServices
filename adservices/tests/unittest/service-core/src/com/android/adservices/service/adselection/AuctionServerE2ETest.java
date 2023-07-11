@@ -171,6 +171,7 @@ public class AuctionServerE2ETest {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private AdSelectionService mAdSelectionService;
     private AuctionServerPayloadFormatter mPayloadFormatter;
+    private AuctionServerPayloadExtractor mPayloadExtractor;
     private AuctionServerDataCompressor mDataCompressor;
 
     @Mock AdSelectionEncryptionKeyManager mAdSelectionEncryptionKeyManagerMock;
@@ -220,8 +221,13 @@ public class AuctionServerE2ETest {
         mAdSelectionService = createAdSelectionService();
 
         mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.getPayloadFormatter(
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
                         mFlags.getFledgeAuctionServerPayloadFormatVersion());
+
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -575,10 +581,8 @@ public class AuctionServerE2ETest {
             byte[] decryptedBytes) {
         try {
             byte[] unformatted =
-                    mPayloadFormatter
-                            .extract(
-                                    AuctionServerPayloadFormatter.FormattedData.create(
-                                            decryptedBytes))
+                    mPayloadExtractor
+                            .extract(AuctionServerPayloadFormattedData.create(decryptedBytes))
                             .getData();
             ProtectedAudienceInput protectedAudienceInput =
                     ProtectedAudienceInput.parseFrom(unformatted);
@@ -627,10 +631,9 @@ public class AuctionServerE2ETest {
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
-        AuctionServerPayloadFormatter.FormattedData formattedData =
+        AuctionServerPayloadFormattedData formattedData =
                 mPayloadFormatter.apply(
-                        AuctionServerPayloadFormatter.UnformattedData.create(
-                                compressedData.getData()),
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
                         AuctionServerDataCompressorGzip.VERSION);
         return formattedData.getData();
     }
