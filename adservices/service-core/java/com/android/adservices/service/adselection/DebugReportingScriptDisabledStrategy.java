@@ -19,13 +19,19 @@ package com.android.adservices.service.adselection;
 import androidx.annotation.NonNull;
 
 class DebugReportingScriptDisabledStrategy extends DebugReportingScriptStrategy {
+
+    private static final String DEFAULT_SCRIPT =
+            HEADER_SCRIPT
+                    + "forDebuggingOnly.reportAdAuctionWin = function(uri) {};\n"
+                    + "forDebuggingOnly.reportAdAuctionLoss = function(uri) {};\n";
+
     @Override
     String wrapGenerateBidsV3Js(@NonNull String jsScript) {
-        return HEADER_SCRIPT + jsScript;
+        return DEFAULT_SCRIPT + jsScript;
     }
 
     @Override
     String wrapIterativeJs(@NonNull String jsScript) {
-        return HEADER_SCRIPT + jsScript;
+        return DEFAULT_SCRIPT + jsScript;
     }
 }
