@@ -53,6 +53,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.view.Surface;
 
 import androidx.lifecycle.Lifecycle;
@@ -101,6 +102,7 @@ public class SdkSandboxManagerTest {
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
+    private static final long UI_ACTION_WAIT_TIME_MILLISECONDS = 500;
 
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
@@ -788,6 +790,7 @@ public class SdkSandboxManagerTest {
             fail("Error while disabling back button: " + e.getMessage());
         }
         sUiDevice.pressBack();
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         assertThat(mRule.getScenario().getState())
                 .isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
@@ -798,6 +801,7 @@ public class SdkSandboxManagerTest {
             fail("Error while enabling back button: " + e.getMessage());
         }
         sUiDevice.pressBack();
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         assertThat(mRule.getScenario().getState()).isEqualTo(State.RESUMED);
         assertThat(sandboxActivityStarter.isActivityResumed()).isFalse();
     }
@@ -818,6 +822,7 @@ public class SdkSandboxManagerTest {
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         // Rotate device to landscape
         sUiDevice.setOrientationLandscape();
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         // Without SDK locking the orientation, display should rotate.
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         assertThat(mRule.getScenario().getState())
@@ -843,10 +848,12 @@ public class SdkSandboxManagerTest {
         // Locking orientation to landscape should override device current orientation
         // (portrait) and restart the sandbox activity in the landscape orientation.
         actionExecutor.setOrientationToLandscape();
-
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
+
         // Rotation the device should not affect the locked display orientation.
         sUiDevice.setOrientationPortrait();
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_90);
         assertThat(mRule.getScenario().getState())
                 .isIn(Arrays.asList(State.CREATED, State.STARTED));
@@ -855,10 +862,12 @@ public class SdkSandboxManagerTest {
         // Locking orientation to portrait should override device current orientation
         // (landscape) and restart the sandbox activity in the portrait orientation.
         actionExecutor.setOrientationToPortrait();
-
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
+
         // Rotation the device should not affect the locked display orientation.
         sUiDevice.setOrientationLandscape();
+        SystemClock.sleep(UI_ACTION_WAIT_TIME_MILLISECONDS);
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
         assertThat(mRule.getScenario().getState())
                 .isIn(Arrays.asList(State.CREATED, State.STARTED));
