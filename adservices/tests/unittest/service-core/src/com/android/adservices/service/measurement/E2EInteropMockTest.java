@@ -47,7 +47,8 @@ import java.util.concurrent.TimeUnit;
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
- * src/content/test/data/attribution_reporting/interop April 21, 2023
+ * src/content/test/data/attribution_reporting/interop April 21, 2023 //TODO(b/290124390): Re-add
+ * event_report_window.json test
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -87,7 +88,8 @@ public class E2EInteropMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mDebugReportApi);
+                        mDebugReportApi,
+                        mFlags);
     }
 
     @Before
