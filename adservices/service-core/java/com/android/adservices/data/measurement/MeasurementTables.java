@@ -172,6 +172,7 @@ public final class MeasurementTables {
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 
     /** Contract for EventReport. */
@@ -232,6 +233,7 @@ public final class MeasurementTables {
         String TRIGGER_ID = "trigger_id";
         String DEDUP_KEY = "dedup_key";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 
     /** Contract for aggregate encryption key. */
@@ -241,6 +243,7 @@ public final class MeasurementTables {
         String KEY_ID = "key_id";
         String PUBLIC_KEY = "public_key";
         String EXPIRY = "expiry";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 
     /** Contract for debug reports. */
@@ -611,6 +614,8 @@ public final class MeasurementTables {
                     + TriggerContract.DEBUG_AD_ID
                     + " TEXT, "
                     + TriggerContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATION_COORDINATOR_ORIGIN
                     + " TEXT "
                     + ")";
 
@@ -851,6 +856,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.REGISTRATION_ORIGIN
                     + " TEXT, "
+                    + AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
@@ -882,7 +889,20 @@ public final class MeasurementTables {
                     + ")";
 
     public static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_LATEST =
-            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6;
+            "CREATE TABLE "
+                    + AggregateEncryptionKey.TABLE
+                    + " ("
+                    + AggregateEncryptionKey.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateEncryptionKey.KEY_ID
+                    + " TEXT, "
+                    + AggregateEncryptionKey.PUBLIC_KEY
+                    + " TEXT, "
+                    + AggregateEncryptionKey.EXPIRY
+                    + " INTEGER, "
+                    + AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT "
+                    + ")";
 
     public static final String CREATE_TABLE_DEBUG_REPORT_V3 =
             "CREATE TABLE IF NOT EXISTS "
