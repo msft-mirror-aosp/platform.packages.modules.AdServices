@@ -75,11 +75,17 @@ public class UxEngine {
         PrivacySandboxEnrollmentChannelCollection eligibleEnrollmentChannel =
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
                         eligibleUx, mConsentManager, mUxStatesManager);
-        mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
 
         // TO-DO: Add an UNSUPPORTED_ENROLLMENT_CHANNEL, rather than using null handling.
-        // Entry point request should not trigger entrollment.
-        if (!adServicesStates.isPrivacySandboxUiRequest() && eligibleEnrollmentChannel != null) {
+        if (eligibleEnrollmentChannel != null) {
+            // Only set the enrollment channel if it is not null.
+            mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
+
+            // Entry point request should not trigger entrollment.
+            if (adServicesStates.isPrivacySandboxUiRequest()) {
+                return;
+            }
+
             eligibleUx
                     .getUx()
                     .handleEnrollment(

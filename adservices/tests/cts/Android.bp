@@ -83,7 +83,7 @@ android_test {
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.junit",
@@ -253,7 +253,7 @@ android_test {
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.junit",

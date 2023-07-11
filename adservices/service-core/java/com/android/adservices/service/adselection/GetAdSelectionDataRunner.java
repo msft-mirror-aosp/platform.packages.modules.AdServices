@@ -107,8 +107,9 @@ public class GetAdSelectionDataRunner {
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
         mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.getPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion());
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -205,7 +206,7 @@ public class GetAdSelectionDataRunner {
                         mLightweightExecutorService);
     }
 
-    private AuctionServerPayloadFormatter.FormattedData createPayload(
+    private AuctionServerPayloadFormattedData createPayload(
             Map<AdTechIdentifier, BuyerInput> buyerInputs,
             GetAdSelectionDataRequest request,
             long adSelectionId) {
@@ -257,13 +258,12 @@ public class GetAdSelectionDataRunner {
                 .build();
     }
 
-    private AuctionServerPayloadFormatter.FormattedData applyPayloadFormatter(
+    private AuctionServerPayloadFormattedData applyPayloadFormatter(
             ProtectedAudienceInput protectedAudienceInput) {
         int version = mFlags.getFledgeAuctionServerCompressionAlgorithmVersion();
         sLogger.v("Applying formatter V" + version + " on protected audience input bytes");
-        AuctionServerPayloadFormatter.UnformattedData unformattedData =
-                AuctionServerPayloadFormatter.UnformattedData.create(
-                        protectedAudienceInput.toByteArray());
+        AuctionServerPayloadUnformattedData unformattedData =
+                AuctionServerPayloadUnformattedData.create(protectedAudienceInput.toByteArray());
         return mPayloadFormatter.apply(unformattedData, version);
     }
 

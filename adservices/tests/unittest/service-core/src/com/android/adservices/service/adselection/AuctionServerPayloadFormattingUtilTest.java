@@ -16,15 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatter.COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS;
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatter.PAYLOAD_FORMAT_VERSION_LENGTH_BITS;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.PAYLOAD_FORMAT_VERSION_LENGTH_BITS;
 
 import com.android.adservices.service.Flags;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AuctionServerPayloadFormatterTest {
+public class AuctionServerPayloadFormattingUtilTest {
     @Test
     public void testMetaInfoByte_allValidValues_extractedSuccessfully() {
         for (int compressionVersion = 0;
@@ -36,10 +36,10 @@ public class AuctionServerPayloadFormatterTest {
                 byte metaInfoByte = (byte) (formatterVersion << 5 | compressionVersion);
                 Assert.assertEquals(
                         compressionVersion,
-                        AuctionServerPayloadFormatter.extractCompressionVersion(metaInfoByte));
+                        AuctionServerPayloadFormattingUtil.extractCompressionVersion(metaInfoByte));
                 Assert.assertEquals(
                         formatterVersion,
-                        AuctionServerPayloadFormatter.extractFormatterVersion(metaInfoByte));
+                        AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte));
             }
         }
     }
@@ -48,18 +48,19 @@ public class AuctionServerPayloadFormatterTest {
     public void test_extractCompressionVersion_success() {
         byte metaInfoByte = 1 << 4;
         Assert.assertEquals(
-                16, AuctionServerPayloadFormatter.extractCompressionVersion(metaInfoByte));
+                16, AuctionServerPayloadFormattingUtil.extractCompressionVersion(metaInfoByte));
     }
 
     @Test
     public void test_extractFormatterVersion_success() {
         byte metaInfoByte = 1 << 5;
-        Assert.assertEquals(1, AuctionServerPayloadFormatter.extractFormatterVersion(metaInfoByte));
+        Assert.assertEquals(
+                1, AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte));
     }
 
     @Test
     public void test_parseMetaInfoByte_success() {
-        byte result = AuctionServerPayloadFormatter.getMetaInfoByte(2, 1);
+        byte result = AuctionServerPayloadFormattingUtil.getMetaInfoByte(2, 1);
         int actualCompressionVersion = result & 0x1f;
         int actualFormatterVersion = (result & 0xff) >>> 5;
         Assert.assertEquals(actualFormatterVersion, 1);
@@ -76,22 +77,22 @@ public class AuctionServerPayloadFormatterTest {
         Assert.assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        AuctionServerPayloadFormatter.getMetaInfoByte(
+                        AuctionServerPayloadFormattingUtil.getMetaInfoByte(
                                 invalidCompressionVersion, validVersion));
         Assert.assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        AuctionServerPayloadFormatter.getMetaInfoByte(
+                        AuctionServerPayloadFormattingUtil.getMetaInfoByte(
                                 validVersion, invalidFormatterVersion));
         Assert.assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        AuctionServerPayloadFormatter.getMetaInfoByte(
+                        AuctionServerPayloadFormattingUtil.getMetaInfoByte(
                                 invalidNegativeVersion, validVersion));
         Assert.assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        AuctionServerPayloadFormatter.getMetaInfoByte(
+                        AuctionServerPayloadFormattingUtil.getMetaInfoByte(
                                 validVersion, invalidNegativeVersion));
     }
 
