@@ -33,14 +33,17 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
+    static final String ARRAY_SPLITTER_COMMA = ",";
     /*
      * Keys for ALL the flags stored in DeviceConfig.
      */
@@ -273,6 +276,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_off_device_enabled";
     static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
+    static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            "fledge_auction_server_payload_bucket_sizes";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -2235,6 +2240,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
+        String bucketSizesString =
+                DeviceConfig.getString(
+                        NAMESPACE_ADSERVICES, KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES, null);
+        // TODO(b/290401812): Decide the fate of malformed bucket size config string.
+        return Optional.ofNullable(bucketSizesString)
+                .map(
+                        s ->
+                                Arrays.stream(s.split(ARRAY_SPLITTER_COMMA))
+                                        .map(Integer::valueOf)
+                                        .collect(Collectors.toList()))
+                .map(ImmutableList::copyOf)
+                .orElse(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -3848,6 +3869,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionOffDeviceEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
+                        + " = "
+                        + getFledgeAuctionServerPayloadBucketSizes());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceRequestCompressionEnabled());
@@ -3976,7 +4002,7 @@ public final class PhFlags implements Flags {
         if (TextUtils.isEmpty(blocklistFlag)) {
             return ImmutableList.of();
         }
-        String[] blocklistList = blocklistFlag.split(",");
+        String[] blocklistList = blocklistFlag.split(ARRAY_SPLITTER_COMMA);
         return ImmutableList.copyOf(blocklistList);
     }
 
@@ -4024,7 +4050,7 @@ public final class PhFlags implements Flags {
         String defaultGlobalBlockedTopicIds =
                 TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
                         .map(String::valueOf)
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.joining(ARRAY_SPLITTER_COMMA));
 
         String globalBlockedTopicIds =
                 DeviceConfig.getString(
@@ -4035,7 +4061,7 @@ public final class PhFlags implements Flags {
             return ImmutableList.of();
         }
         globalBlockedTopicIds = globalBlockedTopicIds.trim();
-        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(",");
+        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(ARRAY_SPLITTER_COMMA);
 
         List<Integer> globalBlockedTopicIdsIntList = new ArrayList<>();
 
@@ -4056,7 +4082,7 @@ public final class PhFlags implements Flags {
         String defaultErrorCodeLoggingDenyStr =
                 ERROR_CODE_LOGGING_DENY_LIST.stream()
                         .map(String::valueOf)
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.joining(ARRAY_SPLITTER_COMMA));
 
         String errorCodeLoggingDenyStr =
                 DeviceConfig.getString(
@@ -4067,7 +4093,7 @@ public final class PhFlags implements Flags {
             return ImmutableList.of();
         }
         errorCodeLoggingDenyStr = errorCodeLoggingDenyStr.trim();
-        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(",");
+        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(ARRAY_SPLITTER_COMMA);
 
         List<Integer> errorCodeLoggingDenyIntList = new ArrayList<>();
 

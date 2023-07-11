@@ -16,22 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
-import androidx.annotation.NonNull;
+/**
+ * Payload extractor interface defines methods for a payload extractor.
+ *
+ * <p>Each formatted data contains a meta info byte as its first byte where the first 3 bits are for
+ * compression algorithm version and the last 5 bits are for the formatter version.
+ */
+public interface AuctionServerPayloadExtractor {
 
-class DebugReportingScriptDisabledStrategy extends DebugReportingScriptStrategy {
-
-    private static final String DEFAULT_SCRIPT =
-            HEADER_SCRIPT
-                    + "forDebuggingOnly.reportAdAuctionWin = function(uri) {};\n"
-                    + "forDebuggingOnly.reportAdAuctionLoss = function(uri) {};\n";
-
-    @Override
-    String wrapGenerateBidsV3Js(@NonNull String jsScript) {
-        return DEFAULT_SCRIPT + jsScript;
-    }
-
-    @Override
-    String wrapIterativeJs(@NonNull String jsScript) {
-        return DEFAULT_SCRIPT + jsScript;
-    }
+    /** Extracts the data and the compression algo version from payload */
+    AuctionServerPayloadUnformattedData extract(AuctionServerPayloadFormattedData payload);
 }
