@@ -38,7 +38,10 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManagerCtor_SMinus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
+        // TODO(b/269798827) - Topics is not enabled on R
+        Assume.assumeTrue(
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.S
+                        || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
         final Context context = ApplicationProvider.getApplicationContext();
         assertThat(TopicsManager.get(context)).isNotNull();
         assertThat(context.getSystemService(TopicsManager.class)).isNull();
