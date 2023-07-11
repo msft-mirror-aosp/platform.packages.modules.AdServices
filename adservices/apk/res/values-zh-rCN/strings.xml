@@ -222,7 +222,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"您屏蔽的应用"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重置应用建议的数据"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"您使用的应用常常会记住您感兴趣的内容，以便为您提供个性化体验。应用还可以将与您的主题相关的信息存储在 Android 中。\n\n例如，如果您使用马拉松训练方面的应用，应用可能会判断您对跑鞋感兴趣。之后，如果您使用其他应用，可能会在其中看到第一款应用建议的跑鞋广告。\n\nAndroid 会定期自动删除应用建议的数据。您再次使用的应用可能会重新出现在列表中。或者，您可以阻止应用为您建议广告。\n\n您在应用中看到的广告可能已经过个性化定制，具体取决于此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"全新广告隐私权功能上线"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"全新广告隐私权功能现已上线"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"只在应用之间分享非常有限的信息，以帮助衡量广告效果"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我们即将推出一项名为“广告效果衡量”的全新广告隐私权功能。Android 只会在应用之间分享非常有限的信息（例如向您展示广告的时段），以帮助应用衡量广告效果。"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"您可以在广告隐私权设置中进行更改。"</string>
