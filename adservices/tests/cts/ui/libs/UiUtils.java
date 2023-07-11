@@ -104,10 +104,14 @@ public class UiUtils {
     }
 
     public static void setAsEuDevice() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices is_eea_device true");
     }
 
     public static void setAsRowDevice() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
     }
 

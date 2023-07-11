@@ -17,9 +17,7 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
-import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -84,7 +82,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     }
 
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
     public void isAdServicesEnabled(@NonNull IAdServicesCommonCallback callback) {
         boolean hasAccessAdServicesStatePermission =
                 PermissionHelper.hasAccessAdServicesStatePermission(mContext);
@@ -137,7 +135,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
      * Adservice Is enabled
      */
     @Override
-    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(MODIFY_ADSERVICES_STATE)
     public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         boolean hasModifyAdServicesStatePermission =
                 PermissionHelper.hasModifyAdServicesStatePermission(mContext);
@@ -250,7 +248,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     }
 
     @Override
-    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(ACCESS_ADSERVICES_STATE)
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
             @NonNull IEnableAdServicesCallback callback) {
