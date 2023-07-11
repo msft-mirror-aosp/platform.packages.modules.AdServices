@@ -4149,10 +4149,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getU18UxEnabled() {
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_U18_UX_ENABLED,
-                /* defaultValue */ DEFAULT_U18_UX_ENABLED);
+        return getEnableAdServicesSystemApi()
+                && DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_U18_UX_ENABLED,
+                        /* defaultValue */ DEFAULT_U18_UX_ENABLED);
     }
 
     static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
