@@ -81,6 +81,18 @@ public final class PhFlags implements Flags {
             "measurement_event_fallback_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
             "measurement_aggregate_encryption_key_coordinator_url";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED =
+            "measurement_aggregation_coordination_origin_enabled";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
+            "measurement_aggregation_coordinator_origin_list";
+
+    static final String KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
+            "measurement_default_aggregation_coordinator_origin";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
+            "measurement_aggregation_coordinator_path";
     static final String KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
@@ -874,6 +886,42 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
                 /* defaultValue */ MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+    }
+
+    @Override
+    public boolean getMeasurementAggregationCoordinatorOriginEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED);
+    }
+
+    @Override
+    public String getMeasurementAggregationCoordinatorOriginList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST);
+    }
+
+    @Override
+    public String getMeasurementDefaultAggregationCoordinatorOrigin() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                /* defaultValue */ MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN);
+    }
+
+    @Override
+    public String getMeasurementAggregationCoordinatorPath() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_PATH);
     }
 
     @Override
@@ -3199,6 +3247,26 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL
                         + " = "
                         + getMeasurementAggregateEncryptionKeyCoordinatorUrl());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED
+                        + " = "
+                        + getMeasurementAggregationCoordinatorOriginEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST
+                        + " = "
+                        + getMeasurementAggregationCoordinatorOriginList());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN
+                        + " = "
+                        + getMeasurementDefaultAggregationCoordinatorOrigin());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH
+                        + " = "
+                        + getMeasurementAggregationCoordinatorPath());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS
