@@ -309,6 +309,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mCustomAudienceDao,
                                     mAuctionServerAdSelectionDao,
                                     mAdSelectionServiceFilter,
+                                    mAdFilteringFeatureFactory.getAdFilterer(),
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
                                     mFlags,
