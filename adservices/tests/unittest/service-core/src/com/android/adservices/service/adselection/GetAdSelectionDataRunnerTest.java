@@ -73,7 +73,6 @@ import com.google.protobuf.ByteString;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -164,7 +163,7 @@ public class GetAdSelectionDataRunnerTest {
         }
     }
 
-    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
+    //    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -173,7 +172,7 @@ public class GetAdSelectionDataRunnerTest {
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
 
-        createAndPersistDBCustomAudiences();
+        createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
                         .setAdSelectionDataRequest(
@@ -263,7 +262,7 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertEquals(result.getGenerationId(), String.valueOf(adSelectionId));
     }
 
-    private void createAndPersistDBCustomAudiences() {
+    private void createAndPersistDBCustomAudiencesWithAdRenderId() {
         Map<String, AdTechIdentifier> nameAndBuyers =
                 Map.of(
                         "Shoes CA of Buyer 1", BUYER_1,
@@ -274,7 +273,8 @@ public class GetAdSelectionDataRunnerTest {
             AdTechIdentifier buyer = entry.getValue();
             String name = entry.getKey();
             DBCustomAudience thisCustomAudience =
-                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+                    DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
+                            .build();
             mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
         }
     }
