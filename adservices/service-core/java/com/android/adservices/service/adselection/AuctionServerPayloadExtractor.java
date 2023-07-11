@@ -17,14 +17,13 @@
 package com.android.adservices.service.adselection;
 
 /**
- * Payload formatter interface defines methods for a payload formatter.
+ * Payload extractor interface defines methods for a payload extractor.
  *
  * <p>Each formatted data contains a meta info byte as its first byte where the first 3 bits are for
  * compression algorithm version and the last 5 bits are for the formatter version.
  */
-public interface AuctionServerPayloadFormatter {
+public interface AuctionServerPayloadExtractor {
 
-    /** Generates payload from given data */
-    AuctionServerPayloadFormattedData apply(
-            AuctionServerPayloadUnformattedData unformattedData, int compressorVersion);
+    /** Extracts the data and the compression algo version from payload */
+    AuctionServerPayloadUnformattedData extract(AuctionServerPayloadFormattedData payload);
 }
