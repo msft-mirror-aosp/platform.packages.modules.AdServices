@@ -177,7 +177,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource() {
-        Source validSource = SourceFixture.getValidSource();
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .build();
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -217,6 +220,7 @@ public class MeasurementDaoTest {
         assertEquals(
                 validSource.getCoarseEventReportDestinations(),
                 source.getCoarseEventReportDestinations());
+        assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -271,8 +275,8 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
         assertEquals(
-                Integer.toString(validSource.getFlexEventReportSpec().getMaxReports()),
-                source.getMaxBucketIncrements());
+                validSource.getFlexEventReportSpec().getMaxReports(),
+                source.getMaxEventLevelReports().intValue());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
                 source.getTriggerSpecs());

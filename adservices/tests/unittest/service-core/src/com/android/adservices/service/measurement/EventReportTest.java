@@ -29,7 +29,6 @@ import static com.android.adservices.service.measurement.TriggerFixture.getValid
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -906,13 +905,13 @@ public final class EventReportTest {
         ReportSpec reportSpec =
                 new ReportSpec(
                         SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
-                        "3",
+                        3,
                         existingAttributes.toString(),
                         "{\"flip_probability\" :0.0024}");
         Source source =
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -989,7 +988,7 @@ public final class EventReportTest {
         Source source =
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1040,6 +1039,69 @@ public final class EventReportTest {
     }
 
     @Test
+    public void populateFromSourceAndTrigger_flexApiValueBased_valueAsExpected()
+            throws JSONException {
+        // Setup
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setEventAttributionStatus(
+                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
+                        .setEventTime(baseTime)
+                        .build();
+        String eventTriggers1 =
+                "[\n"
+                        + "{\n"
+                        + "  \"trigger_data\": \"1\",\n"
+                        + "  \"priority\": \"123\",\n"
+                        + "  \"value\": \"1001\",\n"
+                        + "  \"filters\": [{\n"
+                        + "    \"source_type\": [\"navigation\"],\n"
+                        + "    \"key_1\": [\"value_1\"] \n"
+                        + "   }]\n"
+                        + "},\n"
+                        + "{\n"
+                        + "  \"trigger_data\": \"2\",\n"
+                        + "  \"priority\": \"124\",\n"
+                        + "  \"value\": \"1002\",\n"
+                        + "  \"deduplication_key\": \"101\",\n"
+                        + "  \"filters\": [{\n"
+                        + "     \"source_type\": [\"event\"]\n"
+                        + "   }]\n"
+                        + "}\n"
+                        + "]\n";
+        Trigger trigger =
+                getValidTriggerBuilder()
+                        .setEventTriggers(eventTriggers1)
+                        .setTriggerTime(baseTime + 8000)
+                        .build();
+
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
+        EventReport report1 =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                source.getAttributionDestinations(trigger.getDestinationType()),
+                                true)
+                        .build();
+
+        assertEquals(
+                TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                report1.getReportTime() - baseTime);
+        assertEquals(1001, report1.getTriggerValue());
+    }
+
+    @Test
     public void populateFromSourceAndTrigger_flexApiValueBased_reportTimeWindow2()
             throws JSONException {
         // Setup
@@ -1049,7 +1111,7 @@ public final class EventReportTest {
         Source source =
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1097,64 +1159,6 @@ public final class EventReportTest {
         assertEquals(
                 TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 report1.getReportTime() - baseTime);
-    }
-
-    @Test
-    public void populateFromSourceAndTrigger_flexApiInvalidMaxBucket_throws() throws JSONException {
-        // Setup
-        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        long baseTime = System.currentTimeMillis();
-        Source source =
-                getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements("a")
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
-                        .setEventTime(baseTime)
-                        .build();
-        String eventTriggers1 =
-                "[\n"
-                        + "{\n"
-                        + "  \"trigger_data\": \"1\",\n"
-                        + "  \"priority\": \"123\",\n"
-                        + "  \"filters\": [{\n"
-                        + "    \"source_type\": [\"navigation\"],\n"
-                        + "    \"key_1\": [\"value_1\"] \n"
-                        + "   }]\n"
-                        + "},\n"
-                        + "{\n"
-                        + "  \"trigger_data\": \"2\",\n"
-                        + "  \"priority\": \"124\",\n"
-                        + "  \"deduplication_key\": \"101\",\n"
-                        + "  \"filters\": [{\n"
-                        + "     \"source_type\": [\"event\"]\n"
-                        + "   }]\n"
-                        + "}\n"
-                        + "]\n";
-        Trigger trigger =
-                getValidTriggerBuilder()
-                        .setEventTriggers(eventTriggers1)
-                        .setTriggerTime(baseTime + 18000)
-                        .build();
-
-        List<EventTrigger> eventTriggers = trigger.parseEventTriggers(true);
-        assertThrows(
-                NumberFormatException.class,
-                () ->
-                        new EventReport.Builder()
-                                .populateFromSourceAndTrigger(
-                                        source,
-                                        trigger,
-                                        eventTriggers.get(0),
-                                        sDebugKeyPair,
-                                        mEventReportWindowCalcDelegate,
-                                        mSourceNoiseHandler,
-                                        source.getAttributionDestinations(
-                                                trigger.getDestinationType()),
-                                        true)
-                                .build());
     }
 
     private Source createSourceForTest(

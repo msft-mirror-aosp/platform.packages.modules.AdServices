@@ -63,6 +63,9 @@ import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.json.JSONArray;
@@ -141,6 +144,8 @@ public class AttributionJobHandlerTest {
 
     @Mock Flags mFlags;
 
+    @Mock AdServicesLogger mLogger;
+
     class FakeDatastoreManager extends DatastoreManager {
 
         @Override
@@ -164,13 +169,15 @@ public class AttributionJobHandlerTest {
         mDatastoreManager = new FakeDatastoreManager();
         mEventReportWindowCalcDelegate = spy(new EventReportWindowCalcDelegate(mFlags));
         mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags));
+        mLogger = spy(AdServicesLoggerImpl.getInstance());
         mHandler =
                 new AttributionJobHandler(
                         mDatastoreManager,
                         mFlags,
                         new DebugReportApi(sContext, mFlags),
                         mEventReportWindowCalcDelegate,
-                        mSourceNoiseHandler);
+                        mSourceNoiseHandler,
+                        mLogger);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow()).thenReturn(100);
         when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()).thenReturn(10);
@@ -646,6 +653,7 @@ public class AttributionJobHandlerTest {
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(eventTriggers)
+                        .setTriggerTime(3)
                         .build();
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -653,6 +661,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(100L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(1L)
+                        .setExpiryTime(30)
                         .build();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -660,6 +669,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(2L)
+                        .setExpiryTime(30)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -3390,7 +3400,6 @@ public class AttributionJobHandlerTest {
         String adtechEnrollment = "AdTech1-Ads";
         AttributionConfig attributionConfig =
                 new AttributionConfig.Builder()
-                        .setExpiry(604800L)
                         .setSourceAdtech(adtechEnrollment)
                         .setSourcePriorityRange(new Pair<>(1L, 1000L))
                         .setSourceFilters(null)
@@ -3448,6 +3457,11 @@ public class AttributionJobHandlerTest {
         matchingSourceList.add(triggerEnrollmentSource2);
         when(mMeasurementDao.fetchTriggerMatchingSourcesForXna(any(), any()))
                 .thenReturn(matchingSourceList);
+        when(mMeasurementDao.getSourceDestinations(triggerEnrollmentSource1.getId()))
+                .thenReturn(
+                        Pair.create(
+                                triggerEnrollmentSource1.getAppDestinations(),
+                                triggerEnrollmentSource1.getWebDestinations()));
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
@@ -3462,7 +3476,7 @@ public class AttributionJobHandlerTest {
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).insertAggregateReport(any());
-        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mMeasurementDao).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(any());
         verify(mMeasurementDao)
                 .insertIgnoredSourceForEnrollment(xnaSource.getId(), trigger.getEnrollmentId());
@@ -3700,7 +3714,7 @@ public class AttributionJobHandlerTest {
                         .setEventReportWindow(234324L)
                         .setAggregatableReportWindow(234324L)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -3790,7 +3804,7 @@ public class AttributionJobHandlerTest {
                         .setEventReportWindow(234324L)
                         .setAggregatableReportWindow(234324L)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -3895,7 +3909,7 @@ public class AttributionJobHandlerTest {
         ReportSpec reportSpec =
                 new ReportSpec(
                         templateReportSpec.encodeTriggerSpecsToJSON(),
-                        Integer.toString(templateReportSpec.getMaxReports()),
+                        templateReportSpec.getMaxReports(),
                         existingAttributes.toString(),
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
@@ -3910,13 +3924,15 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setEventReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregatableReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(2)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(2)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -4027,7 +4043,7 @@ public class AttributionJobHandlerTest {
         ReportSpec reportSpec =
                 new ReportSpec(
                         templateReportSpec.encodeTriggerSpecsToJSON(),
-                        Integer.toString(templateReportSpec.getMaxReports()),
+                        templateReportSpec.getMaxReports(),
                         existingAttributes.toString(),
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
@@ -4043,13 +4059,15 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setEventTime(baseTime)
                         .setEventReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregatableReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -4196,7 +4214,7 @@ public class AttributionJobHandlerTest {
         ReportSpec reportSpec =
                 new ReportSpec(
                         templateReportSpec.encodeTriggerSpecsToJSON(),
-                        Integer.toString(templateReportSpec.getMaxReports()),
+                        templateReportSpec.getMaxReports(),
                         existingAttributes.toString(),
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
@@ -4212,13 +4230,15 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setEventTime(baseTime)
                         .setEventReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregatableReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -4375,7 +4395,7 @@ public class AttributionJobHandlerTest {
         ReportSpec reportSpec =
                 new ReportSpec(
                         templateReportSpec.encodeTriggerSpecsToJSON(),
-                        Integer.toString(templateReportSpec.getMaxReports()),
+                        templateReportSpec.getMaxReports(),
                         existingAttributes.toString(),
                         templateReportSpec.encodePrivacyParametersToJSONString());
 
@@ -4391,13 +4411,15 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setEventTime(baseTime)
                         .setEventReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setAggregatableReportWindow(
-                                baseTime + TimeUnit.DAYS.toMillis(3)
-                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
+                                baseTime
+                                        + TimeUnit.DAYS.toMillis(3)
+                                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -4475,6 +4497,92 @@ public class AttributionJobHandlerTest {
                 .updateSourceAttributedTriggers(any(), updatedReportSpec.capture());
         assertEquals(3, updatedReportSpec.getValue().getAttributedTriggers().size());
         verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
+    }
+
+    @Test
+    public void performAttributions_withXnaConfig_derivedSourceWinsAndIsLogged()
+            throws DatastoreException {
+        // Setup
+        String adtechEnrollment = "AdTech1-Ads";
+        AttributionConfig attributionConfig =
+                new AttributionConfig.Builder()
+                        .setExpiry(604800L)
+                        .setSourceAdtech(adtechEnrollment)
+                        .setSourcePriorityRange(new Pair<>(1L, 1000L))
+                        .setSourceFilters(null)
+                        .setPriority(50L)
+                        .setExpiry(604800L)
+                        .setFilterData(null)
+                        .build();
+        Trigger trigger =
+                getXnaTriggerBuilder()
+                        .setFilters(null)
+                        .setNotFilters(null)
+                        .setAttributionConfig(
+                                new JSONArray(
+                                                Collections.singletonList(
+                                                        attributionConfig.serializeAsJson()))
+                                        .toString())
+                        .build();
+
+        String aggregatableSource = SourceFixture.ValidSourceParams.buildAggregateSource();
+        // Its derived source will be winner due to install attribution and higher priority
+        Source xnaSource =
+                createXnaSourceBuilder()
+                        .setEnrollmentId(adtechEnrollment)
+                        // Priority changes to 50 for derived source
+                        .setPriority(1L)
+                        .setAggregateSource(aggregatableSource)
+                        .setFilterData(null)
+                        .setSharedAggregationKeys(
+                                new JSONArray(Arrays.asList("campaignCounts", "geoValue"))
+                                        .toString())
+                        .build();
+        Source triggerEnrollmentSource1 =
+                createXnaSourceBuilder()
+                        .setEnrollmentId(trigger.getEnrollmentId())
+                        .setPriority(2L)
+                        .setFilterData(null)
+                        .setAggregateSource(aggregatableSource)
+                        .build();
+
+        Source triggerEnrollmentSource2 =
+                createXnaSourceBuilder()
+                        .setEnrollmentId(trigger.getEnrollmentId())
+                        .setPriority(2L)
+                        .setFilterData(null)
+                        .setAggregateSource(aggregatableSource)
+                        .setInstallAttributed(false)
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(xnaSource);
+        matchingSourceList.add(triggerEnrollmentSource1);
+        matchingSourceList.add(triggerEnrollmentSource2);
+        when(mMeasurementDao.fetchTriggerMatchingSourcesForXna(any(), any()))
+                .thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
+        // Execution
+        boolean result = mHandler.performPendingAttributions();
+
+        // Assertion
+        assertTrue(result);
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+
+        ArgumentCaptor<MeasurementAttributionStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementAttributionStats.class);
+        verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
+        MeasurementAttributionStats measurementAttributionStats = statusArg.getValue();
+        assertTrue(measurementAttributionStats.isSourceDerived());
     }
 
     public static Trigger.Builder getXnaTriggerBuilder() {

@@ -80,7 +80,8 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mDebugReportApi);
+                        mDebugReportApi,
+                        mFlags);
         getExpectedTriggerDataDistributions();
     }
 

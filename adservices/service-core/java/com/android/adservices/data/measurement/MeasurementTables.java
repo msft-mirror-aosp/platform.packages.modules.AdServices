@@ -128,13 +128,14 @@ public final class MeasurementTables {
         String INSTALL_TIME = "install_time";
         String DEBUG_JOIN_KEY = "debug_join_key";
         String TRIGGER_SPECS = "trigger_specs";
-        String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
         String EVENT_ATTRIBUTION_STATUS = "event_attribution_status";
         String PRIVACY_PARAMETERS = "privacy_parameters";
+        String EVENT_REPORT_WINDOWS = "event_report_windows";
+        String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -480,7 +481,7 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
-                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + SourceContract.MAX_EVENT_LEVEL_REPORTS
                     + " INTEGER, "
                     + SourceContract.PLATFORM_AD_ID
                     + " TEXT, "
@@ -493,6 +494,8 @@ public final class MeasurementTables {
                     + SourceContract.EVENT_ATTRIBUTION_STATUS
                     + " TEXT, "
                     + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT, "
+                    + SourceContract.EVENT_REPORT_WINDOWS
                     + " TEXT "
                     + ")";
 
