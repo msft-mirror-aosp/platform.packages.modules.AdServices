@@ -96,6 +96,7 @@ public class PermissionsValidTest {
     }
 
     private void setAdditionalFlags() {
+        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
         ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check true");
@@ -104,6 +105,8 @@ public class PermissionsValidTest {
     }
 
     private void resetAdditionalFlags() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_enrollment_test_seed false");
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
         ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check null");
         ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check null");

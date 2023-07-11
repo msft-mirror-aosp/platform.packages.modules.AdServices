@@ -66,6 +66,11 @@ public class FlagsFactory {
             }
 
             @Override
+            public boolean getFledgeFetchCustomAudienceEnabled() {
+                return true;
+            }
+
+            @Override
             public boolean getMeasurementFlexibleEventReportingApiEnabled() {
                 return true;
             }

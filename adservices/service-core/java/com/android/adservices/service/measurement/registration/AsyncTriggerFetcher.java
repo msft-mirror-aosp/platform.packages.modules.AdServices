@@ -405,6 +405,25 @@ public class AsyncTriggerFetcher {
                         }
                     }
                 }
+                if (!eventTriggerDatum.isNull("value")) {
+                    if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                        Optional<Long> maybeValue =
+                                FetcherUtil.extractLong(eventTriggerDatum, "value");
+                        if (!maybeValue.isPresent()) {
+                            return Optional.empty();
+                        }
+                        validEventTriggerDatum.put("value", String.valueOf(maybeValue.get()));
+                    } else {
+                        try {
+                            validEventTriggerDatum.put(
+                                    "value",
+                                    String.valueOf(
+                                            Long.parseLong(eventTriggerDatum.getString("value"))));
+                        } catch (NumberFormatException e) {
+                            LogUtil.d(e, "getValidEventTriggerData: parsing value failed.");
+                        }
+                    }
+                }
                 if (!eventTriggerDatum.isNull("deduplication_key")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                         Optional<UnsignedLong> maybeDedupKey = FetcherUtil.extractUnsignedLong(
