@@ -126,7 +126,7 @@ cc_library_shared {
 android_library {
     name: "adservices-service-core-schema",
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     asset_dirs: [
         "schemas",
     ],

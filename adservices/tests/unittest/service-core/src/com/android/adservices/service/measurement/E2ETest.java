@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.reporting.DebugReportSe
 import static com.android.adservices.service.measurement.reporting.EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH;
 
-import android.content.AttributionSource;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.database.Cursor;
@@ -439,12 +438,6 @@ public abstract class E2ETest {
         }
 
         return uriConfigMap;
-    }
-
-    // 'uid', the parameter passed to Builder(), is unimportant for this test; we only need the
-    // package name.
-    public static AttributionSource getAttributionSource(String source) {
-        return new AttributionSource.Builder(1).setPackageName(source).build();
     }
 
     public static InputEvent getInputEvent() {
