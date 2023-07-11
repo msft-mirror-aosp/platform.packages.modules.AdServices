@@ -63,6 +63,7 @@ public class DebugKeyAccessorTest {
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(222222L);
     private static final long DEFAULT_JOIN_KEY_HASH_LIMIT = 100;
     private static final long DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT = 5;
+    public static final String PARENT_SOURCE_ID = "parentSourceId";
 
     @Mock private Flags mFlags;
     @Mock private AdServicesLogger mAdServicesLogger;
@@ -166,8 +167,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithSourceAdId_sourceDebugKeyPresent()
-            throws DatastoreException {
+    public void getDebugKeys_appToAppWithSourceAdId_debugKeysAbsent() throws DatastoreException {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -188,14 +188,13 @@ public class DebugKeyAccessorTest {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
-    public void getDebugKeys_appToAppWithTriggerAdId_triggerDebugKeyPresent()
-            throws DatastoreException {
+    public void getDebugKeys_appToAppWithTriggerAdId_debugKeysAbsent() throws DatastoreException {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -217,7 +216,7 @@ public class DebugKeyAccessorTest {
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
@@ -408,7 +407,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent()
+    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_debugKeysAbsent()
             throws DatastoreException {
         Trigger trigger =
                 createTrigger(
@@ -430,7 +429,7 @@ public class DebugKeyAccessorTest {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
@@ -2744,6 +2743,491 @@ public class DebugKeyAccessorTest {
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_xnaAppToAppWithAdIdPermission_debugKeysPresent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Source derivedSource =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        true,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(derivedSource, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeys_xnaAppToAppNoAdIdPermission_debugKeysAbsent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        false,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Source derivedSource =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        false,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(derivedSource, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeys_xnaWebToWebWithSameRegistrant_debugKeysPresent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Source derivedSource =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(derivedSource, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeys_xnaWebToWebSameJoinKeysAndDifferentRegistrants_debugKeysAbsent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        false,
+                        Uri.parse("https://com.registrant1"),
+                        "debug-join-key",
+                        null,
+                        null);
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        false,
+                                        Uri.parse("https://com.registrant2"),
+                                        "debug-join-key",
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeys_xnaAppToWebJoinKeysMatch_debugKeysAbsent() throws DatastoreException {
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        "debug-join-key",
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        "debug-join-key",
+                        null,
+                        null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeys_xnaWebToAppJoinKeysMatch_debugKeysAbsent() throws DatastoreException {
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        "debug-join-key",
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        false,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        "debug-join-key",
+                        null,
+                        null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatching_xnaAppToWeb_matchingAdIds_debugKeysPresent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        true,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        "test-ad-id",
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        "test-ad-id");
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatching_xnaWebToApp_matchingAdIds_debugKeysAbsent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        "test-ad-id"))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        "test-ad-id",
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaAppToAppWithAdIdPermission_debugKeysPresent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        true,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaAppToWeb_matchingAdIds_debugKeysPresent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        true,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        "test-ad-id",
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        "test-ad-id");
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaAppToWebJoinKeysMatch_sourceDebugKeysAbsent()
+            throws DatastoreException {
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        "debug-join-key",
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        "debug-join-key",
+                        null,
+                        null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaWebToApp_matchingAdIds_sourceDebugKeyAbsent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        "test-ad-id"))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        "test-ad-id",
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaWebToAppJoinKeysMatch_sourceDebugKeysAbsent()
+            throws DatastoreException {
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        "debug-join-key",
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        "debug-join-key",
+                        null,
+                        null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaWebToWebWithSameRegistrant_debugKeysPresent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaW2WSameJoinKeysAndDiffRegistrants_sourceDebugKeysAbsent()
+            throws DatastoreException {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        Uri.parse("https://com.registrant1"),
+                        "debug-join-key",
+                        null,
+                        null);
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        false,
+                                        Uri.parse("https://com.registrant2"),
+                                        "debug-join-key",
+                                        null,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
     }
 
     private static Trigger createTrigger(

@@ -203,6 +203,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
                 builder::setEventReportWindows);
+        setUnsignedLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
+                builder::setSharedDebugKey);
         return builder.build();
     }
 

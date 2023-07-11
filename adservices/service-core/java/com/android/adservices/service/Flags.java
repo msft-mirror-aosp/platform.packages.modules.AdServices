@@ -348,6 +348,13 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    boolean MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY = true;
+
+    /** Enable/disable shared_debug_key processing from source RBR. */
+    default boolean getMeasurementEnableSharedSourceDebugKey() {
+        return MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
+    }
+
     boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
 
     /** Returns whether verbose debug report generation is enabled. */
