@@ -187,10 +187,10 @@ public class SqliteObjectMapper {
                 builder::setCoarseEventReportDestinations);
         setTextColumn(
                 cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
-        setTextColumn(
+        setIntColumn(
                 cursor,
-                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
-                builder::setMaxBucketIncrements);
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
+                builder::setMaxEventLevelReports);
         setTextColumn(
                 cursor,
                 MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
@@ -199,6 +199,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                 builder::setPrivacyParameters);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
+                builder::setEventReportWindows);
         return builder.build();
     }
 

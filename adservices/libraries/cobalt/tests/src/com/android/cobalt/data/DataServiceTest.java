@@ -18,6 +18,10 @@ package com.android.cobalt.data;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import android.content.Context;
 
 import androidx.room.Room;
@@ -27,23 +31,38 @@ import androidx.test.runner.AndroidJUnit4;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 
 import com.google.cobalt.AggregateValue;
+import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.SystemProfile;
+import com.google.cobalt.UnencryptedObservationBatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @RunWith(AndroidJUnit4.class)
 public final class DataServiceTest {
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+
+    private static final Instant TIME = Instant.parse("2023-06-13T16:09:30.00Z");
     private static final int DAY_INDEX_1 = 19202;
     private static final int DAY_INDEX_2 = 19203;
+    private static final int DAY_INDEX_ENABLED = DAY_INDEX_1 - 30;
     private static final ReportKey REPORT_1 = ReportKey.create(1, 2, 3, 4);
     private static final ReportKey REPORT_2 =
             ReportKey.create(
@@ -58,23 +77,49 @@ public final class DataServiceTest {
     private static final EventVector EVENT_VECTOR_1 = EventVector.create(1, 5);
     private static final EventVector EVENT_VECTOR_2 = EventVector.create(2, 6);
     private static final EventVector EVENT_VECTOR_3 = EventVector.create(3, 7);
+    private static final EventVector EVENT_VECTOR_4 = EventVector.create(4, 8);
+    private static final int EVENT_COUNT_3 = 25;
+    private static final int EVENT_COUNT_4 = 7;
 
-    private static final ExecutorService sExecutor = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+    private static final CountEvent EVENT_RECORD_3 =
+            createCountEvent(SYSTEM_PROFILE_1, EVENT_VECTOR_3, EVENT_COUNT_3);
+    private static final CountEvent EVENT_RECORD_3_2 =
+            createCountEvent(SYSTEM_PROFILE_2, EVENT_VECTOR_3, EVENT_COUNT_3);
+    private static final CountEvent EVENT_RECORD_4 =
+            createCountEvent(SYSTEM_PROFILE_1, EVENT_VECTOR_4, EVENT_COUNT_4);
+    private static final CountEvent EVENT_RECORD_4_2 =
+            createCountEvent(SYSTEM_PROFILE_2, EVENT_VECTOR_4, EVENT_COUNT_4);
+    private static final UnencryptedObservationBatch OBSERVATION_1 =
+            UnencryptedObservationBatch.newBuilder()
+                    .setMetadata(
+                            ObservationMetadata.newBuilder().setSystemProfile(SYSTEM_PROFILE_1))
+                    .build();
+    private static final UnencryptedObservationBatch OBSERVATION_2 =
+            UnencryptedObservationBatch.newBuilder()
+                    .setMetadata(
+                            ObservationMetadata.newBuilder().setSystemProfile(SYSTEM_PROFILE_2))
+                    .build();
+    private static final ImmutableList<UnencryptedObservationBatch> EMPTY_OBSERVATIONS =
+            ImmutableList.of();
+    private static final ImmutableListMultimap<SystemProfile, CountEvent> EMPTY_EVENT_DATA =
+            ImmutableListMultimap.of();
 
-    private static final Instant sTime = Instant.parse("2023-06-13T16:09:30.00Z");
+    @Rule(order = 0)
+    public final MockitoRule mockito = MockitoJUnit.rule();
 
     private CobaltDatabase mCobaltDatabase;
     private DaoBuildingBlocks mDaoBuildingBlocks;
     private TestOnlyDao mTestOnlyDao;
     private DataService mDataService;
+    @Mock private ObservationGenerator mGenerator;
 
     @Before
-    public void createDb() {
-        mCobaltDatabase = Room.inMemoryDatabaseBuilder(sContext, CobaltDatabase.class).build();
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+        mCobaltDatabase = Room.inMemoryDatabaseBuilder(CONTEXT, CobaltDatabase.class).build();
         mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
-        mDataService = new DataService(sExecutor, mCobaltDatabase);
+        mDataService = new DataService(EXECUTOR, mCobaltDatabase);
     }
 
     @After
@@ -82,115 +127,123 @@ public final class DataServiceTest {
         mCobaltDatabase.close();
     }
 
-    private Instant sTimePlusHours(int hours) {
-        return sTime.plus(Duration.ofHours(hours));
+    private Instant timePlusHours(int hours) {
+        return TIME.plus(Duration.ofHours(hours));
     }
 
-    private Instant sTimePlusDays(int days) {
-        return sTime.plus(Duration.ofDays(days));
+    private Instant timePlusDays(int days) {
+        return TIME.plus(Duration.ofDays(days));
     }
 
-    private Instant sTimeMinusDays(int days) {
-        return sTime.minus(Duration.ofDays(days));
+    private Instant timeMinusDays(int days) {
+        return TIME.minus(Duration.ofDays(days));
+    }
+
+    private static CountEvent createCountEvent(
+            SystemProfile systemProfile, EventVector eventVector, int aggregateValue) {
+        return CountEvent.create(
+                SystemProfileEntity.getSystemProfileHash(systemProfile),
+                systemProfile,
+                eventVector,
+                AggregateValue.newBuilder().setIntegerValue(aggregateValue).build());
     }
 
     @Test
-    public void testLoggerEnabled_oneTime_stored() throws Exception {
-        assertThat(mDataService.loggerEnabled(sTime).get()).isEqualTo(sTime);
+    public void loggerEnabled_oneTime_stored() throws Exception {
+        assertThat(mDataService.loggerEnabled(TIME).get()).isEqualTo(TIME);
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
-                .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, sTime.toString());
+                .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, TIME.toString());
     }
 
     @Test
     public void loggerEnabled_multipleTimes_firstIsStored() throws Exception {
         // Set the logger as enabled, and again an hour later.
-        mDataService.loggerEnabled(sTime).get();
-        assertThat(mDataService.loggerEnabled(sTimePlusHours(1)).get()).isEqualTo(sTime);
+        mDataService.loggerEnabled(TIME).get();
+        assertThat(mDataService.loggerEnabled(timePlusHours(1)).get()).isEqualTo(TIME);
 
         // Check that the original initial enabled time is returned and set in the database
-        assertThat(mDataService.loggerEnabled(sTime).get()).isEqualTo(sTime);
+        assertThat(mDataService.loggerEnabled(TIME).get()).isEqualTo(TIME);
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
-                .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, sTime.toString());
+                .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, TIME.toString());
     }
 
     @Test
     public void loggerDisabled_notYetEnabled_stored() throws Exception {
         // Set the logger as disabled.
-        mDataService.loggerDisabled(sTime).get();
+        mDataService.loggerDisabled(TIME).get();
 
         // Check that the disabled time is set in the database.
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
-                .containsExactly(GlobalValueEntity.Key.INITIAL_DISABLED_TIME, sTime.toString());
+                .containsExactly(GlobalValueEntity.Key.INITIAL_DISABLED_TIME, TIME.toString());
     }
 
     @Test
     public void loggerDisabled_afterEnabled_stored() throws Exception {
         // Set the logger as enabled.
-        Instant enabledTime = sTime.minus(Duration.ofDays(1));
+        Instant enabledTime = TIME.minus(Duration.ofDays(1));
         mDataService.loggerEnabled(enabledTime).get();
 
         // Set the logger as disabled.
-        mDataService.loggerDisabled(sTime).get();
+        mDataService.loggerDisabled(TIME).get();
 
         // Check that the disabled time is set in the database.
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
                 .containsExactly(
                         GlobalValueEntity.Key.INITIAL_ENABLED_TIME, enabledTime.toString(),
-                        GlobalValueEntity.Key.INITIAL_DISABLED_TIME, sTime.toString());
+                        GlobalValueEntity.Key.INITIAL_DISABLED_TIME, TIME.toString());
     }
 
     @Test
     public void loggerDisabled_multipleTimesAfterEnabled_stored() throws Exception {
         // Set the logger as enabled.
-        Instant enabledTime = sTimeMinusDays(1);
+        Instant enabledTime = timeMinusDays(1);
         mDataService.loggerEnabled(enabledTime).get();
 
         // Set the logger as disabled, and again an hour later.
-        mDataService.loggerDisabled(sTime).get();
-        mDataService.loggerDisabled(sTimePlusHours(1)).get();
+        mDataService.loggerDisabled(TIME).get();
+        mDataService.loggerDisabled(timePlusHours(1)).get();
 
         // Check that the disabled time is set in the database.
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
                 .containsExactly(
                         GlobalValueEntity.Key.INITIAL_ENABLED_TIME, enabledTime.toString(),
-                        GlobalValueEntity.Key.INITIAL_DISABLED_TIME, sTime.toString());
+                        GlobalValueEntity.Key.INITIAL_DISABLED_TIME, TIME.toString());
     }
 
     @Test
     public void loggerEnabled_reenabledShortlyAfterDisabled_originalEnabledTime() throws Exception {
         // Set the logger as enabled.
-        mDataService.loggerEnabled(sTime).get();
+        mDataService.loggerEnabled(TIME).get();
 
         // Set the logger as disabled 10 days later.
-        mDataService.loggerDisabled(sTimePlusDays(10)).get();
+        mDataService.loggerDisabled(timePlusDays(10)).get();
 
         // Re-enable the logger after a day. Less than 2 days so the original enabled time is kept.
-        assertThat(mDataService.loggerEnabled(sTimePlusDays(11)).get()).isEqualTo(sTime);
+        assertThat(mDataService.loggerEnabled(timePlusDays(11)).get()).isEqualTo(TIME);
 
         // Check that the original initial time is kept and the disabled time is no longer set in
         // the database.
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
-                .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, sTime.toString());
+                .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, TIME.toString());
     }
 
     @Test
     public void loggerEnabled_reenabledAfterMoreThanTwoDaysDisabled_newEnabledTime()
             throws Exception {
         // Set the logger as enabled.
-        mDataService.loggerEnabled(sTime).get();
+        mDataService.loggerEnabled(TIME).get();
 
         // Set the logger as disabled 10 days later.
-        mDataService.loggerDisabled(sTimePlusDays(10)).get();
+        mDataService.loggerDisabled(timePlusDays(10)).get();
 
         // Re-enable the logger after 3 days. More than 2 days so the initial enabled time is reset.
-        assertThat(mDataService.loggerEnabled(sTimePlusDays(13)).get())
-                .isEqualTo(sTimePlusDays(13));
+        assertThat(mDataService.loggerEnabled(timePlusDays(13)).get()).isEqualTo(timePlusDays(13));
 
         // Check that the initial time is reset and the disabled time is no longer set in the
         // database.
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
                 .containsExactly(
-                        GlobalValueEntity.Key.INITIAL_ENABLED_TIME, sTimePlusDays(13).toString());
+                        GlobalValueEntity.Key.INITIAL_ENABLED_TIME, timePlusDays(13).toString());
     }
 
     @Test
@@ -416,5 +469,317 @@ public final class DataServiceTest {
                                 .setAggregateValue(
                                         AggregateValue.newBuilder().setIntegerValue(195).build())
                                 .build());
+    }
+
+    @Test
+    public void generateCountObservations_oneEvent_oneObservationStored() throws Exception {
+        // Initialize a report as up to date for sending observations up to the previous day.
+        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
+
+        // Mark a Count report as having occurred on the current day.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+
+        // Expect one CountEvent to be passed to the Obseration Generator.
+        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+                ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_RECORD_3);
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+                .thenReturn(ImmutableList.of(OBSERVATION_1));
+
+        // Generate and store the one observation for the current day.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations())
+                .containsExactly(ObservationStoreEntity.create(1, OBSERVATION_1));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
+    }
+
+    @Test
+    public void generateCountObservations_multipleEventVectors_oneObservationStored()
+            throws Exception {
+        // Initialize a report as up to date for sending observations up to the previous day.
+        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
+
+        // Mark a Count report as having occurred on the current day with 2 event vectors.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_4)
+                .get();
+
+        // Expect one CountEvent with two event vectors to be passed to the observation generator.
+        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+                ImmutableListMultimap.of(
+                        SYSTEM_PROFILE_1, EVENT_RECORD_3, SYSTEM_PROFILE_1, EVENT_RECORD_4);
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+                .thenReturn(ImmutableList.of(OBSERVATION_1));
+
+        // Generate and store the one observation for the current day.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations())
+                .containsExactly(ObservationStoreEntity.create(1, OBSERVATION_1));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
+    }
+
+    @Test
+    public void generateCountObservations_multipleSystemProfiles_twoObservationsStored()
+            throws Exception {
+        // Initialize a report as up to date for sending observations up to the previous day.
+        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
+
+        // Mark a Count report as having occurred on the current day with 2 system profiles.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_4)
+                .get();
+        // Expect two CountEvents to be passed to the Obseration Generator.
+        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+                ImmutableListMultimap.of(
+                        SYSTEM_PROFILE_1, EVENT_RECORD_3,
+                        SYSTEM_PROFILE_2, EVENT_RECORD_4_2);
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+                .thenReturn(ImmutableList.of(OBSERVATION_1, OBSERVATION_2));
+
+        // Generate and store the one observation for the current day.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations())
+                .containsExactly(
+                        ObservationStoreEntity.create(1, OBSERVATION_1),
+                        ObservationStoreEntity.create(2, OBSERVATION_2));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
+    }
+
+    @Test
+    public void generateCountObservations_multipleSystemProfilesAndEventVectors_allStored()
+            throws Exception {
+        // Initialize a report as up to date for sending observations up to the previous day.
+        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
+
+        // Mark a Count report as having occurred on the current day with 2 system profiles each
+        // with 2 event vectors.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_4)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_4)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+
+        // Expect two CountEvents to be passed to the Obseration Generator.
+        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+                ImmutableListMultimap.of(
+                        SYSTEM_PROFILE_1,
+                        EVENT_RECORD_3,
+                        SYSTEM_PROFILE_1,
+                        EVENT_RECORD_4,
+                        SYSTEM_PROFILE_2,
+                        EVENT_RECORD_3_2,
+                        SYSTEM_PROFILE_2,
+                        EVENT_RECORD_4_2);
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+                .thenReturn(ImmutableList.of(OBSERVATION_1, OBSERVATION_2));
+
+        // Generate and store the one observation for the current day.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations())
+                .containsExactly(
+                        ObservationStoreEntity.create(1, OBSERVATION_1),
+                        ObservationStoreEntity.create(2, OBSERVATION_2));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
+    }
+
+    @Test
+    public void generateCountObservations_newReport_noInitialBackfill() throws Exception {
+        // Generate and store the one observation for the current day.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations()).isEmpty();
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
+    }
+
+    @Test
+    public void generateCountObservations_initialBackfillAfterReenabled_onlySinceEnbaledTime()
+            throws Exception {
+        // Initialize a report as up to date for sending observations a week ago.
+        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 8));
+
+        // Expect empty CountEvent to be passed to the Obseration Generator for the days since the
+        // logger was re-enabled.
+        when(mGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
+                .thenReturn(EMPTY_OBSERVATIONS);
+        when(mGenerator.generateObservations(DAY_INDEX_1, EMPTY_EVENT_DATA))
+                .thenReturn(EMPTY_OBSERVATIONS);
+
+        // Generate and store the one observation for the current day.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_1 - 1, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verify(mGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, EMPTY_EVENT_DATA);
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations()).isEmpty();
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
+    }
+
+    @Test
+    public void generateCountObservations_backfillDailyReport_twoDaysStored() throws Exception {
+        // Initialize a report as up to date for sending observations a week ago.
+        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 8));
+
+        // Mark an AtLeastOnce report as having occurred two days ago and today.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1 - 2,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        EVENT_COUNT_3)
+                .get();
+
+        // Expect one CountEvent to be passed to the Obseration Generator for each of the two days.
+        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+                ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_RECORD_3);
+        when(mGenerator.generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA))
+                .thenReturn(EMPTY_OBSERVATIONS);
+        when(mGenerator.generateObservations(DAY_INDEX_1 - 2, expectedCountEvent))
+                .thenReturn(ImmutableList.of(OBSERVATION_1));
+        when(mGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
+                .thenReturn(EMPTY_OBSERVATIONS);
+        // After 7 days of generating observations, there should be no event data.
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+                .thenReturn(ImmutableList.of(OBSERVATION_2));
+
+        // Generate and store the observations for the three days of backfill.
+        mDataService
+                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .get();
+
+        // Check that the Obseration Generator was called correctly.
+        verify(mGenerator).generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA);
+        verify(mGenerator).generateObservations(DAY_INDEX_1 - 2, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verifyNoMoreInteractions(mGenerator);
+
+        assertThat(mDaoBuildingBlocks.queryOldestObservations())
+                .containsExactly(
+                        ObservationStoreEntity.create(1, OBSERVATION_1),
+                        ObservationStoreEntity.create(2, OBSERVATION_2));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(DAY_INDEX_1));
     }
 }

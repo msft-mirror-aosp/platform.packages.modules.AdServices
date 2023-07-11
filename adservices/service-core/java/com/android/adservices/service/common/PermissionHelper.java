@@ -101,18 +101,24 @@ public final class PermissionHelper {
      *     modification API.
      */
     public static boolean hasModifyAdServicesStatePermission(@NonNull Context context) {
-        int status =
-                context.checkCallingOrSelfPermission(AdServicesPermissions.MODIFY_ADSERVICES_STATE);
-        return status == PackageManager.PERMISSION_GRANTED;
+        return PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.MODIFY_ADSERVICES_STATE)
+                || PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT);
     }
 
     /**
      * @return {@code true} if the caller has the permission to invoke AdService's state access API.
      */
     public static boolean hasAccessAdServicesStatePermission(@NonNull Context context) {
-        int status =
-                context.checkCallingOrSelfPermission(AdServicesPermissions.ACCESS_ADSERVICES_STATE);
-        return status == PackageManager.PERMISSION_GRANTED;
+        return PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.ACCESS_ADSERVICES_STATE)
+                || PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT);
     }
 
     private static boolean hasPermission(

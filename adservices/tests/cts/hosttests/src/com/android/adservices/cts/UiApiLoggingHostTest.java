@@ -92,7 +92,6 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
         disableGlobalKillSwitch();
-
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck(/* enrolmentCheckFlag */ "1");
         stopPacakageAPI();
@@ -158,9 +157,8 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
-        ITestDevice device = getDevice();
-        int apiLevel = device.getApiLevel();
-        if (apiLevel < ANDROID_T_API_LEVEL) {
+        if (mApiLevel < ANDROID_T_API_LEVEL) {
+            ITestDevice device = getDevice();
             device.reboot();
             device.waitForDeviceAvailable();
             // Sleep 30s to wait for AdExtBootCompletedReceiver execution

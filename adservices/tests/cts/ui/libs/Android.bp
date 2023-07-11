@@ -29,6 +29,7 @@ android_library {
         "truth-prebuilt",
         "androidx.test.uiautomator_uiautomator",
         "adservices-test-utility",
+        "framework-adservices-lib",
     ],
     libs: [
         "android.test.base",
