@@ -84,6 +84,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -449,6 +450,13 @@ public class TopicsServiceImplTest {
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
@@ -463,6 +471,14 @@ public class TopicsServiceImplTest {
 
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
@@ -474,6 +490,14 @@ public class TopicsServiceImplTest {
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
