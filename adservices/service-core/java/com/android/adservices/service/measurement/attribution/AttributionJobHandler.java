@@ -349,8 +349,8 @@ class AttributionJobHandler {
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
             int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-            if (Debug.isAttributionDebugReportPermitted(source, trigger, sourceDebugKey,
-                      triggerDebugKey)) {
+            if (Debug.isAttributionDebugReportPermitted(
+                    source, trigger, sourceDebugKey, triggerDebugKey)) {
                 debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
             }
             AggregateReport.Builder aggregateReportBuilder =
@@ -532,7 +532,9 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (trigger.getTriggerTime() > source.getEventReportWindow()
+        if (mEventReportWindowCalcDelegate.getReportingTime(
+                                source, trigger.getTriggerTime(), trigger.getDestinationType())
+                        == -1
                 && (source.getTriggerSpecs() == null || source.getTriggerSpecs().isEmpty())) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
@@ -1003,8 +1005,8 @@ class AttributionJobHandler {
         Uri publisher = source.getPublisher();
         Optional<Uri> publisherTopPrivateDomain =
                 source.getPublisherType() == EventSurfaceType.APP
-                ? Optional.of(publisher)
-                : Web.topPrivateDomainAndScheme(publisher);
+                        ? Optional.of(publisher)
+                        : Web.topPrivateDomainAndScheme(publisher);
         if (!triggerDestinationTopPrivateDomain.isPresent()
                 || !publisherTopPrivateDomain.isPresent()) {
             return Optional.empty();
@@ -1087,8 +1089,8 @@ class AttributionJobHandler {
     }
 
     private long getAggregateReportDelay() {
-        long reportDelayFromDefaults = (long) (Math.random() * AGGREGATE_REPORT_DELAY_SPAN
-                    + AGGREGATE_REPORT_MIN_DELAY);
+        long reportDelayFromDefaults =
+                (long) (Math.random() * AGGREGATE_REPORT_DELAY_SPAN + AGGREGATE_REPORT_MIN_DELAY);
 
         if (!mFlags.getMeasurementEnableConfigurableAggregateReportDelay()) {
             return reportDelayFromDefaults;
@@ -1110,7 +1112,7 @@ class AttributionJobHandler {
 
         try {
             final long minDelay = Long.parseLong(split[0].trim());
-            final long delaySpan =  Long.parseLong(split[1].trim());
+            final long delaySpan = Long.parseLong(split[1].trim());
             return (long) (Math.random() * delaySpan + minDelay);
         } catch (NumberFormatException e) {
             LogUtil.e(e, "Configurable aggregate report delay parsing failed.");

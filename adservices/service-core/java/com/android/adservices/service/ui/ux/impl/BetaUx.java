@@ -47,10 +47,4 @@ public class BetaUx implements PrivacySandboxUx {
             ConsentManager consentManager) {
         enrollmentChannel.enroll(context, consentManager);
     }
-
-    /** Select one of the available Beta UX modes for the user. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284175944): Add mode logic.
-    }
 }
