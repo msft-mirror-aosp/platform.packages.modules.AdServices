@@ -150,7 +150,8 @@ public class UxEngineTest {
         verify(mConsentManager, never()).isEntryPointEnabled();
 
         verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        verify(mConsentManager).setEnrollmentChannel(UNSUPPORTED_UX, null);
+        // Enrollment channel is not set when null.
+        verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
 
         ExtendedMockito.verify(
                 () ->
@@ -188,7 +189,8 @@ public class UxEngineTest {
         verify(mUxStatesManager, never()).getFlag(KEY_U18_UX_ENABLED);
 
         verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        verify(mConsentManager).setEnrollmentChannel(UNSUPPORTED_UX, null);
+        // Enrollment channel is not set when null.
+        verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
 
         ExtendedMockito.verify(
                 () ->
@@ -230,7 +232,8 @@ public class UxEngineTest {
         verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
         verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        verify(mConsentManager).setEnrollmentChannel(UNSUPPORTED_UX, null);
+        // Enrollment channel is not set when null.
+        verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
     }
 
     // U18 UX not selected due to ineligible account type, which results in no U18 enrollment
@@ -269,7 +272,8 @@ public class UxEngineTest {
         verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
         verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        verify(mConsentManager).setEnrollmentChannel(UNSUPPORTED_UX, null);
+        // Enrollment channel is not set when null.
+        verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
     }
 
     // U18 UX selected, which results in U18 enrollment action and no more UX checks.
@@ -413,7 +417,8 @@ public class UxEngineTest {
         verify(mConsentManager).isAdultAccount();
 
         verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        verify(mConsentManager).setEnrollmentChannel(UNSUPPORTED_UX, null);
+        // Enrollment channel is not set when null.
+        verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
     }
 
     // GA UX selected, which results in GA UX enrollment action and no more UX checks.
@@ -515,7 +520,8 @@ public class UxEngineTest {
         verify(mConsentManager).isAdultAccount();
 
         verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        verify(mConsentManager).setEnrollmentChannel(UNSUPPORTED_UX, null);
+        // Enrollment channel is not set when null.
+        verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
 
         ExtendedMockito.verify(
                 () -> ConsentNotificationJobService.schedule(any(), anyBoolean(), anyBoolean()),
@@ -582,7 +588,7 @@ public class UxEngineTest {
     // Beta UX selected, which results in Beta UX enrollment action and no more UX checks. But
     // the call is the result of an entry point request and no enrollment can happen.
     @Test
-    public void startTest_betaUxEligible_entryPointDisabled() {
+    public void startTest_betaUxEligible_entryPointEnabled() {
         boolean entryPointEnabled = true;
         boolean isU18Account = false;
         boolean isAdultAccount = true;

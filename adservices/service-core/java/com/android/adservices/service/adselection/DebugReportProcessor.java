@@ -22,8 +22,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
-import android.util.Pair;
 
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -107,7 +107,7 @@ class DebugReportProcessor {
         checkNotNull(debugReports);
         checkNotNull(postAuctionSignals);
         List<Uri> debugUrls = new ArrayList<>();
-        Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap =
+        Map<CustomAudienceSignals, String> caToRejectReasonMap =
                 collectRejectReasonFromDebugReports(debugReports);
         for (DebugReport debugReport : debugReports) {
             Uri debugUri = getDebugUri(debugReport, postAuctionSignals, caToRejectReasonMap);
@@ -118,16 +118,14 @@ class DebugReportProcessor {
         return applyPerAdTechLimit(debugUrls);
     }
 
-    private static Map<Pair<AdTechIdentifier, String>, String> collectRejectReasonFromDebugReports(
+    private static Map<CustomAudienceSignals, String> collectRejectReasonFromDebugReports(
             List<DebugReport> debugReports) {
-        Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap = new HashMap<>();
+        Map<CustomAudienceSignals, String> caToRejectReasonMap = new HashMap<>();
         for (DebugReport debugReport : debugReports) {
             if (Objects.nonNull(debugReport.getSellerRejectReason())
                     && VALID_REJECT_REASON_SET.contains(debugReport.getSellerRejectReason())) {
                 caToRejectReasonMap.put(
-                        Pair.create(
-                                debugReport.getCustomAudienceBuyer(),
-                                debugReport.getCustomAudienceName()),
+                        debugReport.getCustomAudienceSignals(),
                         debugReport.getSellerRejectReason());
             }
         }
@@ -137,7 +135,7 @@ class DebugReportProcessor {
     private static Uri getDebugUri(
             @NonNull DebugReport debugReport,
             @NonNull PostAuctionSignals postAuctionSignals,
-            @NonNull Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap) {
+            @NonNull Map<CustomAudienceSignals, String> caToRejectReasonMap) {
         Uri debugUri;
         boolean isWinnerCA =
                 isDebugReportForCustomAudience(
@@ -154,7 +152,7 @@ class DebugReportProcessor {
         // Seller field is only set for seller specific debug reports.
         AdTechIdentifier adTechIdentifier =
                 Objects.isNull(debugReport.getSeller())
-                        ? debugReport.getCustomAudienceBuyer()
+                        ? debugReport.getCustomAudienceSignals().getBuyer()
                         : debugReport.getSeller();
         if (!hasValidUriForAdTech(debugUri, adTechIdentifier)) {
             return null;
@@ -189,8 +187,8 @@ class DebugReportProcessor {
         if (Objects.isNull(customAudienceBuyer) || Objects.isNull(customAudienceName)) {
             return false;
         }
-        return customAudienceBuyer.equals(debugReport.getCustomAudienceBuyer())
-                && customAudienceName.equals(debugReport.getCustomAudienceName());
+        return customAudienceBuyer.equals(debugReport.getCustomAudienceSignals().getBuyer())
+                && customAudienceName.equals(debugReport.getCustomAudienceSignals().getName());
     }
 
     private static boolean isDebugReportForCustomAudienceBuyer(
@@ -199,13 +197,13 @@ class DebugReportProcessor {
         if (Objects.isNull(customAudienceBuyer)) {
             return false;
         }
-        return customAudienceBuyer.equals(debugReport.getCustomAudienceBuyer());
+        return customAudienceBuyer.equals(debugReport.getCustomAudienceSignals().getBuyer());
     }
 
     private static Map<String, String> collectVariablesFromAdAuction(
             @NonNull DebugReport debugReport,
             @NonNull PostAuctionSignals signals,
-            @NonNull Map<Pair<AdTechIdentifier, String>, String> caToRejectReasonMap,
+            @NonNull Map<CustomAudienceSignals, String> caToRejectReasonMap,
             boolean isWinningUri) {
         Map<String, String> templateToVariableMap = new HashMap<>();
         templateToVariableMap.put(
@@ -233,10 +231,7 @@ class DebugReportProcessor {
         templateToVariableMap.put(
                 REJECT_REASON_VARIABLE_TEMPLATE,
                 caToRejectReasonMap.getOrDefault(
-                        Pair.create(
-                                debugReport.getCustomAudienceBuyer(),
-                                debugReport.getCustomAudienceName()),
-                        DEFAULT_REJECT_REASON));
+                        debugReport.getCustomAudienceSignals(), DEFAULT_REJECT_REASON));
         return templateToVariableMap;
     }
 

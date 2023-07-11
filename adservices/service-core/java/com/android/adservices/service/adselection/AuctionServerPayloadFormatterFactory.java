@@ -16,24 +16,53 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.LoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
-/** Factory for {@link AuctionServerPayloadFormatter} */
+import com.google.common.collect.ImmutableList;
+
+/** Factory for {@link AuctionServerPayloadFormatter} and {@link AuctionServerPayloadExtractor} */
 public class AuctionServerPayloadFormatterFactory {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
-    static final String NO_IMPLEMENTATION_FOUND =
-            "No payload formatter implementation found for version %s";
+    static final String NO_IMPLEMENTATION_FOUND = "No %s implementation found for version %s";
 
     /** Returns an implementation for the {@link AuctionServerPayloadFormatter} */
-    public static AuctionServerPayloadFormatter getPayloadFormatter(int version) {
+    @NonNull
+    public static AuctionServerPayloadFormatter createPayloadFormatter(
+            int version, @NonNull ImmutableList<Integer> availableBucketSizes) {
+        Preconditions.checkCollectionNotEmpty(availableBucketSizes, "available bucket sizes.");
+
         if (version == AuctionServerPayloadFormatterV0.VERSION) {
-            return new AuctionServerPayloadFormatterV0();
+            return new AuctionServerPayloadFormatterV0(availableBucketSizes);
         }
 
-        String errMsg = String.format(NO_IMPLEMENTATION_FOUND, version);
+        String errMsg =
+                String.format(
+                        NO_IMPLEMENTATION_FOUND,
+                        AuctionServerPayloadFormatter.class.getName(),
+                        version);
+        sLogger.e(errMsg);
+        throw new IllegalArgumentException(errMsg);
+    }
+
+    /** Returns an implementation for the {@link AuctionServerPayloadExtractor} */
+    @NonNull
+    public static AuctionServerPayloadExtractor createPayloadExtractor(int version) {
+        if (version == AuctionServerPayloadFormatterV0.VERSION) {
+            // Extract data does not need bucket size list.
+            return new AuctionServerPayloadFormatterV0(ImmutableList.of());
+        }
+
+        String errMsg =
+                String.format(
+                        NO_IMPLEMENTATION_FOUND,
+                        AuctionServerPayloadExtractor.class.getName(),
+                        version);
         sLogger.e(errMsg);
         throw new IllegalArgumentException(errMsg);
     }

@@ -102,6 +102,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPT
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ENABLED;
@@ -334,6 +335,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AUCTION_SERVER_E
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ENABLED;
@@ -522,6 +524,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
 @SmallTest
@@ -5160,6 +5163,42 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeAdSelectionPrebuiltUriEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerPayloadBucketSizes() {
+        assertThat(FlagsFactory.getFlags().getFledgeAuctionServerPayloadBucketSizes())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+
+        final ImmutableList<Integer> phOverridingValue = ImmutableList.of(2, 3);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                phOverridingValue.stream()
+                        .map(integer -> integer.toString())
+                        .collect(Collectors.joining(",")),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeAuctionServerPayloadBucketSizes()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerPayloadBucketSizes_invalidFlagString() {
+        assertThat(FlagsFactory.getFlags().getFledgeAuctionServerPayloadBucketSizes())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+
+        final ImmutableList<Integer> phOverridingValue = ImmutableList.of(2, 3);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                "Non,sense,list",
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThrows(
+                NumberFormatException.class,
+                () -> phFlags.getFledgeAuctionServerPayloadBucketSizes());
     }
 
     @Test

@@ -17,7 +17,7 @@ package {
 }
 
 android_test {
-    name: "AdServicesGaUxNotificationTriggerCtsRootTest",
+    name: "AdServicesGaUxDebugChannelCtsRootTest",
     srcs: [
         "src/**/*.java",
     ],
