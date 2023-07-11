@@ -491,16 +491,17 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
                 aggregateReport.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                aggregateReport.getAggregationCoordinatorOrigin().toString());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");
         }
     }
 
-    /**
-     * Inserts an AggregateEncryptionKey record into the given database.
-     */
-    private static void insertToDb(AggregateEncryptionKey aggregateEncryptionKey, SQLiteDatabase db)
+    /** Inserts an AggregateEncryptionKey record into the given database. */
+    public static void insertToDb(AggregateEncryptionKey aggregateEncryptionKey, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateEncryptionKey.ID, aggregateEncryptionKey.getId());
@@ -510,6 +511,9 @@ public abstract class AbstractDbIntegrationTest {
                 aggregateEncryptionKey.getPublicKey());
         values.put(MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 aggregateEncryptionKey.getExpiry());
+        values.put(
+                MeasurementTables.AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN,
+                aggregateEncryptionKey.getAggregationCoordinatorOrigin().toString());
         long row = db.insert(MeasurementTables.AggregateEncryptionKey.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateEncryptionKey insertion failed.");

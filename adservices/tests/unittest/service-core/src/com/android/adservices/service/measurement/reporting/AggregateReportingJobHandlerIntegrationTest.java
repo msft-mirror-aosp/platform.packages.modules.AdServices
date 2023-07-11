@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +82,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
 
         AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
-        when(mockKeyManager.getAggregateEncryptionKeys(captorNumberOfKeys.capture()))
+        when(mockKeyManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
                         invocation -> {
                             List<AggregateEncryptionKey> keys = new ArrayList<>();
@@ -98,7 +99,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), Mockito.any());
+                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any());
         } catch (IOException e) {
             Assert.fail();
         }
