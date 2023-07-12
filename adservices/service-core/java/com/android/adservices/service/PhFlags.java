@@ -1461,6 +1461,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1470,6 +1471,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeFetchCustomAudienceEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -2878,6 +2880,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean isBackCompatActivityFeatureEnabled() {
         // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
