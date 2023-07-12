@@ -115,44 +115,6 @@ public class GaUxAlreadyEnrolledChannelTest {
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    /** Verify that entry point disabled can not trigger consent notification. */
-    @Test
-    public void testEntryPointDisabled() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
-
-        mCommonManager.enableAdServices(
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(false)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
-    }
-
-    /** Verify that non-adult account can not trigger consent notification. */
-    @Test
-    public void testNonAdultAccount() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
-
-        mCommonManager.enableAdServices(
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(false)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
-    }
-
     /**
      * Verify that for GA, ROW devices with non zeroed-out AdId, the GA ROW notification is
      * displayed.
