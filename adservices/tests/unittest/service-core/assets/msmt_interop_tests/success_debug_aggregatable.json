@@ -234,8 +234,7 @@
               "key": "0x11",
               "value": 333
             }
-          ],
-          "source_debug_key": "111"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239176000"
@@ -262,8 +261,7 @@
               "key": "0x13",
               "value": 555
             }
-          ],
-          "trigger_debug_key": "666"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239178000"

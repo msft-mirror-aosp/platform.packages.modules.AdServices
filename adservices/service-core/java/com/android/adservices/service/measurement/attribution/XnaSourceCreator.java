@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
@@ -49,6 +50,12 @@ import java.util.stream.Collectors;
 /** Class facilitates creation of derived source for XNA. */
 public class XnaSourceCreator {
     private static final String HEX_PREFIX = "0x";
+    private final Flags mFlags;
+
+    public XnaSourceCreator(@NonNull Flags flags) {
+        mFlags = flags;
+    }
+
     /**
      * Generates derived sources using the trigger and parent sources.
      *
@@ -184,9 +191,15 @@ public class XnaSourceCreator {
                         .map(installTime -> installTime < trigger.getTriggerTime())
                         .orElse(false);
         builder.setInstallAttributed(isInstallAttributed);
-
-        // Skip copying these parameters on the derived source
-        builder.setDebugKey(null);
+        builder.setSharedDebugKey(null);
+        if (mFlags.getMeasurementEnableSharedSourceDebugKey()) {
+            builder.setDebugKey(parentSource.getSharedDebugKey());
+        } else {
+            builder.setDebugKey(null);
+        }
+        // Don't let the serving Ad-tech share the AdId and join key with the derived source
+        builder.setDebugAdId(null);
+        builder.setDebugJoinKey(null);
         builder.setAggregateReportDedupKeys(new ArrayList<>());
         builder.setEventReportDedupKeys(new ArrayList<>());
         return builder.build();

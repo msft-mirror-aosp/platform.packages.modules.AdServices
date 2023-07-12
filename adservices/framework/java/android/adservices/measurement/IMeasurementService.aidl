@@ -17,6 +17,7 @@
 package android.adservices.measurement;
 
 import android.adservices.common.CallerMetadata;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
@@ -35,6 +36,8 @@ interface IMeasurementService {
     void registerWebSource(in WebSourceRegistrationRequestInternal params,
             in CallerMetadata callerMetadata, in IMeasurementCallback callback);
     void registerWebTrigger(in WebTriggerRegistrationRequestInternal params,
+            in CallerMetadata callerMetadata, in IMeasurementCallback callback);
+    void registerSource(in SourceRegistrationRequestInternal params,
             in CallerMetadata callerMetadata, in IMeasurementCallback callback);
     void getMeasurementApiStatus(in StatusParam statusParam, in CallerMetadata callerMetadata,
             in IMeasurementApiStatusCallback callback);

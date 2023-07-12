@@ -159,9 +159,6 @@ public class AdBidGeneratorImplTest {
                             adWithBid ->
                                     GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setCustomAudienceName("test_ca")
-                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
-                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
                                             .build())
                     .collect(Collectors.toList());
     private static final List<GenerateBidResult> GENERATE_BIDS_RESPONSE_WITH_AD_COST =
@@ -170,9 +167,6 @@ public class AdBidGeneratorImplTest {
                             adWithBid ->
                                     GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setCustomAudienceName("test_ca")
-                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
-                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
                                             .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                                             .build())
                     .collect(Collectors.toList());
@@ -184,16 +178,10 @@ public class AdBidGeneratorImplTest {
                                 if (adWithBid.getBid() == BIDS.get(3)) {
                                     return GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setCustomAudienceName("test_ca")
-                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
-                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
                                             .build();
                                 } else {
                                     return GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setCustomAudienceName("test_ca")
-                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
-                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
                                             .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                                             .build();
                                 }
@@ -206,9 +194,6 @@ public class AdBidGeneratorImplTest {
                             adWithBid ->
                                     GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setCustomAudienceName("test_ca")
-                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
-                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
                                             .build())
                     .collect(Collectors.toList());
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
@@ -1050,9 +1035,6 @@ public class AdBidGeneratorImplTest {
                             mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
                             GenerateBidResult.Builder builder =
                                     GenerateBidResult.builder()
-                                            .setCustomAudienceName("test_ca")
-                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
-                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
                                             .setWinDebugReportUri(winUri)
                                             .setLossDebugReportUri(lossUri);
                             return FluentFuture.from(
@@ -1098,12 +1080,12 @@ public class AdBidGeneratorImplTest {
                 AdBiddingOutcome.builder()
                         .setAdWithBid(AD_WITH_BIDS.get(2))
                         .setCustomAudienceBiddingInfo(mCustomAudienceBiddingInfo)
-                        .setDebugReport(DebugReport.builder()
-                                .setCustomAudienceName(CUSTOM_AUDIENCE_WITH_EMPTY_ADS.getName())
-                                .setCustomAudienceBuyer(CUSTOM_AUDIENCE_WITH_EMPTY_ADS.getBuyer())
-                                .setWinDebugReportUri(winUri)
-                                .setLossDebugReportUri(lossUri)
-                                .build())
+                        .setDebugReport(
+                                DebugReport.builder()
+                                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                                        .setWinDebugReportUri(winUri)
+                                        .setLossDebugReportUri(lossUri)
+                                        .build())
                         .build();
         runAdBiddingPerCAProcessLoggerLatch.await();
         // Then we can test the result by assertion,
@@ -1924,7 +1906,8 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    @Ignore("b/242895704")
+    // TODO(b/290846406): Remove ignore annotation once test is fixed and verified
+    @Ignore("b/290846406")
     public void testRunAdBiddingPerCABiddingTimesOut() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,

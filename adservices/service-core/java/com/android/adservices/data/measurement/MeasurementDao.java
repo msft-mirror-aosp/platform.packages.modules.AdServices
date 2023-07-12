@@ -56,8 +56,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -136,6 +138,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
                 trigger.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
+                getNullableUriString(trigger.getAggregationCoordinatorOrigin()));
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -416,15 +421,22 @@ class MeasurementDao implements IMeasurementDao {
                     MeasurementTables.SourceContract.TRIGGER_SPECS,
                     source.getFlexEventReportSpec().encodeTriggerSpecsToJSON());
             values.put(
-                    MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
-                    source.getFlexEventReportSpec().getMaxReports());
-            values.put(
                     MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
                     source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                     source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
         }
+        values.put(
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
+                source.getMaxEventLevelReports());
+        values.put(
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
+                source.getEventReportWindows());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
+                getNullableUnsignedLong(source.getSharedDebugKey()));
+
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -1948,6 +1960,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 aggregateEncryptionKey.getExpiry());
+        values.put(
+                MeasurementTables.AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN,
+                aggregateEncryptionKey.getAggregationCoordinatorOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -1961,8 +1976,8 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
-            throws DatastoreException {
+    public List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(
+            Uri coordinatorOrigin, long expiry) throws DatastoreException {
         List<AggregateEncryptionKey> aggregateEncryptionKeys = new ArrayList<>();
         try (Cursor cursor =
                 mSQLTransaction
@@ -1970,8 +1985,13 @@ class MeasurementDao implements IMeasurementDao {
                         .query(
                                 MeasurementTables.AggregateEncryptionKey.TABLE,
                                 /* columns= */ null,
-                                MeasurementTables.AggregateEncryptionKey.EXPIRY + " >= ?",
-                                new String[] {String.valueOf(expiry)},
+                                MeasurementTables.AggregateEncryptionKey.EXPIRY
+                                        + " >= ? "
+                                        + " AND "
+                                        + MeasurementTables.AggregateEncryptionKey
+                                                .AGGREGATION_COORDINATOR_ORIGIN
+                                        + " = ?",
+                                new String[] {String.valueOf(expiry), coordinatorOrigin.toString()},
                                 /* groupBy= */ null,
                                 /* having= */ null,
                                 /* orderBy= */ null,
@@ -2035,6 +2055,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
                 aggregateReport.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                aggregateReport.getAggregationCoordinatorOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2075,15 +2098,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<String> getPendingAggregateReportIdsInWindow(
+    public Map<String, List<String>> getPendingAggregateReportIdsByCoordinatorInWindow(
             long windowStartTime, long windowEndTime) throws DatastoreException {
-        List<String> aggregateReports = new ArrayList<>();
+        Map<String, List<String>> result = new HashMap<>();
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
                         .query(
                                 MeasurementTables.AggregateReport.TABLE,
-                                /* columns= */ null,
+                                /* columns= */ new String[] {
+                                    MeasurementTables.AggregateReport.ID,
+                                    MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                                },
                                 MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
                                         + " >= ? AND "
                                         + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME
@@ -2100,11 +2126,19 @@ class MeasurementDao implements IMeasurementDao {
                                 /* orderBy= */ "RANDOM()",
                                 /* limit= */ null)) {
             while (cursor.moveToNext()) {
-                aggregateReports.add(
+                String coordinator =
                         cursor.getString(
-                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AggregateReport
+                                                .AGGREGATION_COORDINATOR_ORIGIN));
+                result.putIfAbsent(coordinator, new ArrayList<>());
+                result.get(coordinator)
+                        .add(
+                                cursor.getString(
+                                        cursor.getColumnIndex(
+                                                MeasurementTables.AggregateReport.ID)));
             }
-            return aggregateReports;
+            return result;
         }
     }
 
@@ -2133,14 +2167,19 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<String> getPendingAggregateDebugReportIds() throws DatastoreException {
-        List<String> aggregateReports = new ArrayList<>();
+    public Map<String, List<String>> getPendingAggregateDebugReportIdsByCoordinator()
+            throws DatastoreException {
+        Map<String, List<String>> result = new HashMap<>();
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
                         .query(
                                 MeasurementTables.AggregateReport.TABLE,
-                                /* columns= */ null,
+                                /* columns= */ new String[] {
+                                    MeasurementTables.AggregateReport.ID,
+                                    MeasurementTables.AggregateReport
+                                            .AGGREGATION_COORDINATOR_ORIGIN,
+                                },
                                 MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS + " = ? ",
                                 new String[] {
                                     String.valueOf(AggregateReport.DebugReportStatus.PENDING)
@@ -2150,11 +2189,19 @@ class MeasurementDao implements IMeasurementDao {
                                 /* orderBy= */ "RANDOM()",
                                 /* limit= */ null)) {
             while (cursor.moveToNext()) {
-                aggregateReports.add(
+                String coordinator =
                         cursor.getString(
-                                cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AggregateReport
+                                                .AGGREGATION_COORDINATOR_ORIGIN));
+                result.putIfAbsent(coordinator, new ArrayList<>());
+                result.get(coordinator)
+                        .add(
+                                cursor.getString(
+                                        cursor.getColumnIndex(
+                                                MeasurementTables.AggregateReport.ID)));
             }
-            return aggregateReports;
+            return result;
         }
     }
 
