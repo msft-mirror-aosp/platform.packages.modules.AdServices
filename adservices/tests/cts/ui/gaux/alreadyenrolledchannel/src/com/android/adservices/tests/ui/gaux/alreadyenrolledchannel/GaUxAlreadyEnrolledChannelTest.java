@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -130,7 +131,7 @@ public class GaUxAlreadyEnrolledChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
     /** Verify that non-adult account can not trigger consent notification. */
@@ -149,7 +150,7 @@ public class GaUxAlreadyEnrolledChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
     /**
@@ -172,14 +173,14 @@ public class GaUxAlreadyEnrolledChannelTest {
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
     /**
@@ -201,14 +202,14 @@ public class GaUxAlreadyEnrolledChannelTest {
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 
     /**
@@ -230,14 +231,14 @@ public class GaUxAlreadyEnrolledChannelTest {
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
@@ -257,13 +258,13 @@ public class GaUxAlreadyEnrolledChannelTest {
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ true);
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 }
