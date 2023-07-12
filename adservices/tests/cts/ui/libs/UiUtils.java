@@ -146,6 +146,67 @@ public class UiUtils {
     }
 
     public static void verifyNotification(
+            Context context,
+            UiDevice device,
+            boolean isDisplayed,
+            boolean isEuTest,
+            UiConstants.UX ux)
+            throws Exception {
+        device.openNotification();
+        Thread.sleep(LAUNCH_TIMEOUT_MS);
+
+        int notificationTitle = -1;
+        int notificationHeader = -1;
+        switch (ux) {
+            case GA_UX:
+                notificationTitle =
+                        isEuTest
+                                ? R.string.notificationUI_notification_ga_title_eu
+                                : R.string.notificationUI_notification_ga_title;
+                notificationHeader =
+                        isEuTest
+                                ? R.string.notificationUI_header_ga_title_eu
+                                : R.string.notificationUI_header_ga_title;
+                break;
+            case BETA_UX:
+                notificationTitle =
+                        isEuTest
+                                ? R.string.notificationUI_notification_title_eu
+                                : R.string.notificationUI_notification_title;
+                notificationHeader =
+                        isEuTest
+                                ? R.string.notificationUI_header_title_eu
+                                : R.string.notificationUI_header_title;
+                break;
+            case U18_UX:
+                notificationTitle = R.string.notificationUI_u18_notification_title;
+                notificationHeader = R.string.notificationUI_u18_header_title;
+                break;
+        }
+
+        UiSelector notificationCardSelector =
+                new UiSelector().text(getResourceString(context, notificationTitle));
+
+        UiObject scroller =
+                device.findObject(
+                        new UiSelector()
+                                .packageName(SYSTEM_UI_NAME)
+                                .resourceId(SYSTEM_UI_RESOURCE_ID));
+
+        UiObject notificationCard = scroller.getChild(notificationCardSelector);
+        if (!isDisplayed) {
+            assertThat(notificationCard.exists()).isFalse();
+            return;
+        }
+        assertThat(notificationCard.exists()).isTrue();
+
+        notificationCard.click();
+        Thread.sleep(LAUNCH_TIMEOUT_MS);
+        UiObject title = getUiElement(device, context, notificationHeader);
+        assertThat(title.exists()).isTrue();
+    }
+
+    public static void verifyNotification(
             Context context, UiDevice device, boolean isDisplayed, boolean isEuTest, boolean isGa)
             throws Exception {
         device.openNotification();
