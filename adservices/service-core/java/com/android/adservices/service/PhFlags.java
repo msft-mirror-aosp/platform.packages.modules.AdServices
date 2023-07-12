@@ -33,14 +33,17 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
+    static final String ARRAY_SPLITTER_COMMA = ",";
     /*
      * Keys for ALL the flags stored in DeviceConfig.
      */
@@ -78,6 +81,18 @@ public final class PhFlags implements Flags {
             "measurement_event_fallback_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
             "measurement_aggregate_encryption_key_coordinator_url";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED =
+            "measurement_aggregation_coordination_origin_enabled";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
+            "measurement_aggregation_coordinator_origin_list";
+
+    static final String KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
+            "measurement_default_aggregation_coordinator_origin";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
+            "measurement_aggregation_coordinator_path";
     static final String KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
@@ -273,6 +288,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_off_device_enabled";
     static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
+    static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            "fledge_auction_server_payload_bucket_sizes";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -468,6 +485,11 @@ public final class PhFlags implements Flags {
             "disable_measurement_enrollment_check";
 
     static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
+
+    // Enrollment Mdd Deletion Feature Enabled check
+
+    static final String KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED =
+            "enable_enrollment_mdd_record_deletion";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -869,6 +891,42 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
                 /* defaultValue */ MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+    }
+
+    @Override
+    public boolean getMeasurementAggregationCoordinatorOriginEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED);
+    }
+
+    @Override
+    public String getMeasurementAggregationCoordinatorOriginList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST);
+    }
+
+    @Override
+    public String getMeasurementDefaultAggregationCoordinatorOrigin() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                /* defaultValue */ MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN);
+    }
+
+    @Override
+    public String getMeasurementAggregationCoordinatorPath() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_PATH);
     }
 
     @Override
@@ -2235,6 +2293,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
+        String bucketSizesString =
+                DeviceConfig.getString(
+                        NAMESPACE_ADSERVICES, KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES, null);
+        // TODO(b/290401812): Decide the fate of malformed bucket size config string.
+        return Optional.ofNullable(bucketSizesString)
+                .map(
+                        s ->
+                                Arrays.stream(s.split(ARRAY_SPLITTER_COMMA))
+                                        .map(Integer::valueOf)
+                                        .collect(Collectors.toList()))
+                .map(ImmutableList::copyOf)
+                .orElse(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -2444,6 +2518,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_ENROLLMENT_TEST_SEED,
                 /* defaultValue */ ENABLE_ENROLLMENT_TEST_SEED);
+    }
+
+    @Override
+    public boolean getEnrollmentMddRecordDeletionEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED,
+                /* defaultValue */ ENROLLMENT_MDD_RECORD_DELETION_ENABLED);
     }
 
     @Override
@@ -3034,6 +3116,12 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t" + KEY_ENABLE_ENROLLMENT_TEST_SEED + " = " + isEnableEnrollmentTestSeed());
 
+        writer.println(
+                "\t"
+                        + KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED
+                        + " = "
+                        + getEnrollmentMddRecordDeletionEnabled());
+
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
@@ -3178,6 +3266,26 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL
                         + " = "
                         + getMeasurementAggregateEncryptionKeyCoordinatorUrl());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED
+                        + " = "
+                        + getMeasurementAggregationCoordinatorOriginEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST
+                        + " = "
+                        + getMeasurementAggregationCoordinatorOriginList());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN
+                        + " = "
+                        + getMeasurementDefaultAggregationCoordinatorOrigin());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH
+                        + " = "
+                        + getMeasurementAggregationCoordinatorPath());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS
@@ -3848,6 +3956,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionOffDeviceEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
+                        + " = "
+                        + getFledgeAuctionServerPayloadBucketSizes());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceRequestCompressionEnabled());
@@ -3976,7 +4089,7 @@ public final class PhFlags implements Flags {
         if (TextUtils.isEmpty(blocklistFlag)) {
             return ImmutableList.of();
         }
-        String[] blocklistList = blocklistFlag.split(",");
+        String[] blocklistList = blocklistFlag.split(ARRAY_SPLITTER_COMMA);
         return ImmutableList.copyOf(blocklistList);
     }
 
@@ -4024,7 +4137,7 @@ public final class PhFlags implements Flags {
         String defaultGlobalBlockedTopicIds =
                 TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
                         .map(String::valueOf)
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.joining(ARRAY_SPLITTER_COMMA));
 
         String globalBlockedTopicIds =
                 DeviceConfig.getString(
@@ -4035,7 +4148,7 @@ public final class PhFlags implements Flags {
             return ImmutableList.of();
         }
         globalBlockedTopicIds = globalBlockedTopicIds.trim();
-        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(",");
+        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(ARRAY_SPLITTER_COMMA);
 
         List<Integer> globalBlockedTopicIdsIntList = new ArrayList<>();
 
@@ -4056,7 +4169,7 @@ public final class PhFlags implements Flags {
         String defaultErrorCodeLoggingDenyStr =
                 ERROR_CODE_LOGGING_DENY_LIST.stream()
                         .map(String::valueOf)
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.joining(ARRAY_SPLITTER_COMMA));
 
         String errorCodeLoggingDenyStr =
                 DeviceConfig.getString(
@@ -4067,7 +4180,7 @@ public final class PhFlags implements Flags {
             return ImmutableList.of();
         }
         errorCodeLoggingDenyStr = errorCodeLoggingDenyStr.trim();
-        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(",");
+        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(ARRAY_SPLITTER_COMMA);
 
         List<Integer> errorCodeLoggingDenyIntList = new ArrayList<>();
 
@@ -4123,10 +4236,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getU18UxEnabled() {
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_U18_UX_ENABLED,
-                /* defaultValue */ DEFAULT_U18_UX_ENABLED);
+        return getEnableAdServicesSystemApi()
+                && DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_U18_UX_ENABLED,
+                        /* defaultValue */ DEFAULT_U18_UX_ENABLED);
     }
 
     static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
@@ -4155,6 +4269,7 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
+        uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
         return uxMap;
     }
 

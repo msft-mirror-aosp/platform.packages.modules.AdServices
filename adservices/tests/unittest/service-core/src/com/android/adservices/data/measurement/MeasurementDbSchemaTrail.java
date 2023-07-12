@@ -924,6 +924,60 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_TRIGGER_V20 =
+            "CREATE TABLE "
+                    + TriggerContract.TABLE
+                    + " ("
+                    + TriggerContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + TriggerContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGERS
+                    + " TEXT, "
+                    + TriggerContract.STATUS
+                    + " INTEGER, "
+                    + TriggerContract.REGISTRANT
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS
+                    + " TEXT, "
+                    + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.NOT_FILTERS
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_KEY
+                    + " INTEGER, "
+                    + TriggerContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + TriggerContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.ATTRIBUTION_CONFIG
+                    + " TEXT, "
+                    + TriggerContract.X_NETWORK_KEY_MAPPING
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + TriggerContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT "
+                    + ")";
+
     private static final String CREATE_TABLE_EVENT_REPORT_V6 =
             "CREATE TABLE "
                     + EventReportContract.TABLE
@@ -1224,6 +1278,60 @@ public class MeasurementDbSchemaTrail {
                     + ") ON DELETE CASCADE"
                     + ")";
 
+    private static final String CREATE_TABLE_AGGREGATE_REPORT_V20 =
+            "CREATE TABLE "
+                    + AggregateReport.TABLE
+                    + " ("
+                    + AggregateReport.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateReport.PUBLISHER
+                    + " TEXT, "
+                    + AggregateReport.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + AggregateReport.SOURCE_REGISTRATION_TIME
+                    + " INTEGER, "
+                    + AggregateReport.SCHEDULED_REPORT_TIME
+                    + " INTEGER, "
+                    + AggregateReport.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
+                    + " TEXT, "
+                    + AggregateReport.STATUS
+                    + " INTEGER, "
+                    + AggregateReport.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
+                    + AggregateReport.API_VERSION
+                    + " TEXT, "
+                    + AggregateReport.SOURCE_DEBUG_KEY
+                    + " INTEGER, "
+                    + AggregateReport.TRIGGER_DEBUG_KEY
+                    + " INTEGER, "
+                    + AggregateReport.SOURCE_ID
+                    + " TEXT, "
+                    + AggregateReport.TRIGGER_ID
+                    + " TEXT, "
+                    + AggregateReport.DEDUP_KEY
+                    + " INTEGER, "
+                    + AggregateReport.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + AggregateReport.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + "FOREIGN KEY ("
+                    + AggregateReport.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
+
     private static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6 =
             "CREATE TABLE "
                     + AggregateEncryptionKey.TABLE
@@ -1236,6 +1344,22 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + AggregateEncryptionKey.EXPIRY
                     + " INTEGER "
+                    + ")";
+
+    private static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V20 =
+            "CREATE TABLE "
+                    + AggregateEncryptionKey.TABLE
+                    + " ("
+                    + AggregateEncryptionKey.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateEncryptionKey.KEY_ID
+                    + " TEXT, "
+                    + AggregateEncryptionKey.PUBLIC_KEY
+                    + " TEXT, "
+                    + AggregateEncryptionKey.EXPIRY
+                    + " INTEGER, "
+                    + AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT "
                     + ")";
 
     private static final String CREATE_TABLE_ASYNC_REGISTRATION_V6 =
@@ -1690,6 +1814,15 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV20() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV19());
+        createStatements.put(TriggerContract.TABLE, CREATE_TABLE_TRIGGER_V20);
+        createStatements.put(AggregateReport.TABLE, CREATE_TABLE_AGGREGATE_REPORT_V20);
+        createStatements.put(
+                AggregateEncryptionKey.TABLE, CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V20);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -1749,6 +1882,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV18();
     }
 
+    private static Map<String, String> getCreateIndexesV20() {
+        return getCreateIndexesV19();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -1765,6 +1902,7 @@ public class MeasurementDbSchemaTrail {
                     .put(17, getCreateStatementByTableV17().values())
                     .put(18, getCreateStatementByTableV18().values())
                     .put(19, getCreateStatementByTableV19().values())
+                    .put(20, getCreateStatementByTableV20().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -1783,6 +1921,7 @@ public class MeasurementDbSchemaTrail {
                     .put(17, getCreateIndexesV17().values())
                     .put(18, getCreateIndexesV18().values())
                     .put(19, getCreateIndexesV19().values())
+                    .put(20, getCreateIndexesV20().values())
                     .build();
 
     /**

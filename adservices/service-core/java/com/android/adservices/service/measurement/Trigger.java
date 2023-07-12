@@ -72,6 +72,7 @@ public class Trigger {
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
+    @Nullable private Uri mAggregationCoordinatorOrigin;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -351,6 +352,12 @@ public class Trigger {
         return mRegistrationOrigin;
     }
 
+    /** Returns coordinator origin for aggregatable reports */
+    @Nullable
+    public Uri getAggregationCoordinatorOrigin() {
+        return mAggregationCoordinatorOrigin;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -625,19 +632,19 @@ public class Trigger {
         }
 
         /** See {@link Trigger#isDebugReporting()} */
-        public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
+        public Builder setIsDebugReporting(boolean isDebugReporting) {
             mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
         /** See {@link Trigger#hasAdIdPermission()} */
-        public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
+        public Builder setAdIdPermission(boolean adIdPermission) {
             mBuilding.mAdIdPermission = adIdPermission;
             return this;
         }
 
         /** See {@link Trigger#hasArDebugPermission()} */
-        public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
+        public Builder setArDebugPermission(boolean arDebugPermission) {
             mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
@@ -697,10 +704,16 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Source#getRegistrationOrigin()} ()} */
+        /** See {@link Trigger#getRegistrationOrigin()} ()} */
         @NonNull
-        public Trigger.Builder setRegistrationOrigin(Uri registrationOrigin) {
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregationCoordinatorOrigin()} ()} */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
         }
 

@@ -325,8 +325,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return DebugReport.builder()
                 .setWinDebugReportUri(bidResult.getWinDebugReportUri())
                 .setLossDebugReportUri(bidResult.getLossDebugReportUri())
-                .setCustomAudienceName(customAudienceSignals.getName())
-                .setCustomAudienceBuyer(customAudienceSignals.getBuyer())
+                .setCustomAudienceSignals(customAudienceSignals)
                 .build();
     }
 

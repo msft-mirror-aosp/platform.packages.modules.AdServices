@@ -29,6 +29,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
@@ -375,6 +376,15 @@ class AttributionJobHandler {
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
                             .setRegistrationOrigin(trigger.getRegistrationOrigin());
+            if (trigger.getAggregationCoordinatorOrigin() != null) {
+                aggregateReportBuilder.setAggregationCoordinatorOrigin(
+                        trigger.getAggregationCoordinatorOrigin());
+            } else {
+                aggregateReportBuilder.setAggregationCoordinatorOrigin(
+                        Uri.parse(
+                                AdServicesConfig
+                                        .getMeasurementDefaultAggregationCoordinatorOrigin()));
+            }
 
             if (aggregateDeduplicationKeyOptional.isPresent()) {
                 aggregateReportBuilder.setDedupKey(

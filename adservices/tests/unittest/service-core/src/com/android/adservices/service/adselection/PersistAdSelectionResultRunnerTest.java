@@ -123,7 +123,10 @@ public class PersistAdSelectionResultRunnerTest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .reportingUrisDao();
-        mPayloadFormatter = new AuctionServerPayloadFormatterV0();
+        mPayloadFormatter =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        AuctionServerPayloadFormatterV0.VERSION,
+                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
         // Test applications don't have the required permissions to read config P/H flags, and
@@ -228,10 +231,9 @@ public class PersistAdSelectionResultRunnerTest {
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
-        AuctionServerPayloadFormatter.FormattedData formattedData =
+        AuctionServerPayloadFormattedData formattedData =
                 mPayloadFormatter.apply(
-                        AuctionServerPayloadFormatter.UnformattedData.create(
-                                compressedData.getData()),
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
                         AuctionServerDataCompressorGzip.VERSION);
         return formattedData.getData();
     }
