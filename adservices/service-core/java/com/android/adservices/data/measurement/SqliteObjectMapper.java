@@ -270,6 +270,10 @@ public class SqliteObjectMapper {
                 MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
                 registration_origin ->
                         builder.setRegistrationOrigin(Uri.parse(registration_origin)));
+        setUriColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
+                builder::setAggregationCoordinatorOrigin);
         return builder.build();
     }
 
@@ -317,6 +321,10 @@ public class SqliteObjectMapper {
                 MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
                 registration_origin ->
                         builder.setRegistrationOrigin(Uri.parse(registration_origin)));
+        setUriColumn(
+                cursor,
+                MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                builder::setAggregationCoordinatorOrigin);
         return builder.build();
     }
 
@@ -333,6 +341,10 @@ public class SqliteObjectMapper {
                 builder::setPublicKey);
         setLongColumn(cursor, MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 builder::setExpiry);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN,
+                builder::setAggregationCoordinatorOrigin);
         return builder.build();
     }
 
