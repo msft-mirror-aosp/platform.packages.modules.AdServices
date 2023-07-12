@@ -507,7 +507,16 @@ public class EnrollmentDao implements IEnrollmentDao {
         if (db == null) {
             return false;
         }
+        try {
+            insertToDb(enrollmentData, db);
+        } catch (SQLException e) {
+            LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
 
+    private void insertToDb(EnrollmentData enrollmentData, SQLiteDatabase db) throws SQLException {
         ContentValues values = new ContentValues();
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
@@ -532,17 +541,12 @@ public class EnrollmentDao implements IEnrollmentDao {
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 String.join(" ", enrollmentData.getEncryptionKeyUrl()));
-        try {
-            db.insertWithOnConflict(
-                    EnrollmentTables.EnrollmentDataContract.TABLE,
-                    /*nullColumnHack=*/ null,
-                    values,
-                    SQLiteDatabase.CONFLICT_REPLACE);
-        } catch (SQLException e) {
-            LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
-            return false;
-        }
-        return true;
+        LogUtil.d("Inserting Enrollment record. ID : \"%s\"", enrollmentData.getEnrollmentId());
+        db.insertWithOnConflict(
+                EnrollmentTables.EnrollmentDataContract.TABLE,
+                /*nullColumnHack=*/ null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE);
     }
 
     @Override
@@ -593,6 +597,45 @@ public class EnrollmentDao implements IEnrollmentDao {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         } finally {
             db.endTransaction();
+        }
+        return success;
+    }
+
+    @Override
+    public boolean overwriteData(List<EnrollmentData> newEnrollments) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return false;
+        }
+
+        boolean success = false;
+        db.beginTransaction();
+        try {
+            String[] ids =
+                    newEnrollments.stream()
+                            .map(EnrollmentData::getEnrollmentId)
+                            .toArray(String[]::new);
+
+            db.delete(
+                    EnrollmentTables.EnrollmentDataContract.TABLE,
+                    EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " NOT IN (?)",
+                    new String[] {String.join(",", ids)});
+
+            for (EnrollmentData enrollmentData : newEnrollments) {
+                insertToDb(enrollmentData, db);
+            }
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+            unSeed();
+            success = true;
+        } catch (SQLException e) {
+            LogUtil.e("Failed to overwrite EnrollmentData." + e.getMessage());
+        } finally {
+            db.endTransaction();
+        }
+        // TODO (b/289506805) Look at extracting Seeding logic out of EnrollmentDao
+        if (mFlags.isEnableEnrollmentTestSeed()) {
+            seed();
         }
         return success;
     }

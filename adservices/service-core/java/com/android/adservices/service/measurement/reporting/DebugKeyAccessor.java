@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.util.Pair;
 
 import com.android.adservices.data.measurement.DatastoreException;
@@ -101,20 +102,16 @@ public class DebugKeyAccessor {
         Boolean doesPlatformAndDebugAdIdMatch = null;
         switch (attributionType) {
             case AttributionType.SOURCE_APP_TRIGGER_APP:
-                if (source.hasAdIdPermission()) {
+                if (source.hasAdIdPermission() && trigger.hasAdIdPermission()) {
                     sourceDebugKey = source.getDebugKey();
-                }
-                if (trigger.hasAdIdPermission()) {
                     triggerDebugKey = trigger.getDebugKey();
                 }
                 break;
             case AttributionType.SOURCE_WEB_TRIGGER_WEB:
                 // TODO(b/280323940): Web<>Web Debug Keys AdID option
                 if (trigger.getRegistrant().equals(source.getRegistrant())) {
-                    if (source.hasArDebugPermission()) {
+                    if (source.hasArDebugPermission() && trigger.hasArDebugPermission()) {
                         sourceDebugKey = source.getDebugKey();
-                    }
-                    if (trigger.hasArDebugPermission()) {
                         triggerDebugKey = trigger.getDebugKey();
                     }
                 } else if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
@@ -193,7 +190,7 @@ public class DebugKeyAccessor {
 
     /** Returns DebugKey according to the permissions set */
     public Pair<UnsignedLong, UnsignedLong> getDebugKeysForVerboseTriggerDebugReport(
-            @NonNull Source source, Trigger trigger) throws DatastoreException {
+            @Nullable Source source, @NonNull Trigger trigger) throws DatastoreException {
         if (source == null) {
             if (trigger.getDestinationType() == EventSurfaceType.WEB
                     && trigger.hasArDebugPermission()) {
@@ -376,7 +373,8 @@ public class DebugKeyAccessor {
 
     private static boolean canMatchJoinKeys(
             Source source, Trigger trigger, Set<String> allowedEnrollmentsString) {
-        return allowedEnrollmentsString.contains(trigger.getEnrollmentId())
+        return source.getParentId() == null
+                && allowedEnrollmentsString.contains(trigger.getEnrollmentId())
                 && allowedEnrollmentsString.contains(source.getEnrollmentId())
                 && Objects.nonNull(source.getDebugJoinKey())
                 && Objects.nonNull(trigger.getDebugJoinKey());
@@ -398,7 +396,9 @@ public class DebugKeyAccessor {
     }
 
     private static boolean canMatchAdIdWebSourceToAppTrigger(Source source) {
-        return source.hasArDebugPermission() && Objects.nonNull(source.getDebugAdId());
+        return source.getParentId() == null
+                && source.hasArDebugPermission()
+                && Objects.nonNull(source.getDebugAdId());
     }
 
     private boolean isEnrollmentIdWithinUniqueAdIdLimit(String enrollmentId)

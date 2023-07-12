@@ -38,6 +38,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -102,13 +103,13 @@ public class AggregateReportingJobHandler {
      */
     synchronized boolean performScheduledPendingReportsInWindow(
             long windowStartTime, long windowEndTime) {
-        Optional<List<String>> pendingAggregateReportsInWindowOpt =
+        Optional<Map<String, List<String>>> pendingAggregateReportsInWindowOpt =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> {
                             if (mIsDebugInstance) {
-                                return dao.getPendingAggregateDebugReportIds();
+                                return dao.getPendingAggregateDebugReportIdsByCoordinator();
                             } else {
-                                return dao.getPendingAggregateReportIdsInWindow(
+                                return dao.getPendingAggregateReportIdsByCoordinatorInWindow(
                                         windowStartTime, windowEndTime);
                             }
                         });
@@ -117,34 +118,40 @@ public class AggregateReportingJobHandler {
             return true;
         }
 
-        List<String> pendingAggregateReportIdsInWindow = pendingAggregateReportsInWindowOpt.get();
-        List<AggregateEncryptionKey> keys =
-                mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
-                        pendingAggregateReportIdsInWindow.size());
+        Map<String, List<String>> idsByCoordinator = pendingAggregateReportsInWindowOpt.get();
 
-        if (keys.size() == pendingAggregateReportIdsInWindow.size()) {
-            for (int i = 0; i < pendingAggregateReportIdsInWindow.size(); i++) {
-                ReportingStatus reportingStatus = new ReportingStatus();
-                final String aggregateReportId = pendingAggregateReportIdsInWindow.get(i);
-                @AdServicesStatusUtils.StatusCode
-                int result = performReport(aggregateReportId, keys.get(i), reportingStatus);
+        for (Map.Entry<String, List<String>> entrySet : idsByCoordinator.entrySet()) {
+            String coordinator = entrySet.getKey();
+            List<String> reportIds = entrySet.getValue();
+            List<AggregateEncryptionKey> keys =
+                    mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                            Uri.parse(coordinator), reportIds.size());
 
-                if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
-                    reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-                } else {
-                    reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
-                }
+            if (keys.size() == reportIds.size()) {
+                for (int i = 0; i < reportIds.size(); i++) {
+                    ReportingStatus reportingStatus = new ReportingStatus();
+                    final String aggregateReportId = reportIds.get(i);
+                    @AdServicesStatusUtils.StatusCode
+                    int result = performReport(aggregateReportId, keys.get(i), reportingStatus);
 
-                if (mUploadMethod != null) {
-                    reportingStatus.setUploadMethod(mUploadMethod);
+                    if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
+                        reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
+                    } else {
+                        reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                    }
+
+                    if (mUploadMethod != null) {
+                        reportingStatus.setUploadMethod(mUploadMethod);
+                    }
+                    if (!mIsDebugInstance) {
+                        logReportingStats(reportingStatus);
+                    }
                 }
-                if (!mIsDebugInstance) {
-                    logReportingStats(reportingStatus);
-                }
+            } else {
+                LogUtil.w("The number of keys do not align with the number of reports");
             }
-        } else {
-            LogUtil.w("The number of keys do not align with the number of reports");
         }
+
         return true;
     }
 
@@ -238,6 +245,7 @@ public class AggregateReportingJobHandler {
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .setSourceDebugKey(aggregateReport.getSourceDebugKey())
                 .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
+                .setAggregationCoordinatorOrigin(aggregateReport.getAggregationCoordinatorOrigin())
                 .build()
                 .toJson(key);
     }

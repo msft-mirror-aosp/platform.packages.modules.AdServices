@@ -19,16 +19,11 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import android.annotation.Nullable;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager;
 import android.os.SystemProperties;
-import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
 
 import org.junit.AssumptionViolatedException;
 
@@ -89,7 +84,7 @@ public final class AdServicesSupportRule extends AbstractSupportedFeatureRule {
 
     /** Creates a rule with the given mode. */
     public AdServicesSupportRule(Mode mode) {
-        super(mode);
+        super(mode, TAG);
     }
 
     @Override
@@ -113,31 +108,6 @@ public final class AdServicesSupportRule extends AbstractSupportedFeatureRule {
     @Override
     protected void throwFeatureSupportedAVE() {
         throw new AssumptionViolatedException("Device supports AdServices");
-    }
-
-    @Override
-    @FormatMethod
-    protected void log(LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs) {
-        String message = String.format(msgFmt, msgArgs);
-        switch (level) {
-            case ERROR:
-                Log.e(TAG, message);
-                return;
-            case WARNING:
-                Log.w(TAG, message);
-                return;
-            case INFO:
-                Log.i(TAG, message);
-                return;
-            case DEBUG:
-                Log.d(TAG, message);
-                return;
-            case VERBOSE:
-                Log.v(TAG, message);
-                return;
-            default:
-                Log.wtf(TAG, "invalid level (" + level + "): " + message);
-        }
     }
 
     @Override

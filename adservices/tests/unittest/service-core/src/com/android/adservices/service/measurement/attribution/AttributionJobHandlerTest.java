@@ -177,7 +177,8 @@ public class AttributionJobHandlerTest {
                         new DebugReportApi(sContext, mFlags),
                         mEventReportWindowCalcDelegate,
                         mSourceNoiseHandler,
-                        mLogger);
+                        mLogger,
+                        new XnaSourceCreator(mFlags));
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow()).thenReturn(100);
         when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()).thenReturn(10);
