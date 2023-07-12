@@ -433,6 +433,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
                 source.getEventReportWindows());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
+                getNullableUnsignedLong(source.getSharedDebugKey()));
 
         long rowId =
                 mSQLTransaction

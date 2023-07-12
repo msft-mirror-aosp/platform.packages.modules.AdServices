@@ -222,6 +222,7 @@ public class MeasurementDaoTest {
                 validSource.getCoarseEventReportDestinations(),
                 source.getCoarseEventReportDestinations());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
+        assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
 
         // Assert destinations were inserted into the source destination table.
 
