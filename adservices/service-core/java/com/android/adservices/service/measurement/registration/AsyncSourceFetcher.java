@@ -451,6 +451,16 @@ public class AsyncSourceFetcher {
             builder.setTriggerSpecs(updatedTriggerSpec);
             builder.buildInitialFlexEventReportSpec(mFlags);
         }
+
+        if (mFlags.getMeasurementEnableSharedSourceDebugKey()
+                && !json.isNull(SourceHeaderContract.SHARED_DEBUG_KEY)) {
+            try {
+                builder.setSharedDebugKey(
+                        new UnsignedLong(json.getString(SourceHeaderContract.SHARED_DEBUG_KEY)));
+            } catch (NumberFormatException e) {
+                LogUtil.e(e, "parseCommonSourceParams: parsing shared debug key failed");
+            }
+        }
         return true;
     }
 
@@ -837,6 +847,7 @@ public class AsyncSourceFetcher {
         String TRIGGER_SPECS = "trigger_specs";
         String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
+        String SHARED_DEBUG_KEY = "shared_debug_key";
     }
 
     private interface SourceRequestContract {
