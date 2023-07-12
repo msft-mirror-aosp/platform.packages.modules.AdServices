@@ -4250,6 +4250,7 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
+        uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
         return uxMap;
     }
 
