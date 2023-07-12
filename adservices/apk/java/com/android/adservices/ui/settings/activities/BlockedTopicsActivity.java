@@ -22,6 +22,8 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.settings.activitydelegates.BlockedTopicsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.BlockedTopicsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
@@ -42,6 +44,25 @@ public class BlockedTopicsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+            initFragment();
+        }
+    }
+
+    @Override
+    public void initBeta() {
+        initActivity();
+    }
+
+    @Override
+    public void initGA() {
+        initActivity();
+    }
+
+    @Override
+    public void initU18() {}
+
+    private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -51,21 +72,15 @@ public class BlockedTopicsActivity extends AdServicesBaseActivity {
                         null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    @Override
-    public void initBeta() {}
-
-    @Override
-    public void initGA() {}
-
-    @Override
-    public void initU18() {}
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new BlockedTopicsActionDelegate(
                         this, new ViewModelProvider(this).get(BlockedTopicsViewModel.class));
+    }
+
+    private void initActivity() {
+        setContentView(R.layout.blocked_topics_activity);
+        // no need to store since not using
+        new BlockedTopicsActivityActionDelegate(
+                this, new ViewModelProvider(this).get(BlockedTopicsViewModel.class));
     }
 }

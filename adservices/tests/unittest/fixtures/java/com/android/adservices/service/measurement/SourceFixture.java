@@ -82,7 +82,8 @@ public final class SourceFixture {
                 .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
-                .setCoarseEventReportDestinations(true);
+                .setCoarseEventReportDestinations(true)
+                .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY);
     }
 
     public static class ValidSourceParams {
@@ -111,6 +112,7 @@ public final class SourceFixture {
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
+        public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
 
         public static final String buildAggregateSource() {
             try {
