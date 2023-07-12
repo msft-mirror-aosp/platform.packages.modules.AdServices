@@ -61,6 +61,7 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLE
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.Flags.ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT;
@@ -299,6 +300,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENABLE_ENROLLMENT_TEST_
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
+import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ERROR_CODE_LOGGING_DENY_LIST;
 import static com.android.adservices.service.PhFlags.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
@@ -5196,6 +5198,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.isEnableEnrollmentTestSeed()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnrollmentMddRecordDeletionEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnrollmentMddRecordDeletionEnabled())
+                .isEqualTo(ENROLLMENT_MDD_RECORD_DELETION_ENABLED);
+
+        final boolean phOverridingValue = !ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnrollmentMddRecordDeletionEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
