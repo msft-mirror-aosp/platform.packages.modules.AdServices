@@ -74,9 +74,6 @@ android_library {
         proguard_flags_files: ["proguard.flags"],
     },
     apex_available: ["com.android.extservices"],
-    lint: {
-        extra_check_modules: ["BackCompatLintChecker"],
-    },
 }
 
 android_app {
