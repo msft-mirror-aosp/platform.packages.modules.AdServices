@@ -35,6 +35,7 @@ android_test {
     libs: [
         "android.test.base",
         "android.test.runner",
+        "mockito",
     ],
     sdk_version: "test_current",
     test_suites: [

@@ -35,6 +35,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -73,6 +75,12 @@ public class ClassifierInputManagerTest {
     @Mock private Preprocessor mPreprocessor;
     @Mock private Flags mFlags;
     private MockitoSession mStaticMockSession;
+
+    // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
+    // Android R since some tests require handling of unsupported PackageManager APIs. Remove this
+    // rule if Topics API will be launched on Android R in the future (b/290839573).
+    @Rule
+    public final SdkLevelSupportRule sdkLevelRule = new SdkLevelSupportRule(SdkLevel::isAtLeastS);
 
     @Before
     public void setup() throws Exception {

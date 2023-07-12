@@ -96,6 +96,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -177,7 +178,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource() {
-        Source validSource = SourceFixture.getValidSource();
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .build();
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -217,6 +221,7 @@ public class MeasurementDaoTest {
         assertEquals(
                 validSource.getCoarseEventReportDestinations(),
                 source.getCoarseEventReportDestinations());
+        assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -271,8 +276,8 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
         assertEquals(
-                Integer.toString(validSource.getFlexEventReportSpec().getMaxReports()),
-                source.getMaxBucketIncrements());
+                validSource.getFlexEventReportSpec().getMaxReports(),
+                source.getMaxEventLevelReports().intValue());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
                 source.getTriggerSpecs());
@@ -370,6 +375,9 @@ public class MeasurementDaoTest {
             assertEquals(validTrigger.getPlatformAdId(), trigger.getPlatformAdId());
             assertEquals(validTrigger.getDebugAdId(), trigger.getDebugAdId());
             assertEquals(validTrigger.getRegistrationOrigin(), trigger.getRegistrationOrigin());
+            assertEquals(
+                    validTrigger.getAggregationCoordinatorOrigin(),
+                    trigger.getAggregationCoordinatorOrigin());
         }
     }
 
@@ -1664,6 +1672,7 @@ public class MeasurementDaoTest {
                                     PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
+
     // Tests countSourcesPerPublisherXEnrollmentExcludingRegistrationOriginSinceTime
     @Test
     public void testCountSources_forDifferentOriginWithinTimeWindow_returnsNumOfSources() {
@@ -3782,6 +3791,7 @@ public class MeasurementDaoTest {
         String keyId = "38b1d571-f924-4dc0-abe1-e2bac9b6a6be";
         String publicKey = "/amqBgfDOvHAIuatDyoHxhfHaMoYA4BDxZxwtWBRQhc=";
         long expiry = 1653620135831L;
+        Uri aggregationOrigin = WebUtil.validUri("https://a.test");
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
@@ -3791,6 +3801,7 @@ public class MeasurementDaoTest {
                                                 .setKeyId(keyId)
                                                 .setPublicKey(publicKey)
                                                 .setExpiry(expiry)
+                                                .setAggregationCoordinatorOrigin(aggregationOrigin)
                                                 .build()));
 
         try (Cursor cursor =
@@ -3812,6 +3823,8 @@ public class MeasurementDaoTest {
             assertEquals(keyId, aggregateEncryptionKey.getKeyId());
             assertEquals(publicKey, aggregateEncryptionKey.getPublicKey());
             assertEquals(expiry, aggregateEncryptionKey.getExpiry());
+            assertEquals(
+                    aggregationOrigin, aggregateEncryptionKey.getAggregationCoordinatorOrigin());
         }
     }
 
@@ -3881,6 +3894,7 @@ public class MeasurementDaoTest {
                         .setKeyId("keyId")
                         .setPublicKey("publicKey")
                         .setExpiry(1)
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://1.test"))
                         .build();
         ContentValues keyValues = new ContentValues();
         keyValues.put("_id", key.getId());
@@ -3943,6 +3957,7 @@ public class MeasurementDaoTest {
                         .setKeyId("keyId")
                         .setPublicKey("publicKey")
                         .setExpiry(1)
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://1.test"))
                         .build();
         ContentValues keyValues = new ContentValues();
         keyValues.put("_id", key.getId());
@@ -5135,8 +5150,9 @@ public class MeasurementDaoTest {
                                 dao -> dao.insertAsyncRegistration(asyncRegistration)));
 
         long earliestValidInsertion = System.currentTimeMillis() - 60000;
-        assertTrue(datastoreManager.runInTransaction((dao) ->
-                  dao.deleteExpiredRecords(earliestValidInsertion)));
+        assertTrue(
+                datastoreManager.runInTransaction(
+                        (dao) -> dao.deleteExpiredRecords(earliestValidInsertion)));
 
         Cursor cursor =
                 db.query(
@@ -7583,6 +7599,174 @@ public class MeasurementDaoTest {
                         + "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"234\"%' UNION\n"
                         + "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"345\"%'";
         assertEquals(expected.replaceAll("\\s+", " "), query.replaceAll("\\s+", " "));
+    }
+
+    @Test
+    public void getPendingAggregateReportIdsByCoordinatorInWindow() {
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        AggregateReport ar11 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("11")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .build();
+        AggregateReport ar12 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("12")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .build();
+        AggregateReport ar21 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("21")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url2.test"))
+                        .build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ar11, db);
+        AbstractDbIntegrationTest.insertToDb(ar12, db);
+        AbstractDbIntegrationTest.insertToDb(ar21, db);
+
+        Optional<Map<String, List<String>>> resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getPendingAggregateReportIdsByCoordinatorInWindow(
+                                        AggregateReportFixture.ValidAggregateReportParams
+                                                .TRIGGER_TIME,
+                                        AggregateReportFixture.ValidAggregateReportParams
+                                                        .TRIGGER_TIME
+                                                + TimeUnit.DAYS.toMillis(30)));
+        assertTrue(resOpt.isPresent());
+        Map<String, List<String>> res = resOpt.get();
+        assertEquals(2, res.size());
+
+        // URL 1
+        List<String> url1Ids = res.get("https://url1.test");
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(2, url1Ids.size());
+        assertEquals("11", url1Ids.get(0));
+        assertEquals("12", url1Ids.get(1));
+        // URL 2
+        List<String> url2Ids = res.get("https://url2.test");
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(1, url2Ids.size());
+        assertEquals("21", url2Ids.get(0));
+    }
+
+    @Test
+    public void getPendingAggregateDebugReportIdsByCoordinator() {
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        AggregateReport ar11 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("11")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .build();
+        AggregateReport ar12 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("12")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url1.test"))
+                        .build();
+        AggregateReport ar21 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("21")
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://url2.test"))
+                        .build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ar11, db);
+        AbstractDbIntegrationTest.insertToDb(ar12, db);
+        AbstractDbIntegrationTest.insertToDb(ar21, db);
+
+        Optional<Map<String, List<String>>> resOpt =
+                dm.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getPendingAggregateReportIdsByCoordinatorInWindow(
+                                        AggregateReportFixture.ValidAggregateReportParams
+                                                .TRIGGER_TIME,
+                                        AggregateReportFixture.ValidAggregateReportParams
+                                                        .TRIGGER_TIME
+                                                + TimeUnit.DAYS.toMillis(30)));
+        assertTrue(resOpt.isPresent());
+        Map<String, List<String>> res = resOpt.get();
+        assertEquals(2, res.size());
+
+        // URL 1
+        List<String> url1Ids = res.get("https://url1.test");
+        assertEquals(2, url1Ids.size());
+        url1Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals("11", url1Ids.get(0));
+        assertEquals("12", url1Ids.get(1));
+        // URL 2
+        List<String> url2Ids = res.get("https://url2.test");
+        url2Ids.sort(String.CASE_INSENSITIVE_ORDER::compare);
+        assertEquals(1, url2Ids.size());
+        assertEquals("21", url2Ids.get(0));
+    }
+
+    @Test
+    public void getNonExpiredAggregateEncryptionKeys() {
+        AggregateEncryptionKey ek11 =
+                new AggregateEncryptionKey.Builder()
+                        .setId("11")
+                        .setKeyId("11")
+                        .setPublicKey("11")
+                        .setExpiry(11)
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://1coordinator.test"))
+                        .build();
+        // ek12 will not be fetched because expiry (5) < 10
+        AggregateEncryptionKey ek12 =
+                new AggregateEncryptionKey.Builder()
+                        .setId("12")
+                        .setKeyId("12")
+                        .setPublicKey("12")
+                        .setExpiry(5)
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://1coordinator.test"))
+                        .build();
+
+        AggregateEncryptionKey ek21 =
+                new AggregateEncryptionKey.Builder()
+                        .setId("21")
+                        .setKeyId("21")
+                        .setPublicKey("21")
+                        .setExpiry(10)
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://2coordinator.test"))
+                        .build();
+        AggregateEncryptionKey ek22 =
+                new AggregateEncryptionKey.Builder()
+                        .setId("22")
+                        .setKeyId("22")
+                        .setPublicKey("22")
+                        .setExpiry(15)
+                        .setAggregationCoordinatorOrigin(Uri.parse("https://2coordinator.test"))
+                        .build();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ek11, db);
+        AbstractDbIntegrationTest.insertToDb(ek12, db);
+        AbstractDbIntegrationTest.insertToDb(ek21, db);
+        AbstractDbIntegrationTest.insertToDb(ek22, db);
+
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        List<AggregateEncryptionKey> res1 =
+                datastoreManager
+                        .runInTransactionWithResult(
+                                (dao) -> {
+                                    return dao.getNonExpiredAggregateEncryptionKeys(
+                                            Uri.parse("https://1coordinator.test"), 10);
+                                })
+                        .orElseThrow();
+        // ek12 will not be fetched because expiry (5) < 10
+        assertEquals(1, res1.size());
+        assertEquals(ek11, res1.get(0));
+
+        List<AggregateEncryptionKey> res2 =
+                datastoreManager
+                        .runInTransactionWithResult(
+                                (dao) -> {
+                                    return dao.getNonExpiredAggregateEncryptionKeys(
+                                            Uri.parse("https://2coordinator.test"), 10);
+                                })
+                        .orElseThrow();
+        res1.sort((x, y) -> String.CASE_INSENSITIVE_ORDER.compare(x.getId(), y.getId()));
+        assertEquals(2, res2.size());
+        assertEquals(ek21, res2.get(0));
+        assertEquals(ek22, res2.get(1));
     }
 
     private void queryAndAssertSourceEntries(

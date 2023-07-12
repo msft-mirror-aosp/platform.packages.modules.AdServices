@@ -92,7 +92,8 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            Flags flags) {
         SourceNoiseHandler sourceNoiseHandler =
                 spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
@@ -124,6 +125,7 @@ class TestObjectProvider {
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
-                sourceNoiseHandler);
+                sourceNoiseHandler,
+                flags);
     }
 }

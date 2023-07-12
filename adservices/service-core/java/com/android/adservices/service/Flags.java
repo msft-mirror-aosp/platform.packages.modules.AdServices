@@ -220,6 +220,52 @@ public interface Flags {
         return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
     }
 
+    /**
+     * The suffix that is appended to the aggregation coordinator origin for retrieving the
+     * encryption keys.
+     */
+    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH = "v1alpha/publicKeys";
+
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
+    default String getMeasurementAggregationCoordinatorPath() {
+        return MEASUREMENT_AGGREGATION_COORDINATOR_PATH;
+    }
+
+    boolean MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED = true;
+
+    /** Returns true if aggregation coordinator origin is enabled. */
+    default boolean getMeasurementAggregationCoordinatorOriginEnabled() {
+        return MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED;
+    }
+
+    /**
+     * Default list(comma-separated) of origins for creating a URL used to fetch public encryption
+     * keys for aggregatable reports.
+     */
+    String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
+            "https://publickeyservice.aws.privacysandboxservices.com";
+
+    /**
+     * Returns a string which is a comma separated list of origins used to fetch public encryption
+     * keys for aggregatable reports.
+     */
+    default String getMeasurementAggregationCoordinatorOriginList() {
+        return MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST;
+    }
+
+    /* The list of origins for creating a URL used to fetch public encryption keys for
+    aggregatable reports. AWS is the current default. */
+    String MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
+            "https://publickeyservice.aws.privacysandboxservices.com";
+
+    /**
+     * Returns the default origin for creating the URI used to fetch public encryption keys for
+     * aggregatable reports.
+     */
+    default String getMeasurementDefaultAggregationCoordinatorOrigin() {
+        return MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN;
+    }
+
     /* The default min time period (in millis) between each aggregate main reporting job run. */
     long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -414,6 +460,55 @@ public interface Flags {
      */
     default int getMeasurementMaxDistinctDestinationsInActiveSource() {
         return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
+    }
+
+    boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
+
+    /** Returns true if flex lite api is enabled else false. */
+    default boolean getMeasurementFlexLiteAPIEnabled() {
+        return MEASUREMENT_FLEX_LITE_API_ENABLED;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
+
+    /** Returns max information gain in Flexible Event API for Event sources */
+    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
+
+    /** Returns max information gain in Flexible Event API for Navigation sources */
+    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+    }
+
+    int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
+
+    /** Returns max event reports in Flexible Event API */
+    default int getMeasurementFlexAPIMaxEventReports() {
+        return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
+    }
+
+    int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
+
+    /** Returns max event report windows in Flexible Event API */
+    default int getMeasurementFlexAPIMaxEventReportWindows() {
+        return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
+    }
+
+    int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
+
+    /** Returns max trigger data cardinality in Flexible Event API */
+    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+        return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
+    }
+
+    long MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS = TimeUnit.HOURS.toSeconds(1);
+
+    /** Returns minimum event report window */
+    default long getMeasurementMinimumEventReportWindowInSeconds() {
+        return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -857,6 +952,14 @@ public interface Flags {
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
+    }
+
+    ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
+
+    /** Returns available bucket sizes for auction server payloads. */
+    default ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
+        return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
     }
 
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
@@ -2581,6 +2684,14 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
 
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraParsingAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -2637,5 +2748,13 @@ public interface Flags {
     /** Returns the consent notification reset token. */
     default String getConsentNotificationResetToken() {
         return CONSENT_NOTIFICATION_RESET_TOKEN;
+    }
+
+    /** Default whether Enrollment Mdd Record Deletion feature is enabled. */
+    boolean ENROLLMENT_MDD_RECORD_DELETION_ENABLED = false;
+
+    /** Returns whether the {@code enrollmentMddRecordDeletion} feature is enabled. */
+    default boolean getEnrollmentMddRecordDeletionEnabled() {
+        return ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
     }
 }

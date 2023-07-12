@@ -15,7 +15,9 @@
  */
 package com.android.adservices.measurement;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +39,8 @@ import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -65,6 +69,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -74,15 +79,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class MeasurementManagerTest {
+    public static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
     private static final long TIMEOUT = 5000L;
     private static final long CALLBACK_TIMEOUT = 1000L;
-
     private static final long AD_ID_TIMEOUT = 500;
-
-    public static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
-
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final SandboxedSdkContext sSandboxedSdkContext =
             new SandboxedSdkContext(
@@ -1246,6 +1248,254 @@ public class MeasurementManagerTest {
 
         Exception exception = future.get();
         Assert.assertTrue(exception instanceof RuntimeException);
+    }
+
+    @Test
+    public void testRegisterSourceMulti_adIdDisabled_register() throws Exception {
+        // Setup
+        AdIdManager adIdManager = mock(AdIdManager.class);
+        MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
+
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        doReturn(mockService).when(measurementManager).getService();
+        ArgumentCaptor<SourceRegistrationRequestInternal> captor =
+                ArgumentCaptor.forClass(SourceRegistrationRequestInternal.class);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer<Void> serviceResponseAnswer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(serviceResponseAnswer)
+                .when(mockService)
+                .registerSource(captor.capture(), any(), any());
+        Answer adIdAnswer =
+                (invocation) -> {
+                    ((OutcomeReceiver) invocation.getArgument(1)).onError(new SecurityException());
+                    return null;
+                };
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+
+        measurementManager.registerSource(
+                buildDefaultAppSourcesRegistrationRequest(),
+                /* executor = */ null,
+                /* callback = */ null);
+
+        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertNull(captor.getValue().getAdIdValue());
+        Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    @Test
+    public void testRegisterSourceMulti_adIdTimeOut_register() throws Exception {
+        AdIdManager adIdManager = mock(AdIdManager.class);
+        MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
+
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        doReturn(mockService).when(measurementManager).getService();
+        ArgumentCaptor<SourceRegistrationRequestInternal> captor =
+                ArgumentCaptor.forClass(SourceRegistrationRequestInternal.class);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer<Void> answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerSource(captor.capture(), any(), any());
+
+        Answer adIdAnswer =
+                (invocation) -> {
+                    Thread.sleep(AD_ID_TIMEOUT);
+                    return null;
+                };
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+
+        measurementManager.registerSource(
+                buildDefaultAppSourcesRegistrationRequest(),
+                /* executor = */ null,
+                /* callback = */ null);
+
+        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertNull(captor.getValue().getAdIdValue());
+        Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    @Test
+    public void testRegisterSourceMulti_adIdEnabled_register() throws Exception {
+        AdIdManager adIdManager = mock(AdIdManager.class);
+        MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
+
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        doReturn(mockService).when(measurementManager).getService();
+        ArgumentCaptor<SourceRegistrationRequestInternal> captor =
+                ArgumentCaptor.forClass(SourceRegistrationRequestInternal.class);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer<Void> answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerSource(captor.capture(), any(), any());
+
+        Answer adIdAnswer =
+                (invocation) -> {
+                    ((OutcomeReceiver) invocation.getArgument(1)).onResult(new AdId(AD_ID, true));
+                    return null;
+                };
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+
+        measurementManager.registerSource(
+                buildDefaultAppSourcesRegistrationRequest(),
+                /* executor = */ null,
+                /* callback = */ null);
+
+        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertEquals(AD_ID, captor.getValue().getAdIdValue());
+        Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    @Test
+    public void testRegisterSourceMulti_adIdZeroOut_register() throws Exception {
+        AdIdManager adIdManager = mock(AdIdManager.class);
+        MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
+
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        doReturn(mockService).when(measurementManager).getService();
+        ArgumentCaptor<SourceRegistrationRequestInternal> captor =
+                ArgumentCaptor.forClass(SourceRegistrationRequestInternal.class);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer<Void> answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerSource(captor.capture(), any(), any());
+
+        Answer adIdAnswer =
+                (invocation) -> {
+                    ((OutcomeReceiver) invocation.getArgument(1))
+                            .onResult(new AdId(AdId.ZERO_OUT, true));
+                    return null;
+                };
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+
+        measurementManager.registerSource(
+                buildDefaultAppSourcesRegistrationRequest(),
+                /* executor = */ null,
+                /* callback = */ null);
+
+        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertNull(captor.getValue().getAdIdValue());
+        Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    @Test
+    public void testRegisterSourceMulti_BindServiceFailure_propagateErrorCallback() {
+        MeasurementManager measurementManager = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        measurementManager.registerSource(
+                buildDefaultAppSourcesRegistrationRequest(),
+                /* executor = */ CALLBACK_EXECUTOR,
+                /* callback = */ callback);
+
+        verify(callback, after(CALLBACK_TIMEOUT)).onError(any());
+    }
+
+    @Test
+    public void
+            testRegisterSourceMulti_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
+        MeasurementManager measurementManager = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        Assert.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        measurementManager.registerSource(
+                                buildDefaultAppSourcesRegistrationRequest(),
+                                /* executor = */ null,
+                                /* callback = */ callback));
+    }
+
+    @Test
+    public void testRegisterSourceMulti_callingApp_expectedAttributionSource() throws Exception {
+        MeasurementManager mm = getMeasurementManager();
+        IMeasurementService mockService = mock(IMeasurementService.class);
+        doReturn(mockService).when(mm).getService();
+        ArgumentCaptor<SourceRegistrationRequestInternal> captor =
+                ArgumentCaptor.forClass(SourceRegistrationRequestInternal.class);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Answer<Void> answer =
+                (invocation) -> {
+                    countDownLatch.countDown();
+                    return null;
+                };
+        doAnswer(answer).when(mockService).registerSource(captor.capture(), any(), any());
+
+        mm.registerSource(
+                buildDefaultAppSourcesRegistrationRequest(),
+                /* executor = */ null,
+                /* callback = */ null);
+
+        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+    }
+
+    @Test
+    public void testRegisterSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
+        MeasurementManager measurementManager = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        Assert.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        measurementManager.registerSource(
+                                Uri.parse("https://example.com"),
+                                /* input event */ null,
+                                /* executor = */ null,
+                                /* callback = */ callback));
+    }
+
+    @Test
+    public void testRegisterWebSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
+        MeasurementManager measurementManager = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        Assert.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        measurementManager.registerWebSource(
+                                buildDefaultWebSourceRegistrationRequest(),
+                                /* executor = */ null,
+                                /* callback = */ callback));
+    }
+
+    @Test
+    public void testRegisterWebTrigger_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
+        MeasurementManager measurementManager = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        Assert.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        measurementManager.registerWebTrigger(
+                                buildDefaultWebTriggerRegistrationRequest(),
+                                /* executor = */ null,
+                                /* callback = */ callback));
+    }
+
+    private SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
+        return new SourceRegistrationRequest.Builder(
+                        Arrays.asList(
+                                Uri.parse("https://example1.com"),
+                                Uri.parse("https://example2.com")))
+                .setInputEvent(null)
+                .build();
     }
 
     private int callMeasurementApiStatus(MeasurementManager mm) throws Exception {
