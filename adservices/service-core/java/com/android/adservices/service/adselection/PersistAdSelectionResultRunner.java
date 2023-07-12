@@ -65,7 +65,7 @@ public class PersistAdSelectionResultRunner {
     @NonNull private final int mCallerUid;
 
     @NonNull private AuctionServerDataCompressor mDataCompressor;
-    @NonNull private AuctionServerPayloadFormatter mPayloadFormatter;
+    @NonNull private AuctionServerPayloadExtractor mPayloadExtractor;
 
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
@@ -201,9 +201,8 @@ public class PersistAdSelectionResultRunner {
         initializePayloadFormatter(resultBytes);
 
         sLogger.v("Applying formatter on AuctionResult bytes");
-        AuctionServerPayloadFormatter.UnformattedData unformattedResult =
-                mPayloadFormatter.extract(
-                        AuctionServerPayloadFormatter.FormattedData.create(resultBytes));
+        AuctionServerPayloadUnformattedData unformattedResult =
+                mPayloadExtractor.extract(AuctionServerPayloadFormattedData.create(resultBytes));
 
         sLogger.v("Applying decompression on AuctionResult bytes");
         AuctionServerDataCompressor.UncompressedData uncompressedResult =
@@ -218,7 +217,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(resultBytes, "AdSelectionResult bytes cannot be null");
 
         byte metaInfoByte = resultBytes[0];
-        int version = AuctionServerPayloadFormatter.extractCompressionVersion(metaInfoByte);
+        int version = AuctionServerPayloadFormattingUtil.extractCompressionVersion(metaInfoByte);
         mDataCompressor = AuctionServerDataCompressorFactory.getDataCompressor(version);
     }
 
@@ -226,8 +225,8 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(resultBytes, "AdSelectionResult bytes cannot be null");
 
         byte metaInfoByte = resultBytes[0];
-        int version = AuctionServerPayloadFormatter.extractFormatterVersion(metaInfoByte);
-        mPayloadFormatter = AuctionServerPayloadFormatterFactory.getPayloadFormatter(version);
+        int version = AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte);
+        mPayloadExtractor = AuctionServerPayloadFormatterFactory.createPayloadExtractor(version);
     }
 
     private AuctionResult composeAuctionResult(
