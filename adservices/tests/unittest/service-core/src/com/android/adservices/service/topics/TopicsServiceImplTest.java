@@ -65,6 +65,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -94,6 +95,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -157,6 +159,12 @@ public class TopicsServiceImplTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
+
+    // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
+    // Android R since some tests require handling of unsupported PackageManager APIs. Remove this
+    // rule if Topics API will be launched on Android R in the future (b/290839573).
+    @Rule
+    public final SdkLevelSupportRule sdkLevelRule = new SdkLevelSupportRule(SdkLevel::isAtLeastS);
 
     @Before
     public void setup() throws Exception {

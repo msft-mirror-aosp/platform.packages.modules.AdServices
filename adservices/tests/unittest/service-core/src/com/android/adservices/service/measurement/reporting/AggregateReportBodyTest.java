@@ -20,17 +20,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import android.net.Uri;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.quality.Strictness;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
@@ -55,9 +66,13 @@ public class AggregateReportBodyTest {
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(27628792L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(23443234L);
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
+
+    private static final String COORDINATOR_ORIGIN = "https://coordinator.origin";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
+    private StaticMockitoSession mMockitoSession;
+    private Flags mMockFlags;
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
@@ -70,6 +85,7 @@ public class AggregateReportBodyTest {
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .build();
     }
 
@@ -82,6 +98,7 @@ public class AggregateReportBodyTest {
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .setSourceDebugKey(null)
                 .setTriggerDebugKey(null)
                 .build();
@@ -97,6 +114,7 @@ public class AggregateReportBodyTest {
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .build();
     }
 
@@ -110,7 +128,25 @@ public class AggregateReportBodyTest {
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .build();
+    }
+
+    @Before
+    public void before() {
+        mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        mMockFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
+    }
+
+    @After
+    public void after() {
+        mMockitoSession.finishMocking();
     }
 
     @Test
@@ -127,6 +163,25 @@ public class AggregateReportBodyTest {
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
         assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
+    }
+
+    @Test
+    public void testSharedInfoJsonSerialization_originFlagDisabled() throws JSONException {
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(false);
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+        assertTrue(aggregateJson.isNull("aggregation_coordinator_origin"));
     }
 
     @Test
@@ -141,6 +196,7 @@ public class AggregateReportBodyTest {
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
         assertNull(aggregateJson.opt("source_debug_key"));
         assertNull(aggregateJson.opt("trigger_debug_key"));
     }
@@ -159,6 +215,7 @@ public class AggregateReportBodyTest {
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
         assertNull(aggregateJson.opt("trigger_debug_key"));
     }
 
@@ -177,6 +234,7 @@ public class AggregateReportBodyTest {
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertNull(aggregateJson.opt("source_debug_key"));
         assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
     }
 
     @Test

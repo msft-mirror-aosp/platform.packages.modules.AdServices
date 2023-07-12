@@ -230,9 +230,9 @@ public final class KeyedFrequencyCap implements Parcelable {
                     maxCount > 0, MAX_COUNT_NOT_POSITIVE_ERROR_MESSAGE, maxCount);
             Objects.requireNonNull(interval, INTERVAL_NULL_ERROR_MESSAGE);
             Preconditions.checkArgument(
-                    interval.toSeconds() > 0, INTERVAL_NOT_POSITIVE_FORMAT, interval);
+                    interval.getSeconds() > 0, INTERVAL_NOT_POSITIVE_FORMAT, interval);
             Preconditions.checkArgument(
-                    interval.toSeconds() <= MAX_INTERVAL.toSeconds(),
+                    interval.getSeconds() <= MAX_INTERVAL.getSeconds(),
                     MAX_INTERVAL_EXCEEDED_FORMAT,
                     interval,
                     MAX_INTERVAL);
@@ -276,9 +276,9 @@ public final class KeyedFrequencyCap implements Parcelable {
         public Builder setInterval(@NonNull Duration interval) {
             Objects.requireNonNull(interval, INTERVAL_NULL_ERROR_MESSAGE);
             Preconditions.checkArgument(
-                    interval.toSeconds() > 0, INTERVAL_NOT_POSITIVE_FORMAT, interval);
+                    interval.getSeconds() > 0, INTERVAL_NOT_POSITIVE_FORMAT, interval);
             Preconditions.checkArgument(
-                    interval.toSeconds() <= MAX_INTERVAL.toSeconds(),
+                    interval.getSeconds() <= MAX_INTERVAL.getSeconds(),
                     MAX_INTERVAL_EXCEEDED_FORMAT,
                     interval,
                     MAX_INTERVAL);
