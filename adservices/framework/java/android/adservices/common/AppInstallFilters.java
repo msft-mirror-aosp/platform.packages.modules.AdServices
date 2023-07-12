@@ -45,8 +45,6 @@ import java.util.Set;
  * <p>Note that the filtering is based on any package with one of the listed package names being on
  * the device. It is possible that the package holding the package name is not the application
  * targeted by the ad.
- *
- * @hide
  */
 public final class AppInstallFilters implements Parcelable {
     /** @hide */

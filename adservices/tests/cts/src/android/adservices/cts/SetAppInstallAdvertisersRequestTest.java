@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.common.AdTechIdentifier;
 
-import org.junit.Ignore;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,7 +34,7 @@ public class SetAppInstallAdvertisersRequestTest {
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
 
-    @Ignore
+    @Test
     public void testBuildsSetAppInstallAdvertisersRequest() {
         SetAppInstallAdvertisersRequest request = new SetAppInstallAdvertisersRequest(ADVERTISERS);
 
