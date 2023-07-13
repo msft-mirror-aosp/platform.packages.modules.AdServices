@@ -21,13 +21,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -53,6 +59,8 @@ public class SourceTest {
 
     private static final UnsignedLong DEBUG_KEY_1 = new UnsignedLong(81786463L);
     private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
+    private static final UnsignedLong SHARED_DEBUG_KEY_1 = new UnsignedLong(1786463L);
+    private static final UnsignedLong SHARED_DEBUG_KEY_2 = new UnsignedLong(3487834L);
 
     @Test
     public void testDefaults() {
@@ -124,6 +132,7 @@ public class SourceTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .setCoarseEventReportDestinations(true)
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -165,6 +174,7 @@ public class SourceTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .setCoarseEventReportDestinations(true)
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .build());
     }
 
@@ -365,6 +375,13 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setCoarseEventReportDestinations(true)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_2)
                         .build());
     }
 
@@ -778,6 +795,15 @@ public class SourceTest {
     }
 
     @Test
+    public void setSharedDebugKey_success() throws JSONException {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .build();
+        assertEquals(SHARED_DEBUG_KEY_1, source.getSharedDebugKey());
+    }
+
+    @Test
     public void reportSpecs_encodingDecoding_equal() throws JSONException {
         // Setup
         Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
@@ -869,6 +895,15 @@ public class SourceTest {
 
     @Test
     public void isFlexEventApiValueValid_eventSource_true() throws JSONException {
+        Flags flags = mock(Flags.class);
+        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+                .when(flags)
+                .getMeasurementFlexAPIMaxInformationGainEvent();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+                .when(flags)
+                .getMeasurementFlexAPIMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
@@ -887,18 +922,27 @@ public class SourceTest {
                         .setEventTime(new Random().nextLong())
                         .setExpiryTime(8640000010L)
                         .setPriority(100L)
-                        .setSourceType(Source.SourceType.EVENT)
+                        .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("1")
-                        .buildInitialFlexEventReportSpec()
+                        .setMaxEventLevelReports(3)
+                        .buildInitialFlexEventReportSpec(flags)
                         .build();
-        assertTrue(testSource.isFlexEventApiValueValid());
+        assertTrue(testSource.isFlexEventApiValueValid(flags));
     }
 
     @Test
     public void isFlexEventApiValueValid_eventSource_false() throws JSONException {
+        Flags flags = mock(Flags.class);
+        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+                .when(flags)
+                .getMeasurementFlexAPIMaxInformationGainEvent();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+                .when(flags)
+                .getMeasurementFlexAPIMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -925,14 +969,23 @@ public class SourceTest {
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("1")
-                        .buildInitialFlexEventReportSpec()
+                        .setMaxEventLevelReports(3)
+                        .buildInitialFlexEventReportSpec(flags)
                         .build();
-        assertFalse(testSource.isFlexEventApiValueValid());
+        assertFalse(testSource.isFlexEventApiValueValid(flags));
     }
 
     @Test
     public void isFlexEventApiValueValid_navigationSource_true() throws JSONException {
+        Flags flags = mock(Flags.class);
+        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+                .when(flags)
+                .getMeasurementFlexAPIMaxInformationGainEvent();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+                .when(flags)
+                .getMeasurementFlexAPIMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -959,10 +1012,10 @@ public class SourceTest {
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("1")
-                        .buildInitialFlexEventReportSpec()
+                        .setMaxEventLevelReports(3)
+                        .buildInitialFlexEventReportSpec(flags)
                         .build();
-        assertTrue(testSource.isFlexEventApiValueValid());
+        assertTrue(testSource.isFlexEventApiValueValid(flags));
     }
 
     @Test
@@ -981,14 +1034,14 @@ public class SourceTest {
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("3")
+                        .setMaxEventLevelReports(3)
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
                         .build();
         testSource.buildFlexibleEventReportApi();
         // Assertion
         assertEquals(
                 testSource.getFlexEventReportSpec(),
-                new ReportSpec(triggerSpecsString, "3", "", "{\"flip_probability\" :0.0024}"));
+                new ReportSpec(triggerSpecsString, "3", "", "{\"flip_probability\":0.0024}"));
     }
 
     @Test
@@ -1007,7 +1060,7 @@ public class SourceTest {
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("3")
+                        .setMaxEventLevelReports(3)
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}")
                         .build();
 
@@ -1017,6 +1070,8 @@ public class SourceTest {
 
     @Test
     public void buildInitialFlexEventReportSpec_validParams_pass() throws JSONException {
+        Flags flags = mock(Flags.class);
+        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
@@ -1031,8 +1086,8 @@ public class SourceTest {
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("3")
-                        .buildInitialFlexEventReportSpec()
+                        .setMaxEventLevelReports(3)
+                        .buildInitialFlexEventReportSpec(flags)
                         .build();
         // Assertion
         assertEquals(testSource.getFlexEventReportSpec(), new ReportSpec(triggerSpecsString, "3"));
@@ -1040,6 +1095,8 @@ public class SourceTest {
 
     @Test
     public void buildInitialFlexEventReportSpec_invalidParamsSyntaxError_throws() {
+        Flags flags = mock(Flags.class);
+        doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3,"
                         + "\"event_report_windows\": { "
@@ -1054,11 +1111,148 @@ public class SourceTest {
         Source.Builder testSourceBuilder =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecs(triggerSpecsString)
-                        .setMaxBucketIncrements("3")
+                        .setMaxEventLevelReports(3)
                         .setPrivacyParameters("{\"flip_probability\" :0.0024}");
 
         // Assertion
         assertThrows(
-                JSONException.class, () -> testSourceBuilder.buildInitialFlexEventReportSpec());
+                JSONException.class,
+                () -> testSourceBuilder.buildInitialFlexEventReportSpec(flags));
+    }
+
+    @Test
+    public void parseEventReportWindows() {
+        // Invalid JSON
+        assertNull(Source.parseEventReportWindows("{'}"));
+
+        // No Start Time
+        List<Pair<Long, Long>> eventReportWindows =
+                Source.parseEventReportWindows("{'end_times': [3600, 86400]}");
+        assertNotNull(eventReportWindows);
+        assertEquals(2, eventReportWindows.size());
+        assertEquals(new Pair<>(0L, 3600L), eventReportWindows.get(0));
+        assertEquals(new Pair<>(3600L, 86400L), eventReportWindows.get(1));
+
+        // With Start Time
+        eventReportWindows =
+                Source.parseEventReportWindows(
+                        "{'start_time': '2000', 'end_times': [3600, 86400, 172000]}");
+        assertNotNull(eventReportWindows);
+        assertEquals(eventReportWindows.size(), 3);
+        assertEquals(new Pair<>(2000L, 3600L), eventReportWindows.get(0));
+        assertEquals(new Pair<>(3600L, 86400L), eventReportWindows.get(1));
+        assertEquals(new Pair<>(86400L, 172000L), eventReportWindows.get(2));
+    }
+
+    @Test
+    public void getOrDefaultEventReportWindows() {
+        Flags flags = mock(Flags.class);
+        // AdTech Windows
+        List<Pair<Long, Long>> eventReportWindows =
+                Source.getOrDefaultEventReportWindows(
+                        "{'start_time': '2000000', 'end_times': [3600000, 86400000, 172000000]}",
+                        Source.SourceType.EVENT,
+                        8640000,
+                        flags);
+        assertNotNull(eventReportWindows);
+        assertEquals(eventReportWindows.size(), 3);
+        assertEquals(new Pair<>(2000000L, 3600000L), eventReportWindows.get(0));
+        assertEquals(new Pair<>(3600000L, 86400000L), eventReportWindows.get(1));
+        assertEquals(new Pair<>(86400000L, 172000000L), eventReportWindows.get(2));
+
+        // Default Windows - Event
+        when(flags.getMeasurementEventReportsVtcEarlyReportingWindows()).thenReturn("86400");
+        when(flags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn("172800,604800");
+        eventReportWindows =
+                Source.getOrDefaultEventReportWindows(
+                        null, Source.SourceType.EVENT, TimeUnit.DAYS.toMillis(15), flags);
+        assertNotNull(eventReportWindows);
+        assertEquals(2, eventReportWindows.size());
+        assertEquals(new Pair<>(0L, 86400000L), eventReportWindows.get(0));
+        assertEquals(new Pair<>(86400000L, 1296000000L), eventReportWindows.get(1));
+
+        // Default Windows - Navigation
+        eventReportWindows =
+                Source.getOrDefaultEventReportWindows(
+                        null, Source.SourceType.NAVIGATION, TimeUnit.DAYS.toMillis(15), flags);
+        assertNotNull(eventReportWindows);
+        assertEquals(3, eventReportWindows.size());
+        assertEquals(new Pair<>(0L, 172800000L), eventReportWindows.get(0));
+        assertEquals(new Pair<>(172800000L, 604800000L), eventReportWindows.get(1));
+        assertEquals(new Pair<>(604800000L, 1296000000L), eventReportWindows.get(2));
+    }
+
+    @Test
+    public void parsedProcessedEventReportWindows() {
+        // Null event report window
+        Source source = SourceFixture.getValidSource();
+        assertNull(source.parsedProcessedEventReportWindows());
+
+        // Invalid event report windows string
+        Source sourceInvalidWindows =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(10L)
+                        .setEventReportWindows("{''}")
+                        .build();
+        assertNull(sourceInvalidWindows.parsedProcessedEventReportWindows());
+
+        // Valid event report windows string
+        Source sourceValidWindows =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(10L)
+                        .setEventReportWindows(
+                                "{'start_time': 1800000, 'end_times': [3600000, 864000000]}")
+                        .build();
+        List<Pair<Long, Long>> windows = sourceValidWindows.parsedProcessedEventReportWindows();
+        assertNotNull(windows);
+        assertEquals(2, windows.size());
+        assertEquals(new Pair<>(1800010L, 3600010L), windows.get(0));
+        assertEquals(new Pair<>(3600010L, 864000010L), windows.get(1));
+    }
+
+    @Test
+    public void getOrDefaultMaxEventLevelReports() {
+        Flags flags = mock(Flags.class);
+        when(flags.getMeasurementVtcConfigurableMaxEventReportsCount()).thenReturn(2);
+        // null, Default for EVENT
+        assertEquals(
+                Integer.valueOf(2),
+                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.EVENT, null, flags));
+        // null, Default for NAVIGATION
+        assertEquals(
+                Integer.valueOf(3),
+                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.NAVIGATION, null, flags));
+        // Valid value provided
+        assertEquals(
+                Integer.valueOf(7),
+                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.NAVIGATION, 7, flags));
+    }
+
+    @Test
+    public void getProcessedEventReportWindow() {
+        // null eventReportWindow
+        Source sourceNullEventReportWindow =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(10)
+                        .setEventReportWindow(null)
+                        .build();
+        assertNull(sourceNullEventReportWindow.getProcessedEventReportWindow());
+
+        // eventReportWindow Value < eventTime
+        Source sourceNewEventReportWindow =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(10)
+                        .setEventReportWindow(4L)
+                        .build();
+        assertEquals(Long.valueOf(14L), sourceNewEventReportWindow.getProcessedEventReportWindow());
+
+        // eventReportWindow Value > eventTime
+        Source sourceOldEventReportWindow =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(10)
+                        .setEventReportWindow(15L)
+                        .build();
+        assertEquals(Long.valueOf(15L), sourceOldEventReportWindow.getProcessedEventReportWindow());
     }
 }

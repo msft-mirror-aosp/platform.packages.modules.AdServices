@@ -25,6 +25,7 @@ import com.google.auto.service.AutoService
 @Suppress("UnstableApiUsage")
 class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
     override val issues = listOf(
+            BackCompatAndroidProcessDetector.ISSUE,
             BackCompatJobServiceDetector.ISSUE
     )
 

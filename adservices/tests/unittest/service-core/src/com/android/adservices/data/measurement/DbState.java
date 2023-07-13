@@ -379,6 +379,8 @@ public class DbState {
                 .setKeyId(keyJSON.getString("keyId"))
                 .setPublicKey(keyJSON.getString("publicKey"))
                 .setExpiry(keyJSON.getLong("expiry"))
+                .setAggregationCoordinatorOrigin(
+                        WebUtil.validUri(keyJSON.getString("aggregation_coordinator_origin")))
                 .build();
     }
 
@@ -458,6 +460,10 @@ public class DbState {
                 .setSourceId(rJSON.optString("sourceId", null))
                 .setTriggerId(rJSON.optString("triggerId", null))
                 .setRegistrationOrigin(getRegistrationOrigin(rJSON))
+                .setAggregationCoordinatorOrigin(
+                        Uri.parse(
+                                rJSON.optString(
+                                        "aggregation_coordinator_origin", "https://test.test")))
                 .build();
     }
 

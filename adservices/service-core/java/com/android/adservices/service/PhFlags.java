@@ -33,14 +33,17 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
+    static final String ARRAY_SPLITTER_COMMA = ",";
     /*
      * Keys for ALL the flags stored in DeviceConfig.
      */
@@ -78,6 +81,18 @@ public final class PhFlags implements Flags {
             "measurement_event_fallback_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
             "measurement_aggregate_encryption_key_coordinator_url";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED =
+            "measurement_aggregation_coordination_origin_enabled";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
+            "measurement_aggregation_coordinator_origin_list";
+
+    static final String KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
+            "measurement_default_aggregation_coordinator_origin";
+
+    static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
+            "measurement_aggregation_coordinator_path";
     static final String KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
@@ -109,6 +124,8 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
+    static final String KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY =
+            "measurement_enable_shared_source_debug_key";
     static final String KEY_MEASUREMENT_ENABLE_DEBUG_REPORT = "measurement_enable_debug_report";
     static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT =
             "measurement_enable_source_debug_report";
@@ -154,6 +171,9 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
+
+    static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
+            "key_measurement_enable_ara_parsing_alignment_v1";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -270,6 +290,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_off_device_enabled";
     static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
+    static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            "fledge_auction_server_payload_bucket_sizes";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -466,6 +488,11 @@ public final class PhFlags implements Flags {
 
     static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
 
+    // Enrollment Mdd Deletion Feature Enabled check
+
+    static final String KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED =
+            "enable_enrollment_mdd_record_deletion";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -577,6 +604,26 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
 
+    static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED = "measurement_flex_lite_api_enabled";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT =
+            "measurement_flex_api_max_information_gain_event";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION =
+            "measurement_flex_api_max_information_gain_navigation";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
+            "measurement_flex_api_max_event_reports";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS =
+            "measurement_flex_api_max_event_report_windows";
+
+    static final String KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY =
+            "measurement_flex_api_max_trigger_data_cardinality";
+
+    static final String KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS =
+            "measurement_minimum_event_report_window_in_seconds";
+
     static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
             "measurement_max_sources_per_publisher";
 
@@ -590,7 +637,7 @@ public final class PhFlags implements Flags {
             "measurement_max_event_reports_per_destination";
 
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_seconds";
+            "measurement_min_event_report_delay_millis";
 
     static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
             "measurement_enable_configurable_event_reporting_windows";
@@ -849,6 +896,42 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementAggregationCoordinatorOriginEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED);
+    }
+
+    @Override
+    public String getMeasurementAggregationCoordinatorOriginList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST);
+    }
+
+    @Override
+    public String getMeasurementDefaultAggregationCoordinatorOrigin() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                /* defaultValue */ MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN);
+    }
+
+    @Override
+    public String getMeasurementAggregationCoordinatorPath() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
+                /* defaultValue */ MEASUREMENT_AGGREGATION_COORDINATOR_PATH);
+    }
+
+    @Override
     public long getMeasurementAggregateMainReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -936,6 +1019,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_XNA,
                 /* defaultValue */ MEASUREMENT_ENABLE_XNA);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSharedSourceDebugKey() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY,
+                /* defaultValue */ MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY);
     }
 
     @Override
@@ -1370,6 +1461,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1379,6 +1471,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeFetchCustomAudienceEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -2212,6 +2305,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
+        String bucketSizesString =
+                DeviceConfig.getString(
+                        NAMESPACE_ADSERVICES, KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES, null);
+        // TODO(b/290401812): Decide the fate of malformed bucket size config string.
+        return Optional.ofNullable(bucketSizesString)
+                .map(
+                        s ->
+                                Arrays.stream(s.split(ARRAY_SPLITTER_COMMA))
+                                        .map(Integer::valueOf)
+                                        .collect(Collectors.toList()))
+                .map(ImmutableList::copyOf)
+                .orElse(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -2421,6 +2530,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_ENROLLMENT_TEST_SEED,
                 /* defaultValue */ ENABLE_ENROLLMENT_TEST_SEED);
+    }
+
+    @Override
+    public boolean getEnrollmentMddRecordDeletionEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED,
+                /* defaultValue */ ENROLLMENT_MDD_RECORD_DELETION_ENABLED);
     }
 
     @Override
@@ -2763,6 +2880,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean isBackCompatActivityFeatureEnabled() {
         // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -2822,6 +2940,62 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
                 /* defaultValue */ MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
+    }
+
+    @Override
+    public boolean getMeasurementFlexLiteAPIEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
+                /* defaultValue */ MEASUREMENT_FLEX_LITE_API_ENABLED);
+    }
+
+    @Override
+    public float getMeasurementFlexAPIMaxInformationGainEvent() {
+        return DeviceConfig.getFloat(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+    }
+
+    @Override
+    public float getMeasurementFlexAPIMaxInformationGainNavigation() {
+        return DeviceConfig.getFloat(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+    }
+
+    @Override
+    public int getMeasurementFlexAPIMaxEventReports() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS);
+    }
+
+    @Override
+    public int getMeasurementFlexAPIMaxEventReportWindows() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS);
+    }
+
+    @Override
+    public int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY);
+    }
+
+    @Override
+    public long getMeasurementMinimumEventReportWindowInSeconds() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS);
     }
 
     @Override
@@ -2954,6 +3128,12 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t" + KEY_ENABLE_ENROLLMENT_TEST_SEED + " = " + isEnableEnrollmentTestSeed());
+
+        writer.println(
+                "\t"
+                        + KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED
+                        + " = "
+                        + getEnrollmentMddRecordDeletionEnabled());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -3101,6 +3281,26 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateEncryptionKeyCoordinatorUrl());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED
+                        + " = "
+                        + getMeasurementAggregationCoordinatorOriginEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST
+                        + " = "
+                        + getMeasurementAggregationCoordinatorOriginList());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN
+                        + " = "
+                        + getMeasurementDefaultAggregationCoordinatorOrigin());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH
+                        + " = "
+                        + getMeasurementAggregationCoordinatorPath());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementAggregateMainReportingJobPeriodMs());
@@ -3162,6 +3362,11 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY
+                        + " = "
+                        + getMeasurementEnableSharedSourceDebugKey());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
                         + " = "
                         + getEnforceEnrollmentOriginMatch());
@@ -3210,6 +3415,41 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
                         + " = "
                         + getMeasurementFlexibleEventReportingApiEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_LITE_API_ENABLED
+                        + " = "
+                        + getMeasurementFlexLiteAPIEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
+                        + " = "
+                        + getMeasurementFlexAPIMaxInformationGainEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION
+                        + " = "
+                        + getMeasurementFlexAPIMaxInformationGainNavigation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
+                        + " = "
+                        + getMeasurementFlexAPIMaxEventReports());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS
+                        + " = "
+                        + getMeasurementFlexAPIMaxEventReportWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY
+                        + " = "
+                        + getMeasurementFlexAPIMaxTriggerDataCardinality());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS
+                        + " = "
+                        + getMeasurementMinimumEventReportWindowInSeconds());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
@@ -3330,12 +3570,21 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
                         + " = "
                         + getMeasurementMaxDistinctDestinationsInActiveSource());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT
+                        + " = "
+                        + getMeasurementVtcConfigurableMaxEventReportsCount());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS
                         + " = "
                         + getMeasurementEnableCoarseEventReportDestinations());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1
+                        + " = "
+                        + getMeasurementEnableAraParsingAlignmentV1());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -3729,6 +3978,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionOffDeviceEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
+                        + " = "
+                        + getFledgeAuctionServerPayloadBucketSizes());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceRequestCompressionEnabled());
@@ -3857,7 +4111,7 @@ public final class PhFlags implements Flags {
         if (TextUtils.isEmpty(blocklistFlag)) {
             return ImmutableList.of();
         }
-        String[] blocklistList = blocklistFlag.split(",");
+        String[] blocklistList = blocklistFlag.split(ARRAY_SPLITTER_COMMA);
         return ImmutableList.copyOf(blocklistList);
     }
 
@@ -3905,7 +4159,7 @@ public final class PhFlags implements Flags {
         String defaultGlobalBlockedTopicIds =
                 TOPICS_GLOBAL_BLOCKED_TOPIC_IDS.stream()
                         .map(String::valueOf)
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.joining(ARRAY_SPLITTER_COMMA));
 
         String globalBlockedTopicIds =
                 DeviceConfig.getString(
@@ -3916,7 +4170,7 @@ public final class PhFlags implements Flags {
             return ImmutableList.of();
         }
         globalBlockedTopicIds = globalBlockedTopicIds.trim();
-        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(",");
+        String[] globalBlockedTopicIdsList = globalBlockedTopicIds.split(ARRAY_SPLITTER_COMMA);
 
         List<Integer> globalBlockedTopicIdsIntList = new ArrayList<>();
 
@@ -3937,7 +4191,7 @@ public final class PhFlags implements Flags {
         String defaultErrorCodeLoggingDenyStr =
                 ERROR_CODE_LOGGING_DENY_LIST.stream()
                         .map(String::valueOf)
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.joining(ARRAY_SPLITTER_COMMA));
 
         String errorCodeLoggingDenyStr =
                 DeviceConfig.getString(
@@ -3948,7 +4202,7 @@ public final class PhFlags implements Flags {
             return ImmutableList.of();
         }
         errorCodeLoggingDenyStr = errorCodeLoggingDenyStr.trim();
-        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(",");
+        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(ARRAY_SPLITTER_COMMA);
 
         List<Integer> errorCodeLoggingDenyIntList = new ArrayList<>();
 
@@ -4004,10 +4258,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getU18UxEnabled() {
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_U18_UX_ENABLED,
-                /* defaultValue */ DEFAULT_U18_UX_ENABLED);
+        return getEnableAdServicesSystemApi()
+                && DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_U18_UX_ENABLED,
+                        /* defaultValue */ DEFAULT_U18_UX_ENABLED);
     }
 
     static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
@@ -4036,6 +4291,7 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
+        uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
         return uxMap;
     }
 
@@ -4062,6 +4318,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAraParsingAlignmentV1() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1,
+                /* defaultValue */ MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1);
     }
 
     @Override

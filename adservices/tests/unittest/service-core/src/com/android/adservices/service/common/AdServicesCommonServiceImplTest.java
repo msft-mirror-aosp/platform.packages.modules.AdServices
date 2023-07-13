@@ -53,6 +53,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.UxEngine;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -77,6 +78,7 @@ public class AdServicesCommonServiceImplTest {
     @Mock private Context mContext;
     @Mock private PackageManager mPackageManager;
     @Mock private UxEngine mUxEngine;
+    @Mock private UxStatesManager mUxStatesManager;
     @Mock private SharedPreferences mSharedPreferences;
     @Mock private SharedPreferences.Editor mEditor;
     @Mock private ConsentManager mConsentManager;
@@ -96,14 +98,17 @@ public class AdServicesCommonServiceImplTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(PermissionHelper.class)
+                        .spyStatic(UxStatesManager.class)
                         .mockStatic(PackageManagerCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         doReturn(true).when(mFlags).getAdServicesEnabled();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance(any()));
         doNothing()
                 .when(
                         () ->
@@ -128,6 +133,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(true).when(mUxStatesManager).isEnrolledUser();
     }
 
 
@@ -138,10 +144,45 @@ public class AdServicesCommonServiceImplTest {
         }
     }
 
+    // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.
+    @Test
+    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws InterruptedException {
+        doReturn(false).when(mUxStatesManager).isEnrolledUser();
+        doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+        // Calling get adservice status, init set the flag to true, expect to return true
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
+        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+    }
+
+    // For the new entry point logic, only enrolled user can see the entry point.
+    @Test
+    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws InterruptedException {
+        doReturn(false).when(mUxStatesManager).isEnrolledUser();
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+        // Calling get adservice status, init set the flag to true, expect to return true
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
+        assertThat(
+                mGetCommonCallbackLatch.await(
+                        BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
+        assertThat(getStatusResult1.getAdServicesEnabled()).isFalse();
+    }
+
     @Test
     public void getAdserviceStatusTest() throws InterruptedException {
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         // Calling get adservice status, init set the flag to true, expect to return true
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
@@ -169,7 +210,8 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mFlags).isBackCompatActivityFeatureEnabled();
 
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
-        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine);
+        mCommonService =
+                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
         // Calling get adservice status, set the activity to enabled, expect to return true
@@ -265,6 +307,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
+
         IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
         assertThat(
                         mGetCommonCallbackLatch.await(

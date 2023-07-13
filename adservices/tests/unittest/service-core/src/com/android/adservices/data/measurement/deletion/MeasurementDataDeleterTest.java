@@ -614,7 +614,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReport()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -667,7 +667,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -718,7 +718,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -769,7 +769,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -819,7 +819,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -870,7 +870,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -921,7 +921,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -971,7 +971,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -1013,7 +1013,7 @@ public class MeasurementDataDeleterTest {
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
                                 reportSpec.encodeTriggerStatusToJSON().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());

@@ -142,6 +142,9 @@ public class DbHelper extends SQLiteOpenHelper {
         LogUtil.d(
                 "DbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);
+        // Apply migrations only if all V1 tables are present, otherwise skip migration because
+        // either Db is in an unexpected stage or Measurement has started using its own database.
+        // Note: This check works because there is no table deletion from V1 to V6.
         if (hasV1MeasurementTables(db)) {
             getOrderedDbMigrators()
                     .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
