@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
@@ -115,7 +116,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 });
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX);
 
         UiUtils.turnOnEnableAdsServicesAPI();
     }
@@ -155,7 +160,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX);
     }
 
     /**
@@ -177,7 +186,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX);
     }
 
     /**
@@ -198,7 +211,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 
     /**
@@ -219,7 +236,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
@@ -238,6 +259,10 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 }
