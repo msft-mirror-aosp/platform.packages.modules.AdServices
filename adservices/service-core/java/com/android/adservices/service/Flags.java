@@ -2779,4 +2779,26 @@ public interface Flags {
     default String getCobaltAdservicesApiKeyHex() {
         return COBALT_ADSERVICES_API_KEY_HEX;
     }
+
+    /**
+     * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
+     * logged_topic column to ReturnedTopic table.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_LOGGED_TOPIC = false;
+
+    /** @return if to enable logged_topic column in ReturnedTopic table. */
+    default boolean getEnableLoggedTopic() {
+        return ENABLE_LOGGED_TOPIC;
+    }
+
+    /** Whether to enable database schema version 8 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_8 = false;
+
+    /** @return if to enable database schema version 8. */
+    default boolean getEnableDatabaseSchemaVersion8() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
 }
