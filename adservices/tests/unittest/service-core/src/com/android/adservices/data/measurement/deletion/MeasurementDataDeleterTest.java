@@ -383,6 +383,7 @@ public class MeasurementDataDeleterTest {
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
+        List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
         Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -428,6 +429,14 @@ public class MeasurementDataDeleterTest {
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
+        when(mMeasurementDao.fetchMatchingAsyncRegistrations(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(asyncRegistrationIds);
         when(mMeasurementDao.fetchMatchingTriggers(
                         Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
@@ -451,9 +460,9 @@ public class MeasurementDataDeleterTest {
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
         verify(subjectUnderTest)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
+        verify(mMeasurementDao).deleteAsyncRegistrations(asyncRegistrationIds);
         verify(mMeasurementDao).deleteSources(sourceIds);
         verify(mMeasurementDao).deleteTriggers(triggerIds);
-        verify(mMeasurementDao).deleteAsyncRegistrationsProvidedRegistrant(APP_PACKAGE_NAME);
         verify(subjectUnderTest)
                 .resetAggregateReportDedupKeys(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
