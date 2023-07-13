@@ -36,6 +36,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
@@ -60,7 +61,7 @@ public class ConsentNotificationTrigger {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance(context);
         if (!notificationManager.areNotificationsEnabled()) {
-            recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
+            recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled(context);
             return;
         }
@@ -77,21 +78,38 @@ public class ConsentNotificationTrigger {
         notificationManager.notify(NOTIFICATION_ID, notification);
 
         UiStatsLogger.logNotificationDisplayed(context);
-        recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
+        recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
     }
 
     private static void recordNotificationDisplayed(
-            boolean gaUxFeatureEnabled, ConsentManager consentManager) {
+            @NonNull Context context, boolean gaUxFeatureEnabled, ConsentManager consentManager) {
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()
                 && consentManager.getUserManualInteractionWithConsent()
                         != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
             consentManager.recordUserManualInteractionWithConsent(
                     ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
         }
-        if (gaUxFeatureEnabled) {
-            consentManager.recordGaUxNotificationDisplayed(true);
+
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+            switch (NotificationUtil.getUx(null, context)) {
+                case GA_UX:
+                    consentManager.recordGaUxNotificationDisplayed(true);
+                    break;
+                case U18_UX:
+                    consentManager.setU18NotificationDisplayed(true);
+                    break;
+                case BETA_UX:
+                    consentManager.recordNotificationDisplayed(true);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            if (gaUxFeatureEnabled) {
+                consentManager.recordGaUxNotificationDisplayed(true);
+            }
+            consentManager.recordNotificationDisplayed(true);
         }
-        consentManager.recordNotificationDisplayed(true);
     }
 
     @NonNull
