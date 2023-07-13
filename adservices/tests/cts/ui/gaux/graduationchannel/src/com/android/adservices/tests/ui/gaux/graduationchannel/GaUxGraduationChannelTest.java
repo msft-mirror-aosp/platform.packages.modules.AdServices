@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.gaux.alreadyenrolledchannel;
+package com.android.adservices.tests.ui.gaux.graduationchannel;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -43,7 +43,7 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class GaUxAlreadyEnrolledChannelTest {
+public class GaUxGraduationChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -120,113 +120,38 @@ public class GaUxAlreadyEnrolledChannelTest {
      * displayed.
      */
     @Test
-    public void testGaRowAdIdEnabled() throws Exception {
+    public void testRowU18ToGaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
+        UiUtils.enableU18Ux();
+        UiUtils.enableBeta();
+
+        AdServicesStates u18States =
+                new AdServicesStates.Builder()
+                        .setU18Account(true)
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(false)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build();
+
+        mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
+
         UiUtils.enableGa();
 
-        AdServicesStates adServicesStates =
+        AdServicesStates adultStates =
                 new AdServicesStates.Builder()
+                        .setU18Account(false)
                         .setAdIdEnabled(true)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
                         .build();
 
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+        mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX);
-
-        // Notifications should not be shown twice.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
+        // No notifications should be shown as graduation channel is not yet implmeneted.
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
-    }
-
-    /**
-     * Verify that for GA, ROW devices with zeroed-out AdId, the GA EU notification is displayed.
-     */
-    @Test
-    public void testGaRowAdIdDisabled() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
-
-        // Notifications should not be shown twice.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
-    }
-
-    /**
-     * Verify that for GA, EU devices with non zeroed-out AdId, the GA EU notification is displayed.
-     */
-    @Test
-    public void testGaEuAdIdEnabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
-
-        // Notifications should not be shown twice.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
-    }
-
-    /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
-    @Test
-    public void testGaEuAdIdDisabled() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
-
-        // Notifications should not be shown twice.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 }

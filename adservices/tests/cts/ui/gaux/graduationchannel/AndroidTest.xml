@@ -61,11 +61,11 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="AdServicesGaUxAlreadyEnrolledChannelTest.apk"/>
+        <option name="test-file-name" value="AdServicesGaUxGraduationChannelTest.apk"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
-        <option name="package" value="com.android.adservices.tests.ui.gaux.alredyenrolledchannel"/>
+        <option name="package" value="com.android.adservices.tests.ui.gaux.graduationchannel"/>
         <option name="restart" value="false"/>
     </test>
 </configuration>

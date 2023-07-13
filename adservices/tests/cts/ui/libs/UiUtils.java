@@ -119,6 +119,10 @@ public class UiUtils {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
     }
 
+    public static void enableU18Ux() {
+        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+    }
+
     public static void restartAdservices() {
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
         ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
