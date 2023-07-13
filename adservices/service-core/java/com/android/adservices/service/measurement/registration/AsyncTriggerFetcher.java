@@ -123,8 +123,7 @@ public class AsyncTriggerFetcher {
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
 
-        builder.setPlatformAdId(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+        builder.setPlatformAdId(asyncRegistration.getPlatformAdId());
 
         List<String> field =
                 headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);

@@ -64,6 +64,7 @@ public final class RegisterTrigger implements Action {
                                                 TestFormatJsonMapping.REGISTRATION_URI_KEY)),
                                 attributionSource.getPackageName(),
                                 /* sdkPackageName = */ "")
+                        .setAdIdValue(regParamsJson.optString(TestFormatJsonMapping.PLATFORM_AD_ID))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

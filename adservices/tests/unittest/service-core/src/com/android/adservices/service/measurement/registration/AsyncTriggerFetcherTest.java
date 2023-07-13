@@ -59,7 +59,6 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WebUtil;
-import com.android.adservices.service.measurement.util.AdIdEncryption;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -5537,10 +5536,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
-
-        String expectedAdIdHash =
-                AdIdEncryption.encryptAdIdAndEnrollmentSha256(PLATFORM_AD_ID_VALUE, ENROLLMENT_ID);
-        assertEquals(expectedAdIdHash, result.getPlatformAdId());
+        assertEquals(PLATFORM_AD_ID_VALUE, result.getPlatformAdId());
     }
 
     @Test
