@@ -192,6 +192,7 @@ public class MeasurementManager {
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(registrationRequest);
+        requireExecutorForCallback(executor, callback);
 
         String registrationType = "source";
         if (registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_TRIGGER) {
@@ -206,14 +207,14 @@ public class MeasurementManager {
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
-                            if (callback != null && executor != null) {
+                            if (callback != null) {
                                 executor.execute(() -> callback.onResult(new Object()));
                             }
                         }
 
                         @Override
                         public void onFailure(MeasurementErrorResponse failureParcel) {
-                            if (callback != null && executor != null) {
+                            if (callback != null) {
                                 executor.execute(
                                         () ->
                                                 callback.onError(
@@ -224,7 +225,7 @@ public class MeasurementManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            if (callback != null && executor != null) {
+            if (callback != null) {
                 executor.execute(() -> callback.onError(new IllegalStateException(e)));
             }
         }
@@ -248,10 +249,12 @@ public class MeasurementManager {
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(attributionSource);
+        requireExecutorForCallback(executor, callback);
 
         IMeasurementService service = getServiceWrapper(executor, callback);
 
         if (service == null) {
+            // Error was sent in the callback by getServiceWrapper call
             LogUtil.d("Measurement service not found");
             return;
         }
@@ -278,6 +281,76 @@ public class MeasurementManager {
     }
 
     /**
+     * Register attribution sources(click or view) from an app context. This API will not process
+     * any redirects, all registration URLs should be supplied with the request.
+     *
+     * @param request app source registration request
+     * @param executor used by callback to dispatch results
+     * @param callback intended to notify asynchronously the API result
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
+    public void registerSource(
+            @NonNull SourceRegistrationRequest request,
+            @Nullable @CallbackExecutor Executor executor,
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
+        Objects.requireNonNull(request);
+        requireExecutorForCallback(executor, callback);
+
+        IMeasurementService service = getServiceWrapper(executor, callback);
+        if (service == null) {
+            // Error was sent in the callback by getServiceWrapper call
+            LogUtil.d("Measurement service not found");
+            return;
+        }
+
+        CallerMetadata callerMetadata = generateCallerMetadataWithCurrentTime();
+        IMeasurementCallback measurementCallback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        if (callback != null) {
+                            executor.execute(() -> callback.onResult(new Object()));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse failureParcel) {
+                        if (callback != null) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
+                        }
+                    }
+                };
+
+        final SourceRegistrationRequestInternal.Builder builder =
+                new SourceRegistrationRequestInternal.Builder(
+                        request,
+                        getAppPackageName(),
+                        getSdkPackageName(),
+                        SystemClock.uptimeMillis());
+
+        getAdId(
+                (isAdIdEnabled, adIdValue) -> {
+                    try {
+                        LogUtil.d("Registering app sources");
+                        service.registerSource(
+                                builder.setAdIdValue(adIdValue).build(),
+                                callerMetadata,
+                                measurementCallback);
+                    } catch (RemoteException e) {
+                        LogUtil.e(e, "RemoteException");
+                        if (callback != null) {
+                            executor.execute(() -> callback.onError(new IllegalStateException(e)));
+                        }
+                    }
+                });
+    }
+
+    /**
      * Register an attribution source(click or view) from web context. This API will not process any
      * redirects, all registration URLs should be supplied with the request. At least one of
      * appDestination or webDestination parameters are required to be provided. If the registration
@@ -296,10 +369,12 @@ public class MeasurementManager {
             @Nullable Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(request);
+        requireExecutorForCallback(executor, callback);
 
         IMeasurementService service = getServiceWrapper(executor, callback);
 
         if (service == null) {
+            // Error was sent in the callback by getServiceWrapper call
             LogUtil.d("Measurement service not found");
             return;
         }
@@ -309,14 +384,14 @@ public class MeasurementManager {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        if (callback != null && executor != null) {
+                        if (callback != null) {
                             executor.execute(() -> callback.onResult(new Object()));
                         }
                     }
 
                     @Override
                     public void onFailure(MeasurementErrorResponse failureParcel) {
-                        if (callback != null && executor != null) {
+                        if (callback != null) {
                             executor.execute(
                                     () ->
                                             callback.onError(
@@ -352,12 +427,13 @@ public class MeasurementManager {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback measurementCallback,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
+        requireExecutorForCallback(executor, callback);
         try {
             LogUtil.d("Registering web source");
             service.registerWebSource(request, callerMetadata, measurementCallback);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            if (callback != null && executor != null) {
+            if (callback != null) {
                 executor.execute(() -> callback.onError(new IllegalStateException(e)));
             }
         }
@@ -381,10 +457,12 @@ public class MeasurementManager {
             @Nullable Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(request);
+        requireExecutorForCallback(executor, callback);
 
         IMeasurementService service = getServiceWrapper(executor, callback);
 
         if (service == null) {
+            // Error was sent in the callback by getServiceWrapper call
             LogUtil.d("Measurement service not found");
             return;
         }
@@ -394,14 +472,14 @@ public class MeasurementManager {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        if (callback != null && executor != null) {
+                        if (callback != null) {
                             executor.execute(() -> callback.onResult(new Object()));
                         }
                     }
 
                     @Override
                     public void onFailure(MeasurementErrorResponse failureParcel) {
-                        if (callback != null && executor != null) {
+                        if (callback != null) {
                             executor.execute(
                                     () ->
                                             callback.onError(
@@ -434,12 +512,13 @@ public class MeasurementManager {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback measurementCallback,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
+        requireExecutorForCallback(executor, callback);
         try {
             LogUtil.d("Registering web trigger");
             service.registerWebTrigger(request, callerMetadata, measurementCallback);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            if (callback != null && executor != null) {
+            if (callback != null) {
                 executor.execute(() -> callback.onError(new IllegalStateException(e)));
             }
         }
@@ -460,10 +539,12 @@ public class MeasurementManager {
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(trigger);
+        requireExecutorForCallback(executor, callback);
 
         IMeasurementService service = getServiceWrapper(executor, callback);
 
         if (service == null) {
+            // Error was sent in the callback by getServiceWrapper call
             LogUtil.d("Measurement service not found");
             return;
         }
@@ -501,6 +582,7 @@ public class MeasurementManager {
         final IMeasurementService service = getServiceWrapper(executor, callback);
 
         if (service == null) {
+            // Error was sent in the callback by getServiceWrapper call
             LogUtil.d("Measurement service not found");
             return;
         }
@@ -645,16 +727,25 @@ public class MeasurementManager {
     private IMeasurementService getServiceWrapper(
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
+        requireExecutorForCallback(executor, callback);
         IMeasurementService service = null;
         try {
             service = getService();
         } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to measurement service");
-            if (callback != null && executor != null) {
+            if (callback != null) {
                 executor.execute(() -> callback.onError(e));
             }
         }
         return service;
+    }
+
+    private static void requireExecutorForCallback(
+            Executor executor, OutcomeReceiver<Object, Exception> callback) {
+        if (callback != null && executor == null) {
+            throw new IllegalArgumentException(
+                    "Executor should be provided when callback is provided.");
+        }
     }
 
     /* Make AdId call with timeout */

@@ -131,6 +131,7 @@ public class ContentValueFixtures {
         // Added in V19
         public static final int MAX_EVENT_LEVEL_REPORTS = 3;
         public static final String EVENT_REPORT_WINDOWS = "{'end_times': [12, 123]}";
+        public static final long SHARED_DEBUG_KEY = 2345L;
     }
 
     public static class SourceDestinationValues {
@@ -629,6 +630,17 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
                 SourceValues.EVENT_REPORT_WINDOWS);
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV20() {
+        return generateSourceContentValuesV19();
+    }
+
+    public static ContentValues generateSourceContentValuesV21() {
+        ContentValues values = generateSourceContentValuesV20();
+        values.put(
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY, SourceValues.SHARED_DEBUG_KEY);
         return values;
     }
 

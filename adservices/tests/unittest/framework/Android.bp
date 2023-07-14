@@ -75,6 +75,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 

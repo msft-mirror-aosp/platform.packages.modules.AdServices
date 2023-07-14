@@ -124,6 +124,8 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
             "measurement_enforce_foreground_status_get_status";
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
+    static final String KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY =
+            "measurement_enable_shared_source_debug_key";
     static final String KEY_MEASUREMENT_ENABLE_DEBUG_REPORT = "measurement_enable_debug_report";
     static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT =
             "measurement_enable_source_debug_report";
@@ -1020,6 +1022,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableSharedSourceDebugKey() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY,
+                /* defaultValue */ MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY);
+    }
+
+    @Override
     public boolean getMeasurementEnableDebugReport() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -1451,6 +1461,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1460,6 +1471,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeFetchCustomAudienceEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -2868,6 +2880,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean isBackCompatActivityFeatureEnabled() {
         // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -3349,6 +3362,11 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY
+                        + " = "
+                        + getMeasurementEnableSharedSourceDebugKey());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
                         + " = "
                         + getEnforceEnrollmentOriginMatch());
@@ -3552,7 +3570,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
                         + " = "
                         + getMeasurementMaxDistinctDestinationsInActiveSource());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT
+                        + " = "
+                        + getMeasurementVtcConfigurableMaxEventReportsCount());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS

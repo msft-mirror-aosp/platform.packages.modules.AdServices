@@ -98,6 +98,7 @@ public class Source {
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     private boolean mCoarseEventReportDestinations;
+    @Nullable private UnsignedLong mSharedDebugKey;
     private List<Pair<Long, Long>> mParsedEventReportWindows;
 
     /**
@@ -384,7 +385,8 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
+                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
     }
 
     @Override
@@ -423,7 +425,8 @@ public class Source {
                 mRegistrationOrigin,
                 mDebugJoinKey,
                 mFlexEventReportSpec,
-                mCoarseEventReportDestinations);
+                mCoarseEventReportDestinations,
+                mSharedDebugKey);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -725,9 +728,8 @@ public class Source {
     }
 
     /**
-     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
-     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
-     * generating reports.
+     * Returns actual platform AdID from getAdId() on app source registration, to be matched with a
+     * web trigger's {@link Trigger#getDebugAdId()} value at the time of generating reports.
      */
     @Nullable
     public String getPlatformAdId() {
@@ -860,6 +862,11 @@ public class Source {
         return mFilterData;
     }
 
+    @Nullable
+    public UnsignedLong getSharedDebugKey() {
+        return mSharedDebugKey;
+    }
+
     /** Returns true if the source has app destination(s), false otherwise. */
     public boolean hasAppDestinations() {
         return mAppDestinations != null && mAppDestinations.size() > 0;
@@ -950,6 +957,7 @@ public class Source {
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
+            builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             return builder;
         }
 
@@ -1283,6 +1291,13 @@ public class Source {
         @NonNull
         public Builder setPrivacyParameters(@Nullable String privacyParameters) {
             mBuilding.mPrivacyParametersString = privacyParameters;
+            return this;
+        }
+
+        /** See {@link Source#getSharedDebugKey()}. */
+        @NonNull
+        public Builder setSharedDebugKey(@Nullable UnsignedLong sharedDebugKey) {
+            mBuilding.mSharedDebugKey = sharedDebugKey;
             return this;
         }
 
