@@ -123,8 +123,7 @@ public class AsyncTriggerFetcher {
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
 
-        builder.setPlatformAdId(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+        builder.setPlatformAdId(asyncRegistration.getPlatformAdId());
 
         List<String> field =
                 headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
@@ -238,6 +237,20 @@ public class AsyncTriggerFetcher {
                 builder.setAttributionConfig(attributionConfigsString);
             }
 
+            if (mFlags.getMeasurementAggregationCoordinatorOriginEnabled()
+                    && !json.isNull(TriggerHeaderContract.AGGREGATION_COORDINATOR_ORIGIN)) {
+                String origin =
+                        json.getString(TriggerHeaderContract.AGGREGATION_COORDINATOR_ORIGIN);
+                String allowlist = mFlags.getMeasurementAggregationCoordinatorOriginList();
+                if (origin.isEmpty() || !isAllowlisted(allowlist, origin)) {
+                    LogUtil.d("parseTrigger: aggregation_coordinator_origin is invalid.");
+                    asyncFetchStatus.setEntityStatus(
+                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                    return Optional.empty();
+                }
+                builder.setAggregationCoordinatorOrigin(Uri.parse(origin));
+            }
+
             String enrollmentBlockList =
                     mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
             Set<String> blockedEnrollmentsString =
@@ -263,6 +276,14 @@ public class AsyncTriggerFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
         }
+    }
+
+    private boolean isAllowlisted(String allowlist, String origin) {
+        if (AllowLists.doesAllowListAllowAll(allowlist)) {
+            return true;
+        }
+        Set<String> elements = new HashSet<>(AllowLists.splitAllowList(allowlist));
+        return elements.contains(origin);
     }
 
     /** Provided a testing hook. */
@@ -671,5 +692,6 @@ public class AsyncTriggerFetcher {
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
         String DEBUG_JOIN_KEY = "debug_join_key";
         String DEBUG_AD_ID = "debug_ad_id";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 }

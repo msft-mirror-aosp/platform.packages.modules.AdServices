@@ -285,6 +285,32 @@ public class EnrollmentDaoTest {
     }
 
     @Test
+    public void testOverwriteEnrollmentData() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertNotEquals(0, count);
+
+        mEnrollmentDao.overwriteData(Arrays.asList(ENROLLMENT_DATA2, ENROLLMENT_DATA3));
+        count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertEquals(2, count);
+        assertNull(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA1.getEnrollmentId()));
+        assertEquals(
+                mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA2.getEnrollmentId()),
+                ENROLLMENT_DATA2);
+        assertEquals(
+                mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA3.getEnrollmentId()),
+                ENROLLMENT_DATA3);
+    }
+
+    @Test
     public void testGetEnrollmentData() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");

@@ -365,7 +365,7 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
+    // TODO(b/265204820): Unhide for frequency cap dev override API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAdCounterHistogramOverride(
             @NonNull SetAdCounterHistogramOverrideRequest setRequest,
@@ -425,7 +425,7 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
+    // TODO(b/265204820): Unhide for frequency cap dev override API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdCounterHistogramOverride(
             @NonNull RemoveAdCounterHistogramOverrideRequest removeRequest,
@@ -482,7 +482,7 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
+    // TODO(b/265204820): Unhide for frequency cap dev override API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdCounterHistogramOverrides(
             @NonNull @CallbackExecutor Executor executor,

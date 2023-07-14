@@ -29,6 +29,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
@@ -94,6 +95,7 @@ class AttributionJobHandler {
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
     private final AdServicesLogger mLogger;
+    private final XnaSourceCreator mXnaSourceCreator;
     private final Flags mFlags;
 
     private enum TriggeringStatus {
@@ -108,7 +110,8 @@ class AttributionJobHandler {
                 debugReportApi,
                 new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
                 new SourceNoiseHandler(FlagsFactory.getFlags()),
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                new XnaSourceCreator(FlagsFactory.getFlags()));
     }
 
     AttributionJobHandler(
@@ -117,13 +120,15 @@ class AttributionJobHandler {
             DebugReportApi debugReportApi,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
             SourceNoiseHandler sourceNoiseHandler,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            XnaSourceCreator xnaSourceCreator) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mDebugReportApi = debugReportApi;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
         mLogger = logger;
+        mXnaSourceCreator = xnaSourceCreator;
     }
 
     /**
@@ -375,6 +380,15 @@ class AttributionJobHandler {
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
                             .setRegistrationOrigin(trigger.getRegistrationOrigin());
+            if (trigger.getAggregationCoordinatorOrigin() != null) {
+                aggregateReportBuilder.setAggregationCoordinatorOrigin(
+                        trigger.getAggregationCoordinatorOrigin());
+            } else {
+                aggregateReportBuilder.setAggregationCoordinatorOrigin(
+                        Uri.parse(
+                                AdServicesConfig
+                                        .getMeasurementDefaultAggregationCoordinatorOrigin()));
+            }
 
             if (aggregateDeduplicationKeyOptional.isPresent()) {
                 aggregateReportBuilder.setDedupKey(
@@ -416,8 +430,7 @@ class AttributionJobHandler {
                 }
             }
             List<Source> derivedSources =
-                    new XnaSourceCreator()
-                            .generateDerivedSources(trigger, otherEnrollmentBasedSources);
+                    mXnaSourceCreator.generateDerivedSources(trigger, otherEnrollmentBasedSources);
             matchingSources = new ArrayList<>();
             matchingSources.addAll(triggerEnrollmentMatchingSources);
             matchingSources.addAll(derivedSources);
