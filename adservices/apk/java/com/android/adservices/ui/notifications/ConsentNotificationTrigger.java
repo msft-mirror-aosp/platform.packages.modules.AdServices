@@ -116,19 +116,40 @@ public class ConsentNotificationTrigger {
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
         Notification notification;
-        if (FlagsFactory.getFlags().getU18UxEnabled()
-                && UxStatesManager.getInstance(context)
-                        .getUx()
-                        .equals(PrivacySandboxUxCollection.U18_UX)) {
-            notification = getU18ConsentNotification(context);
-        } else if (gaUxFeatureEnabled) {
-            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
-                notification = getGaV2ConsentNotification(context, isEuDevice);
-            } else {
-                notification = getGaConsentNotification(context, isEuDevice);
+
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+            switch (NotificationUtil.getUx(null, context)) {
+                case GA_UX:
+                    notification =
+                            FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()
+                                    ? getGaV2ConsentNotification(context, isEuDevice)
+                                    : getGaConsentNotification(context, isEuDevice);
+                    break;
+                case U18_UX:
+                    notification = getU18ConsentNotification(context);
+                    break;
+                case BETA_UX:
+                    notification = getConsentNotification(context, isEuDevice);
+                    break;
+                default:
+                    notification = getConsentNotification(context, isEuDevice);
+                    break;
             }
         } else {
-            notification = getConsentNotification(context, isEuDevice);
+            if (FlagsFactory.getFlags().getU18UxEnabled()
+                    && UxStatesManager.getInstance(context)
+                            .getUx()
+                            .equals(PrivacySandboxUxCollection.U18_UX)) {
+                notification = getU18ConsentNotification(context);
+            } else if (gaUxFeatureEnabled) {
+                if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
+                    notification = getGaV2ConsentNotification(context, isEuDevice);
+                } else {
+                    notification = getGaConsentNotification(context, isEuDevice);
+                }
+            } else {
+                notification = getConsentNotification(context, isEuDevice);
+            }
         }
 
         // make notification sticky (non-dismissible) for EuDevices when the GA UX feature is on
