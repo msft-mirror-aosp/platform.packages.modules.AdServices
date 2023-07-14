@@ -95,6 +95,7 @@ class AttributionJobHandler {
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
     private final AdServicesLogger mLogger;
+    private final XnaSourceCreator mXnaSourceCreator;
     private final Flags mFlags;
 
     private enum TriggeringStatus {
@@ -109,7 +110,8 @@ class AttributionJobHandler {
                 debugReportApi,
                 new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
                 new SourceNoiseHandler(FlagsFactory.getFlags()),
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                new XnaSourceCreator(FlagsFactory.getFlags()));
     }
 
     AttributionJobHandler(
@@ -118,13 +120,15 @@ class AttributionJobHandler {
             DebugReportApi debugReportApi,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
             SourceNoiseHandler sourceNoiseHandler,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            XnaSourceCreator xnaSourceCreator) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mDebugReportApi = debugReportApi;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
         mLogger = logger;
+        mXnaSourceCreator = xnaSourceCreator;
     }
 
     /**
@@ -426,8 +430,7 @@ class AttributionJobHandler {
                 }
             }
             List<Source> derivedSources =
-                    new XnaSourceCreator()
-                            .generateDerivedSources(trigger, otherEnrollmentBasedSources);
+                    mXnaSourceCreator.generateDerivedSources(trigger, otherEnrollmentBasedSources);
             matchingSources = new ArrayList<>();
             matchingSources.addAll(triggerEnrollmentMatchingSources);
             matchingSources.addAll(derivedSources);

@@ -136,6 +136,7 @@ public final class MeasurementTables {
         String PRIVACY_PARAMETERS = "privacy_parameters";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
+        String SHARED_DEBUG_KEY = "shared_debug_key";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -499,7 +500,9 @@ public final class MeasurementTables {
                     + SourceContract.PRIVACY_PARAMETERS
                     + " TEXT, "
                     + SourceContract.EVENT_REPORT_WINDOWS
-                    + " TEXT "
+                    + " TEXT, "
+                    + SourceContract.SHARED_DEBUG_KEY
+                    + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =
