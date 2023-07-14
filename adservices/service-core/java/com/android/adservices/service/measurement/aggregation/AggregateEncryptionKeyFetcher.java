@@ -109,7 +109,8 @@ final class AggregateEncryptionKeyFetcher {
     private static Optional<List<AggregateEncryptionKey>> parseResponse(
             @NonNull String responseBody,
             @NonNull Map<String, List<String>> headers,
-            @NonNull long eventTime) {
+            @NonNull long eventTime,
+            @NonNull Uri coordinatorOrigin) {
         long maxAge = getMaxAgeInSeconds(headers);
         if (maxAge <= 0) {
             return Optional.empty();
@@ -125,6 +126,7 @@ final class AggregateEncryptionKeyFetcher {
                 keyBuilder.setKeyId(keyObj.getString(ResponseContract.KEYS_KEY_ID));
                 keyBuilder.setPublicKey(keyObj.getString(ResponseContract.KEYS_PUBLIC_KEY));
                 keyBuilder.setExpiry(expiry);
+                keyBuilder.setAggregationCoordinatorOrigin(coordinatorOrigin);
                 aggregateEncryptionKeys.add(keyBuilder.build());
             }
             return Optional.of(aggregateEncryptionKeys);
@@ -134,11 +136,9 @@ final class AggregateEncryptionKeyFetcher {
         }
     }
 
-    /**
-     * Fetch public encryption keys for aggregatable reports.
-     */
+    /** Fetch public encryption keys for aggregatable reports. */
     public Optional<List<AggregateEncryptionKey>> fetch(
-            @NonNull Uri target, @NonNull long eventTime) {
+            @NonNull Uri coordinatorOrigin, @NonNull Uri target, @NonNull long eventTime) {
         // Require https.
         if (!target.getScheme().equals("https")) {
             return Optional.empty();
@@ -177,7 +177,7 @@ final class AggregateEncryptionKeyFetcher {
             }
             bufferedReader.close();
 
-            return parseResponse(responseBody.toString(), headers, eventTime);
+            return parseResponse(responseBody.toString(), headers, eventTime, coordinatorOrigin);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to get coordinator response");
             return Optional.empty();

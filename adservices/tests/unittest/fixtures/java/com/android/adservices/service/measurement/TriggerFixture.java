@@ -62,6 +62,7 @@ public final class TriggerFixture {
                 .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
                 .setAdtechBitMapping(ValidTriggerParams.X_NETWORK_KEY_MAPPING)
                 .setRegistrationOrigin(ValidTriggerParams.REGISTRATION_ORIGIN)
+                .setAggregationCoordinatorOrigin(ValidTriggerParams.AGGREGATION_COORDINATOR_ORIGIN)
                 .build();
     }
 
@@ -154,6 +155,9 @@ public final class TriggerFixture {
                         + "}";
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
+
+        public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
+                WebUtil.validUri("https://coordinator.example.test");
 
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";

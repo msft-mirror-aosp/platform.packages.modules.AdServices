@@ -165,7 +165,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           },
           {
             "id": "old report time - deleted",
@@ -175,7 +176,8 @@
             "scheduledReportTime": 8640000002,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           },
           {
             "id": "delivered report - deleted",
@@ -185,7 +187,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 1,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           }
         ]
       },
@@ -199,7 +202,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           }
         ]
       }

@@ -23,8 +23,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -568,62 +566,6 @@ public final class FetcherUtilTest {
     @Test
     public void isValidAggregateDeduplicationKey_nullValue_success() {
         assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_webRegistration_null() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.WEB_SOURCE)
-                        .setAdIdPermission(true)
-                        .setPlatformAdId("not-null-ad-id")
-                        .build();
-
-        assertNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_missingAdIdPermission_null() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                        .setAdIdPermission(false)
-                        .setPlatformAdId("not-null-ad-id")
-                        .build();
-
-        assertNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_nullAdIdValue_null() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                        .setAdIdPermission(true)
-                        .setPlatformAdId(null)
-                        .build();
-
-        assertNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_adIdValuePresent_notNull() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                        .setAdIdPermission(true)
-                        .setPlatformAdId("not-null-ad-id")
-                        .build();
-
-        assertNotNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
     }
 
     private Map<String, List<String>> createHeadersMap() {

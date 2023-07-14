@@ -59,7 +59,6 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WebUtil;
-import com.android.adservices.service.measurement.util.AdIdEncryption;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -181,8 +180,8 @@ public final class AsyncTriggerFetcherTest {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> getConfig() throws IOException, JSONException {
         return List.of(
-                new Object[]{ "ara_parsing_alignment_v1_enabled", Boolean.TRUE },
-                new Object[]{ "ara_parsing_alignment_v1_disabled", Boolean.FALSE });
+                new Object[] {"ara_parsing_alignment_v1_enabled", Boolean.TRUE},
+                new Object[] {"ara_parsing_alignment_v1_disabled", Boolean.FALSE});
     }
 
     public AsyncTriggerFetcherTest(String name, Boolean araParsingAlignmentV1Enabled) {
@@ -190,17 +189,19 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Rule
-    public ExternalResource externalResource = new ExternalResource() {
-        protected void before() throws Throwable {
-            setup();
-        }
+    public ExternalResource externalResource =
+            new ExternalResource() {
+                protected void before() throws Throwable {
+                    setup();
+                }
 
-        protected void after() {
-            try {
-                cleanup();
-            } catch (InterruptedException ignored) { }
-        }
-    };
+                protected void after() {
+                    try {
+                        cleanup();
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            };
 
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -3256,7 +3257,8 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{\"aggregatable_trigger_data\":"
-                                        + aggregateTriggerData + "}")));
+                                                + aggregateTriggerData
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3294,7 +3296,8 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
                                         "{\"aggregatable_trigger_data\":"
-                                        + aggregateTriggerData + "}")));
+                                                + aggregateTriggerData
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5533,10 +5536,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
-
-        String expectedAdIdHash =
-                AdIdEncryption.encryptAdIdAndEnrollmentSha256(PLATFORM_AD_ID_VALUE, ENROLLMENT_ID);
-        assertEquals(expectedAdIdHash, result.getPlatformAdId());
+        assertEquals(PLATFORM_AD_ID_VALUE, result.getPlatformAdId());
     }
 
     @Test
@@ -5703,6 +5703,143 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(Enrollment.FAKE_ENROLLMENT, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(DEBUG_KEY, result.getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_aggregatorCoordinatorOriginAllowed_pass() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + " [{}],"
+                                                + "'aggregation_coordinator_origin': "
+                                                + "'https://cloud.coordination.test'"
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                asyncRegistration.getTopOrigin().toString(),
+                result.getAttributionDestination().toString());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        assertEquals("[{\"trigger_data\":\"0\"}]", result.getEventTriggers());
+        assertEquals(
+                Uri.parse("https://cloud.coordination.test"),
+                result.getAggregationCoordinatorOrigin());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_aggregatorCoordinatorOriginDisallowed_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + " [{}],"
+                                                + "'aggregation_coordinator_origin': "
+                                                + "'https://invalid.cloud.coordination.test'"
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_nullCloudCoordinatorOrigin() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{" + "\"event_trigger_data\": " + "[{}]" + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                asyncRegistration.getTopOrigin().toString(),
+                result.getAttributionDestination().toString());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        assertEquals("[{\"trigger_data\":\"0\"}]", result.getEventTriggers());
+        assertNull(result.getAggregationCoordinatorOrigin());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_emptyCloudCoordinatorOrigin_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"event_trigger_data\":"
+                                                + " [{}],"
+                                                + "'aggregation_coordinator_origin': "
+                                                + "'https://invalid.cloud.coordination.test'"
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
