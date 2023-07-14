@@ -60,7 +60,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.WebUtil;
-import com.android.adservices.service.measurement.util.AdIdEncryption;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -4967,10 +4966,7 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
-
-        String expectedAdIdHash =
-                AdIdEncryption.encryptAdIdAndEnrollmentSha256(PLATFORM_AD_ID_VALUE, ENROLLMENT_ID);
-        assertEquals(expectedAdIdHash, result.getPlatformAdId());
+        assertEquals(PLATFORM_AD_ID_VALUE, result.getPlatformAdId());
     }
 
     @Test
