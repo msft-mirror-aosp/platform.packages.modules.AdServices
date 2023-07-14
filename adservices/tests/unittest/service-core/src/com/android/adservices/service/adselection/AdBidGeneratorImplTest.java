@@ -1906,7 +1906,8 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    @Ignore("b/242895704")
+    // TODO(b/290846406): Remove ignore annotation once test is fixed and verified
+    @Ignore("b/290846406")
     public void testRunAdBiddingPerCABiddingTimesOut() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,

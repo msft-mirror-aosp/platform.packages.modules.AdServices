@@ -45,7 +45,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /** Handles EnrollmentData download from MDD server to device. */
@@ -56,6 +58,7 @@ public class EnrollmentDataDownloadManager {
     private static volatile EnrollmentDataDownloadManager sEnrollmentDataDownloadManager;
     private final MobileDataDownload mMobileDataDownload;
     private final SynchronousFileStorage mFileStorage;
+    private final Flags mFlags;
 
     private static final String GROUP_NAME = "adtech_enrollment_data";
     private static final String DOWNLOADED_ENROLLMENT_DATA_FILE_ID = "adtech_enrollment_data.csv";
@@ -67,6 +70,7 @@ public class EnrollmentDataDownloadManager {
         mContext = context.getApplicationContext();
         mMobileDataDownload = MobileDataDownloadFactory.getMdd(context, flags);
         mFileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        mFlags = flags;
     }
 
     /** Gets an instance of EnrollmentDataDownloadManager to be used. */
@@ -86,7 +90,7 @@ public class EnrollmentDataDownloadManager {
      * Find, open and read the enrollment data file from MDD and only insert new data into the
      * enrollment database.
      */
-    public ListenableFuture<DownloadStatus> readAndInsertEnrolmentDataFromMdd() {
+    public ListenableFuture<DownloadStatus> readAndInsertEnrollmentDataFromMdd() {
         LogUtil.d("Reading MDD data from file.");
         Pair<ClientFile, String> FileGroupAndBuildIdPair = getEnrollmentDataFile();
         if (FileGroupAndBuildIdPair == null || FileGroupAndBuildIdPair.first == null) {
@@ -104,22 +108,25 @@ public class EnrollmentDataDownloadManager {
                     fileGroupBuildId);
             return Futures.immediateFuture(DownloadStatus.SKIP);
         }
-
-        if (readDownloadedFile(enrollmentDataFile)) {
+        boolean shouldTrimEnrollmentData = mFlags.getEnrollmentMddRecordDeletionEnabled();
+        if (processDownloadedFile(enrollmentDataFile, shouldTrimEnrollmentData)) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.clear().putBoolean(fileGroupBuildId, true);
             if (!editor.commit()) {
                 // TODO(b/280579966): Add logging using CEL.
                 LogUtil.e("Saving to the enrollment file read status sharedpreference failed");
             }
-            LogUtil.d("Inserted new enrollment data build id = %s into DB.", fileGroupBuildId);
+            LogUtil.d(
+                    "Inserted new enrollment data build id = %s into DB. "
+                            + "Enrollment Mdd Record Deletion Feature Enabled: %b",
+                    fileGroupBuildId, shouldTrimEnrollmentData);
             return Futures.immediateFuture(DownloadStatus.SUCCESS);
         } else {
             return Futures.immediateFuture(DownloadStatus.PARSING_FAILED);
         }
     }
 
-    private boolean readDownloadedFile(ClientFile enrollmentDataFile) {
+    private boolean processDownloadedFile(ClientFile enrollmentDataFile, boolean trimTable) {
         LogUtil.d("Inserting MDD data into DB.");
         try {
             InputStream inputStream =
@@ -130,8 +137,10 @@ public class EnrollmentDataDownloadManager {
             String line = null;
             // While loop runs from the second line.
             EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(mContext);
+            List<EnrollmentData> newEnrollments = new ArrayList<>();
+
             while ((line = bufferedReader.readLine()) != null) {
-                // Constructs EnrollmentData object and save it into DB.
+                // Parses CSV into EnrollmentData list.
                 String[] data = line.split(",");
                 if (data.length == 8) {
                     String enrollmentId = data[0];
@@ -162,8 +171,14 @@ public class EnrollmentDataDownloadManager {
                                                     ? Arrays.asList(data[7].split(" "))
                                                     : Arrays.asList(data[7]))
                                     .build();
-                    enrollmentDao.insert(enrollmentData);
+                    newEnrollments.add(enrollmentData);
                 }
+            }
+            if (trimTable) {
+                return enrollmentDao.overwriteData(newEnrollments);
+            }
+            for (EnrollmentData enrollmentData : newEnrollments) {
+                enrollmentDao.insert(enrollmentData);
             }
             return true;
         } catch (IOException e) {

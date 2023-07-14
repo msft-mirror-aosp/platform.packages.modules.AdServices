@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static org.mockito.Mockito.when;
 
+
 import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
@@ -25,6 +26,7 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.service.measurement.WebUtil;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -42,14 +44,16 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/**
- * Integration tests for {@link AttributionJobHandler}
- */
+/** Integration tests for {@link AggregateEncryptionKeyManager} */
 @RunWith(Parameterized.class)
 public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbIntegrationTest {
     private static final int NUM_KEYS_REQUESTED = 5;
-    private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            Uri.parse("https://not-going-to-be-visited.test");
+    private static final String AGGREGATION_COORDINATOR_ORIGIN_1 =
+            WebUtil.validUrl("https://not-going-to-be-visited.test");
+    private static final String AGGREGATION_COORDINATOR_ORIGIN_2 =
+            WebUtil.validUrl("https://again-not-going-to-be-visited.test");
+
+    private static final String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_PATH = "test/path";
 
     @Mock Clock mClock;
     @Spy AggregateEncryptionKeyFetcher mFetcher;
@@ -78,10 +82,19 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(datastoreManager, mFetcher, mClock,
-                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+                new AggregateEncryptionKeyManager(
+                        datastoreManager,
+                        mFetcher,
+                        mClock,
+                        String.join(
+                                ",",
+                                List.of(
+                                        AGGREGATION_COORDINATOR_ORIGIN_1,
+                                        AGGREGATION_COORDINATOR_ORIGIN_2)),
+                        MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_PATH);
         List<AggregateEncryptionKey> providedKeys =
-                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
+                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        Uri.parse(AGGREGATION_COORDINATOR_ORIGIN_1), NUM_KEYS_REQUESTED);
         Assert.assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
                 + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
                 AggregateEncryptionKeyTestUtil.isSuperset(

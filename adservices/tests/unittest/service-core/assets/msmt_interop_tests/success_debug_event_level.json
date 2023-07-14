@@ -205,8 +205,7 @@
           "scheduled_report_time": "1643411973",
           "source_event_id": "123",
           "source_type": "navigation",
-          "trigger_data": "5",
-          "source_debug_key": "111"
+          "trigger_data": "5"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
         "report_time": "1643411973000"
@@ -231,8 +230,7 @@
           "scheduled_report_time": "1643411973",
           "source_event_id": "789",
           "source_type": "navigation",
-          "trigger_data": "3",
-          "trigger_debug_key": "666"
+          "trigger_data": "3"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
         "report_time": "1643411973002"
