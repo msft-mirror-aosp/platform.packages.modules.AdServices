@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -83,7 +84,8 @@ public final class SourceFixture {
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
                 .setCoarseEventReportDestinations(true)
-                .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY);
+                .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY)
+                .setAttributedTriggers(new ArrayList<>());
     }
 
     public static class ValidSourceParams {
@@ -166,16 +168,18 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
-        return new ReportSpec(triggerSpecsString, "3");
+        return new ReportSpec(triggerSpecsString, "3", getValidSource());
     }
 
     public static ReportSpec getValidReportSpecValueSum() throws JSONException {
-        return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3");
+        return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3",
+                getValidSource());
     }
 
     public static Source getValidSourceWithFlexEventReport() {
         try {
             return getValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
                     .setFlexEventReportSpec(getValidReportSpecCountBased())
                     .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
                     .build();
@@ -187,6 +191,7 @@ public final class SourceFixture {
     public static Source.Builder getValidFullSourceBuilderWithFlexEventReportValueSum() {
         try {
             return getValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
                     .setFlexEventReportSpec(getValidReportSpecValueSum());
         } catch (JSONException e) {
             return null;
@@ -200,7 +205,7 @@ public final class SourceFixture {
                 .setId(UUID.randomUUID().toString())
                 .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                 .setMaxEventLevelReports(reportSpec.getMaxReports())
-                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
+                .setEventAttributionStatus(null)
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
 
@@ -210,7 +215,7 @@ public final class SourceFixture {
                 .setId(UUID.randomUUID().toString())
                 .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                 .setMaxEventLevelReports(reportSpec.getMaxReports())
-                .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
+                .setEventAttributionStatus(null)
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
 

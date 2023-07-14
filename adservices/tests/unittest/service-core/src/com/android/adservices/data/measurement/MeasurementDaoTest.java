@@ -283,7 +283,7 @@ public class MeasurementDaoTest {
                 validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
                 source.getTriggerSpecs());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString(),
+                validSource.encodeAttributedTriggersToJson(),
                 source.getEventAttributionStatus());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
@@ -3262,9 +3262,7 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         measurementDao ->
-                                measurementDao.updateSourceAttributedTriggers(
-                                        originalSource.getId(),
-                                        originalSource.getFlexEventReportSpec()));
+                                measurementDao.updateSourceAttributedTriggers(originalSource));
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
@@ -3752,11 +3750,8 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-        values.put(
-                SourceContract.EVENT_ATTRIBUTION_STATUS,
-                source.getFlexEventReportSpec() == null
-                        ? ""
-                        : source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
+        values.put(SourceContract.EVENT_ATTRIBUTION_STATUS,
+                source.encodeAttributedTriggersToJson());
         db.insert(SourceContract.TABLE, null, values);
 
         // Insert source destinations
@@ -6548,28 +6543,6 @@ public class MeasurementDaoTest {
             throws JSONException {
         // Setup
         ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("234567")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("345678")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -6577,8 +6550,11 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source1.buildFlexibleEventReportApi();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
@@ -6586,17 +6562,39 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source2.buildFlexibleEventReportApi();
 
-        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpecCountBased();
-        testReportSpecWithTriggers.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
+        List<ReportSpec> reportSpecs = List.of(
+                source1.getFlexEventReportSpec(),
+                source2.getFlexEventReportSpec());
+
+        for (ReportSpec reportSpec : reportSpecs) {
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("123456")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("234567")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("345678")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+        }
 
         Source source3 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -6605,8 +6603,19 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setFlexEventReportSpec(testReportSpecWithTriggers)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source3.buildFlexibleEventReportApi();
+
+        source3.getFlexEventReportSpec().insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
 
         List<Source> sources = List.of(source1, source2, source3);
 
@@ -6666,28 +6675,6 @@ public class MeasurementDaoTest {
             throws JSONException {
         // Setup
         ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("234567")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("345678")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -6695,8 +6682,12 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source1.buildFlexibleEventReportApi();
+
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
@@ -6704,17 +6695,39 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source2.buildFlexibleEventReportApi();
 
-        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpecCountBased();
-        testReportSpecWithTriggers.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
+        List<ReportSpec> reportSpecs = List.of(
+                source1.getFlexEventReportSpec(),
+                source2.getFlexEventReportSpec());
+
+        for (ReportSpec reportSpec : reportSpecs) {
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("123456")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("234567")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("345678")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+        }
 
         Source source3 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -6723,8 +6736,19 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setFlexEventReportSpec(testReportSpecWithTriggers)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source3.buildFlexibleEventReportApi();
+
+        source3.getFlexEventReportSpec().insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
 
         List<Source> sources = List.of(source1, source2, source3);
 
