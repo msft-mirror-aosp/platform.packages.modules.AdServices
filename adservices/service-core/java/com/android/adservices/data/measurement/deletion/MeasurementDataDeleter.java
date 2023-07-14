@@ -90,6 +90,14 @@ public class MeasurementDataDeleter {
                                     deletionParam.getOriginUris(),
                                     deletionParam.getDomainUris(),
                                     deletionParam.getMatchBehavior());
+                    List<String> asyncRegistrationIds =
+                            dao.fetchMatchingAsyncRegistrations(
+                                    getRegistrant(deletionParam.getAppPackageName()),
+                                    deletionParam.getStart(),
+                                    deletionParam.getEnd(),
+                                    deletionParam.getOriginUris(),
+                                    deletionParam.getDomainUris(),
+                                    deletionParam.getMatchBehavior());
 
                     // Rest aggregate contributions and dedup keys on sources for triggers to be
                     // deleted.
@@ -141,9 +149,7 @@ public class MeasurementDataDeleter {
 
                     resetDedupKeys(dao, eventReports);
 
-                    // Delete Async Registration Table Data
-                    dao.deleteAsyncRegistrationsProvidedRegistrant(
-                            deletionParam.getAppPackageName());
+                    dao.deleteAsyncRegistrations(asyncRegistrationIds);
 
                     // Delete sources and triggers, that'll take care of deleting related reports
                     // and attributions

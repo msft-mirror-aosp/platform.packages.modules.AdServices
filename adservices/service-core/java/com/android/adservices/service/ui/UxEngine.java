@@ -62,8 +62,8 @@ public class UxEngine {
     }
 
     /**
-     * Starts the UxEgine. In which the general UX flow would be carried out as the engine
-     * orchestrates tasks and events between vairous UX components.
+     * Starts the UxEngine. In which the general UX flow would be carried out as the engine
+     * orchestrates tasks and events between various UX components.
      */
     public void start(AdServicesStates adServicesStates) {
         mUxStatesManager.persistAdServicesStates(adServicesStates);
@@ -75,11 +75,17 @@ public class UxEngine {
         PrivacySandboxEnrollmentChannelCollection eligibleEnrollmentChannel =
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
                         eligibleUx, mConsentManager, mUxStatesManager);
-        mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
 
         // TO-DO: Add an UNSUPPORTED_ENROLLMENT_CHANNEL, rather than using null handling.
-        // Entry point request should not trigger entrollment.
-        if (!adServicesStates.isPrivacySandboxUiRequest() && eligibleEnrollmentChannel != null) {
+        if (eligibleEnrollmentChannel != null) {
+            // Only set the enrollment channel if it is not null.
+            mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
+
+            // Entry point request should not trigger enrollment.
+            if (adServicesStates.isPrivacySandboxUiRequest()) {
+                return;
+            }
+
             eligibleUx
                     .getUx()
                     .handleEnrollment(

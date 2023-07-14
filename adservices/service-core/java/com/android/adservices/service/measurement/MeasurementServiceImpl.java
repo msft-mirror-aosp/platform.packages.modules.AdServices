@@ -39,6 +39,7 @@ import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.MeasurementErrorResponse;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.adservices.measurement.StatusParam;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
@@ -263,6 +264,15 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             callerMetadata,
                             serviceStartTime);
                 });
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION)
+    public void registerSource(
+            @NonNull SourceRegistrationRequestInternal request,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull IMeasurementCallback callback) {
+        // TODO b/290121162: Implementation
     }
 
     @Override

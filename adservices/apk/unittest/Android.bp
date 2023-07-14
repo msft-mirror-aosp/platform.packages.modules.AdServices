@@ -62,7 +62,7 @@ android_test {
     privileged: true,
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -86,7 +86,7 @@ android_test {
         "general-tests",
         "mts-extservices",
     ],
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     test_config: "AndroidTest.ExtServices.xml",
 }

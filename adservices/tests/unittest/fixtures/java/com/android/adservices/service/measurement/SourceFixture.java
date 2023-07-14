@@ -55,7 +55,7 @@ public final class SourceFixture {
         return getValidSourceBuilder().build();
     }
 
-    private static Source.Builder getValidSourceBuilder() {
+    public static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
@@ -82,7 +82,8 @@ public final class SourceFixture {
                 .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
-                .setCoarseEventReportDestinations(true);
+                .setCoarseEventReportDestinations(true)
+                .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY);
     }
 
     public static class ValidSourceParams {
@@ -111,6 +112,7 @@ public final class SourceFixture {
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
+        public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
 
         public static final String buildAggregateSource() {
             try {
@@ -175,6 +177,7 @@ public final class SourceFixture {
         try {
             return getValidSourceBuilder()
                     .setFlexEventReportSpec(getValidReportSpecCountBased())
+                    .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
                     .build();
         } catch (JSONException e) {
             return null;
@@ -196,7 +199,7 @@ public final class SourceFixture {
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setMaxEventLevelReports(reportSpec.getMaxReports())
                 .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }
@@ -206,7 +209,7 @@ public final class SourceFixture {
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                .setMaxBucketIncrements(Integer.toString(reportSpec.getMaxReports()))
+                .setMaxEventLevelReports(reportSpec.getMaxReports())
                 .setEventAttributionStatus(reportSpec.encodeTriggerSpecsToJSON())
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
     }

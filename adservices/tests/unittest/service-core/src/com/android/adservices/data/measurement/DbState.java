@@ -27,6 +27,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -55,6 +56,7 @@ public class DbState {
     List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
     List<AggregateReport> mAggregateReportList;
     List<DebugReport> mDebugReportList;
+    List<AsyncRegistration> mAsyncRegistrationList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
@@ -65,6 +67,7 @@ public class DbState {
         mAggregateEncryptionKeyList = new ArrayList<>();
         mAggregateReportList = new ArrayList<>();
         mDebugReportList = new ArrayList<>();
+        mAsyncRegistrationList = new ArrayList<>();
     }
 
     public DbState(JSONObject testInput) throws JSONException {
@@ -147,6 +150,16 @@ public class DbState {
                 JSONObject rJSON = debugReports.getJSONObject(i);
                 DebugReport debugReport = getDebugReportFrom(rJSON);
                 mDebugReportList.add(debugReport);
+            }
+        }
+
+        if (testInput.has("async_registrations")) {
+            // AsyncRegistrations
+            JSONArray asyncRegistrations = testInput.getJSONArray("async_registrations");
+            for (int i = 0; i < asyncRegistrations.length(); i++) {
+                JSONObject aJSON = asyncRegistrations.getJSONObject(i);
+                AsyncRegistration asyncRegistration = getAsyncRegistrationFrom(aJSON);
+                mAsyncRegistrationList.add(asyncRegistration);
             }
         }
     }
@@ -242,6 +255,22 @@ public class DbState {
                     SqliteObjectMapper.constructDebugReportFromCursor(debugReportCursor));
         }
         debugReportCursor.close();
+
+        // Read AsyncRegistration table
+        Cursor asyncRegistrationCursor =
+                readerDB.query(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+        while (asyncRegistrationCursor.moveToNext()) {
+            mAsyncRegistrationList.add(
+                    SqliteObjectMapper.constructAsyncRegistration(asyncRegistrationCursor));
+        }
+        asyncRegistrationCursor.close();
     }
 
     public void sortAll() {
@@ -271,6 +300,8 @@ public class DbState {
                         .thenComparing(AggregateReport::getSourceRegistrationTime));
 
         mDebugReportList.sort(Comparator.comparing(DebugReport::getId));
+
+        mAsyncRegistrationList.sort(Comparator.comparing(AsyncRegistration::getRequestTime));
     }
 
     public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
@@ -379,6 +410,8 @@ public class DbState {
                 .setKeyId(keyJSON.getString("keyId"))
                 .setPublicKey(keyJSON.getString("publicKey"))
                 .setExpiry(keyJSON.getLong("expiry"))
+                .setAggregationCoordinatorOrigin(
+                        WebUtil.validUri(keyJSON.getString("aggregation_coordinator_origin")))
                 .build();
     }
 
@@ -458,6 +491,10 @@ public class DbState {
                 .setSourceId(rJSON.optString("sourceId", null))
                 .setTriggerId(rJSON.optString("triggerId", null))
                 .setRegistrationOrigin(getRegistrationOrigin(rJSON))
+                .setAggregationCoordinatorOrigin(
+                        Uri.parse(
+                                rJSON.optString(
+                                        "aggregation_coordinator_origin", "https://test.test")))
                 .build();
     }
 
@@ -466,6 +503,28 @@ public class DbState {
                 .setId(rJSON.getString("id"))
                 .setType(rJSON.getString("type"))
                 .setBody(rJSON.getString("body"))
+                .build();
+    }
+
+    private AsyncRegistration getAsyncRegistrationFrom(JSONObject aJSON) throws JSONException {
+        return new AsyncRegistration.Builder()
+                .setRegistrationId(aJSON.getString("registrationId"))
+                .setRegistrationUri(Uri.parse(aJSON.getString("registrationUri")))
+                .setTopOrigin(Uri.parse(aJSON.getString("topOrigin")))
+                .setRegistrant(Uri.parse(aJSON.getString("registrant")))
+                .setOsDestination(Uri.parse(aJSON.getString("osDestination")))
+                .setRequestTime(aJSON.getLong("requestTime"))
+                .setAdIdPermission(aJSON.getBoolean("adIdPermission"))
+                .setId(aJSON.getString("id"))
+                .setType(
+                        AsyncRegistration.RegistrationType.values()[
+                                aJSON.getInt("registrationType")])
+                .setPlatformAdId(aJSON.getString("platformAdId"))
+                .setDebugKeyAllowed(aJSON.getBoolean("debugKeyAllowed"))
+                .setRetryCount(aJSON.getInt("retryCount"))
+                .setVerifiedDestination(Uri.parse(aJSON.getString("verifiedDestination")))
+                .setWebDestination(Uri.parse(aJSON.getString("webDestination")))
+                .setSourceType(Source.SourceType.values()[aJSON.getInt("sourceType")])
                 .build();
     }
 

@@ -20,13 +20,21 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.util.Pair;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.Combinatorics;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
 import com.google.common.collect.ImmutableMultiset;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -58,7 +66,8 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private long mEventReportWindow;
+    @Nullable private Long mEventReportWindow;
+    @Nullable private String mEventReportWindows;
     private long mAggregatableReportWindow;
     private List<UnsignedLong> mAggregateReportDedupKeys;
     private List<UnsignedLong> mEventReportDedupKeys;
@@ -82,13 +91,149 @@ public class Source {
     @Nullable private String mDebugJoinKey;
     @Nullable private ReportSpec mFlexEventReportSpec;
     @Nullable private String mTriggerSpecsString;
-    @Nullable private String mMaxBucketIncrementsString;
+    @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
-    @Nullable private String mPrivacyParametersString;
+    @Nullable private String mPrivacyParametersString = null;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     private boolean mCoarseEventReportDestinations;
+    @Nullable private UnsignedLong mSharedDebugKey;
+    private List<Pair<Long, Long>> mParsedEventReportWindows;
+
+    /**
+     * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
+     * windows provided by user.
+     */
+    @Nullable
+    public List<Pair<Long, Long>> parsedProcessedEventReportWindows() {
+        if (mParsedEventReportWindows != null) {
+            return mParsedEventReportWindows;
+        }
+        if (mEventReportWindows == null) {
+            return null;
+        }
+
+        List<Pair<Long, Long>> rawWindows = parseEventReportWindows(mEventReportWindows);
+        if (rawWindows == null) {
+            return null;
+        }
+        // Append Event Time
+        mParsedEventReportWindows = new ArrayList<>();
+
+        for (Pair<Long, Long> window : rawWindows) {
+            mParsedEventReportWindows.add(
+                    new Pair<>(mEventTime + window.first, mEventTime + window.second));
+        }
+        return mParsedEventReportWindows;
+    }
+
+    /**
+     * Returns parsed or default value of event report windows.
+     *
+     * @param eventReportWindows string to be parsed
+     * @param sourceType Source's Type
+     * @param expiryDelta relative expiry value
+     * @param flags Flags
+     * @return parsed or default value
+     */
+    @Nullable
+    public static List<Pair<Long, Long>> getOrDefaultEventReportWindows(
+            @Nullable String eventReportWindows,
+            @NonNull SourceType sourceType,
+            long expiryDelta,
+            @NonNull Flags flags) {
+        if (eventReportWindows == null) {
+            return getDefaultEventReportWindows(expiryDelta, sourceType, flags);
+        }
+        return parseEventReportWindows(eventReportWindows);
+    }
+
+    /** Parses the provided eventReportWindows. Returns null if parsing fails */
+    @Nullable
+    public static List<Pair<Long, Long>> parseEventReportWindows(
+            @NonNull String eventReportWindows) {
+        List<Pair<Long, Long>> result = new ArrayList<>();
+        try {
+            JSONObject jsonObject = new JSONObject(eventReportWindows);
+            long startDuration = 0;
+            if (!jsonObject.isNull("start_time")) {
+                startDuration = jsonObject.getLong("start_time");
+            }
+            JSONArray endTimesJSON = jsonObject.getJSONArray("end_times");
+
+            for (int i = 0; i < endTimesJSON.length(); i++) {
+                long endDuration = endTimesJSON.getLong(i);
+                Pair<Long, Long> window = new Pair<>(startDuration, endDuration);
+                result.add(window);
+                startDuration = endDuration;
+            }
+        } catch (JSONException e) {
+            LogUtil.e(e, "Invalid JSON encountered: event_report_windows");
+            return null;
+        }
+        return result;
+    }
+
+    private static List<Pair<Long, Long>> getDefaultEventReportWindows(
+            long expiryDelta, SourceType sourceType, Flags flags) {
+        List<Pair<Long, Long>> result = new ArrayList<>();
+        List<Long> defaultEarlyWindows =
+                EventReportWindowCalcDelegate.getDefaultEarlyReportingWindows(sourceType, false);
+        List<Long> earlyWindows =
+                new EventReportWindowCalcDelegate(flags)
+                        .getConfiguredOrDefaultEarlyReportingWindows(
+                                sourceType, defaultEarlyWindows, false);
+        long windowStart = 0;
+        for (long earlyWindow : earlyWindows) {
+            if (earlyWindow >= expiryDelta) {
+                continue;
+            }
+            result.add(new Pair<>(windowStart, earlyWindow));
+            windowStart = earlyWindow;
+        }
+        result.add(new Pair<>(windowStart, expiryDelta));
+        return result;
+    }
+
+    /**
+     * Checks if the source has valid information gain
+     *
+     * @param flags flag values
+     */
+    public boolean hasValidInformationGain(@NonNull Flags flags) {
+        return isFlexLiteApiValueValid(flags) && isFlexEventApiValueValid(flags);
+    }
+
+    private boolean isFlexLiteApiValueValid(Flags flags) {
+        if (!flags.getMeasurementFlexLiteAPIEnabled()
+                || (mEventReportWindows == null && mMaxEventLevelReports == null)) {
+            return true;
+        }
+        double informationGainThreshold =
+                mSourceType == SourceType.EVENT
+                        ? flags.getMeasurementFlexAPIMaxInformationGainEvent()
+                        : flags.getMeasurementFlexAPIMaxInformationGainNavigation();
+
+        EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
+                new EventReportWindowCalcDelegate(flags);
+        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
+        int numStates =
+                Combinatorics.getNumStatesArithmetic(
+                        eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
+                        getTriggerDataCardinality(),
+                        eventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                                this, installCase));
+        double flipProbability = Combinatorics.getFlipProbability(numStates);
+
+        return Combinatorics.getInformationGain(numStates, flipProbability)
+                <= informationGainThreshold;
+    }
+
+    /** Returns true is manual event reporting windows are set otherwise false; */
+    public boolean hasManualEventReportWindows() {
+        return getEventReportWindows() != null;
+    }
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -181,6 +326,7 @@ public class Source {
 
     /**
      * Range of trigger metadata: [0, cardinality).
+     *
      * @return Cardinality of {@link Trigger} metadata
      */
     public int getTriggerDataCardinality() {
@@ -211,8 +357,9 @@ public class Source {
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
-                && mEventReportWindow == source.mEventReportWindow
-                && mAggregatableReportWindow == source.mAggregatableReportWindow
+                && Objects.equals(mEventReportWindow, source.mEventReportWindow)
+                && Objects.equals(mEventReportWindows, source.mEventReportWindows)
+                && Objects.equals(mAggregatableReportWindow, source.mAggregatableReportWindow)
                 && mEventTime == source.mEventTime
                 && mAdIdPermission == source.mAdIdPermission
                 && mArDebugPermission == source.mArDebugPermission
@@ -238,7 +385,8 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
+                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
     }
 
     @Override
@@ -254,6 +402,7 @@ public class Source {
                 mStatus,
                 mExpiryTime,
                 mEventReportWindow,
+                mEventReportWindows,
                 mAggregatableReportWindow,
                 mEventTime,
                 mEventId,
@@ -276,7 +425,8 @@ public class Source {
                 mRegistrationOrigin,
                 mDebugJoinKey,
                 mFlexEventReportSpec,
-                mCoarseEventReportDestinations);
+                mCoarseEventReportDestinations,
+                mSharedDebugKey);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -355,9 +505,30 @@ public class Source {
         return mExpiryTime;
     }
 
-    /** Time when {@link Source} event report window will expire. */
-    public long getEventReportWindow() {
+    /** Returns Event report window */
+    public Long getEventReportWindow() {
         return mEventReportWindow;
+    }
+
+    /**
+     * Time when {@link Source} event report window will expire. (Appends the Event Time to window)
+     */
+    public Long getProcessedEventReportWindow() {
+        if (mEventReportWindow == null) {
+            return null;
+        }
+        // TODO(b/290098169): Cleanup after a few releases
+        // Handling cases where ReportWindow is already stored as mEventTime + mEventReportWindow
+        if (mEventReportWindow > mEventTime) {
+            return mEventReportWindow;
+        } else {
+            return mEventTime + mEventReportWindow;
+        }
+    }
+
+    /** JSON string for event report windows */
+    public String getEventReportWindows() {
+        return mEventReportWindows;
     }
 
     /** Time when {@link Source} aggregate report window will expire. */
@@ -450,19 +621,16 @@ public class Source {
      *
      * @return whether the parameters of flexible are valid
      */
-    public boolean isFlexEventApiValueValid() {
-        if (mFlexEventReportSpec == null) {
-            // the source doesn't not use flexible event report api. It is always valid
+    public boolean isFlexEventApiValueValid(Flags flags) {
+        if (!flags.getMeasurementFlexibleEventReportingApiEnabled()
+                || mFlexEventReportSpec == null) {
             return true;
         }
-        double informationGainThreshold = Double.MIN_VALUE;
-        if (mSourceType == SourceType.EVENT) {
-            informationGainThreshold =
-                    PrivacyParams.getMaxFlexibleEventInformationGainEventSource();
-        } else if (mSourceType == SourceType.NAVIGATION) {
-            informationGainThreshold =
-                    PrivacyParams.getMaxFlexibleEventInformationGainNavigationSource();
-        }
+        double informationGainThreshold =
+                mSourceType == SourceType.EVENT
+                        ? flags.getMeasurementFlexAPIMaxInformationGainEvent()
+                        : flags.getMeasurementFlexAPIMaxInformationGainNavigation();
+
         if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
             return false;
         }
@@ -482,19 +650,11 @@ public class Source {
 
     /**
      * Returns aggregate source string used for aggregation. aggregate source json is a JSONArray.
-     * Example:
-     * [{
-     *   // Generates a "0x159" key piece (low order bits of the key) named
-     *   // "campaignCounts"
-     *   "id": "campaignCounts",
-     *   "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
-     * },
-     * {
-     *   // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
-     *   "id": "geoValue",
-     *   // Source-side geo region = 5 (US), out of a possible ~100 regions.
-     *   "key_piece": "0x5",
-     * }]
+     * Example: [{ // Generates a "0x159" key piece (low order bits of the key) named //
+     * "campaignCounts" "id": "campaignCounts", "key_piece": "0x159", // User saw ad from campaign
+     * 345 (out of 511) }, { // Generates a "0x5" key piece (low order bits of the key) named
+     * "geoValue" "id": "geoValue", // Source-side geo region = 5 (US), out of a possible ~100
+     * regions. "key_piece": "0x5", }]
      */
     public String getAggregateSource() {
         return mAggregateSource;
@@ -568,9 +728,8 @@ public class Source {
     }
 
     /**
-     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
-     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
-     * generating reports.
+     * Returns actual platform AdID from getAdId() on app source registration, to be matched with a
+     * web trigger's {@link Trigger#getDebugAdId()} value at the time of generating reports.
      */
     @Nullable
     public String getPlatformAdId() {
@@ -607,8 +766,29 @@ public class Source {
     }
 
     /** Returns max bucket increments */
-    public String getMaxBucketIncrements() {
-        return mMaxBucketIncrementsString;
+    public Integer getMaxEventLevelReports() {
+        return mMaxEventLevelReports;
+    }
+
+    /**
+     * Returns the RBR provided or default value for max_event_level_reports
+     *
+     * @param sourceType Source's Type
+     * @param maxEventLevelReports RBR parsed value for max_event_level_reports
+     * @param flags Flag values
+     */
+    @NonNull
+    public static Integer getOrDefaultMaxEventLevelReports(
+            @NonNull SourceType sourceType,
+            @Nullable Integer maxEventLevelReports,
+            @NonNull Flags flags) {
+        if (maxEventLevelReports == null) {
+            maxEventLevelReports =
+                    sourceType == Source.SourceType.NAVIGATION
+                            ? PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS
+                            : flags.getMeasurementVtcConfigurableMaxEventReportsCount();
+        }
+        return maxEventLevelReports;
     }
 
     /** Returns event attribution status of current source */
@@ -682,6 +862,11 @@ public class Source {
         return mFilterData;
     }
 
+    @Nullable
+    public UnsignedLong getSharedDebugKey() {
+        return mSharedDebugKey;
+    }
+
     /** Returns true if the source has app destination(s), false otherwise. */
     public boolean hasAppDestinations() {
         return mAppDestinations != null && mAppDestinations.size() > 0;
@@ -709,7 +894,8 @@ public class Source {
         mFlexEventReportSpec =
                 new ReportSpec(
                         mTriggerSpecsString,
-                        mMaxBucketIncrementsString,
+                        getOrDefaultMaxEventLevelReports(
+                                mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
                         mEventAttributionStatusString,
                         mPrivacyParametersString);
     }
@@ -719,6 +905,7 @@ public class Source {
      */
     public static final class Builder {
         private final Source mBuilding;
+
         public Builder() {
             mBuilding = new Source();
         }
@@ -755,6 +942,8 @@ public class Source {
             builder.setEventReportDedupKeys(copyFrom.mEventReportDedupKeys);
             builder.setAggregateReportDedupKeys(copyFrom.mAggregateReportDedupKeys);
             builder.setEventReportWindow(copyFrom.mEventReportWindow);
+            builder.setEventReportWindows(copyFrom.mEventReportWindows);
+            builder.setMaxEventLevelReports(copyFrom.mMaxEventLevelReports);
             builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
             builder.setEnrollmentId(copyFrom.mEnrollmentId);
             builder.setFilterData(copyFrom.mFilterDataString);
@@ -768,6 +957,7 @@ public class Source {
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
+            builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             return builder;
         }
 
@@ -859,18 +1049,20 @@ public class Source {
             return this;
         }
 
-        /**
-         * See {@link Source#getEventReportWindow()}.
-         */
-        public Builder setEventReportWindow(long eventReportWindow) {
+        /** See {@link Source#getEventReportWindow()}. */
+        public Builder setEventReportWindow(Long eventReportWindow) {
             mBuilding.mEventReportWindow = eventReportWindow;
             return this;
         }
 
-        /**
-         * See {@link Source#getAggregatableReportWindow()}.
-         */
-        public Builder setAggregatableReportWindow(long aggregateReportWindow) {
+        /** See {@link Source#getEventReportWindows()} ()}. */
+        public Builder setEventReportWindows(String eventReportWindows) {
+            mBuilding.mEventReportWindows = eventReportWindows;
+            return this;
+        }
+
+        /** See {@link Source#getAggregatableReportWindow()}. */
+        public Builder setAggregatableReportWindow(Long aggregateReportWindow) {
             mBuilding.mAggregatableReportWindow = aggregateReportWindow;
             return this;
         }
@@ -1054,10 +1246,16 @@ public class Source {
 
         /** See {@link Source#getFlexEventReportSpec()} */
         @NonNull
-        public Builder buildInitialFlexEventReportSpec() throws JSONException {
+        public Builder buildInitialFlexEventReportSpec(@NonNull Flags flags) throws JSONException {
+            // TODO(b/290100712): Refactor to remove this method
+            if (mBuilding.mTriggerSpecsString == null || mBuilding.mTriggerSpecsString.isEmpty()) {
+                return this;
+            }
             mBuilding.mFlexEventReportSpec =
                     new ReportSpec(
-                            mBuilding.mTriggerSpecsString, mBuilding.mMaxBucketIncrementsString);
+                            mBuilding.mTriggerSpecsString,
+                            getOrDefaultMaxEventLevelReports(
+                                    mBuilding.mSourceType, mBuilding.mMaxEventLevelReports, flags));
             return this;
         }
 
@@ -1075,10 +1273,10 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getMaxBucketIncrements()} */
+        /** See {@link Source#getMaxEventLevelReports()} */
         @NonNull
-        public Builder setMaxBucketIncrements(@Nullable String maxBucketIncrements) {
-            mBuilding.mMaxBucketIncrementsString = maxBucketIncrements;
+        public Builder setMaxEventLevelReports(@Nullable Integer maxEventLevelReports) {
+            mBuilding.mMaxEventLevelReports = maxEventLevelReports;
             return this;
         }
 
@@ -1093,6 +1291,13 @@ public class Source {
         @NonNull
         public Builder setPrivacyParameters(@Nullable String privacyParameters) {
             mBuilding.mPrivacyParametersString = privacyParameters;
+            return this;
+        }
+
+        /** See {@link Source#getSharedDebugKey()}. */
+        @NonNull
+        public Builder setSharedDebugKey(@Nullable UnsignedLong sharedDebugKey) {
+            mBuilding.mSharedDebugKey = sharedDebugKey;
             return this;
         }
 
