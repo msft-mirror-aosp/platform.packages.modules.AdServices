@@ -444,7 +444,7 @@ public class ConsentNotificationTriggerTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).isEeaDevice();
-        doReturn(true).when(mMockFlags).getU18UxEnabled();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
         doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
@@ -470,7 +470,6 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
         verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
-        verify(mConsentManager).recordNotificationDisplayed(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
