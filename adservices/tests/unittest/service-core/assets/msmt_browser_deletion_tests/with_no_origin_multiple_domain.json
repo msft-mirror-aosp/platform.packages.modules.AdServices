@@ -1,6 +1,6 @@
 {
   "name": "With no origin and multiple domain",
-  "description": "(S1, S4), (T1, T4), (E1, E2(due to S1), E3, E4, E6) and (A1, A4) deleted due to origin match; S2, T2, E5, A2 skipped due to being out of range.",
+  "description": "(S1, S4), (T1, T4), (E1, E2(due to S1), E3, E4, E6), (A1, A4), and (AR1) deleted due to site match; S2, T2, E5, A2, AR2 skipped due to being out of range.",
   "input": {
     "sources": [
       {
@@ -308,6 +308,42 @@
         "sourceId" : "S3",
         "triggerId" : "T2"
       }
+    ],
+    "async_registrations": [
+      {
+        "registrationId": "AR1",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate1.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733601,
+        "adIdPermission": false,
+        "id": "id1",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
+      },
+      {
+        "registrationId": "AR2",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate2.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733605,
+        "adIdPermission": false,
+        "id": "id2",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
+      }
     ]
   },
   "output": {
@@ -446,6 +482,25 @@
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S3",
         "triggerId" : "T2"
+      }
+    ],
+    "async_registrations": [
+      {
+        "registrationId": "AR2",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate2.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733605,
+        "adIdPermission": false,
+        "id": "id2",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
       }
     ]
   },

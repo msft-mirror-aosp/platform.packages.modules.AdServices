@@ -27,6 +27,7 @@ import android.os.UserHandle;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.sdksandbox.SandboxLatencyInfo;
 
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
@@ -147,14 +148,16 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         public static final int SANDBOX_BIND_TIMEOUT_S = 5;
 
         @Override
-        public void onBindingSuccessful(ISdkSandboxService service, int time) {
+        public void onBindingSuccessful(
+                ISdkSandboxService service, int time, SandboxLatencyInfo sandboxLatencyInfo) {
             mSuccess = true;
             mService = service;
             mLatch.countDown();
         }
 
         @Override
-        public void onBindingFailed(LoadSdkException e, long time) {
+        public void onBindingFailed(
+                LoadSdkException e, long time, SandboxLatencyInfo sandboxLatencyInfo) {
             mLatch.countDown();
         }
 
@@ -194,8 +197,9 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         LatchSandboxServiceConnectionCallback callback =
                 new LatchSandboxServiceConnectionCallback();
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
 
-        mService.startSdkSandboxIfNeeded(mCallingInfo, callback);
+        mService.startSdkSandboxIfNeeded(mCallingInfo, callback, sandboxLatencyInfo);
         if (callback.isSuccessful()) {
             ISdkSandboxService service = callback.getService();
             if (mService.isSdkSandboxDisabled(service)) {

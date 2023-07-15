@@ -65,7 +65,9 @@ public final class AggregateEncryptionKeyFetcherTest {
         AggregateEncryptionKeyTestUtil.prepareMockAggregateEncryptionKeyFetcher(
                 mFetcher, mUrlConnection, AggregateEncryptionKeyTestUtil.getDefaultResponseBody());
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         List<AggregateEncryptionKey> result = resultOptional.get();
         assertEquals(2, result.size());
@@ -88,7 +90,10 @@ public final class AggregateEncryptionKeyFetcherTest {
     public void testBadSourceUrl() throws Exception {
         Uri badTarget = WebUtil.validUri("bad-schema://foo.test");
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(badTarget, AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        badTarget,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
     }
 
@@ -97,7 +102,9 @@ public final class AggregateEncryptionKeyFetcherTest {
         doThrow(new IOException("Bad internet things")).when(mFetcher).openUrl(
                 new URL(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET.toString()));
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
     }
@@ -113,7 +120,9 @@ public final class AggregateEncryptionKeyFetcherTest {
                 "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE)));
         when(mUrlConnection.getInputStream()).thenReturn(inputStream);
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
     }
@@ -128,7 +137,9 @@ public final class AggregateEncryptionKeyFetcherTest {
         when(mUrlConnection.getInputStream()).thenReturn(inputStream);
         when(mUrlConnection.getHeaderFields()).thenReturn(new HashMap());
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
     }
@@ -146,7 +157,9 @@ public final class AggregateEncryptionKeyFetcherTest {
         when(mUrlConnection.getHeaderFields()).thenReturn(Map.of(
                 "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE)));
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         List<AggregateEncryptionKey> result = resultOptional.get();
         assertEquals(2, result.size());
@@ -177,7 +190,9 @@ public final class AggregateEncryptionKeyFetcherTest {
                 "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE),
                 "age", List.of("not an int")));
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         List<AggregateEncryptionKey> result = resultOptional.get();
         assertEquals(2, result.size());
@@ -206,7 +221,9 @@ public final class AggregateEncryptionKeyFetcherTest {
                 "cache-control", List.of(AggregateEncryptionKeyTestUtil.DEFAULT_MAX_AGE),
                 "age", List.of("604801")));
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
+                mFetcher.fetch(
+                        AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
+                        AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
     }
@@ -214,7 +231,9 @@ public final class AggregateEncryptionKeyFetcherTest {
     @Test
     public void testNotOverHttps() throws Exception {
         Optional<List<AggregateEncryptionKey>> resultOptional =
-                mFetcher.fetch(WebUtil.validUri("http://foo.test"),
+                mFetcher.fetch(
+                        WebUtil.validUri("http://foo.test"),
+                        WebUtil.validUri("http://foo.test"),
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         assertFalse(resultOptional.isPresent());
         verify(mFetcher, never()).openUrl(any());

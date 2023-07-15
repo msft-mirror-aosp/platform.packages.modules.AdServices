@@ -17,12 +17,13 @@
 package com.android.adservices.service.measurement.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
 public class AdIdEncryptionTest {
     @Test
-    public void testEncryptionWithKnownVectors() {
+    public void encryptAdIdAndEnrollmentSha256_withKnownValues_success() {
         String testAdIdValue = "ab";
         String testEnrollmentId = "c";
 
@@ -32,5 +33,10 @@ public class AdIdEncryptionTest {
         assertEquals(
                 knownSha256,
                 AdIdEncryption.encryptAdIdAndEnrollmentSha256(testAdIdValue, testEnrollmentId));
+    }
+
+    @Test
+    public void encryptAdIdAndEnrollmentSha256_withNullAdId_returnsNull() {
+        assertNull(AdIdEncryption.encryptAdIdAndEnrollmentSha256(null, "c"));
     }
 }

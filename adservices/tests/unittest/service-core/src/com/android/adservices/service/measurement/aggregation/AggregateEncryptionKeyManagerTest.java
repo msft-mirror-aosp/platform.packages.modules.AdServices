@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement.aggregation;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -51,9 +52,17 @@ import javax.net.ssl.HttpsURLConnection;
 @SmallTest
 public final class AggregateEncryptionKeyManagerTest {
     private static final int NUM_KEYS_REQUESTED = 5;
-    private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            Uri.parse("https://not-going-to-be-visited.test");
-    private static final Uri LOCALHOST = Uri.parse("https://localhost");
+    private static final String AGGREGATION_COORDINATOR_ORIGIN_1 =
+            "https://not-going-to-be-visited.test";
+    private static final String AGGREGATION_COORDINATOR_ORIGIN_2 =
+            "https://again-not-going-to-be-visited.test";
+    private static final String AGGREGATION_ORIGIN_LIST =
+            String.join(
+                    ",",
+                    List.of(AGGREGATION_COORDINATOR_ORIGIN_1, AGGREGATION_COORDINATOR_ORIGIN_2));
+    private static final String AGGREGATION_COORDINATOR_ORIGIN_PATH = "test/path";
+
+    private static final String LOCALHOST = "https://localhost";
 
     @Mock DatastoreManager mDatastoreManager;
     @Spy AggregateEncryptionKeyFetcher mFetcher;
@@ -70,18 +79,26 @@ public final class AggregateEncryptionKeyManagerTest {
         // Mock the datastore to return the expected seed key list; we are testing that the fetcher
         // is not called.
         doAnswer((Answer<Optional<List<AggregateEncryptionKey>>>)
-                invocation -> Optional.of(getExpectedKeys()))
-                        .when(mDatastoreManager).runInTransactionWithResult(any());
+                invocation -> Optional.of(getExpectedKeys(AGGREGATION_COORDINATOR_ORIGIN_1)))
+                .when(mDatastoreManager).runInTransactionWithResult(any());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
-                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+                new AggregateEncryptionKeyManager(
+                        mDatastoreManager,
+                        mFetcher,
+                        Clock.systemUTC(),
+                        AGGREGATION_ORIGIN_LIST,
+                        AGGREGATION_COORDINATOR_ORIGIN_PATH);
         List<AggregateEncryptionKey> providedKeys =
-                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
-        assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
-                + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
-                AggregateEncryptionKeyTestUtil.isSuperset(getExpectedKeys(), providedKeys)
+                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        Uri.parse(AGGREGATION_COORDINATOR_ORIGIN_1), NUM_KEYS_REQUESTED);
+        assertTrue(
+                "aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
+                        + "unexpected results:"
+                        + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
+                AggregateEncryptionKeyTestUtil.isSuperset(
+                                getExpectedKeys(AGGREGATION_COORDINATOR_ORIGIN_1), providedKeys)
                         && providedKeys.size() == NUM_KEYS_REQUESTED);
-        verify(mFetcher, never()).fetch(any(Uri.class), anyLong());
+        verify(mFetcher, never()).fetch(any(), any(Uri.class), anyLong());
     }
 
     @Test
@@ -89,18 +106,25 @@ public final class AggregateEncryptionKeyManagerTest {
         // Mock the datastore to return an empty list.
         doAnswer((Answer<Optional<List<AggregateEncryptionKey>>>)
                 invocation -> Optional.of(new ArrayList<>()))
-                        .when(mDatastoreManager).runInTransactionWithResult(any());
+                .when(mDatastoreManager).runInTransactionWithResult(any());
         // Mock the fetcher as failing.
         doReturn(mUrlConnection).when(mFetcher).openUrl(any());
         when(mUrlConnection.getResponseCode()).thenReturn(400);
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
-                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+                new AggregateEncryptionKeyManager(
+                        mDatastoreManager,
+                        mFetcher,
+                        Clock.systemUTC(),
+                        AGGREGATION_ORIGIN_LIST,
+                        AGGREGATION_COORDINATOR_ORIGIN_PATH);
         List<AggregateEncryptionKey> providedKeys =
-                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
-        assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
-                + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
-                        providedKeys.isEmpty());
+                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        Uri.parse(AGGREGATION_COORDINATOR_ORIGIN_2), NUM_KEYS_REQUESTED);
+        assertTrue(
+                "aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
+                        + "unexpected results:"
+                        + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
+                providedKeys.isEmpty());
     }
 
     @Test
@@ -109,35 +133,69 @@ public final class AggregateEncryptionKeyManagerTest {
         // Mock the datastore to return an empty list.
         doAnswer((Answer<Optional<List<AggregateEncryptionKey>>>)
                 invocation -> Optional.of(new ArrayList<>()))
-                        .when(mDatastoreManager).runInTransactionWithResult(any());
-        List<AggregateEncryptionKey> expectedKeys = getExpectedKeys();
+                .when(mDatastoreManager).runInTransactionWithResult(any());
+        List<AggregateEncryptionKey> expectedKeys = getExpectedKeys(LOCALHOST);
         // Mock the fetcher returning keys.
-        doReturn(Optional.of(expectedKeys)).when(mFetcher).fetch(any(Uri.class), anyLong());
+        doReturn(Optional.of(expectedKeys)).when(mFetcher).fetch(any(), any(Uri.class), anyLong());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
-                        LOCALHOST);
+                new AggregateEncryptionKeyManager(
+                        mDatastoreManager,
+                        mFetcher,
+                        Clock.systemUTC(),
+                        LOCALHOST,
+                        AGGREGATION_COORDINATOR_ORIGIN_PATH);
         List<AggregateEncryptionKey> providedKeys =
-                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
-        assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
-                + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
+                aggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        Uri.parse(LOCALHOST), NUM_KEYS_REQUESTED);
+        assertTrue(
+                "aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
+                        + "unexpected results:"
+                        + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
                 AggregateEncryptionKeyTestUtil.isSuperset(expectedKeys, providedKeys)
                         && providedKeys.size() == NUM_KEYS_REQUESTED);
         // Datastore is called once to delete expired encryption keys.
         verify(mDatastoreManager, times(1)).runInTransaction(any());
     }
 
-    private static List<AggregateEncryptionKey> getExpectedKeys() {
+    @Test
+    public void createURL() {
+        // Slash in origin, slash in path
+        assertEquals(
+                Uri.parse("https://a.test//test/qwe"),
+                AggregateEncryptionKeyManager.createURL(Uri.parse("https://a.test/"), "/test/qwe"));
+
+        // No slash in origin, slash in path
+        assertEquals(
+                Uri.parse("https://a.test//test/qwe"),
+                AggregateEncryptionKeyManager.createURL(Uri.parse("https://a.test"), "/test/qwe"));
+
+        // No slash in origin, no slash in path
+        assertEquals(
+                Uri.parse("https://a.test/test/qwe"),
+                AggregateEncryptionKeyManager.createURL(Uri.parse("https://a.test"), "test/qwe"));
+
+        // Slash in origin, no slash in path
+        assertEquals(
+                Uri.parse("https://a.test/test/qwe"),
+                AggregateEncryptionKeyManager.createURL(Uri.parse("https://a.test/"), "test/qwe"));
+    }
+
+    private static List<AggregateEncryptionKey> getExpectedKeys(String origin) {
         List<AggregateEncryptionKey> result = new ArrayList<>();
-        result.add(new AggregateEncryptionKey.Builder()
-                .setKeyId(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID)
-                .setPublicKey(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY)
-                .setExpiry(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY)
-                .build());
-        result.add(new AggregateEncryptionKey.Builder()
-                .setKeyId(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID)
-                .setPublicKey(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY)
-                .setExpiry(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY)
-                .build());
+        result.add(
+                new AggregateEncryptionKey.Builder()
+                        .setKeyId(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID)
+                        .setPublicKey(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY)
+                        .setExpiry(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY)
+                        .setAggregationCoordinatorOrigin(Uri.parse(origin))
+                        .build());
+        result.add(
+                new AggregateEncryptionKey.Builder()
+                        .setKeyId(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID)
+                        .setPublicKey(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY)
+                        .setExpiry(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY)
+                        .setAggregationCoordinatorOrigin(Uri.parse(origin))
+                        .build());
         return result;
     }
 }

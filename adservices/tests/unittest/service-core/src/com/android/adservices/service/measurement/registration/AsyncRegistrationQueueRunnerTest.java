@@ -73,12 +73,14 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Truth;
 
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -2141,6 +2143,9 @@ public class AsyncRegistrationQueueRunnerTest {
     @Test
     public void testRegisterWebSource_failsWebAndOsDestinationVerification()
             throws DatastoreException, IOException {
+        // TODO(b/291147700) - Disabling until manifest parser works on R
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+
         // Setup
         AsyncSourceFetcher mFetcher =
                 spy(new AsyncSourceFetcher(sDefaultContext, mEnrollmentDao, mFlags, mLogger));

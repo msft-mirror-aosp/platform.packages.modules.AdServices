@@ -59,6 +59,8 @@ public class SourceTest {
 
     private static final UnsignedLong DEBUG_KEY_1 = new UnsignedLong(81786463L);
     private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
+    private static final UnsignedLong SHARED_DEBUG_KEY_1 = new UnsignedLong(1786463L);
+    private static final UnsignedLong SHARED_DEBUG_KEY_2 = new UnsignedLong(3487834L);
 
     @Test
     public void testDefaults() {
@@ -130,6 +132,7 @@ public class SourceTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .setCoarseEventReportDestinations(true)
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -171,6 +174,7 @@ public class SourceTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .setCoarseEventReportDestinations(true)
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .build());
     }
 
@@ -371,6 +375,13 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setCoarseEventReportDestinations(true)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_2)
                         .build());
     }
 
@@ -781,6 +792,15 @@ public class SourceTest {
 
         // Assertion
         assertEquals(fromSource, Source.Builder.from(fromSource).build());
+    }
+
+    @Test
+    public void setSharedDebugKey_success() throws JSONException {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .build();
+        assertEquals(SHARED_DEBUG_KEY_1, source.getSharedDebugKey());
     }
 
     @Test
