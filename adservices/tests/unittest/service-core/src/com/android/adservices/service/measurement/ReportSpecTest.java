@@ -251,7 +251,7 @@ public class ReportSpecTest {
         triggerRecord1.put("priority", 1L);
         triggerRecord1.put("trigger_time", BASE_TIME);
         triggerRecord1.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord1.put("dedup_key", new UnsignedLong(34567L).getValue());
+        triggerRecord1.put("dedup_key", null);
 
         JSONObject triggerRecord2 = new JSONObject();
         triggerRecord2.put("trigger_id", "200");
