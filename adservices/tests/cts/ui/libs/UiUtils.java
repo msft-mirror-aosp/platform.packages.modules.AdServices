@@ -111,6 +111,10 @@ public class UiUtils {
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
     }
 
+    public static void enableU18() {
+        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+    }
+
     public static void enableGa() {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
     }
