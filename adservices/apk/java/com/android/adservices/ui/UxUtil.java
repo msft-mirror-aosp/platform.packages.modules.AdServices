@@ -31,8 +31,7 @@ import java.util.stream.Stream;
 
 /** Utility class for notification related logic. */
 @RequiresApi(Build.VERSION_CODES.S)
-// TO-DO: Rename class to settingsUtil.
-public class NotificationUtil {
+public class UxUtil {
 
     /** Returns whether the device is an EEA device. */
     public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {

@@ -41,8 +41,8 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.UxUtil;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 // TODO(b/269798827): Enable for R.
@@ -96,7 +96,7 @@ public class ConsentNotificationTrigger {
         }
 
         if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
-            switch (NotificationUtil.getUx(context)) {
+            switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     consentManager.recordGaUxNotificationDisplayed(true);
                     break;
@@ -123,7 +123,7 @@ public class ConsentNotificationTrigger {
         Notification notification;
 
         if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
-            switch (NotificationUtil.getUx(context)) {
+            switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     if (UxStatesManager.getInstance(context)
                             .getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED)) {
@@ -168,7 +168,7 @@ public class ConsentNotificationTrigger {
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
         if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
-            switch (NotificationUtil.getUx(context)) {
+            switch (UxUtil.getUx(context)) {
                 case U18_UX:
                     consentManager.recordMeasurementDefaultConsent(false);
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
