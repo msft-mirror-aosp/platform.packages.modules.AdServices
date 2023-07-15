@@ -2764,4 +2764,19 @@ public interface Flags {
     default boolean getEnrollmentMddRecordDeletionEnabled() {
         return ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
     }
+
+    /** Default value of whether topics cobalt logging feature is enabled. */
+    boolean TOPICS_COBALT_LOGGING_ENABLED = false;
+
+    /** Returns whether the topics cobalt logging feature is enabled. */
+    default boolean getTopicsCobaltLoggingEnabled() {
+        return TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of Cobalt Adservices Api key. */
+    String COBALT_ADSERVICES_API_KEY_HEX = "cobalt-default-api-key";
+
+    default String getCobaltAdservicesApiKeyHex() {
+        return COBALT_ADSERVICES_API_KEY_HEX;
+    }
 }
