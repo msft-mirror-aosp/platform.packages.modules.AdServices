@@ -658,6 +658,11 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
 
+    static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
+
+    // Database Schema Version Flags
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 = "enable_database_schema_version_8";
+
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
@@ -3113,6 +3118,24 @@ public final class PhFlags implements Flags {
     @Override
     public boolean isEnrollmentBlocklisted(String enrollmentId) {
         return getEnrollmentBlocklist().contains(enrollmentId);
+    }
+
+    @Override
+    public boolean getEnableLoggedTopic() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_LOGGED_TOPIC,
+                /* defaultValue */ ENABLE_LOGGED_TOPIC
+        );
+    }
+
+    @Override
+    public boolean getEnableDatabaseSchemaVersion8() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_8,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_8
+        );
     }
 
     @Override

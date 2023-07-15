@@ -54,7 +54,9 @@ import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -300,7 +302,9 @@ import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_BACK_COMPAT;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
@@ -6612,5 +6616,38 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getConsentNotificationResetToken()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnableLoggedTopic() {
+        assertThat(FlagsFactory.getFlags().getEnableLoggedTopic()).isEqualTo(ENABLE_LOGGED_TOPIC);
+
+        final boolean phOverrideValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_LOGGED_TOPIC,
+                Boolean.toString(phOverrideValue),
+                /* makeDefault */ false
+        );
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableLoggedTopic()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetEnableDatabaseSchemaVersion8() {
+        assertThat(FlagsFactory.getFlags().getEnableDatabaseSchemaVersion8())
+                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_8);
+
+        final boolean phOverrideValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_DATABASE_SCHEMA_VERSION_8,
+                Boolean.toString(phOverrideValue),
+                /* makeDefault */ false
+        );
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableDatabaseSchemaVersion8()).isEqualTo(phOverrideValue);
     }
 }
