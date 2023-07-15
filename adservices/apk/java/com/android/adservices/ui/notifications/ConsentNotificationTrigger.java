@@ -170,7 +170,7 @@ public class ConsentNotificationTrigger {
         if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
             switch (UxUtil.getUx(context)) {
                 case U18_UX:
-                    consentManager.recordMeasurementDefaultConsent(false);
+                    consentManager.recordMeasurementDefaultConsent(true);
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
                     break;
                 case BETA_UX:
