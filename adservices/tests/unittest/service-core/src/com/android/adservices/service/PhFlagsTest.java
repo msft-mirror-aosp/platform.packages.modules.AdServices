@@ -31,6 +31,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_WO
 import static com.android.adservices.service.Flags.CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
+import static com.android.adservices.service.Flags.COBALT_ADSERVICES_API_KEY_HEX;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
@@ -53,7 +54,9 @@ import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -251,6 +254,7 @@ import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECON
 import static com.android.adservices.service.Flags.TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -283,6 +287,7 @@ import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_FORCE_USE_BU
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
+import static com.android.adservices.service.PhFlags.KEY_COBALT_ADSERVICES_API_KEY_HEX;
 import static com.android.adservices.service.PhFlags.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.PhFlags.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
@@ -297,7 +302,9 @@ import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_BACK_COMPAT;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
@@ -492,6 +499,7 @@ import static com.android.adservices.service.PhFlags.KEY_RECORD_MANUAL_INTERACTI
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.PhFlags.KEY_TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_KILL_SWITCH;
@@ -830,6 +838,40 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getClassifierForceUseBundledFiles()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testTopicsCobaltLoggingEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getTopicsCobaltLoggingEnabled())
+                .isEqualTo(TOPICS_COBALT_LOGGING_ENABLED);
+
+        boolean phOverridingValue = !TOPICS_COBALT_LOGGING_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getTopicsCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testCobaltAdservicesApiKeyHex() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getCobaltAdservicesApiKeyHex())
+                .isEqualTo(COBALT_ADSERVICES_API_KEY_HEX);
+
+        String phOverridingValue = "testkey";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_COBALT_ADSERVICES_API_KEY_HEX,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getCobaltAdservicesApiKeyHex()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -6574,5 +6616,38 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getConsentNotificationResetToken()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnableLoggedTopic() {
+        assertThat(FlagsFactory.getFlags().getEnableLoggedTopic()).isEqualTo(ENABLE_LOGGED_TOPIC);
+
+        final boolean phOverrideValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_LOGGED_TOPIC,
+                Boolean.toString(phOverrideValue),
+                /* makeDefault */ false
+        );
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableLoggedTopic()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetEnableDatabaseSchemaVersion8() {
+        assertThat(FlagsFactory.getFlags().getEnableDatabaseSchemaVersion8())
+                .isEqualTo(ENABLE_DATABASE_SCHEMA_VERSION_8);
+
+        final boolean phOverrideValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_DATABASE_SCHEMA_VERSION_8,
+                Boolean.toString(phOverrideValue),
+                /* makeDefault */ false
+        );
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableDatabaseSchemaVersion8()).isEqualTo(phOverrideValue);
     }
 }

@@ -64,6 +64,9 @@ public class CustomAudienceManagerTest {
 
     @Before
     public void setUp() throws TimeoutException {
+        // Skip the test if it's on an unsupported SDK Level
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+
         // Skip the test if it runs on unsupported platforms
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
