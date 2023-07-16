@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__PUBLIC_STOP_REASON__STOP_REASON_UNDEFINED;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
@@ -47,6 +48,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -251,13 +253,19 @@ public class AdservicesJobServiceTest {
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
+
+        // StopReason was only introduced in Android S; prior to that it'll only log as Unknown.
+        int expectedStopReason =
+                SdkLevel.isAtLeastS()
+                        ? stopReason
+                        : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__PUBLIC_STOP_REASON__STOP_REASON_UNDEFINED;
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_1,
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY,
-                        stopReason);
+                        expectedStopReason);
         // Second Execution -- onStopJob() is called without retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(false);
@@ -274,7 +282,7 @@ public class AdservicesJobServiceTest {
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY,
-                        stopReason);
+                        expectedStopReason);
     }
     /** To test the flow that execution is halted without calling onStopJob(). */
     @Test

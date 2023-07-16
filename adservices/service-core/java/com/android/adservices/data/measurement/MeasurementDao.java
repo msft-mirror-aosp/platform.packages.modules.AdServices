@@ -1719,6 +1719,54 @@ class MeasurementDao implements IMeasurementDao {
         return triggerIds.build();
     }
 
+    @Override
+    public List<String> fetchMatchingAsyncRegistrations(
+            @NonNull Uri registrant,
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            // TODO: change this to selection and invert selection mode
+            @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException {
+        Objects.requireNonNull(registrant);
+        Objects.requireNonNull(origins);
+        Objects.requireNonNull(domains);
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
+        validateRange(start, end);
+        Instant cappedStart = capDeletionRange(start);
+        Instant cappedEnd = capDeletionRange(end);
+        Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
+        Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
+        Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
+
+        final SQLiteDatabase db = mSQLTransaction.getDatabase();
+        ImmutableList.Builder<String> asyncRegistrationIds = new ImmutableList.Builder<>();
+        try (Cursor cursor =
+                db.query(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        new String[] {MeasurementTables.AsyncRegistrationContract.ID},
+                        mergeConditions(
+                                " AND ",
+                                registrantMatcher.apply(
+                                        MeasurementTables.AsyncRegistrationContract.REGISTRANT),
+                                siteMatcher.apply(
+                                        MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN),
+                                timeMatcher.apply(
+                                        MeasurementTables.AsyncRegistrationContract.REQUEST_TIME)),
+                        null,
+                        null,
+                        null,
+                        null)) {
+            while (cursor.moveToNext()) {
+                asyncRegistrationIds.add(cursor.getString(0));
+            }
+        }
+
+        return asyncRegistrationIds.build();
+    }
+
     private static Function<String, String> getRegistrantMatcher(Uri registrant) {
         return (String columnName) ->
                 columnName + " = " + DatabaseUtils.sqlEscapeString(registrant.toString());
@@ -2252,6 +2300,15 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.ID);
     }
 
+    @Override
+    public void deleteAsyncRegistrations(@NonNull List<String> asyncRegistrationIds)
+            throws DatastoreException {
+        deleteRecordsColumnBased(
+                asyncRegistrationIds,
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.ID);
+    }
+
     private void deleteRecordsColumnBased(
             List<String> columnValues, String tableName, String columnName)
             throws DatastoreException {
@@ -2565,21 +2622,6 @@ class MeasurementDao implements IMeasurementDao {
             throw new DatastoreException("Async Registration already deleted");
         }
         LogUtil.d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
-    }
-
-    @Override
-    public void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri)
-            throws DatastoreException {
-        SQLiteDatabase db = mSQLTransaction.getDatabase();
-        int rows =
-                db.delete(
-                        MeasurementTables.AsyncRegistrationContract.TABLE,
-                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
-                        new String[] {uri});
-        LogUtil.d(
-                "MeasurementDao: deleteAsyncRegistrationsProvidedRegistrant: rows"
-                        + " affected="
-                        + rows);
     }
 
     @Override

@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class GaUxConsentNotificationDebugChannelTest {
+public class GaUxDebugChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 

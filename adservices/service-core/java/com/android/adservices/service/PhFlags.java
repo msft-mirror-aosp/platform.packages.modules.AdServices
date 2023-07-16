@@ -74,6 +74,10 @@ public final class PhFlags implements Flags {
     static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
             "classifier_force_use_bundled_files";
 
+    // Topics Cobalt keys
+    static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
+    static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
+
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_event_main_reporting_job_period_ms";
@@ -654,6 +658,11 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
 
+    static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
+
+    // Database Schema Version Flags
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 = "enable_database_schema_version_8";
+
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
@@ -828,6 +837,24 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES,
                 /* defaultValue */ CLASSIFIER_FORCE_USE_BUNDLED_FILES);
+    }
+
+    @Override
+    public boolean getTopicsCobaltLoggingEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public String getCobaltAdservicesApiKeyHex() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_COBALT_ADSERVICES_API_KEY_HEX,
+                /* defaultValue */ COBALT_ADSERVICES_API_KEY_HEX);
     }
 
     @Override
@@ -3094,6 +3121,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableLoggedTopic() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_LOGGED_TOPIC,
+                /* defaultValue */ ENABLE_LOGGED_TOPIC
+        );
+    }
+
+    @Override
+    public boolean getEnableDatabaseSchemaVersion8() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_8,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_8
+        );
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("\t" + KEY_DEBUG_UX + " = " + getDebugUx());
         writer.println(
@@ -4070,6 +4115,8 @@ public final class PhFlags implements Flags {
                         + getFledgeRegisterAdBeaconEnabled());
         writer.println(
                 "\t" + KEY_FLEDGE_CPC_BILLING_ENABLED + " = " + getFledgeCpcBillingEnabled());
+        writer.println(
+                "\t" + KEY_TOPICS_COBALT_LOGGING_ENABLED + " = " + getTopicsCobaltLoggingEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(

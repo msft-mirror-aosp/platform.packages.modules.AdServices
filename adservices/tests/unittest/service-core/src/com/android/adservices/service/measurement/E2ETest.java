@@ -197,6 +197,7 @@ public abstract class E2ETest {
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
         String ENROLL = "enroll";
+        String PLATFORM_AD_ID = "platform_ad_id";
     }
 
     private interface ApiConfigKeys {
