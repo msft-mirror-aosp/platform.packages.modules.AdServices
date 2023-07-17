@@ -87,7 +87,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
         }
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
             initWithUx(this, getApplicationContext());
         } else {
             initFragment();
