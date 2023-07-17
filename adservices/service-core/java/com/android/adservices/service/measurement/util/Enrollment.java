@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.util;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -78,10 +77,8 @@ public final class Enrollment {
                     registrationUri, enrollmentData.getEnrollmentId());
             return Optional.empty();
         }
-        // TODO(b/269798827): Enable for R.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && !AppManifestConfigHelper.isAllowedAttributionAccess(
-                        context, packageName, enrollmentData.getEnrollmentId())) {
+        if (!AppManifestConfigHelper.isAllowedAttributionAccess(
+                context, packageName, enrollmentData.getEnrollmentId())) {
             LogUtil.w(
                     "Enrollment check failed, Reason: Enrollment Id missing from "
                             + "App Manifest AdTech allowlist, "
