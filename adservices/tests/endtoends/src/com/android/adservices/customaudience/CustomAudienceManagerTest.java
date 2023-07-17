@@ -65,6 +65,7 @@ public class CustomAudienceManagerTest {
     @Before
     public void setUp() throws TimeoutException {
         // Skip the test if it's on an unsupported SDK Level
+        // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
         Assume.assumeTrue(SdkLevel.isAtLeastS());
 
         // Skip the test if it runs on unsupported platforms
@@ -88,7 +89,8 @@ public class CustomAudienceManagerTest {
 
     @After
     public void tearDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
+        // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+        if (!(SdkLevel.isAtLeastS() && AdservicesTestHelper.isDeviceSupported())) {
             return;
         }
 
