@@ -293,6 +293,13 @@ public class UiUtils {
             } else {
                 rightControlButton.click();
             }
+
+            rightControlButton =
+                    getUiElement(
+                            device,
+                            context,
+                            R.string.notificationUI_confirmation_right_control_button_text);
+            rightControlButton.click();
         } else {
             leftControlButton.click();
             Thread.sleep(1000);
