@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox;
+package android.app.sdksandbox;
 
+/** @hide */
 parcelable SandboxLatencyInfo;
