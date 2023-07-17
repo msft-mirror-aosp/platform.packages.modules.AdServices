@@ -636,12 +636,6 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao,
             EventTrigger eventTrigger)
             throws DatastoreException {
-        try {
-            source.buildFlexibleEventReportApi();
-        } catch (JSONException e) {
-            LogUtil.e("Source::buildFlexibleEventReportApi caught JSON exception");
-            return false;
-        }
         ReportSpec reportSpec = source.getFlexEventReportSpec();
         if (!reportSpec.containsTriggerData(newEventReport.getTriggerData())) {
             return false;
