@@ -207,6 +207,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
                 builder::setSharedDebugKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                builder::setSharedFilterDataKeys);
         return builder.build();
     }
 

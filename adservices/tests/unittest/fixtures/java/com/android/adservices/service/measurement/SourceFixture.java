@@ -76,6 +76,7 @@ public final class SourceFixture {
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
+                .setSharedFilterDataKeys(ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
                 .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
@@ -109,6 +110,8 @@ public final class SourceFixture {
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
+        public static final String SHARED_FILTER_DATA_KEYS =
+                "[\"conversion_subdomain\", \"product\"]";
         public static final Long INSTALL_TIME = 100L;
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
