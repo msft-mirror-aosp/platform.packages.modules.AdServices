@@ -23,6 +23,7 @@ import android.os.Parcelable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 /**
  * Parameters describing the encrypted Cobalt Envelope being sent.
@@ -56,15 +57,13 @@ public final class EncryptedCobaltEnvelopeParams implements Parcelable {
             @Environment int environment, @NonNull int keyIndex, @NonNull byte[] ciphertext) {
         mEnvironment = environment;
         mKeyIndex = keyIndex;
-        mCiphertext = ciphertext;
+        mCiphertext = Objects.requireNonNull(ciphertext);
     }
 
     private EncryptedCobaltEnvelopeParams(@NonNull Parcel in) {
-        mCiphertext = null;
-
         mEnvironment = in.readInt();
         mKeyIndex = in.readInt();
-        in.readByteArray(mCiphertext);
+        mCiphertext = in.createByteArray();
     }
 
     public static final @NonNull Creator<EncryptedCobaltEnvelopeParams> CREATOR =
