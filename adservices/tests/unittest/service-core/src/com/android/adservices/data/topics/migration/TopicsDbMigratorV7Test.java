@@ -41,8 +41,8 @@ import org.mockito.quality.Strictness;
 import java.util.Map;
 import java.util.Set;
 
-/** Unit tests for {@link TopicDbMigratorV7} */
-public class TopicDbMigratorV7Test {
+/** Unit tests for {@link TopicsDbMigratorV7} */
+public class TopicsDbMigratorV7Test {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     // The database is created with V6 and will migrate to V7.
     private final TopicsDbHelperV6 mTopicsDbHelper = TopicsDbHelperV6.getInstance(sContext);
@@ -83,7 +83,7 @@ public class TopicDbMigratorV7Test {
         // In normal DB upgrade, the DB will commit the change automatically.
         db.beginTransaction();
         // Upgrade the db V7 by using TopicDbMigratorV7
-        new TopicDbMigratorV7().performMigration(db);
+        new TopicsDbMigratorV7().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();
         db.endTransaction();
@@ -108,7 +108,7 @@ public class TopicDbMigratorV7Test {
         assertThat(topicsDao.retrieveTopicToContributorsMap(epochId))
                 .isEqualTo(topicContributorsMap);
 
-        new TopicDbMigratorV7().performMigration(db);
+        new TopicsDbMigratorV7().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();
         db.endTransaction();
