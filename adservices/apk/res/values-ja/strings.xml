@@ -91,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"デバイスの設定で広告のトピックを確認して、アプリと共有したくないトピックをブロックできます。Android では、定期的に広告のトピックも自動削除されます。"</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"プライバシー設定でいつでも変更できます。"</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"広告のトピックの詳細"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android がユーザーデータを保護する仕組みについては、"<a href="https://policies.google.com/privacy">"プライバシー ポリシー"</a>"をご覧ください。"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android によるユーザーデータの保護について、詳しくは"<a href="https://policies.google.com/privacy">"プライバシー ポリシー"</a>"をご覧ください。"</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"試してみる"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  使用されるデータ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"広告のトピックは、このデバイスで最近使用されたアプリとアプリの使用頻度に基づきます。"</string>
@@ -224,8 +224,8 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"一般に、ご利用のアプリはユーザーの利便性をパーソナライズするためにユーザーが関心 / 興味を持っている内容を記録します。また、アプリはユーザーのトピックに関する情報も Android で保存できます。\n\nたとえば、マラソンのトレーニングについてアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心がある、と判断することがあります。その後に使用した別のアプリには、最初のアプリから提案されたランニング シューズの広告が表示される可能性があります。\n\nAndroid は、アプリから提案されたデータを定期的に自動削除します。再び使用したアプリはリストに再表示される可能性があります。また、アプリがユーザーに適した広告を提案しないようブロックすることもできます。\n\nアプリにパーソナライズド広告が表示されるかどうかは、この設定のほか、広告トピックの設定、広告 ID の設定、使用しているアプリが広告をパーソナライズするかどうかによって決まります。"</string>
     <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"新しい広告のプライバシー機能をご利用いただけます"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"広告のパフォーマンスを測定するために、ごく少量の限定的な情報のみがアプリ間で共有されます"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"広告の測定という新しい広告プライバシー機能をリリースします。Android ではアプリによる広告の効果測定に役立てるため、広告が表示されたときに、ごく少量の限定的な情報のみがアプリ間で共有されます。"</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"広告のプライバシー設定で変更できます。"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"広告の測定という新しい広告プライバシー機能をリリースします。Android では、アプリによる広告の効果測定に役立てるため、広告が表示されたときに、ごく少量の限定的な情報のみがアプリ間で共有されます。"</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"広告プライバシー設定で変更できます。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"ユーザーが使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android では、限られた種類のデータのみアプリが収集できるよう設定できます。"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"音楽、ニュース、スポーツなど、興味 / 関心のあるトピックを表すカラフルなイラスト"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"円の中に鍵が描かれているカラフルなイラスト"</string>
