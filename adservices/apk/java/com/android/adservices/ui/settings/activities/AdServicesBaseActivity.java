@@ -43,7 +43,7 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), false);
         }
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
             initWithUx(this, getApplicationContext());
         }
     }

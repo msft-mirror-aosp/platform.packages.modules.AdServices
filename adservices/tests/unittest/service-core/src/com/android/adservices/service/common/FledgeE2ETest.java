@@ -107,10 +107,10 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -216,7 +216,13 @@ public class FledgeE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
+    private static final String SELLER_DEBUG_REPORT_WIN_PATH = "/seller/reportWin";
+    private static final String SELLER_DEBUG_REPORT_LOSS_PATH = "/seller/reportLoss";
+    private static final String DEBUG_REPORT_WINNING_BID_PARAM = "?wb=${winningBid}";
+    private static final String DEBUG_REPORT_WINNING_BID_RESPONSE = "?wb=10.0";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
+    private static final String BUYER_DEBUG_REPORT_WIN_PATH = "/buyer/reportWin";
+    private static final String BUYER_DEBUG_REPORT_LOSS_PATH = "/buyer/reportLoss";
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -281,7 +287,7 @@ public class FledgeE2ETest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private ReportingUrisDao mReportingUrisDao;
+    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -289,7 +295,7 @@ public class FledgeE2ETest {
     private AdSelectionServiceImpl mAdSelectionService;
 
     private static final Flags DEFAULT_FLAGS =
-            new FledgeE2ETestFlags(false, true, true, true, false);
+            new FledgeE2ETestFlags(false, true, true, true, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
     private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
@@ -346,7 +352,7 @@ public class FledgeE2ETest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mReportingUrisDao = serverDb.reportingUrisDao();
+        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, DEFAULT_FLAGS);
 
@@ -991,7 +997,7 @@ public class FledgeE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1149,7 +1155,7 @@ public class FledgeE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1664,9 +1670,63 @@ public class FledgeE2ETest {
     }
 
     @Test
+    public void testFledgeFlowSuccessWithDebugReporting() throws Exception {
+        initClients(false, false, true, false, false, true);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        setupAdSelectionConfig();
+        joinCustomAudienceAndAssertSuccess(
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1));
+        joinCustomAudienceAndAssertSuccess(
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2));
+        CountDownLatch debugReportingLatch = new CountDownLatch(4);
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicJsWithDebugReporting(
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        SELLER_DEBUG_REPORT_WIN_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM,
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        SELLER_DEBUG_REPORT_LOSS_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM),
+                        getBiddingLogicWithDebugReporting(
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        BUYER_DEBUG_REPORT_WIN_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM,
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        BUYER_DEBUG_REPORT_LOSS_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM),
+                        /* debugReportingLatch= */ debugReportingLatch);
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        debugReportingLatch.await(10, TimeUnit.SECONDS);
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                9,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS,
+                        BUYER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE,
+                        BUYER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE,
+                        SELLER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE,
+                        SELLER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
     public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
             throws Exception {
-        initClients(false, true, true, false, false);
+        initClients(false, true, true, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -1983,6 +2043,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2141,6 +2202,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2301,6 +2363,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2471,6 +2534,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2745,7 +2809,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallFlagOffWithMockServer() throws Exception {
-        initClients(false, true, false, true, false);
+        initClients(false, true, false, true, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -3300,6 +3364,16 @@ public class FledgeE2ETest {
                 + "}";
     }
 
+    private String getDecisionLogicJsWithDebugReporting(String reportWinUrl, String reportLossUrl) {
+        return "function scoreAd(ad, bid, auction_config, seller_signals,"
+                + " trusted_scoring_signals, contextual_signal, user_signal,"
+                + " custom_audience_signal) { \n"
+                + "  forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
+                + "  forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "  return {'status': 0, 'score': bid };\n"
+                + "}";
+    }
+
     private String getBiddingLogicWithBeacons() {
         return "function generateBid(ad, auction_signals, per_buyer_signals,"
                 + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
@@ -3316,6 +3390,23 @@ public class FledgeE2ETest {
                 + " return {'status': 0, 'results': {'reporting_uri': '"
                 + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                 + "' } };\n"
+                + "}";
+    }
+
+    private String getBiddingLogicWithDebugReporting(String reportWinUrl, String reportLossUrl) {
+        return "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                + "    trusted_bidding_signals, contextual_signals) {\n"
+                + "    const ads = custom_audience.ads;\n"
+                + "    let result = null;\n"
+                + "    for (const ad of ads) {\n"
+                + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                + "            result = ad;\n"
+                + "            forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
+                + "            forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "        }\n"
+                + "    }\n"
+                + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                + "'render': result.render_uri };\n"
                 + "}";
     }
 
@@ -3375,7 +3466,23 @@ public class FledgeE2ETest {
                 biddingLogicJs,
                 impressionReportingSemaphore,
                 interactionReportingSemaphore,
+                null,
                 jsVersioning);
+    }
+
+    private MockWebServer getMockWebServer(
+            String decisionLogicJs,
+            String biddingLogicJs,
+            CountDownLatch debugReportingLatch)
+            throws Exception {
+        return getMockWebServer(
+                new HashMap<>(),
+                decisionLogicJs,
+                biddingLogicJs,
+                null,
+                null,
+                debugReportingLatch,
+                true);
     }
 
     private MockWebServer getMockWebServer(
@@ -3384,6 +3491,7 @@ public class FledgeE2ETest {
             String biddingLogicJs,
             Semaphore impressionReportingSemaphore,
             Semaphore interactionReportingSemaphore,
+            CountDownLatch debugReportingLatch,
             boolean jsVersioning)
             throws Exception {
         String versionHeaderName =
@@ -3410,6 +3518,14 @@ public class FledgeE2ETest {
                             } else {
                                 return new MockResponse().setBody(biddingLogicJs);
                             }
+                        case BUYER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                        case BUYER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                        case SELLER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                        case SELLER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                            if (Objects.nonNull(debugReportingLatch)) {
+                                debugReportingLatch.countDown();
+                            }
+                            return new MockResponse().setResponseCode(200);
                         case CLICK_SELLER_PATH: // Intentional fallthrough
                         case CLICK_BUYER_PATH:
                             interactionReportingSemaphore.release();
@@ -3591,7 +3707,7 @@ public class FledgeE2ETest {
 
     private void initClients(
             boolean gaUXEnabled, boolean registerAdBeaconEnabled, boolean cpcBillingEnabled) {
-        initClients(gaUXEnabled, registerAdBeaconEnabled, true, true, cpcBillingEnabled);
+        initClients(gaUXEnabled, registerAdBeaconEnabled, true, true, cpcBillingEnabled, false);
     }
 
     private void initClients(
@@ -3599,14 +3715,16 @@ public class FledgeE2ETest {
             boolean registerAdBeaconEnabled,
             boolean filtersEnabled,
             boolean enrollmentCheckDisabled,
-            boolean cpcBillingEnabled) {
+            boolean cpcBillingEnabled,
+            boolean debugReportingEnabled) {
         Flags flags =
                 new FledgeE2ETestFlags(
                         gaUXEnabled,
                         registerAdBeaconEnabled,
                         filtersEnabled,
                         enrollmentCheckDisabled,
-                        cpcBillingEnabled);
+                        cpcBillingEnabled,
+                        debugReportingEnabled);
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -3655,7 +3773,7 @@ public class FledgeE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4133,18 +4251,21 @@ public class FledgeE2ETest {
         private final boolean mFiltersEnabled;
         private final boolean mEnrollmentCheckDisabled;
         private final boolean mCpcBillingEnabled;
+        private final boolean mDebugReportingEnabled;
 
         FledgeE2ETestFlags(
                 boolean isGaUxEnabled,
                 boolean registerAdBeaconEnabled,
                 boolean filtersEnabled,
                 boolean enrollmentCheckDisabled,
-                boolean cpcBillingEnabled) {
+                boolean cpcBillingEnabled,
+                boolean debugReportingEnabled) {
             mIsGaUxEnabled = isGaUxEnabled;
             mRegisterAdBeaconEnabled = registerAdBeaconEnabled;
             mFiltersEnabled = filtersEnabled;
             mEnrollmentCheckDisabled = enrollmentCheckDisabled;
             mCpcBillingEnabled = cpcBillingEnabled;
+            mDebugReportingEnabled = debugReportingEnabled;
         }
 
         @Override
@@ -4211,6 +4332,11 @@ public class FledgeE2ETest {
         @Override
         public boolean getFledgeFetchCustomAudienceEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportingEnabled() {
+            return mDebugReportingEnabled;
         }
     }
 }

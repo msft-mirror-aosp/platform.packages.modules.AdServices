@@ -42,7 +42,7 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
             initFragment();
         }
     }

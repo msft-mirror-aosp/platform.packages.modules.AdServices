@@ -111,12 +111,20 @@ public class UiUtils {
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
     }
 
+    public static void enableU18() {
+        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+    }
+
     public static void enableGa() {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
     }
 
     public static void enableBeta() {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+    }
+
+    public static void enableU18Ux() {
+        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
     }
 
     public static void restartAdservices() {
@@ -143,6 +151,67 @@ public class UiUtils {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
+    }
+
+    public static void verifyNotification(
+            Context context,
+            UiDevice device,
+            boolean isDisplayed,
+            boolean isEuTest,
+            UiConstants.UX ux)
+            throws Exception {
+        device.openNotification();
+        Thread.sleep(LAUNCH_TIMEOUT_MS);
+
+        int notificationTitle = -1;
+        int notificationHeader = -1;
+        switch (ux) {
+            case GA_UX:
+                notificationTitle =
+                        isEuTest
+                                ? R.string.notificationUI_notification_ga_title_eu
+                                : R.string.notificationUI_notification_ga_title;
+                notificationHeader =
+                        isEuTest
+                                ? R.string.notificationUI_header_ga_title_eu
+                                : R.string.notificationUI_header_ga_title;
+                break;
+            case BETA_UX:
+                notificationTitle =
+                        isEuTest
+                                ? R.string.notificationUI_notification_title_eu
+                                : R.string.notificationUI_notification_title;
+                notificationHeader =
+                        isEuTest
+                                ? R.string.notificationUI_header_title_eu
+                                : R.string.notificationUI_header_title;
+                break;
+            case U18_UX:
+                notificationTitle = R.string.notificationUI_u18_notification_title;
+                notificationHeader = R.string.notificationUI_u18_header_title;
+                break;
+        }
+
+        UiSelector notificationCardSelector =
+                new UiSelector().text(getResourceString(context, notificationTitle));
+
+        UiObject scroller =
+                device.findObject(
+                        new UiSelector()
+                                .packageName(SYSTEM_UI_NAME)
+                                .resourceId(SYSTEM_UI_RESOURCE_ID));
+
+        UiObject notificationCard = scroller.getChild(notificationCardSelector);
+        if (!isDisplayed) {
+            assertThat(notificationCard.exists()).isFalse();
+            return;
+        }
+        assertThat(notificationCard.exists()).isTrue();
+
+        notificationCard.click();
+        Thread.sleep(LAUNCH_TIMEOUT_MS);
+        UiObject title = getUiElement(device, context, notificationHeader);
+        assertThat(title.exists()).isTrue();
     }
 
     public static void verifyNotification(
@@ -228,6 +297,13 @@ public class UiUtils {
             } else {
                 rightControlButton.click();
             }
+
+            rightControlButton =
+                    getUiElement(
+                            device,
+                            context,
+                            R.string.notificationUI_confirmation_right_control_button_text);
+            rightControlButton.click();
         } else {
             leftControlButton.click();
             Thread.sleep(1000);

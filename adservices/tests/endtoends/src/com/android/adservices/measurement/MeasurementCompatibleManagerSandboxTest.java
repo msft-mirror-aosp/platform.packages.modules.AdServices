@@ -25,11 +25,12 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdManager;
+import android.adservices.adid.AdIdCompatibleManager;
+import android.adservices.common.OutcomeReceiver;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
-import android.adservices.measurement.MeasurementManager;
+import android.adservices.measurement.MeasurementCompatibleManager;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.StatusParam;
 import android.adservices.measurement.WebSourceParams;
@@ -41,7 +42,6 @@ import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 import android.test.suitebuilder.annotation.SmallTest;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -64,7 +64,7 @@ import java.util.concurrent.Executor;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-public class MeasurementManagerSandboxTest {
+public class MeasurementCompatibleManagerSandboxTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
@@ -81,7 +81,7 @@ public class MeasurementManagerSandboxTest {
     private OutcomeReceiver mMockOutcomeReceiver;
     private IMeasurementService mMockMeasurementService;
 
-    private MeasurementManager mMeasurementManager;
+    private MeasurementCompatibleManager mMeasurementManager;
 
     @Before
     public void setUp() {
@@ -99,17 +99,17 @@ public class MeasurementManagerSandboxTest {
         // name could be the only parameter that could differ, so package name would need to be
         // verified that it remains the same as the context package name on all the APIs.
         String adId = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
-        AdIdManager adIdManager = mock(AdIdManager.class);
-        mMeasurementManager = spy(MeasurementManager.get(sContext, adIdManager));
+        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        mMeasurementManager = spy(MeasurementCompatibleManager.get(sContext, adIdManager));
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
         doAnswer(
-                (invocation) -> {
-                    ((OutcomeReceiver) invocation.getArgument(1))
-                            .onResult(new AdId(adId, true));
-                    return null;
-                })
+                        (invocation) -> {
+                            ((OutcomeReceiver) invocation.getArgument(1))
+                                    .onResult(new AdId(adId, true));
+                            return null;
+                        })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         overrideMeasurementKillSwitches(true);
     }

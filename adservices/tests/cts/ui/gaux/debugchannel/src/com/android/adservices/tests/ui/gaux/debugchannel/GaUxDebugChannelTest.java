@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
@@ -40,7 +41,7 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class GaUxConsentNotificationDebugChannelTest {
+public class GaUxDebugChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -115,7 +116,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 });
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX);
 
         UiUtils.turnOnEnableAdsServicesAPI();
     }
@@ -139,6 +144,30 @@ public class GaUxConsentNotificationDebugChannelTest {
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
     }
 
+    /** Verify that when request sent from entry point, we won't trigger notification. */
+    @Test
+    public void testFromEntryPointRequest() throws Exception {
+        UiUtils.setAsEuDevice();
+        UiUtils.enableGa();
+
+        mCommonManager.enableAdServices(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .setPrivacySandboxUiRequest(true)
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
+
+        UiUtils.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
+    }
+
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
     public void testNonAdultAccount() throws Exception {
@@ -155,7 +184,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX);
     }
 
     /**
@@ -177,7 +210,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX);
     }
 
     /**
@@ -198,7 +235,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 
     /**
@@ -219,7 +260,11 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
@@ -238,6 +283,10 @@ public class GaUxConsentNotificationDebugChannelTest {
                 mCallback);
 
         UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 }

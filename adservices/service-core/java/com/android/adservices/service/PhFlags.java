@@ -74,6 +74,10 @@ public final class PhFlags implements Flags {
     static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
             "classifier_force_use_bundled_files";
 
+    // Topics Cobalt keys
+    static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
+    static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
+
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_event_main_reporting_job_period_ms";
@@ -539,7 +543,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
 
-    static final String KEY_RECORD_MANUAL_INTERACTION_ENABLED = "record_manual_interaction_enabled";
+    public static final String KEY_RECORD_MANUAL_INTERACTION_ENABLED =
+            "record_manual_interaction_enabled";
 
     static final String KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED =
             "is_check_activity_feature_enabled";
@@ -547,7 +552,8 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
-    static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED = "ui_ota_strings_feature_enabled";
+    public static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED =
+            "ui_ota_strings_feature_enabled";
 
     static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE = "ui_ota_strings_download_deadline";
 
@@ -653,6 +659,11 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
+
+    static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
+
+    // Database Schema Version Flags
+    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 = "enable_database_schema_version_8";
 
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
@@ -828,6 +839,24 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES,
                 /* defaultValue */ CLASSIFIER_FORCE_USE_BUNDLED_FILES);
+    }
+
+    @Override
+    public boolean getTopicsCobaltLoggingEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public String getCobaltAdservicesApiKeyHex() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_COBALT_ADSERVICES_API_KEY_HEX,
+                /* defaultValue */ COBALT_ADSERVICES_API_KEY_HEX);
     }
 
     @Override
@@ -1461,6 +1490,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeAdSelectionContextualAdsEnabled() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1470,6 +1500,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean getFledgeFetchCustomAudienceEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -2878,6 +2909,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public boolean isBackCompatActivityFeatureEnabled() {
         // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -3088,6 +3120,24 @@ public final class PhFlags implements Flags {
     @Override
     public boolean isEnrollmentBlocklisted(String enrollmentId) {
         return getEnrollmentBlocklist().contains(enrollmentId);
+    }
+
+    @Override
+    public boolean getEnableLoggedTopic() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_LOGGED_TOPIC,
+                /* defaultValue */ ENABLE_LOGGED_TOPIC
+        );
+    }
+
+    @Override
+    public boolean getEnableDatabaseSchemaVersion8() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_8,
+                /* defaultValue */ ENABLE_DATABASE_SCHEMA_VERSION_8
+        );
     }
 
     @Override
@@ -4067,6 +4117,8 @@ public final class PhFlags implements Flags {
                         + getFledgeRegisterAdBeaconEnabled());
         writer.println(
                 "\t" + KEY_FLEDGE_CPC_BILLING_ENABLED + " = " + getFledgeCpcBillingEnabled());
+        writer.println(
+                "\t" + KEY_TOPICS_COBALT_LOGGING_ENABLED + " = " + getTopicsCobaltLoggingEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
         writer.println(
@@ -4231,7 +4283,7 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
     }
 
-    static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
+    public static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
 
     @Override
     public boolean getEuNotifFlowChangeEnabled() {
@@ -4241,7 +4293,8 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
     }
 
-    static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK = "notification_dmsmissed_on_click";
+    public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
+            "notification_dmsmissed_on_click";
 
     @Override
     public boolean getNotificationDismissedOnClick() {
@@ -4288,7 +4341,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
+        uxMap.put(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, getEuNotifFlowChangeEnabled());
         uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
+        uxMap.put(KEY_NOTIFICATION_DISMISSED_ON_CLICK, getNotificationDismissedOnClick());
         return uxMap;
     }
 

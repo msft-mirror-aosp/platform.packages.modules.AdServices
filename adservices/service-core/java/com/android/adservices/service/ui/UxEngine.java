@@ -62,8 +62,8 @@ public class UxEngine {
     }
 
     /**
-     * Starts the UxEgine. In which the general UX flow would be carried out as the engine
-     * orchestrates tasks and events between vairous UX components.
+     * Starts the UxEngine. In which the general UX flow would be carried out as the engine
+     * orchestrates tasks and events between various UX components.
      */
     public void start(AdServicesStates adServicesStates) {
         mUxStatesManager.persistAdServicesStates(adServicesStates);
@@ -81,7 +81,7 @@ public class UxEngine {
             // Only set the enrollment channel if it is not null.
             mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
 
-            // Entry point request should not trigger entrollment.
+            // Entry point request should not trigger enrollment.
             if (adServicesStates.isPrivacySandboxUiRequest()) {
                 return;
             }
