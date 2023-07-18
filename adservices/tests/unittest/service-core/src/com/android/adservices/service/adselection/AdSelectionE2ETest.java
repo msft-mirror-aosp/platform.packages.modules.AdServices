@@ -106,12 +106,12 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -564,7 +564,7 @@ public class AdSelectionE2ETest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private ReportingUrisDao mReportingUrisDao;
+    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
@@ -599,7 +599,7 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mReportingUrisDao = serverDb.reportingUrisDao();
+        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -639,7 +639,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -849,7 +849,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -970,7 +970,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1180,7 +1180,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1272,7 +1272,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1450,7 +1450,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1569,7 +1569,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2095,7 +2095,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2227,7 +2227,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2931,7 +2931,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3042,7 +3042,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3155,7 +3155,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3271,7 +3271,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3390,7 +3390,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3522,7 +3522,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4668,7 +4668,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4908,7 +4908,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4981,7 +4981,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5165,7 +5165,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5238,7 +5238,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5354,7 +5354,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6001,7 +6001,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6127,7 +6127,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6254,7 +6254,7 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,

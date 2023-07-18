@@ -25,7 +25,7 @@ import com.android.internal.annotations.VisibleForTesting;
  * Migrator to perform DB schema change to version 7 in Topics API. Version 7 is to add
  * TopicContributors Table.
  */
-public class TopicDbMigratorV7 extends AbstractTopicsDbMigrator {
+public class TopicsDbMigratorV7 extends AbstractTopicsDbMigrator {
     private static final int DATABASE_VERSION_V7 = 7;
     // Following go/gmscore-flagging-best-practices, we should clean dated table when upgrading and
     // do nothing when downgrading.
@@ -34,7 +34,7 @@ public class TopicDbMigratorV7 extends AbstractTopicsDbMigrator {
         TopicsTables.CREATE_TABLE_TOPIC_CONTRIBUTORS
     };
 
-    public TopicDbMigratorV7() {
+    public TopicsDbMigratorV7() {
         super(DATABASE_VERSION_V7);
     }
 

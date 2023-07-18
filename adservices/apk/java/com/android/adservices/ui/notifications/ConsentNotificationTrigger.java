@@ -16,6 +16,12 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.PhFlags.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.PhFlags.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -35,9 +41,8 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.ui.NotificationUtil;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.UxUtil;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 // TODO(b/269798827): Enable for R.
@@ -47,7 +52,6 @@ public class ConsentNotificationTrigger {
     public static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_MAX;
-
     /**
      * Shows consent notification as the highest priority notification to the user.
      *
@@ -56,7 +60,8 @@ public class ConsentNotificationTrigger {
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
         UiStatsLogger.logRequestedNotification(context);
 
-        boolean gaUxFeatureEnabled = FlagsFactory.getFlags().getGaUxFeatureEnabled();
+        boolean gaUxFeatureEnabled =
+                UxStatesManager.getInstance(context).getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance(context);
@@ -67,7 +72,7 @@ public class ConsentNotificationTrigger {
         }
 
         // Set OTA resources if it exists.
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (UxStatesManager.getInstance(context).getFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)) {
             OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
 
@@ -83,7 +88,7 @@ public class ConsentNotificationTrigger {
 
     private static void recordNotificationDisplayed(
             @NonNull Context context, boolean gaUxFeatureEnabled, ConsentManager consentManager) {
-        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()
+        if (UxStatesManager.getInstance(context).getFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED)
                 && consentManager.getUserManualInteractionWithConsent()
                         != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
             consentManager.recordUserManualInteractionWithConsent(
@@ -91,7 +96,7 @@ public class ConsentNotificationTrigger {
         }
 
         if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
-            switch (NotificationUtil.getUx(null, context)) {
+            switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     consentManager.recordGaUxNotificationDisplayed(true);
                     break;
@@ -116,19 +121,36 @@ public class ConsentNotificationTrigger {
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
         Notification notification;
-        if (FlagsFactory.getFlags().getU18UxEnabled()
-                && UxStatesManager.getInstance(context)
-                        .getUx()
-                        .equals(PrivacySandboxUxCollection.U18_UX)) {
-            notification = getU18ConsentNotification(context);
-        } else if (gaUxFeatureEnabled) {
-            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
-                notification = getGaV2ConsentNotification(context, isEuDevice);
-            } else {
-                notification = getGaConsentNotification(context, isEuDevice);
+
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+            switch (UxUtil.getUx(context)) {
+                case GA_UX:
+                    if (UxStatesManager.getInstance(context)
+                            .getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED)) {
+                        notification = getGaV2ConsentNotification(context, isEuDevice);
+                    } else {
+                        notification = getGaConsentNotification(context, isEuDevice);
+                    }
+                    break;
+                case U18_UX:
+                    notification = getU18ConsentNotification(context);
+                    break;
+                case BETA_UX:
+                    notification = getConsentNotification(context, isEuDevice);
+                    break;
+                default:
+                    notification = getGaConsentNotification(context, isEuDevice);
             }
         } else {
-            notification = getConsentNotification(context, isEuDevice);
+            if (gaUxFeatureEnabled) {
+                if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
+                    notification = getGaV2ConsentNotification(context, isEuDevice);
+                } else {
+                    notification = getGaConsentNotification(context, isEuDevice);
+                }
+            } else {
+                notification = getConsentNotification(context, isEuDevice);
+            }
         }
 
         // make notification sticky (non-dismissible) for EuDevices when the GA UX feature is on
@@ -145,36 +167,37 @@ public class ConsentNotificationTrigger {
             boolean isEuDevice,
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
-        // Keep the feature flag at the upper level to make it easier to cleanup the code once
-        // the beta functionality is fully deprecated and abandoned.
-        if (gaUxFeatureEnabled) {
-            // EU: all APIs are by default disabled
-            // ROW: all APIs are by default enabled
-            // TODO(b/260266623): change consent state to UNDEFINED
-            if (isEuDevice) {
-                consentManager.recordTopicsDefaultConsent(false);
-                consentManager.recordFledgeDefaultConsent(false);
-                consentManager.recordMeasurementDefaultConsent(false);
-
-                consentManager.disable(context, AdServicesApiType.TOPICS);
-                consentManager.disable(context, AdServicesApiType.FLEDGE);
-                consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
-            } else {
-                consentManager.recordTopicsDefaultConsent(true);
-                consentManager.recordFledgeDefaultConsent(true);
-                consentManager.recordMeasurementDefaultConsent(true);
-
-                consentManager.enable(context, AdServicesApiType.TOPICS);
-                consentManager.enable(context, AdServicesApiType.FLEDGE);
-                consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+            switch (UxUtil.getUx(context)) {
+                case U18_UX:
+                    consentManager.recordMeasurementDefaultConsent(true);
+                    consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                    break;
+                case BETA_UX:
+                    if (!isEuDevice) {
+                        consentManager.enable(context);
+                    } else {
+                        consentManager.disable(context);
+                    }
+                    break;
+                default:
+                    // Default behavior is GA UX.
+                    setUpGaConsent(context, isEuDevice, consentManager);
+                    break;
             }
         } else {
-            // For the ROW devices, set the consent to GIVEN (enabled).
-            // For the EU devices, set the consent to REVOKED (disabled)
-            if (!isEuDevice) {
-                consentManager.enable(context);
+            // Keep the feature flag at the upper level to make it easier to cleanup the code once
+            // the beta functionality is fully deprecated and abandoned.
+            if (gaUxFeatureEnabled) {
+                setUpGaConsent(context, isEuDevice, consentManager);
             } else {
-                consentManager.disable(context);
+                // For the ROW devices, set the consent to GIVEN (enabled).
+                // For the EU devices, set the consent to REVOKED (disabled)
+                if (!isEuDevice) {
+                    consentManager.enable(context);
+                } else {
+                    consentManager.disable(context);
+                }
             }
         }
     }
@@ -255,7 +278,9 @@ public class ConsentNotificationTrigger {
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
 
-        if (isEuDevice && !FlagsFactory.getFlags().getNotificationDismissedOnClick()) {
+        if (isEuDevice
+                && !UxStatesManager.getInstance(context)
+                        .getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK)) {
             notification.setAutoCancel(false);
         }
 
@@ -342,5 +367,26 @@ public class ConsentNotificationTrigger {
         NotificationManager notificationManager =
                 context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
+    }
+
+    private static void setUpGaConsent(
+            @NonNull Context context, boolean isEuDevice, ConsentManager consentManager) {
+        if (isEuDevice) {
+            consentManager.recordTopicsDefaultConsent(false);
+            consentManager.recordFledgeDefaultConsent(false);
+            consentManager.recordMeasurementDefaultConsent(false);
+
+            consentManager.disable(context, AdServicesApiType.TOPICS);
+            consentManager.disable(context, AdServicesApiType.FLEDGE);
+            consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
+        } else {
+            consentManager.recordTopicsDefaultConsent(true);
+            consentManager.recordFledgeDefaultConsent(true);
+            consentManager.recordMeasurementDefaultConsent(true);
+
+            consentManager.enable(context, AdServicesApiType.TOPICS);
+            consentManager.enable(context, AdServicesApiType.FLEDGE);
+            consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+        }
     }
 }

@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
-public class GaUxConsentNotificationDebugChannelTest {
+public class GaUxDebugChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -142,6 +142,30 @@ public class GaUxConsentNotificationDebugChannelTest {
 
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+    }
+
+    /** Verify that when request sent from entry point, we won't trigger notification. */
+    @Test
+    public void testFromEntryPointRequest() throws Exception {
+        UiUtils.setAsEuDevice();
+        UiUtils.enableGa();
+
+        mCommonManager.enableAdServices(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .setPrivacySandboxUiRequest(true)
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
+
+        UiUtils.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX);
     }
 
     /** Verify that non-adult account can not trigger consent notification. */
