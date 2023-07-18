@@ -1,5 +1,5 @@
 {
-  "description": "One source and one trigger that match with source event id as negative and trigger data as too large. Event report task within the expiry window sends one report with source event id and trigger data as 0.",
+  "description": "One source and one trigger that match with source event id as negative and trigger data as too large. Both registrations are rejected as invalid and no report is sent.",
   "input": {
     "sources": [{
       "registration_request": {
@@ -46,18 +46,7 @@
     }]
   },
   "output": {
-    "event_level_results": [{
-      "report_time": "800176400001",
-      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-      "payload": {
-        "attribution_destination": "android-app://example.2d1.test",
-        "scheduled_report_time": "800176400",
-        "source_event_id": "0",
-        "trigger_data": "0",
-        "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
-      }
-    }],
+    "event_level_results": [],
     "aggregatable_results": []
   }
 }
