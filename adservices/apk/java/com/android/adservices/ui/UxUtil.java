@@ -31,8 +31,7 @@ import java.util.stream.Stream;
 
 /** Utility class for notification related logic. */
 @RequiresApi(Build.VERSION_CODES.S)
-// TO-DO: Rename class to settingsUtil.
-public class NotificationUtil {
+public class UxUtil {
 
     /** Returns whether the device is an EEA device. */
     public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {
@@ -43,14 +42,10 @@ public class NotificationUtil {
     }
 
     /** Returns the current UX. */
-    public static PrivacySandboxUxCollection getUx(
-            FragmentActivity fragmentActivity, Context context) {
+    public static PrivacySandboxUxCollection getUx(Context context) {
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()) {
             return Stream.of(PrivacySandboxUxCollection.values())
-                    .filter(
-                            ux -> {
-                                return ux.toString().equals(FlagsFactory.getFlags().getDebugUx());
-                            })
+                    .filter(ux -> ux.toString().equals(FlagsFactory.getFlags().getDebugUx()))
                     .findFirst()
                     .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
         } else {
