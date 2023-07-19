@@ -67,8 +67,12 @@ public class CommonFixture {
         return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + authority + path);
     }
 
+    public static Uri getUriWithGivenSubdomain(String subdomain, String authority, String path) {
+        return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + subdomain + "." + authority + path);
+    }
+
     public static Uri getUriWithValidSubdomain(String authority, String path) {
-        return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://valid.subdomain." + authority + path);
+        return getUriWithGivenSubdomain("valid.subdomain", authority, path);
     }
 
     public static Uri getUri(AdTechIdentifier authority, String path) {
