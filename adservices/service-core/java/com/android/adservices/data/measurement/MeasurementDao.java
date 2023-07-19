@@ -1562,7 +1562,8 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException {
+    public void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+            throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         String earliestValidInsertionStr = String.valueOf(earliestValidInsertion);
         // Deleting the sources and triggers will take care of deleting records from
@@ -1602,8 +1603,9 @@ class MeasurementDao implements IMeasurementDao {
         // Async Registration table
         db.delete(
                 MeasurementTables.AsyncRegistrationContract.TABLE,
-                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ?",
-                new String[] {earliestValidInsertionStr});
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ? OR "
+                        + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT + " >= ? ",
+                new String[] {earliestValidInsertionStr, String.valueOf(registrationRetryLimit)});
 
         // Cleanup unnecessary Registration Redirect Counts
         String subQuery =
