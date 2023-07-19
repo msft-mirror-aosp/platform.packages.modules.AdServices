@@ -591,6 +591,7 @@ public final class PhFlags implements Flags {
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
+    static final String KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING = "enrollment_enable_limited_logging";
 
     // New Feature Flags
     static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
@@ -2570,6 +2571,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnrollmentEnableLimitedLogging() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING,
+                /* defaultValue */ ENROLLMENT_ENABLE_LIMITED_LOGGING);
+    }
+
+    @Override
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
@@ -3181,6 +3190,11 @@ public final class PhFlags implements Flags {
                         + KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED
                         + " = "
                         + getEnrollmentMddRecordDeletionEnabled());
+        writer.println(
+                "\t"
+                        + KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING
+                        + " = "
+                        + getEnrollmentEnableLimitedLogging());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());

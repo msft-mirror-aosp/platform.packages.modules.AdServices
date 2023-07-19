@@ -2801,4 +2801,15 @@ public interface Flags {
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
     }
+
+    /**
+     * Default whether to limit logging for enrollment metrics to avoid performance issues. This
+     * includes not logging data that requires database queries and downloading MDD files.
+     */
+    boolean ENROLLMENT_ENABLE_LIMITED_LOGGING = false;
+
+    /** Returns whether enrollment logging should be limited. */
+    default boolean getEnrollmentEnableLimitedLogging() {
+        return ENROLLMENT_ENABLE_LIMITED_LOGGING;
+    }
 }

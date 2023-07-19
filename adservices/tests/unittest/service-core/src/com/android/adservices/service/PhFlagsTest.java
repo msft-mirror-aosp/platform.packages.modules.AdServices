@@ -64,6 +64,7 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLE
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.Flags.ENROLLMENT_ENABLE_LIMITED_LOGGING;
 import static com.android.adservices.service.Flags.ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT;
@@ -308,6 +309,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
+import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ERROR_CODE_LOGGING_DENY_LIST;
 import static com.android.adservices.service.PhFlags.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
@@ -5526,6 +5528,23 @@ public class PhFlagsTest {
 
         assertThat(phFlags.getEnrollmentBlocklist())
                 .containsNoneOf(enrollmentId1, enrollmentId2, enrollmentId3);
+    }
+
+    @Test
+    public void testGetEnrollmentEnableLimitedLogging() {
+        assertThat(FlagsFactory.getFlags().getEnrollmentEnableLimitedLogging())
+                .isEqualTo(ENROLLMENT_ENABLE_LIMITED_LOGGING);
+
+        final boolean phOverridingValue = true;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnrollmentEnableLimitedLogging()).isTrue();
     }
 
     @Test
