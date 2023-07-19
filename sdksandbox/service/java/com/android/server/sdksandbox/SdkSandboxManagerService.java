@@ -244,6 +244,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "broadcastreceiver_allowlist_per_targetSdkVersion";
 
+    // Property for the canary set allowlist indicating which broadcast receivers can be registered
+    // by the sandbox.
+    private static final String PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST =
+            "next_broadcastreceiver_allowlist";
+
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
             "contentprovider_allowlist_per_targetSdkVersion";
 
@@ -1795,6 +1800,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mBroadcastReceiverAllowlistPerTargetSdkVersion =
                         getBroadcastReceiverDeviceConfigAllowlist();
 
+        @GuardedBy("mLock")
+        private ArraySet<String> mNextBroadcastReceiverAllowlist =
+                getNextBroadcastReceiverDeviceConfigAllowlist();
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1884,6 +1893,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @Nullable
+        ArraySet<String> getNextBroadcastReceiverAllowlist() {
+            synchronized (mLock) {
+                return mNextBroadcastReceiverAllowlist;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1938,6 +1954,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         case PROPERTY_BROADCASTRECEIVER_ALLOWLIST:
                             mBroadcastReceiverAllowlistPerTargetSdkVersion =
                                     getBroadcastReceiverDeviceConfigAllowlist();
+                            break;
+                        case PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST:
+                            mNextBroadcastReceiverAllowlist =
+                                    getNextBroadcastReceiverDeviceConfigAllowlist();
                             break;
                         default:
                     }
@@ -2031,6 +2051,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return broadcastReceiverAllowlistsProto == null
                     ? null
                     : broadcastReceiverAllowlistsProto.getAllowlistPerTargetSdkMap();
+        }
+
+        @Nullable
+        private static ArraySet<String> getNextBroadcastReceiverDeviceConfigAllowlist() {
+            AllowedBroadcastReceivers allowedBroadcastReceivers =
+                    getDeviceConfigProtoProperty(
+                            AllowedBroadcastReceivers.parser(),
+                            PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST);
+            if (allowedBroadcastReceivers != null) {
+                return new ArraySet<>(allowedBroadcastReceivers.getIntentActionsList());
+            }
+            return null;
         }
     }
 
@@ -2542,6 +2574,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Nullable
     private ArraySet<String> getBroadcastReceiverAllowlist() {
         synchronized (mLock) {
+            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
+                return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
+            }
+
             if (mSdkSandboxSettingsListener.getBroadcastReceiverAllowlistPerTargetSdkVersion()
                     != null) {
                 // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.

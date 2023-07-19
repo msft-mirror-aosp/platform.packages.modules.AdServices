@@ -76,6 +76,8 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
     public void testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied() throws Exception {
         runPhase("testRegisterBroadcastReceiver_DeviceConfigEmptyAllowlistApplied");
         runPhase("testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied");
+        runPhase("testRegisterBroadcastReceiver_DeviceConfigNextAllowlistApplied");
+        runPhase("testRegisterBroadcastReceiver_DeviceConfigNextRestrictions_AllowlistNotSet");
     }
 
     @Test

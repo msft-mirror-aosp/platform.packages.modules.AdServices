@@ -61,12 +61,24 @@ public class BroadcastRestrictionsTestApp {
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "broadcastreceiver_allowlist_per_targetSdkVersion";
 
+    // Keep the value consistent with
+    // SdkSandboxManagerService.PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS.
+    private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
+            "apply_sdk_sandbox_next_restrictions";
+
+    // Keep the value consistent with
+    // SdkSandboxManagerService.PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST.
+    private static final String PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST =
+            "next_broadcastreceiver_allowlist";
+
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.broadcasts";
 
     private String mEnforceBroadcastRestrictionsSandboxNamespace;
     private String mEnforceBroadcastRestrictionsAdServicesNamespace;
     private String mInitialBroadcastReceiverAllowlistValue;
+    private String mInitialApplySdkSandboxNextRestrictionsValue;
+    private String mInitialNextBroadcastReceiverAllowlistValue;
 
     private static final List<String> INTENT_ACTIONS =
             new ArrayList<>(Arrays.asList(Intent.ACTION_SEND, Intent.ACTION_VIEW));
@@ -84,10 +96,6 @@ public class BroadcastRestrictionsTestApp {
                 .adoptShellPermissionIdentity(
                         Manifest.permission.WRITE_DEVICE_CONFIG,
                         Manifest.permission.READ_DEVICE_CONFIG);
-        DeviceConfig.Properties propertiesSdkSandboxNamespace =
-                DeviceConfig.getProperties(
-                        DeviceConfig.NAMESPACE_SDK_SANDBOX,
-                        PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
 
         mEnforceBroadcastRestrictionsSandboxNamespace =
                 DeviceConfig.getProperty(
@@ -99,6 +107,14 @@ public class BroadcastRestrictionsTestApp {
         mInitialBroadcastReceiverAllowlistValue =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
+        mInitialApplySdkSandboxNextRestrictionsValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+        mInitialNextBroadcastReceiverAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST);
 
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_SDK_SANDBOX,
@@ -107,6 +123,11 @@ public class BroadcastRestrictionsTestApp {
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST);
+
         mRule.getScenario();
 
         // Greedily unload SDK to reduce flakiness
@@ -155,6 +176,29 @@ public class BroadcastRestrictionsTestApp {
         } else {
             DeviceConfig.deleteProperty(
                     DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
+        }
+
+        if (mInitialApplySdkSandboxNextRestrictionsValue != null) {
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                    mInitialApplySdkSandboxNextRestrictionsValue,
+                    /*makeDefault=*/ false);
+        } else {
+            DeviceConfig.deleteProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS);
+        }
+
+        if (mInitialNextBroadcastReceiverAllowlistValue != null) {
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST,
+                    mInitialNextBroadcastReceiverAllowlistValue,
+                    /*makeDefault=*/ false);
+        } else {
+            DeviceConfig.deleteProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST);
         }
 
         InstrumentationRegistry.getInstrumentation()
@@ -326,6 +370,88 @@ public class BroadcastRestrictionsTestApp {
                 () ->
                         broadcastSdkApi.registerBroadcastReceiver(
                                 new ArrayList<>(Arrays.asList(Intent.ACTION_SEND))));
+        assertThrows(
+                SecurityException.class,
+                () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigNextAllowlistApplied() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS, "true", false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                "true",
+                false);
+
+        // Base64 encoded proto AllowedBroadcastReceivers containing the strings Intent.ACTION_VIEW
+        // and Intent.ACTION_SEND.
+        final String encodedNextAllowlist =
+                "ChphbmRyb2lkLmludGVudC5hY3Rpb24uVklFVwoaYW5kcm9pZC5pbnRlbnQuYWN0aW9uLlNFTkQ=";
+        // Set the canary set.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST,
+                encodedNextAllowlist,
+                false);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        final IBinder binder = sandboxedSdk.getInterface();
+        final IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        // No exception should be thrown when registering a BroadcastReceiver with
+        // Intent.ACTION_VIEW and Intent.ACTION_SEND.
+        broadcastSdkApi.registerBroadcastReceiver(new ArrayList<>(List.of(Intent.ACTION_VIEW)));
+        broadcastSdkApi.registerBroadcastReceiver(new ArrayList<>(List.of(Intent.ACTION_SEND)));
+        broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        broadcastSdkApi.registerBroadcastReceiver(
+                                new ArrayList<>(List.of(Intent.ACTION_SCREEN_OFF))));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        broadcastSdkApi.registerBroadcastReceiver(
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                Intent.ACTION_SEND, Intent.ACTION_SCREEN_OFF))));
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigNextRestrictions_AllowlistNotSet()
+            throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS, "true", false);
+
+        // Apply next restrictions, but don't set any value for the allowlist.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS,
+                "true",
+                false);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        final IBinder binder = sandboxedSdk.getInterface();
+        final IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        // No exception should be thrown when it is a protected broadcast.
+        broadcastSdkApi.registerBroadcastReceiver(
+                new ArrayList<>(List.of(Intent.ACTION_SCREEN_OFF)));
         assertThrows(
                 SecurityException.class,
                 () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
