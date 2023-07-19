@@ -47,6 +47,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -75,6 +78,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
@@ -96,6 +100,7 @@ public class GetAdSelectionDataRunnerTest {
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
+    @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
@@ -112,6 +117,10 @@ public class GetAdSelectionDataRunnerTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mServerAdSelectionDaoSpy =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+                        .build()
+                        .auctionServerAdSelectionDao();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -138,6 +147,7 @@ public class GetAdSelectionDataRunnerTest {
                 new GetAdSelectionDataRunner(
                         mObliviousHttpEncryptorMock,
                         mCustomAudienceDao,
+                        mServerAdSelectionDaoSpy,
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -180,6 +190,13 @@ public class GetAdSelectionDataRunnerTest {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1)).encryptBytes(any(), anyLong(), anyLong());
+        verify(mServerAdSelectionDaoSpy, times(1))
+                .insertAuctionServerAdSelection(
+                        DBAuctionServerAdSelection.builder()
+                                .setAdSelectionId(
+                                        callback.mGetAdSelectionDataResponse.getAdSelectionId())
+                                .setSeller(SELLER)
+                                .build());
     }
 
     @Test
@@ -208,6 +225,7 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNull(callback.mGetAdSelectionDataResponse);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
+        verifyZeroInteractions(mServerAdSelectionDaoSpy);
     }
 
     @Test
