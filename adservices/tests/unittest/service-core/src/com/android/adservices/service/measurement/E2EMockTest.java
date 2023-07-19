@@ -41,6 +41,7 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -145,7 +146,9 @@ public abstract class E2EMockTest extends E2ETest {
                         ApplicationProvider.getApplicationContext(),
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
-                        /* enable seed */ true);
+                        /* enable seed */ true,
+                        AdServicesLoggerImpl.getInstance(),
+                        EnrollmentUtil.getInstance(sContext));
 
         mAsyncSourceFetcher =
                 spy(
