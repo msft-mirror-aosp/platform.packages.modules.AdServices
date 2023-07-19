@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox;
+package android.app.sdksandbox;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -26,7 +26,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * To be used to send latency information from sandbox to system system via callback
+ * To be used to send sandbox latency information via callback
  *
  * @hide
  */
@@ -151,6 +151,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         mSandboxStatus = sandboxStatus;
     }
 
+    /** Returns latency of the Sandbox stage of the call. */
     public int getSandboxLatency() {
         int latencySandbox =
                 (int) (mTimeSandboxCalledSystemServer - mTimeSandboxReceivedCallFromSystemServer);
@@ -161,6 +162,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         return latencySandbox;
     }
 
+    /** Returns latency of the SDK stage of the call. */
     public int getSdkLatency() {
         if (mTimeSandboxCalledSdk != -1 && mTimeSdkCallCompleted != -1) {
             return ((int) (mTimeSdkCallCompleted - mTimeSandboxCalledSdk));
@@ -168,6 +170,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         return -1;
     }
 
+    /** Returns latency of the IPC call from System Server to Sandbox. */
     public int getLatencySystemServerToSandbox() {
         return ((int) (mTimeSandboxReceivedCallFromSystemServer - mTimeSystemServerCalledSandbox));
     }
