@@ -146,11 +146,11 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST =
             "measurement_max_retries_per_registration_request";
 
-    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS =
-            "measurement_registration_job_trigger_delay_ms";
+    static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            "measurement_async_registration_job_trigger_min_delay_ms";
 
-    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
-            "measurement_registration_job_trigger_max_delay_ms";
+    static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            "measurement_async_registration_job_trigger_max_delay_ms";
 
     static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH =
             "measurement_attribution_fallback_job_kill_switch";
@@ -1116,19 +1116,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getMeasurementRegistrationJobTriggerDelayMs() {
+    public long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS,
-                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS);
+                /* flagName */ KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS,
+                /* defaultValue */ DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS);
     }
 
     @Override
-    public long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+    public long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
-                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
+                /* flagName */ KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
+                /* defaultValue */ DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
     }
 
     @Override
@@ -3538,14 +3538,14 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxRetriesPerRegistrationRequest());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS
+                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS
                         + " = "
-                        + getMeasurementRegistrationJobTriggerDelayMs());
+                        + getMeasurementAsyncRegistrationJobTriggerMinDelayMs());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
+                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
                         + " = "
-                        + getMeasurementRegistrationJobTriggerMaxDelayMs());
+                        + getMeasurementAsyncRegistrationJobTriggerMaxDelayMs());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
