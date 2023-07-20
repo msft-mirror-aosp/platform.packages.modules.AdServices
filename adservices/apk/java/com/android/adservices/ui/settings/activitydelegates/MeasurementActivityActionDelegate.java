@@ -58,7 +58,10 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
+        configureSharedElements();
+    }
 
     private void configureSharedElements() {
         // consent switch
