@@ -57,6 +57,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -64,6 +65,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
@@ -164,7 +166,12 @@ public abstract class E2EMockTest extends E2ETest {
                                 mEnrollmentDao,
                                 mFlags,
                                 AdServicesLoggerImpl.getInstance()));
-        mDebugReportApi = new DebugReportApi(sContext, mFlags);
+        mDebugReportApi = new DebugReportApi(
+                sContext,
+                mFlags,
+                new EventReportWindowCalcDelegate(mFlags),
+                new SourceNoiseHandler(mFlags),
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
         when(mMockContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
@@ -608,9 +615,10 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         sDatastoreManager
                 .runInTransaction(
-                        dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
     }
 
     void updateEnrollment(String uri) {

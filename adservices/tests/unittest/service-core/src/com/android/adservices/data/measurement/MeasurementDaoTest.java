@@ -5022,7 +5022,9 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         List<AsyncRegistration> asyncRegistrationList = new ArrayList<>();
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
 
+        // Will be deleted by request time
         asyncRegistrationList.add(
                 new AsyncRegistration.Builder()
                         .setId("1")
@@ -5032,18 +5034,49 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
+                        .setRetryCount(retryLimit - 1L)
                         .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
+        // Will be deleted by either request time or retry limit
         asyncRegistrationList.add(
                 new AsyncRegistration.Builder()
                         .setId("2")
+                        .setOsDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setAdIdPermission(false)
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRequestTime(1)
+                        .setRetryCount(retryLimit)
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .build());
+
+        // Will not be deleted
+        asyncRegistrationList.add(
+                new AsyncRegistration.Builder()
+                        .setId("3")
                         .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
                         .setRegistrant(Uri.parse("android-app://installed-registrant"))
                         .setTopOrigin(Uri.parse("android-app://installed-registrant"))
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
+                        .setRetryCount(retryLimit - 1L)
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .build());
+
+        // Will be deleted due to retry limit
+        asyncRegistrationList.add(
+                new AsyncRegistration.Builder()
+                        .setId("4")
+                        .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setAdIdPermission(false)
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRequestTime(Long.MAX_VALUE)
+                        .setRetryCount(retryLimit)
                         .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
@@ -5069,6 +5102,9 @@ public class MeasurementDaoTest {
                             AsyncRegistrationContract.REQUEST_TIME,
                             asyncRegistration.getRequestTime());
                     values.put(
+                            AsyncRegistrationContract.RETRY_COUNT,
+                            asyncRegistration.getRetryCount());
+                    values.put(
                             AsyncRegistrationContract.REGISTRATION_ID,
                             asyncRegistration.getRegistrationId());
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
@@ -5077,14 +5113,15 @@ public class MeasurementDaoTest {
         long count =
                 DatabaseUtils.queryNumEntries(
                         db, AsyncRegistrationContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
+        assertEquals(4, count);
 
         long earliestValidInsertion = System.currentTimeMillis() - 2;
+
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
                                 measurementDao -> measurementDao.deleteExpiredRecords(
-                                        earliestValidInsertion)));
+                                        earliestValidInsertion, retryLimit)));
 
         count =
                 DatabaseUtils.queryNumEntries(
@@ -5101,7 +5138,7 @@ public class MeasurementDaoTest {
                         /* having */ null,
                         /* orderBy */ null);
 
-        Set<String> ids = new HashSet<>(Arrays.asList("2"));
+        Set<String> ids = new HashSet<>(Arrays.asList("3"));
         List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
         while (cursor.moveToNext()) {
             AsyncRegistration asyncRegistration =
@@ -5151,9 +5188,10 @@ public class MeasurementDaoTest {
                                 dao -> dao.insertAsyncRegistration(asyncRegistration)));
 
         long earliestValidInsertion = System.currentTimeMillis() - 60000;
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         assertTrue(
                 datastoreManager.runInTransaction(
-                        (dao) -> dao.deleteExpiredRecords(earliestValidInsertion)));
+                        (dao) -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit)));
 
         Cursor cursor =
                 db.query(
@@ -5292,10 +5330,12 @@ public class MeasurementDaoTest {
         db.insert(EventReportContract.TABLE, null, eventReport_expiredTrigger);
 
         long earliestValidInsertion = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         measurementDao ->
-                                measurementDao.deleteExpiredRecords(earliestValidInsertion));
+                                measurementDao.deleteExpiredRecords(
+                                        earliestValidInsertion, retryLimit));
 
         List<ContentValues> deletedReports =
                 List.of(eventReport_expiredSource, eventReport_expiredTrigger);

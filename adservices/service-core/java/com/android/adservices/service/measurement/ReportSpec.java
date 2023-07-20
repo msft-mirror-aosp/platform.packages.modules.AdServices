@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement;
 
 import android.annotation.NonNull;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -457,7 +459,7 @@ public class ReportSpec {
         private final UnsignedLong mTriggerData;
         private final long mValue;
         private final long mTriggerTime;
-        private final UnsignedLong mDedupKey;
+        @Nullable private final UnsignedLong mDedupKey;
 
         @Override
         public boolean equals(Object obj) {
@@ -487,9 +489,13 @@ public class ReportSpec {
                             json.getString(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
             mValue = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.VALUE);
             mTriggerTime = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_TIME);
-            mDedupKey =
-                    new UnsignedLong(
-                            json.getString(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY));
+            if (!json.isNull(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY)) {
+                mDedupKey =
+                        new UnsignedLong(
+                                json.getString(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY));
+            } else {
+                mDedupKey = null;
+            }
         }
 
         private AttributedTrigger(
@@ -498,7 +504,7 @@ public class ReportSpec {
                 UnsignedLong triggerData,
                 long value,
                 long triggerTime,
-                UnsignedLong dedupKey) {
+                @Nullable UnsignedLong dedupKey) {
             mTriggerId = triggerId;
             mPriority = priority;
             mTriggerData = triggerData;
@@ -536,7 +542,10 @@ public class ReportSpec {
                         mTriggerData.toString());
                 json.put(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_TIME, mTriggerTime);
                 json.put(ReportSpecUtil.FlexEventReportJsonKeys.VALUE, mValue);
-                json.put(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY, mDedupKey.toString());
+                if (mDedupKey != null) {
+                    json.put(
+                            ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY, mDedupKey.toString());
+                }
                 json.put(ReportSpecUtil.FlexEventReportJsonKeys.PRIORITY, mPriority);
             } catch (JSONException e) {
                 LogUtil.e("ReportSpec::encodeToJSON cannot encode AttributedTrigger to JSON");
