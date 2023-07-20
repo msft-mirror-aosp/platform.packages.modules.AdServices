@@ -60,7 +60,7 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  */
-public final class AdServicesSupportRule extends AbstractSupportedFeatureRule {
+public final class AdServicesSupportRule extends AbstractAndroidSupportedFeatureRule {
 
     private static final String TAG = AdServicesSupportRule.class.getSimpleName();
 

@@ -101,4 +101,21 @@ public interface AdServicesLogger {
     /** Logs measurement delayed source registration stats. */
     void logMeasurementDelayedSourceRegistrationStats(
             MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
+
+    /** Logs enrollment data stats. */
+    void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
+
+    /** Logs enrollment matching stats. */
+    void logEnrollmentMatchStats(boolean mIsSuccessful, int mBuildId);
+
+    /** Logs enrollment file download stats. */
+    void logEnrollmentFileDownloadStats(boolean mIsSuccessful, int mBuildId);
+
+    /** Logs enrollment failure stats. */
+    void logEnrollmentFailedStats(
+            int mBuildId,
+            int mDataFileGroupStatus,
+            int mEnrollmentRecordCountInTable,
+            String mQueryParameter,
+            int mErrorCause);
 }

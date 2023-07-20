@@ -147,4 +147,34 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logMeasurementDelayedSourceRegistrationStats(
                 measurementDelayedSourceRegistrationStats);
     }
+
+    @Override
+    public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
+        mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
+    }
+
+    @Override
+    public void logEnrollmentMatchStats(boolean mIsSuccessful, int mBuildId) {
+        mStatsdAdServicesLogger.logEnrollmentMatchStats(mIsSuccessful, mBuildId);
+    }
+
+    @Override
+    public void logEnrollmentFileDownloadStats(boolean mIsSuccessful, int mBuildId) {
+        mStatsdAdServicesLogger.logEnrollmentFileDownloadStats(mIsSuccessful, mBuildId);
+    }
+
+    @Override
+    public void logEnrollmentFailedStats(
+            int mBuildId,
+            int mDataFileGroupStatus,
+            int mEnrollmentRecordCountInTable,
+            String mQueryParameter,
+            int mErrorCause) {
+        mStatsdAdServicesLogger.logEnrollmentFailedStats(
+                mBuildId,
+                mDataFileGroupStatus,
+                mEnrollmentRecordCountInTable,
+                mQueryParameter,
+                mErrorCause);
+    }
 }

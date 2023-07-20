@@ -57,8 +57,6 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
-import java.util.function.Supplier;
-
 public class CustomAudienceServiceFilterTest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
@@ -93,8 +91,6 @@ public class CustomAudienceServiceFilterTest {
 
     @Mock private Throttler mMockThrottler;
 
-    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
-
     private MockitoSession mStaticMockSession = null;
 
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -121,7 +117,7 @@ public class CustomAudienceServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
 
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
     }
@@ -212,7 +208,7 @@ public class CustomAudienceServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)

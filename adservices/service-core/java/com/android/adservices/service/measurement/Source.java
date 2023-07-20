@@ -891,13 +891,15 @@ public class Source {
 
     /** Build the flexible event report API from the raw string */
     public void buildFlexibleEventReportApi() throws JSONException {
-        mFlexEventReportSpec =
-                new ReportSpec(
-                        mTriggerSpecsString,
-                        getOrDefaultMaxEventLevelReports(
-                                mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
-                        mEventAttributionStatusString,
-                        mPrivacyParametersString);
+        if (mFlexEventReportSpec == null) {
+            mFlexEventReportSpec =
+                    new ReportSpec(
+                            mTriggerSpecsString,
+                            getOrDefaultMaxEventLevelReports(
+                                    mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
+                            mEventAttributionStatusString,
+                            mPrivacyParametersString);
+        }
     }
 
     /**

@@ -18,24 +18,45 @@ package com.android.cobalt.crypto.testing;
 
 import android.annotation.NonNull;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.cobalt.crypto.Encrypter;
+import com.android.cobalt.crypto.EncryptionFailedException;
 
 import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.Envelope;
 import com.google.cobalt.ObservationToEncrypt;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /** An encrypter that doesn't encrypt, just serializes the proto into the EncryptedMessage. */
+@VisibleForTesting
 public final class NoOpEncrypter implements Encrypter {
     /** Encrypt an envelope by serializing its bytes. */
-    public EncryptedMessage encryptEnvelope(@NonNull Envelope envelope) {
-        return EncryptedMessage.newBuilder().setCiphertext(envelope.toByteString()).build();
+    public Optional<EncryptedMessage> encryptEnvelope(@NonNull Envelope envelope)
+            throws EncryptionFailedException {
+        Objects.requireNonNull(envelope);
+
+        if (envelope.toByteArray().length == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                EncryptedMessage.newBuilder().setCiphertext(envelope.toByteString()).build());
     }
 
     /** Encrypt an observation by serializing its bytes. */
-    public EncryptedMessage encryptObservation(@NonNull ObservationToEncrypt observation) {
-        return EncryptedMessage.newBuilder()
-                .setContributionId(observation.getContributionId())
-                .setCiphertext(observation.getObservation().toByteString())
-                .build();
+    public Optional<EncryptedMessage> encryptObservation(@NonNull ObservationToEncrypt observation)
+            throws EncryptionFailedException {
+        Objects.requireNonNull(observation);
+
+        if (observation.getObservation().toByteArray().length == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                EncryptedMessage.newBuilder()
+                        .setContributionId(observation.getContributionId())
+                        .setCiphertext(observation.getObservation().toByteString())
+                        .build());
     }
 }

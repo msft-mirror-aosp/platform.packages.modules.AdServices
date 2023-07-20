@@ -404,24 +404,26 @@ public interface Flags {
         return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(5);
 
     /**
      * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -2800,5 +2802,16 @@ public interface Flags {
     /** @return if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /**
+     * Default whether to limit logging for enrollment metrics to avoid performance issues. This
+     * includes not logging data that requires database queries and downloading MDD files.
+     */
+    boolean ENROLLMENT_ENABLE_LIMITED_LOGGING = false;
+
+    /** Returns whether enrollment logging should be limited. */
+    default boolean getEnrollmentEnableLimitedLogging() {
+        return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 }
