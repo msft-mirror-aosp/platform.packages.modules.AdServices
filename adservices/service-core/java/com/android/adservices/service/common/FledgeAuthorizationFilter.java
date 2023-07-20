@@ -171,13 +171,15 @@ public class FledgeAuthorizationFilter {
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
-            mEnrollmentUtil.logEnrollmentFailedStats(
-                    mAdServicesLogger,
-                    buildId,
-                    dataFileGroupStatus,
-                    enrollmentRecordsCount,
-                    adTechIdentifier.toString(),
-                    EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            if (mEnrollmentUtil != null) {
+                mEnrollmentUtil.logEnrollmentFailedStats(
+                        mAdServicesLogger,
+                        buildId,
+                        dataFileGroupStatus,
+                        enrollmentRecordsCount,
+                        adTechIdentifier.toString(),
+                        EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            }
             throw new AdTechNotAllowedException();
         }
 
