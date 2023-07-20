@@ -478,7 +478,7 @@ public class FrequencyCapFilteringE2ETest {
                                     Mockito.mock(AppImportanceFilter.class),
                                     mFledgeAuthorizationFilter,
                                     Mockito.mock(FledgeAllowListsFilter.class),
-                                    () -> Throttler.getInstance(flagsWithLowRateLimit)),
+                                    Throttler.getInstance(flagsWithLowRateLimit)),
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
                             mObliviousHttpEncryptor);
