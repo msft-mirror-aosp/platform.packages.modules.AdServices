@@ -225,7 +225,7 @@
     <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"New ads privacy feature available"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Only very limited info is shared between apps to help measure ad performance"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"We\'re launching a new ads privacy feature called ad measurement. Android only shares very limited information between apps, such as when an ad was shown to you, to help apps measure the performance of ads."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"You can make changes in ads privacy settings."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"You can make changes in ad privacy settings."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Apps that you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data only."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Colourful illustration of symbols representing topics of interest like music, news and sports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Colourful illustration of a lock inside a circle"</string>
