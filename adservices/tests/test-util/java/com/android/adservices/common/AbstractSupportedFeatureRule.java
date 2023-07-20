@@ -17,7 +17,6 @@
 package com.android.adservices.common;
 
 import android.annotation.Nullable;
-import android.util.Log;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -72,14 +71,11 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
     }
 
     private final Mode mMode;
-    private final String mLoggingTag;
 
     /** Default constructor. */
-    public AbstractSupportedFeatureRule(Mode mode, String loggingTag) {
+    public AbstractSupportedFeatureRule(Mode mode) {
         mMode = Objects.requireNonNull(mode);
-        mLoggingTag = Objects.requireNonNull(loggingTag);
         logD("Constructor: mode=%s", mode);
-        logD("Constructor: loggingTag=%s", loggingTag);
     }
 
     // NOTE: ideally should be final and provide proper hooks for subclasses, but we might make it
@@ -288,28 +284,8 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
 
     /** Logs a message in the given level. */
     @FormatMethod
-    protected void log(LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs) {
-        String message = String.format(msgFmt, msgArgs);
-        switch (level) {
-            case ERROR:
-                Log.e(mLoggingTag, message);
-                return;
-            case WARNING:
-                Log.w(mLoggingTag, message);
-                return;
-            case INFO:
-                Log.i(mLoggingTag, message);
-                return;
-            case DEBUG:
-                Log.d(mLoggingTag, message);
-                return;
-            case VERBOSE:
-                Log.v(mLoggingTag, message);
-                return;
-            default:
-                Log.wtf(mLoggingTag, "invalid level (" + level + "): " + message);
-        }
-    }
+    protected abstract void log(
+            LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs);
 
     /** Checks if the device supports the feature. */
     abstract boolean isFeatureSupported();
