@@ -36,6 +36,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
@@ -69,6 +70,7 @@ public class UpdateAdCounterHistogramWorker {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
+    @NonNull private final DevContext mDevContext;
 
     public UpdateAdCounterHistogramWorker(
             @NonNull AdCounterHistogramUpdater adCounterHistogramUpdater,
@@ -78,7 +80,8 @@ public class UpdateAdCounterHistogramWorker {
             @NonNull Flags flags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull ConsentManager consentManager,
-            int callerUid) {
+            int callerUid,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(clock);
@@ -86,6 +89,7 @@ public class UpdateAdCounterHistogramWorker {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(consentManager);
+        Objects.requireNonNull(devContext);
 
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mExecutorService = MoreExecutors.listeningDecorator(executor);
@@ -95,6 +99,7 @@ public class UpdateAdCounterHistogramWorker {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
         mCallerUid = callerUid;
+        mDevContext = devContext;
     }
 
     /**
@@ -166,7 +171,8 @@ public class UpdateAdCounterHistogramWorker {
                 false,
                 mCallerUid,
                 LOGGING_API_NAME,
-                FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM);
+                FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,
+                mDevContext);
 
         // TODO(b/271147154): Merge into the filterRequest call once all filters update
         //  FLEDGE per-app consent

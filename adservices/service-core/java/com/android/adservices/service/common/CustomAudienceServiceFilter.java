@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 
 import java.util.Objects;
 
@@ -85,9 +86,11 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey) {
+            @NonNull Throttler.ApiKey apiKey,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(apiKey);
+        Objects.requireNonNull(devContext);
 
         sLogger.v("Validating caller package name.");
         assertCallerPackageName(callerPackageName, callerUid, apiName);
@@ -101,7 +104,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         }
         if (!Objects.isNull(adTech)) {
             sLogger.v("Checking ad tech is allowed to use FLEDGE.");
-            assertFledgeEnrollment(adTech, callerPackageName, apiName);
+            assertFledgeEnrollment(adTech, callerPackageName, apiName, devContext);
         }
 
         sLogger.v("Validating caller package is in allow list.");
@@ -141,7 +144,8 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey) {
+            @NonNull Throttler.ApiKey apiKey,
+            DevContext devContext) {
         Objects.requireNonNull(uriForAdTech);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(apiKey);
