@@ -81,12 +81,14 @@ public class GetAdSelectionDataRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AuctionServerAdSelectionDao auctionServerAdSelectionDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final Flags flags,
             final int callerUid) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(auctionServerAdSelectionDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
@@ -106,6 +108,7 @@ public class GetAdSelectionDataRunner {
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
+                        adFilterer,
                         mFlags,
                         mLightweightExecutorService,
                         mBackgroundExecutorService);
