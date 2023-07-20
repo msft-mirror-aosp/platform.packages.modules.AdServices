@@ -310,7 +310,8 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), timeSystemServerCalledApp);
+            mLoadCallback.onLoadSdkSuccess(
+                    getSandboxedSdk(), timeSystemServerCalledApp, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
         }
@@ -351,7 +352,8 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkFailure(exception, timeSystemServerCalledApp);
+            mLoadCallback.onLoadSdkFailure(
+                    exception, timeSystemServerCalledApp, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeFailure", e);
         }

@@ -793,7 +793,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Log.e(TAG, "Failed to load SDK " + sdkName, e);
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
-                        System.currentTimeMillis());
+                        System.currentTimeMillis(),
+                        sandboxLatencyInfo);
             } catch (RemoteException ex) {
                 Log.e(TAG, "Failed to send onLoadCodeFailure", e);
             }
@@ -1378,6 +1379,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (RemoteException ignore) {
             // App died. Sync will be re-established again by app later.
         }
+    }
+
+    @Override
+    public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
+        // TODO(b/287047664): log latencies for all stages here.
     }
 
     @Override

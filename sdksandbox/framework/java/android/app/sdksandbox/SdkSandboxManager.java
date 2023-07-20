@@ -752,15 +752,35 @@ public final class SdkSandboxManager {
         }
 
         @Override
-        public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk, long timeSystemServerCalledApp) {
+        public void onLoadSdkSuccess(
+                SandboxedSdk sandboxedSdk,
+                long timeSystemServerCalledApp,
+                SandboxLatencyInfo sandboxLatencyInfo) {
+            logLatencies(sandboxLatencyInfo);
             logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
-        public void onLoadSdkFailure(LoadSdkException exception, long timeSystemServerCalledApp) {
+        public void onLoadSdkFailure(
+                LoadSdkException exception,
+                long timeSystemServerCalledApp,
+                SandboxLatencyInfo sandboxLatencyInfo) {
+            logLatencies(sandboxLatencyInfo);
             logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onError(exception));
+        }
+
+        private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
+            try {
+                mService.logLatencies(sandboxLatencyInfo);
+            } catch (RemoteException e) {
+                Log.w(
+                        TAG,
+                        "Remote exception while calling logLatencies."
+                                + "Error: "
+                                + e.getMessage());
+            }
         }
 
         private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
