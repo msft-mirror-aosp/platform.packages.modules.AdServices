@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,6 +57,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -300,6 +302,45 @@ public class AsyncRegistrationQueueJobServiceTest {
                 });
     }
 
+    @Test
+    public void scheduleIfNeeded_minAndMaxDelayModified_scheduleAccordingly() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    long minDelay = 30000L;
+                    doReturn(minDelay)
+                            .when(mMockFlags)
+                            .getMeasurementAsyncRegistrationJobTriggerMinDelayMs();
+                    long maxDelay = 60000L;
+                    doReturn(maxDelay)
+                            .when(mMockFlags)
+                            .getMeasurementAsyncRegistrationJobTriggerMaxDelayMs();
+
+                    final Context mockContext = mock(Context.class);
+                    doReturn(mMockJobScheduler)
+                            .when(mockContext)
+                            .getSystemService(JobScheduler.class);
+                    doReturn(/* noJobInfo= */ null)
+                            .when(mMockJobScheduler)
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+
+                    // Execute
+                    AsyncRegistrationQueueJobService.scheduleIfNeeded(mockContext, false);
+
+                    // Validate
+                    ExtendedMockito.verify(
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
+                            times(1));
+                    ArgumentCaptor<JobInfo> jobInfoArgumentCaptor =
+                            ArgumentCaptor.forClass(JobInfo.class);
+                    verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+                    JobInfo job = jobInfoArgumentCaptor.getValue();
+                    assertEquals(minDelay, job.getTriggerContentUpdateDelay());
+                    assertEquals(maxDelay, job.getTriggerContentMaxDelay());
+                });
+    }
+
     private void onStartJob_shouldDisableJobTrue() throws Exception {
         // Setup
         ExtendedMockito.doReturn(true)
@@ -376,8 +417,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                     .when(AdServicesLoggerImpl::getInstance);
-            ExtendedMockito.doNothing()
-                    .when(() -> AsyncRegistrationQueueJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
 

@@ -48,6 +48,22 @@ public class SystemHealthParams {
         return FlagsFactory.getFlags().getMeasurementMaxEventReportsPerDestination();
     }
 
+    /**
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    public static long getMeasurementAsyncRegistrationJobQueueMinDelayMs() {
+        return FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMinDelayMs();
+    }
+
+    /**
+     * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    public static long getMeasurementAsyncRegistrationJobQueueMaxDelayMs() {
+        return FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMaxDelayMs();
+    }
+
     /** Delay for attribution job triggering. */
     public static final long ATTRIBUTION_JOB_TRIGGERING_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
 
