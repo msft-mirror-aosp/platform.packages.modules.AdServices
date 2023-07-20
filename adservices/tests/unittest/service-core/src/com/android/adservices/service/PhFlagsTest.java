@@ -39,6 +39,8 @@ import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
@@ -240,8 +242,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIG
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
-import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
@@ -417,6 +417,8 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
@@ -488,8 +490,6 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTER_WE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
-import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
@@ -1812,40 +1812,40 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetMeasurementRegistrationJobTriggerDelayMs() {
+    public void testGetMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMeasurementRegistrationJobTriggerDelayMs())
-                .isEqualTo(MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS);
+        assertThat(FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMinDelayMs())
+                .isEqualTo(DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS);
 
         final long phOverridingValue = 150000;
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS,
+                KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS,
                 Long.toString(phOverridingValue),
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementRegistrationJobTriggerDelayMs())
+        assertThat(phFlags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs())
                 .isEqualTo(phOverridingValue);
     }
 
     @Test
-    public void testGetMeasurementRegistrationJobTriggerMaxDelayMs() {
+    public void testGetMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMeasurementRegistrationJobTriggerMaxDelayMs())
-                .isEqualTo(MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
+        assertThat(FlagsFactory.getFlags().getMeasurementAsyncRegistrationJobTriggerMaxDelayMs())
+                .isEqualTo(DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
 
         final long phOverridingValue = 1500000;
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
+                KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
                 Long.toString(phOverridingValue),
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementRegistrationJobTriggerMaxDelayMs())
+        assertThat(phFlags.getMeasurementAsyncRegistrationJobTriggerMaxDelayMs())
                 .isEqualTo(phOverridingValue);
     }
 
