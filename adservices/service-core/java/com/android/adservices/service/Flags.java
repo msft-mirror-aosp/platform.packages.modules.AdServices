@@ -104,6 +104,14 @@ public interface Flags {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
 
+    /** Privacy budget for logging topic ID distributions with randomized response. */
+    float TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION = 5f;
+
+    /** Returns the privacy budget for logging topic ID distributions with randomized response. */
+    default float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+    }
+
     /** Available types of classifier behaviours for the Topics API. */
     @IntDef(
             flag = true,
