@@ -104,6 +104,14 @@ public interface Flags {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
 
+    /** Privacy budget for logging topic ID distributions with randomized response. */
+    float TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION = 5f;
+
+    /** Returns the privacy budget for logging topic ID distributions with randomized response. */
+    default float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+    }
+
     /** Available types of classifier behaviours for the Topics API. */
     @IntDef(
             flag = true,
@@ -404,24 +412,26 @@ public interface Flags {
         return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(5);
 
     /**
      * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;

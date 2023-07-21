@@ -42,6 +42,7 @@ import com.android.internal.util.Preconditions;
 
 import java.io.PrintWriter;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -114,6 +115,7 @@ public class EpochManager {
     private final Flags mFlags;
     // Use Clock.SYSTEM_CLOCK except in unit tests, which pass in a local instance of Clock to mock.
     private final Clock mClock;
+    private final ClassifierManager mClassifierManager;
 
     @VisibleForTesting
     EpochManager(
@@ -122,13 +124,15 @@ public class EpochManager {
             @NonNull Random random,
             @NonNull Classifier classifier,
             Flags flags,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull ClassifierManager classifierManager) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
         mClassifier = classifier;
         mFlags = flags;
         mClock = clock;
+        mClassifierManager = classifierManager;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -143,7 +147,8 @@ public class EpochManager {
                                 new Random(),
                                 ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                Clock.SYSTEM_CLOCK);
+                                Clock.SYSTEM_CLOCK,
+                                ClassifierManager.getInstance(context));
             }
             return sSingleton;
         }
@@ -394,6 +399,16 @@ public class EpochManager {
 
         for (Map.Entry<String, List<String>> appSdks : appSdksUsageMap.entrySet()) {
             Topic returnedTopic = selectRandomTopic(topTopics);
+            if(mFlags.getEnableLoggedTopic()
+                    && mTopicsDao.supportsLoggedTopicInReturnedTopicTable()) {
+                returnedTopic =
+                        Topic.create(
+                                returnedTopic.getTopic(),
+                                returnedTopic.getTaxonomyVersion(),
+                                returnedTopic.getModelVersion(),
+                                getTopicIdForLogging(returnedTopic));
+            }
+
             String app = appSdks.getKey();
 
             // Check if the app can learn this topic.
@@ -519,5 +534,39 @@ public class EpochManager {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();
         writer.println(String.format("Current epochId is %d", epochId));
+    }
+
+    // Gets a topic ID for logging from the given topic using randomized response mechanism.
+    private int getTopicIdForLogging(Topic topic) {
+        List<Integer> topicsTaxonomy = mClassifierManager.getTopicsTaxonomy();
+
+        // Probability of logging real vs. random topic:
+        // Real topic: e^privacyBudget / (e^privacyBudget + taxonomySize - 1)
+        // Random topic: (taxonomySize - 1) / (e^privacyBudget + taxonomySize - 1)
+        double expPrivacyBudget = Math.exp(mFlags.getTopicsPrivacyBudgetForTopicIdDistribution());
+        int taxonomySize = topicsTaxonomy.size();
+        double pRandomization =
+                expPrivacyBudget == Double.POSITIVE_INFINITY
+                        ? 0d
+                        : (taxonomySize - 1d) / (expPrivacyBudget + taxonomySize - 1d);
+
+        int topicId = topic.getTopic();
+
+        if (mRandom.nextDouble() < pRandomization) {
+            // Log a random topic ID other than the real one.
+            int randomTopicId = topicId;
+
+            Collections.shuffle(topicsTaxonomy);
+            for (int candidateTopicId : topicsTaxonomy) {
+                if (candidateTopicId != topicId) {
+                    randomTopicId = candidateTopicId;
+                    break;
+                }
+            }
+
+            return randomTopicId;
+        } else {
+            return topicId;
+        }
     }
 }
