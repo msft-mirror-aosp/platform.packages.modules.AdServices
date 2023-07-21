@@ -35,7 +35,7 @@ public class CompatAdServicesTestUtils {
      */
     public static void setFlags() {
         if (SdkLevel.isAtLeastT()) {
-            // Do nothing; This method is intended to set flags for Android S- only.
+            // Do nothing; this method is intended to set flags for Android S- only.
             return;
         } else if (SdkLevel.isAtLeastS()) {
             setEnableBackCompatFlag(true);
@@ -55,11 +55,16 @@ public class CompatAdServicesTestUtils {
 
     /** Reset back-compat related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
+        if (SdkLevel.isAtLeastT()) {
+            // Do nothing; this method is intended to set flags for Android S- only.
+            return;
+        }
         setEnableBackCompatFlag(false);
-        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setEnableAppSearchConsentData(false);
-        setEnableMeasurementRollbackAppSearchKillSwitch(true);
+        // TODO (b/285208753): Set to AppSearch always once it's supported on R.
+        setBlockedTopicsSourceOfTruth(SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_ONLY);
+        setConsentSourceOfTruth(SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_ONLY);
+        setEnableAppSearchConsentData(SdkLevel.isAtLeastS());
+        setEnableMeasurementRollbackAppSearchKillSwitch(!SdkLevel.isAtLeastS());
     }
 
     public static void setPpapiAppAllowList(String allowList) {

@@ -42,6 +42,8 @@ import android.util.Pair;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -695,7 +697,8 @@ public class TopicsDao {
      * @param returnedAppSdkTopics {@link Map} a Map<Pair<app, sdk>, Topic>
      */
     public void persistReturnedAppTopicsMap(
-            long epochId, @NonNull Map<Pair<String, String>, Topic> returnedAppSdkTopics) {
+            long epochId,
+            @NonNull Map<Pair<String, String>, Topic> returnedAppSdkTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -714,6 +717,11 @@ public class TopicsDao {
             values.put(
                     TopicsTables.ReturnedTopicContract.MODEL_VERSION,
                     app.getValue().getModelVersion());
+            // Persist the logged topic to DB if ENABLE_LOGGED_TOPIC is true.
+            if (supportsLoggedTopicInReturnedTopicTable()) {
+                values.put(TopicsTables.ReturnedTopicContract.LOGGED_TOPIC,
+                        app.getValue().getLoggedTopic());
+            }
 
             try {
                 db.insert(
@@ -756,6 +764,18 @@ public class TopicsDao {
             TopicsTables.ReturnedTopicContract.MODEL_VERSION,
             TopicsTables.ReturnedTopicContract.TOPIC,
         };
+        // Add LOGGED_TOPIC in the projection if flag ENABLE_LOGGED_TOPIC is true.
+        if (supportsLoggedTopicInReturnedTopicTable()) {
+            projection = new String[] {
+                    TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                    TopicsTables.ReturnedTopicContract.APP,
+                    TopicsTables.ReturnedTopicContract.SDK,
+                    TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
+                    TopicsTables.ReturnedTopicContract.MODEL_VERSION,
+                    TopicsTables.ReturnedTopicContract.TOPIC,
+                    TopicsTables.ReturnedTopicContract.LOGGED_TOPIC,
+            };
+        }
 
         // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
         String selection =
@@ -814,6 +834,16 @@ public class TopicsDao {
                 }
 
                 Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
+                // Add logged topic id to topic if flag ENABLE_LOGGED_TOPIC is true.
+                if (supportsLoggedTopicInReturnedTopicTable()) {
+                    int loggedTopicId =
+                            cursor.getInt(
+                                    cursor.getColumnIndexOrThrow(
+                                            TopicsTables.ReturnedTopicContract.LOGGED_TOPIC));
+                    topic = Topic.create(
+                            topicId, taxonomyVersion, modelVersion, loggedTopicId);
+                }
+
                 topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
@@ -1317,5 +1347,10 @@ public class TopicsDao {
                     TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
+    }
+
+    /** Check whether Logged Topic is supported in ReturnedTopic Table . */
+    public boolean supportsLoggedTopicInReturnedTopicTable() {
+        return mDbHelper.supportsLoggedTopicInReturnedTopicTable();
     }
 }

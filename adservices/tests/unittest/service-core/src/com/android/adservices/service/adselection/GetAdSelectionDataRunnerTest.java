@@ -103,6 +103,7 @@ public class GetAdSelectionDataRunnerTest {
     @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+    @Spy private AdFilterer mAdFiltererSpy = new AdFiltererNoOpImpl();
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
     private MockitoSession mStaticMockSession = null;
 
@@ -149,6 +150,7 @@ public class GetAdSelectionDataRunnerTest {
                         mCustomAudienceDao,
                         mServerAdSelectionDaoSpy,
                         mAdSelectionServiceFilterMock,
+                        mAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mFlags,
@@ -197,6 +199,7 @@ public class GetAdSelectionDataRunnerTest {
                                         callback.mGetAdSelectionDataResponse.getAdSelectionId())
                                 .setSeller(SELLER)
                                 .build());
+        verify(mAdFiltererSpy).filterCustomAudiences(any());
     }
 
     @Test
@@ -226,6 +229,7 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertNull(callback.mGetAdSelectionDataResponse);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mServerAdSelectionDaoSpy);
+        verifyZeroInteractions(mAdFiltererSpy);
     }
 
     @Test

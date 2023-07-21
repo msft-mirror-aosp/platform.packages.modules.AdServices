@@ -38,7 +38,6 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -422,7 +421,7 @@ class MeasurementDao implements IMeasurementDao {
                     source.getFlexEventReportSpec().encodeTriggerSpecsToJSON());
             values.put(
                     MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
-                    source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
+                    source.encodeAttributedTriggersToJson());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                     source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
@@ -647,12 +646,11 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateSourceAttributedTriggers(@NonNull String sourceId, ReportSpec reportSpec)
-            throws DatastoreException {
+    public void updateSourceAttributedTriggers(@NonNull Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(
                 MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
-                reportSpec.encodeTriggerStatusToJSON().toString());
+                source.encodeAttributedTriggersToJson());
         long rows =
                 mSQLTransaction
                         .getDatabase()
@@ -660,7 +658,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.SourceContract.TABLE,
                                 values,
                                 MeasurementTables.SourceContract.ID + " = ?",
-                                new String[] {sourceId});
+                                new String[] {source.getId()});
         if (rows != 1) {
             throw new DatastoreException("Source  event attribution status update failed.");
         }

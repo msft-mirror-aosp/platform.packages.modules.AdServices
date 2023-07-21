@@ -680,8 +680,7 @@ class AttributionJobHandler {
                         numOfNewReportGenerated);
             }
         }
-        measurementDao.updateSourceAttributedTriggers(
-                source.getId(), source.getFlexEventReportSpec());
+        measurementDao.updateSourceAttributedTriggers(source);
         return true;
     }
 
