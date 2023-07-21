@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMultiset;
 
@@ -89,6 +90,7 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private List<AttributedTrigger> mAttributedTriggers;
     @Nullable private ReportSpec mFlexEventReportSpec;
     @Nullable private String mTriggerSpecsString;
     @Nullable private Integer mMaxEventLevelReports;
@@ -336,6 +338,29 @@ public class Source {
     }
 
     /**
+     * @return the list of attributed triggers
+     */
+    @Nullable
+    public List<AttributedTrigger> getAttributedTriggers() {
+        return mAttributedTriggers;
+    }
+
+    /**
+     * @return the JSON encoded current trigger status
+     */
+    @Nullable
+    public String encodeAttributedTriggersToJson() {
+        if (mAttributedTriggers == null) {
+            return null;
+        }
+        JSONArray jsonArray = new JSONArray();
+        for (AttributedTrigger trigger : mAttributedTriggers) {
+            jsonArray.put(trigger.encodeToJson());
+        }
+        return jsonArray.toString();
+    }
+
+    /**
      * @return the flex event report specifications
      */
     @Nullable
@@ -385,7 +410,13 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
+                && Objects.equals(mAttributedTriggers, source.mAttributedTriggers)
                 && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
+                && Objects.equals(mMaxEventLevelReports, source.mMaxEventLevelReports)
+                && Objects.equals(mEventAttributionStatusString,
+                        source.mEventAttributionStatusString)
+                && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
                 && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
     }
 
@@ -424,7 +455,12 @@ public class Source {
                 mDebugAdId,
                 mRegistrationOrigin,
                 mDebugJoinKey,
+                mAttributedTriggers,
                 mFlexEventReportSpec,
+                mTriggerSpecsString,
+                mMaxEventLevelReports,
+                mEventAttributionStatusString,
+                mPrivacyParametersString,
                 mCoarseEventReportDestinations,
                 mSharedDebugKey);
     }
@@ -889,15 +925,36 @@ public class Source {
         }
     }
 
+    /** Parses the event attribution status string. */
+    @VisibleForTesting
+    public void parseEventAttributionStatus() throws JSONException {
+        JSONArray eventAttributionStatus = new JSONArray(mEventAttributionStatusString);
+        for (int i = 0; i < eventAttributionStatus.length(); i++) {
+            JSONObject json = eventAttributionStatus.getJSONObject(i);
+            mAttributedTriggers.add(new AttributedTrigger(json));
+        }
+    }
+
+    /** Build the attributed triggers list from the raw string */
+    public void buildAttributedTriggers() throws JSONException {
+        if (mAttributedTriggers == null) {
+            mAttributedTriggers = new ArrayList<>();
+            if (mEventAttributionStatusString != null && !mEventAttributionStatusString.isEmpty()) {
+                parseEventAttributionStatus();
+            }
+        }
+    }
+
     /** Build the flexible event report API from the raw string */
     public void buildFlexibleEventReportApi() throws JSONException {
+        buildAttributedTriggers();
         if (mFlexEventReportSpec == null) {
             mFlexEventReportSpec =
                     new ReportSpec(
                             mTriggerSpecsString,
                             getOrDefaultMaxEventLevelReports(
                                     mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
-                            mEventAttributionStatusString,
+                            this,
                             mPrivacyParametersString);
         }
     }
@@ -957,6 +1014,7 @@ public class Source {
             builder.setPlatformAdId(copyFrom.mPlatformAdId);
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
+            builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
@@ -1239,6 +1297,13 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getAttributedTriggers()} */
+        @NonNull
+        public Builder setAttributedTriggers(@NonNull List<AttributedTrigger> attributedTriggers) {
+            mBuilding.mAttributedTriggers = attributedTriggers;
+            return this;
+        }
+
         /** See {@link Source#getFlexEventReportSpec()} */
         @NonNull
         public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
@@ -1257,7 +1322,8 @@ public class Source {
                     new ReportSpec(
                             mBuilding.mTriggerSpecsString,
                             getOrDefaultMaxEventLevelReports(
-                                    mBuilding.mSourceType, mBuilding.mMaxEventLevelReports, flags));
+                                    mBuilding.mSourceType, mBuilding.mMaxEventLevelReports, flags),
+                            null);
             return this;
         }
 

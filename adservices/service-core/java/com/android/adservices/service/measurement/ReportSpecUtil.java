@@ -31,11 +31,9 @@ import java.util.stream.Collectors;
 public class ReportSpecUtil {
     /** The JSON keys for flexible event report API input */
     public interface FlexEventReportJsonKeys {
-        String TRIGGER_ID = "trigger_id";
         String VALUE = "value";
         String PRIORITY = "priority";
         String TRIGGER_TIME = "trigger_time";
-        String DEDUP_KEY = "dedup_key";
         String TRIGGER_DATA = "trigger_data";
         String FLIP_PROBABILITY = "flip_probability";
         String END_TIMES = "end_times";
