@@ -304,8 +304,7 @@ public class MeasurementDataDeleter {
                     if (numDecrementalBucket > 0) {
                         eventReportsToDelete.add(eventReport);
                     }
-                    dao.updateSourceAttributedTriggers(
-                            source.getId(), source.getFlexEventReportSpec());
+                    dao.updateSourceAttributedTriggers(source);
                 }
             }
         }

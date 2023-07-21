@@ -17,8 +17,7 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.NonNull;
-
-import androidx.annotation.Nullable;
+import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.noising.Combinatorics;
@@ -42,34 +41,36 @@ public class ReportSpec {
     private final TriggerSpec[] mTriggerSpecs;
     private int mMaxEventLevelReports;
     private final PrivacyComputationParams mPrivacyParams;
-    private List<AttributedTrigger> mAttributedTriggers;
+    // Reference to a list that is a property of the Source object.
+    private List<AttributedTrigger> mAttributedTriggersRef;
 
     public ReportSpec(
             String triggerSpecsString,
             String maxEventLevelReports,
-            String eventAttributionStatusString,
+            Source source,
             String privacyParametersString)
             throws JSONException {
         this(
                 triggerSpecsString,
                 Integer.parseInt(maxEventLevelReports),
-                eventAttributionStatusString,
+                source,
                 privacyParametersString);
     }
+
     /**
      * This constructor is called during the attribution process. Current trigger status will be
      * read and process to determine the outcome of incoming trigger.
      *
      * @param triggerSpecsString input trigger specs from ad tech
      * @param maxEventLevelReports max event level reports from ad tech
-     * @param eventAttributionStatusString current triggers to this source
+     * @param source the source associated with this report spec
      * @param privacyParametersString computed privacy parameters
      * @throws JSONException JSON exception
      */
     public ReportSpec(
             String triggerSpecsString,
             int maxEventLevelReports,
-            String eventAttributionStatusString,
+            @Nullable Source source,
             String privacyParametersString)
             throws JSONException {
         if (triggerSpecsString == null || triggerSpecsString.isEmpty()) {
@@ -83,31 +84,29 @@ public class ReportSpec {
 
         mMaxEventLevelReports = maxEventLevelReports;
 
-        if (eventAttributionStatusString != null && !eventAttributionStatusString.isEmpty()) {
-            JSONArray eventAttributionStatus = new JSONArray(eventAttributionStatusString);
-            mAttributedTriggers = new ArrayList<>();
-            for (int i = 0; i < eventAttributionStatus.length(); i++) {
-                JSONObject json = eventAttributionStatus.getJSONObject(i);
-                mAttributedTriggers.add(new AttributedTrigger(json));
-            }
+        if (source != null) {
+            mAttributedTriggersRef = source.getAttributedTriggers();
         }
+
         mPrivacyParams = new PrivacyComputationParams(privacyParametersString);
     }
 
     @VisibleForTesting
-    public ReportSpec(@NonNull String triggerSpecsString, @NonNull String maxEventLevelReports)
-            throws JSONException {
-        this(triggerSpecsString, Integer.parseInt(maxEventLevelReports));
+    public ReportSpec(@NonNull String triggerSpecsString, @NonNull String maxEventLevelReports,
+            @Nullable Source source) throws JSONException {
+        this(triggerSpecsString, Integer.parseInt(maxEventLevelReports), source);
     }
+
     /**
      * This constructor is called during the source registration process.
      *
      * @param triggerSpecsString input trigger specs from ad tech
      * @param maxEventLevelReports max event level reports from ad tech
+     * @param source the source associated with this report spec
      * @throws JSONException JSON exception
      */
-    public ReportSpec(@NonNull String triggerSpecsString, int maxEventLevelReports)
-            throws JSONException {
+    public ReportSpec(@NonNull String triggerSpecsString, int maxEventLevelReports,
+            @Nullable Source source) throws JSONException {
         if (triggerSpecsString.isEmpty()) {
             throw new JSONException("the source is not registered as flexible event report API");
         }
@@ -119,7 +118,9 @@ public class ReportSpec {
         }
         mMaxEventLevelReports = maxEventLevelReports;
         mPrivacyParams = new PrivacyComputationParams();
-        mAttributedTriggers = new ArrayList<>();
+        if (source != null) {
+            mAttributedTriggersRef = source.getAttributedTriggers();
+        }
     }
 
     /**
@@ -208,7 +209,7 @@ public class ReportSpec {
     public long getHighestPriorityOfAttributedAndIncomingTriggers(
             UnsignedLong triggerData, Long incomingPriority) {
         long highestPriority = Long.MIN_VALUE;
-        for (AttributedTrigger trigger : mAttributedTriggers) {
+        for (AttributedTrigger trigger : mAttributedTriggersRef) {
             if (Objects.equals(trigger.getTriggerData(), triggerData)) {
                 highestPriority = Long.max(highestPriority, trigger.getPriority());
             }
@@ -245,7 +246,7 @@ public class ReportSpec {
         ReportSpec t = (ReportSpec) obj;
 
         return mMaxEventLevelReports == t.mMaxEventLevelReports
-                && Objects.equals(mAttributedTriggers, t.mAttributedTriggers)
+                && Objects.equals(mAttributedTriggersRef, t.mAttributedTriggersRef)
                 && Arrays.equals(mTriggerSpecs, t.mTriggerSpecs);
     }
 
@@ -255,7 +256,7 @@ public class ReportSpec {
                 Arrays.hashCode(mTriggerSpecs),
                 mMaxEventLevelReports,
                 mPrivacyParams,
-                mAttributedTriggers);
+                mAttributedTriggersRef);
     }
 
     /**
@@ -307,24 +308,13 @@ public class ReportSpec {
     }
 
     /**
-     * @return the JSON encoded current status
-     */
-    public JSONArray encodeTriggerStatusToJSON() {
-        JSONArray jsonArray = new JSONArray();
-        for (AttributedTrigger trigger : mAttributedTriggers) {
-            jsonArray.put(trigger.encodeToJSON());
-        }
-        return jsonArray;
-    }
-
-    /**
      * Obtaining trigger value from trigger id.
      *
      * @param triggerId the trigger id for query
      * @return the value from the queried trigger id
      */
     public long getTriggerValue(String triggerId) {
-        for (AttributedTrigger trigger : mAttributedTriggers) {
+        for (AttributedTrigger trigger : mAttributedTriggersRef) {
             if (trigger.getTriggerId().equals(triggerId)) {
                 return trigger.getValue();
             }
@@ -338,7 +328,7 @@ public class ReportSpec {
      * @param eventReport incoming report
      */
     public void insertAttributedTrigger(EventReport eventReport) {
-        mAttributedTriggers.add(
+        mAttributedTriggersRef.add(
                 new AttributedTrigger(
                         eventReport.getTriggerId(),
                         eventReport.getTriggerPriority(),
@@ -354,7 +344,7 @@ public class ReportSpec {
      * @param eventReport the event report to be deleted
      */
     public boolean deleteFromAttributedValue(EventReport eventReport) {
-        Iterator<AttributedTrigger> iterator = mAttributedTriggers.iterator();
+        Iterator<AttributedTrigger> iterator = mAttributedTriggersRef.iterator();
         while (iterator.hasNext()) {
             AttributedTrigger element = iterator.next();
             if (element.getTriggerId().equals(eventReport.getTriggerId())) {
@@ -368,8 +358,8 @@ public class ReportSpec {
 
     long findCurrentAttributedValue(UnsignedLong triggerData) {
         long result = 0;
-        for (AttributedTrigger trigger : mAttributedTriggers) {
-            if (Objects.equals(trigger.mTriggerData, triggerData)) {
+        for (AttributedTrigger trigger : mAttributedTriggersRef) {
+            if (Objects.equals(trigger.getTriggerData(), triggerData)) {
                 result += trigger.getValue();
             }
         }
@@ -393,7 +383,7 @@ public class ReportSpec {
 
     @VisibleForTesting
     public List<AttributedTrigger> getAttributedTriggers() {
-        return mAttributedTriggers;
+        return mAttributedTriggersRef;
     }
 
     /**
@@ -401,8 +391,8 @@ public class ReportSpec {
      */
     public List<String> getAllTriggerIds() {
         List<String> result = new ArrayList<>();
-        for (AttributedTrigger trigger : mAttributedTriggers) {
-            result.add(trigger.mTriggerId);
+        for (AttributedTrigger trigger : mAttributedTriggersRef) {
+            result.add(trigger.getTriggerId());
         }
         return result;
     }
@@ -450,108 +440,6 @@ public class ReportSpec {
 
         private int[] getPerTypeCapList() {
             return mPerTypeCapList;
-        }
-    }
-
-    private static class AttributedTrigger {
-        private final String mTriggerId;
-        private final long mPriority;
-        private final UnsignedLong mTriggerData;
-        private final long mValue;
-        private final long mTriggerTime;
-        @Nullable private final UnsignedLong mDedupKey;
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof AttributedTrigger)) {
-                return false;
-            }
-            AttributedTrigger t = (AttributedTrigger) obj;
-
-            return mTriggerId.equals(t.mTriggerId)
-                    && mPriority == t.mPriority
-                    && Objects.equals(mTriggerData, t.mTriggerData)
-                    && mValue == t.mValue
-                    && mTriggerTime == t.mTriggerTime
-                    && Objects.equals(mDedupKey, t.mDedupKey);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(mTriggerId, mPriority, mTriggerData, mValue, mTriggerTime);
-        }
-
-        private AttributedTrigger(JSONObject json) throws JSONException {
-            mTriggerId = json.getString(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_ID);
-            mPriority = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.PRIORITY);
-            mTriggerData =
-                    new UnsignedLong(
-                            json.getString(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
-            mValue = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.VALUE);
-            mTriggerTime = json.getLong(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_TIME);
-            if (!json.isNull(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY)) {
-                mDedupKey =
-                        new UnsignedLong(
-                                json.getString(ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY));
-            } else {
-                mDedupKey = null;
-            }
-        }
-
-        private AttributedTrigger(
-                String triggerId,
-                long priority,
-                UnsignedLong triggerData,
-                long value,
-                long triggerTime,
-                @Nullable UnsignedLong dedupKey) {
-            mTriggerId = triggerId;
-            mPriority = priority;
-            mTriggerData = triggerData;
-            mValue = value;
-            mTriggerTime = triggerTime;
-            mDedupKey = dedupKey;
-        }
-
-        @VisibleForTesting
-        public UnsignedLong getTriggerData() {
-            return mTriggerData;
-        }
-
-        @VisibleForTesting
-        public long getPriority() {
-            return mPriority;
-        }
-
-        @VisibleForTesting
-        public long getValue() {
-            return mValue;
-        }
-
-        @VisibleForTesting
-        public String getTriggerId() {
-            return mTriggerId;
-        }
-
-        private JSONObject encodeToJSON() {
-            JSONObject json = new JSONObject();
-            try {
-                json.put(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_ID, mTriggerId);
-                json.put(
-                        ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA,
-                        mTriggerData.toString());
-                json.put(ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_TIME, mTriggerTime);
-                json.put(ReportSpecUtil.FlexEventReportJsonKeys.VALUE, mValue);
-                if (mDedupKey != null) {
-                    json.put(
-                            ReportSpecUtil.FlexEventReportJsonKeys.DEDUP_KEY, mDedupKey.toString());
-                }
-                json.put(ReportSpecUtil.FlexEventReportJsonKeys.PRIORITY, mPriority);
-            } catch (JSONException e) {
-                LogUtil.e("ReportSpec::encodeToJSON cannot encode AttributedTrigger to JSON");
-                return null;
-            }
-            return json;
         }
     }
 }
