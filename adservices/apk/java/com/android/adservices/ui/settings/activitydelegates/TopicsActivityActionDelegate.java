@@ -200,12 +200,20 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_TOPICS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInTopicsDialog(mActivity);
+                                }
                                 mTopicsViewModel.setTopicsConsent(true);
                                 mTopicsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_TOPICS:
-                                mTopicsViewModel.setTopicsConsent(false);
-                                mTopicsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutTopicsDialog(
+                                            mActivity, mTopicsViewModel);
+                                } else {
+                                    mTopicsViewModel.setTopicsConsent(false);
+                                    mTopicsViewModel.refresh();
+                                }
                                 break;
                             case BLOCK_TOPIC:
                                 UiStatsLogger.logBlockTopicSelected(mActivity);
