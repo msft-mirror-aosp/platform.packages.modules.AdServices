@@ -117,15 +117,41 @@ public class MeasurementCtsDebuggableTest {
     }
 
     @Test
-    public void testRegisterSourceAndTriggerAndRunAttributionAndReporting() throws Exception {
-        executeDeleteRegistrations();
+    public void registerSourceAndTriggerAndRunAttributionAndEventReporting() throws Exception {
         executeRegisterSource();
         executeRegisterTrigger();
+        executeAttribution();
+        executeEventReporting();
+        executeDeleteRegistrations();
+    }
+
+    @Test
+    public void registerSourceAndTriggerAndRunAttributionAndAggregateReporting() throws Exception {
+        executeRegisterSource();
+        executeRegisterTrigger();
+        executeAttribution();
+        executeAggregateReporting();
+        executeDeleteRegistrations();
+    }
+
+    @Test
+    public void registerWebSourceAndWebTriggerAndRunAttributionAndEventReporting()
+            throws Exception {
+        executeRegisterWebSource();
+        executeRegisterWebTrigger();
+        executeAttribution();
+        executeEventReporting();
+        executeDeleteRegistrations();
+    }
+
+    @Test
+    public void registerWebSourceAndWebTriggerAndRunAttributionAndAggregateReporting()
+            throws Exception {
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
         executeAggregateReporting();
-        executeEventReporting();
+        executeDeleteRegistrations();
     }
 
     private static UiDevice getUiDevice() {
@@ -171,7 +197,7 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private static void sleep() {
-        sleep(2L);
+        sleep(1L);
     }
 
     private static void sleep(long seconds) {
@@ -469,7 +495,7 @@ public class MeasurementCtsDebuggableTest {
 
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(EVENT_ATTRIBUTION_REPORT_URI_PATH);
-            assertThat(mockWebServer.getRequestCount()).isEqualTo(2);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
         } finally {
             shutdownServer(mockWebServer);
         }
@@ -491,7 +517,7 @@ public class MeasurementCtsDebuggableTest {
 
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(aggregateReportWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
-            assertThat(aggregateReportWebServer.getRequestCount()).isEqualTo(2);
+            assertThat(aggregateReportWebServer.getRequestCount()).isEqualTo(1);
         } finally {
             shutdownServer(aggregateReportWebServer);
             shutdownServer(keysReportWebServer);
@@ -500,7 +526,11 @@ public class MeasurementCtsDebuggableTest {
 
     private void executeDeleteRegistrations() {
         try {
-            DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+            DeletionRequest deletionRequest =
+                    new DeletionRequest.Builder()
+                            // Preserve none since empty origin and site lists are provided.
+                            .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                            .build();
             ListenableFuture<Void> future = sMeasurementClient.deleteRegistrations(deletionRequest);
             future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
