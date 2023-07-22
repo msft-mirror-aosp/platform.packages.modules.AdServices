@@ -121,10 +121,11 @@ public class CustomAudienceImpl {
         mCustomAudienceValidator.validate(customAudience);
 
         boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
-        boolean adRenerIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
+        boolean adRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
+        sLogger.v("Ad render id enabled flag is %s", adRenderIdEnabled);
         AdDataConversionStrategy dataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        adSelectionFilteringEnabled, adRenerIdEnabled);
+                        adSelectionFilteringEnabled, adRenderIdEnabled);
 
         Duration customAudienceDefaultExpireIn =
                 Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());

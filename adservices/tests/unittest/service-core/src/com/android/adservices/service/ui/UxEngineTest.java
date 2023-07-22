@@ -149,8 +149,8 @@ public class UxEngineTest {
         verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
         verify(mConsentManager, never()).isEntryPointEnabled();
 
-        verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        // Enrollment channel is not set when null.
+        // UX and channel are not set unless a valid channel exists.
+        verify(mConsentManager, never()).setUx(UNSUPPORTED_UX);
         verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
 
         ExtendedMockito.verify(
@@ -188,8 +188,8 @@ public class UxEngineTest {
         // U18 UX logic.
         verify(mUxStatesManager, never()).getFlag(KEY_U18_UX_ENABLED);
 
-        verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        // Enrollment channel is not set when null.
+        // UX and channel are not set unless a valid channel exists.
+        verify(mConsentManager, never()).setUx(UNSUPPORTED_UX);
         verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
 
         ExtendedMockito.verify(
@@ -231,8 +231,8 @@ public class UxEngineTest {
         // GA UX logic.
         verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
-        verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        // Enrollment channel is not set when null.
+        // UX and channel are not set unless a valid channel exists.
+        verify(mConsentManager, never()).setUx(UNSUPPORTED_UX);
         verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
     }
 
@@ -271,8 +271,8 @@ public class UxEngineTest {
         // GA UX logic.
         verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
-        verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        // Enrollment channel is not set when null.
+        // UX and channel are not set unless a valid channel exists.
+        verify(mConsentManager, never()).setUx(UNSUPPORTED_UX);
         verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
     }
 
@@ -416,8 +416,8 @@ public class UxEngineTest {
         verify(mUxStatesManager, times(2)).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         verify(mConsentManager).isAdultAccount();
 
-        verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        // Enrollment channel is not set when null.
+        // UX and channel are not set unless a valid channel exists.
+        verify(mConsentManager, never()).setUx(UNSUPPORTED_UX);
         verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
     }
 
@@ -519,8 +519,8 @@ public class UxEngineTest {
         // take place.
         verify(mConsentManager).isAdultAccount();
 
-        verify(mConsentManager).setUx(UNSUPPORTED_UX);
-        // Enrollment channel is not set when null.
+        // UX and channel are not set unless a valid channel exists.
+        verify(mConsentManager, never()).setUx(UNSUPPORTED_UX);
         verify(mConsentManager, never()).setEnrollmentChannel(UNSUPPORTED_UX, null);
 
         ExtendedMockito.verify(
@@ -641,5 +641,91 @@ public class UxEngineTest {
 
         ExtendedMockito.verify(
                 () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never());
+    }
+
+    // Test the flow in which user is eligible for GA graduation.
+    @Test
+    public void startTest_gaGraduation() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = false;
+        boolean isAdultAccount = true;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(false)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        // U18 notice was already displayed.
+        doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // The UX can not be updated due to the fact that graduation channel is currently disabled.
+        verify(mConsentManager, never()).setUx(any());
+        verify(mConsentManager, never()).setEnrollmentChannel(any(), any());
+    }
+
+    // Test the flow in which user is eligible for U18 detention.
+    @Test
+    public void startTest_u18Detention() {
+        boolean entryPointEnabled = true;
+        boolean isU18Account = true;
+        boolean isAdultAccount = false;
+        boolean adIdEnabled = false;
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(adIdEnabled)
+                        .setAdultAccount(isAdultAccount)
+                        .setU18Account(isU18Account)
+                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setPrivacySandboxUiRequest(false)
+                        .build();
+
+        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
+        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
+        doReturn(isAdultAccount).when(mConsentManager).isAdultAccount();
+        doReturn(isU18Account).when(mConsentManager).isU18Account();
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        // GA notice was already displayed.
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
+
+        mUxEngine.start(adServicesStates);
+
+        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
+
+        // Unsupported UX logic.
+        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
+        verify(mConsentManager).isEntryPointEnabled();
+
+        // U18 UX logic.
+        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        verify(mConsentManager).isU18Account();
+
+        // U18 UX is set as the detention channel is available.
+        verify(mConsentManager).setUx(U18_UX);
+        verify(mConsentManager)
+                .setEnrollmentChannel(
+                        U18_UX, U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL);
     }
 }

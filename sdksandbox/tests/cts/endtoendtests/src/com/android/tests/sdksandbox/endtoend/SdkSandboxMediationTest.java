@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox.cts.app;
+package com.android.tests.sdksandbox.endtoend;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -46,10 +46,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxMediationTestApp {
+public class SdkSandboxMediationTest {
 
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.mediationtest";
-    private static final String SDK_NAME_2 = "com.android.sdksandbox.cts.provider.storagetest";
+    private static final String SDK_NAME_2 = "com.android.ctssdkprovider";
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME =
             "com.android.ctsappownedsdksandboxinterface";
 
@@ -68,9 +68,14 @@ public class SdkSandboxMediationTestApp {
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
+
         // unload SDK to fix flakiness
         mSdkSandboxManager.unloadSdk(SDK_NAME);
         mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+        mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+        mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2);
     }
 
     @After
@@ -79,6 +84,10 @@ public class SdkSandboxMediationTestApp {
         if (mSdkSandboxManager != null) {
             mSdkSandboxManager.unloadSdk(SDK_NAME);
             mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+            mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                    APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+            mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
+                    APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2);
         }
     }
 
@@ -118,8 +127,8 @@ public class SdkSandboxMediationTestApp {
                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
                         /*version=*/ 0,
                         /*interfaceIBinder=*/ iBinder));
-        IBinder iBinder2 = new Binder();
 
+        IBinder iBinder2 = new Binder();
         mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
                 new AppOwnedSdkSandboxInterface(
                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2,
@@ -183,9 +192,8 @@ public class SdkSandboxMediationTestApp {
 
         assertThat(interfaceDescriptors)
                 .containsExactly(
-                        "com.android.sdksandbox.cts.provider.storagetest" + ".IStorageTestSdkApi",
-                        "com.android.sdksandbox.cts.provider.mediationtest"
-                                + ".IMediationTestSdkApi");
+                        "com.android.ctssdkprovider.ICtsSdkProviderApi",
+                        "com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi");
     }
 
     private void loadMediatorSdkAndPopulateInterface() {
