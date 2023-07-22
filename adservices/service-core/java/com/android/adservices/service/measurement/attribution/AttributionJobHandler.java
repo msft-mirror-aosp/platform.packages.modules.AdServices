@@ -32,6 +32,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -562,15 +563,29 @@ class AttributionJobHandler {
 
         EventTrigger eventTrigger = matchingEventTrigger.get();
         // Check if deduplication key clashes with existing reports.
-        if (eventTrigger.getDedupKey() != null
-                && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    /* limit = */ null,
-                    measurementDao,
-                    Type.TRIGGER_EVENT_DEDUPLICATED);
-            return TriggeringStatus.DROPPED;
+        if (eventTrigger.getDedupKey() != null) {
+            boolean alreadyAttributed;
+            if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                try {
+                    source.buildAttributedTriggers();
+                    alreadyAttributed = hasDeduplicationKey(source, eventTrigger.getDedupKey());
+                } catch (JSONException e) {
+                    LogUtil.e(e, "maybeGenerateEventReport: failed to build attributed triggers.");
+                    return TriggeringStatus.DROPPED;
+                }
+            } else {
+                alreadyAttributed = source.getEventReportDedupKeys().contains(
+                        eventTrigger.getDedupKey());
+            }
+            if (alreadyAttributed) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_EVENT_DEDUPLICATED);
+                return TriggeringStatus.DROPPED;
+            }
         }
 
         int numReports =
@@ -620,7 +635,12 @@ class AttributionJobHandler {
             if (!provisionEventReportQuota(source, trigger, newEventReport, measurementDao)) {
                 return TriggeringStatus.DROPPED;
             }
-            finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
+            if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+                finalizeEventReportCreation(
+                        source, eventTrigger, trigger, newEventReport, measurementDao);
+            } else {
+                finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
+            }
         } else {
             if (!provisionEventReportFlexEventApiQuota(
                     source, newEventReport, measurementDao, eventTrigger)) {
@@ -647,7 +667,10 @@ class AttributionJobHandler {
             // the new proposed report doesn't cause bucket increments so no new report
             // generated
             reportSpec.insertAttributedTrigger(newEventReport);
-            if (eventTrigger.getDedupKey() != null) {
+            // Flex API already inserts the attributed trigger and does not need an explicit action
+            // for that.
+            if (eventTrigger.getDedupKey() != null
+                    && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
                 source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
                 measurementDao.updateSourceEventReportDedupKeys(source);
             }
@@ -668,7 +691,8 @@ class AttributionJobHandler {
                 int numOfNewReportGenerated = tmp.second;
                 for (EventReport report : toBeDeletedReports) {
                     measurementDao.deleteEventReport(report);
-                    if (report.getTriggerDedupKey() != null) {
+                    if (report.getTriggerDedupKey() != null
+                            && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
                         source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
                     }
                 }
@@ -680,7 +704,9 @@ class AttributionJobHandler {
                         numOfNewReportGenerated);
             }
         }
-        measurementDao.updateSourceAttributedTriggers(source);
+        measurementDao.updateSourceAttributedTriggers(
+                source.getId(),
+                source.attributedTriggersToJsonFlexApi());
         return true;
     }
 
@@ -741,7 +767,8 @@ class AttributionJobHandler {
             return false;
         }
 
-        if (lowestPriorityEventReport.getTriggerDedupKey() != null) {
+        if (lowestPriorityEventReport.getTriggerDedupKey() != null
+                && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
             source.getEventReportDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
         }
 
@@ -763,17 +790,42 @@ class AttributionJobHandler {
         measurementDao.insertEventReport(eventReport);
     }
 
-    private static void finalizeMultipleEventReportCreation(
+    private static void finalizeEventReportCreation(
+            Source source,
+            EventTrigger eventTrigger,
+            Trigger trigger,
+            EventReport eventReport,
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
+        if (eventTrigger.getDedupKey() != null) {
+            source.getAttributedTriggers().add(
+                    new AttributedTrigger(
+                            trigger.getId(),
+                            eventTrigger.getTriggerData(),
+                            eventTrigger.getDedupKey()));
+            measurementDao.updateSourceAttributedTriggers(
+                    source.getId(),
+                    source.attributedTriggersToJson());
+        }
+
+        measurementDao.insertEventReport(eventReport);
+    }
+
+    private void finalizeMultipleEventReportCreation(
             Source source,
             EventTrigger eventTrigger,
             EventReport eventReport,
             IMeasurementDao measurementDao,
             int numReport)
             throws DatastoreException {
-        if (eventTrigger.getDedupKey() != null) {
-            source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+        // Flex API already inserts the attributed trigger and does not need an explicit action for
+        // that.
+        if (!mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
+            if (eventTrigger.getDedupKey() != null) {
+                source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+            }
+            measurementDao.updateSourceEventReportDedupKeys(source);
         }
-        measurementDao.updateSourceEventReportDedupKeys(source);
         for (int i = 0; i < numReport; i++) {
             measurementDao.insertEventReport(eventReport);
         }
@@ -1080,6 +1132,16 @@ class AttributionJobHandler {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
                 : Web.topPrivateDomainAndScheme(uri);
+    }
+
+    private static boolean hasDeduplicationKey(@NonNull Source source,
+            @NonNull UnsignedLong dedupKey) {
+        for (AttributedTrigger attributedTrigger : source.getAttributedTriggers()) {
+            if (dedupKey.equals(attributedTrigger.getDedupKey())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void logAttributionStats(AttributionStatus attributionStatus) {

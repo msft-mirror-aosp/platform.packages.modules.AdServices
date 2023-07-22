@@ -281,11 +281,9 @@ public class MeasurementDaoTest {
                 validSource.getFlexEventReportSpec().getMaxReports(),
                 source.getMaxEventLevelReports().intValue());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
+                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJson(),
                 source.getTriggerSpecs());
-        assertEquals(
-                validSource.encodeAttributedTriggersToJson(),
-                source.getEventAttributionStatus());
+        assertNull(source.getEventAttributionStatus());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
                 source.getPrivacyParameters());
@@ -3263,7 +3261,9 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         measurementDao ->
-                                measurementDao.updateSourceAttributedTriggers(originalSource));
+                                measurementDao.updateSourceAttributedTriggers(
+                                        originalSource.getId(),
+                                        originalSource.attributedTriggersToJsonFlexApi()));
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
@@ -3751,8 +3751,9 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-        values.put(SourceContract.EVENT_ATTRIBUTION_STATUS,
-                source.encodeAttributedTriggersToJson());
+        if (source.getAttributedTriggers() != null) {
+            values.put(SourceContract.EVENT_ATTRIBUTION_STATUS, source.attributedTriggersToJson());
+        }
         db.insert(SourceContract.TABLE, null, values);
 
         // Insert source destinations
@@ -6552,7 +6553,7 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6564,7 +6565,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6605,7 +6606,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6684,7 +6685,7 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6697,7 +6698,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6738,7 +6739,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();

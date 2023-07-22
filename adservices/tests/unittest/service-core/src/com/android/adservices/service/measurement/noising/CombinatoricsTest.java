@@ -213,7 +213,7 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void testNumStatesFlexAPI() {
+    public void testNumStatesFlexApi() {
         // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
         // states}
         int[][][][] testCases = {
@@ -235,7 +235,7 @@ public class CombinatoricsTest {
                         (testCase) ->
                                 assertEquals(
                                         testCase[1][0][0],
-                                        Combinatorics.getNumStatesFlexAPI(
+                                        Combinatorics.getNumStatesFlexApi(
                                                 testCase[0][0][0],
                                                 testCase[0][1],
                                                 testCase[0][2])));
@@ -300,7 +300,7 @@ public class CombinatoricsTest {
                             ArrayList<List<Combinatorics.AtomReportState>> allReportSets =
                                     new ArrayList<>();
                             int numberStates =
-                                    Combinatorics.getNumStatesFlexAPI(
+                                    Combinatorics.getNumStatesFlexApi(
                                             testCase[0][0], testCase[1], testCase[2]);
                             for (int i = 0; i < numberStates; i++) {
                                 List<Combinatorics.AtomReportState> ithSet =
@@ -324,7 +324,7 @@ public class CombinatoricsTest {
                         (testCase) -> {
                             Map<List<Integer>, Integer> dp = new HashMap<>();
                             int numberStates =
-                                    Combinatorics.getNumStatesFlexAPI(
+                                    Combinatorics.getNumStatesFlexApi(
                                             testCase[0][0], testCase[1], testCase[2]);
                             for (int i = 0; i < numberStates; i++) {
                                 List<Combinatorics.AtomReportState> ithSet =

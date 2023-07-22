@@ -93,7 +93,7 @@ public final class MeasurementImpl {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
-        mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
+        mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager, mFlags);
         mContentResolver = mContext.getContentResolver();
         deleteOnRollback();
     }

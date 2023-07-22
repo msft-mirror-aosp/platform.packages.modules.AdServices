@@ -421,10 +421,7 @@ class MeasurementDao implements IMeasurementDao {
         if (source.getFlexEventReportSpec() != null) {
             values.put(
                     MeasurementTables.SourceContract.TRIGGER_SPECS,
-                    source.getFlexEventReportSpec().encodeTriggerSpecsToJSON());
-            values.put(
-                    MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
-                    source.encodeAttributedTriggersToJson());
+                    source.getFlexEventReportSpec().encodeTriggerSpecsToJson());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                     source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
@@ -649,11 +646,12 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateSourceAttributedTriggers(@NonNull Source source) throws DatastoreException {
+    public void updateSourceAttributedTriggers(@NonNull String sourceId,
+            @Nullable String attributionStatus) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(
                 MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
-                source.encodeAttributedTriggersToJson());
+                attributionStatus);
         long rows =
                 mSQLTransaction
                         .getDatabase()
@@ -661,7 +659,7 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.SourceContract.TABLE,
                                 values,
                                 MeasurementTables.SourceContract.ID + " = ?",
-                                new String[] {source.getId()});
+                                new String[] {sourceId});
         if (rows != 1) {
             throw new DatastoreException("Source  event attribution status update failed.");
         }
