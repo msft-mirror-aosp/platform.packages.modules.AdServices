@@ -16,36 +16,34 @@
 
 package com.android.cobalt.crypto.testing;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import androidx.test.runner.AndroidJUnit4;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import com.google.cobalt.Envelope;
 import com.google.cobalt.EncryptedMessage;
+import com.google.cobalt.Envelope;
 import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationToEncrypt;
 import com.google.protobuf.ByteString;
 
-import com.android.cobalt.crypto.testing.NoOpEncrypter;
-
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.Optional;
 
 @RunWith(AndroidJUnit4.class)
 public class NoOpEncrypterTest {
-    private static final ByteString CONTRIBUTION_ID = ByteString.copyFromUtf8(
-            "test_contribution_id");
+    private static final ByteString CONTRIBUTION_ID =
+            ByteString.copyFromUtf8("test_contribution_id");
     private final NoOpEncrypter mNoOpEncrypter = new NoOpEncrypter();
 
     @Test
     public void encryptEnvelope() throws Exception {
-        Envelope envelope = Envelope.newBuilder().setApiKey(
-                ByteString.copyFromUtf8("test_api_key")).build();
+        Envelope envelope =
+                Envelope.newBuilder().setApiKey(ByteString.copyFromUtf8("test_api_key")).build();
 
         // NoOp Encrypt envelope.
         Optional<EncryptedMessage> encryptionResult = mNoOpEncrypter.encryptEnvelope(envelope);
@@ -57,17 +55,22 @@ public class NoOpEncrypterTest {
 
     @Test
     public void encryptObservation() throws Exception {
-        Observation observation = Observation.newBuilder().setRandomId(
-                ByteString.copyFromUtf8("test_random_id")).build();
+        Observation observation =
+                Observation.newBuilder()
+                        .setRandomId(ByteString.copyFromUtf8("test_random_id"))
+                        .build();
 
         // NoOp Encrypt observation.
-        Optional<EncryptedMessage> encryptionResult = mNoOpEncrypter.encryptObservation(
-                ObservationToEncrypt.newBuilder().setObservation(observation).setContributionId(
-                        CONTRIBUTION_ID).build());
+        Optional<EncryptedMessage> encryptionResult =
+                mNoOpEncrypter.encryptObservation(
+                        ObservationToEncrypt.newBuilder()
+                                .setObservation(observation)
+                                .setContributionId(CONTRIBUTION_ID)
+                                .build());
         assertTrue(encryptionResult.isPresent());
 
-        Observation noOpEncryptedObservation = Observation.parseFrom(
-                encryptionResult.get().getCiphertext());
+        Observation noOpEncryptedObservation =
+                Observation.parseFrom(encryptionResult.get().getCiphertext());
         assertThat(noOpEncryptedObservation).isEqualTo(observation);
         assertThat(encryptionResult.get().getContributionId()).isEqualTo(CONTRIBUTION_ID);
     }
@@ -86,14 +89,20 @@ public class NoOpEncrypterTest {
         Observation emptyObservation = Observation.newBuilder().build();
 
         // NoOp Encrypt empty observation.
-        Optional<EncryptedMessage> encryptionResult = mNoOpEncrypter.encryptObservation(
-                ObservationToEncrypt.newBuilder().setObservation(
-                        emptyObservation).setContributionId(CONTRIBUTION_ID).build());
+        Optional<EncryptedMessage> encryptionResult =
+                mNoOpEncrypter.encryptObservation(
+                        ObservationToEncrypt.newBuilder()
+                                .setObservation(emptyObservation)
+                                .setContributionId(CONTRIBUTION_ID)
+                                .build());
         assertFalse(encryptionResult.isPresent());
 
         // NoOp Encrypt unset observation.
-        encryptionResult = mNoOpEncrypter.encryptObservation(
-                ObservationToEncrypt.newBuilder().setContributionId(CONTRIBUTION_ID).build());
+        encryptionResult =
+                mNoOpEncrypter.encryptObservation(
+                        ObservationToEncrypt.newBuilder()
+                                .setContributionId(CONTRIBUTION_ID)
+                                .build());
         assertFalse(encryptionResult.isPresent());
     }
 }

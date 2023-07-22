@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.ui;
 
+
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.Build;
@@ -70,7 +71,6 @@ public class UxEngine {
 
         PrivacySandboxUxCollection eligibleUx =
                 mUxEngineUtil.getEligibleUxCollection(mConsentManager, mUxStatesManager);
-        mConsentManager.setUx(eligibleUx);
 
         PrivacySandboxEnrollmentChannelCollection eligibleEnrollmentChannel =
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
@@ -78,10 +78,11 @@ public class UxEngine {
 
         // TO-DO: Add an UNSUPPORTED_ENROLLMENT_CHANNEL, rather than using null handling.
         if (eligibleEnrollmentChannel != null) {
-            // Only set the enrollment channel if it is not null.
+            // UX and channel should only be updated when an enrollment channel exists.
+            mConsentManager.setUx(eligibleUx);
             mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
 
-            // Entry point request should not trigger enrollment.
+            // Entry point request should not trigger enrollment but should refresh the UX states.
             if (adServicesStates.isPrivacySandboxUiRequest()) {
                 return;
             }

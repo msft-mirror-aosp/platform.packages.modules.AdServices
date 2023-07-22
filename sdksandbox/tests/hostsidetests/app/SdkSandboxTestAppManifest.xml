@@ -31,16 +31,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".SdkSandboxEmptyActivity"
-                  android:exported="true"
-                  android:turnScreenOn="true"
-                  android:keepScreenOn="true"
-                  android:showWhenLocked="true">
-            <intent-filter>
-               <action android:name="android.intent.action.MAIN" />
-               <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
         <uses-sdk-library
             android:name="com.android.testcode"
