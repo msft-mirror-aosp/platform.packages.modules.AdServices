@@ -818,13 +818,17 @@ public final class EventReportTest {
     public void populateFromSourceAndTrigger_flexApiNoPrevTrigger_returnsNewPriority()
             throws JSONException {
         // Setup
+        ReportSpec reportSpec =
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "3",
+                        null);
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setFlexEventReportSpec(
-                                new ReportSpec(
-                                        SourceFixture
-                                                .getTriggerSpecValueSumEncodedJSONValidBaseline(),
-                                        "3"))
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setMaxEventLevelReports(reportSpec.getMaxReports())
+                        .setEventAttributionStatus(new JSONArray().toString())
+                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .build();
         String eventTriggers1 =
                 "[\n"
@@ -906,14 +910,13 @@ public final class EventReportTest {
                 new ReportSpec(
                         SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
                         3,
-                        existingAttributes.toString(),
+                        null,
                         "{\"flip_probability\" :0.0024}");
         Source source =
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(existingAttributes.toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -989,8 +992,7 @@ public final class EventReportTest {
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -1049,8 +1051,7 @@ public final class EventReportTest {
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();
@@ -1112,8 +1113,7 @@ public final class EventReportTest {
                 getMinimalValidSourceBuilder()
                         .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
-                        .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
+                        .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
                         .setEventTime(baseTime)
                         .build();

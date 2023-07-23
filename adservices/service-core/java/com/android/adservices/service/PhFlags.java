@@ -61,6 +61,8 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
+    static final String KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION =
+            "topics_privacy_budget_for_topic_ids_distribution";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
@@ -146,11 +148,11 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST =
             "measurement_max_retries_per_registration_request";
 
-    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS =
-            "measurement_registration_job_trigger_delay_ms";
+    static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            "measurement_async_registration_job_trigger_min_delay_ms";
 
-    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
-            "measurement_registration_job_trigger_max_delay_ms";
+    static final String KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            "measurement_async_registration_job_trigger_max_delay_ms";
 
     static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH =
             "measurement_attribution_fallback_job_kill_switch";
@@ -543,7 +545,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
 
-    static final String KEY_RECORD_MANUAL_INTERACTION_ENABLED = "record_manual_interaction_enabled";
+    public static final String KEY_RECORD_MANUAL_INTERACTION_ENABLED =
+            "record_manual_interaction_enabled";
 
     static final String KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED =
             "is_check_activity_feature_enabled";
@@ -551,7 +554,8 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
-    static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED = "ui_ota_strings_feature_enabled";
+    public static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED =
+            "ui_ota_strings_feature_enabled";
 
     static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE = "ui_ota_strings_download_deadline";
 
@@ -589,6 +593,7 @@ public final class PhFlags implements Flags {
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
+    static final String KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING = "enrollment_enable_limited_logging";
 
     // New Feature Flags
     static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
@@ -777,6 +782,23 @@ public final class PhFlags implements Flags {
         }
 
         return topicsNumberOfLookBackEpochs;
+    }
+
+    @Override
+    public float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        float topicsPrivacyBudgetForTopicIdDistribution =
+                DeviceConfig.getFloat(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                        /* defaultValue */ TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
+
+        if (topicsPrivacyBudgetForTopicIdDistribution <= 0) {
+            throw new IllegalArgumentException(
+                    "topicsPrivacyBudgetForTopicIdDistribution should be > 0");
+        }
+
+        return topicsPrivacyBudgetForTopicIdDistribution;
     }
 
     @Override
@@ -1113,19 +1135,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getMeasurementRegistrationJobTriggerDelayMs() {
+    public long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS,
-                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS);
+                /* flagName */ KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS,
+                /* defaultValue */ DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS);
     }
 
     @Override
-    public long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+    public long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
-                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
+                /* flagName */ KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
+                /* defaultValue */ DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
     }
 
     @Override
@@ -2568,6 +2590,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnrollmentEnableLimitedLogging() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING,
+                /* defaultValue */ ENROLLMENT_ENABLE_LIMITED_LOGGING);
+    }
+
+    @Override
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
@@ -3179,6 +3209,11 @@ public final class PhFlags implements Flags {
                         + KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED
                         + " = "
                         + getEnrollmentMddRecordDeletionEnabled());
+        writer.println(
+                "\t"
+                        + KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING
+                        + " = "
+                        + getEnrollmentEnableLimitedLogging());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -3522,14 +3557,14 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxRetriesPerRegistrationRequest());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS
+                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS
                         + " = "
-                        + getMeasurementRegistrationJobTriggerDelayMs());
+                        + getMeasurementAsyncRegistrationJobTriggerMinDelayMs());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
+                        + KEY_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
                         + " = "
-                        + getMeasurementRegistrationJobTriggerMaxDelayMs());
+                        + getMeasurementAsyncRegistrationJobTriggerMaxDelayMs());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
@@ -4281,7 +4316,7 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
     }
 
-    static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
+    public static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
 
     @Override
     public boolean getEuNotifFlowChangeEnabled() {
@@ -4291,7 +4326,8 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
     }
 
-    static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK = "notification_dmsmissed_on_click";
+    public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
+            "notification_dmsmissed_on_click";
 
     @Override
     public boolean getNotificationDismissedOnClick() {
@@ -4338,7 +4374,9 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
+        uxMap.put(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, getEuNotifFlowChangeEnabled());
         uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
+        uxMap.put(KEY_NOTIFICATION_DISMISSED_ON_CLICK, getNotificationDismissedOnClick());
         return uxMap;
     }
 

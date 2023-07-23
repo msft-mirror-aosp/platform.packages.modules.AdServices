@@ -32,10 +32,8 @@ import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -134,9 +132,6 @@ public final class EnrollmentTest {
 
     @Test
     public void testMaybeGetEnrollmentId_packageManifestCheckFailure() {
-        // TODO(b/291147700) - Disabling until manifest parser works on R
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
