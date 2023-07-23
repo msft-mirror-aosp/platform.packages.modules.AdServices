@@ -181,7 +181,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 public class FledgeE2ETest {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
@@ -298,7 +297,6 @@ public class FledgeE2ETest {
             new FledgeE2ETestFlags(false, true, true, true, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
-    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
 
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
@@ -3756,7 +3754,7 @@ public class FledgeE2ETest {
                                 mAppImportanceFilter,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
-                                mThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
 
         when(mDevContextFilter.createDevContext())

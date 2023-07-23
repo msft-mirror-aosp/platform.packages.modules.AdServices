@@ -81,9 +81,9 @@ public abstract class ObservationStoreEntity {
     /**
      * Creates an {@link ObservationBatch} using the provided {@link Encrypter}.
      *
-     * @param encrypter the {@link Encrypter} to encrypt data with.
+     * @param encrypter the {@link Encrypter} to encrypt data with
      * @return an ObservationBatch
-     * @throws {@link EncryptionFailedException} if encryption failed
+     * @throws EncryptionFailedException if encryption failed
      */
     @NonNull
     public ObservationBatch encrypt(@NonNull Encrypter encrypter) throws EncryptionFailedException {

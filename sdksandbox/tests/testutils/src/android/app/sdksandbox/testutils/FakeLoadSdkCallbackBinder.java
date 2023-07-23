@@ -18,6 +18,7 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 
 public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
@@ -32,12 +33,18 @@ public class FakeLoadSdkCallbackBinder extends ILoadSdkCallback.Stub {
     }
 
     @Override
-    public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk, long timeSystemServerCalledApp) {
+    public void onLoadSdkSuccess(
+            SandboxedSdk sandboxedSdk,
+            long timeSystemServerCalledApp,
+            SandboxLatencyInfo sandboxLatencyInfo) {
         mFakeLoadSdkCallback.onResult(sandboxedSdk);
     }
 
     @Override
-    public void onLoadSdkFailure(LoadSdkException exception, long timeSystemServerCalledApp) {
+    public void onLoadSdkFailure(
+            LoadSdkException exception,
+            long timeSystemServerCalledApp,
+            SandboxLatencyInfo sandboxLatencyInfo) {
         mFakeLoadSdkCallback.onError(exception);
     }
 

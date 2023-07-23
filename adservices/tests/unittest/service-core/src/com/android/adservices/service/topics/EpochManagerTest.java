@@ -43,6 +43,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
+import com.android.adservices.service.topics.classifier.ClassifierManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +88,7 @@ public final class EpochManagerTest {
     @Mock Classifier mMockClassifier;
     @Mock Clock mMockClock;
     @Mock Flags mMockFlag;
+    @Mock ClassifierManager mClassifierManager;
 
     @Before
     public void setup() {
@@ -96,7 +98,13 @@ public final class EpochManagerTest {
         mTopicsDao = new TopicsDao(mDbHelper);
         mEpochManager =
                 new EpochManager(
-                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, mFlags, mMockClock);
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        mFlags,
+                        mMockClock,
+                        mClassifierManager);
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -199,7 +207,8 @@ public final class EpochManagerTest {
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
                         mFlags,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -239,7 +248,8 @@ public final class EpochManagerTest {
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
                         mFlags,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -261,10 +271,16 @@ public final class EpochManagerTest {
                 new EpochManager(
                         mTopicsDao,
                         mDbHelper,
-                        new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                        new MockRandom(
+                                new long[] {1, 5, 6, 7, 8, 9},
+                                // Use a positive double greater than 1 to ensure that loggedTopic
+                                // must be the same as the topic.
+                                new double[] {2d}
+                        ),
                         mMockClassifier,
                         mFlags,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -395,7 +411,8 @@ public final class EpochManagerTest {
                         new Random(),
                         mMockClassifier,
                         mMockFlag,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         // For table except CallerCanLearnTopicsContract, epoch to delete from is 7-3-1 = epoch 3
         final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
@@ -484,10 +501,15 @@ public final class EpochManagerTest {
                         new EpochManager(
                                 topicsDao,
                                 mDbHelper,
-                                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                                new MockRandom(
+                                        new long[] {1, 5, 6, 7, 8, 9},
+                                        // Use a positive double greater than 1 to ensure that
+                                        // loggedTopic must be the same as the topic.
+                                        new double[] {2d}),
                                 mMockClassifier,
                                 mFlags,
-                                mMockClock));
+                                mMockClock,
+                                mClassifierManager));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         doReturn(epochId).when(epochManager).getCurrentEpochId();
@@ -682,7 +704,8 @@ public final class EpochManagerTest {
                                 new Random(),
                                 mMockClassifier,
                                 mFlags,
-                                mMockClock));
+                                mMockClock,
+                                mClassifierManager));
 
         // To mimic the scenario that there was no usage in last epoch.
         // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
@@ -877,7 +900,13 @@ public final class EpochManagerTest {
         // Initialize a local instance of epochManager to use mocked Flags.
         EpochManager epochManager =
                 new EpochManager(
-                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, flags, mMockClock);
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        flags,
+                        mMockClock,
+                        mClassifierManager);
 
         // Mock clock so that:
         // 1st call: There is no origin and will set 0 as origin.
@@ -1020,6 +1049,12 @@ public final class EpochManagerTest {
 
     private EpochManager createEpochManagerWithMockedFlag() {
         return new EpochManager(
-                mTopicsDao, mDbHelper, new Random(), mMockClassifier, mMockFlag, mMockClock);
+                mTopicsDao,
+                mDbHelper,
+                new Random(),
+                mMockClassifier,
+                mMockFlag,
+                mMockClock,
+                mClassifierManager);
     }
 }

@@ -64,6 +64,8 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -320,6 +322,16 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             if (!permitted) {
                 invokeCallbackWithStatus(
                         callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
+                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(mContext);
+                Integer buildId = enrollmentUtil.getBuildId();
+                Integer dataFileGroupStatus = enrollmentUtil.getFileGroupStatus();
+                enrollmentUtil.logEnrollmentFailedStats(
+                        mAdServicesLogger,
+                        buildId,
+                        dataFileGroupStatus,
+                        mEnrollmentDao.getEnrollmentRecordCountForLogging(),
+                        topicsParam.getSdkName(),
+                        EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue());
                 return STATUS_CALLER_NOT_ALLOWED;
             }
         }

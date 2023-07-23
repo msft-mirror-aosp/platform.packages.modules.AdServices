@@ -28,7 +28,6 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -208,12 +207,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * @param sourceId the source id
-     * @param reportSpec the new report specification in source
+     * @param source the source
      * @throws DatastoreException throws DatastoreException
      */
-    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
-            throws DatastoreException;
+    void updateSourceAttributedTriggers(Source source) throws DatastoreException;
 
     /**
      * Update the value of {@link Source.Status} for the corresponding {@link Source}
@@ -345,7 +342,8 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
