@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.ui;
 
+import static com.android.adservices.service.ui.constants.DebugMessages.NO_ENROLLMENT_CHANNEL_AVAILABLE;
+import static com.android.adservices.service.ui.constants.DebugMessages.PRIVACY_SANDBOX_UI_REQUEST;
 
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
@@ -23,6 +25,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -81,12 +84,16 @@ public class UxEngine {
             // UX and channel should only be updated when an enrollment channel exists.
             mConsentManager.setUx(eligibleUx);
             mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
+            LogUtil.d("Ux: " + eligibleUx);
+            LogUtil.d("Enrollment Channel: " + eligibleEnrollmentChannel);
 
             // Entry point request should not trigger enrollment but should refresh the UX states.
             if (adServicesStates.isPrivacySandboxUiRequest()) {
+                LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST);
                 return;
             }
 
+            LogUtil.d("Starting enrollment logic.");
             eligibleUx
                     .getUx()
                     .handleEnrollment(
@@ -96,6 +103,10 @@ public class UxEngine {
 
             mUxEngineUtil.startBackgroundTasksUponConsent(
                     eligibleUx, mContext, FlagsFactory.getFlags());
+
+            return;
         }
+
+        LogUtil.d(NO_ENROLLMENT_CHANNEL_AVAILABLE);
     }
 }
