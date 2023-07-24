@@ -59,6 +59,7 @@ public class GaUxAlreadyEnrolledChannelTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         UiUtils.enableNotificationPermission();
+        UiUtils.enableGa();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -122,7 +123,6 @@ public class GaUxAlreadyEnrolledChannelTest {
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -151,7 +151,6 @@ public class GaUxAlreadyEnrolledChannelTest {
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
         UiUtils.setAsRowDevice();
-        UiUtils.enableGa();
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -180,7 +179,6 @@ public class GaUxAlreadyEnrolledChannelTest {
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
         UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -207,7 +205,6 @@ public class GaUxAlreadyEnrolledChannelTest {
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
         UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
