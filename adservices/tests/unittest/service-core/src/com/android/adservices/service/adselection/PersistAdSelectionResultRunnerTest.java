@@ -95,7 +95,7 @@ public class PersistAdSelectionResultRunnerTest {
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
                     .setCustomAudienceName("test-name")
-                    .setCustomAudienceOwner(WINNER_BUYER.toString())
+                    .setBuyer(WINNER_BUYER.toString())
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
