@@ -140,6 +140,8 @@ public class SdkSandboxManagerServiceUnitTest {
     private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
             ArgumentCaptor.forClass(ActivityInterceptorCallback.class);
     private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
+    private boolean mDisabledNetworkChecks;
+    private boolean mDisabledForegroundCheck;
 
     @Mock private IBinder mAdServicesManager;
 
@@ -307,15 +309,26 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     private void disableForegroundCheck() {
-        Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+        if (!mDisabledForegroundCheck) {
+            Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+            mDisabledForegroundCheck = true;
+        }
     }
 
     /* Ignores network permission checks. */
     private void disableNetworkPermissionChecks() {
-        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
-                Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
-        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
-                Mockito.eq("android.permission.ACCESS_NETWORK_STATE"), Mockito.anyString());
+        if (!mDisabledNetworkChecks) {
+            Mockito.doNothing()
+                    .when(mSpyContext)
+                    .enforceCallingPermission(
+                            Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
+            Mockito.doNothing()
+                    .when(mSpyContext)
+                    .enforceCallingPermission(
+                            Mockito.eq("android.permission.ACCESS_NETWORK_STATE"),
+                            Mockito.anyString());
+            mDisabledNetworkChecks = true;
+        }
     }
 
     @Test
