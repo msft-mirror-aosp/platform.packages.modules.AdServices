@@ -59,6 +59,7 @@ public class GaUxGraduationChannelTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         UiUtils.enableNotificationPermission();
+        UiUtils.enableGa();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -123,7 +124,6 @@ public class GaUxGraduationChannelTest {
     public void testRowU18ToGaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableU18Ux();
-        UiUtils.enableBeta();
 
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
