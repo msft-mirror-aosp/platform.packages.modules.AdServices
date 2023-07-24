@@ -136,7 +136,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"私隱沙箱"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推測的興趣"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"會推測興趣的應用程式"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告評估功能"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告成效評估"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可使用私隱沙箱評估廣告成效。為此，廣告客戶可透過 Android 暫時儲存你與其廣告和應用程式之間互動的資料。他們可儲存的資料量有限，且會定期刪除。\n\n你可隨時停用私隱沙箱以刪除這些資料。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 會定期根據你所用的應用程式，推測你最感興趣的類別。應用程式可要求 Android 運用那些興趣，向你顯示更相關的廣告。\n\n如果你封鎖某個興趣，清單就不會再顯示該興趣，直至你解除封鎖為止。你可能仍會看到部分相關的廣告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"封鎖"</string>
