@@ -90,6 +90,14 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Fetches the count of aggregate reports for the provided source id.
+     *
+     * @param sourceId source id
+     * @return number of aggregate reports in the database attributed to the provided source id.
+     */
+    int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException;
+
+    /**
      * Fetches the count of event reports for the provided destination.
      *
      * @param attributionDestination Uri for the destination

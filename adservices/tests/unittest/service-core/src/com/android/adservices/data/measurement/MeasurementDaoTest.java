@@ -103,6 +103,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -2696,6 +2697,60 @@ public class MeasurementDaoTest {
         assertTrue(
                 ImmutableMultiset.copyOf(source2.getWebDestinations())
                         .equals(ImmutableMultiset.copyOf(result2.second)));
+    }
+
+    @Test
+    public void getNumAggregateReportsPerSource_returnsExpected() {
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(2L))
+                                .setId("source2")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(3L))
+                                .setId("source3")
+                                .build());
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 1, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 2, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"), 3, "source2"));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sources.forEach(source -> insertSource(source, source.getId()));
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        reports.forEach(aggregateReportConsumer);
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source1"))
+                                    .isEqualTo(2);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source2"))
+                                    .isEqualTo(1);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source3"))
+                                    .isEqualTo(0);
+                        });
     }
 
     @Test
@@ -8323,6 +8378,15 @@ public class MeasurementDaoTest {
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
         return new AggregateReport.Builder()
                 .setId(String.valueOf(id))
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .build();
+    }
+
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setSourceId(sourceId)
                 .setAttributionDestination(Uri.parse(attributionDestination))
                 .build();
     }
