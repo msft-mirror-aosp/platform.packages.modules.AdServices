@@ -109,6 +109,8 @@ import com.android.server.sdksandbox.proto.Services.ServiceAllowlists;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
+import com.google.protobuf.Parser;
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -1943,85 +1945,57 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return null;
         }
 
-        private static Map<Integer, AllowedServices> getServicesAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_SERVICES_ALLOWLIST);
-
-            if (Objects.isNull(decode)) {
-                return new ArrayMap<>();
-            }
-
-            try {
-                final ServiceAllowlists allowedServicesProto = ServiceAllowlists.parseFrom(decode);
-
-                if (allowedServicesProto != null) {
-                    return allowedServicesProto.getAllowlistPerTargetSdkMap();
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error while parsing " + PROPERTY_SERVICES_ALLOWLIST + ". Error: ", e);
-            }
-            return new ArrayMap<>();
-        }
-
-        private AllowedServices getNextServiceDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_SERVICE_ALLOWLIST);
-
+        @Nullable
+        private static <T> T getDeviceConfigProtoProperty(
+                Parser<T> parser, @NonNull String property) {
+            final byte[] decode = getDecodedPropertyValue(property);
             if (Objects.isNull(decode)) {
                 return null;
             }
 
+            T proto = null;
             try {
-                AllowedServices allowedServices = AllowedServices.parseFrom(decode);
-                if (allowedServices != null) {
-                    return allowedServices;
-                }
+                proto = parser.parseFrom(decode);
             } catch (Exception e) {
-                Log.e(
-                        TAG,
-                        "Error while parsing " + PROPERTY_NEXT_SERVICE_ALLOWLIST + ". Error: ",
-                        e);
+                Log.e(TAG, "Error while parsing " + property + ". Error: ", e);
             }
-            return null;
+
+            return proto;
         }
 
+        @NonNull
+        private static Map<Integer, AllowedServices> getServicesAllowlist() {
+            final ServiceAllowlists allowedServicesProto =
+                    getDeviceConfigProtoProperty(
+                            ServiceAllowlists.parser(), PROPERTY_SERVICES_ALLOWLIST);
+            return allowedServicesProto == null
+                    ? new ArrayMap<>()
+                    : allowedServicesProto.getAllowlistPerTargetSdkMap();
+        }
+
+        @Nullable
+        private AllowedServices getNextServiceDeviceConfigAllowlist() {
+            return getDeviceConfigProtoProperty(
+                    AllowedServices.parser(), PROPERTY_NEXT_SERVICE_ALLOWLIST);
+        }
+
+        @NonNull
         private static Map<Integer, AllowedContentProviders>
                 getContentProviderDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_CONTENTPROVIDER_ALLOWLIST);
-
+            final ContentProviderAllowlists contentProviderAllowlistsProto =
+                    getDeviceConfigProtoProperty(
+                            ContentProviderAllowlists.parser(), PROPERTY_CONTENTPROVIDER_ALLOWLIST);
             // Content providers are restricted by default. If the property is not set, or it is an
             // empty string, there are no content providers to allowlist.
-            if (Objects.isNull(decode)) {
-                return new ArrayMap<>();
-            }
-
-            ContentProviderAllowlists contentProviderAllowlistsProto = null;
-            try {
-                contentProviderAllowlistsProto = ContentProviderAllowlists.parseFrom(decode);
-            } catch (Exception e) {
-                Log.e(TAG, "Could not parse content provider allowlist " + e);
-            }
-            if (contentProviderAllowlistsProto != null) {
-                return contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
-            }
-            return new ArrayMap<>();
+            return contentProviderAllowlistsProto == null
+                    ? new ArrayMap<>()
+                    : contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
         }
 
+        @Nullable
         private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
-
-            // Content providers are restricted by default. If the property is not set, or it is an
-            // empty string, there are no content providers to allowlist.
-            if (Objects.isNull(decode)) {
-                return null;
-            }
-
-            AllowedContentProviders allowedContentProvidersProto = null;
-            try {
-                allowedContentProvidersProto = AllowedContentProviders.parseFrom(decode);
-            } catch (Exception e) {
-                Log.e(TAG, "Could not parse content provider canary allowlist " + e);
-            }
-
-            return allowedContentProvidersProto;
+            return getDeviceConfigProtoProperty(
+                    AllowedContentProviders.parser(), PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
         }
     }
 
