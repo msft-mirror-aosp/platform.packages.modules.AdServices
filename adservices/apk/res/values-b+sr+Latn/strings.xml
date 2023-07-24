@@ -130,7 +130,7 @@
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Sada imate više izbora u vezi sa oglasima koji vam se prikazuju, a identitet vam je zaštićen"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nove funkcije privatnosti sa oglasima su sada dostupne"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android sada nudi nove funkcije privatnosti koje vam pružaju više izbora u vezi sa oglasima koji vam se prikazuju."</string>
-    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Sledeće"</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Dalje"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Zaštićeno okruženje privatnosti"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Učestvujte u beta verziji Android privatnosti sa oglasima"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Zaštićeno okruženje privatnosti"</string>
