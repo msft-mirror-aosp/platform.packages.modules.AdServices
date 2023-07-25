@@ -460,12 +460,15 @@ public final class SdkSandboxManager {
             appProcessToken = null;
         }
         try {
+            // TODO(b/297352617): add timeAppCalledSystemServer to the constructor.
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
             mService.loadSdk(
                     mContext.getPackageName(),
                     appProcessToken,
                     sdkName,
-                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK),
-                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    sandboxLatencyInfo,
                     params,
                     callbackProxy);
         } catch (RemoteException e) {

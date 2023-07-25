@@ -153,15 +153,14 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         @Override
         public void onBindingSuccessful(
-                ISdkSandboxService service, int time, SandboxLatencyInfo sandboxLatencyInfo) {
+                ISdkSandboxService service, SandboxLatencyInfo sandboxLatencyInfo) {
             mSuccess = true;
             mService = service;
             mLatch.countDown();
         }
 
         @Override
-        public void onBindingFailed(
-                LoadSdkException e, long time, SandboxLatencyInfo sandboxLatencyInfo) {
+        public void onBindingFailed(LoadSdkException e, SandboxLatencyInfo sandboxLatencyInfo) {
             mLatch.countDown();
         }
 

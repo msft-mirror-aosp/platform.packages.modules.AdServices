@@ -29,6 +29,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
@@ -809,12 +810,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             IBinder callingAppProcessToken,
             String sdkName,
             SandboxLatencyInfo sandboxLatencyInfo,
-            long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {
         try {
-            // Log the IPC latency from app to system server
-            final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+            sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.getCurrentTime());
 
             final int callingUid = Binder.getCallingUid();
             CallingInfo callingInfo;
@@ -838,15 +837,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
 
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    /*latency=*/ (int)
-                            (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
-                    /*success=*/ true,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
-                    callingUid);
-
             final long token = Binder.clearCallingIdentity();
             try {
                 loadSdkWithClearIdentity(
@@ -854,7 +844,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         sdkName,
                         params,
                         callback,
-                        timeSystemServerReceivedCallFromApp,
                         sandboxLatencyInfo);
             } finally {
                 Binder.restoreCallingIdentity(token);
@@ -877,7 +866,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String sdkName,
             Bundle params,
             ILoadSdkCallback callback,
-            long timeSystemServerReceivedCallFromApp,
             SandboxLatencyInfo sandboxLatencyInfo) {
         LoadSdkSession loadSdkSession =
                 new LoadSdkSession(
@@ -886,10 +874,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
         if (!TextUtils.isEmpty(errorMsg)) {
             Log.w(TAG, errorMsg);
+            sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             loadSdkSession.handleLoadFailure(
                     new LoadSdkException(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg),
-                    /*startTimeOfErrorStage=*/ timeSystemServerReceivedCallFromApp,
-                    SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                    /*startTimeOfErrorStage=*/ -1,
+                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                     /*successAtStage=*/ false,
                     sandboxLatencyInfo);
             return;
@@ -907,12 +898,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // If there was a previous load session and the status is loaded, this new load request
             // should fail.
             if (prevLoadSession != null && prevLoadSession.getStatus() == LoadSdkSession.LOADED) {
+                sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
+                // TODO(b/296844050): only take LoadSdkException and SandboxLatencyInfo as
+                // parameters.
                 loadSdkSession.handleLoadFailure(
                         new LoadSdkException(
                                 SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
                                 sdkName + " has been loaded already"),
-                        /*startTimeOfErrorStage=*/ timeSystemServerReceivedCallFromApp,
-                        SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                        /*startTimeOfErrorStage=*/ -1,
+                        SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                         /*successAtStage=*/ false,
                         sandboxLatencyInfo);
                 return;
@@ -921,12 +917,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             // If there was an ongoing load session for this SDK, this new load request should fail.
             if (prevLoadSession != null
                     && prevLoadSession.getStatus() == LoadSdkSession.LOAD_PENDING) {
+                sandboxLatencyInfo.setTimeSystemServerCalledSandbox(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 loadSdkSession.handleLoadFailure(
                         new LoadSdkException(
                                 SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
                                 sdkName + " is currently being loaded"),
-                        /*startTimeOfErrorStage=*/ timeSystemServerReceivedCallFromApp,
-                        SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                        /*startTimeOfErrorStage=*/ -1,
+                        SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                         /*successAtStage=*/ false,
                         sandboxLatencyInfo);
                 return;
@@ -944,16 +943,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 // Hence, it is of no use for the call from sandbox.
                 mUidImportanceListener.startListening();
                 if (!registerForAppDeath(callingInfo, callback.asBinder())) {
-                    // Log the time taken in System Server before the exception occurred
-                    SdkSandboxStatsLog.write(
-                            SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                            SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                            /*latency=*/ (int)
-                                    (mInjector.getCurrentTime()
-                                            - timeSystemServerReceivedCallFromApp),
-                            /*success=*/ false,
-                            SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                            callingInfo.getUid());
+                    sandboxLatencyInfo.setTimeFailedAtSystemServer(mInjector.getCurrentTime());
+                    sandboxLatencyInfo.setSandboxStatus(
+                            SandboxLatencyInfo
+                                    .SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                     // App has already died and there is no point in loading the SDK.
                     return;
                 }
@@ -961,36 +954,28 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         // Callback to be invoked once the sandbox has been created;
-        SandboxBindingCallback sandboxBindingCallback =
-                createSdkLoadCallback(loadSdkSession, timeSystemServerReceivedCallFromApp);
+        SandboxBindingCallback sandboxBindingCallback = createSdkLoadCallback(loadSdkSession);
         startSdkSandboxIfNeeded(callingInfo, sandboxBindingCallback, sandboxLatencyInfo);
     }
 
-    private SandboxBindingCallback createSdkLoadCallback(
-            LoadSdkSession loadSdkSession, long timeSystemServerReceivedCallFromApp) {
+    private SandboxBindingCallback createSdkLoadCallback(LoadSdkSession loadSdkSession) {
         return new SandboxBindingCallback() {
             @Override
             public void onBindingSuccessful(
-                    ISdkSandboxService service,
-                    int timeToLoadSandbox,
-                    SandboxLatencyInfo sandboxLatencyInfo) {
-                loadSdkForService(
-                        loadSdkSession,
-                        timeToLoadSandbox,
-                        timeSystemServerReceivedCallFromApp,
-                        service,
-                        sandboxLatencyInfo);
+                    ISdkSandboxService service, SandboxLatencyInfo sandboxLatencyInfo) {
+                loadSdkForService(loadSdkSession, service, sandboxLatencyInfo);
             }
 
             @Override
             public void onBindingFailed(
-                    LoadSdkException exception,
-                    long startTimeForLoadingSandbox,
-                    SandboxLatencyInfo sandboxLatencyInfo) {
+                    LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+                sandboxLatencyInfo.setTimeSandboxLoaded(mInjector.getCurrentTime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_LOAD_SANDBOX);
                 loadSdkSession.handleLoadFailure(
                         exception,
-                        /*startTimeOfErrorStage=*/ startTimeForLoadingSandbox,
-                        /*stage*/ SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
+                        /*startTimeOfErrorStage=*/ -1,
+                        /*stage*/ SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                         /*successAtStage=*/ false,
                         sandboxLatencyInfo);
             }
@@ -1024,17 +1009,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        final long startTimeForLoadingSandbox = mInjector.getCurrentTime();
-
         if (!isSandboxStartRequired) {
             ISdkSandboxService service = mServiceProvider.getSdkSandboxServiceForApp(callingInfo);
             if (service == null) {
                 LoadSdkException exception =
                         new LoadSdkException(
                                 SDK_SANDBOX_PROCESS_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG);
-                callback.onBindingFailed(exception, startTimeForLoadingSandbox, sandboxLatencyInfo);
+                callback.onBindingFailed(exception, sandboxLatencyInfo);
             }
-            callback.onBindingSuccessful(service, -1, sandboxLatencyInfo);
+            callback.onBindingSuccessful(service, sandboxLatencyInfo);
             return;
         }
 
@@ -1042,12 +1025,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // is missing, starting the sandbox process would crash as we will fail to mount data_mirror
         // for sdk-data isolation.
         mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
+        sandboxLatencyInfo.setTimeLoadSandboxStarted(mInjector.getCurrentTime());
         mServiceProvider.bindService(
                 callingInfo,
                 new SandboxServiceConnection(
                         mServiceProvider,
                         callingInfo,
-                        startTimeForLoadingSandbox,
                         sandboxLatencyInfo));
     }
 
@@ -1469,13 +1452,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
-        // TODO(b/287047664): log latencies for all stages here.
         int method = convertToStatsLogMethodCode(sandboxLatencyInfo.getMethod());
         if (method == SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED) {
             return;
         }
         int callingUid = Binder.getCallingUid();
 
+        logLatencyForStage(
+                method,
+                sandboxLatencyInfo.getAppToSystemServerLatency(),
+                sandboxLatencyInfo.isSuccessfulAtAppToSystemServer(),
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                callingUid);
+        logLatencyForStage(
+                method,
+                sandboxLatencyInfo.getSystemServerAppToSandboxLatency(),
+                sandboxLatencyInfo.isSuccessfulAtSystemServerAppToSandbox(),
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                callingUid);
+        logLatencyForStage(
+                method,
+                sandboxLatencyInfo.getLoadSandboxLatency(),
+                sandboxLatencyInfo.isSuccessfulAtLoadSandbox(),
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
+                callingUid);
         logLatencyForStage(
                 method,
                 sandboxLatencyInfo.getSystemServerToSandboxLatency(),
@@ -1561,12 +1561,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     interface SandboxBindingCallback {
         void onBindingSuccessful(
                 ISdkSandboxService service,
-                int timeToLoadSandbox,
                 SandboxLatencyInfo sandboxLatencyInfo);
 
         void onBindingFailed(
                 LoadSdkException exception,
-                long startTimeForLoadingSandbox,
                 SandboxLatencyInfo sandboxLatencyInfo);
     }
 
@@ -1575,17 +1573,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final SdkSandboxServiceProvider mServiceProvider;
         private final CallingInfo mCallingInfo;
         private boolean mHasConnectedBefore = false;
-        private long mStartTimeForLoadingSandbox;
         private SandboxLatencyInfo mSandboxLatencyInfo;
 
         SandboxServiceConnection(
                 SdkSandboxServiceProvider serviceProvider,
                 CallingInfo callingInfo,
-                long startTimeForLoadingSandbox,
                 SandboxLatencyInfo sandboxLatencyInfo) {
             mServiceProvider = serviceProvider;
             mCallingInfo = callingInfo;
-            mStartTimeForLoadingSandbox = startTimeForLoadingSandbox;
             mSandboxLatencyInfo = sandboxLatencyInfo;
         }
 
@@ -1614,10 +1609,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 computeSdkStorage(mCallingInfo, mService);
                             });
 
-            final int timeToLoadSandbox =
-                    (int) (mInjector.getCurrentTime() - mStartTimeForLoadingSandbox);
+            mSandboxLatencyInfo.setTimeSandboxLoaded(mInjector.getCurrentTime());
             if (!mHasConnectedBefore) {
-                logSandboxStart(timeToLoadSandbox);
                 mHasConnectedBefore = true;
             }
 
@@ -1625,7 +1618,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     clearAndGetSandboxBindingCallbacks();
             for (int i = 0; i < sandboxBindingCallbacksForApp.size(); i++) {
                 SandboxBindingCallback callback = sandboxBindingCallbacksForApp.get(i);
-                callback.onBindingSuccessful(mService, timeToLoadSandbox, mSandboxLatencyInfo);
+                callback.onBindingSuccessful(mService, mSandboxLatencyInfo);
             }
         }
 
@@ -1658,8 +1651,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     clearAndGetSandboxBindingCallbacks();
             for (int i = 0; i < sandboxBindingCallbacksForApp.size(); i++) {
                 SandboxBindingCallback callback = sandboxBindingCallbacksForApp.get(i);
-                callback.onBindingFailed(
-                        exception, mStartTimeForLoadingSandbox, mSandboxLatencyInfo);
+                callback.onBindingFailed(exception, mSandboxLatencyInfo);
             }
         }
 
@@ -1693,17 +1685,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
 
             return true;
-        }
-
-        private void logSandboxStart(int timeToLoadSandbox) {
-            // Log the latency for loading the Sandbox process
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    timeToLoadSandbox,
-                    /* success=*/ true,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX,
-                    mCallingInfo.getUid());
         }
 
         private ArrayList<SandboxBindingCallback> clearAndGetSandboxBindingCallbacks() {
@@ -2373,8 +2354,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void loadSdkForService(
             LoadSdkSession loadSdkSession,
-            int timeToLoadSandbox,
-            long timeSystemServerReceivedCallFromApp,
             ISdkSandboxService service,
             SandboxLatencyInfo sandboxLatencyInfo) {
         CallingInfo callingInfo = loadSdkSession.mCallingInfo;
@@ -2384,7 +2363,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             loadSdkSession.handleLoadFailure(
                     new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
                     -1,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED,
+                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
                     false,
                     sandboxLatencyInfo);
             return;
@@ -2400,8 +2379,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         loadSdkSession.load(
                 service,
                 customizedInfo,
-                timeToLoadSandbox,
-                timeSystemServerReceivedCallFromApp,
                 sandboxLatencyInfo);
     }
 
@@ -2551,6 +2528,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Bundle params,
                 ILoadSdkCallback callback)
                 throws RemoteException {
+            // TODO(b/294216354): create SandboxLatencyInfo object in SdkSandboxController and set
+            // LOAD_SDK_VIA_CONTROLLER method instead of LOAD_SDK.
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(timeAppCalledSystemServer);
             // The process token is only used to kill the app process when the
             // sandbox dies (for U+, not available on T), so a sandbox process token
             // is not needed here. This is taken care of when the first SDK is loaded
@@ -2559,8 +2541,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     callingPackageName,
                     /*callingAppProcessToken=*/ null,
                     sdkName,
-                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK),
-                    timeAppCalledSystemServer,
+                    sandboxLatencyInfo,
                     params,
                     callback);
         }
