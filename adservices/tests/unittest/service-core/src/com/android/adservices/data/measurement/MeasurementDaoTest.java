@@ -210,6 +210,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
         assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
         assertEquals(validSource.getFilterDataString(), source.getFilterDataString());
+        assertEquals(validSource.getSharedFilterDataKeys(), source.getSharedFilterDataKeys());
         assertEquals(validSource.getAggregateContributions(), source.getAggregateContributions());
         assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
@@ -5789,6 +5790,7 @@ public class MeasurementDaoTest {
         values.put(SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(SourceContract.SHARED_FILTER_DATA_KEYS, source.getSharedFilterDataKeys());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, source.getAggregateContributions());
         values.put(SourceContract.DEBUG_REPORTING, source.isDebugReporting());
         values.put(SourceContract.INSTALL_TIME, source.getInstallTime());
@@ -8069,6 +8071,7 @@ public class MeasurementDaoTest {
                 .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
                 .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
+                .setSharedFilterDataKeys(SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(UUID.randomUUID().toString())
                 .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
