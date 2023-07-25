@@ -132,6 +132,8 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
     static final String KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY =
             "measurement_enable_shared_source_debug_key";
+    static final String KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA =
+            "measurement_enable_shared_filter_data_keys_xna";
     static final String KEY_MEASUREMENT_ENABLE_DEBUG_REPORT = "measurement_enable_debug_report";
     static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT =
             "measurement_enable_source_debug_report";
@@ -1076,6 +1078,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY,
                 /* defaultValue */ MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA,
+                /* defaultValue */ MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA);
     }
 
     @Override
@@ -3445,6 +3455,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY
                         + " = "
                         + getMeasurementEnableSharedSourceDebugKey());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA
+                        + " = "
+                        + getMeasurementEnableSharedFilterDataKeysXNA());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH

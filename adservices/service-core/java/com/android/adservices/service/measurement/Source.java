@@ -79,6 +79,7 @@ public class Source {
     private boolean mIsInstallAttributed;
     private boolean mIsDebugReporting;
     private String mFilterDataString;
+    @Nullable private String mSharedFilterDataKeys;
     private FilterMap mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
@@ -397,6 +398,7 @@ public class Source {
                 && mAttributionMode == source.mAttributionMode
                 && mIsDebugReporting == source.mIsDebugReporting
                 && Objects.equals(mFilterDataString, source.mFilterDataString)
+                && Objects.equals(mSharedFilterDataKeys, source.mSharedFilterDataKeys)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
@@ -414,8 +416,8 @@ public class Source {
                 && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
                 && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
                 && Objects.equals(mMaxEventLevelReports, source.mMaxEventLevelReports)
-                && Objects.equals(mEventAttributionStatusString,
-                        source.mEventAttributionStatusString)
+                && Objects.equals(
+                        mEventAttributionStatusString, source.mEventAttributionStatusString)
                 && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
                 && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
     }
@@ -441,6 +443,7 @@ public class Source {
                 mEventReportDedupKeys,
                 mAggregateReportDedupKeys,
                 mFilterDataString,
+                mSharedFilterDataKeys,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
@@ -682,6 +685,15 @@ public class Source {
      */
     public String getFilterDataString() {
         return mFilterDataString;
+    }
+
+    /**
+     * Returns the shared filter data keys of the source as a unique list of strings. Example:
+     * ["click_duration", "campaign_type"]
+     */
+    @Nullable
+    public String getSharedFilterDataKeys() {
+        return mSharedFilterDataKeys;
     }
 
     /**
@@ -1006,6 +1018,7 @@ public class Source {
             builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
             builder.setEnrollmentId(copyFrom.mEnrollmentId);
             builder.setFilterData(copyFrom.mFilterDataString);
+            builder.setSharedFilterDataKeys(copyFrom.mSharedFilterDataKeys);
             builder.setInstallTime(copyFrom.mInstallTime);
             builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
             builder.setPriority(copyFrom.mPriority);
@@ -1215,6 +1228,12 @@ public class Source {
         /** See {@link Source#getFilterDataString()}. */
         public Builder setFilterData(@Nullable String filterMap) {
             mBuilding.mFilterDataString = filterMap;
+            return this;
+        }
+
+        /** See {@link Source#getSharedFilterDataKeys()}. */
+        public Builder setSharedFilterDataKeys(@Nullable String sharedFilterDataKeys) {
+            mBuilding.mSharedFilterDataKeys = sharedFilterDataKeys;
             return this;
         }
 

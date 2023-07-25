@@ -363,6 +363,13 @@ public interface Flags {
         return MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
     }
 
+    boolean MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA = true;
+
+    /** Enable/disable shared_filter_data_keys processing from source RBR. */
+    default boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA;
+    }
+
     boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
 
     /** Returns whether verbose debug report generation is enabled. */

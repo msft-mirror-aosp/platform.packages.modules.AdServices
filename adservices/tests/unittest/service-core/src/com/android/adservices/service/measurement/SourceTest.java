@@ -101,6 +101,7 @@ public class SourceTest {
         filterMap.put("product", Arrays.asList("1234", "2345"));
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
+        String sharedFilterDataKeys = "[\"product\"]";
         String parentId = "parent-id";
         String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
@@ -140,6 +141,7 @@ public class SourceTest {
                         .setDebugKey(DEBUG_KEY_1)
                         .setRegistrationId("R1")
                         .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
                         .setDebugJoinKey(debugJoinKey)
@@ -188,6 +190,7 @@ public class SourceTest {
                         .setDebugKey(DEBUG_KEY_1)
                         .setRegistrationId("R1")
                         .setSharedAggregationKeys(sharedAggregateKeys)
+                        .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
                         .setDebugJoinKey(debugJoinKey)
@@ -369,6 +372,17 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregationKeys2)
                         .build());
 
+        String sharedFilterDataKeys1 = "[\"key1\"]";
+        String sharedFilterDataKeys2 = "[\"key2\"]";
+
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedFilterDataKeys(sharedFilterDataKeys1)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSharedFilterDataKeys(sharedFilterDataKeys2)
+                        .build());
+
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder().setInstallTime(100L).build(),
                 SourceFixture.getMinimalValidSourceBuilder().setInstallTime(101L).build());
@@ -477,6 +491,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -499,6 +514,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -525,6 +541,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -548,6 +565,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -571,6 +589,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -594,6 +613,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -619,6 +639,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -644,6 +665,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -669,6 +691,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
@@ -691,6 +714,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -716,6 +740,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
+                SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
@@ -1009,6 +1034,7 @@ public class SourceTest {
             @Nullable String filterData,
             @Nullable String registrationId,
             @Nullable String sharedAggregationKeys,
+            @Nullable String sharedFilterDataKeys,
             @Nullable Long installTime,
             Uri registrationOrigin) {
         assertThrows(
@@ -1035,6 +1061,7 @@ public class SourceTest {
                                 .setSharedAggregationKeys(sharedAggregationKeys)
                                 .setInstallTime(installTime)
                                 .setRegistrationOrigin(registrationOrigin)
+                                .setSharedFilterDataKeys(sharedFilterDataKeys)
                                 .build());
     }
 
