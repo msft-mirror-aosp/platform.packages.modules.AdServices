@@ -16,6 +16,8 @@
 
 package android.adservices.exceptions;
 
+import static java.util.Locale.ENGLISH;
+
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -173,6 +175,20 @@ public class AdServicesNetworkException extends IOException {
     @NonNull
     public Duration getRetryAfter() {
         return mRetryAfter;
+    }
+
+    /**
+     * @return a human-readable representation of {@link AdServicesNetworkException}.
+     */
+    @Override
+    public String toString() {
+        return String.format(
+                ENGLISH,
+                "%s: {Error code: %s, Retry after: %sms, Server response: %s}",
+                this.getClass().getCanonicalName(),
+                mErrorCode,
+                mRetryAfter.toMillis(),
+                this.getMessage());
     }
 
     private void checkErrorCode(@ErrorCode int errorCode) {
