@@ -43,5 +43,6 @@ public class DebugMessages {
     public static String PRIVACY_SANDBOX_UI_REQUEST_MESSAGE =
             "PS UI request was received and enrollment will not be triggered.";
 
-    public static String NO_ENROLLMENT_CHANNEL_AVAILABLE = "No enrollment channel available";
+    public static String NO_ENROLLMENT_CHANNEL_AVAILABLE_MESSAGE =
+            "No enrollment channel available";
 }
