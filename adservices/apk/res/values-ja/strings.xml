@@ -97,7 +97,7 @@
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"広告のトピックは、このデバイスで最近使用されたアプリとアプリの使用頻度に基づきます。"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Google によるこのデータの使用"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android では、ユーザーのアプリ使用時に興味 / 関心のあるトピックが記録されます。トピックのラベルは事前定義されていて、「アート、エンターテインメント」、「ショッピング」、「スポーツ」などがあります。その後、使用するアプリでは、表示する広告をパーソナライズするため、Android に（アプリの使用状況や個人情報に関するデータではなく）いくつかのトピックを提示するよう要求されることがあります。"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"データを管理する方法"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"データの管理方法"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android では、トピックが定期的に自動削除されます。アプリを引き続き使用していると、トピックがリストに再度表示される場合もあります。また、プライバシー設定では、Android からアプリと共有しないトピックをブロックしたり、広告のトピックを無効にしたりすることがいつでも可能です。"</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"プライバシー設定で変更できます。"</string>
     <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"その他の広告のプライバシー機能がリリースされました"</string>
@@ -110,7 +110,7 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"このデバイスで使用しているアプリでのアクティビティ。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  アプリによるこのデータの使用"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"アプリでは、ユーザーの興味 / 関心に関する情報を Android に保存できます。たとえば、マラソン トレーニングのアプリを使用した場合、そのアプリは、ユーザーはランニング シューズに関心があると判断されます。その後、別のアプリを使用すると、最初に使用したアプリにより提案されたランニング シューズの広告が表示されます。"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  データを管理する方法"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  データの管理方法"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android では、アプリにより提案されたデータが定期的に自動削除されます。アプリをもう一度使用すると、リストにそのアプリが再度表示される場合もあります。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"また、プライバシー設定では、アプリによる広告の提案をブロックしたり、アプリによる提案データをリセットしたり、アプリによる広告の提案を無効したりすることがいつでも可能です。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"使用するアプリが、広告のパフォーマンスを測定するための情報を提示するよう Android に求めることがあります。Android では、アプリ間で共有できる情報を制限することにより、ユーザーのプライバシーを保護します。"</string>
