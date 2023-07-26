@@ -46,7 +46,7 @@ public class SdkSandboxSmallModuleTestApp {
     public void tearDown() {}
 
     @Test
-    public void installApexWithoutApkPendingReboot() throws Exception {
+    public void installSmallModulePendingReboot() throws Exception {
         TestApp apexWithoutApk =
                 new TestApp(
                         "ApexWithoutApk",
