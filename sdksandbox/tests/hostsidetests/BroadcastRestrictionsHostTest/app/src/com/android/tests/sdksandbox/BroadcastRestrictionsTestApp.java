@@ -56,11 +56,18 @@ public class BroadcastRestrictionsTestApp {
     private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
             "enforce_broadcast_receiver_restrictions";
     private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+
+    // Keep consistent with SdkSandboxManagerService.PROPERTY_BROADCASTRECEIVER_ALLOWLIST
+    private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
+            "broadcastreceiver_allowlist_per_targetSdkVersion";
+
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.broadcasts";
 
     private String mEnforceBroadcastRestrictionsSandboxNamespace;
     private String mEnforceBroadcastRestrictionsAdServicesNamespace;
+    private String mInitialBroadcastReceiverAllowlistValue;
+
     private static final List<String> INTENT_ACTIONS =
             new ArrayList<>(Arrays.asList(Intent.ACTION_SEND, Intent.ACTION_VIEW));
 
@@ -89,12 +96,17 @@ public class BroadcastRestrictionsTestApp {
         mEnforceBroadcastRestrictionsAdServicesNamespace =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
+        mInitialBroadcastReceiverAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
 
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_SDK_SANDBOX,
                 PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
         DeviceConfig.deleteProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
         mRule.getScenario();
 
         // Greedily unload SDK to reduce flakiness
@@ -132,6 +144,17 @@ public class BroadcastRestrictionsTestApp {
         } else {
             DeviceConfig.deleteProperty(
                     DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ENFORCE_RESTRICTIONS);
+        }
+
+        if (mInitialBroadcastReceiverAllowlistValue != null) {
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_BROADCASTRECEIVER_ALLOWLIST,
+                    mInitialBroadcastReceiverAllowlistValue, /*makeDefault*/
+                    false);
+        } else {
+            DeviceConfig.deleteProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
         }
 
         InstrumentationRegistry.getInstrumentation()
@@ -218,6 +241,94 @@ public class BroadcastRestrictionsTestApp {
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
         broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigEmptyAllowlistApplied() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_ENFORCE_RESTRICTIONS,
+                "true",
+                /*makeDefault=*/ false);
+
+        // Set an empty allowlist for effectiveTargetSdkVersion U. This should block all
+        // BroadcastReceivers.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_BROADCASTRECEIVER_ALLOWLIST,
+                "CgQIIhIA",
+                /*makeDefault=*/ false);
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        assertThrows(
+                SecurityException.class,
+                () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+
+        // Even protected broadcasts should be blocked.
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        broadcastSdkApi.registerBroadcastReceiver(
+                                new ArrayList<>(Arrays.asList(Intent.ACTION_SCREEN_OFF))));
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_ENFORCE_RESTRICTIONS,
+                "true",
+                /*makeDefault=*/ false);
+
+        // Set an allowlist mapping from U to {android.intent.action.VIEW,
+        // android.intent.action.SCREEN_OFF}
+        final String encodedAllowlist =
+                "CkIIIhI+ChphbmRyb2lkLmludGVudC5hY3Rpb24uVklFVwogYW5kcm9pZC5pbnRlbnQuYWN0aW9uLlNDUk"
+                        + "VFTl9PRkY=";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_BROADCASTRECEIVER_ALLOWLIST,
+                encodedAllowlist,
+                /*makeDefault=*/ false);
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        broadcastSdkApi.registerBroadcastReceiver(
+                new ArrayList<>(Arrays.asList(Intent.ACTION_VIEW)));
+        broadcastSdkApi.registerBroadcastReceiver(
+                new ArrayList<>(Arrays.asList(Intent.ACTION_SCREEN_OFF)));
+        broadcastSdkApi.registerBroadcastReceiver(
+                new ArrayList<>(Arrays.asList(Intent.ACTION_VIEW, Intent.ACTION_SCREEN_OFF)));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        broadcastSdkApi.registerBroadcastReceiver(
+                                new ArrayList<>(Arrays.asList(Intent.ACTION_BATTERY_CHANGED))));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        broadcastSdkApi.registerBroadcastReceiver(
+                                new ArrayList<>(Arrays.asList(Intent.ACTION_SEND))));
+        assertThrows(
+                SecurityException.class,
+                () -> broadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
     }
 
     @Test
