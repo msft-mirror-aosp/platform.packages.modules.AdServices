@@ -459,17 +459,15 @@ public class AdServicesHttpsClient {
         }
 
         // Throw the appropriate AdServicesNetworkException exception.
-        LogUtil.e(
-                "Throwing the following AdServicesNetworkException:\n"
-                        + " Error code: %s\n"
-                        + " Error message: %s\n"
-                        + " Retry after: %s",
-                errorCode, serverResponse, retryAfterDuration);
+        AdServicesNetworkException exception;
         if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
-            throw new AdServicesNetworkException(errorCode, serverResponse);
+            exception = new AdServicesNetworkException(errorCode, serverResponse);
         } else {
-            throw new AdServicesNetworkException(errorCode, retryAfterDuration, serverResponse);
+            exception =
+                    new AdServicesNetworkException(errorCode, retryAfterDuration, serverResponse);
         }
+        LogUtil.e("Throwing %s.", exception.toString());
+        throw exception;
     }
 
     private static void maybeDisconnect(@Nullable URLConnection urlConnection) {
