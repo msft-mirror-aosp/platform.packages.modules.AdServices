@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -84,7 +84,7 @@ public class TrustedBiddingDataFetcherTest {
     private static final Uri PATH_2 = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/p2/");
 
     private static final Set<String> RESPONSE_HEADER_KEYS =
-            ImmutableSet.of(DATA_VERSION_HEADER_KEY);
+            ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY);
 
     @Mock private AdServicesHttpsClient mAdServicesHttpsClient;
     @Mock private DevContext mDevContext;
