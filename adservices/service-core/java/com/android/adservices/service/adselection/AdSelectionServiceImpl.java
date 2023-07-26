@@ -255,7 +255,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        () -> Throttler.getInstance(FlagsFactory.getFlags())),
+                        Throttler.getInstance(FlagsFactory.getFlags())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),
@@ -309,6 +309,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mCustomAudienceDao,
                                     mAuctionServerAdSelectionDao,
                                     mAdSelectionServiceFilter,
+                                    mAdFilteringFeatureFactory.getAdFilterer(),
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
                                     mFlags,
@@ -1095,7 +1096,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
         try {
-            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext);
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
             jsScriptEngine.shutdown();
         } catch (JSSandboxIsNotAvailableException exception) {
             sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");

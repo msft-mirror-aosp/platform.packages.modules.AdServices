@@ -20,6 +20,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.android.modules.utils.build.SdkLevel;
+
 import org.junit.AssumptionViolatedException;
 
 import java.lang.annotation.Annotation;
@@ -31,7 +33,8 @@ import java.util.function.Supplier;
  * Rule used to properly check a test behavior depending on whether the device supports a certain
  * SDK level constraint.
  */
-public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
+// TODO(b/284971005): add unit test coverage for rule.
+public final class SdkLevelSupportRule extends AbstractAndroidSupportedFeatureRule {
     private static final String TAG = SdkLevelSupportRule.class.getSimpleName();
     private final Supplier<Boolean> mSdkLevelConstraint;
 
@@ -42,6 +45,11 @@ public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
     public SdkLevelSupportRule(Mode mode, Supplier<Boolean> sdkLevelConstraint) {
         super(mode, TAG);
         this.mSdkLevelConstraint = sdkLevelConstraint;
+    }
+
+    /** Rule that ensures test is executed on Android S+. Skips test otherwise. */
+    public static SdkLevelSupportRule isAtLeastS() {
+        return new SdkLevelSupportRule(SdkLevel::isAtLeastS);
     }
 
     @Override

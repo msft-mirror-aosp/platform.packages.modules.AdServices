@@ -132,6 +132,9 @@ public class ContentValueFixtures {
         public static final int MAX_EVENT_LEVEL_REPORTS = 3;
         public static final String EVENT_REPORT_WINDOWS = "{'end_times': [12, 123]}";
         public static final long SHARED_DEBUG_KEY = 2345L;
+
+        // Added in V22
+        public static final String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
     }
 
     public static class SourceDestinationValues {
@@ -644,6 +647,14 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateSourceContentValuesV22() {
+        ContentValues values = generateSourceContentValuesV21();
+        values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                SourceValues.SHARED_FILTER_DATA_KEYS);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -825,6 +836,18 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
                 TriggerValues.AGGREGATION_COORDINATOR_ORIGIN.toString());
+        return values;
+    }
+
+    public static ContentValues generateTriggerContentValuesV21() {
+        return generateTriggerContentValuesV20();
+    }
+
+    public static ContentValues generateTriggerContentValuesV22() {
+        ContentValues values = generateTriggerContentValuesV21();
+        values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                SourceValues.SHARED_FILTER_DATA_KEYS);
         return values;
     }
 

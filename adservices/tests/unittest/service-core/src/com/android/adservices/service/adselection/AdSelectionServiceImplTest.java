@@ -4497,7 +4497,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
+        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any(), any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4531,7 +4531,7 @@ public class AdSelectionServiceImplTest {
     public void testJSScriptEngineConnectionExceptionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
         doThrow(JSSandboxIsNotAvailableException.class)
-                .when(() -> JSScriptEngine.getInstance(any()));
+                .when(() -> JSScriptEngine.getInstance(any(), any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(

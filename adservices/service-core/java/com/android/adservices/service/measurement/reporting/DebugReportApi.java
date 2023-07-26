@@ -115,6 +115,7 @@ public class DebugReportApi {
                 new SourceNoiseHandler(flags));
     }
 
+    // TODO(b/292009320): Keep only one constructor in DebugReportApi
     @VisibleForTesting
     DebugReportApi(
             Context context,
@@ -126,6 +127,20 @@ public class DebugReportApi {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
+    }
+
+    @VisibleForTesting
+    public DebugReportApi(
+            Context context,
+            Flags flags,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler,
+            DatastoreManager datastoreManager) {
+        mContext = context;
+        mFlags = flags;
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
+        mDatastoreManager = datastoreManager;
     }
 
     /** Schedules the Source Success Debug Report */

@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.topics;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
+import android.platform.test.option.StringOption;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -30,6 +31,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,7 +47,14 @@ public class GetTopicsApiCall {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final String SDKNAME = "sdk1";
+    private static final String DEFAULT_SDKNAME = "sdk1";
+
+    private static final String OPTION_SDKNAME = "sdk_name";
+
+    // To supply value, use {@code -e sdk_name sdk1} in the instrumentation command.
+    @Rule
+    public StringOption sdkOption =
+            new StringOption(OPTION_SDKNAME).setRequired(false).setDefault(DEFAULT_SDKNAME);
 
     @Before
     public void setup() {
@@ -75,7 +84,7 @@ public class GetTopicsApiCall {
         AdvertisingTopicsClient advertisingTopicsClient =
                 new android.adservices.clients.topics.AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
-                        .setSdkName(SDKNAME)
+                        .setSdkName(sdkOption.get())
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 

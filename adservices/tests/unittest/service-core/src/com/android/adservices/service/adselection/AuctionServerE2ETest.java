@@ -137,7 +137,7 @@ public class AuctionServerE2ETest {
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
                     .setCustomAudienceName("test-name")
-                    .setCustomAudienceOwner("test-owner")
+                    .setBuyer("test-buyer.com")
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();

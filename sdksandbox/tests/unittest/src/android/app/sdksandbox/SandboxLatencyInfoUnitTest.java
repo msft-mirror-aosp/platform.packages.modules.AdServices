@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox;
+package android.app.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -54,9 +54,16 @@ public class SandboxLatencyInfoUnitTest {
     }
 
     @Test
-    public void testTimeSandboxCalledSdk() {
-        final SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
-        assertThat(sandboxLatencyInfo.getTimeSandboxCalledSdk()).isEqualTo(TIME_SANDBOX_CALLED_SDK);
+    public void testMethodIsSet() {
+        final SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
+        assertThat(sandboxLatencyInfo.getMethod()).isEqualTo(SandboxLatencyInfo.METHOD_LOAD_SDK);
+    }
+
+    @Test
+    public void testMethodIsUnspecified() {
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        assertThat(sandboxLatencyInfo.getMethod()).isEqualTo(SandboxLatencyInfo.METHOD_UNSPECIFIED);
     }
 
     @Test

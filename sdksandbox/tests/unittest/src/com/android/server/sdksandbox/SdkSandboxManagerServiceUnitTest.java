@@ -48,6 +48,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.DeviceSupportUtils;
@@ -89,7 +90,6 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
@@ -141,6 +141,8 @@ public class SdkSandboxManagerServiceUnitTest {
     private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
             ArgumentCaptor.forClass(ActivityInterceptorCallback.class);
     private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
+    private boolean mDisabledNetworkChecks;
+    private boolean mDisabledForegroundCheck;
 
     @Mock private IBinder mAdServicesManager;
 
@@ -344,15 +346,26 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     private void disableForegroundCheck() {
-        Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+        if (!mDisabledForegroundCheck) {
+            Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+            mDisabledForegroundCheck = true;
+        }
     }
 
     /* Ignores network permission checks. */
     private void disableNetworkPermissionChecks() {
-        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
-                Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
-        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
-                Mockito.eq("android.permission.ACCESS_NETWORK_STATE"), Mockito.anyString());
+        if (!mDisabledNetworkChecks) {
+            Mockito.doNothing()
+                    .when(mSpyContext)
+                    .enforceCallingPermission(
+                            Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
+            Mockito.doNothing()
+                    .when(mSpyContext)
+                    .enforceCallingPermission(
+                            Mockito.eq("android.permission.ACCESS_NETWORK_STATE"),
+                            Mockito.anyString());
+            mDisabledNetworkChecks = true;
+        }
     }
 
     @Test
