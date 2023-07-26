@@ -751,7 +751,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        final SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
         try {
             // Log the IPC latency from app to system server
             final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
