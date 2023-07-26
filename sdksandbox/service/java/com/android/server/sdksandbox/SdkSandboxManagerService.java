@@ -202,8 +202,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private final UidImportanceListener mUidImportanceListener = new UidImportanceListener();
 
-    private final String mAdServicesPackageName;
-
     private Injector mInjector;
 
     private final SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
@@ -285,6 +283,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
         private final SdkSandboxServiceProvider mServiceProvider;
+        private boolean mAdServicePackageNameResolved;
+        private @Nullable String mAdServicesPackageName;
 
         Injector(Context context) {
             mContext = context;
@@ -293,6 +293,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         private static final boolean IS_EMULATOR =
                 SystemProperties.getBoolean("ro.boot.qemu", false);
+
+        void resolveAdServicesPackage() {
+            if (mAdServicePackageNameResolved) {
+                return;
+            }
+            PackageManager pm = mContext.getPackageManager();
+            Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
+            List<ResolveInfo> resolveInfos =
+                    pm.queryIntentServicesAsUser(
+                            serviceIntent,
+                            PackageManager.GET_SERVICES
+                                    | PackageManager.MATCH_SYSTEM_ONLY
+                                    | PackageManager.MATCH_DIRECT_BOOT_AWARE
+                                    | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
+                            UserHandle.SYSTEM);
+            ServiceInfo serviceInfo =
+                    AdServicesCommon.resolveAdServicesService(
+                            resolveInfos, serviceIntent.getAction());
+            if (serviceInfo != null) {
+                mAdServicesPackageName = serviceInfo.packageName;
+            }
+            Log.w(TAG, "AdServices apk missing");
+            mAdServicePackageNameResolved = true;
+        }
 
         long getCurrentTime() {
             return System.currentTimeMillis();
@@ -330,6 +354,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkSandboxManagerLocal getLocalManager() {
             return mLocalManager;
         }
+
+        String getAdServicesPackageName() {
+            resolveAdServicesPackage();
+            return mAdServicesPackageName;
+        }
+
+        boolean isAdServiceApkPresent() {
+            resolveAdServicesPackage();
+            return mAdServicesPackageName != null;
+        }
     }
 
     SdkSandboxManagerService(Context context) {
@@ -362,7 +396,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         registerBroadcastReceivers();
 
-        mAdServicesPackageName = resolveAdServicesPackage();
         mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext);
         mSdkSandboxSettingsListener.registerObserver();
         mSdkSandboxPulledAtoms.initialize(mContext);
@@ -1269,6 +1302,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             writer.println("AdServicesManager binder published: " + mAdServicesManagerPublished);
         }
+        if (mInjector.isAdServiceApkPresent()) {
+            writer.println("AdService package name: " + mInjector.getAdServicesPackageName());
+        } else {
+            writer.println("AdService apk not present.");
+        }
+        writer.println();
 
         writer.println("mServiceProvider:");
         mServiceProvider.dump(writer);
@@ -1721,6 +1760,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     Log.w(TAG, "Could not verify SDK sandbox state", e);
                     return true;
                 }
+            }
+
+            if (!mInjector.isAdServiceApkPresent()) {
+                return true;
             }
 
             // Disable immediately if visibility patch is missing
@@ -2272,7 +2315,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             if ((componentPackageName != null)
                     && (componentPackageName.equals(
                                     WebViewUpdateService.getCurrentWebViewPackageName())
-                            || componentPackageName.equals(getAdServicesPackageName()))) {
+                            || componentPackageName.equals(mInjector.getAdServicesPackageName()))) {
                 return;
             }
         }
@@ -2304,25 +2347,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         args);
     }
 
-    private String resolveAdServicesPackage() {
-        PackageManager pm = mContext.getPackageManager();
-        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
-        List<ResolveInfo> resolveInfos =
-                pm.queryIntentServicesAsUser(
-                        serviceIntent,
-                        PackageManager.GET_SERVICES
-                                | PackageManager.MATCH_SYSTEM_ONLY
-                                | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                        UserHandle.SYSTEM);
-        final ServiceInfo serviceInfo =
-                AdServicesCommon.resolveAdServicesService(resolveInfos, serviceIntent.getAction());
-        if (serviceInfo != null) {
-            return serviceInfo.packageName;
-        }
-        return null;
-    }
-
     private ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
             ApplicationInfo clientAppInfo, int userId, boolean isSdkInSandbox)
             throws PackageManager.NameNotFoundException {
@@ -2348,11 +2372,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 getLocalManager().getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
 
         return sdkSandboxInfoForInstrumentation;
-    }
-
-    @VisibleForTesting
-    String getAdServicesPackageName() {
-        return mAdServicesPackageName;
     }
 
     /**
