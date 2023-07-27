@@ -284,6 +284,7 @@ class LoadSdkSession {
     void handleLoadSuccess(
             long timeSystemServerReceivedCallFromSandbox, SandboxLatencyInfo sandboxLatencyInfo) {
         final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
@@ -310,8 +311,7 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkSuccess(
-                    getSandboxedSdk(), timeSystemServerCalledApp, sandboxLatencyInfo);
+            mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
         }
@@ -324,6 +324,7 @@ class LoadSdkSession {
             boolean successAtStage,
             SandboxLatencyInfo sandboxLatencyInfo) {
         final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
         if (stage != SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -352,8 +353,7 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkFailure(
-                    exception, timeSystemServerCalledApp, sandboxLatencyInfo);
+            mLoadCallback.onLoadSdkFailure(exception, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeFailure", e);
         }

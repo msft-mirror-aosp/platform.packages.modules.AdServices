@@ -794,9 +794,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (Throwable e) {
             try {
                 Log.e(TAG, "Failed to load SDK " + sdkName, e);
+                sandboxLatencyInfo.setTimeSystemServerCalledApp(System.currentTimeMillis());
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
-                        System.currentTimeMillis(),
                         sandboxLatencyInfo);
             } catch (RemoteException ex) {
                 Log.e(TAG, "Failed to send onLoadCodeFailure", e);
@@ -1387,6 +1387,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
         // TODO(b/287047664): log latencies for all stages here.
+        int method = convertToStatsLogMethodCode(sandboxLatencyInfo.getMethod());
+        if (method == SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED) {
+            return;
+        }
+
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                method,
+                sandboxLatencyInfo.getSystemServerToAppLatency(),
+                sandboxLatencyInfo.isSuccessfulAtSystemServerToApp(),
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
+                Binder.getCallingUid());
     }
 
     @Override
@@ -1398,6 +1410,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 /*success=*/ true,
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_APP,
                 Binder.getCallingUid());
+    }
+
+    private int convertToStatsLogMethodCode(int method) {
+        switch (method) {
+            case SandboxLatencyInfo.METHOD_LOAD_SDK:
+                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
+            default:
+                return SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED;
+        }
     }
 
     private int convertToStatsLogMethodCode(String method) {
