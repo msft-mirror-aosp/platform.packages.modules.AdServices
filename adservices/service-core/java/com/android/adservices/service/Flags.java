@@ -2618,6 +2618,25 @@ public interface Flags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
+    /** Disable maximum number of aggregatable reports per source by default. */
+    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
+
+    /**
+     * Returns true if maximum number of aggregatable reports per source is enabled, false
+     * otherwise.
+     */
+    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum Aggregate Reports per source. */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE = 20;
+
+    /** Returns maximum Aggregate Reports per source. */
+    default int getMeasurementMaxAggregateReportsPerSource() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
     /** Default minimum event report delay in milliseconds */
     long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
 
