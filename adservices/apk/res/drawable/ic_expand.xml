@@ -20,7 +20,7 @@
     android:height="28dp">
     <path
         android:pathData="M14 0H14A14 14 0 0 1 28 14V14A14 14 0 0 1 14 28H14A14 14 0 0 1 0 14V14A14 14 0 0 1 14 0Z"
-        android:fillColor="@color/settingslib_colorAccentPrimary" />
+        android:fillColor="@color/adservices_colorAccentPrimary" />
     <path
         android:pathData="M8.50825 10.325L7.33325 11.5L13.9999 18.1667L20.6666 11.5L19.4916 10.325L13.9999 15.8083"
         android:fillColor="#000000" />

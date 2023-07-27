@@ -654,8 +654,7 @@ public class AsyncSourceFetcher {
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
 
-        builder.setPlatformAdId(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+        builder.setPlatformAdId(asyncRegistration.getPlatformAdId());
 
         List<String> field =
                 headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
@@ -689,6 +688,13 @@ public class AsyncSourceFetcher {
                 JSONArray sharedAggregationKeys =
                         json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
                 builder.setSharedAggregationKeys(sharedAggregationKeys.toString());
+            }
+            if (mFlags.getMeasurementEnableSharedFilterDataKeysXNA()
+                    && !json.isNull(SourceHeaderContract.SHARED_FILTER_DATA_KEYS)) {
+                // Parsed as JSONArray for validation
+                JSONArray sharedFilterDataKeys =
+                        json.getJSONArray(SourceHeaderContract.SHARED_FILTER_DATA_KEYS);
+                builder.setSharedFilterDataKeys(sharedFilterDataKeys.toString());
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
@@ -848,6 +854,7 @@ public class AsyncSourceFetcher {
         String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String SHARED_DEBUG_KEY = "shared_debug_key";
+        String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
     }
 
     private interface SourceRequestContract {

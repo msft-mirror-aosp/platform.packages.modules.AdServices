@@ -41,6 +41,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.util.AdIdEncryption;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MsmtAdIdMatchForDebugKeysStats;
@@ -63,7 +64,15 @@ public class DebugKeyAccessorTest {
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(222222L);
     private static final long DEFAULT_JOIN_KEY_HASH_LIMIT = 100;
     private static final long DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT = 5;
-    public static final String PARENT_SOURCE_ID = "parentSourceId";
+    private static final String PARENT_SOURCE_ID = "parentSourceId";
+    private static final String TEST_ACTUAL_AD_ID_1 = "12345678-1234-1234-1234-123456789012";
+    private static final String TEST_ACTUAL_AD_ID_2 = "22345678-1234-1234-1234-123456789012";
+    private static final String TEST_SHA_ENCRYPTED_AD_ID_1 =
+            AdIdEncryption.encryptAdIdAndEnrollmentSha256(
+                    TEST_ACTUAL_AD_ID_1, ValidTriggerParams.ENROLLMENT_ID);
+    private static final String TEST_SHA_ENCRYPTED_AD_ID_2 =
+            AdIdEncryption.encryptAdIdAndEnrollmentSha256(
+                    TEST_ACTUAL_AD_ID_2, ValidTriggerParams.ENROLLMENT_ID);
 
     @Mock private Flags mFlags;
     @Mock private AdServicesLogger mAdServicesLogger;
@@ -1610,7 +1619,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1640,7 +1649,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -1650,7 +1659,47 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_encryptedAdIdMatching_appToWeb_matchingAdIds_debugKeysPresent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1680,7 +1729,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id1",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -1690,7 +1739,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id2");
+                        TEST_SHA_ENCRYPTED_AD_ID_2);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1720,7 +1769,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         "test-debug-key",
-                        "test-ad-id1",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -1730,7 +1779,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         "test-debug-key",
                         null,
-                        "test-ad-id2");
+                        TEST_SHA_ENCRYPTED_AD_ID_2);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1764,7 +1813,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -1774,7 +1823,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1795,7 +1844,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -1805,7 +1854,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1827,7 +1876,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -1837,7 +1886,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -1897,7 +1946,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1937,7 +1986,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1945,7 +1994,47 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_encryptedAdIdMatching_webToApp_matchingAdIds_debugKeysPresent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -1977,7 +2066,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id1");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1985,7 +2074,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id2",
+                        TEST_ACTUAL_AD_ID_2,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2017,7 +2106,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         "test-debug-key",
                         null,
-                        "test-ad-id1");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2025,7 +2114,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         "test-debug-key",
-                        "test-ad-id2",
+                        TEST_ACTUAL_AD_ID_2,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2061,7 +2150,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2069,7 +2158,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2092,7 +2181,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2100,7 +2189,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2124,7 +2213,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2132,7 +2221,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2203,7 +2292,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2233,7 +2322,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2243,7 +2332,47 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_encryptedAdIdAppToWeb_matchingAdIds_sourceDebugKeyPresent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2273,7 +2402,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id1",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2283,7 +2412,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id2");
+                        TEST_SHA_ENCRYPTED_AD_ID_2);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2313,7 +2442,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         "test-debug-key",
-                        "test-ad-id1",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2323,7 +2452,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         "test-debug-key",
                         null,
-                        "test-ad-id2");
+                        TEST_SHA_ENCRYPTED_AD_ID_2);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2357,7 +2486,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2367,7 +2496,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2388,7 +2517,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2398,7 +2527,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2420,7 +2549,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2430,7 +2559,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -2491,7 +2620,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2531,7 +2660,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2539,7 +2668,47 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_encryptedAdIdWebToApp_matchingAdIds_sourceDebugKeyPresent()
+            throws DatastoreException {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2571,7 +2740,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id1");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2579,7 +2748,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id2",
+                        TEST_ACTUAL_AD_ID_2,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2611,7 +2780,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         "test-debug-key",
                         null,
-                        "test-ad-id1");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2619,7 +2788,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         "test-debug-key",
-                        "test-ad-id2",
+                        TEST_ACTUAL_AD_ID_2,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2655,7 +2824,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2663,7 +2832,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2686,7 +2855,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2694,7 +2863,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2718,7 +2887,7 @@ public class DebugKeyAccessorTest {
                         ValidSourceParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2726,7 +2895,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2939,7 +3108,7 @@ public class DebugKeyAccessorTest {
                                         false,
                                         ValidSourceParams.REGISTRANT,
                                         null,
-                                        "test-ad-id",
+                                        TEST_ACTUAL_AD_ID_1,
                                         null))
                         .setParentId(PARENT_SOURCE_ID)
                         .build();
@@ -2951,7 +3120,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
@@ -2983,7 +3152,7 @@ public class DebugKeyAccessorTest {
                                         ValidSourceParams.REGISTRANT,
                                         null,
                                         null,
-                                        "test-ad-id"))
+                                        TEST_ACTUAL_AD_ID_1))
                         .setParentId(PARENT_SOURCE_ID)
                         .build();
         Trigger trigger =
@@ -2993,7 +3162,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -3046,7 +3215,7 @@ public class DebugKeyAccessorTest {
                                         false,
                                         ValidSourceParams.REGISTRANT,
                                         null,
-                                        "test-ad-id",
+                                        TEST_ACTUAL_AD_ID_1,
                                         null))
                         .setParentId(PARENT_SOURCE_ID)
                         .build();
@@ -3058,7 +3227,7 @@ public class DebugKeyAccessorTest {
                         ValidTriggerParams.REGISTRANT,
                         null,
                         null,
-                        "test-ad-id");
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
@@ -3120,7 +3289,7 @@ public class DebugKeyAccessorTest {
                                         ValidSourceParams.REGISTRANT,
                                         null,
                                         null,
-                                        "test-ad-id"))
+                                        TEST_SHA_ENCRYPTED_AD_ID_1))
                         .setParentId(PARENT_SOURCE_ID)
                         .build();
         Trigger trigger =
@@ -3130,7 +3299,7 @@ public class DebugKeyAccessorTest {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        "test-ad-id",
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =

@@ -111,6 +111,10 @@ public class UiUtils {
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
     }
 
+    public static void enableU18() {
+        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+    }
+
     public static void enableGa() {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
     }
@@ -293,6 +297,13 @@ public class UiUtils {
             } else {
                 rightControlButton.click();
             }
+
+            rightControlButton =
+                    getUiElement(
+                            device,
+                            context,
+                            R.string.notificationUI_confirmation_right_control_button_text);
+            rightControlButton.click();
         } else {
             leftControlButton.click();
             Thread.sleep(1000);

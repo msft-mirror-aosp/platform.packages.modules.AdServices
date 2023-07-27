@@ -22,34 +22,28 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 import java.util.Objects;
 
 /** Handles the BootCompleted initialization for AdExtServices APK on S-. */
 // TODO(b/269798827): Enable for R.
-// TODO(b/274675141): add e2e test for boot complete receiver
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdExtBootCompletedReceiver extends BroadcastReceiver {
-
     @Override
     public void onReceive(Context context, Intent intent) {
         LogUtil.i("AdExtBootCompletedReceiver onReceive invoked");
 
-        // TODO(b/269798827): Enable for R.
         // On T+ devices, always disable the AdExtServices activities and services.
-        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
-                && Build.VERSION.SDK_INT != Build.VERSION_CODES.S_V2) {
+        if (SdkLevel.isAtLeastT()) {
             // If this is not an S- device, disable the activities, services, unregister the
             // broadcast receivers, and unschedule any background jobs.
             unregisterPackageChangedBroadcastReceivers(context);

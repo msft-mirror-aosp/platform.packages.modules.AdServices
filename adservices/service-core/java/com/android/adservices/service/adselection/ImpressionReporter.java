@@ -40,7 +40,6 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -443,10 +442,10 @@ public class ImpressionReporter {
         return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
                         dbAdSelectionEntry -> {
-                            LogUtil.v(
+                            sLogger.v(
                                     "DecisionLogicJs from db entry: "
                                             + dbAdSelectionEntry.getBuyerDecisionLogicJs());
-                            LogUtil.v(
+                            sLogger.v(
                                     "DecisionLogicUri from db entry: "
                                             + dbAdSelectionEntry.getBiddingLogicUri().toString());
                             ReportingContext ctx = new ReportingContext();

@@ -36,7 +36,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
 // TODO(b/269798827): Enable for R.
@@ -49,7 +48,7 @@ public abstract class AbstractFledgeServiceFilter {
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
-    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
+    @NonNull private final Throttler mThrottler;
 
     public AbstractFledgeServiceFilter(
             @NonNull Context context,
@@ -58,14 +57,14 @@ public abstract class AbstractFledgeServiceFilter {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Supplier<Throttler> throttlerSupplier) {
+            @NonNull Throttler throttler) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
-        Objects.requireNonNull(throttlerSupplier);
+        Objects.requireNonNull(throttler);
 
         mContext = context;
         mConsentManager = consentManager;
@@ -73,7 +72,7 @@ public abstract class AbstractFledgeServiceFilter {
         mAppImportanceFilter = appImportanceFilter;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
-        mThrottlerSupplier = throttlerSupplier;
+        mThrottler = throttler;
     }
 
     /**
@@ -187,8 +186,7 @@ public abstract class AbstractFledgeServiceFilter {
     protected void assertCallerNotThrottled(final String callerPackageName, Throttler.ApiKey apiKey)
             throws LimitExceededException {
         sLogger.v("Checking if API is throttled for package: %s ", callerPackageName);
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled = !throttler.tryAcquire(apiKey, callerPackageName);
+        boolean isThrottled = !mThrottler.tryAcquire(apiKey, callerPackageName);
 
         if (isThrottled) {
             sLogger.e(String.format("Rate Limit Reached for API: %s", apiKey));

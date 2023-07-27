@@ -636,12 +636,6 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao,
             EventTrigger eventTrigger)
             throws DatastoreException {
-        try {
-            source.buildFlexibleEventReportApi();
-        } catch (JSONException e) {
-            LogUtil.e("Source::buildFlexibleEventReportApi caught JSON exception");
-            return false;
-        }
         ReportSpec reportSpec = source.getFlexEventReportSpec();
         if (!reportSpec.containsTriggerData(newEventReport.getTriggerData())) {
             return false;
@@ -653,18 +647,18 @@ class AttributionJobHandler {
             // the new proposed report doesn't cause bucket increments so no new report
             // generated
             reportSpec.insertAttributedTrigger(newEventReport);
+            if (eventTrigger.getDedupKey() != null) {
+                source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+                measurementDao.updateSourceEventReportDedupKeys(source);
+            }
         } else {
             List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
             if (sourceEventReports.size() + bucketIncrements <= reportSpec.getMaxReports()) {
                 // there are enough quota to generate all report for this trigger. No competing
                 // condition
                 reportSpec.insertAttributedTrigger(newEventReport);
-                for (int i = 0; i < bucketIncrements; i++) {
-                    // 1 bucket increment lead to 1 report so multiple report with same content
-                    // may be inserted.
-                    finalizeEventReportCreation(
-                            source, eventTrigger, newEventReport, measurementDao);
-                }
+                finalizeMultipleEventReportCreation(
+                        source, eventTrigger, newEventReport, measurementDao, bucketIncrements);
             } else {
                 // competing condition: more event report candidate than allowed quota
                 Pair<List<EventReport>, Integer> tmp =
@@ -674,15 +668,19 @@ class AttributionJobHandler {
                 int numOfNewReportGenerated = tmp.second;
                 for (EventReport report : toBeDeletedReports) {
                     measurementDao.deleteEventReport(report);
+                    if (report.getTriggerDedupKey() != null) {
+                        source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
+                    }
                 }
-                for (int i = 0; i < numOfNewReportGenerated; i++) {
-                    finalizeEventReportCreation(
-                            source, eventTrigger, newEventReport, measurementDao);
-                }
+                finalizeMultipleEventReportCreation(
+                        source,
+                        eventTrigger,
+                        newEventReport,
+                        measurementDao,
+                        numOfNewReportGenerated);
             }
         }
-        measurementDao.updateSourceAttributedTriggers(
-                source.getId(), source.getFlexEventReportSpec());
+        measurementDao.updateSourceAttributedTriggers(source);
         return true;
     }
 
@@ -763,6 +761,22 @@ class AttributionJobHandler {
         measurementDao.updateSourceEventReportDedupKeys(source);
 
         measurementDao.insertEventReport(eventReport);
+    }
+
+    private static void finalizeMultipleEventReportCreation(
+            Source source,
+            EventTrigger eventTrigger,
+            EventReport eventReport,
+            IMeasurementDao measurementDao,
+            int numReport)
+            throws DatastoreException {
+        if (eventTrigger.getDedupKey() != null) {
+            source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+        }
+        measurementDao.updateSourceEventReportDedupKeys(source);
+        for (int i = 0; i < numReport; i++) {
+            measurementDao.insertEventReport(eventReport);
+        }
     }
 
     private static void finalizeAggregateReportCreation(

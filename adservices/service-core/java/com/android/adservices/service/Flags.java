@@ -104,6 +104,14 @@ public interface Flags {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
 
+    /** Privacy budget for logging topic ID distributions with randomized response. */
+    float TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION = 5f;
+
+    /** Returns the privacy budget for logging topic ID distributions with randomized response. */
+    default float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+    }
+
     /** Available types of classifier behaviours for the Topics API. */
     @IntDef(
             flag = true,
@@ -355,6 +363,13 @@ public interface Flags {
         return MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
     }
 
+    boolean MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA = true;
+
+    /** Enable/disable shared_filter_data_keys processing from source RBR. */
+    default boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA;
+    }
+
     boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
 
     /** Returns whether verbose debug report generation is enabled. */
@@ -404,24 +419,26 @@ public interface Flags {
         return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(5);
 
     /**
      * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -2763,5 +2780,53 @@ public interface Flags {
     /** Returns whether the {@code enrollmentMddRecordDeletion} feature is enabled. */
     default boolean getEnrollmentMddRecordDeletionEnabled() {
         return ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
+    }
+
+    /** Default value of whether topics cobalt logging feature is enabled. */
+    boolean TOPICS_COBALT_LOGGING_ENABLED = false;
+
+    /** Returns whether the topics cobalt logging feature is enabled. */
+    default boolean getTopicsCobaltLoggingEnabled() {
+        return TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of Cobalt Adservices Api key. */
+    String COBALT_ADSERVICES_API_KEY_HEX = "cobalt-default-api-key";
+
+    default String getCobaltAdservicesApiKeyHex() {
+        return COBALT_ADSERVICES_API_KEY_HEX;
+    }
+
+    /**
+     * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
+     * logged_topic column to ReturnedTopic table.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_LOGGED_TOPIC = false;
+
+    /** @return if to enable logged_topic column in ReturnedTopic table. */
+    default boolean getEnableLoggedTopic() {
+        return ENABLE_LOGGED_TOPIC;
+    }
+
+    /** Whether to enable database schema version 8 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_8 = false;
+
+    /** @return if to enable database schema version 8. */
+    default boolean getEnableDatabaseSchemaVersion8() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /**
+     * Default whether to limit logging for enrollment metrics to avoid performance issues. This
+     * includes not logging data that requires database queries and downloading MDD files.
+     */
+    boolean ENROLLMENT_ENABLE_LIMITED_LOGGING = false;
+
+    /** Returns whether enrollment logging should be limited. */
+    default boolean getEnrollmentEnableLimitedLogging() {
+        return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 }

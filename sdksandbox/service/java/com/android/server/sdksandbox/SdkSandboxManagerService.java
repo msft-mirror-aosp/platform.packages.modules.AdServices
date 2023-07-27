@@ -47,6 +47,7 @@ import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LogUtil;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
@@ -95,7 +96,6 @@ import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxService;
-import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
@@ -108,6 +108,8 @@ import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.sdksandbox.proto.Services.ServiceAllowlists;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
+
+import com.google.protobuf.Parser;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -749,6 +751,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {
+        final SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
         try {
             // Log the IPC latency from app to system server
             final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
@@ -782,7 +786,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         sdkName,
                         params,
                         callback,
-                        timeSystemServerReceivedCallFromApp);
+                        timeSystemServerReceivedCallFromApp,
+                        sandboxLatencyInfo);
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
@@ -791,7 +796,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Log.e(TAG, "Failed to load SDK " + sdkName, e);
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
-                        System.currentTimeMillis());
+                        System.currentTimeMillis(),
+                        sandboxLatencyInfo);
             } catch (RemoteException ex) {
                 Log.e(TAG, "Failed to send onLoadCodeFailure", e);
             }
@@ -803,12 +809,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String sdkName,
             Bundle params,
             ILoadSdkCallback callback,
-            long timeSystemServerReceivedCallFromApp) {
+            long timeSystemServerReceivedCallFromApp,
+            SandboxLatencyInfo sandboxLatencyInfo) {
         LoadSdkSession loadSdkSession =
                 new LoadSdkSession(
                         mContext, this, mInjector, sdkName, callingInfo, params, callback);
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
-
         // SDK provider was invalid. This load request should fail.
         String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
         if (!TextUtils.isEmpty(errorMsg)) {
@@ -819,7 +824,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                     /*successAtStage=*/ false,
                     sandboxLatencyInfo);
-
             return;
         }
 
@@ -886,25 +890,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // Callback to be invoked once the sandbox has been created;
         SandboxBindingCallback sandboxBindingCallback =
                 createSdkLoadCallback(loadSdkSession, timeSystemServerReceivedCallFromApp);
-        startSdkSandboxIfNeeded(callingInfo, sandboxBindingCallback);
+        startSdkSandboxIfNeeded(callingInfo, sandboxBindingCallback, sandboxLatencyInfo);
     }
 
     private SandboxBindingCallback createSdkLoadCallback(
             LoadSdkSession loadSdkSession, long timeSystemServerReceivedCallFromApp) {
         return new SandboxBindingCallback() {
             @Override
-            public void onBindingSuccessful(ISdkSandboxService service, int timeToLoadSandbox) {
+            public void onBindingSuccessful(
+                    ISdkSandboxService service,
+                    int timeToLoadSandbox,
+                    SandboxLatencyInfo sandboxLatencyInfo) {
                 loadSdkForService(
                         loadSdkSession,
                         timeToLoadSandbox,
                         timeSystemServerReceivedCallFromApp,
-                        service);
+                        service,
+                        sandboxLatencyInfo);
             }
 
             @Override
             public void onBindingFailed(
-                    LoadSdkException exception, long startTimeForLoadingSandbox) {
-                final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+                    LoadSdkException exception,
+                    long startTimeForLoadingSandbox,
+                    SandboxLatencyInfo sandboxLatencyInfo) {
                 loadSdkSession.handleLoadFailure(
                         exception,
                         /*startTimeOfErrorStage=*/ startTimeForLoadingSandbox,
@@ -915,7 +924,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         };
     }
 
-    void startSdkSandboxIfNeeded(CallingInfo callingInfo, SandboxBindingCallback callback) {
+    void startSdkSandboxIfNeeded(
+            CallingInfo callingInfo,
+            SandboxBindingCallback callback,
+            SandboxLatencyInfo sandboxLatencyInfo) {
 
         boolean isSandboxStartRequired = false;
         synchronized (mLock) {
@@ -943,9 +955,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 LoadSdkException exception =
                         new LoadSdkException(
                                 SDK_SANDBOX_PROCESS_NOT_AVAILABLE, SANDBOX_NOT_AVAILABLE_MSG);
-                callback.onBindingFailed(exception, startTimeForLoadingSandbox);
+                callback.onBindingFailed(exception, startTimeForLoadingSandbox, sandboxLatencyInfo);
             }
-            callback.onBindingSuccessful(service, -1);
+            callback.onBindingSuccessful(service, -1, sandboxLatencyInfo);
             return;
         }
 
@@ -956,7 +968,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mServiceProvider.bindService(
                 callingInfo,
                 new SandboxServiceConnection(
-                        mServiceProvider, callingInfo, startTimeForLoadingSandbox));
+                        mServiceProvider,
+                        callingInfo,
+                        startTimeForLoadingSandbox,
+                        sandboxLatencyInfo));
     }
 
     private void addSandboxBindingCallback(
@@ -1370,6 +1385,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
+    public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
+        // TODO(b/287047664): log latencies for all stages here.
+    }
+
+    @Override
     public void logLatencyFromSystemServerToApp(String method, int latency) {
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -1392,9 +1412,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     interface SandboxBindingCallback {
-        void onBindingSuccessful(ISdkSandboxService service, int timeToLoadSandbox);
+        void onBindingSuccessful(
+                ISdkSandboxService service,
+                int timeToLoadSandbox,
+                SandboxLatencyInfo sandboxLatencyInfo);
 
-        void onBindingFailed(LoadSdkException exception, long startTimeForLoadingSandbox);
+        void onBindingFailed(
+                LoadSdkException exception,
+                long startTimeForLoadingSandbox,
+                SandboxLatencyInfo sandboxLatencyInfo);
     }
 
     class SandboxServiceConnection implements ServiceConnection {
@@ -1403,15 +1429,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final CallingInfo mCallingInfo;
         private boolean mHasConnectedBefore = false;
         private long mStartTimeForLoadingSandbox;
-
+        private SandboxLatencyInfo mSandboxLatencyInfo;
 
         SandboxServiceConnection(
                 SdkSandboxServiceProvider serviceProvider,
                 CallingInfo callingInfo,
-                long startTimeForLoadingSandbox) {
+                long startTimeForLoadingSandbox,
+                SandboxLatencyInfo sandboxLatencyInfo) {
             mServiceProvider = serviceProvider;
             mCallingInfo = callingInfo;
             mStartTimeForLoadingSandbox = startTimeForLoadingSandbox;
+            mSandboxLatencyInfo = sandboxLatencyInfo;
         }
 
         @Override
@@ -1450,7 +1478,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     clearAndGetSandboxBindingCallbacks();
             for (int i = 0; i < sandboxBindingCallbacksForApp.size(); i++) {
                 SandboxBindingCallback callback = sandboxBindingCallbacksForApp.get(i);
-                callback.onBindingSuccessful(mService, timeToLoadSandbox);
+                callback.onBindingSuccessful(mService, timeToLoadSandbox, mSandboxLatencyInfo);
             }
         }
 
@@ -1483,7 +1511,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     clearAndGetSandboxBindingCallbacks();
             for (int i = 0; i < sandboxBindingCallbacksForApp.size(); i++) {
                 SandboxBindingCallback callback = sandboxBindingCallbacksForApp.get(i);
-                callback.onBindingFailed(exception, mStartTimeForLoadingSandbox);
+                callback.onBindingFailed(
+                        exception, mStartTimeForLoadingSandbox, mSandboxLatencyInfo);
             }
         }
 
@@ -1917,85 +1946,57 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return null;
         }
 
-        private static Map<Integer, AllowedServices> getServicesAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_SERVICES_ALLOWLIST);
-
-            if (Objects.isNull(decode)) {
-                return new ArrayMap<>();
-            }
-
-            try {
-                final ServiceAllowlists allowedServicesProto = ServiceAllowlists.parseFrom(decode);
-
-                if (allowedServicesProto != null) {
-                    return allowedServicesProto.getAllowlistPerTargetSdkMap();
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Error while parsing " + PROPERTY_SERVICES_ALLOWLIST + ". Error: ", e);
-            }
-            return new ArrayMap<>();
-        }
-
-        private AllowedServices getNextServiceDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_SERVICE_ALLOWLIST);
-
+        @Nullable
+        private static <T> T getDeviceConfigProtoProperty(
+                Parser<T> parser, @NonNull String property) {
+            final byte[] decode = getDecodedPropertyValue(property);
             if (Objects.isNull(decode)) {
                 return null;
             }
 
+            T proto = null;
             try {
-                AllowedServices allowedServices = AllowedServices.parseFrom(decode);
-                if (allowedServices != null) {
-                    return allowedServices;
-                }
+                proto = parser.parseFrom(decode);
             } catch (Exception e) {
-                Log.e(
-                        TAG,
-                        "Error while parsing " + PROPERTY_NEXT_SERVICE_ALLOWLIST + ". Error: ",
-                        e);
+                Log.e(TAG, "Error while parsing " + property + ". Error: ", e);
             }
-            return null;
+
+            return proto;
         }
 
+        @NonNull
+        private static Map<Integer, AllowedServices> getServicesAllowlist() {
+            final ServiceAllowlists allowedServicesProto =
+                    getDeviceConfigProtoProperty(
+                            ServiceAllowlists.parser(), PROPERTY_SERVICES_ALLOWLIST);
+            return allowedServicesProto == null
+                    ? new ArrayMap<>()
+                    : allowedServicesProto.getAllowlistPerTargetSdkMap();
+        }
+
+        @Nullable
+        private AllowedServices getNextServiceDeviceConfigAllowlist() {
+            return getDeviceConfigProtoProperty(
+                    AllowedServices.parser(), PROPERTY_NEXT_SERVICE_ALLOWLIST);
+        }
+
+        @NonNull
         private static Map<Integer, AllowedContentProviders>
                 getContentProviderDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_CONTENTPROVIDER_ALLOWLIST);
-
+            final ContentProviderAllowlists contentProviderAllowlistsProto =
+                    getDeviceConfigProtoProperty(
+                            ContentProviderAllowlists.parser(), PROPERTY_CONTENTPROVIDER_ALLOWLIST);
             // Content providers are restricted by default. If the property is not set, or it is an
             // empty string, there are no content providers to allowlist.
-            if (Objects.isNull(decode)) {
-                return new ArrayMap<>();
-            }
-
-            ContentProviderAllowlists contentProviderAllowlistsProto = null;
-            try {
-                contentProviderAllowlistsProto = ContentProviderAllowlists.parseFrom(decode);
-            } catch (Exception e) {
-                Log.e(TAG, "Could not parse content provider allowlist " + e);
-            }
-            if (contentProviderAllowlistsProto != null) {
-                return contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
-            }
-            return new ArrayMap<>();
+            return contentProviderAllowlistsProto == null
+                    ? new ArrayMap<>()
+                    : contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
         }
 
+        @Nullable
         private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist() {
-            final byte[] decode = getDecodedPropertyValue(PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
-
-            // Content providers are restricted by default. If the property is not set, or it is an
-            // empty string, there are no content providers to allowlist.
-            if (Objects.isNull(decode)) {
-                return null;
-            }
-
-            AllowedContentProviders allowedContentProvidersProto = null;
-            try {
-                allowedContentProvidersProto = AllowedContentProviders.parseFrom(decode);
-            } catch (Exception e) {
-                Log.e(TAG, "Could not parse content provider canary allowlist " + e);
-            }
-
-            return allowedContentProvidersProto;
+            return getDeviceConfigProtoProperty(
+                    AllowedContentProviders.parser(), PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
         }
     }
 
@@ -2121,9 +2122,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             LoadSdkSession loadSdkSession,
             int timeToLoadSandbox,
             long timeSystemServerReceivedCallFromApp,
-            ISdkSandboxService service) {
+            ISdkSandboxService service,
+            SandboxLatencyInfo sandboxLatencyInfo) {
         CallingInfo callingInfo = loadSdkSession.mCallingInfo;
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
 
         if (isSdkSandboxDisabled(service)) {
             Log.e(TAG, "SDK cannot be loaded because SDK sandbox is disabled");

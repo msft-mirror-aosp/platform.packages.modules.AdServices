@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -55,12 +56,12 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -96,7 +97,6 @@ import com.google.common.util.concurrent.Futures;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -183,6 +183,8 @@ public class FrequencyCapFilteringE2ETest {
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private CallerMetadata mCallerMetadataMock;
     @Mock private File mAdSelectionDbFileMock;
+    @Mock private AppImportanceFilter mAppImportanceFilterMock;
+    @Mock private FledgeAllowListsFilter mFledgeAllowListsFilterMock;
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private CustomAudienceDao mCustomAudienceDao;
@@ -190,12 +192,12 @@ public class FrequencyCapFilteringE2ETest {
     private FrequencyCapDao mFrequencyCapDaoSpy;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private ReportingUrisDao mReportingUrisDao;
+    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
 
-    private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+    private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     private AdSelectionServiceImpl mAdSelectionServiceImpl;
@@ -233,21 +235,22 @@ public class FrequencyCapFilteringE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mReportingUrisDao = serverDb.reportingUrisDao();
+        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
 
         Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
 
-        mFledgeAuthorizationFilter =
-                new FledgeAuthorizationFilter(
-                        mContextSpy.getPackageManager(),
-                        new EnrollmentDao(
-                                mContextSpy,
-                                DbTestUtil.getSharedDbHelperForTest(),
-                                flagsEnablingAdFiltering),
-                        mAdServicesLoggerMock);
+        mFledgeAuthorizationFilterSpy =
+                ExtendedMockito.spy(
+                        new FledgeAuthorizationFilter(
+                                mContextSpy.getPackageManager(),
+                                new EnrollmentDao(
+                                        mContextSpy,
+                                        DbTestUtil.getSharedDbHelperForTest(),
+                                        flagsEnablingAdFiltering),
+                                mAdServicesLoggerMock));
 
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
@@ -261,7 +264,7 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -271,7 +274,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdServicesLoggerMock,
                         flagsEnablingAdFiltering,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -403,7 +406,7 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -413,7 +416,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithDisabledAdFiltering,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -428,7 +431,6 @@ public class FrequencyCapFilteringE2ETest {
         verifyNoMoreInteractions(mFrequencyCapDaoSpy);
     }
 
-    @Ignore("b/274834235")
     @Test
     public void testUpdateHistogramExceedingRateLimitNotifiesError() throws InterruptedException {
         class FlagsWithLowRateLimit implements Flags {
@@ -439,11 +441,15 @@ public class FrequencyCapFilteringE2ETest {
 
             @Override
             public float getSdkRequestPermitsPerSecond() {
-                return 0.1f;
+                return 1f;
             }
         }
 
         Throttler.destroyExistingThrottler();
+
+        doNothing()
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAdTechAllowed(any(), any(), any(), anyInt());
 
         try {
             Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
@@ -460,7 +466,7 @@ public class FrequencyCapFilteringE2ETest {
                             mFrequencyCapDaoSpy,
                             mEncryptionContextDao,
                             mEncryptionKeyDao,
-                            mReportingUrisDao,
+                            mAuctionServerAdSelectionDao,
                             mAdServicesHttpsClientMock,
                             mDevContextFilterMock,
                             mLightweightExecutorService,
@@ -470,15 +476,15 @@ public class FrequencyCapFilteringE2ETest {
                             mAdServicesLoggerMock,
                             flagsWithLowRateLimit,
                             CallingAppUidSupplierProcessImpl.create(),
-                            mFledgeAuthorizationFilter,
+                            mFledgeAuthorizationFilterSpy,
                             new AdSelectionServiceFilter(
                                     mContextSpy,
                                     mConsentManagerMock,
                                     flagsWithLowRateLimit,
-                                    Mockito.mock(AppImportanceFilter.class),
-                                    mFledgeAuthorizationFilter,
-                                    Mockito.mock(FledgeAllowListsFilter.class),
-                                    () -> Throttler.getInstance(flagsWithLowRateLimit)),
+                                    mAppImportanceFilterMock,
+                                    mFledgeAuthorizationFilterSpy,
+                                    mFledgeAllowListsFilterMock,
+                                    Throttler.getInstance(flagsWithLowRateLimit)),
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
                             mObliviousHttpEncryptor);
@@ -710,7 +716,7 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -720,7 +726,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdServicesLoggerMock,
                         new FlagsWithLowEventCounts(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -821,7 +827,7 @@ public class FrequencyCapFilteringE2ETest {
                         mFrequencyCapDaoSpy,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -831,7 +837,7 @@ public class FrequencyCapFilteringE2ETest {
                         mAdServicesLoggerMock,
                         new FlagsWithLowPerBuyerEventCounts(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,

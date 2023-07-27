@@ -383,6 +383,7 @@ public class MeasurementDataDeleterTest {
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
+        List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
         Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -428,6 +429,14 @@ public class MeasurementDataDeleterTest {
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
+        when(mMeasurementDao.fetchMatchingAsyncRegistrations(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(asyncRegistrationIds);
         when(mMeasurementDao.fetchMatchingTriggers(
                         Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
@@ -451,9 +460,9 @@ public class MeasurementDataDeleterTest {
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
         verify(subjectUnderTest)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
+        verify(mMeasurementDao).deleteAsyncRegistrations(asyncRegistrationIds);
         verify(mMeasurementDao).deleteSources(sourceIds);
         verify(mMeasurementDao).deleteTriggers(triggerIds);
-        verify(mMeasurementDao).deleteAsyncRegistrationsProvidedRegistrant(APP_PACKAGE_NAME);
         verify(subjectUnderTest)
                 .resetAggregateReportDedupKeys(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
@@ -607,18 +616,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(1L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecCountBased();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReport()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReport()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -659,19 +668,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(1L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -710,19 +718,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(7L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -762,18 +769,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(20L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -811,19 +818,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(50L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -862,19 +868,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(50L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -913,19 +918,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(30L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -963,19 +967,18 @@ public class MeasurementDataDeleterTest {
                         .setTriggerValue(60L)
                         .setSourceId(sourceId)
                         .build();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        reportSpec.insertAttributedTrigger(eventReport1);
-        reportSpec.insertAttributedTrigger(eventReport2);
-
-        Source.Builder sourceBuilder =
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1, eventReport2)))
+                        .build();
+
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
 
@@ -998,26 +1001,31 @@ public class MeasurementDataDeleterTest {
         // This test case is for value-based trigger specifications
         // Setup
         String sourceId = UUID.randomUUID().toString();
-        ReportSpec reportSpec = SourceFixture.getValidReportSpecValueSum();
-        EventReport eventReport1 =
+        EventReport.Builder eventReportBuilder =
                 EventReportFixture.getBaseEventReportBuild()
-                        .setId(UUID.randomUUID().toString())
                         .setTriggerId("12345")
                         .setTriggerData(new UnsignedLong(1L))
                         .setTriggerValue(100L)
-                        .setSourceId(sourceId)
+                        .setSourceId(sourceId);
+        EventReport eventReport1 =
+                eventReportBuilder
+                        .setId("reportId1")
                         .build();
-
-        reportSpec.insertAttributedTrigger(eventReport1);
-        Source.Builder sourceBuilder =
+        EventReport eventReport2 =
+                eventReportBuilder
+                        .setId("reportId2")
+                        .build();
+        Source sourceToGenerateTriggerStatus =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .build();
+        Source source =
                 SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
                         .setId(sourceId)
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
-                        .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(
-                                reportSpec.encodeTriggerStatusToJSON().toString())
-                        .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
-        Source source = sourceBuilder.build();
+                                getTriggerStatusJson(
+                                        sourceToGenerateTriggerStatus,
+                                        List.of(eventReport1)))
+                        .build();
 
         when(mMeasurementDao.getSource(source.getId())).thenReturn(source);
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
@@ -1028,10 +1036,20 @@ public class MeasurementDataDeleterTest {
                 subjectUnderTest.filterReportFlexibleEventsAPI(
                         mMeasurementDao,
                         new ArrayList<>(),
-                        new ArrayList<>(Arrays.asList(eventReport1, eventReport1)));
+                        new ArrayList<>(Arrays.asList(eventReport1, eventReport2)));
         // Assertion
         // The report causes decrements of the report
         assertEquals(2, toBeDeleted.size());
-        assertEquals(new ArrayList<>(Arrays.asList(eventReport1, eventReport1)), toBeDeleted);
+        assertEquals(new ArrayList<>(Arrays.asList(eventReport1, eventReport2)), toBeDeleted);
+    }
+
+    private static String getTriggerStatusJson(Source source, List<EventReport> eventReports)
+            throws JSONException {
+        source.buildFlexibleEventReportApi();
+        ReportSpec reportSpec = source.getFlexEventReportSpec();
+        for (EventReport eventReport : eventReports) {
+            reportSpec.insertAttributedTrigger(eventReport);
+        }
+        return source.encodeAttributedTriggersToJson();
     }
 }

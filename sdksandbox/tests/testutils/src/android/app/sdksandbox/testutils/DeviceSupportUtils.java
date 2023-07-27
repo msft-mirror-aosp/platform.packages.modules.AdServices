@@ -23,7 +23,7 @@ import android.content.pm.PackageManager;
 public class DeviceSupportUtils {
 
     public static boolean isSdkSandboxSupported(Context context) {
-        return !isWatch(context) && !isTv(context);
+        return !isWatch(context) && !isTv(context) && !isAuto(context);
     }
 
     private static boolean isWatch(Context context) {
@@ -32,5 +32,9 @@ public class DeviceSupportUtils {
 
     private static boolean isTv(Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
+    private static boolean isAuto(Context context) {
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
     }
 }

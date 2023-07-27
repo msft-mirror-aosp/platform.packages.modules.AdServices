@@ -28,7 +28,6 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -208,12 +207,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * @param sourceId the source id
-     * @param reportSpec the new report specification in source
+     * @param source the source
      * @throws DatastoreException throws DatastoreException
      */
-    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
-            throws DatastoreException;
+    void updateSourceAttributedTriggers(Source source) throws DatastoreException;
 
     /**
      * Update the value of {@link Source.Status} for the corresponding {@link Source}
@@ -345,7 +342,8 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -416,21 +414,21 @@ public interface IMeasurementDao {
     void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
 
     /**
-     * Delete records from Async Registration table whose registrant or app destination match with
-     * provided app URI.
-     *
-     * @param uri AsyncRegistrations registrant or OS Destination to match
-     * @throws DatastoreException database transaction issues
-     */
-    void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri) throws DatastoreException;
-
-    /**
-     * Delete records from source table that match provided trigger IDs.
+     * Delete records from trigger table that match provided trigger IDs.
      *
      * @param triggerIds trigger IDs to match
      * @throws DatastoreException database transaction issues
      */
     void deleteTriggers(@NonNull List<String> triggerIds) throws DatastoreException;
+
+    /**
+     * Delete records from async registration table that match provided async registration IDs.
+     *
+     * @param asyncRegistrationIds async registration IDs to match
+     * @throws DatastoreException database transaction issues
+     */
+    void deleteAsyncRegistrations(@NonNull List<String> asyncRegistrationIds)
+            throws DatastoreException;
 
     /**
      * Insert a record into the Async Registration Table.
@@ -554,7 +552,7 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Returns list of triggers matching registrant, publishers and also in the provided time frame.
+     * Returns list of triggers matching registrant and destinations in the provided time frame.
      * It matches registrant and time range (start & end) irrespective of the {@code matchBehavior}.
      * In the resulting set, if matchBehavior is {@link
      * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_DELETE}, then it
@@ -573,6 +571,34 @@ public interface IMeasurementDao {
      * @throws DatastoreException database transaction level issues
      */
     List<String> fetchMatchingTriggers(
+            @NonNull Uri registrant,
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException;
+
+    /**
+     * Returns list of async registrations matching registrant and top origins in the provided time
+     * frame. It matches registrant and time range (start & end) irrespective of the {@code
+     * matchBehavior}. In the resulting set, if matchBehavior is {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_DELETE}, then it
+     * matches origins and domains. In case of {@link
+     * android.adservices.measurement.DeletionRequest.MatchBehavior#MATCH_BEHAVIOR_PRESERVE}, it
+     * returns the records that don't match origins or domain.
+     *
+     * @param registrant registrant to match
+     * @param start request time should be after this instant (inclusive)
+     * @param end request time should be after this instant (inclusive)
+     * @param origins top origin site match
+     * @param domains top origin top level domain matches
+     * @param matchBehavior indicates whether to return matching or inversely matching (everything
+     *     except matching) data
+     * @return list of async registration IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    List<String> fetchMatchingAsyncRegistrations(
             @NonNull Uri registrant,
             @NonNull Instant start,
             @NonNull Instant end,
