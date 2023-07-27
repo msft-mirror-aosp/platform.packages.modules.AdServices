@@ -181,7 +181,7 @@ public final class PhFlags implements Flags {
             "measurement_vtc_configurable_max_event_reports_count";
 
     static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
-            "key_measurement_enable_ara_parsing_alignment_v1";
+            "measurement_enable_ara_parsing_alignment_v1";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
