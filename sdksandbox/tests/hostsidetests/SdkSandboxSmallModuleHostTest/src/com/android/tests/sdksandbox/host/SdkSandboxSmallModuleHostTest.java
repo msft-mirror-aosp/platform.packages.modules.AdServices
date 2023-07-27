@@ -25,6 +25,7 @@ import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.testtype.junit4.DeviceTestRunOptions;
 
 import org.junit.After;
 import org.junit.Before;
@@ -43,25 +44,31 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
     private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
-     * Runs the given phase of a test by calling into the device. Throws an exception if the test
-     * phase fails.
+     * Runs the given phase of a test by calling into the device.
+     *
+     * <p>Hidden API checks are disabled.
      *
      * <p>For example, <code>runPhase("testExample");</code>
+     *
+     * @throws AssertionException if test phase fails.
      */
     private void runPhase(String phase) throws Exception {
-        assertThat(
-                        runDeviceTests(
-                                TEST_APP_PACKAGE,
-                                TEST_APP_PACKAGE + ".SdkSandboxSmallModuleTestApp",
-                                phase))
-                .isTrue();
+        DeviceTestRunOptions options =
+                new DeviceTestRunOptions(TEST_APP_PACKAGE)
+                        .setTestClassName(TEST_APP_PACKAGE + ".SdkSandboxSmallModuleTestApp")
+                        .setTestMethodName(phase)
+                        .setDisableHiddenApiCheck(true);
+
+        assertThat(runDeviceTests(options)).isTrue();
     }
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue("Device needs to support SdkSandbox",
-                mDeviceSupportUtils.isSdkSandboxSupported());
-        assumeTrue("Device needs to have com.android.adservices APEX installed",
+        // TODO(b/292998823): Turn this into AbstractSupportedFeatureRule
+        assumeTrue(
+                "Device needs to support SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+        assumeTrue(
+                "Device needs to have com.android.adservices APEX installed",
                 getDevice().doesFileExist(SYSTEM_APEX_PATH));
 
         removeUpdatedApexIfNecessary();
@@ -74,16 +81,23 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSmallModuleCanBeInstalled() throws Exception {
-        assertWithMessage("AdServices APK is present")
-                .that(isAdServicesApkPresent())
-                .isTrue();
+        assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isTrue();
 
         runPhase("installSmallModulePendingReboot");
         getDevice().reboot();
 
-        assertWithMessage("AdServices APK is present")
-                .that(isAdServicesApkPresent())
-                .isFalse();
+        assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isFalse();
+    }
+
+    /** Verify services exported from AdServices APK are unavailable on small module. */
+    @Test
+    public void testVerifyAdServicesAreUnavailableOnSmallModule() throws Exception {
+        runPhase("testVerifyAdServicesAreUnavailable_preSmallModuleInstall");
+
+        runPhase("installSmallModulePendingReboot");
+        getDevice().reboot();
+
+        runPhase("testVerifyAdServicesAreUnavailable_postSmallModuleInstall");
     }
 
     private boolean isAdServicesApkPresent() throws Exception {
@@ -102,9 +116,7 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
                 String childPath = ACTIVE_APEX_DIR + "/" + child;
                 getDevice().deleteFile(childPath);
                 getDevice().reboot();
-                assertWithMessage("Module update removed")
-                        .that(isAdServicesApkPresent())
-                        .isTrue();
+                assertWithMessage("Module update removed").that(isAdServicesApkPresent()).isTrue();
             }
         }
 
