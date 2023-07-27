@@ -455,6 +455,9 @@ public final class PhFlags implements Flags {
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+
+    static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // AdServices APK sha certs.
@@ -2170,6 +2173,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
+    @Override
+    public String getMsmtApiAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MSMT_API_APP_ALLOW_LIST,
+                /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
+    }
+
     // AdServices APK SHA certs.
     @Override
     public String getAdservicesApkShaCertificate() {
@@ -3274,6 +3286,7 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getPpapiAppSignatureAllowList());
         writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println("\t" + KEY_MSMT_API_APP_ALLOW_LIST + " = " + getMsmtApiAppAllowList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(

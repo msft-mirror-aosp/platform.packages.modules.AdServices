@@ -1918,6 +1918,47 @@ public interface Flags {
     }
 
     /*
+     * The allow-list for Measurement APIs. This list has the list of app package names that we
+     * allow using Measurement APIs.
+     */
+    String MSMT_API_APP_ALLOW_LIST =
+            "android.platform.test.scenario,"
+                    + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.adservices.endtoendtest,"
+                    + "com.android.adservices.servicecoretest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "com.android.adservices.tests.adid,"
+                    + "com.android.adservices.tests.appsetid,"
+                    + "com.android.sdksandboxclient,"
+                    + "com.android.tests.sandbox.adid,"
+                    + "com.android.tests.sandbox.appsetid,"
+                    + "com.android.tests.sandbox.fledge,"
+                    + "com.android.tests.sandbox.measurement,"
+                    + "com.example.adservices.samples.adid.app,"
+                    + "com.example.adservices.samples.appsetid.app,"
+                    + "com.example.adservices.samples.fledge.sampleapp,"
+                    + "com.example.adservices.samples.fledge.sampleapp1,"
+                    + "com.example.adservices.samples.fledge.sampleapp2,"
+                    + "com.example.adservices.samples.fledge.sampleapp3,"
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.example.measurement.sampleapp,"
+                    + "com.example.measurement.sampleapp2,"
+                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+
+    /*
+     * App Package Name that does not belong to this allow-list will not be able to use Measurement
+     * APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    default String getMsmtApiAppAllowList() {
+        return MSMT_API_APP_ALLOW_LIST;
+    }
+
+    /*
      * The allow-list for PP APIs. This list has the list of app signatures that we allow
      * using PP APIs. App Package signatures that do not belong to this allow-list will not be
      * able to use PP APIs, unless the package name of this app is in the bypass list.
