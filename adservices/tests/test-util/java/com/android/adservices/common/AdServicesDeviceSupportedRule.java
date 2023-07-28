@@ -25,6 +25,8 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+// TODO(b/284971005): try to merge it with AdServicesSupportedRule (for example, using a
+// builder that would tell whether to check for device support)
 /**
  * Rule used to properly check a test behavior depending on whether the device supports {@code
  * AdService}.
@@ -55,9 +57,37 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
- * <p><b>NOTE: </b>this rule will mostly used to skip test on unsupported platforms - if you want to
- * test that your API checks if AdServices is enabled, you most likely need to use {@code
- * AdServicesSupportedRule} instead.
+ * <p>When used together with similar rules (like {@link AdServicesSupportedRule}
+ *
+ * <p><b>NOTE: </b>this rule will mostly be used to skip test on unsupported platforms - if you want
+ * to test that your API behaves correctly whether or not AdServices is enabled, you most likely
+ * should use {@link AdServicesSupportedRule} instead. In fact, there might be cases where both
+ * rules are used, in which case it's recommended to run this one first (so the test is skipped
+ * right away when not supported). Example:
+ *
+ * <pre class="prettyprint">
+ * &#064;Rule(order = 0)
+ * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+ *     new AdServicesDeviceSupportedRule();
+ *
+ * &#064;Rule(order = 1)
+ * public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
+ * </pre>
+ *
+ * <p>Generally speaking, you should organize the rules using the order of feature dependency. For
+ * example, if the test also required a given SDK level:
+ *
+ * <pre class="prettyprint">
+ * &#064;Rule(order = 0)
+ * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+ *     new AdServicesDeviceSupportedRule();
+ *
+ * &#064;Rule(order = 1)
+ *   @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+ *
+ * &#064;Rule(order = 2)
+ * public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
+ * </pre>
  */
 public final class AdServicesDeviceSupportedRule extends AbstractSupportedFeatureRule {
 
@@ -75,7 +105,7 @@ public final class AdServicesDeviceSupportedRule extends AbstractSupportedFeatur
     }
 
     @Override
-    boolean isFeatureSupported() {
+    public boolean isFeatureSupported() {
         boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
