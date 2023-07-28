@@ -683,7 +683,6 @@ public class AdServicesHttpsClientTest {
                 .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
         assertThat(exception.getRetryAfter())
                 .isEqualTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE);
-        assertThat(exception.getMessage()).isNull();
     }
 
     @Test
@@ -705,7 +704,6 @@ public class AdServicesHttpsClientTest {
         assertThat(exception.getErrorCode())
                 .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
         assertThat(exception.getRetryAfter()).isEqualTo(Duration.ofMillis(1000));
-        assertThat(exception.getMessage()).isNull();
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri) throws Exception {

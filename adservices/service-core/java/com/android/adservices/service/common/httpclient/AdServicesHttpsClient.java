@@ -422,7 +422,6 @@ public class AdServicesHttpsClient {
         @AdServicesNetworkException.ErrorCode
         int errorCode = AdServicesNetworkException.ERROR_OTHER;
         Duration retryAfterDuration = AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
-        String serverResponse = null;
 
         // Assign a relevant error code to the HTTP response code.
         switch (responseCode / 100) {
@@ -447,24 +446,12 @@ public class AdServicesHttpsClient {
         }
         LogUtil.v("Received %s error status code.", responseCode);
 
-        // TODO(b/287146167): Investigate why getErrorStream is null when using the MockWebServer
-        //  and corresponding tests.
-        // Extract message from the server, if any.
-        InputStream errorStream = urlConnection.getErrorStream();
-        long contentLength = urlConnection.getContentLengthLong();
-        if (!Objects.isNull(errorStream) && contentLength > 0) {
-            LogUtil.v("Error stream exists with %s length.", contentLength);
-            serverResponse = fromInputStream(urlConnection.getErrorStream(), contentLength);
-            LogUtil.v("Received %s from server as response.", serverResponse);
-        }
-
         // Throw the appropriate AdServicesNetworkException exception.
         AdServicesNetworkException exception;
         if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
-            exception = new AdServicesNetworkException(errorCode, serverResponse);
+            exception = new AdServicesNetworkException(errorCode);
         } else {
-            exception =
-                    new AdServicesNetworkException(errorCode, retryAfterDuration, serverResponse);
+            exception = new AdServicesNetworkException(errorCode, retryAfterDuration);
         }
         LogUtil.e("Throwing %s.", exception.toString());
         throw exception;
