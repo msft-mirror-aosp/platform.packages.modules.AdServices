@@ -215,8 +215,8 @@ public class Source {
         }
         double informationGainThreshold =
                 mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexAPIMaxInformationGainEvent()
-                        : flags.getMeasurementFlexAPIMaxInformationGainNavigation();
+                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
+                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
 
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
@@ -349,14 +349,23 @@ public class Source {
     /**
      * @return the JSON encoded current trigger status
      */
-    @Nullable
-    public String encodeAttributedTriggersToJson() {
-        if (mAttributedTriggers == null) {
-            return null;
-        }
+    @NonNull
+    public String attributedTriggersToJson() {
         JSONArray jsonArray = new JSONArray();
         for (AttributedTrigger trigger : mAttributedTriggers) {
             jsonArray.put(trigger.encodeToJson());
+        }
+        return jsonArray.toString();
+    }
+
+    /**
+     * @return the JSON encoded current trigger status
+     */
+    @NonNull
+    public String attributedTriggersToJsonFlexApi() {
+        JSONArray jsonArray = new JSONArray();
+        for (AttributedTrigger trigger : mAttributedTriggers) {
+            jsonArray.put(trigger.encodeToJsonFlexApi());
         }
         return jsonArray.toString();
     }
@@ -667,8 +676,8 @@ public class Source {
         }
         double informationGainThreshold =
                 mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexAPIMaxInformationGainEvent()
-                        : flags.getMeasurementFlexAPIMaxInformationGainNavigation();
+                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
+                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
 
         if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
             return false;

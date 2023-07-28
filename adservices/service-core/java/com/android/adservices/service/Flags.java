@@ -496,35 +496,35 @@ public interface Flags {
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
-    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+    default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
-    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+    default float getMeasurementFlexApiMaxInformationGainNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReports() {
+    default int getMeasurementFlexApiMaxEventReports() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
 
     /** Returns max event report windows in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReportWindows() {
+    default int getMeasurementFlexApiMaxEventReportWindows() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
 
     /** Returns max trigger data cardinality in Flexible Event API */
-    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+    default int getMeasurementFlexApiMaxTriggerDataCardinality() {
         return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
     }
 
@@ -2714,6 +2714,14 @@ public interface Flags {
     /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraParsingAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
     }
 
     /** Default U18 UX feature flag.. */

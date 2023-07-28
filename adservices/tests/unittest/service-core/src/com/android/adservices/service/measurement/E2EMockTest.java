@@ -141,7 +141,7 @@ public abstract class E2EMockTest extends E2ETest {
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlags();
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
-        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
+        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager, mFlags));
 
         mEnrollmentDao =
                 new EnrollmentDao(

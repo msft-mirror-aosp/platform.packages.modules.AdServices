@@ -825,7 +825,7 @@ public final class EventReportTest {
                         null);
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -914,7 +914,7 @@ public final class EventReportTest {
                         "{\"flip_probability\" :0.0024}");
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -990,7 +990,7 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1049,7 +1049,7 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1111,7 +1111,7 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
