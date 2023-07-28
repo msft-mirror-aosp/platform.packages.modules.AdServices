@@ -79,6 +79,8 @@ public final class PhFlags implements Flags {
     // Topics Cobalt keys
     static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
     static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
+    static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
+            "adservices_release_stage_for_cobalt";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -879,6 +881,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_COBALT_ADSERVICES_API_KEY_HEX,
                 /* defaultValue */ COBALT_ADSERVICES_API_KEY_HEX);
+    }
+
+    @Override
+    public String getAdservicesReleaseStageForCobalt() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
+                /* defaultValue */ ADSERVICES_RELEASE_STAGE_FOR_COBALT);
     }
 
     @Override
@@ -4174,6 +4185,11 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+        writer.println(
+                "\t"
+                        + KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT
+                        + " = "
+                        + getAdservicesReleaseStageForCobalt());
         writer.println("==== AdServices Consent Dump STATUS ====");
         writer.println("\t" + KEY_CONSENT_SOURCE_OF_TRUTH + " = " + getConsentSourceOfTruth());
         writer.println(
