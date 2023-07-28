@@ -28,7 +28,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesSupportRule;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
@@ -100,7 +100,9 @@ public class TopicsManagerTest {
                     + " apex.";
 
     // Skip the test if it runs on unsupported platforms.
-    @Rule public final AdServicesSupportRule mAdServicesSupportRule = new AdServicesSupportRule();
+    @Rule
+    public final AdServicesDeviceSupportedRule mAdServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setup() throws Exception {
