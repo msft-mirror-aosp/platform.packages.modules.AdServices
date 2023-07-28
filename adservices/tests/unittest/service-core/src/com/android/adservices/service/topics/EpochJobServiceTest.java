@@ -72,9 +72,9 @@ import org.mockito.quality.Strictness;
 /** Unit tests for {@link com.android.adservices.service.topics.EpochJobService} */
 @SuppressWarnings("ConstantConditions")
 public class EpochJobServiceTest {
-    private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     private static final long EPOCH_JOB_PERIOD_MS = 10_000L;
+    private static final long AWAIT_JOB_TIMEOUT_MS = 5_000L;
     private static final long EPOCH_JOB_FLEX_MS = 1_000L;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
@@ -138,7 +138,7 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOff_withoutLogging() throws InterruptedException {
+    public void testOnStartJob_killSwitchOff_withoutLogging() {
         // Logging killswitch is on.
         Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
@@ -150,7 +150,7 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOff_withLogging() throws InterruptedException {
+    public void testOnStartJob_killSwitchOff_withLogging() {
         // Logging killswitch is off.
         Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
@@ -215,7 +215,7 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_globalKillSwitchOverridesAll() throws InterruptedException {
+    public void testOnStartJob_globalKillSwitchOverridesAll() {
         // Global Killswitch is on.
         doReturn(true).when(mMockFlags).getGlobalKillSwitch();
 
@@ -258,7 +258,8 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
+    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled()
+            throws InterruptedException {
         // Logging killswitch is off.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
@@ -406,7 +407,7 @@ public class EpochJobServiceTest {
         assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
     }
 
-    private void testOnStartJob_killSwitchOff() throws InterruptedException {
+    private void testOnStartJob_killSwitchOff() {
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -427,6 +428,13 @@ public class EpochJobServiceTest {
                 .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
         mSpyEpochJobService.onStartJob(mMockJobParameters);
+
+        try {
+            // Allow some time for async job to execute before running any assertions.
+            Thread.sleep(AWAIT_JOB_TIMEOUT_MS);
+        } catch (InterruptedException exception) {
+            throw new IllegalStateException("Interrupted while waiting!", exception);
+        }
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
@@ -465,6 +473,15 @@ public class EpochJobServiceTest {
                         .setPersisted(true)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
+
+        try {
+            // Even though the job shouldn't execute, allow some time for async job to execute
+            // just in case before running any assertions.
+            Thread.sleep(AWAIT_JOB_TIMEOUT_MS);
+        } catch (InterruptedException exception) {
+            throw new IllegalStateException("Interrupted while waiting!", exception);
+        }
+
         assertNotNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
 
         // Now verify that when the Job starts, it will unschedule itself.
@@ -495,6 +512,15 @@ public class EpochJobServiceTest {
                         .setPersisted(true)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
+
+        try {
+            // Even though the job shouldn't execute, allow some time for async job to execute
+            // just in case before running any assertions.
+            Thread.sleep(AWAIT_JOB_TIMEOUT_MS);
+        } catch (InterruptedException exception) {
+            throw new IllegalStateException("Interrupted while waiting!", exception);
+        }
+
         assertNotNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
 
         // Now verify that when the Job starts, it will unschedule itself.
