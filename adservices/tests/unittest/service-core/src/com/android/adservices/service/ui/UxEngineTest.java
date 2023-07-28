@@ -42,6 +42,7 @@ import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
@@ -82,6 +83,7 @@ public class UxEngineTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(ConsentManager.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(UiStatsLogger.class)
                         .spyStatic(ConsentNotificationJobService.class)
                         .spyStatic(PackageChangedReceiver.class)
                         .spyStatic(BackgroundJobsManager.class)
@@ -110,7 +112,7 @@ public class UxEngineTest {
         ExtendedMockito.doNothing().when(
                 () ->
                         BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
-
+        ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked(any()));
 
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();

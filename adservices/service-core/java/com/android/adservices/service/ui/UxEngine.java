@@ -17,7 +17,6 @@
 package com.android.adservices.service.ui;
 
 import static com.android.adservices.service.ui.constants.DebugMessages.NO_ENROLLMENT_CHANNEL_AVAILABLE;
-import static com.android.adservices.service.ui.constants.DebugMessages.PRIVACY_SANDBOX_UI_REQUEST;
 
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
@@ -28,6 +27,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.util.UxEngineUtil;
@@ -89,7 +89,7 @@ public class UxEngine {
 
             // Entry point request should not trigger enrollment but should refresh the UX states.
             if (adServicesStates.isPrivacySandboxUiRequest()) {
-                LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST);
+                UiStatsLogger.logEntryPointClicked(mContext);
                 return;
             }
 
