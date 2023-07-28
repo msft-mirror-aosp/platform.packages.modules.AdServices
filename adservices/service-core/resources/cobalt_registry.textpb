@@ -19,6 +19,11 @@
 # repository, and the file is copied to Android where it is used by the Cobalt
 # client. Do not edit the copy of this file in this Android repo as those edits
 # will be overwritten when the file is next copied.
+#
+# Additionally, code which translates AdServices concepts, e.g., topics, to
+# Cobalt event codes may need to be updated when the registry changes.
+# Dependencies include, but may not be limited to:
+# * adservices/service-core/java/com/android/adservices/service/topics/cobalt/TopicsCobaltLogger.java
 ################################################################################
 customers {
   customer_name: "privacy_sandbox"
