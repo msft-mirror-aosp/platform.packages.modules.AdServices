@@ -288,6 +288,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(*) FROM %1$s WHERE %2$s = '%3$s'",
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.SOURCE_ID,
+                        sourceId);
+        return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
+    }
+
+    @Override
     public EventReport getEventReport(@NonNull String eventReportId) throws DatastoreException {
         try (Cursor cursor =
                 mSQLTransaction
