@@ -21,6 +21,7 @@ import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECO
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
 import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_SECOND;
@@ -281,6 +282,7 @@ import static com.android.adservices.service.PhFlags.KEY_ADID_REQUEST_PERMITS_PE
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
@@ -909,6 +911,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getCobaltAdservicesApiKeyHex()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testAdservicesReleaseStageForCobalt() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getAdservicesReleaseStageForCobalt())
+                .isEqualTo(ADSERVICES_RELEASE_STAGE_FOR_COBALT);
+
+        String phOverridingValue = ADSERVICES_RELEASE_STAGE_FOR_COBALT + "OPEN_BETA";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdservicesReleaseStageForCobalt()).isEqualTo(phOverridingValue);
     }
 
     @Test

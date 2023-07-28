@@ -2798,6 +2798,17 @@ public interface Flags {
     }
 
     /**
+     * Default value of Adservices release stage for Cobalt. The value should correspond to {@link
+     * com.google.cobalt.ReleaseStage} enum.
+     */
+    String ADSERVICES_RELEASE_STAGE_FOR_COBALT = "GA";
+
+    /** Returns the value of Adservices release stage for Cobalt. */
+    default String getAdservicesReleaseStageForCobalt() {
+        return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
+    }
+
+    /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
      *
