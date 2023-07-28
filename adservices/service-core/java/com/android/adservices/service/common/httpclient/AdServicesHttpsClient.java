@@ -17,6 +17,7 @@
 package com.android.adservices.service.common.httpclient;
 
 import android.adservices.exceptions.AdServicesNetworkException;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -217,7 +218,7 @@ public class AdServicesHttpsClient {
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
             AdServicesHttpClientRequest request)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (request.getUseCache()) {
@@ -325,7 +326,7 @@ public class AdServicesHttpsClient {
     }
 
     private Void doGetAndReadNothing(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
@@ -376,7 +377,7 @@ public class AdServicesHttpsClient {
     }
 
     private Void doPostPlainText(URL url, String data, ClosingFuture.DeferredCloser closer)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
@@ -415,13 +416,13 @@ public class AdServicesHttpsClient {
     }
 
     private void throwError(final HttpsURLConnection urlConnection, int responseCode)
-            throws IOException {
+            throws AdServicesNetworkException {
         LogUtil.v("Error occurred while executing HTTP request.");
 
         // Default values for AdServiceNetworkException fields.
         @AdServicesNetworkException.ErrorCode
         int errorCode = AdServicesNetworkException.ERROR_OTHER;
-        Duration retryAfterDuration = AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
+        Duration retryAfterDuration = RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
 
         // Assign a relevant error code to the HTTP response code.
         switch (responseCode / 100) {
@@ -446,12 +447,14 @@ public class AdServicesHttpsClient {
         }
         LogUtil.v("Received %s error status code.", responseCode);
 
-        // Throw the appropriate AdServicesNetworkException exception.
+        // Throw the appropriate exception.
         AdServicesNetworkException exception;
-        if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
+        if (retryAfterDuration.compareTo(
+                        RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE)
+                <= 0) {
             exception = new AdServicesNetworkException(errorCode);
         } else {
-            exception = new AdServicesNetworkException(errorCode, retryAfterDuration);
+            exception = new RetryableAdServicesNetworkException(errorCode, retryAfterDuration);
         }
         LogUtil.e("Throwing %s.", exception.toString());
         throw exception;
