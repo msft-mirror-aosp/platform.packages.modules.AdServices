@@ -101,6 +101,8 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.proto.BroadcastReceiver.AllowedBroadcastReceivers;
+import com.android.server.sdksandbox.proto.BroadcastReceiver.BroadcastReceiverAllowlists;
 import com.android.server.sdksandbox.proto.ContentProvider.AllowedContentProviders;
 import com.android.server.sdksandbox.proto.ContentProvider.ContentProviderAllowlists;
 import com.android.server.sdksandbox.proto.Services.AllowedService;
@@ -238,6 +240,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
+
+    private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
+            "broadcastreceiver_allowlist_per_targetSdkVersion";
+
+    // Property for the canary set allowlist indicating which broadcast receivers can be registered
+    // by the sandbox.
+    private static final String PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST =
+            "next_broadcastreceiver_allowlist";
 
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
             "contentprovider_allowlist_per_targetSdkVersion";
@@ -1805,6 +1815,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private AllowedContentProviders mNextContentProviderAllowlist =
                 getNextContentProviderDeviceConfigAllowlist();
 
+        @Nullable
+        @GuardedBy("mLock")
+        private Map<Integer, AllowedBroadcastReceivers>
+                mBroadcastReceiverAllowlistPerTargetSdkVersion =
+                        getBroadcastReceiverDeviceConfigAllowlist();
+
+        @GuardedBy("mLock")
+        private ArraySet<String> mNextBroadcastReceiverAllowlist =
+                getNextBroadcastReceiverDeviceConfigAllowlist();
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1887,6 +1907,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @Nullable
+        Map<Integer, AllowedBroadcastReceivers> getBroadcastReceiverAllowlistPerTargetSdkVersion() {
+            synchronized (mLock) {
+                return mBroadcastReceiverAllowlistPerTargetSdkVersion;
+            }
+        }
+
+        @Nullable
+        ArraySet<String> getNextBroadcastReceiverAllowlist() {
+            synchronized (mLock) {
+                return mNextBroadcastReceiverAllowlist;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1937,6 +1971,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         case PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST:
                             mNextContentProviderAllowlist =
                                     getNextContentProviderDeviceConfigAllowlist();
+                            break;
+                        case PROPERTY_BROADCASTRECEIVER_ALLOWLIST:
+                            mBroadcastReceiverAllowlistPerTargetSdkVersion =
+                                    getBroadcastReceiverDeviceConfigAllowlist();
+                            break;
+                        case PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST:
+                            mNextBroadcastReceiverAllowlist =
+                                    getNextBroadcastReceiverDeviceConfigAllowlist();
                             break;
                         default:
                     }
@@ -2018,6 +2060,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist() {
             return getDeviceConfigProtoProperty(
                     AllowedContentProviders.parser(), PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST);
+        }
+
+        @Nullable
+        private static Map<Integer, AllowedBroadcastReceivers>
+                getBroadcastReceiverDeviceConfigAllowlist() {
+            final BroadcastReceiverAllowlists broadcastReceiverAllowlistsProto =
+                    getDeviceConfigProtoProperty(
+                            BroadcastReceiverAllowlists.parser(),
+                            PROPERTY_BROADCASTRECEIVER_ALLOWLIST);
+            return broadcastReceiverAllowlistsProto == null
+                    ? null
+                    : broadcastReceiverAllowlistsProto.getAllowlistPerTargetSdkMap();
+        }
+
+        @Nullable
+        private static ArraySet<String> getNextBroadcastReceiverDeviceConfigAllowlist() {
+            AllowedBroadcastReceivers allowedBroadcastReceivers =
+                    getDeviceConfigProtoProperty(
+                            AllowedBroadcastReceivers.parser(),
+                            PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST);
+            if (allowedBroadcastReceivers != null) {
+                return new ArraySet<>(allowedBroadcastReceivers.getIntentActionsList());
+            }
+            return null;
         }
     }
 
@@ -2552,6 +2618,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return contentProviderAuthoritiesAllowlist;
     }
 
+    // Returns null if an allowlist was not set at all.
+    @Nullable
+    private ArraySet<String> getBroadcastReceiverAllowlist() {
+        synchronized (mLock) {
+            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
+                return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
+            }
+
+            if (mSdkSandboxSettingsListener.getBroadcastReceiverAllowlistPerTargetSdkVersion()
+                    != null) {
+                // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
+                final AllowedBroadcastReceivers broadcastReceiverAllowlistPerTargetSdkVersion =
+                        mSdkSandboxSettingsListener
+                                .getBroadcastReceiverAllowlistPerTargetSdkVersion()
+                                .get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+                if (broadcastReceiverAllowlistPerTargetSdkVersion != null) {
+                    return new ArraySet<>(
+                            broadcastReceiverAllowlistPerTargetSdkVersion.getIntentActionsList());
+                }
+            }
+            return null;
+        }
+    }
+
     private boolean requestAllowedPerAllowlist(
             String action,
             String packageName,
@@ -2828,7 +2918,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return true;
             }
 
-            if (intentFilter.countActions() == 0) {
+            final int actionsCount = intentFilter.countActions();
+            if (actionsCount == 0) {
                 return false;
             }
 
@@ -2839,9 +2930,23 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long token = Binder.clearCallingIdentity();
 
             try {
-                final boolean enforceRestrictions =
-                        mSdkSandboxSettingsListener.areRestrictionsEnforced();
-                return !enforceRestrictions || onlyProtectedBroadcasts;
+                if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
+                    return true;
+                }
+
+                final ArraySet<String> broadcastReceiverAllowlist = getBroadcastReceiverAllowlist();
+                // If an allowlist was not set at all, only allow protected broadcasts. Note that
+                // this is different from an empty allowlist (which blocks all BroadcastReceivers).
+                if (broadcastReceiverAllowlist == null) {
+                    return onlyProtectedBroadcasts;
+                }
+                for (int i = 0; i < actionsCount; ++i) {
+                    if (!doesInputMatchAnyWildcardPattern(
+                            broadcastReceiverAllowlist, intentFilter.getAction(i))) {
+                        return false;
+                    }
+                }
+                return true;
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
