@@ -604,7 +604,7 @@ public class ReportSpecUtilTest {
         source.buildAttributedTriggers();
         ReportSpec testReportSpec =
                 new ReportSpec(
-                        templateReportSpec.encodeTriggerSpecsToJSON(),
+                        templateReportSpec.encodeTriggerSpecsToJson(),
                         Integer.toString(templateReportSpec.getMaxReports()),
                         source,
                         templateReportSpec.encodePrivacyParametersToJSONString());

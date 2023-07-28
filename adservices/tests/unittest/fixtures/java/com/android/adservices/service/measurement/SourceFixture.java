@@ -206,7 +206,7 @@ public final class SourceFixture {
         ReportSpec reportSpec = getValidReportSpecValueSum();
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
-                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                 .setMaxEventLevelReports(reportSpec.getMaxReports())
                 .setEventAttributionStatus(null)
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
@@ -216,7 +216,7 @@ public final class SourceFixture {
         ReportSpec reportSpec = getValidReportSpecCountBased();
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
-                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                 .setMaxEventLevelReports(reportSpec.getMaxReports())
                 .setEventAttributionStatus(null)
                 .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
