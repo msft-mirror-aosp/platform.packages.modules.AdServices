@@ -293,10 +293,29 @@ package android.adservices.customaudience {
   }
 
   public class CustomAudienceManager {
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void fetchAndJoinCustomAudience(@NonNull android.adservices.customaudience.FetchAndJoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @NonNull public static android.adservices.customaudience.CustomAudienceManager get(@NonNull android.content.Context);
     method @NonNull public android.adservices.customaudience.TestCustomAudienceManager getTestCustomAudienceManager();
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void joinCustomAudience(@NonNull android.adservices.customaudience.JoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+  }
+
+  public class FetchAndJoinCustomAudienceRequest {
+    method @Nullable public java.time.Instant getActivationTime();
+    method @Nullable public java.time.Instant getExpirationTime();
+    method @NonNull public android.net.Uri getFetchUri();
+    method @Nullable public String getName();
+    method @Nullable public android.adservices.common.AdSelectionSignals getUserBiddingSignals();
+  }
+
+  public static final class FetchAndJoinCustomAudienceRequest.Builder {
+    ctor public FetchAndJoinCustomAudienceRequest.Builder(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.FetchAndJoinCustomAudienceRequest build();
+    method @NonNull public android.adservices.customaudience.FetchAndJoinCustomAudienceRequest.Builder setActivationTime(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.customaudience.FetchAndJoinCustomAudienceRequest.Builder setExpirationTime(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.customaudience.FetchAndJoinCustomAudienceRequest.Builder setFetchUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.FetchAndJoinCustomAudienceRequest.Builder setName(@Nullable String);
+    method @NonNull public android.adservices.customaudience.FetchAndJoinCustomAudienceRequest.Builder setUserBiddingSignals(@Nullable android.adservices.common.AdSelectionSignals);
   }
 
   public class JoinCustomAudienceRequest {
