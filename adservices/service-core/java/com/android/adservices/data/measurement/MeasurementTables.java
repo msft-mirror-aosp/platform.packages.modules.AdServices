@@ -117,6 +117,7 @@ public final class MeasurementTables {
         String INSTALL_COOLDOWN_WINDOW = "install_cooldown_window";
         String IS_INSTALL_ATTRIBUTED = "is_install_attributed";
         String FILTER_DATA = "filter_data";
+        String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
         String AGGREGATE_SOURCE = "aggregate_source";
         String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
         String DEBUG_KEY = "debug_key";
@@ -502,7 +503,9 @@ public final class MeasurementTables {
                     + SourceContract.EVENT_REPORT_WINDOWS
                     + " TEXT, "
                     + SourceContract.SHARED_DEBUG_KEY
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =

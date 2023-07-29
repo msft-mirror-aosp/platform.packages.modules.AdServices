@@ -103,6 +103,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -210,6 +211,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
         assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
         assertEquals(validSource.getFilterDataString(), source.getFilterDataString());
+        assertEquals(validSource.getSharedFilterDataKeys(), source.getSharedFilterDataKeys());
         assertEquals(validSource.getAggregateContributions(), source.getAggregateContributions());
         assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
@@ -280,11 +282,9 @@ public class MeasurementDaoTest {
                 validSource.getFlexEventReportSpec().getMaxReports(),
                 source.getMaxEventLevelReports().intValue());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
+                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJson(),
                 source.getTriggerSpecs());
-        assertEquals(
-                validSource.encodeAttributedTriggersToJson(),
-                source.getEventAttributionStatus());
+        assertNull(source.getEventAttributionStatus());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
                 source.getPrivacyParameters());
@@ -2698,6 +2698,60 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getNumAggregateReportsPerSource_returnsExpected() {
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(2L))
+                                .setId("source2")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(3L))
+                                .setId("source3")
+                                .build());
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 1, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 2, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"), 3, "source2"));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sources.forEach(source -> insertSource(source, source.getId()));
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        reports.forEach(aggregateReportConsumer);
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source1"))
+                                    .isEqualTo(2);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source2"))
+                                    .isEqualTo(1);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source3"))
+                                    .isEqualTo(0);
+                        });
+    }
+
+    @Test
     public void getNumAggregateReportsPerDestination_returnsExpected() {
         List<AggregateReport> reportsWithPlainDestination =
                 Arrays.asList(
@@ -3262,7 +3316,9 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         measurementDao ->
-                                measurementDao.updateSourceAttributedTriggers(originalSource));
+                                measurementDao.updateSourceAttributedTriggers(
+                                        originalSource.getId(),
+                                        originalSource.attributedTriggersToJsonFlexApi()));
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
@@ -3750,8 +3806,9 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-        values.put(SourceContract.EVENT_ATTRIBUTION_STATUS,
-                source.encodeAttributedTriggersToJson());
+        if (source.getAttributedTriggers() != null) {
+            values.put(SourceContract.EVENT_ATTRIBUTION_STATUS, source.attributedTriggersToJson());
+        }
         db.insert(SourceContract.TABLE, null, values);
 
         // Insert source destinations
@@ -5789,6 +5846,7 @@ public class MeasurementDaoTest {
         values.put(SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(SourceContract.SHARED_FILTER_DATA_KEYS, source.getSharedFilterDataKeys());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, source.getAggregateContributions());
         values.put(SourceContract.DEBUG_REPORTING, source.isDebugReporting());
         values.put(SourceContract.INSTALL_TIME, source.getInstallTime());
@@ -6550,7 +6608,7 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6562,7 +6620,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6603,7 +6661,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6682,7 +6740,7 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6695,7 +6753,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6736,7 +6794,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -8069,6 +8127,7 @@ public class MeasurementDaoTest {
                 .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
                 .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
+                .setSharedFilterDataKeys(SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(UUID.randomUUID().toString())
                 .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
@@ -8320,6 +8379,15 @@ public class MeasurementDaoTest {
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
         return new AggregateReport.Builder()
                 .setId(String.valueOf(id))
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .build();
+    }
+
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setSourceId(sourceId)
                 .setAttributionDestination(Uri.parse(attributionDestination))
                 .build();
     }

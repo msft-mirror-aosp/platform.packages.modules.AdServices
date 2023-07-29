@@ -52,6 +52,7 @@ android_library {
         "error_prone_annotations",
         "framework-adservices-lib",
         "framework-annotations-lib",
+        "framework-configinfrastructure",
     ],
     static_libs: [
         "androidx.test.runner",

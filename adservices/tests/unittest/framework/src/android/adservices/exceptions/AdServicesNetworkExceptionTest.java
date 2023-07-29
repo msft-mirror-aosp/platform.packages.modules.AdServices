@@ -16,35 +16,33 @@
 
 package android.adservices.exceptions;
 
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS;
+import static android.adservices.exceptions.AdServicesNetworkException.INVALID_ERROR_CODE_MESSAGE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+
+import static java.util.Locale.ENGLISH;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-
 // TODO(b/278016822): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class AdServicesNetworkExceptionTest {
-    private final String mServerResponse = "Example of a server response.";
-    private final int mValidErrorCode = AdServicesNetworkException.ERROR_OTHER;
-    private final int mInvalidErrorCode = 1000;
-    private final Duration mValidRetryAfter = Duration.of(1000, ChronoUnit.MILLIS);
-    private final Duration mUnsetRetryAfter = Duration.ZERO;
-    private final Duration mNegativeRetryAfter = Duration.of(-1, ChronoUnit.MILLIS);
+    private static final int VALID_ERROR_CODE = ERROR_TOO_MANY_REQUESTS;
+    private static final int INVALID_ERROR_CODE = 1000;
 
     @Test
     public void testExceptionWithErrorCode_valid() {
-        AdServicesNetworkException exception = new AdServicesNetworkException(mValidErrorCode);
+        AdServicesNetworkException exception = new AdServicesNetworkException(VALID_ERROR_CODE);
 
-        assertThat(exception.getErrorCode()).isEqualTo(mValidErrorCode);
+        assertThat(exception.getErrorCode()).isEqualTo(VALID_ERROR_CODE);
         assertThat(exception.getMessage()).isNull();
-        assertThat(exception.getRetryAfter())
-                .isEqualTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE);
+        assertThat(exception.toString())
+                .isEqualTo(getHumanReadableAdServicesNetworkException(VALID_ERROR_CODE));
     }
 
     @Test
@@ -52,115 +50,15 @@ public class AdServicesNetworkExceptionTest {
         Exception exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> new AdServicesNetworkException(mInvalidErrorCode));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_ERROR_CODE_MESSAGE);
+                        () -> new AdServicesNetworkException(INVALID_ERROR_CODE));
+        assertThat(exception.getMessage()).isEqualTo(INVALID_ERROR_CODE_MESSAGE);
     }
 
-    @Test
-    public void testExceptionWithErrorCodeAndServerResponse_valid() {
-        AdServicesNetworkException exception =
-                new AdServicesNetworkException(mValidErrorCode, mServerResponse);
-
-        assertThat(exception.getErrorCode()).isEqualTo(mValidErrorCode);
-        assertThat(exception.getMessage()).isEqualTo(mServerResponse);
-        assertThat(exception.getRetryAfter())
-                .isEqualTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndServerResponse_errorCodeInvalid() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> new AdServicesNetworkException(mInvalidErrorCode, mServerResponse));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_ERROR_CODE_MESSAGE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfter_valid() {
-        AdServicesNetworkException exception =
-                new AdServicesNetworkException(mValidErrorCode, mValidRetryAfter);
-
-        assertThat(exception.getErrorCode()).isEqualTo(mValidErrorCode);
-        assertThat(exception.getRetryAfter()).isEqualTo(mValidRetryAfter);
-        assertThat(exception.getMessage()).isNull();
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfter_errorCodeInvalid() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> new AdServicesNetworkException(mInvalidErrorCode, mValidRetryAfter));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_ERROR_CODE_MESSAGE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfter_retryAfterUnset() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> new AdServicesNetworkException(mValidErrorCode, mUnsetRetryAfter));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_RETRY_AFTER_MESSAGE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfter_retryAfterNegative() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> new AdServicesNetworkException(mValidErrorCode, mNegativeRetryAfter));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_RETRY_AFTER_MESSAGE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfterAndServerResponse_valid() {
-        AdServicesNetworkException exception =
-                new AdServicesNetworkException(mValidErrorCode, mValidRetryAfter, mServerResponse);
-
-        assertThat(exception.getErrorCode()).isEqualTo(mValidErrorCode);
-        assertThat(exception.getRetryAfter()).isEqualTo(mValidRetryAfter);
-        assertThat(exception.getMessage()).isEqualTo(mServerResponse);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfterAndServerResponse_errorCodeInvalid() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                new AdServicesNetworkException(
-                                        mInvalidErrorCode, mValidRetryAfter, mServerResponse));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_ERROR_CODE_MESSAGE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfterAndServerResponse_retryAfterUnset() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                new AdServicesNetworkException(
-                                        mValidErrorCode, mUnsetRetryAfter, mServerResponse));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_RETRY_AFTER_MESSAGE);
-    }
-
-    @Test
-    public void testExceptionWithErrorCodeAndRetryAfterAndServerResponse_retryAfterNegative() {
-        Exception exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                new AdServicesNetworkException(
-                                        mValidErrorCode, mNegativeRetryAfter, mServerResponse));
-        assertThat(exception.getMessage())
-                .isEqualTo(AdServicesNetworkException.INVALID_RETRY_AFTER_MESSAGE);
+    private String getHumanReadableAdServicesNetworkException(int errorCode) {
+        return String.format(
+                ENGLISH,
+                "%s: {Error code: %s}",
+                AdServicesNetworkException.class.getCanonicalName(),
+                errorCode);
     }
 }

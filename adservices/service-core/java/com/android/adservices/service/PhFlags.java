@@ -79,6 +79,8 @@ public final class PhFlags implements Flags {
     // Topics Cobalt keys
     static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
     static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
+    static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
+            "adservices_release_stage_for_cobalt";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -132,6 +134,8 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
     static final String KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY =
             "measurement_enable_shared_source_debug_key";
+    static final String KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA =
+            "measurement_enable_shared_filter_data_keys_xna";
     static final String KEY_MEASUREMENT_ENABLE_DEBUG_REPORT = "measurement_enable_debug_report";
     static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT =
             "measurement_enable_source_debug_report";
@@ -179,7 +183,10 @@ public final class PhFlags implements Flags {
             "measurement_vtc_configurable_max_event_reports_count";
 
     static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
-            "key_measurement_enable_ara_parsing_alignment_v1";
+            "measurement_enable_ara_parsing_alignment_v1";
+
+    static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
+            "measurement_enable_ara_deduplication_alignment_v1";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -880,6 +887,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getAdservicesReleaseStageForCobalt() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
+                /* defaultValue */ ADSERVICES_RELEASE_STAGE_FOR_COBALT);
+    }
+
+    @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
@@ -1076,6 +1092,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY,
                 /* defaultValue */ MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA,
+                /* defaultValue */ MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA);
     }
 
     @Override
@@ -3008,7 +3032,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public float getMeasurementFlexAPIMaxInformationGainEvent() {
+    public float getMeasurementFlexApiMaxInformationGainEvent() {
         return DeviceConfig.getFloat(
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
@@ -3016,7 +3040,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public float getMeasurementFlexAPIMaxInformationGainNavigation() {
+    public float getMeasurementFlexApiMaxInformationGainNavigation() {
         return DeviceConfig.getFloat(
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
@@ -3024,7 +3048,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getMeasurementFlexAPIMaxEventReports() {
+    public int getMeasurementFlexApiMaxEventReports() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS,
@@ -3032,7 +3056,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getMeasurementFlexAPIMaxEventReportWindows() {
+    public int getMeasurementFlexApiMaxEventReportWindows() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS,
@@ -3040,7 +3064,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+    public int getMeasurementFlexApiMaxTriggerDataCardinality() {
         return DeviceConfig.getInt(
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY,
@@ -3447,6 +3471,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableSharedSourceDebugKey());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA
+                        + " = "
+                        + getMeasurementEnableSharedFilterDataKeysXNA());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
                         + " = "
                         + getEnforceEnrollmentOriginMatch());
@@ -3504,27 +3533,27 @@ public final class PhFlags implements Flags {
                 "\t"
                         + KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
                         + " = "
-                        + getMeasurementFlexAPIMaxInformationGainEvent());
+                        + getMeasurementFlexApiMaxInformationGainEvent());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION
                         + " = "
-                        + getMeasurementFlexAPIMaxInformationGainNavigation());
+                        + getMeasurementFlexApiMaxInformationGainNavigation());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
                         + " = "
-                        + getMeasurementFlexAPIMaxEventReports());
+                        + getMeasurementFlexApiMaxEventReports());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS
                         + " = "
-                        + getMeasurementFlexAPIMaxEventReportWindows());
+                        + getMeasurementFlexApiMaxEventReportWindows());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY
                         + " = "
-                        + getMeasurementFlexAPIMaxTriggerDataCardinality());
+                        + getMeasurementFlexApiMaxTriggerDataCardinality());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS
@@ -3665,6 +3694,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1
                         + " = "
                         + getMeasurementEnableAraParsingAlignmentV1());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1
+                        + " = "
+                        + getMeasurementEnableAraDeduplicationAlignmentV1());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -4159,6 +4193,11 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+        writer.println(
+                "\t"
+                        + KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT
+                        + " = "
+                        + getAdservicesReleaseStageForCobalt());
         writer.println("==== AdServices Consent Dump STATUS ====");
         writer.println("\t" + KEY_CONSENT_SOURCE_OF_TRUTH + " = " + getConsentSourceOfTruth());
         writer.println(
@@ -4411,6 +4450,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1,
                 /* defaultValue */ MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1,
+                /* defaultValue */ MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1);
     }
 
     @Override
