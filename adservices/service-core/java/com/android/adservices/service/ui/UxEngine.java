@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.ui;
 
-import static com.android.adservices.service.ui.constants.DebugMessages.NO_ENROLLMENT_CHANNEL_AVAILABLE;
+import static com.android.adservices.service.ui.constants.DebugMessages.NO_ENROLLMENT_CHANNEL_AVAILABLE_MESSAGE;
 
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
@@ -84,8 +84,10 @@ public class UxEngine {
             // UX and channel should only be updated when an enrollment channel exists.
             mConsentManager.setUx(eligibleUx);
             mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
-            LogUtil.d("Ux: " + eligibleUx);
-            LogUtil.d("Enrollment Channel: " + eligibleEnrollmentChannel);
+            LogUtil.d(
+                    String.format(
+                            "Ux: %s, Enrollment Channel: %s",
+                            eligibleUx, eligibleEnrollmentChannel));
 
             // Entry point request should not trigger enrollment but should refresh the UX states.
             if (adServicesStates.isPrivacySandboxUiRequest()) {
@@ -93,7 +95,6 @@ public class UxEngine {
                 return;
             }
 
-            LogUtil.d("Starting enrollment logic.");
             eligibleUx
                     .getUx()
                     .handleEnrollment(
@@ -107,6 +108,6 @@ public class UxEngine {
             return;
         }
 
-        LogUtil.d(NO_ENROLLMENT_CHANNEL_AVAILABLE);
+        LogUtil.d(NO_ENROLLMENT_CHANNEL_AVAILABLE_MESSAGE);
     }
 }
