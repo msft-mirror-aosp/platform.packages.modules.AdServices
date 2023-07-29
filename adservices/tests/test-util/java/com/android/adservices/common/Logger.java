@@ -21,41 +21,41 @@ import com.google.errorprone.annotations.FormatString;
 import java.util.Objects;
 
 /** Helper class providing convenience methods to log a message. */
-final class Logger {
+public final class Logger {
 
     private final RealLogger mRealLogger;
 
-    Logger(RealLogger realLogger) {
+    public Logger(RealLogger realLogger) {
         mRealLogger = Objects.requireNonNull(realLogger);
     }
 
     /** Convenience method to log an error message. */
     @FormatMethod
-    protected void e(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+    public void e(@FormatString String msgFmt, @Nullable Object... msgArgs) {
         log(LogLevel.WARNING, msgFmt, msgArgs);
     }
 
     /** Convenience method to log a warning message. */
     @FormatMethod
-    protected void w(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+    public void w(@FormatString String msgFmt, @Nullable Object... msgArgs) {
         log(LogLevel.WARNING, msgFmt, msgArgs);
     }
 
     /** Convenience method to log a info message. */
     @FormatMethod
-    protected void i(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+    public void i(@FormatString String msgFmt, @Nullable Object... msgArgs) {
         log(LogLevel.INFO, msgFmt, msgArgs);
     }
 
     /** Convenience method to log a debug message. */
     @FormatMethod
-    protected void d(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+    public void d(@FormatString String msgFmt, @Nullable Object... msgArgs) {
         log(LogLevel.DEBUG, msgFmt, msgArgs);
     }
 
     /** Convenience method to log a verbose message. */
     @FormatMethod
-    protected void v(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+    public void v(@FormatString String msgFmt, @Nullable Object... msgArgs) {
         log(LogLevel.VERBOSE, msgFmt, msgArgs);
     }
 
