@@ -67,8 +67,11 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         }
         ShellUtils.runShellCommand(
                 "device_config put adservices enable_ad_services_system_api true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux U18_UX");
 
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());

@@ -264,8 +264,8 @@ public class ReportSpec {
      *
      * @return json object encode this class
      */
-    public String encodeTriggerSpecsToJSON() {
-        return encodeTriggerSpecsToJSON(mTriggerSpecs);
+    public String encodeTriggerSpecsToJson() {
+        return encodeTriggerSpecsToJson(mTriggerSpecs);
     }
 
     /**
@@ -274,7 +274,7 @@ public class ReportSpec {
      * @param triggerSpecs triggerSpec array to be encoded
      * @return JSON encoded String
      */
-    public static String encodeTriggerSpecsToJSON(TriggerSpec[] triggerSpecs) {
+    public static String encodeTriggerSpecsToJson(TriggerSpec[] triggerSpecs) {
         try {
             JSONObject[] triggerSpecsArray = new JSONObject[triggerSpecs.length];
             for (int i = 0; i < triggerSpecs.length; i++) {
@@ -282,7 +282,7 @@ public class ReportSpec {
             }
             return new JSONArray(triggerSpecsArray).toString();
         } catch (JSONException e) {
-            LogUtil.e("ReportSpec::encodeTriggerSpecsToJSON is unable to encode TriggerSpecs");
+            LogUtil.e("ReportSpec::encodeTriggerSpecsToJson is unable to encode TriggerSpecs");
             return null;
         }
     }
@@ -410,7 +410,7 @@ public class ReportSpec {
 
             // compute number of state and other privacy parameters
             mNumStates =
-                    Combinatorics.getNumStatesFlexAPI(
+                    Combinatorics.getNumStatesFlexApi(
                             mMaxEventLevelReports, mPerTypeNumWindowList, mPerTypeCapList);
             mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
             mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);

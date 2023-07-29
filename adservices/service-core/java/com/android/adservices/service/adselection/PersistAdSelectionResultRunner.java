@@ -263,7 +263,7 @@ public class PersistAdSelectionResultRunner {
                                         .setSeller(seller)
                                         .setWinnerBuyer(
                                                 AdTechIdentifier.fromString(
-                                                        auctionResult.getCustomAudienceOwner()))
+                                                        auctionResult.getBuyer()))
                                         .setWinnerAdRenderUri(
                                                 Uri.parse(auctionResult.getAdRenderUrl()))
                                         // TODO(b/288622004): Validate that reporting url domain is
@@ -340,7 +340,7 @@ public class PersistAdSelectionResultRunner {
                 " Decrypted AuctionResult proto: "
                         + "\nadRenderUrl: %s"
                         + "\ncustom audience name: %s"
-                        + "\ncustom audience owner: %s"
+                        + "\nbuyer: %s"
                         + "\nscore: %s"
                         + "\nbid: %s"
                         + "\nis_chaff: %s"
@@ -348,7 +348,7 @@ public class PersistAdSelectionResultRunner {
                         + "\nseller reporting url: %s",
                 auctionResult.getAdRenderUrl(),
                 auctionResult.getCustomAudienceName(),
-                auctionResult.getCustomAudienceOwner(),
+                auctionResult.getBuyer(),
                 auctionResult.getScore(),
                 auctionResult.getBid(),
                 auctionResult.getIsChaff(),

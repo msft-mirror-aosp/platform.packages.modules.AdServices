@@ -34,8 +34,10 @@ import java.util.function.Supplier;
  * SDK level constraint.
  */
 // TODO(b/284971005): add unit test coverage for rule.
-public final class SdkLevelSupportRule extends AbstractAndroidSupportedFeatureRule {
-    private static final String TAG = SdkLevelSupportRule.class.getSimpleName();
+public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
+
+    private static final AndroidLogger sLogger = new AndroidLogger(SdkLevelSupportRule.class);
+
     private final Supplier<Boolean> mSdkLevelConstraint;
 
     public SdkLevelSupportRule(Supplier<Boolean> sdkLevelConstraint) {
@@ -43,7 +45,7 @@ public final class SdkLevelSupportRule extends AbstractAndroidSupportedFeatureRu
     }
 
     public SdkLevelSupportRule(Mode mode, Supplier<Boolean> sdkLevelConstraint) {
-        super(mode, TAG);
+        super(sLogger, mode);
         this.mSdkLevelConstraint = sdkLevelConstraint;
     }
 
@@ -58,12 +60,12 @@ public final class SdkLevelSupportRule extends AbstractAndroidSupportedFeatureRu
     }
 
     @Override
-    protected void throwFeatureNotSupportedAVE() {
+    protected void throwFeatureNotSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device doesn't support desired SDK level.");
     }
 
     @Override
-    protected void throwFeatureSupportedAVE() {
+    protected void throwFeatureSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device supports SDK Level.");
     }
 
