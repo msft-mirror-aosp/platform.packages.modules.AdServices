@@ -21,11 +21,11 @@ import com.google.errorprone.annotations.FormatString;
 import java.util.Objects;
 
 /** Helper class providing convenience methods to log a message. */
-final class Logger {
+public final class Logger {
 
     private final RealLogger mRealLogger;
 
-    Logger(RealLogger realLogger) {
+    public Logger(RealLogger realLogger) {
         mRealLogger = Objects.requireNonNull(realLogger);
     }
 
