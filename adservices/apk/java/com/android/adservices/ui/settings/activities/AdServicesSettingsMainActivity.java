@@ -65,7 +65,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         }
         UiStatsLogger.logSettingsPageDisplayed(getApplication());
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi(this)) {
             initMainFragment();
         }
     }
@@ -84,7 +84,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi(getApplicationContext())) {
             initWithUx(this, getApplicationContext());
         }
     }
