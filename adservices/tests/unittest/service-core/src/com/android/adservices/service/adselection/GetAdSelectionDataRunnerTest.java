@@ -32,7 +32,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
-import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -178,8 +177,7 @@ public class GetAdSelectionDataRunnerTest {
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
-                        .setAdSelectionDataRequest(
-                                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build())
+                        .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
@@ -221,8 +219,7 @@ public class GetAdSelectionDataRunnerTest {
 
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
-                        .setAdSelectionDataRequest(
-                                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build())
+                        .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         GetAdSelectionDataTestCallback callback =

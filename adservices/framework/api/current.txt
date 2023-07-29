@@ -109,19 +109,13 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedScoringSignals();
   }
 
-  public final class GetAdSelectionDataOutcome implements android.os.Parcelable {
-    method public int describeContents();
+  public final class GetAdSelectionDataOutcome {
     method @Nullable public byte[] getAdSelectionData();
-    method @Nullable public long getAdSelectionId();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.GetAdSelectionDataOutcome> CREATOR;
+    method public long getAdSelectionId();
   }
 
-  public final class GetAdSelectionDataRequest implements android.os.Parcelable {
-    method public int describeContents();
+  public final class GetAdSelectionDataRequest {
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.GetAdSelectionDataRequest> CREATOR;
   }
 
   public static final class GetAdSelectionDataRequest.Builder {
@@ -130,13 +124,10 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
   }
 
-  public final class PersistAdSelectionResultRequest implements android.os.Parcelable {
-    method public int describeContents();
+  public final class PersistAdSelectionResultRequest {
     method public long getAdSelectionId();
     method @Nullable public byte[] getAdSelectionResult();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.PersistAdSelectionResultRequest> CREATOR;
   }
 
   public static final class PersistAdSelectionResultRequest.Builder {

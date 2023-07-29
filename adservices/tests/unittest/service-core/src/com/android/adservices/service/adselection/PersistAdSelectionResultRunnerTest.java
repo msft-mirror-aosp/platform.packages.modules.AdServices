@@ -27,7 +27,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
-import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -172,12 +171,9 @@ public class PersistAdSelectionResultRunnerTest {
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
-                        .setPersistAdSelectionResultRequest(
-                                new PersistAdSelectionResultRequest.Builder()
-                                        .setSeller(SELLER)
-                                        .setAdSelectionId(AD_SELECTION_ID)
-                                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
-                                        .build())
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         PersistAdSelectionResultTestCallback callback =
@@ -212,12 +208,9 @@ public class PersistAdSelectionResultRunnerTest {
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
-                        .setPersistAdSelectionResultRequest(
-                                new PersistAdSelectionResultRequest.Builder()
-                                        .setSeller(SELLER)
-                                        .setAdSelectionId(AD_SELECTION_ID)
-                                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
-                                        .build())
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         PersistAdSelectionResultTestCallback callback =
@@ -249,12 +242,9 @@ public class PersistAdSelectionResultRunnerTest {
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
-                        .setPersistAdSelectionResultRequest(
-                                new PersistAdSelectionResultRequest.Builder()
-                                        .setSeller(SELLER)
-                                        .setAdSelectionId(AD_SELECTION_ID)
-                                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
-                                        .build())
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         PersistAdSelectionResultTestCallback callback =
