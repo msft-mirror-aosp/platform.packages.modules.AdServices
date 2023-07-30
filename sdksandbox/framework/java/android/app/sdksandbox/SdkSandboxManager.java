@@ -753,46 +753,26 @@ public final class SdkSandboxManager {
 
         @Override
         public void onLoadSdkSuccess(
-                SandboxedSdk sandboxedSdk,
-                long timeSystemServerCalledApp,
-                SandboxLatencyInfo sandboxLatencyInfo) {
+                SandboxedSdk sandboxedSdk, SandboxLatencyInfo sandboxLatencyInfo) {
             logLatencies(sandboxLatencyInfo);
-            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
         public void onLoadSdkFailure(
-                LoadSdkException exception,
-                long timeSystemServerCalledApp,
-                SandboxLatencyInfo sandboxLatencyInfo) {
+                LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
             logLatencies(sandboxLatencyInfo);
-            logLatencyFromSystemServerToApp(timeSystemServerCalledApp);
             mExecutor.execute(() -> mCallback.onError(exception));
         }
 
         private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
+            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(System.currentTimeMillis());
             try {
                 mService.logLatencies(sandboxLatencyInfo);
             } catch (RemoteException e) {
                 Log.w(
                         TAG,
                         "Remote exception while calling logLatencies."
-                                + "Error: "
-                                + e.getMessage());
-            }
-        }
-
-        private void logLatencyFromSystemServerToApp(long timeSystemServerCalledApp) {
-            try {
-                mService.logLatencyFromSystemServerToApp(
-                        ISdkSandboxManager.LOAD_SDK,
-                        // TODO(b/242832156): Add Injector class for testing
-                        (int) (System.currentTimeMillis() - timeSystemServerCalledApp));
-            } catch (RemoteException e) {
-                Log.w(
-                        TAG,
-                        "Remote exception while calling logLatencyFromSystemServerToApp."
                                 + "Error: "
                                 + e.getMessage());
             }

@@ -244,11 +244,11 @@ public class ReportSpecTest {
     }
 
     @Test
-    public void encodeTriggerSpecsToJSON_equal() throws JSONException {
+    public void encodeTriggerSpecsToJson_equal() throws JSONException {
         ReportSpec testObject1 = new ReportSpec(
                 SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "3", null);
 
-        String encodedJSON = testObject1.encodeTriggerSpecsToJSON();
+        String encodedJSON = testObject1.encodeTriggerSpecsToJson();
 
         ReportSpec testObject2 = new ReportSpec(new JSONArray(encodedJSON).toString(), "3", null);
         // Assertion

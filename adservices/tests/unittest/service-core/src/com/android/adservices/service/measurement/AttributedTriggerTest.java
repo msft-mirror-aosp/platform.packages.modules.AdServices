@@ -291,10 +291,7 @@ public class AttributedTriggerTest {
     public void encodeToJson_jsonConstructor_equalAfterReconstructing() throws JSONException {
         JSONObject triggerObj = new JSONObject();
         triggerObj.put("trigger_id", TRIGGER_ID1);
-        triggerObj.put("priority", PRIORITY1);
-        triggerObj.put("trigger_data", TRIGGER_DATA1.toString());
-        triggerObj.put("value", VALUE1);
-        triggerObj.put("trigger_time", TRIGGER_TIME1);
+        triggerObj.put("trigger_data", TRIGGER_DATA1);
         triggerObj.put("dedup_key", DEDUP_KEY1.toString());
 
         AttributedTrigger triggerFromJson = new AttributedTrigger(triggerObj);
@@ -313,7 +310,33 @@ public class AttributedTriggerTest {
     }
 
     @Test
-    public void encodeToJson_triggerDataNull_throws() {
+    public void encodeToJsonFlexApi_jsonConstructor_equalAfterReconstructing()
+            throws JSONException {
+        JSONObject triggerObj = new JSONObject();
+        triggerObj.put("trigger_id", TRIGGER_ID1);
+        triggerObj.put("priority", PRIORITY1);
+        triggerObj.put("trigger_data", TRIGGER_DATA1.toString());
+        triggerObj.put("value", VALUE1);
+        triggerObj.put("trigger_time", TRIGGER_TIME1);
+        triggerObj.put("dedup_key", DEDUP_KEY1.toString());
+
+        AttributedTrigger triggerFromJson = new AttributedTrigger(triggerObj);
+        JSONObject encodedObj = triggerFromJson.encodeToJsonFlexApi();
+
+        // The original object used in the constructor is similar to the encoded object
+        HashSet<String> keys = new HashSet(triggerObj.keySet());
+        keys.addAll(encodedObj.keySet());
+        for (String key : keys) {
+            assertEquals(triggerObj.get(key).toString(), encodedObj.get(key).toString());
+        }
+
+        // The AttributedTrigger constructed from the original object is equal to the
+        // AttributedTrigger constructed from the encoded object.
+        assertEquals(triggerFromJson, new AttributedTrigger(encodedObj));
+    }
+
+    @Test
+    public void encodeToJsonFlexApi_triggerDataNull_throws() {
         AttributedTrigger attributedTrigger =
                 new AttributedTrigger(
                         TRIGGER_ID1,
@@ -325,6 +348,6 @@ public class AttributedTriggerTest {
 
         assertThrows(
                 NullPointerException.class,
-                () -> attributedTrigger.encodeToJson());
+                () -> attributedTrigger.encodeToJsonFlexApi());
     }
 }
