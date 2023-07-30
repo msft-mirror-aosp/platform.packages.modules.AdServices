@@ -288,6 +288,17 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Change the summary bucket of the event report
+     *
+     * @param eventReportId the id of the event report to be updated
+     * @param summaryBucket the new summary bucket of the report
+     * @throws DatastoreException
+     */
+    void updateEventReportSummaryBucket(
+            @NonNull String eventReportId, @NonNull String summaryBucket) throws DatastoreException;
+    ;
+
+    /**
      * Change the status of an event debug report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated

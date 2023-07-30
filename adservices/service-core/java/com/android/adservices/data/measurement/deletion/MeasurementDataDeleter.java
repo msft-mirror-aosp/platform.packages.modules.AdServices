@@ -331,6 +331,7 @@ public class MeasurementDataDeleter {
                     dao.updateSourceAttributedTriggers(
                             source.getId(),
                             source.attributedTriggersToJsonFlexApi());
+                    ReportSpecUtil.resetSummaryBucketForAllEventReport(source, dao);
                 }
             }
         }

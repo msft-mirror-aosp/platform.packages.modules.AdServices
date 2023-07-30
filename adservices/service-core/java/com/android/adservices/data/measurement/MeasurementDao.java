@@ -711,7 +711,26 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.EventReportContract.ID + " = ?",
                                 new String[] {eventReportId});
         if (rows != 1) {
-            throw new DatastoreException("EventReport update failed.");
+            throw new DatastoreException("EventReport status update failed.");
+        }
+    }
+
+    @Override
+    public void updateEventReportSummaryBucket(
+            @NonNull String eventReportId, @NonNull String summaryBucket)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET, summaryBucket);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.EventReportContract.TABLE,
+                                values,
+                                MeasurementTables.EventReportContract.ID + " = ?",
+                                new String[] {eventReportId});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport summary bucket update failed.");
         }
     }
 
@@ -966,6 +985,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
                 eventReport.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                eventReport.getStringEncodedTriggerSummaryBucket());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

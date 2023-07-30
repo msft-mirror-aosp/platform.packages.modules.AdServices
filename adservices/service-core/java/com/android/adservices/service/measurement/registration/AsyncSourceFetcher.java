@@ -140,14 +140,9 @@ public class AsyncSourceFetcher {
         long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Optional<UnsignedLong> maybeExpiry =
-                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.EXPIRY);
-                if (!maybeExpiry.isPresent()) {
-                    return false;
-                }
                 UnsignedLong expiryUnsigned =
                         extractValidNumberInRange(
-                                maybeExpiry.get(),
+                                new UnsignedLong(json.getString(SourceHeaderContract.EXPIRY)),
                                 new UnsignedLong(
                                         MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                                 new UnsignedLong(
@@ -171,14 +166,10 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
             long eventReportWindow;
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Optional<UnsignedLong> maybeEventReportWindow = FetcherUtil.extractUnsignedLong(
-                        json, SourceHeaderContract.EVENT_REPORT_WINDOW);
-                if (!maybeEventReportWindow.isPresent()) {
-                    return false;
-                }
                 UnsignedLong eventReportWindowUnsigned =
                         extractValidNumberInRange(
-                                        maybeEventReportWindow.get(),
+                                new UnsignedLong(
+                                        json.getString(SourceHeaderContract.EVENT_REPORT_WINDOW)),
                                 new UnsignedLong(
                                         mFlags.getMeasurementMinimumEventReportWindowInSeconds()),
                                 new UnsignedLong(
@@ -199,16 +190,11 @@ public class AsyncSourceFetcher {
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Optional<UnsignedLong> maybeAggregatableReportWindow =
-                        FetcherUtil.extractUnsignedLong(
-                                json, SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW);
-                if (!maybeAggregatableReportWindow.isPresent()) {
-                    return false;
-                }
                 // Registration will be rejected if parsing unsigned long throws.
                 UnsignedLong aggregateReportWindowUnsigned =
                         extractValidNumberInRange(
-                                maybeAggregatableReportWindow.get(),
+                                new UnsignedLong(json.getString(
+                                        SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
                                 new UnsignedLong(
                                         MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                                 new UnsignedLong(
