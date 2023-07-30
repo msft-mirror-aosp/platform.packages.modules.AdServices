@@ -22,7 +22,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJSON;
+import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJson;
 import static com.android.adservices.service.measurement.Source.getOrDefaultEventReportWindows;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.TriggerSpec.getLongArrayFromJSON;
@@ -140,14 +140,9 @@ public class AsyncSourceFetcher {
         long expiry;
         if (!json.isNull(SourceHeaderContract.EXPIRY)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Optional<UnsignedLong> maybeExpiry =
-                        FetcherUtil.extractUnsignedLong(json, SourceHeaderContract.EXPIRY);
-                if (!maybeExpiry.isPresent()) {
-                    return false;
-                }
                 UnsignedLong expiryUnsigned =
                         extractValidNumberInRange(
-                                maybeExpiry.get(),
+                                new UnsignedLong(json.getString(SourceHeaderContract.EXPIRY)),
                                 new UnsignedLong(
                                         MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                                 new UnsignedLong(
@@ -171,14 +166,10 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
             long eventReportWindow;
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Optional<UnsignedLong> maybeEventReportWindow = FetcherUtil.extractUnsignedLong(
-                        json, SourceHeaderContract.EVENT_REPORT_WINDOW);
-                if (!maybeEventReportWindow.isPresent()) {
-                    return false;
-                }
                 UnsignedLong eventReportWindowUnsigned =
                         extractValidNumberInRange(
-                                        maybeEventReportWindow.get(),
+                                new UnsignedLong(
+                                        json.getString(SourceHeaderContract.EVENT_REPORT_WINDOW)),
                                 new UnsignedLong(
                                         mFlags.getMeasurementMinimumEventReportWindowInSeconds()),
                                 new UnsignedLong(
@@ -199,16 +190,11 @@ public class AsyncSourceFetcher {
         long aggregateReportWindow;
         if (!json.isNull(SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
-                Optional<UnsignedLong> maybeAggregatableReportWindow =
-                        FetcherUtil.extractUnsignedLong(
-                                json, SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW);
-                if (!maybeAggregatableReportWindow.isPresent()) {
-                    return false;
-                }
                 // Registration will be rejected if parsing unsigned long throws.
                 UnsignedLong aggregateReportWindowUnsigned =
                         extractValidNumberInRange(
-                                maybeAggregatableReportWindow.get(),
+                                new UnsignedLong(json.getString(
+                                        SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
                                 new UnsignedLong(
                                         MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                                 new UnsignedLong(
@@ -411,7 +397,7 @@ public class AsyncSourceFetcher {
             if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
                 int maxEventLevelReports =
                         json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                if (maxEventLevelReports > mFlags.getMeasurementFlexAPIMaxEventReports()) {
+                if (maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
                     return false;
                 }
                 builder.setMaxEventLevelReports(maxEventLevelReports);
@@ -506,7 +492,7 @@ public class AsyncSourceFetcher {
                                     triggerSpecJson.getJSONObject(i), defaultStart, defaultEnds)
                             .build();
         }
-        return encodeTriggerSpecsToJSON(triggerSpecs);
+        return encodeTriggerSpecsToJson(triggerSpecs);
     }
 
     private boolean isTriggerSpecArrayValid(String triggerSpecString, long expiry) {
@@ -520,7 +506,7 @@ public class AsyncSourceFetcher {
                 }
             }
             // Check cardinality of trigger_data across the whole trigger spec array
-            if (triggerDataSet.size() > mFlags.getMeasurementFlexAPIMaxTriggerDataCardinality()) {
+            if (triggerDataSet.size() > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
                 return false;
             }
         } catch (JSONException | IllegalArgumentException ex) {
@@ -538,7 +524,7 @@ public class AsyncSourceFetcher {
                         triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA);
         if (triggerDataList.isEmpty()
                 || triggerDataList.size()
-                        > mFlags.getMeasurementFlexAPIMaxTriggerDataCardinality()) {
+                        > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
             return false;
         }
         // Check exclusivity of trigger_data across the whole trigger spec array
@@ -606,7 +592,7 @@ public class AsyncSourceFetcher {
                 getLongArrayFromJSON(
                         jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES);
         if (windowsEnd.isEmpty()
-                || windowsEnd.size() > mFlags.getMeasurementFlexAPIMaxEventReportWindows()) {
+                || windowsEnd.size() > mFlags.getMeasurementFlexApiMaxEventReportWindows()) {
             return false;
         }
 
@@ -688,6 +674,13 @@ public class AsyncSourceFetcher {
                 JSONArray sharedAggregationKeys =
                         json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
                 builder.setSharedAggregationKeys(sharedAggregationKeys.toString());
+            }
+            if (mFlags.getMeasurementEnableSharedFilterDataKeysXNA()
+                    && !json.isNull(SourceHeaderContract.SHARED_FILTER_DATA_KEYS)) {
+                // Parsed as JSONArray for validation
+                JSONArray sharedFilterDataKeys =
+                        json.getJSONArray(SourceHeaderContract.SHARED_FILTER_DATA_KEYS);
+                builder.setSharedFilterDataKeys(sharedFilterDataKeys.toString());
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
@@ -847,6 +840,7 @@ public class AsyncSourceFetcher {
         String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String SHARED_DEBUG_KEY = "shared_debug_key";
+        String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
     }
 
     private interface SourceRequestContract {

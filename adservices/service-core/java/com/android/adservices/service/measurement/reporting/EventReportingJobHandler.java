@@ -198,17 +198,16 @@ public class EventReportingJobHandler {
         return new EventReportPayload.Builder()
                 .setReportId(eventReport.getId())
                 .setSourceEventId(eventReport.getSourceEventId())
-                .setAttributionDestination(
-                        eventReport.getAttributionDestinations())
+                .setAttributionDestination(eventReport.getAttributionDestinations())
                 .setScheduledReportTime(
                         String.valueOf(
-                                TimeUnit.MILLISECONDS.toSeconds(
-                                        eventReport.getReportTime())))
+                                TimeUnit.MILLISECONDS.toSeconds(eventReport.getReportTime())))
                 .setTriggerData(eventReport.getTriggerData())
                 .setSourceType(eventReport.getSourceType().getValue())
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
                 .setSourceDebugKey(eventReport.getSourceDebugKey())
                 .setTriggerDebugKey(eventReport.getTriggerDebugKey())
+                .setTriggerSummaryBucket(eventReport.getTriggerSummaryBucket())
                 .build()
                 .toJson();
     }
