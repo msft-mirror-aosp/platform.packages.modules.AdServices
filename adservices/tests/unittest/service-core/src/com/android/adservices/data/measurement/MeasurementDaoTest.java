@@ -4483,6 +4483,62 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void constructEventReportFromCursor_missingTriggerSummaryBucket_noException() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<EventReport> eventReportList = new ArrayList<>();
+
+        // set a valid trigger summary bucket
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("2")
+                        .setTriggerSummaryBucket("10,99")
+                        .build());
+        // set null for trigger summary bucket explicitly
+        String emptySummaryBucket = null;
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("3")
+                        .setTriggerSummaryBucket(emptySummaryBucket)
+                        .build());
+
+        eventReportList.forEach(
+                eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(
+                            MeasurementTables.EventReportContract.ID, UUID.randomUUID().toString());
+                    values.put(
+                            MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                            eventReport.getStringEncodedTriggerSummaryBucket());
+                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<EventReport> results = new ArrayList<>();
+        Cursor cursor =
+                db.query(
+                        EventReportContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+            results.add(eventReport);
+        }
+        assertEquals(
+                eventReportList.get(0).getStringEncodedTriggerSummaryBucket(),
+                results.get(0).getStringEncodedTriggerSummaryBucket());
+        assertEquals(
+                eventReportList.get(1).getStringEncodedTriggerSummaryBucket(),
+                results.get(1).getStringEncodedTriggerSummaryBucket());
+    }
+
+    @Test
     public void testDeleteAppRecordsNotPresentForAggregateReports() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<AggregateReport> aggregateReportList = new ArrayList<>();
