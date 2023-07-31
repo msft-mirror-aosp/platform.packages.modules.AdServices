@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.util;
+package com.android.adservices.service.common;
 
 import android.net.Uri;
 
@@ -22,14 +22,14 @@ import com.google.common.net.InternetDomainName;
 
 import java.util.Optional;
 
-/** Web utilities for measurement. */
-public final class Web {
+/** Web address utilities. */
+public final class WebAddresses {
 
     private static final String HTTPS_SCHEME = "https";
     private static final String LOCALHOST = "localhost";
     private static final String LOCALHOST_IP = "127.0.0.1";
 
-    private Web() { }
+    private WebAddresses() { }
 
     /**
      * Returns a {@code Uri} of the scheme concatenated with the first subdomain of the provided URL
