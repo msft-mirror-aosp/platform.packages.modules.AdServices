@@ -47,6 +47,9 @@ android_test_helper_app {
         "androidx.test.ext.junit",
         "cts-install-lib",
     ],
+    libs: [
+        "framework-adservices.impl",
+    ],
     java_resources: [
         ":com.android.adservices.withoutapk.test",
     ],
