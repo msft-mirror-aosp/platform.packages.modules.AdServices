@@ -190,6 +190,24 @@ public class AdServicesHttpsClient {
     /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @param headers keys of the headers we want in the response
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
+            @NonNull Uri uri, @NonNull ImmutableSet<String> headers) {
+        LogUtil.v("Fetching payload from uri: " + uri + " with headers: " + headers.toString());
+        return fetchPayload(
+                AdServicesHttpClientRequest.builder()
+                        .setUri(uri)
+                        .setResponseHeaderKeys(headers)
+                        .build());
+    }
+
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload.
+     *
      * @param request of type {@link AdServicesHttpClientRequest}
      * @return a string containing the fetched payload
      */
