@@ -20,6 +20,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.content.Context;
 
 import androidx.annotation.Nullable;
 
@@ -2736,6 +2737,10 @@ public interface Flags {
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
     /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi(Context context) {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+    }
+
     default boolean getEnableAdServicesSystemApi() {
         return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
     }

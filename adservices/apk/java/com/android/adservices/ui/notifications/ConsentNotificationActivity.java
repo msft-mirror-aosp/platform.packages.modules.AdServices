@@ -83,12 +83,16 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Context context = getApplicationContext();
+
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            OTAResourcesManager.applyOTAResources(context, true);
         }
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
-            initWithUx(this, getApplicationContext());
+
+        if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
+                || FlagsFactory.getFlags().getEnableAdServicesSystemApi(context)) {
+            initWithUx(this, context);
         } else {
             initFragment();
         }

@@ -42,7 +42,7 @@ public class TopicsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi(this)) {
             initFragment();
         }
     }
