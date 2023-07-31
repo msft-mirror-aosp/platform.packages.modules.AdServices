@@ -70,8 +70,8 @@ public class AdExtServicesBootCompleteReceiverHostTest implements IDeviceTest {
         // reboot the device
         device.reboot();
         device.waitForDeviceAvailable();
-        // Sleep 30s to wait for AdBootCompletedReceiver execution
-        Thread.sleep(30 * 1000);
+        // Sleep 5 mins to wait for AdBootCompletedReceiver execution
+        Thread.sleep(300 * 1000);
 
         String startActivityMsg =
                 getDevice().executeShellCommand("am start -a android.adservices.ui.SETTINGS");
@@ -83,11 +83,17 @@ public class AdExtServicesBootCompleteReceiverHostTest implements IDeviceTest {
         getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
         getDevice().executeShellCommand("device_config put adservices adservice_enabled true");
         getDevice().executeShellCommand("device_config put adservices enable_back_compat true");
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices set_sync_disabled_for_tests persistent");
     }
 
     private void resetCompatFlags() throws DeviceNotAvailableException {
         getDevice().executeShellCommand("device_config delete adservices global_kill_switch");
         getDevice().executeShellCommand("device_config delete adservices adservice_enabled");
         getDevice().executeShellCommand("device_config delete adservices enable_back_compat");
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices set_sync_disabled_for_tests none");
     }
 }
