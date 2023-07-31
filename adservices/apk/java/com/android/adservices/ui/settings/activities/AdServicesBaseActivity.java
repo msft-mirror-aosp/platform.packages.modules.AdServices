@@ -24,6 +24,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxSelector;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
@@ -47,7 +48,8 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, false);
         }
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(context).getUx() != null) {
             initWithUx(this, context);
         }
     }

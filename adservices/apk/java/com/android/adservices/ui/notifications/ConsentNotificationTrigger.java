@@ -95,7 +95,8 @@ public class ConsentNotificationTrigger {
                     ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
         }
 
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi(context)) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(context).getUx() != null) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     consentManager.recordGaUxNotificationDisplayed(true);
@@ -121,7 +122,8 @@ public class ConsentNotificationTrigger {
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
         Notification notification;
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi(context)) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(context).getUx() != null) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     if (UxStatesManager.getInstance(context)
@@ -148,7 +150,6 @@ public class ConsentNotificationTrigger {
                     notification = getGaConsentNotification(context, isEuDevice);
                 }
             } else {
-                android.util.Log.i("test", "5");
                 notification = getConsentNotification(context, isEuDevice);
             }
         }
@@ -167,7 +168,8 @@ public class ConsentNotificationTrigger {
             boolean isEuDevice,
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi(context)) {
+        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(context).getUx() != null) {
             switch (UxUtil.getUx(context)) {
                 case U18_UX:
                     consentManager.recordMeasurementDefaultConsent(true);
