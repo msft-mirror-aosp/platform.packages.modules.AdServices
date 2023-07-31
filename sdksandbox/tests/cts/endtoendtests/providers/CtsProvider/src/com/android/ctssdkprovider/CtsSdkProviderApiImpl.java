@@ -28,6 +28,7 @@ import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -259,6 +260,17 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         if (!userDao.getAll().contains(testData)) {
             throw new IllegalStateException(
                     "Room database access has failed - does not contain inserted data");
+        }
+    }
+
+    @Override
+    public void checkCanUseSharedPreferences() {
+        SharedPreferences sharedPref = mContext.getSharedPreferences("test", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("test_value", 54321);
+        if (!editor.commit() && sharedPref.getInt("test_value", 0) != 54321) {
+            throw new IllegalStateException("Sandboxed SDK could not access shared preferences");
         }
     }
 

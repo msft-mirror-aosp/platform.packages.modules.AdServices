@@ -31,6 +31,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,10 +55,23 @@ public class SdkSandboxStorageTest {
         mRule.getScenario();
     }
 
+    @After
+    public void teardown() {
+        try {
+            mSdkSandboxManager.unloadSdk(SDK_NAME_1);
+        } catch (Exception ignored) {
+        }
+    }
+
     // Verify that the SDK is able to use the Room library for storage.
     @Test
     public void testSdkSandboxRoomDatabaseAccess() throws Exception {
         loadSdk().checkRoomDatabaseAccess();
+    }
+
+    @Test
+    public void testSdkSandboxCanUseSharedPreferences() throws Exception {
+        loadSdk().checkCanUseSharedPreferences();
     }
 
     // Helper method to load SDK_NAME_1
