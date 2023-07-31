@@ -45,6 +45,14 @@ public class ReportImpressionRequestTest {
     }
 
     @Test
+    public void testBuildsReportImpressionInputWithOnlyAdSelectionId() {
+        ReportImpressionRequest request = new ReportImpressionRequest(AUCTION_ID);
+
+        assertThat(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
+        assertThat(request.getAdSelectionConfig()).isEqualTo(AdSelectionConfig.EMPTY);
+    }
+
+    @Test
     public void testFailsToBuildWithUnsetAdSelectionId() {
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
         assertThrows(
