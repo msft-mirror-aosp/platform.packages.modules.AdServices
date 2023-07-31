@@ -53,6 +53,8 @@ public class TestAdSelectionManager {
         mAdSelectionManager = adSelectionManager;
     }
 
+    // TODO(b/289362476): Add override APIs for server auction key fetch
+
     /**
      * Overrides the AdSelection API for a given {@link AdSelectionConfig} to avoid fetching data
      * from remote servers and use the data provided in {@link AddAdSelectionOverrideRequest}
