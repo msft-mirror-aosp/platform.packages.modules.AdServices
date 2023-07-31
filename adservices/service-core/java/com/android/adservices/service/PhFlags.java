@@ -1634,6 +1634,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
     }
 
+    @Override
+    public String getMsmtApiAppBlockList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST,
+                /* defaultValue */ MSMT_API_APP_BLOCK_LIST);
+    }
+
     // AdServices APK SHA certs.
     @Override
     public String getAdservicesApkShaCertificate() {
@@ -2854,6 +2863,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST
                         + " = "
                         + getMsmtApiAppAllowList());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST
+                        + " = "
+                        + getMsmtApiAppBlockList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
