@@ -226,7 +226,7 @@
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Hanya info yang sangat terbatas yang dibagikan antar-aplikasi untuk membantu mengukur performa iklan"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Kami meluncurkan fitur privasi iklan baru yang disebut pengukuran iklan. Android hanya membagikan informasi yang sangat terbatas antar-aplikasi, seperti saat iklan ditampilkan kepada Anda, untuk membantu aplikasi mengukur performa iklan."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Anda dapat mengubahnya di setelan privasi iklan."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android memungkinkan aplikasi mengumpulkan hanya jenis data terbatas."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android mengizinkan aplikasi mengumpulkan beberapa jenis data tertentu saja."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrasi simbol penuh warna yang menampilkan topik minat seperti musik, berita, dan olahraga"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrasi kunci dalam lingkaran yang penuh warna"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrasi hitam putih kecil yang menggambarkan sembilan titik membentuk persegi"</string>
