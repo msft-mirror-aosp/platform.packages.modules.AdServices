@@ -199,7 +199,7 @@
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android можа абагульваць з праграмамі толькі вельмі абмежаваную інфармацыю, каб яны маглі вымяраць эфектыўнасць рэкламы, якую паказваюць."</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Выключыць вымярэнне эфектыўнасці рэкламы?"</string>
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Усе справаздачы па вымярэнні эфектыўнасці рэкламы, якія знаходзяцца ў стане чакання, будуць выдалены. Новыя справаздачы не будуць стварацца і абагульвацца."</string>
-    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Прыватнасць пры паказе рэкламы"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Прыватнасць у рэкламе"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Тэмы рэкламы"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Рэклама, якую прапануюць праграмы"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android вызначае цікавыя для вас тэмы на падставе таго, якімі праграмамі і як часта вы нядаўна карысталіся."</string>
