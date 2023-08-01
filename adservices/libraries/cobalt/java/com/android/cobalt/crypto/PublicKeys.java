@@ -37,9 +37,15 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * </code>
  */
 final class PublicKeys {
-    // TODO(b/286278248): HPKE PROD keys are not available in the keystore. The PROD keys will be
-    //  added once the HPKE DEV keys are end-to-end tested.
     static final int X25519_PUBLIC_VALUE_LEN = 32;
+
+    static final byte[] SHUFFLER_KEY_PROD =
+            new byte[] {
+                -111, -111, 86, 123, -6, -114, -109, 121, -84, -113, -92, -5, 50, 103, 22, -53, 103,
+                -57, 97, 11, 80, -5, 105, -26, -122, 106, 65, 107, -32, -74, -23, 10
+            };
+    static final int SHUFFLER_KEY_INDEX_PROD = 11;
+
     static final byte[] SHUFFLER_KEY_DEV =
             new byte[] {
                 -90, -73, 32, -62, 119, -72, 48, -40, -127, -103, -7, -58, 35, -88, -4, 45, 33, 21,
@@ -47,6 +53,13 @@ final class PublicKeys {
             };
     static final int SHUFFLER_KEY_INDEX_DEV = 9;
     static final byte[] SHUFFLER_CONTEXT_INFO_BYTES = "cobalt-1.0-shuffler".getBytes(UTF_8);
+
+    static final byte[] ANALYZER_KEY_PROD =
+            new byte[] {
+                75, -121, 55, -37, -24, -80, -119, -113, -64, 25, -91, 114, -56, -23, 108, 5, 90,
+                -3, 24, -62, 1, 109, 51, 123, -88, 36, 36, 0, 51, 104, -37, 1
+            };
+    static final int ANALYZER_KEY_INDEX_PROD = 12;
     static final byte[] ANALYZER_KEY_DEV =
             new byte[] {
                 -5, -81, 123, 9, -16, -83, -75, -106, 122, -13, 111, -106, 123, -65, -7, -78, 125,
