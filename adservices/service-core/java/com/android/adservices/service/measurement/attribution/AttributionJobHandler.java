@@ -32,8 +32,8 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -283,11 +283,11 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        int numReports =
+        int numReportsPerDestination =
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
+        if (numReportsPerDestination >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
@@ -298,9 +298,29 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReports),
+                    String.valueOf(numReportsPerDestination),
                     measurementDao,
                     Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
+            return TriggeringStatus.DROPPED;
+        }
+
+        int numReportsPerSource = measurementDao.getNumAggregateReportsPerSource(source.getId());
+
+        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()
+                && numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
+            LogUtil.d(
+                    String.format(
+                            Locale.ENGLISH,
+                            "Aggregate reports for source %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            source.getId(),
+                            mFlags.getMeasurementMaxAggregateReportsPerSource()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReportsPerSource),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
             return TriggeringStatus.DROPPED;
         }
 

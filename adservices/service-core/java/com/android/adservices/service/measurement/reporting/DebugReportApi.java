@@ -78,6 +78,7 @@ public class DebugReportApi {
         String TRIGGER_EVENT_STORAGE_LIMIT = "trigger-event-storage-limit";
         String TRIGGER_UNKNOWN_ERROR = "trigger-unknown-error";
         String TRIGGER_AGGREGATE_STORAGE_LIMIT = "trigger-aggregate-storage-limit";
+        String TRIGGER_AGGREGATE_EXCESSIVE_REPORTS = "trigger-aggregate-excessive-reports";
     }
 
     /** Defines different verbose debug report body parameters. */

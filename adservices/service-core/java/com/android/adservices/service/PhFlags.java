@@ -654,6 +654,12 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
+    static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
+            "measurement_enable_max_aggregate_reports_per_source";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
+            "measurement_max_aggregate_reports_per_source";
+
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
             "measurement_min_event_report_delay_millis";
 
@@ -3118,6 +3124,23 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateReportsPerSource() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
     public long getMeasurementMinEventReportDelayMillis() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -4224,6 +4247,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE
+                        + " = "
+                        + getMeasurementEnableMaxAggregateReportsPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAggregateReportsPerSource());
     }
 
     @VisibleForTesting
