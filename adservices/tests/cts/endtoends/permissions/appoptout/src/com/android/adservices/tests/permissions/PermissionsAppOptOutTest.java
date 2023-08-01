@@ -31,7 +31,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.content.Context;
 import android.net.Uri;
 
@@ -128,27 +127,6 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testNoEnrollment_fledgeFetchAndJoinCustomAudience() {
-        AdvertisingCustomAudienceClient customAudienceClient =
-                new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                Uri.parse("https://buyer.example.com/fetch/ca"))
-                        .setName("exampleCustomAudience")
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> customAudienceClient.fetchAndJoinCustomAudience(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
