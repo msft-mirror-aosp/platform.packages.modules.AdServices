@@ -15,10 +15,12 @@
  */
 package com.android.adservices.common;
 
-// TODO(b/284971005): try to merge it with AdServicesSupportedRule (for example, using a
-// builder that would tell whether to check for device support)
+import com.android.tradefed.device.ITestDevice;
+
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
+
+    private ITestDevice mDevice;
 
     /** Creates a rule using {@link Mode#SUPPORTED_BY_DEFAULT}. */
     public AdServicesDeviceSupportedRule() {
@@ -27,12 +29,16 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
 
     /** Creates a rule with the given mode. */
     public AdServicesDeviceSupportedRule(Mode mode) {
-        super(new AndroidLogger(AdServicesDeviceSupportedRule.class), mode);
+        super(new ConsoleLogger(AdServicesDeviceSupportedRule.class), mode);
+    }
+
+    public void setDevice(ITestDevice device) {
+        mDevice = device;
     }
 
     @Override
-    public boolean isFeatureSupported() {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
+    public boolean isFeatureSupported() throws Exception {
+        boolean isSupported = AdServicesSupportHelper.isDeviceSupported(mDevice);
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
     }
