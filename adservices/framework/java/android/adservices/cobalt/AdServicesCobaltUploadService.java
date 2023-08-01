@@ -18,8 +18,6 @@ package android.adservices.cobalt;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SdkConstant;
-import android.annotation.SystemApi;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -29,19 +27,9 @@ import android.os.IBinder;
  *
  * <p>The implementor of this service needs to override the onUploadEncryptedCobaltEnvelope method.
  *
- * <p>Cobalt is a telemetry system with built-in support for differential privacy. See
- * https://fuchsia.googlesource.com/cobalt for a comprehensive overview of the project and the
- * Fuchsia client implementation.
- *
  * @hide
  */
-@SystemApi
 public abstract class AdServicesCobaltUploadService extends Service {
-    /** The intent that the service must respond to. Add it to the intent filter of the service. */
-    @SdkConstant(SdkConstant.SdkConstantType.SERVICE_ACTION)
-    public static final String SERVICE_INTERFACE =
-            "android.adservices.cobalt.AdServicesCobaltUploadService";
-
     /** Abstract method which will be overridden by the sender to upload the data */
     public abstract void onUploadEncryptedCobaltEnvelope(
             @NonNull EncryptedCobaltEnvelopeParams params);
