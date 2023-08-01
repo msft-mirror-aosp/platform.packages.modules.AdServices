@@ -173,8 +173,16 @@
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run CtsAdServicesCobaltTest.
+      "name": "CtsAdServicesCobaltTest[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesAppSetIdEndToEndTest.
       "name": "CtsAdExtServicesAppSetIdEndToEndTest[com.google.android.extservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesAdServicesCobaltTest.
+      "name": "CtsAdExtServicesAdServicesCobaltTest[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
@@ -306,6 +314,9 @@
           "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
+    },
+    {
+      "name": "CtsAdServicesCobaltTest"
     },
     {
       "name": "AdServicesBetaUxCtsRootTest"
