@@ -825,7 +825,7 @@ public final class EventReportTest {
                         null);
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -914,7 +914,7 @@ public final class EventReportTest {
                         "{\"flip_probability\" :0.0024}");
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(existingAttributes.toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -990,7 +990,7 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1049,7 +1049,7 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1111,7 +1111,7 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 getMinimalValidSourceBuilder()
-                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(reportSpec.getMaxReports())
                         .setEventAttributionStatus(new JSONArray().toString())
                         .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString())
@@ -1161,6 +1161,24 @@ public final class EventReportTest {
                 report1.getReportTime() - baseTime);
     }
 
+    @Test
+    public void updateSummaryBucket_newBucket_equal() {
+        EventReport eventReport = createExample();
+        Pair<Long, Long> summaryBucket = new Pair<>(11L, 23L);
+        eventReport.updateSummaryBucket(summaryBucket);
+        assertEquals(summaryBucket, eventReport.getTriggerSummaryBucket());
+    }
+
+    @Test
+    public void setTriggerSummaryBucket_fromString_equalToExpectation() {
+        EventReport eventReport =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerSummaryBucket("3,10")
+                        .build();
+
+        assertEquals(new Pair<>(3L, 10L), eventReport.getTriggerSummaryBucket());
+    }
+
     private Source createSourceForTest(
             long eventTime,
             Source.SourceType sourceType,
@@ -1193,6 +1211,7 @@ public final class EventReportTest {
     }
 
     private EventReport createExample() {
+        String summaryBucket = null;
         return new EventReport.Builder()
                 .setId("1")
                 .setSourceEventId(new UnsignedLong(21L))
@@ -1212,6 +1231,7 @@ public final class EventReportTest {
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
                 .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setTriggerSummaryBucket(summaryBucket)
                 .build();
     }
 

@@ -198,6 +198,7 @@ public final class MeasurementTables {
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String TRIGGER_SUMMARY_BUCKET = "trigger_summary_bucket";
     }
 
     /** Contract for Attribution rate limit. */
@@ -719,6 +720,8 @@ public final class MeasurementTables {
                     + EventReportContract.TRIGGER_ID
                     + " TEXT, "
                     + EventReportContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + EventReportContract.TRIGGER_SUMMARY_BUCKET
                     + " TEXT, "
                     + "FOREIGN KEY ("
                     + EventReportContract.SOURCE_ID

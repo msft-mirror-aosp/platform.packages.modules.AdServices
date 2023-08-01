@@ -20,23 +20,16 @@ import static java.util.Locale.ENGLISH;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 
-import com.android.internal.util.Preconditions;
-
-import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.time.Duration;
-import java.util.Objects;
 
 /**
  * Exception thrown by the service when a failed HTTP request is the cause of a failed API call.
  *
  * @hide
  */
-public class AdServicesNetworkException extends IOException {
-
+public class AdServicesNetworkException extends AdServicesException {
     /**
      * Error code indicating that the service received an <a
      * href="https://httpwg.org/specs/rfc9110.html#status.3xx">HTTP 3xx</a> status code.
@@ -81,15 +74,7 @@ public class AdServicesNetworkException extends IOException {
     /** @hide */
     public static final String INVALID_ERROR_CODE_MESSAGE = "Valid error code must be set.";
 
-    /** @hide */
-    public static final Duration UNSET_RETRY_AFTER_VALUE = Duration.ZERO;
-
-    /** @hide */
-    public static final String INVALID_RETRY_AFTER_MESSAGE =
-            "Retry-after time duration must be strictly greater than zero.";
-
     @ErrorCode private final int mErrorCode;
-    private final Duration mRetryAfter;
 
     /**
      * Constructs an {@link AdServicesNetworkException} that is caused by a failed HTTP request.
@@ -101,62 +86,6 @@ public class AdServicesNetworkException extends IOException {
 
         checkErrorCode(errorCode);
         mErrorCode = errorCode;
-        mRetryAfter = UNSET_RETRY_AFTER_VALUE;
-    }
-
-    /**
-     * Constructs an {@link AdServicesNetworkException} that is caused by a failed HTTP request.
-     *
-     * @param errorCode relevant {@link ErrorCode} corresponding to the failure.
-     * @param serverResponse response from the server.
-     */
-    public AdServicesNetworkException(@ErrorCode int errorCode, @Nullable String serverResponse) {
-        super(serverResponse);
-
-        checkErrorCode(errorCode);
-        mErrorCode = errorCode;
-        mRetryAfter = UNSET_RETRY_AFTER_VALUE;
-    }
-
-    /**
-     * Constructs an {@link AdServicesNetworkException} that is caused by a failed HTTP request.
-     *
-     * @param errorCode relevant {@link ErrorCode} corresponding to the failure.
-     * @param retryAfter time {@link Duration} to back-off until next retry.
-     */
-    public AdServicesNetworkException(@ErrorCode int errorCode, @NonNull Duration retryAfter) {
-        super();
-
-        checkErrorCode(errorCode);
-        Objects.requireNonNull(retryAfter);
-        Preconditions.checkArgument(
-                retryAfter.compareTo(UNSET_RETRY_AFTER_VALUE) > 0, INVALID_RETRY_AFTER_MESSAGE);
-
-        mErrorCode = errorCode;
-        mRetryAfter = retryAfter;
-    }
-
-    /**
-     * Constructs an {@link AdServicesNetworkException} that is caused by a failed HTTP request.
-     *
-     * @param errorCode relevant {@link ErrorCode} corresponding to the failure.
-     * @param retryAfter time {@link Duration} to back-off until next retry.
-     * @param serverResponse response from the server.
-     * @hide
-     */
-    public AdServicesNetworkException(
-            @ErrorCode int errorCode,
-            @NonNull Duration retryAfter,
-            @Nullable String serverResponse) {
-        super(serverResponse);
-
-        checkErrorCode(errorCode);
-        Objects.requireNonNull(retryAfter);
-        Preconditions.checkArgument(
-                retryAfter.compareTo(UNSET_RETRY_AFTER_VALUE) > 0, INVALID_RETRY_AFTER_MESSAGE);
-
-        mErrorCode = errorCode;
-        mRetryAfter = retryAfter;
     }
 
     /**
@@ -169,26 +98,15 @@ public class AdServicesNetworkException extends IOException {
     }
 
     /**
-     * @return the positive retry-after {@link Duration} in milliseconds if set or else {@link
-     *     #UNSET_RETRY_AFTER_VALUE} by default.
-     */
-    @NonNull
-    public Duration getRetryAfter() {
-        return mRetryAfter;
-    }
-
-    /**
      * @return a human-readable representation of {@link AdServicesNetworkException}.
      */
     @Override
     public String toString() {
         return String.format(
                 ENGLISH,
-                "%s: {Error code: %s, Retry after: %sms, Server response: %s}",
+                "%s: {Error code: %s}",
                 this.getClass().getCanonicalName(),
-                mErrorCode,
-                mRetryAfter.toMillis(),
-                this.getMessage());
+                this.getErrorCode());
     }
 
     private void checkErrorCode(@ErrorCode int errorCode) {

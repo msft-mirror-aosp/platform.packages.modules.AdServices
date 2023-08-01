@@ -103,6 +103,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -281,11 +282,9 @@ public class MeasurementDaoTest {
                 validSource.getFlexEventReportSpec().getMaxReports(),
                 source.getMaxEventLevelReports().intValue());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
+                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJson(),
                 source.getTriggerSpecs());
-        assertEquals(
-                validSource.encodeAttributedTriggersToJson(),
-                source.getEventAttributionStatus());
+        assertNull(source.getEventAttributionStatus());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
                 source.getPrivacyParameters());
@@ -2699,6 +2698,60 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getNumAggregateReportsPerSource_returnsExpected() {
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(2L))
+                                .setId("source2")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(3L))
+                                .setId("source3")
+                                .build());
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 1, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 2, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"), 3, "source2"));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sources.forEach(source -> insertSource(source, source.getId()));
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        reports.forEach(aggregateReportConsumer);
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source1"))
+                                    .isEqualTo(2);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source2"))
+                                    .isEqualTo(1);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source3"))
+                                    .isEqualTo(0);
+                        });
+    }
+
+    @Test
     public void getNumAggregateReportsPerDestination_returnsExpected() {
         List<AggregateReport> reportsWithPlainDestination =
                 Arrays.asList(
@@ -3263,7 +3316,9 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         measurementDao ->
-                                measurementDao.updateSourceAttributedTriggers(originalSource));
+                                measurementDao.updateSourceAttributedTriggers(
+                                        originalSource.getId(),
+                                        originalSource.attributedTriggersToJsonFlexApi()));
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
@@ -3751,8 +3806,9 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-        values.put(SourceContract.EVENT_ATTRIBUTION_STATUS,
-                source.encodeAttributedTriggersToJson());
+        if (source.getAttributedTriggers() != null) {
+            values.put(SourceContract.EVENT_ATTRIBUTION_STATUS, source.attributedTriggersToJson());
+        }
         db.insert(SourceContract.TABLE, null, values);
 
         // Insert source destinations
@@ -4424,6 +4480,62 @@ public class MeasurementDaoTest {
             EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
             assertEquals("1", eventReport.getId());
         }
+    }
+
+    @Test
+    public void constructEventReportFromCursor_missingTriggerSummaryBucket_noException() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<EventReport> eventReportList = new ArrayList<>();
+
+        // set a valid trigger summary bucket
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("2")
+                        .setTriggerSummaryBucket("10,99")
+                        .build());
+        // set null for trigger summary bucket explicitly
+        String emptySummaryBucket = null;
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("3")
+                        .setTriggerSummaryBucket(emptySummaryBucket)
+                        .build());
+
+        eventReportList.forEach(
+                eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(
+                            MeasurementTables.EventReportContract.ID, UUID.randomUUID().toString());
+                    values.put(
+                            MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                            eventReport.getStringEncodedTriggerSummaryBucket());
+                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<EventReport> results = new ArrayList<>();
+        Cursor cursor =
+                db.query(
+                        EventReportContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+            results.add(eventReport);
+        }
+        assertEquals(
+                eventReportList.get(0).getStringEncodedTriggerSummaryBucket(),
+                results.get(0).getStringEncodedTriggerSummaryBucket());
+        assertEquals(
+                eventReportList.get(1).getStringEncodedTriggerSummaryBucket(),
+                results.get(1).getStringEncodedTriggerSummaryBucket());
     }
 
     @Test
@@ -6552,7 +6664,7 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6564,7 +6676,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6605,7 +6717,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6684,7 +6796,7 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6697,7 +6809,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -6738,7 +6850,7 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJSON())
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
                         .setMaxEventLevelReports(testReportSpec.getMaxReports())
                         .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
@@ -8323,6 +8435,15 @@ public class MeasurementDaoTest {
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
         return new AggregateReport.Builder()
                 .setId(String.valueOf(id))
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .build();
+    }
+
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setSourceId(sourceId)
                 .setAttributionDestination(Uri.parse(attributionDestination))
                 .build();
     }

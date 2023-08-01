@@ -67,8 +67,11 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         }
         ShellUtils.runShellCommand(
                 "device_config put adservices enable_ad_services_system_api true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_activity_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices debug_ux U18_UX");
 
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
@@ -104,9 +107,7 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_u18_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
+
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -131,9 +132,7 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_u18_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
+
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);

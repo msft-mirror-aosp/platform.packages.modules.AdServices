@@ -1262,6 +1262,64 @@ public class MeasurementDbSchemaTrail {
                     + ") ON DELETE CASCADE"
                     + ")";
 
+    private static final String CREATE_TABLE_EVENT_REPORT_V23 =
+            "CREATE TABLE "
+                    + EventReportContract.TABLE
+                    + " ("
+                    + EventReportContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EventReportContract.SOURCE_EVENT_ID
+                    + " INTEGER, "
+                    + EventReportContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + EventReportContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + EventReportContract.REPORT_TIME
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DATA
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_PRIORITY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DEDUP_KEY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + EventReportContract.STATUS
+                    + " INTEGER, "
+                    + EventReportContract.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
+                    + EventReportContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + EventReportContract.RANDOMIZED_TRIGGER_RATE
+                    + " DOUBLE, "
+                    + EventReportContract.SOURCE_DEBUG_KEY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DEBUG_KEY
+                    + " INTEGER, "
+                    + EventReportContract.SOURCE_ID
+                    + " TEXT, "
+                    + EventReportContract.TRIGGER_ID
+                    + " TEXT, "
+                    + EventReportContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + EventReportContract.TRIGGER_SUMMARY_BUCKET
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + EventReportContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE, "
+                    + "FOREIGN KEY ("
+                    + EventReportContract.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
+
     private static final String CREATE_TABLE_ATTRIBUTION_V6 =
             "CREATE TABLE "
                     + AttributionContract.TABLE
@@ -2009,6 +2067,12 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV23() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV22());
+        createStatements.put(EventReportContract.TABLE, CREATE_TABLE_EVENT_REPORT_V23);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -2080,6 +2144,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV21();
     }
 
+    private static Map<String, String> getCreateIndexesV23() {
+        return getCreateIndexesV22();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -2099,6 +2167,7 @@ public class MeasurementDbSchemaTrail {
                     .put(20, getCreateStatementByTableV20().values())
                     .put(21, getCreateStatementByTableV21().values())
                     .put(22, getCreateStatementByTableV22().values())
+                    .put(23, getCreateStatementByTableV23().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -2120,6 +2189,7 @@ public class MeasurementDbSchemaTrail {
                     .put(20, getCreateIndexesV20().values())
                     .put(21, getCreateIndexesV21().values())
                     .put(22, getCreateIndexesV22().values())
+                    .put(23, getCreateIndexesV23().values())
                     .build();
 
     /**

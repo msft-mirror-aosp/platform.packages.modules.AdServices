@@ -1652,17 +1652,28 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testEnforceAllowedToStartOrBindService_disallowNonExistentPackage() {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName("nonexistent.package", "test"));
+        Intent intent = new Intent().setComponent(new ComponentName("nonexistent.package", "test"));
         assertThrows(
                 SecurityException.class,
                 () -> sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
     }
 
     @Test
-    public void testEnforceAllowedToStartOrBindService_allowedPackages() {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName(mService.getAdServicesPackageName(), "test"));
+    public void testEnforceAllowedToStartOrBindService_AdServicesApkNotPresent() throws Exception {
+        String adServicesPackageName = mInjector.getAdServicesPackageName();
+        Mockito.when(mInjector.getAdServicesPackageName()).thenReturn(null);
+        Intent intent = new Intent().setComponent(new ComponentName(adServicesPackageName, "test"));
+        assertThrows(
+                SecurityException.class,
+                () -> sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
+    }
+
+    @Test
+    public void testEnforceAllowedToStartOrBindService_allowedPackages() throws Exception {
+        Intent intent =
+                new Intent()
+                        .setComponent(
+                                new ComponentName(mInjector.getAdServicesPackageName(), "test"));
         sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
@@ -2076,8 +2087,8 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testAdServicesPackageIsResolved() {
-        assertThat(mService.getAdServicesPackageName()).contains("adservices");
+    public void testAdServicesPackageIsResolved() throws Exception {
+        assertThat(mInjector.getAdServicesPackageName()).contains("adservices");
     }
 
     @Test
@@ -3360,7 +3371,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSdkSandboxEnabledForEmulator() {
-        // SDK sandbox is enabled for an emulator, even if the killswitch is turned on.
+        // SDK sandbox is enabled for an emulator, even if the killswitch is turned on provided
+        // AdServices APK is present.
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
@@ -3369,6 +3381,26 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.clearSdkSandboxState();
         Mockito.when(mInjector.isEmulator()).thenReturn(false);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDisabledForEmulator() {
+        // SDK sandbox is disabled for an emulator, if AdServices APK is not present.
+        Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
+        Mockito.when(mInjector.isEmulator()).thenReturn(true);
+        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDisabledForAdServiceApkMissing() {
+        Mockito.doReturn(true).when(mInjector).isAdServiceApkPresent();
+        sSdkSandboxSettingsListener.setKillSwitchState(false);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
+
+        Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
+        sSdkSandboxSettingsListener.setKillSwitchState(false);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
     }
 

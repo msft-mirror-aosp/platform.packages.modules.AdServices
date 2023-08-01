@@ -165,7 +165,7 @@ public class AdServicesCommonServiceImplTest {
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws InterruptedException {
         doReturn(false).when(mUxStatesManager).isEnrolledUser();
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mFlags).getEnableAdServicesSystemApi(any());
         mCommonService =
                 new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         // Calling get adservice status, init set the flag to true, expect to return true

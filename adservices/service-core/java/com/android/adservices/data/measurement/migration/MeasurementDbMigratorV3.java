@@ -24,8 +24,8 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
-import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -399,7 +399,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         if (uri.getScheme().equals(ANDROID_APP_SCHEME)) {
             return Optional.of(BaseUriExtractor.getBaseUri(uri).toString());
         }
-        Optional<Uri> topPrivateDomainAndScheme = Web.topPrivateDomainAndScheme(uri);
+        Optional<Uri> topPrivateDomainAndScheme = WebAddresses.topPrivateDomainAndScheme(uri);
         if (topPrivateDomainAndScheme.isPresent()) {
             return Optional.of(topPrivateDomainAndScheme.get().toString());
         }

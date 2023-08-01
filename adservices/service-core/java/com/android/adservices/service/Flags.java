@@ -20,9 +20,12 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.content.Context;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.cobalt.CobaltApiKeys;
+import com.android.adservices.cobalt.CobaltReleaseStages;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
@@ -496,35 +499,35 @@ public interface Flags {
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
-    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+    default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
-    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+    default float getMeasurementFlexApiMaxInformationGainNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReports() {
+    default int getMeasurementFlexApiMaxEventReports() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
 
     /** Returns max event report windows in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReportWindows() {
+    default int getMeasurementFlexApiMaxEventReportWindows() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
 
     /** Returns max trigger data cardinality in Flexible Event API */
-    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+    default int getMeasurementFlexApiMaxTriggerDataCardinality() {
         return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
     }
 
@@ -2615,6 +2618,25 @@ public interface Flags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
+    /** Disable maximum number of aggregatable reports per source by default. */
+    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
+
+    /**
+     * Returns true if maximum number of aggregatable reports per source is enabled, false
+     * otherwise.
+     */
+    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum Aggregate Reports per source. */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE = 20;
+
+    /** Returns maximum Aggregate Reports per source. */
+    default int getMeasurementMaxAggregateReportsPerSource() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
     /** Default minimum event report delay in milliseconds */
     long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
 
@@ -2716,6 +2738,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
     }
 
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -2728,6 +2758,10 @@ public interface Flags {
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
     /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi(Context context) {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+    }
+
     default boolean getEnableAdServicesSystemApi() {
         return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
     }
@@ -2791,10 +2825,21 @@ public interface Flags {
     }
 
     /** Default value of Cobalt Adservices Api key. */
-    String COBALT_ADSERVICES_API_KEY_HEX = "cobalt-default-api-key";
+    String COBALT_ADSERVICES_API_KEY_HEX = CobaltApiKeys.DEFAULT_API_KEY;
 
     default String getCobaltAdservicesApiKeyHex() {
         return COBALT_ADSERVICES_API_KEY_HEX;
+    }
+
+    /**
+     * Default value of Adservices release stage for Cobalt. The value should correspond to {@link
+     * com.google.cobalt.ReleaseStage} enum.
+     */
+    String ADSERVICES_RELEASE_STAGE_FOR_COBALT = CobaltReleaseStages.DEFAULT_RELEASE_STAGE;
+
+    /** Returns the value of Adservices release stage for Cobalt. */
+    default String getAdservicesReleaseStageForCobalt() {
+        return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
     }
 
     /**
