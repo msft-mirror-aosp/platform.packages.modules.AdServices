@@ -177,7 +177,6 @@ package android.adservices.adselection {
 
   public class ReportImpressionRequest {
     ctor public ReportImpressionRequest(long, @NonNull android.adservices.adselection.AdSelectionConfig);
-    ctor public ReportImpressionRequest(long);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method public long getAdSelectionId();
   }
