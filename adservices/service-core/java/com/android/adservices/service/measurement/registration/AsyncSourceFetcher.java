@@ -24,7 +24,6 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJson;
 import static com.android.adservices.service.measurement.Source.getOrDefaultEventReportWindows;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.TriggerSpec.getLongArrayFromJSON;
 import static com.android.adservices.service.measurement.TriggerSpec.getTriggerDataArrayFromJSON;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
@@ -790,7 +789,8 @@ public class AsyncSourceFetcher {
     }
 
     private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
-        if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+        if (aggregationKeys.length()
+                > mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()) {
             LogUtil.d(
                     "Aggregation-keys have more entries than permitted. %s",
                     aggregationKeys.length());

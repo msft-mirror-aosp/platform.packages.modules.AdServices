@@ -2636,6 +2636,22 @@ public interface Flags {
         return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
     }
 
+    /** Maximum number of aggregation keys allowed during source registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during source registration. */
+    default int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
+    }
+
+    /** Maximum number of aggregation keys allowed during trigger registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during trigger registration. */
+    default int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
+    }
+
     /** Default minimum event report delay in milliseconds */
     long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
 

@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
@@ -226,6 +225,7 @@ public final class AsyncTriggerFetcherTest {
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
         when(mFlags.getMeasurementEnableAraParsingAlignmentV1())
                 .thenReturn(mAraParsingAlignmentV1Enabled);
+        when(mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()).thenReturn(20);
     }
 
     public void cleanup() throws InterruptedException {
@@ -3820,7 +3820,9 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder tooManyKeys = new StringBuilder("[");
         tooManyKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
+                IntStream.range(
+                                0,
+                                mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration() + 1)
                         .mapToObj(i -> "aggregate-key-" + i)
                         .collect(Collectors.joining(",")));
         tooManyKeys.append("]");
@@ -4718,7 +4720,9 @@ public final class AsyncTriggerFetcherTest {
     public void testTriggerRequestWithAggregatableValues_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("{");
         tooManyKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
+                IntStream.range(
+                                0,
+                                mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration() + 1)
                         .mapToObj(i -> String.format("\"key-%s\": 12345,", i))
                         .collect(Collectors.joining(",")));
         tooManyKeys.append("}");
