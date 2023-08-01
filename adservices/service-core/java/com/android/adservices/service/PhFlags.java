@@ -19,7 +19,6 @@ package com.android.adservices.service;
 import static java.lang.Float.parseFloat;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 import android.text.TextUtils;
@@ -27,7 +26,6 @@ import android.text.TextUtils;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -4423,17 +4421,6 @@ public final class PhFlags implements Flags {
     }
 
     static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
-
-    @Override
-    public boolean getEnableAdServicesSystemApi(Context context) {
-        // The getUx check is necessary to handle the edge cases where the flag is used before the
-        // enableAdServices API is called.
-        return ConsentManager.getInstance(context).getUx() != null
-                && DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ENABLE_AD_SERVICES_SYSTEM_API,
-                        /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
-    }
 
     @Override
     public boolean getEnableAdServicesSystemApi() {
