@@ -21,6 +21,8 @@ import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTI
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
+import android.view.InputEvent;
 
 import com.android.internal.util.Preconditions;
 
@@ -53,6 +55,7 @@ public class ReportEventRequest {
 
     private final long mAdSelectionId;
     @NonNull private final String mEventKey;
+    @Nullable private final InputEvent mInputEvent;
     @NonNull private final String mEventData;
     @ReportingDestination private final int mReportingDestinations; // buyer, seller, or both
 
@@ -74,6 +77,7 @@ public class ReportEventRequest {
 
         this.mAdSelectionId = builder.mAdSelectionId;
         this.mEventKey = builder.mEventKey;
+        this.mInputEvent = builder.mInputEvent;
         this.mEventData = builder.mEventData;
         this.mReportingDestinations = builder.mReportingDestinations;
     }
@@ -102,6 +106,19 @@ public class ReportEventRequest {
     @NonNull
     public String getKey() {
         return mEventKey;
+    }
+
+    /**
+     * Returns the input event associated with the user interaction.
+     *
+     * <p>This field is either {@code null}, representing a <em>view</em> event, or has an {@link
+     * InputEvent} object, representing a <em>click</em> event.
+     *
+     * @hide
+     */
+    @Nullable
+    public InputEvent getInputEvent() {
+        return mInputEvent;
     }
 
     /**
@@ -152,6 +169,7 @@ public class ReportEventRequest {
 
         private long mAdSelectionId;
         @NonNull private String mEventKey;
+        @Nullable private InputEvent mInputEvent;
         @NonNull private String mEventData;
         @ReportingDestination private int mReportingDestinations; // buyer, seller, or both
 
@@ -209,6 +227,19 @@ public class ReportEventRequest {
         }
 
         /**
+         * Sets the input event associated with the user interaction.
+         *
+         * <p>See {@link #getInputEvent()} for more information.
+         *
+         * @hide
+         */
+        @NonNull
+        public Builder setInputEvent(@Nullable InputEvent inputEvent) {
+            mInputEvent = inputEvent;
+            return this;
+        }
+
+        /**
          * Sets the ad event data.
          *
          * <p>See {@link #getData()} for more information.
@@ -222,9 +253,9 @@ public class ReportEventRequest {
         }
 
         /**
-         * Sets the ad event data.
+         * Sets the bitfield of reporting destinations to report to (buyer, seller, or both).
          *
-         * <p>See {@link #getData()} for more information.
+         * <p>See {@link #getReportingDestinations()} for more information.
          */
         @NonNull
         public Builder setReportingDestinations(@ReportingDestination int reportingDestinations) {
