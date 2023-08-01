@@ -28,12 +28,16 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import java.util.function.Supplier;
+
 /** Helper to check if AdServices is supported / enabled in a device. */
-final class AdServicesSupportHelper {
+public final class AdServicesSupportHelper {
 
     private static final String TAG = AdServicesSupportHelper.class.getSimpleName();
 
     private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
+    private static final String SYSPROP_SDK_SANDBOX_SUPPORTED =
+            "debug.adservices.sdk_sandbox_supported";
 
     // TODO(b/284971005): reuse from PhFlags ?
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -43,26 +47,47 @@ final class AdServicesSupportHelper {
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-    private static boolean isDeviceSupportedByDefault() {
-        PackageManager pm = sContext.getPackageManager();
+    private static boolean isDeviceSupportedByDefault(Context context) {
+        PackageManager pm = context.getPackageManager();
         return !pm.hasSystemFeature(PackageManager.FEATURE_RAM_LOW) // Android Go Devices
                 && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
 
+    // TODO(b/284971005): use isDeviceSupportedByDefault() instead (if Go check is ok)
+    private static boolean isSdkSandboxSupportedOnDeviceByDefault(Context context) {
+        PackageManager pm = context.getPackageManager();
+        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
+                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
+                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
     /** Checks whether AdServices is supported by the device / form factor. */
     public static boolean isDeviceSupported() {
+        return isDeviceSupported(
+                sContext,
+                "isDeviceSupported()",
+                SYSPROP_ADSERVICES_SUPPORTED,
+                () -> isDeviceSupportedByDefault(sContext));
+    }
+
+    private static boolean isDeviceSupported(
+            Context context,
+            String logPrefix,
+            String sysProp,
+            Supplier<Boolean> supportedByDefault) {
         if (AdservicesTestHelper.isDebuggable()) {
-            String overriddenValue = SystemProperties.get(SYSPROP_ADSERVICES_SUPPORTED);
+            String overriddenValue = SystemProperties.get(sysProp);
             if (!TextUtils.isEmpty(overriddenValue)) {
                 boolean supported = Boolean.valueOf(overriddenValue);
                 Log.i(
                         TAG,
-                        "isDeviceSupported(): returning "
+                        logPrefix
+                                + ": returning "
                                 + supported
                                 + " as defined by system property "
-                                + SYSPROP_ADSERVICES_SUPPORTED
+                                + sysProp
                                 + " ("
                                 + overriddenValue
                                 + ")");
@@ -70,9 +95,23 @@ final class AdServicesSupportHelper {
             }
         }
 
-        boolean supported = isDeviceSupportedByDefault();
-        Log.v(TAG, "isDeviceSupported(): returning hardcoded value (" + supported + ")");
+        boolean supported = isDeviceSupportedByDefault(context);
+        Log.v(TAG, logPrefix + ": returning hardcoded value (" + supported + ")");
         return supported;
+    }
+
+    /** Checks whether SdkSandbox is supported by the device / form factor. */
+    public static boolean isSdkSandboxSupportedOnDevice() {
+        return isSdkSandboxSupportedOnDevice(sContext);
+    }
+
+    /** Checks whether SdkSandbox is supported by the device / form factor. */
+    public static boolean isSdkSandboxSupportedOnDevice(Context context) {
+        return isDeviceSupported(
+                context,
+                "isSdkSandboxSupportedOnDevice()",
+                SYSPROP_SDK_SANDBOX_SUPPORTED,
+                () -> isSdkSandboxSupportedOnDeviceByDefault(context));
     }
 
     /** Checks whether AdServices is enabled in the device. */
