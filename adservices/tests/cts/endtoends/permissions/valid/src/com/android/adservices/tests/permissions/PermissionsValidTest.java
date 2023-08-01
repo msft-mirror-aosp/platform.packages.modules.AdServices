@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
@@ -193,6 +195,25 @@ public class PermissionsValidTest {
     }
 
     @Test
+    public void testValidPermissions_selectAds_adSelectionFromOutcomesConfig() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+
+    @Test
     public void testValidPermissions_reportImpression()
             throws ExecutionException, InterruptedException {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -208,7 +229,6 @@ public class PermissionsValidTest {
 
         ReportImpressionRequest request =
                 new ReportImpressionRequest(adSelectionId, adSelectionConfig);
-
 
         ExecutionException exception =
                 assertThrows(
