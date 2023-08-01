@@ -55,7 +55,7 @@ public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
     }
 
     @Override
-    boolean isFeatureSupported() {
+    public boolean isFeatureSupported() {
         return mSdkLevelConstraint.get();
     }
 
