@@ -54,6 +54,19 @@ filegroup {
     ],
 }
 
+filegroup {
+    name: "adservices-service-core-phflags-sources",
+    srcs: [
+        "java/com/android/adservices/cobalt/CobaltConstants.java",
+        "java/com/android/adservices/service/Flags.java",
+        "java/com/android/adservices/service/PhFlags.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests/test-util",
+    ],
+}
+
 android_library {
     name: "adservices-service-core",
     sdk_version: "module_current",
