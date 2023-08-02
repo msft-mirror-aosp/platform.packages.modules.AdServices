@@ -16,10 +16,13 @@
 
 package com.android.sdksandbox.cts.provider.mediationtest;
 
+
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
+import android.os.Bundle;
 
 import java.util.List;
 
@@ -39,5 +42,22 @@ public class MediationTestSdkApiImpl extends IMediationTestSdkApi.Stub {
     @Override
     public List<SandboxedSdk> getSandboxedSdks() {
         return mContext.getSystemService(SdkSandboxController.class).getSandboxedSdks();
+    }
+
+    @Override
+    public void loadSdkBySdk(String sdkName) {
+        Bundle params = new Bundle();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        try {
+            mContext.getSystemService(SdkSandboxController.class)
+                    .loadSdk(sdkName, params, Runnable::run, callback);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load Mediatee SDK " + e.getMessage());
+        }
+        try {
+            callback.assertLoadSdkIsSuccessful();
+        } catch (Throwable e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
