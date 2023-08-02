@@ -33,4 +33,5 @@ interface ICtsSdkProviderApi {
     String getOpPackageName();
     String getClientPackageName();
     void checkRoomDatabaseAccess();
+    void checkCanUseSharedPreferences();
 }
