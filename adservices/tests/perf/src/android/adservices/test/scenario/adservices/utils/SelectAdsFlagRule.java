@@ -88,6 +88,10 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_service_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_service_kill_switch false");
+        ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
         // Extra flags to set for enabling AdServices on Android S-
         if (!SdkLevel.isAtLeastT()) {
