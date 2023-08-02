@@ -16,22 +16,18 @@
 
 package com.android.adservices.cobalt;
 
-import static com.android.adservices.cobalt.CobaltApiKeys.DEFAULT_API_KEY;
 import static com.android.adservices.cobalt.CobaltApiKeys.copyFromHexApiKey;
+import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_API_KEY;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.runner.AndroidJUnit4;
-
 import com.google.protobuf.ByteString;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class CobaltApiKeysTest {
+public final class CobaltApiKeysTest {
 
     @Test
     public void defaultApiKey_copiedAsUtf8() throws Exception {
@@ -53,10 +49,6 @@ public class CobaltApiKeysTest {
 
     @Test
     public void nullApiKey_throwsNullPointerException() throws Exception {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    copyFromHexApiKey(null);
-                });
+        assertThrows(NullPointerException.class, () -> copyFromHexApiKey(null));
     }
 }

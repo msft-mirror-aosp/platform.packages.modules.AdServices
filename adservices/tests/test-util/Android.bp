@@ -47,6 +47,7 @@ android_library {
     min_sdk_version: "30",
     srcs: [
         ":adservices-test-utility-sources",
+        ":adservices-service-core-phflags-sources",
     ],
     libs: [
         "error_prone_annotations",

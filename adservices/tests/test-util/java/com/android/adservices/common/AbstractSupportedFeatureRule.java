@@ -309,7 +309,7 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
     /** Checks if the device supports the feature. */
     public abstract boolean isFeatureSupported() throws Exception;
 
-    /** Defines the expected behaviuor of each test. */
+    /** Defines the expected behavior of each test. */
     private enum ExpectedTestBehavior {
         SUPPORTED,
         NOT_SUPPORTED,
