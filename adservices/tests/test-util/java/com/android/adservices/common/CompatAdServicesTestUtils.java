@@ -79,6 +79,18 @@ public class CompatAdServicesTestUtils {
         return mPreviousAppAllowList;
     }
 
+    public static void setMsmtApiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices msmt_api_app_allow_list " + allowList);
+    }
+
+    public static String getAndOverrideMsmtApiAppAllowList(String packageName) {
+        String mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices msmt_api_app_allow_list");
+        setMsmtApiAppAllowList(mPreviousAppAllowList + "," + packageName);
+        return mPreviousAppAllowList;
+    }
+
     private static void setEnableBackCompatFlag(boolean isEnabled) {
         ShellUtils.runShellCommand("device_config put adservices enable_back_compat " + isEnabled);
     }
