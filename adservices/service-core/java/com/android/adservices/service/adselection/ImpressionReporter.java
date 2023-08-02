@@ -757,6 +757,9 @@ public class ImpressionReporter {
          * to the database. 2. We will not commit an entry to the database if {@link
          * InteractionUriRegistrationInfo#getInteractionKey()} is larger than {@link
          * ImpressionReporter#mFlags#getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySize()}
+         * or if {@link InteractionUriRegistrationInfo#getInteractionReportingUri()} is larger than
+         * {@link
+         * ImpressionReporter#mFlags#getFledgeReportImpressionMaxInteractionReportingUriSizeB()}
          */
         private void commitRegisteredAdInteractionsToDatabase(
                 @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
@@ -767,6 +770,8 @@ public class ImpressionReporter {
             long maxTableSize = mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
             long maxInteractionKeySize =
                     mFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB();
+            long maxInteractionReportingUriSize =
+                    mFlags.getFledgeReportImpressionMaxInteractionReportingUriSizeB();
             long maxNumRowsPerDestination =
                     mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
@@ -778,6 +783,18 @@ public class ImpressionReporter {
                         > maxInteractionKeySize) {
                     sLogger.v(
                             "InteractionKey size exceeds the maximum allowed! Skipping this entry");
+                    continue;
+                }
+
+                if (uriRegistrationInfo
+                                .getInteractionReportingUri()
+                                .toString()
+                                .getBytes(StandardCharsets.UTF_8)
+                                .length
+                        > maxInteractionReportingUriSize) {
+                    sLogger.v(
+                            "Interaction reporting uri size exceeds the maximum allowed! Skipping"
+                                    + " this entry");
                     continue;
                 }
 
