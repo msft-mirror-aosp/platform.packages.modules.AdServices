@@ -29,7 +29,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
 // TODO(b/269798827): Enable for R.
@@ -42,7 +41,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Supplier<Throttler> throttlerSupplier) {
+            @NonNull Throttler throttler) {
         super(
                 context,
                 consentManager,
@@ -50,7 +49,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttlerSupplier);
+                throttler);
     }
 
     /**

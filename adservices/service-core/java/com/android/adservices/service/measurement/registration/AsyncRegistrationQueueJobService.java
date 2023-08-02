@@ -112,9 +112,11 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                         AsyncRegistrationContentProvider.TRIGGER_URI,
                                         JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                         .setTriggerContentUpdateDelay(
-                                SystemHealthParams.ASYNC_REGISTRATION_JOB_TRIGGERING_DELAY_MS)
+                                SystemHealthParams
+                                        .getMeasurementAsyncRegistrationJobQueueMinDelayMs())
                         .setTriggerContentMaxDelay(
-                                SystemHealthParams.ASYNC_REGISTRATION_JOB_TRIGGERING_MAX_DELAY_MS)
+                                SystemHealthParams
+                                        .getMeasurementAsyncRegistrationJobQueueMaxDelayMs())
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
                         .build();

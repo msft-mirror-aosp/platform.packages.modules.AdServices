@@ -109,7 +109,7 @@ public class FledgeMaintenanceTasksWorkerTests {
 
         Instant expectedExpirationTime =
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
-                        KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+                        KeyedFrequencyCap.MAX_INTERVAL.getSeconds());
 
         verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
         verify(mFrequencyCapDaoMock)
@@ -147,7 +147,7 @@ public class FledgeMaintenanceTasksWorkerTests {
 
         Instant expectedExpirationTime =
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
-                        KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+                        KeyedFrequencyCap.MAX_INTERVAL.getSeconds());
 
         verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
         verify(mFrequencyCapDaoMock)

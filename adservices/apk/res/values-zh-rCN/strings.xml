@@ -57,7 +57,7 @@
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"您已加入 Android 广告隐私权 Beta 版测试计划。我们已为您的设备开启 Privacy Sandbox。\n\n您随时可在隐私设置中了解详情或关闭 Beta 版。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"感谢您的回复。我们已为您的设备关闭 Privacy Sandbox。\n\n如果您改变了主意或想了解详情，请前往隐私设置。"</string>
-    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"隐私设置"</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"隐私权设置"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"知道了"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"您已加入 Beta 版测试计划"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"您的设备已开启 Privacy Sandbox，因此应用已能测试这些更注重保护隐私的新方式来向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>

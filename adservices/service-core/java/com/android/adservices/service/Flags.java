@@ -23,6 +23,8 @@ import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.cobalt.CobaltApiKeys;
+import com.android.adservices.cobalt.CobaltReleaseStages;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
@@ -102,6 +104,14 @@ public interface Flags {
      */
     default int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
+    }
+
+    /** Privacy budget for logging topic ID distributions with randomized response. */
+    float TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION = 5f;
+
+    /** Returns the privacy budget for logging topic ID distributions with randomized response. */
+    default float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -220,6 +230,52 @@ public interface Flags {
         return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
     }
 
+    /**
+     * The suffix that is appended to the aggregation coordinator origin for retrieving the
+     * encryption keys.
+     */
+    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH = "v1alpha/publicKeys";
+
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
+    default String getMeasurementAggregationCoordinatorPath() {
+        return MEASUREMENT_AGGREGATION_COORDINATOR_PATH;
+    }
+
+    boolean MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED = true;
+
+    /** Returns true if aggregation coordinator origin is enabled. */
+    default boolean getMeasurementAggregationCoordinatorOriginEnabled() {
+        return MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED;
+    }
+
+    /**
+     * Default list(comma-separated) of origins for creating a URL used to fetch public encryption
+     * keys for aggregatable reports.
+     */
+    String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
+            "https://publickeyservice.aws.privacysandboxservices.com";
+
+    /**
+     * Returns a string which is a comma separated list of origins used to fetch public encryption
+     * keys for aggregatable reports.
+     */
+    default String getMeasurementAggregationCoordinatorOriginList() {
+        return MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST;
+    }
+
+    /* The list of origins for creating a URL used to fetch public encryption keys for
+    aggregatable reports. AWS is the current default. */
+    String MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
+            "https://publickeyservice.aws.privacysandboxservices.com";
+
+    /**
+     * Returns the default origin for creating the URI used to fetch public encryption keys for
+     * aggregatable reports.
+     */
+    default String getMeasurementDefaultAggregationCoordinatorOrigin() {
+        return MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN;
+    }
+
     /* The default min time period (in millis) between each aggregate main reporting job run. */
     long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -302,6 +358,20 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    boolean MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY = true;
+
+    /** Enable/disable shared_debug_key processing from source RBR. */
+    default boolean getMeasurementEnableSharedSourceDebugKey() {
+        return MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
+    }
+
+    boolean MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA = true;
+
+    /** Enable/disable shared_filter_data_keys processing from source RBR. */
+    default boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA;
+    }
+
     boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
 
     /** Returns whether verbose debug report generation is enabled. */
@@ -351,24 +421,26 @@ public interface Flags {
         return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(5);
 
     /**
      * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -426,34 +498,35 @@ public interface Flags {
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
-    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+    default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
-    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+    default float getMeasurementFlexApiMaxInformationGainNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
+
     /** Returns max event reports in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReports() {
+    default int getMeasurementFlexApiMaxEventReports() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
 
     /** Returns max event report windows in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReportWindows() {
+    default int getMeasurementFlexApiMaxEventReportWindows() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
 
     /** Returns max trigger data cardinality in Flexible Event API */
-    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+    default int getMeasurementFlexApiMaxTriggerDataCardinality() {
         return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
     }
 
@@ -2544,6 +2617,41 @@ public interface Flags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
+    /** Disable maximum number of aggregatable reports per source by default. */
+    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
+
+    /**
+     * Returns true if maximum number of aggregatable reports per source is enabled, false
+     * otherwise.
+     */
+    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum Aggregate Reports per source. */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE = 20;
+
+    /** Returns maximum Aggregate Reports per source. */
+    default int getMeasurementMaxAggregateReportsPerSource() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum number of aggregation keys allowed during source registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during source registration. */
+    default int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
+    }
+
+    /** Maximum number of aggregation keys allowed during trigger registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during trigger registration. */
+    default int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
+    }
+
     /** Default minimum event report delay in milliseconds */
     long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
 
@@ -2645,6 +2753,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
     }
 
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -2701,5 +2817,72 @@ public interface Flags {
     /** Returns the consent notification reset token. */
     default String getConsentNotificationResetToken() {
         return CONSENT_NOTIFICATION_RESET_TOKEN;
+    }
+
+    /** Default whether Enrollment Mdd Record Deletion feature is enabled. */
+    boolean ENROLLMENT_MDD_RECORD_DELETION_ENABLED = false;
+
+    /** Returns whether the {@code enrollmentMddRecordDeletion} feature is enabled. */
+    default boolean getEnrollmentMddRecordDeletionEnabled() {
+        return ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
+    }
+
+    /** Default value of whether topics cobalt logging feature is enabled. */
+    boolean TOPICS_COBALT_LOGGING_ENABLED = false;
+
+    /** Returns whether the topics cobalt logging feature is enabled. */
+    default boolean getTopicsCobaltLoggingEnabled() {
+        return TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of Cobalt Adservices Api key. */
+    String COBALT_ADSERVICES_API_KEY_HEX = CobaltApiKeys.DEFAULT_API_KEY;
+
+    default String getCobaltAdservicesApiKeyHex() {
+        return COBALT_ADSERVICES_API_KEY_HEX;
+    }
+
+    /**
+     * Default value of Adservices release stage for Cobalt. The value should correspond to {@link
+     * com.google.cobalt.ReleaseStage} enum.
+     */
+    String ADSERVICES_RELEASE_STAGE_FOR_COBALT = CobaltReleaseStages.DEFAULT_RELEASE_STAGE;
+
+    /** Returns the value of Adservices release stage for Cobalt. */
+    default String getAdservicesReleaseStageForCobalt() {
+        return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
+    }
+
+    /**
+     * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
+     * logged_topic column to ReturnedTopic table.
+     *
+     * <p>Default value is false, which means the feature is disabled by default and needs to be
+     * ramped up.
+     */
+    boolean ENABLE_LOGGED_TOPIC = false;
+
+    /** @return if to enable logged_topic column in ReturnedTopic table. */
+    default boolean getEnableLoggedTopic() {
+        return ENABLE_LOGGED_TOPIC;
+    }
+
+    /** Whether to enable database schema version 8 */
+    boolean ENABLE_DATABASE_SCHEMA_VERSION_8 = false;
+
+    /** @return if to enable database schema version 8. */
+    default boolean getEnableDatabaseSchemaVersion8() {
+        return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /**
+     * Default whether to limit logging for enrollment metrics to avoid performance issues. This
+     * includes not logging data that requires database queries and downloading MDD files.
+     */
+    boolean ENROLLMENT_ENABLE_LIMITED_LOGGING = false;
+
+    /** Returns whether enrollment logging should be limited. */
+    default boolean getEnrollmentEnableLimitedLogging() {
+        return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 }

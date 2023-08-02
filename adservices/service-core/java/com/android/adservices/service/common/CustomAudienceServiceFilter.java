@@ -31,7 +31,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /** Composite filter for CustomAudienceService request. */
 // TODO(b/269798827): Enable for R.
@@ -46,7 +45,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Supplier<Throttler> throttlerSupplier) {
+            @NonNull Throttler throttler) {
         super(
                 context,
                 consentManager,
@@ -54,7 +53,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttlerSupplier);
+                throttler);
     }
 
     /**

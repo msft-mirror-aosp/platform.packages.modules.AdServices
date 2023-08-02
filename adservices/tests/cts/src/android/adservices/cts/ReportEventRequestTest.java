@@ -18,11 +18,15 @@ package android.adservices.cts;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.view.KeyEvent.ACTION_DOWN;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.ReportEventRequest;
+import android.view.InputEvent;
+import android.view.KeyEvent;
 
 import org.json.JSONObject;
 import org.junit.Before;
@@ -31,6 +35,7 @@ import org.junit.Test;
 public class ReportEventRequestTest {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
+    private static final InputEvent INPUT_EVENT = new KeyEvent(ACTION_DOWN, 0);
     private String mInteractionData;
     private static final int DESTINATIONS =
             FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
@@ -42,7 +47,7 @@ public class ReportEventRequestTest {
     }
 
     @Test
-    public void testBuildReportEventRequestSuccess() throws Exception {
+    public void testBuildReportEventRequestSuccess_viewInputEvent() throws Exception {
         ReportEventRequest request =
                 new ReportEventRequest.Builder(
                                 AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
@@ -50,6 +55,22 @@ public class ReportEventRequestTest {
 
         assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
         assertEquals(INTERACTION_KEY, request.getKey());
+        assertNull(request.getInputEvent());
+        assertEquals(mInteractionData, request.getData());
+        assertEquals(DESTINATIONS, request.getReportingDestinations());
+    }
+
+    @Test
+    public void testBuildReportEventRequestSuccess_clickInputEvent() throws Exception {
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
+                        .setInputEvent(INPUT_EVENT)
+                        .build();
+
+        assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
+        assertEquals(INTERACTION_KEY, request.getKey());
+        assertEquals(INPUT_EVENT, request.getInputEvent());
         assertEquals(mInteractionData, request.getData());
         assertEquals(DESTINATIONS, request.getReportingDestinations());
     }

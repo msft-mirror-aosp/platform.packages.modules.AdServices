@@ -37,7 +37,7 @@ public interface UxSelector {
      * @param context Current context
      */
     default void initWithUx(FragmentActivity fragmentActivity, Context context) {
-        switch (NotificationUtil.getUx(fragmentActivity, context)) {
+        switch (UxUtil.getUx(context)) {
             case U18_UX:
                 initU18();
                 break;
