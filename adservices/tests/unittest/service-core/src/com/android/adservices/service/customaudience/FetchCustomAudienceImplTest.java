@@ -98,7 +98,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -856,14 +856,16 @@ public class FetchCustomAudienceImplTest {
 
         @Override
         public void onSuccess() {
-            LogUtil.v("Reporting success to FetchCustomAudienceTestCallback.");
+            LoggerFactory.getFledgeLogger()
+                    .v("Reporting success to FetchCustomAudienceTestCallback.");
             mIsSuccess = true;
             mCountDownLatch.countDown();
         }
 
         @Override
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            LogUtil.v("Reporting failure to FetchCustomAudienceTestCallback.");
+            LoggerFactory.getFledgeLogger()
+                    .v("Reporting failure to FetchCustomAudienceTestCallback.");
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }

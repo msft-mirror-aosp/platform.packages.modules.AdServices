@@ -70,6 +70,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_GOT_IT_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_CONFIRMATION_PAGE_SETTINGS_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_ENTRY_POINT_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED;
@@ -103,6 +104,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
+import static com.android.adservices.service.ui.constants.DebugMessages.PRIVACY_SANDBOX_UI_REQUEST_MESSAGE;
 
 import android.content.Context;
 import android.os.Build;
@@ -110,6 +112,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -516,6 +519,18 @@ public class UiStatsLogger {
         sLogger.logUIStats(uiStats);
     }
 
+    /** Logs that the user has clicked the privacy sandbox entry point in the settings page. */
+    public static void logEntryPointClicked(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(
+                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_ENTRY_POINT_CLICKED);
+
+        sLogger.logUIStats(uiStats);
+
+        LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
+    }
+
     private static int getRegion(@NonNull Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
@@ -609,12 +624,16 @@ public class UiStatsLogger {
     }
 
     private static int getUx(@NonNull Context context) {
-        return switch (UxStatesManager.getInstance(context).getUx()) {
-            case U18_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
-            case GA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
-            case BETA_UX -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
-            default -> AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
-        };
+        switch (UxStatesManager.getInstance(context).getUx()) {
+            case U18_UX:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
+            case GA_UX:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
+            case BETA_UX:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__BETA_UX;
+            default:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSUPPORTED_UX;
+        }
     }
 
     private static int getEnrollmentChannel(@NonNull Context context) {

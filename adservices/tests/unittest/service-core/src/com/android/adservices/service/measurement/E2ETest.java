@@ -121,7 +121,8 @@ public abstract class E2ETest {
                         "trigger_data",
                         "source_type",
                         "source_debug_key",
-                        "trigger_debug_key");
+                        "trigger_debug_key",
+                        "trigger_summary_bucket");
         String DOUBLE = "randomized_trigger_rate";
         String STRING_OR_ARRAY = "attribution_destination";
     }

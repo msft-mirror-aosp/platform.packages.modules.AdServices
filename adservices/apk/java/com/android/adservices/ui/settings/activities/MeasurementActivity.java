@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.activitydelegates.MeasurementActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.MeasurementActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
@@ -42,7 +43,8 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(getApplicationContext()).getUx() != null) {
             initFragment();
         }
     }
@@ -58,7 +60,9 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        initActivity();
+    }
 
     private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);

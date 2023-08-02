@@ -30,6 +30,8 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -62,6 +64,7 @@ public class GetAdSelectionDataRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -76,13 +79,17 @@ public class GetAdSelectionDataRunner {
     public GetAdSelectionDataRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final AuctionServerAdSelectionDao auctionServerAdSelectionDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final Flags flags,
             final int callerUid) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(auctionServerAdSelectionDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -90,6 +97,7 @@ public class GetAdSelectionDataRunner {
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mCustomAudienceDao = customAudienceDao;
+        mAuctionServerAdSelectionDao = auctionServerAdSelectionDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -100,6 +108,7 @@ public class GetAdSelectionDataRunner {
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
+                        adFilterer,
                         mFlags,
                         mLightweightExecutorService,
                         mBackgroundExecutorService);
@@ -203,6 +212,11 @@ public class GetAdSelectionDataRunner {
                             return mObliviousHttpEncryptor.encryptBytes(
                                     formatted.getData(), adSelectionId, keyFetchTimeout);
                         },
+                        mLightweightExecutorService)
+                .transformAsync(
+                        encrypted ->
+                                persistAdSelectionIdRequest(
+                                        adSelectionId, request.getSeller(), encrypted),
                         mLightweightExecutorService);
     }
 
@@ -217,6 +231,19 @@ public class GetAdSelectionDataRunner {
                         compressedBuyerInput, request.getSeller(), adSelectionId);
         sLogger.v("ProtectedAudienceInput composed");
         return applyPayloadFormatter(protectedAudienceInput);
+    }
+
+    private ListenableFuture<byte[]> persistAdSelectionIdRequest(
+            long adSelectionId, AdTechIdentifier seller, byte[] encryptedBytes) {
+        return mBackgroundExecutorService.submit(
+                () -> {
+                    mAuctionServerAdSelectionDao.insertAuctionServerAdSelection(
+                            DBAuctionServerAdSelection.builder()
+                                    .setAdSelectionId(adSelectionId)
+                                    .setSeller(seller)
+                                    .build());
+                    return encryptedBytes;
+                });
     }
 
     private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>

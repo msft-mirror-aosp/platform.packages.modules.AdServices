@@ -39,10 +39,10 @@ import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -102,11 +102,15 @@ public class SdkSandboxManagerTest {
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final ActivityScenarioRule<TestActivity> mRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
-    @Rule public final Expect mExpect = Expect.create();
+    @Rule(order = 2)
+    public final Expect mExpect = Expect.create();
 
     private ActivityScenario<TestActivity> mScenario;
 
@@ -118,7 +122,6 @@ public class SdkSandboxManagerTest {
     @Before
     public void setup() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        assumeTrue(DeviceSupportUtils.isSdkSandboxSupported(context));
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         killSandboxIfExists();
         mScenario = mRule.getScenario();

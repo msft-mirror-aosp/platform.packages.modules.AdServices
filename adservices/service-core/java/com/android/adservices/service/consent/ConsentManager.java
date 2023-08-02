@@ -29,6 +29,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -1237,6 +1238,10 @@ public class ConsentManager {
     // T5: Restored consent should be revoked
     @VisibleForTesting
     void setAggregatedConsentToPpApi() throws IOException {
+        if (getUx() == U18_UX) {
+            // The edge case does not apply to U18 UX.
+            return;
+        }
         if (getConsent(AdServicesApiType.TOPICS).isGiven()
                 && getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
                 && getConsent(AdServicesApiType.FLEDGE).isGiven()) {
