@@ -397,11 +397,26 @@ package android.adservices.measurement {
     method @NonNull public static android.adservices.measurement.MeasurementManager get(@NonNull android.content.Context);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
     field public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
+  }
+
+  public final class SourceRegistrationRequest implements android.os.Parcelable {
+    method public int describeContents();
+    method @Nullable public android.view.InputEvent getInputEvent();
+    method @NonNull public java.util.List<android.net.Uri> getRegistrationUris();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.SourceRegistrationRequest> CREATOR;
+  }
+
+  public static final class SourceRegistrationRequest.Builder {
+    ctor public SourceRegistrationRequest.Builder(@NonNull java.util.List<android.net.Uri>);
+    method @NonNull public android.adservices.measurement.SourceRegistrationRequest build();
+    method @NonNull public android.adservices.measurement.SourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
   }
 
   public final class WebSourceParams implements android.os.Parcelable {
