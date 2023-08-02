@@ -95,6 +95,22 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
         assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isFalse();
     }
 
+    @Test
+    public void testSmallModuleCanBeInstalled_andThenUpdatedToFullModule() throws Exception {
+        // This test only makes sense for devices where we can install the small module apex
+        assumeTrue(
+                "Device has com.android.adservices APEX pre-installed",
+                isSmallModuleUpdatePossible());
+
+        runPhase("installSmallModulePendingReboot");
+        getDevice().reboot();
+
+        runPhase("installFullModulePendingReboot");
+        getDevice().reboot();
+
+        assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isTrue();
+    }
+
     /** Verify services exported from AdServices APK are unavailable on small module. */
     @Test
     public void testVerifyAdServicesAreUnavailableOnSmallModule() throws Exception {
