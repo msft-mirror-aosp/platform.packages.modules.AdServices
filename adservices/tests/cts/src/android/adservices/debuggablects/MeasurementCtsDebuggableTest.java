@@ -584,8 +584,9 @@ public class MeasurementCtsDebuggableTest {
                 "setprop debug.adservices.consent_manager_debug_mode true");
 
         // Override the flag to allow current package to call APIs.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + PACKAGE_NAME);
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices msmt_api_app_allow_list " + PACKAGE_NAME);
 
         // Override the flag to allow current package to call web API.
         getUiDevice().executeShellCommand(
@@ -663,8 +664,8 @@ public class MeasurementCtsDebuggableTest {
                 "setprop debug.adservices.consent_manager_debug_mode null");
 
         // Reset allowed packages.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices ppapi_app_allow_list null");
+        getUiDevice()
+                .executeShellCommand("device_config put adservices msmt_api_app_allow_list null");
 
         // Reset the flag to allow current package to call web API.
         getUiDevice().executeShellCommand(
