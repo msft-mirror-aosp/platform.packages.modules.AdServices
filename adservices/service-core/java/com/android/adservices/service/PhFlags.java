@@ -460,6 +460,9 @@ public final class PhFlags implements Flags {
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+
+    static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // AdServices APK sha certs.
@@ -651,6 +654,18 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
+
+    static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
+            "measurement_enable_max_aggregate_reports_per_source";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
+            "measurement_max_aggregate_reports_per_source";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION =
+            "measurement_max_aggregate_keys_per_source_registration";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
+            "measurement_max_aggregate_keys_per_trigger_registration";
 
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
             "measurement_min_event_report_delay_millis";
@@ -2184,6 +2199,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
+    @Override
+    public String getMsmtApiAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MSMT_API_APP_ALLOW_LIST,
+                /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
+    }
+
     // AdServices APK SHA certs.
     @Override
     public String getAdservicesApkShaCertificate() {
@@ -3116,6 +3140,41 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateReportsPerSource() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION);
+    }
+
+    @Override
     public long getMeasurementMinEventReportDelayMillis() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -3288,6 +3347,7 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getPpapiAppSignatureAllowList());
         writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println("\t" + KEY_MSMT_API_APP_ALLOW_LIST + " = " + getMsmtApiAppAllowList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -4222,6 +4282,26 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE
+                        + " = "
+                        + getMeasurementEnableMaxAggregateReportsPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAggregateReportsPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregateKeysPerSourceRegistration());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregateKeysPerTriggerRegistration());
     }
 
     @VisibleForTesting

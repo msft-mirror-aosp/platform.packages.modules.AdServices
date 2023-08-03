@@ -32,6 +32,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
@@ -61,7 +62,6 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
@@ -283,11 +283,11 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        int numReports =
+        int numReportsPerDestination =
                 measurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType());
 
-        if (numReports >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
+        if (numReportsPerDestination >= SystemHealthParams.getMaxAggregateReportsPerDestination()) {
             LogUtil.d(
                     String.format(
                             Locale.ENGLISH,
@@ -298,9 +298,29 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReports),
+                    String.valueOf(numReportsPerDestination),
                     measurementDao,
                     Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
+            return TriggeringStatus.DROPPED;
+        }
+
+        int numReportsPerSource = measurementDao.getNumAggregateReportsPerSource(source.getId());
+
+        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()
+                && numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
+            LogUtil.d(
+                    String.format(
+                            Locale.ENGLISH,
+                            "Aggregate reports for source %1$s exceeds system health limit of"
+                                    + " %2$d.",
+                            source.getId(),
+                            mFlags.getMeasurementMaxAggregateReportsPerSource()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReportsPerSource),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
             return TriggeringStatus.DROPPED;
         }
 
@@ -1102,12 +1122,12 @@ class AttributionJobHandler {
         Optional<Uri> triggerDestinationTopPrivateDomain =
                 trigger.getDestinationType() == EventSurfaceType.APP
                         ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
-                        : Web.topPrivateDomainAndScheme(attributionDestination);
+                        : WebAddresses.topPrivateDomainAndScheme(attributionDestination);
         Uri publisher = source.getPublisher();
         Optional<Uri> publisherTopPrivateDomain =
                 source.getPublisherType() == EventSurfaceType.APP
                         ? Optional.of(publisher)
-                        : Web.topPrivateDomainAndScheme(publisher);
+                        : WebAddresses.topPrivateDomainAndScheme(publisher);
         if (!triggerDestinationTopPrivateDomain.isPresent()
                 || !publisherTopPrivateDomain.isPresent()) {
             return Optional.empty();
@@ -1153,7 +1173,7 @@ class AttributionJobHandler {
             Uri uri, @EventSurfaceType int eventSurfaceType) {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
-                : Web.topPrivateDomainAndScheme(uri);
+                : WebAddresses.topPrivateDomainAndScheme(uri);
     }
 
     private static boolean hasDeduplicationKey(@NonNull Source source,

@@ -26,6 +26,7 @@ android_test_helper_app {
     static_libs: [
         "CtsMediationTestSdkApi",
         "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
     ],
     min_sdk_version: "33",
     target_sdk_version: "33",

@@ -447,6 +447,7 @@ public class ConsentNotificationTriggerTest {
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
         doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED);

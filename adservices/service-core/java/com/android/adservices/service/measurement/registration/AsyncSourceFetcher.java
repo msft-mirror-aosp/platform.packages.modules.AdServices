@@ -24,7 +24,6 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.ReportSpec.encodeTriggerSpecsToJson;
 import static com.android.adservices.service.measurement.Source.getOrDefaultEventReportWindows;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.TriggerSpec.getLongArrayFromJSON;
 import static com.android.adservices.service.measurement.TriggerSpec.getTriggerDataArrayFromJSON;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
@@ -42,6 +41,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.ReportSpecUtil;
@@ -49,7 +49,6 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -367,7 +366,7 @@ public class AsyncSourceFetcher {
                     matchedOneWebDestination = true;
                 }
                 Optional<Uri> topPrivateDomainAndScheme =
-                        Web.topPrivateDomainAndScheme(destination);
+                        WebAddresses.topPrivateDomainAndScheme(destination);
                 if (topPrivateDomainAndScheme.isEmpty()) {
                     LogUtil.d("Unable to extract top private domain and scheme from web "
                             + "destination.");
@@ -630,7 +629,7 @@ public class AsyncSourceFetcher {
         builder.setPublisherType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         Optional<Uri> registrationUriOrigin =
-                Web.originAndScheme(asyncRegistration.getRegistrationUri());
+                WebAddresses.originAndScheme(asyncRegistration.getRegistrationUri());
         if (!registrationUriOrigin.isPresent()) {
             LogUtil.d(
                     "AsyncSourceFetcher: "
@@ -790,7 +789,8 @@ public class AsyncSourceFetcher {
     }
 
     private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
-        if (aggregationKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+        if (aggregationKeys.length()
+                > mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()) {
             LogUtil.d(
                     "Aggregation-keys have more entries than permitted. %s",
                     aggregationKeys.length());

@@ -15,84 +15,10 @@
  */
 package com.android.adservices.common;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import org.junit.AssumptionViolatedException;
-
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 // TODO(b/284971005): try to merge it with AdServicesSupportedRule (for example, using a
 // builder that would tell whether to check for device support)
-/**
- * Rule used to properly check a test behavior depending on whether the device supports {@code
- * AdService}.
- *
- * <p>Typical usage:
- *
- * <pre class="prettyprint">
- * &#064;Rule
- * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
- *     new AdServicesDeviceSupportedRule();
- * </pre>
- *
- * <p>In the example above, it assumes that every test should only be executed when the device
- * supports {@code AdServices} - if the device doesn't support it, the test will be skipped (with an
- * {@link AssumptionViolatedException}).
- *
- * <p>The rule can also be used to make sure APIs throw {@link UnsupportedOperationException} when
- * the device doesn't support {@code AdServices}; in that case, you annotate the test method with
- * {@link RequiresDeviceNotSupported}, then simply call the API that should throw the exception on
- * its body - the rule will make sure the exception is thrown (and fail the test if it isn't).
- * Example:
- *
- * <pre class="prettyprint">
- * &#064;Test
- * &#064;RequiresDeviceNotSupported
- * public void testFoo_notSupported() {
- *    mObjectUnderTest.foo();
- * }
- * </pre>
- *
- * <p>When used together with similar rules (like {@link AdServicesSupportedRule}
- *
- * <p><b>NOTE: </b>this rule will mostly be used to skip test on unsupported platforms - if you want
- * to test that your API behaves correctly whether or not AdServices is enabled, you most likely
- * should use {@link AdServicesSupportedRule} instead. In fact, there might be cases where both
- * rules are used, in which case it's recommended to run this one first (so the test is skipped
- * right away when not supported). Example:
- *
- * <pre class="prettyprint">
- * &#064;Rule(order = 0)
- * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
- *     new AdServicesDeviceSupportedRule();
- *
- * &#064;Rule(order = 1)
- * public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
- * </pre>
- *
- * <p>Generally speaking, you should organize the rules using the order of feature dependency. For
- * example, if the test also required a given SDK level:
- *
- * <pre class="prettyprint">
- * &#064;Rule(order = 0)
- * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
- *     new AdServicesDeviceSupportedRule();
- *
- * &#064;Rule(order = 1)
- *   @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
- *
- * &#064;Rule(order = 2)
- * public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
- * </pre>
- */
-public final class AdServicesDeviceSupportedRule extends AbstractSupportedFeatureRule {
-
-    private static final AndroidLogger sLogger =
-            new AndroidLogger(AdServicesDeviceSupportedRule.class);
+/** See {@link AbstractAdServicesDeviceSupportedRule}. */
+public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
     /** Creates a rule using {@link Mode#SUPPORTED_BY_DEFAULT}. */
     public AdServicesDeviceSupportedRule() {
@@ -101,7 +27,7 @@ public final class AdServicesDeviceSupportedRule extends AbstractSupportedFeatur
 
     /** Creates a rule with the given mode. */
     public AdServicesDeviceSupportedRule(Mode mode) {
-        super(sLogger, mode);
+        super(new AndroidLogger(AdServicesDeviceSupportedRule.class), mode);
     }
 
     @Override
@@ -110,71 +36,4 @@ public final class AdServicesDeviceSupportedRule extends AbstractSupportedFeatur
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
     }
-
-    @Override
-    protected void throwFeatureNotSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device doesn't support AdServices");
-    }
-
-    @Override
-    protected void throwFeatureSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device supports AdServices");
-    }
-
-    @Override
-    protected void assertUnsupportedTestThrewRightException(Throwable thrown) {
-        if (!(thrown instanceof UnsupportedOperationException)
-                && (thrown.getCause() instanceof UnsupportedOperationException)) {
-            return;
-        }
-        super.assertUnsupportedTestThrewRightException(thrown);
-    }
-
-    @Override
-    protected boolean isFeatureSupportedAnnotation(Annotation annotation) {
-        return annotation instanceof RequiresDeviceSupported;
-    }
-
-    @Override
-    protected boolean isFeatureNotSupportedAnnotation(Annotation annotation) {
-        return annotation instanceof RequiresDeviceNotSupported;
-    }
-
-    @Override
-    protected boolean isFeatureSupportedOrNotAnnotation(Annotation annotation) {
-        return annotation instanceof RequiresDeviceSupportedOrNot;
-    }
-
-    /**
-     * Annotation used to indicate that a test should only be run when the device supports {@code
-     * AdServices}.
-     *
-     * <p>Typically used to override the behavior defined in the rule constructor or annotations
-     * defined in the class / superclass.
-     */
-    @Retention(RUNTIME)
-    @Target({TYPE, METHOD})
-    public static @interface RequiresDeviceSupported {}
-
-    /**
-     * Annotation used to indicate that a test should only be run when the device does NOT support
-     * {@code AdServices}, and that the test should throw a {@link UnsupportedOperationException}.
-     *
-     * <p>Typically used to override the behavior defined in the rule constructor or annotations
-     * defined in the class / superclass.
-     */
-    @Retention(RUNTIME)
-    @Target({TYPE, METHOD})
-    public static @interface RequiresDeviceNotSupported {}
-
-    /**
-     * Annotation used to indicate that a test should always run, whether the device supports {@code
-     * AdServices} or not.
-     *
-     * <p>Typically used to override the behavior defined in the rule constructor or annotations
-     * defined in the class / superclass.
-     */
-    @Retention(RUNTIME)
-    @Target({TYPE, METHOD})
-    public static @interface RequiresDeviceSupportedOrNot {}
 }
