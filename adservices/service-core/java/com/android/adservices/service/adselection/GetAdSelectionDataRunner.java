@@ -156,7 +156,8 @@ public class GetAdSelectionDataRunner {
                                     ignoredVoid ->
                                             orchestrateGetAdSelectionDataRunner(
                                                     inputParams.getAdSelectionDataRequest(),
-                                                    adSelectionId),
+                                                    adSelectionId,
+                                                    inputParams.getCallerPackageName()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -197,14 +198,15 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull GetAdSelectionDataRequest request, long adSelectionId) {
+            @NonNull GetAdSelectionDataRequest request, long adSelectionId, String packageName) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(packageName);
 
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
                 .transform(
-                        buyerInputs -> createPayload(buyerInputs, request, adSelectionId),
+                        buyerInputs -> createPayload(buyerInputs, packageName, adSelectionId),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -221,14 +223,12 @@ public class GetAdSelectionDataRunner {
     }
 
     private AuctionServerPayloadFormattedData createPayload(
-            Map<AdTechIdentifier, BuyerInput> buyerInputs,
-            GetAdSelectionDataRequest request,
-            long adSelectionId) {
+            Map<AdTechIdentifier, BuyerInput> buyerInputs, String packageName, long adSelectionId) {
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
                 compressEachBuyerInput(buyerInputs);
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
-                        compressedBuyerInput, request.getSeller(), adSelectionId);
+                        compressedBuyerInput, packageName, adSelectionId);
         sLogger.v("ProtectedAudienceInput composed");
         return applyPayloadFormatter(protectedAudienceInput);
     }
@@ -267,7 +267,7 @@ public class GetAdSelectionDataRunner {
     @VisibleForTesting
     ProtectedAudienceInput composeProtectedAudienceInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
-            AdTechIdentifier seller,
+            String packageName,
             long adSelectionId) {
         sLogger.v("Composing ProtectedAudienceInput with buyer inputs and publisher");
         return ProtectedAudienceInput.newBuilder()
@@ -277,7 +277,7 @@ public class GetAdSelectionDataRunner {
                                         Collectors.toMap(
                                                 e -> e.getKey().toString(),
                                                 e -> ByteString.copyFrom(e.getValue().getData()))))
-                .setPublisherName(seller.toString())
+                .setPublisherName(packageName)
                 .setEnableDebugReporting(mFlags.getFledgeAuctionServerEnableDebugReporting())
                 // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
                 //  accessible in plaintext.
