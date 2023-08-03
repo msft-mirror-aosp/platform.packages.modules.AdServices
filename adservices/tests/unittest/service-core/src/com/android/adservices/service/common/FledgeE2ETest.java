@@ -3181,6 +3181,35 @@ public class FledgeE2ETest {
                 mRequestMatcherPrefixMatch);
     }
 
+    @Test
+    public void testSelectAdsWithFilterExceptionFromNullPointerExceptionDoesNotCrash()
+            throws Exception {
+        initClients(false, false, false);
+        setupConsentGivenStubs();
+        setupAdSelectionConfig();
+
+        doThrow(new FilterException(new NullPointerException("Intentional test failure")))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+
+        // Run Ad Selection
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertWithMessage("Callback success").that(resultsCallback.mIsSuccess).isFalse();
+        assertWithMessage("Callback AdSelectionResponse")
+                .that(resultsCallback.mAdSelectionResponse)
+                .isNull();
+        assertWithMessage("Callback FledgeErrorResponse")
+                .that(resultsCallback.mFledgeErrorResponse)
+                .isNotNull();
+        assertWithMessage("Callback FledgeErrorResponse")
+                .that(resultsCallback.mFledgeErrorResponse.getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+    }
+
     private void updateHistogramAndAssertSuccess(long adSelectionId, int adEventType)
             throws InterruptedException {
         UpdateAdCounterHistogramInput inputParams =
