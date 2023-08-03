@@ -46,6 +46,7 @@ import java.util.List;
 public class SdkSandboxSmallModuleTestApp {
 
     private static final String TAG = "SdkSandboxSmallModuleTestApp";
+    private static final String MODULE_PACKAGE_NAME = "com.android.adservices";
     private static final String[] AD_SERVICES = {
         AdServicesCommon.ACTION_TOPICS_SERVICE,
         AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE,
@@ -71,14 +72,26 @@ public class SdkSandboxSmallModuleTestApp {
 
     @Test
     public void installSmallModulePendingReboot() throws Exception {
-        TestApp apexWithoutApk =
+        TestApp smallModule =
                 new TestApp(
-                        "ApexWithoutApk",
-                        "com.android.adservices",
+                        "SmallModule",
+                        MODULE_PACKAGE_NAME,
                         1,
                         /*isApex=*/ true,
-                        "com.android.adservices.withoutapk.test.apex");
-        Install.single(apexWithoutApk).setStaged().commit();
+                        "com.android.adservices.smallmodule.apex");
+        Install.single(smallModule).setStaged().commit();
+    }
+
+    @Test
+    public void installFullModulePendingReboot() throws Exception {
+        TestApp fullModule =
+                new TestApp(
+                        "FullModule",
+                        MODULE_PACKAGE_NAME,
+                        1,
+                        /*isApex=*/ true,
+                        "com.android.adservices.fullmodule.apex");
+        Install.single(fullModule).setStaged().commit();
     }
 
     @Test
