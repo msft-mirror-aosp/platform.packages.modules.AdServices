@@ -387,7 +387,7 @@
 
         <!-- Boot completed receiver registers package changed event receivers. -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
-                  android:enabled="@bool/atLeastS"
+                  android:enabled="@bool/isAdExtBootCompletedReceiverEnabled"
                   android:exported="true"
                   android:process=".adservices">
             <intent-filter>
