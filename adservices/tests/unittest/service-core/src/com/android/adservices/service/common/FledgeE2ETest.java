@@ -200,7 +200,7 @@ public class FledgeE2ETest {
                                                     Duration.ofDays(1))
                                             .build()))
                     .build();
-    @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    @Spy private static final Context CONTEXT_SPY = ApplicationProvider.getApplicationContext();
 
     private static final AdTechIdentifier LOCALHOST_BUYER =
             AdTechIdentifier.fromString("localhost");
@@ -275,8 +275,7 @@ public class FledgeE2ETest {
     @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
     // This object access some system APIs
-    @Mock private DevContextFilter mDevContextFilter;
-    @Mock private AppImportanceFilter mAppImportanceFilter;
+    @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private Throttler mMockThrottler;
     private AdSelectionConfig mAdSelectionConfig;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -308,9 +307,9 @@ public class FledgeE2ETest {
 
     @Mock private File mMockDBAdSelectionFile;
 
-    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
-    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
 
     @Before
     public void setUp() throws Exception {
@@ -333,21 +332,21 @@ public class FledgeE2ETest {
         doReturn(DEFAULT_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
 
         mAdSelectionEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
         SharedStorageDatabase sharedDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
         mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
@@ -378,13 +377,13 @@ public class FledgeE2ETest {
                 .thenReturn(true);
 
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
-        when(CONTEXT.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(CONTEXT_SPY.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
-        when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
+        when(ConsentManager.getInstance(CONTEXT_SPY)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
         doNothing()
@@ -415,7 +414,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -477,7 +476,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -545,7 +544,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -722,7 +721,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -789,7 +788,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -860,7 +859,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -927,7 +926,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -981,7 +980,7 @@ public class FledgeE2ETest {
         // reporting
         // due to package mismatch
         PackageManager packageManagerMock = mock(PackageManager.class);
-        when(CONTEXT.getPackageManager()).thenReturn(packageManagerMock);
+        when(CONTEXT_SPY.getPackageManager()).thenReturn(packageManagerMock);
         when(packageManagerMock.getPackagesForUid(Process.myUid()))
                 .thenReturn(new String[] {CommonFixture.TEST_PACKAGE_NAME, otherPackageName});
 
@@ -997,19 +996,19 @@ public class FledgeE2ETest {
                         mEncryptionKeyDao,
                         mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        CONTEXT_SPY,
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptorMock);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1072,7 +1071,7 @@ public class FledgeE2ETest {
 
         mMockWebServerRule.startMockWebServer(request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1139,7 +1138,7 @@ public class FledgeE2ETest {
         // reporting
         // due to package mismatch
         PackageManager packageManagerMock = mock(PackageManager.class);
-        when(CONTEXT.getPackageManager()).thenReturn(packageManagerMock);
+        when(CONTEXT_SPY.getPackageManager()).thenReturn(packageManagerMock);
         when(packageManagerMock.getPackagesForUid(Process.myUid()))
                 .thenReturn(new String[] {CommonFixture.TEST_PACKAGE_NAME, otherPackageName});
 
@@ -1155,19 +1154,19 @@ public class FledgeE2ETest {
                         mEncryptionKeyDao,
                         mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        CONTEXT_SPY,
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptorMock);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1190,7 +1189,7 @@ public class FledgeE2ETest {
 
         mMockWebServerRule.startMockWebServer(request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1263,7 +1262,7 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1349,7 +1348,7 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1482,7 +1481,7 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -2973,7 +2972,7 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
 
@@ -3726,7 +3725,7 @@ public class FledgeE2ETest {
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT,
+                        CONTEXT_SPY,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 new CustomAudienceQuantityChecker(mCustomAudienceDao, flags),
@@ -3741,23 +3740,23 @@ public class FledgeE2ETest {
                                 flags),
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
-                        mAppImportanceFilter,
+                        mAppImportanceFilterMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT,
+                                CONTEXT_SPY,
                                 mConsentManagerMock,
                                 flags,
-                                mAppImportanceFilter,
+                                mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
                                 mMockThrottler),
                         new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags);
@@ -3773,19 +3772,19 @@ public class FledgeE2ETest {
                         mEncryptionKeyDao,
                         mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        CONTEXT_SPY,
                         mAdServicesLogger,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptorMock);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
