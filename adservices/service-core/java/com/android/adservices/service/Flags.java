@@ -2032,6 +2032,12 @@ public interface Flags {
     float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
+     * PP API Rate Limit for measurement register sources. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
      * PP API Rate Limit for measurement register trigger. This is the max allowed QPS for one API
      * client to one PP API. Negative Value means skipping the rate limiting checking.
      */
@@ -2089,6 +2095,11 @@ public interface Flags {
     /** Returns the Measurement Register Source Request Permits Per Second. */
     default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Sources Request Permits Per Second. */
+    default float getMeasurementRegisterSourcesRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
