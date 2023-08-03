@@ -34,6 +34,8 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
+import android.adservices.customaudience.TrustedBiddingData;
+import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -178,6 +180,44 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         // Override mClient with a new value that explicitly uses the Get method to create manager
         createClientUsingGetMethod();
         testJoinCustomAudience_withValidSubdomains_success();
+    }
+
+    @Test
+    public void testJoinCustomAudience_withManyValidSubdomains_success() throws Exception {
+        joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderWithSubdomainsForBuyer(
+                                CommonFixture.VALID_BUYER_1)
+                        .setBiddingLogicUri(
+                                CommonFixture.getUriWithGivenSubdomain(
+                                        "bidding.subdomain",
+                                        CommonFixture.VALID_BUYER_1.toString(),
+                                        "/bidding/logic"))
+                        .setDailyUpdateUri(
+                                CommonFixture.getUriWithGivenSubdomain(
+                                        "daily.update.subdomain",
+                                        CommonFixture.VALID_BUYER_1.toString(),
+                                        "/daily/update"))
+                        .setTrustedBiddingData(
+                                new TrustedBiddingData.Builder()
+                                        .setTrustedBiddingUri(
+                                                CommonFixture.getUriWithGivenSubdomain(
+                                                        "trusted.bidding",
+                                                        CommonFixture.VALID_BUYER_1.toString(),
+                                                        "/bidding/trusted"))
+                                        .setTrustedBiddingKeys(
+                                                TrustedBiddingDataFixture
+                                                        .VALID_TRUSTED_BIDDING_KEYS)
+                                        .build())
+                        .build());
+    }
+
+    @Test
+    public void
+            testJoinCustomAudience_withManyValidSubdomains_success_usingGetMethodToCreateManager()
+                    throws Exception {
+        // Override mClient with a new value that explicitly uses the Get method to create manager
+        createClientUsingGetMethod();
+        testJoinCustomAudience_withManyValidSubdomains_success();
     }
 
     @Test

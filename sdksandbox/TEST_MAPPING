@@ -131,6 +131,9 @@
     },
     {
       "name": "SdkSandboxTestUtilsExampleTest"
+    },
+    {
+      "name": "SdkSandboxSmallModuleHostTest"
     }
   ],
   "postsubmit": [

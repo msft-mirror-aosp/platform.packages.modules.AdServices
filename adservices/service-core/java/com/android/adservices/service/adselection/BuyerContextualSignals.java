@@ -16,15 +16,22 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdSelectionSignals;
+
 import androidx.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
+
+import java.util.Objects;
 
 /** Represents buyer contextual signals that will be passed through buyer JS functions. */
 @AutoValue
 public abstract class BuyerContextualSignals {
     @Nullable
     abstract AdCost getAdCost();
+
+    @Nullable
+    abstract Integer getDataVersion();
 
     /** Creates a builder for a {@link BuyerContextualSignals} object. */
     public static BuyerContextualSignals.Builder builder() {
@@ -37,6 +44,8 @@ public abstract class BuyerContextualSignals {
         /** Sets the adCost. */
         public abstract Builder setAdCost(@Nullable AdCost adCost);
 
+        public abstract Builder setDataVersion(@Nullable Integer dataVersion);
+
         /** Builds a {@link BuyerContextualSignals} object. */
         public abstract BuyerContextualSignals build();
     }
@@ -44,6 +53,15 @@ public abstract class BuyerContextualSignals {
     /** Returns {@link BuyerContextualSignals} in a JSON format */
     @Override
     public final String toString() {
-        return "{" + "\"adCost\":" + getAdCost() + "}";
+        return "{"
+                + (Objects.nonNull(getAdCost()) ? "\"adCost\":" + getAdCost() : "")
+                + (Objects.nonNull(getDataVersion())
+                        ? "\"dataVersion\":" + getDataVersion().toString()
+                        : "")
+                + "}";
+    }
+
+    public AdSelectionSignals toAdSelectionSignals() {
+        return AdSelectionSignals.fromString(toString());
     }
 }

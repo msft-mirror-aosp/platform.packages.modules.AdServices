@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.enrollment;
 
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -30,6 +29,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -48,6 +50,9 @@ import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -69,6 +74,9 @@ public class EnrollmentDaoTest {
     private EnrollmentDao mEnrollmentDao;
 
     @Mock private Flags mMockFlags;
+    @Mock private AdServicesLogger mLogger;
+    @Mock private EnrollmentUtil mEnrollmentUtil;
+    @Mock private SharedDbHelper mMockDbHelper;
 
     private static final EnrollmentData ENROLLMENT_DATA1 =
             new EnrollmentData.Builder()
@@ -185,7 +193,15 @@ public class EnrollmentDaoTest {
         MockitoAnnotations.initMocks(this);
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
-        mEnrollmentDao = new EnrollmentDao(sContext, mDbHelper, mMockFlags);
+        when(mEnrollmentUtil.getBuildId()).thenReturn(1);
+        mEnrollmentDao =
+                new EnrollmentDao(
+                        sContext,
+                        mDbHelper,
+                        mMockFlags,
+                        mMockFlags.isEnableEnrollmentTestSeed(),
+                        mLogger,
+                        mEnrollmentUtil);
     }
 
     @After
@@ -203,7 +219,14 @@ public class EnrollmentDaoTest {
     public void testInitialization() {
         // Check seeded
         EnrollmentDao spyEnrollmentDao =
-                Mockito.spy(new EnrollmentDao(sContext, mDbHelper, mMockFlags));
+                Mockito.spy(
+                        new EnrollmentDao(
+                                sContext,
+                                mDbHelper,
+                                mMockFlags,
+                                mMockFlags.isEnableEnrollmentTestSeed(),
+                                mLogger,
+                                mEnrollmentUtil));
         Mockito.doReturn(false).when(spyEnrollmentDao).isSeeded();
 
         spyEnrollmentDao.seed();
@@ -229,10 +252,24 @@ public class EnrollmentDaoTest {
     @Test
     public void testDelete() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
         assertEquals(e, ENROLLMENT_DATA1);
 
         mEnrollmentDao.delete("1");
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e2 = mEnrollmentDao.getEnrollmentData("1");
         assertNull(e2);
     }
@@ -247,9 +284,21 @@ public class EnrollmentDaoTest {
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         null);
         assertNotEquals(count, 0);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         // Delete the whole table
         assertTrue(mEnrollmentDao.deleteAll());
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         // Check seeded enrollments are deleted.
         count =
@@ -274,7 +323,14 @@ public class EnrollmentDaoTest {
                         .startMocking();
 
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        EnrollmentDao enrollmentDao = new EnrollmentDao(sContext, helper, mMockFlags);
+        EnrollmentDao enrollmentDao =
+                new EnrollmentDao(
+                        sContext,
+                        helper,
+                        mMockFlags,
+                        mMockFlags.isEnableEnrollmentTestSeed(),
+                        mLogger,
+                        mEnrollmentUtil);
         when(helper.safeGetWritableDatabase()).thenReturn(db);
         when(db.delete(eq(EnrollmentTables.EnrollmentDataContract.TABLE), eq(null), eq(null)))
                 .thenThrow(SQLiteException.class);
@@ -285,8 +341,40 @@ public class EnrollmentDaoTest {
     }
 
     @Test
+    public void testOverwriteEnrollmentData() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertNotEquals(0, count);
+
+        mEnrollmentDao.overwriteData(Arrays.asList(ENROLLMENT_DATA2, ENROLLMENT_DATA3));
+        count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertEquals(2, count);
+        assertNull(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA1.getEnrollmentId()));
+        assertEquals(
+                mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA2.getEnrollmentId()),
+                ENROLLMENT_DATA2);
+        assertEquals(
+                mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA3.getEnrollmentId()),
+                ENROLLMENT_DATA3);
+    }
+
+    @Test
     public void testGetEnrollmentData() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
         assertEquals(e, ENROLLMENT_DATA1);
     }
@@ -294,7 +382,14 @@ public class EnrollmentDaoTest {
     @Test
     public void initEnrollmentDao_ForEnrollmentSeedFlagOn_PerformsSeed() {
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(true);
-        EnrollmentDao enrollmentDao = new EnrollmentDao(sContext, mDbHelper, mMockFlags);
+        EnrollmentDao enrollmentDao =
+                new EnrollmentDao(
+                        sContext,
+                        mDbHelper,
+                        mMockFlags,
+                        mMockFlags.isEnableEnrollmentTestSeed(),
+                        mLogger,
+                        mEnrollmentUtil);
 
         for (EnrollmentData enrollmentData : PreEnrolledAdTechForTest.getList()) {
             EnrollmentData e = enrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
@@ -315,6 +410,13 @@ public class EnrollmentDaoTest {
     public void getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndSameOrigin_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://us.5test.com/source"));
@@ -340,12 +442,25 @@ public class EnrollmentDaoTest {
         assertEquals(e3, ENROLLMENT_DATA5);
         assertEquals(e4, ENROLLMENT_DATA5);
         assertEquals(e5, ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(5))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(5)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndSamePort_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
@@ -356,12 +471,25 @@ public class EnrollmentDaoTest {
 
         assertEquals(e1, ENROLLMENT_DATA5);
         assertEquals(e2, ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndDifferentPort_isNotMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
@@ -372,12 +500,25 @@ public class EnrollmentDaoTest {
 
         assertNull(e1);
         assertNull(e2);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndAnyPort_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
@@ -396,6 +537,13 @@ public class EnrollmentDaoTest {
         assertEquals(e2, ENROLLMENT_DATA5);
         assertEquals(e3, ENROLLMENT_DATA5);
         assertEquals(e4, ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(4)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
@@ -403,6 +551,12 @@ public class EnrollmentDaoTest {
             getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndDifferentOriginUri_isNotMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://eu.5test.com/source"));
@@ -422,12 +576,25 @@ public class EnrollmentDaoTest {
         assertNull(e2);
         assertNull(e3);
         assertNull(e4);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(4)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSameSiteUri_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/source"));
@@ -442,12 +609,25 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger"));
         assertEquals(e3, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSameETLD_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.2test.com/source"));
@@ -462,12 +642,25 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.2test.com/trigger"));
         assertEquals(e3, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSamePath_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
@@ -479,12 +672,26 @@ public class EnrollmentDaoTest {
 
         assertEquals(e1, ENROLLMENT_DATA2);
         assertEquals(e2, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndIncompletePath_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/so"));
@@ -501,12 +708,26 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger/extra"));
         assertEquals(e4, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(4)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndExtraPath_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/source/viewId/123"));
@@ -526,12 +747,26 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger/extra/path/clickId/123"));
         assertEquals(e4, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(4)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentUri_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.com/path"));
@@ -546,6 +781,13 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://test-prefix.com/path"));
         assertEquals(e3, ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
@@ -565,6 +807,13 @@ public class EnrollmentDaoTest {
                         .setEncryptionKeyUrl(Arrays.asList("https://5test.com/keys"))
                         .build();
         mEnrollmentDao.insert(data);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com"));
@@ -579,6 +828,13 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com/path"));
         assertEquals(e3, data);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
@@ -598,16 +854,37 @@ public class EnrollmentDaoTest {
                         .setEncryptionKeyUrl(Arrays.asList("https://4test.com/keys"))
                         .build();
         mEnrollmentDao.insert(data);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com"));
         assertEquals(e1, data);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSameSubdomainChild_isMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://test-prefix.com"));
@@ -617,12 +894,26 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://other-prefix.test-prefix.com"));
         assertEquals(e1, ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentDomain_doesNotMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://abc2test.com/source"));
@@ -631,12 +922,26 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://abc2test.com/trigger"));
         assertNull(e1);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentScheme_doesNotMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("http://2test.com/source"));
@@ -645,12 +950,26 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("http://2test.com/trigger"));
         assertNull(e1);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentETld_doesNotMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(Uri.parse("https://2test.co"));
 
@@ -663,16 +982,31 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.co/trigger"));
         assertNull(e3);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
     }
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndInvalidPublicSuffix_isNoMatch() {
         when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.invalid"));
         assertNull(e);
+        verifyZeroInteractions(mLogger);
 
         EnrollmentData enrollmentData =
                 new EnrollmentData.Builder()
@@ -688,19 +1022,41 @@ public class EnrollmentDaoTest {
                         .setEncryptionKeyUrl(Arrays.asList("https://4test.invalid/keys"))
                         .build();
         mEnrollmentDao.insert(enrollmentData);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.invalid"));
         assertNull(e1);
+        verifyZeroInteractions(mLogger);
     }
 
     @Test
     public void testGetEnrollmentDataForFledgeByAdTechIdentifier() {
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         AdTechIdentifier adtechIdentifier = AdTechIdentifier.fromString("2test.com", false);
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
         assertEquals(e, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
@@ -709,6 +1065,12 @@ public class EnrollmentDaoTest {
         clearAllTables();
 
         assertThat(mEnrollmentDao.getAllFledgeEnrolledAdTechs()).isEmpty();
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
     }
 
     @Test
@@ -716,6 +1078,12 @@ public class EnrollmentDaoTest {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
 
         Set<AdTechIdentifier> enrolledFledgeAdTechIdentifiers =
                 mEnrollmentDao.getAllFledgeEnrolledAdTechs();
@@ -725,6 +1093,12 @@ public class EnrollmentDaoTest {
                 .containsExactly(
                         AdTechIdentifier.fromString("1test.com"),
                         AdTechIdentifier.fromString("2test.com"));
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
     }
 
     @Test
@@ -732,6 +1106,7 @@ public class EnrollmentDaoTest {
         assertWithMessage("Returned enrollment pair")
                 .that(mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(null))
                 .isNull();
+        verifyZeroInteractions(mLogger);
     }
 
     @Test
@@ -741,11 +1116,19 @@ public class EnrollmentDaoTest {
                         mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                                 Uri.EMPTY))
                 .isNull();
+        verifyZeroInteractions(mLogger);
     }
 
     @Test
     public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_noMatchFound() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         Uri nonMatchingUri =
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/path/for/resource");
 
@@ -753,11 +1136,25 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(nonMatchingUri);
 
         assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
     }
 
     @Test
     public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_matchesHostExactly() {
         mEnrollmentDao.insert(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         Uri exactMatchUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/path/for/resource");
 
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
@@ -769,11 +1166,25 @@ public class EnrollmentDaoTest {
         assertWithMessage("Returned AdTechIdentifier")
                 .that(enrollmentResult.first)
                 .isEqualTo(CommonFixture.VALID_BUYER_1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_matchesHostSubdomain() {
         mEnrollmentDao.insert(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         Uri subdomainMatchUri =
                 CommonFixture.getUriWithValidSubdomain(
                         CommonFixture.VALID_BUYER_2.toString(), "/path/for/resource");
@@ -788,11 +1199,25 @@ public class EnrollmentDaoTest {
         assertWithMessage("Returned AdTechIdentifier")
                 .that(enrollmentResult.first)
                 .isEqualTo(CommonFixture.VALID_BUYER_2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(1)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_nonMatchingSubstring() {
         mEnrollmentDao.insert(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         // Note this URI is missing a "." separating the prefix from the expected host
         Uri nonMatchingSubstringUri =
                 CommonFixture.getUri(
@@ -808,25 +1233,112 @@ public class EnrollmentDaoTest {
     @Test
     public void testGetEnrollmentDataFromSdkName() {
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e = mEnrollmentDao.getEnrollmentDataFromSdkName("2sdk");
         assertEquals(e, ENROLLMENT_DATA2);
-
         EnrollmentData e2 = mEnrollmentDao.getEnrollmentDataFromSdkName("anotherSdk");
         assertEquals(e2, ENROLLMENT_DATA2);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
 
         mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e3 = mEnrollmentDao.getEnrollmentDataFromSdkName("31sdk");
         assertEquals(e3, ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(3))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
     }
 
     @Test
     public void testDuplicateEnrollmentData() {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
         assertEquals(ENROLLMENT_DATA1, e);
 
         mEnrollmentDao.insert(DUPLICATE_ID_ENROLLMENT_DATA);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
         e = mEnrollmentDao.getEnrollmentData("1");
         assertEquals(DUPLICATE_ID_ENROLLMENT_DATA, e);
+    }
+
+    @Test
+    public void testGetEnrollmentRecordsCountForLogging_insertionsMatchCount() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        mEnrollmentDao.insert(DUPLICATE_ID_ENROLLMENT_DATA);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
+        assertEquals(enrollmentRecordsCount, 3);
+    }
+
+    @Test
+    public void testGetEnrollmentRecordsCountForLogging_limitedEnrollmentLoggingEnabled() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        when(mMockFlags.getEnrollmentEnableLimitedLogging()).thenReturn(true);
+        int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
+        assertEquals(-2, enrollmentRecordsCount);
+    }
+
+    @Test
+    public void testGetEnrollmentRecordsCountForLogging_databaseError() {
+        EnrollmentDao enrollmentDao =
+                new EnrollmentDao(
+                        sContext,
+                        mMockDbHelper,
+                        mMockFlags,
+                        mMockFlags.isEnableEnrollmentTestSeed(),
+                        mLogger,
+                        mEnrollmentUtil);
+        enrollmentDao.insert(ENROLLMENT_DATA1);
+        enrollmentDao.insert(ENROLLMENT_DATA2);
+        enrollmentDao.insert(ENROLLMENT_DATA3);
+        when(mMockFlags.getEnrollmentEnableLimitedLogging()).thenReturn(false);
+        when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(null);
+        int enrollmentRecordsCount = enrollmentDao.getEnrollmentRecordCountForLogging();
+        assertEquals(-1, enrollmentRecordsCount);
     }
 }

@@ -22,6 +22,9 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.activitydelegates.BlockedAppsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.BlockedAppsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.BlockedAppsViewModel;
@@ -43,6 +46,26 @@ public class BlockedAppsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(getApplicationContext()).getUx() != null) {
+            initFragment();
+        }
+    }
+
+    @Override
+    public void initBeta() {
+        initActivity();
+    }
+
+    @Override
+    public void initGA() {
+        initActivity();
+    }
+
+    @Override
+    public void initU18() {}
+
+    private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -52,21 +75,15 @@ public class BlockedAppsActivity extends AdServicesBaseActivity {
                         null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    @Override
-    public void initBeta() {}
-
-    @Override
-    public void initGA() {}
-
-    @Override
-    public void initU18() {}
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new BlockedAppsActionDelegate(
                         this, new ViewModelProvider(this).get(BlockedAppsViewModel.class));
+    }
+
+    private void initActivity() {
+        setContentView(R.layout.blocked_apps_activity);
+        // no need to store since not using
+        new BlockedAppsActivityActionDelegate(
+                this, new ViewModelProvider(this).get(BlockedAppsViewModel.class));
     }
 }

@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.activitydelegates.AppsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.AppsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
@@ -45,7 +46,8 @@ public class AppsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()
+                && ConsentManager.getInstance(this).getUx() != null) {
             initFragment();
         }
     }

@@ -22,15 +22,18 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
+import android.os.SystemProperties;
 import android.util.Log;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 
 /** Class to place Adservices CTS related helper method. */
-public class AdservicesTestHelper {
+public final class AdservicesTestHelper {
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
     private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
     private static final String DEFAULT_LOG_TAG = "adservices";
@@ -105,10 +108,22 @@ public class AdservicesTestHelper {
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
      * @return if the device is supported.
-     * @deprecated use {@link AdServicesSupportRule} instead.
+     * @deprecated use {@link AdServicesSupportedRule} or {@link AdServicesDeviceSupportedRule}
+     *     instead.
      */
     @Deprecated
     public static boolean isDeviceSupported() {
-        return AdServicesSupportRule.isDeviceSupported();
+        return AdServicesSupportHelper.isDeviceSupported();
+    }
+
+    /**
+     * Checks if the device is debuggable, as the {@code Build.isDebuggable()} was just added on
+     * Android S.
+     */
+    public static boolean isDebuggable() {
+        if (SdkLevel.isAtLeastS()) {
+            return Build.isDebuggable();
+        }
+        return SystemProperties.getInt("ro.debuggable", 0) == 1;
     }
 }
