@@ -22,11 +22,26 @@ import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.Envelope;
 import com.google.cobalt.ObservationToEncrypt;
 
+import java.util.Optional;
+
 /** Interface for encrypting data types that need to be encrypted before upload. */
 public interface Encrypter {
-    /** Encrypt an envelope. */
-    EncryptedMessage encryptEnvelope(@NonNull Envelope envelope);
+    /**
+     * Encrypt an envelope.
+     *
+     * @return empty Optional if the {@link Envelope} to encrypt is empty
+     * @throws EncryptionFailedException if encryption fails
+     */
+    Optional<EncryptedMessage> encryptEnvelope(@NonNull Envelope envelope)
+            throws EncryptionFailedException;
 
-    /** Encrypt an observation. */
-    EncryptedMessage encryptObservation(@NonNull ObservationToEncrypt observation);
+    /**
+     * Encrypt an observation.
+     *
+     * @return empty Optional if the {@link Observation} wrapped in {@link ObservationToEncrypt} to
+     *     encrypt is empty
+     * @throws EncryptionFailedException if encryption fails
+     */
+    Optional<EncryptedMessage> encryptObservation(@NonNull ObservationToEncrypt observation)
+            throws EncryptionFailedException;
 }

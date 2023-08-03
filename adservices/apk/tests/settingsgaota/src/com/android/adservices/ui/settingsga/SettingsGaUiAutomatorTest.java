@@ -72,10 +72,8 @@ public class SettingsGaUiAutomatorTest {
             CompatAdServicesTestUtils.setFlags();
         }
 
-        // Mock GA_UX for testing.
         ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux GA_UX");
+                "device_config put adservices enable_ad_services_system_api false");
     }
 
     @After

@@ -47,6 +47,17 @@ public class SystemDataTest {
 
     @Test
     public void filteredSystemProfile_appVersionMissing_succeeds() throws Exception {
+        SystemData systemData = new SystemData();
+        assertThat(
+                        systemData.filteredSystemProfile(
+                                ReportDefinition.newBuilder()
+                                        .addSystemProfileField(SystemProfileField.APP_VERSION)
+                                        .build()))
+                .isEqualTo(SystemProfile.getDefaultInstance());
+    }
+
+    @Test
+    public void filteredSystemProfile_appVersionNull_succeeds() throws Exception {
         SystemData systemData = new SystemData(null);
         assertThat(
                         systemData.filteredSystemProfile(

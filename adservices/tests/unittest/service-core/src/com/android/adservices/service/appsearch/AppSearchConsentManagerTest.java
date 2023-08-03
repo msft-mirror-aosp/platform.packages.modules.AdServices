@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
@@ -229,6 +230,9 @@ public class AppSearchConsentManagerTest {
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUse() {
+        when(mAppSearchConsentWorker.getAppsWithConsent(
+                        AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT))
+                .thenReturn(List.of());
         when(mAppSearchConsentWorker.addAppWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_CONSENT, PACKAGE_NAME1))
                 .thenReturn(true);
@@ -236,17 +240,24 @@ public class AppSearchConsentManagerTest {
                 mAppSearchConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         PACKAGE_NAME1);
         assertThat(result).isFalse();
+        verify(mAppSearchConsentWorker)
+                .addAppWithConsent(AppSearchAppConsentDao.APPS_WITH_CONSENT, PACKAGE_NAME1);
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUse_revoked() {
-        when(mAppSearchConsentWorker.addAppWithConsent(
-                        AppSearchAppConsentDao.APPS_WITH_CONSENT, PACKAGE_NAME2))
-                .thenReturn(false);
+        when(mAppSearchConsentWorker.getAppsWithConsent(
+                        AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT))
+                .thenReturn(List.of(PACKAGE_NAME2));
         boolean result =
                 mAppSearchConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         PACKAGE_NAME2);
         assertThat(result).isTrue();
+        verify(mAppSearchConsentWorker)
+                .getAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT);
+
+        // Verify that addAppWithConsent is not called
+        verifyNoMoreInteractions(mAppSearchConsentWorker);
     }
 
     @Test

@@ -38,6 +38,9 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class AuctionServerCustomAudienceFiltererTest {
 
@@ -63,7 +66,7 @@ public class AuctionServerCustomAudienceFiltererTest {
     }
 
     @Test
-    public void test_isValidCustomAudience_noBiddingKeys_returnsFalse() {
+    public void test_isValidCustomAudience_emptyBiddingKeyList_returnsFalse() {
         DBCustomAudience customAudience =
                 new DBCustomAudience.Builder()
                         .setOwner(VALID_OWNER)
@@ -85,7 +88,57 @@ public class AuctionServerCustomAudienceFiltererTest {
     }
 
     @Test
-    public void test_isValidCustomAudience_noAdRenderId_returnsFalse() {
+    public void test_isValidCustomAudience_nullBiddingKeys_returnsFalse() {
+        DBCustomAudience customAudience =
+                new DBCustomAudience.Builder()
+                        .setOwner(VALID_OWNER)
+                        .setBuyer(VALID_BUYER_1)
+                        .setName(CustomAudienceFixture.VALID_NAME)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setLastAdsAndBiddingDataUpdatedTime(
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setBiddingLogicUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                        .setTrustedBiddingData(
+                                new DBTrustedBiddingData.Builder()
+                                        .setUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                                        .setKeys(Collections.singletonList(null))
+                                        .build())
+                        .build();
+
+        assertFalse(
+                AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
+                        customAudience));
+    }
+
+    @Test
+    public void test_isValidCustomAudience_emptyBiddingKeys_returnsFalse() {
+        DBCustomAudience customAudience =
+                new DBCustomAudience.Builder()
+                        .setOwner(VALID_OWNER)
+                        .setBuyer(VALID_BUYER_1)
+                        .setName(CustomAudienceFixture.VALID_NAME)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setLastAdsAndBiddingDataUpdatedTime(
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setBiddingLogicUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                        .setTrustedBiddingData(
+                                new DBTrustedBiddingData.Builder()
+                                        .setUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                                        .setKeys(Collections.singletonList(""))
+                                        .build())
+                        .build();
+
+        assertFalse(
+                AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
+                        customAudience));
+    }
+
+    @Test
+    public void test_isValidCustomAudience_noAds_returnsFalse() {
         DBCustomAudience customAudience =
                 new DBCustomAudience.Builder()
                         .setOwner(VALID_OWNER)
@@ -111,7 +164,103 @@ public class AuctionServerCustomAudienceFiltererTest {
     }
 
     @Test
-    public void test_isValidCustomAudience_returnsTrue() {
+    public void test_isValidCustomAudience_emptyAdRenderId_returnsFalse() {
+        DBCustomAudience customAudience =
+                new DBCustomAudience.Builder()
+                        .setOwner(VALID_OWNER)
+                        .setBuyer(VALID_BUYER_1)
+                        .setName(CustomAudienceFixture.VALID_NAME)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setLastAdsAndBiddingDataUpdatedTime(
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setTrustedBiddingData(
+                                new DBTrustedBiddingData.Builder()
+                                        .setUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                                        .setKeys(getValidTrustedBiddingKeys())
+                                        .build())
+                        .setBiddingLogicUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                        .setAds(
+                                ImmutableList.of(
+                                        new DBAdData.Builder()
+                                                .setRenderUri(
+                                                        AdDataFixture.getValidRenderUriByBuyer(
+                                                                VALID_BUYER_1, 1))
+                                                .setMetadata(AdDataFixture.VALID_METADATA)
+                                                .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                                                .setAdRenderId("")
+                                                .build()))
+                        .build();
+
+        assertFalse(
+                AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
+                        customAudience));
+    }
+
+    @Test
+    public void test_isValidCustomAudience_nullAdRenderId_returnsFalse() {
+        DBCustomAudience customAudience =
+                new DBCustomAudience.Builder()
+                        .setOwner(VALID_OWNER)
+                        .setBuyer(VALID_BUYER_1)
+                        .setName(CustomAudienceFixture.VALID_NAME)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setLastAdsAndBiddingDataUpdatedTime(
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setTrustedBiddingData(
+                                new DBTrustedBiddingData.Builder()
+                                        .setUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                                        .setKeys(getValidTrustedBiddingKeys())
+                                        .build())
+                        .setBiddingLogicUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
+                        .setAds(
+                                ImmutableList.of(
+                                        new DBAdData.Builder()
+                                                .setRenderUri(
+                                                        AdDataFixture.getValidRenderUriByBuyer(
+                                                                VALID_BUYER_1, 1))
+                                                .setMetadata(AdDataFixture.VALID_METADATA)
+                                                .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                                                .setAdRenderId(null)
+                                                .build()))
+                        .build();
+
+        assertFalse(
+                AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
+                        customAudience));
+    }
+
+    @Test
+    public void test_isValidCustomAudience_atLeastOneNonNullNonEmptyKeyAndAdRenderId_returnsTrue() {
+        List<String> mixOfValidAndInvalidKeys = getValidTrustedBiddingKeys();
+        mixOfValidAndInvalidKeys.addAll(Arrays.asList("", null));
+        List<DBAdData> mixOfValidAndInValidAds =
+                ImmutableList.of(
+                        new DBAdData.Builder()
+                                .setRenderUri(
+                                        AdDataFixture.getValidRenderUriByBuyer(VALID_BUYER_1, 1))
+                                .setMetadata(AdDataFixture.VALID_METADATA)
+                                .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                                .setAdRenderId(String.valueOf(1))
+                                .build(),
+                        new DBAdData.Builder()
+                                .setRenderUri(
+                                        AdDataFixture.getValidRenderUriByBuyer(VALID_BUYER_1, 1))
+                                .setMetadata(AdDataFixture.VALID_METADATA)
+                                .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                                .setAdRenderId("")
+                                .build(),
+                        new DBAdData.Builder()
+                                .setRenderUri(
+                                        AdDataFixture.getValidRenderUriByBuyer(VALID_BUYER_1, 1))
+                                .setMetadata(AdDataFixture.VALID_METADATA)
+                                .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                                .setAdRenderId(null)
+                                .build());
+
         DBCustomAudience customAudience =
                 new DBCustomAudience.Builder()
                         .setOwner(VALID_OWNER)
@@ -126,18 +275,9 @@ public class AuctionServerCustomAudienceFiltererTest {
                         .setTrustedBiddingData(
                                 new DBTrustedBiddingData.Builder()
                                         .setUri(getValidTrustedBiddingUriByBuyer(VALID_BUYER_1))
-                                        .setKeys(getValidTrustedBiddingKeys())
+                                        .setKeys(mixOfValidAndInvalidKeys)
                                         .build())
-                        .setAds(
-                                ImmutableList.of(
-                                        new DBAdData.Builder()
-                                                .setRenderUri(
-                                                        AdDataFixture.getValidRenderUriByBuyer(
-                                                                VALID_BUYER_1, 1))
-                                                .setMetadata(AdDataFixture.VALID_METADATA)
-                                                .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
-                                                .setAdRenderId(String.valueOf(1))
-                                                .build()))
+                        .setAds(mixOfValidAndInValidAds)
                         .build();
 
         assertTrue(

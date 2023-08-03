@@ -38,7 +38,7 @@
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex" />
+            value="com.google.android.extservices.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>

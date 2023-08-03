@@ -31,7 +31,12 @@ import com.google.auto.value.AutoValue.CopyAnnotations;
 
 import java.util.Objects;
 
-/** Table to look up reporting URIs. */
+/**
+ * Table to look up reporting URIs.
+ *
+ * @deprecated Columns moved to DBAuctionServerAdSelection table
+ */
+@Deprecated(since = "Columns moved to DBAuctionServerAdSelection table")
 @AutoValue
 @CopyAnnotations
 @Entity(
@@ -56,8 +61,6 @@ public abstract class DBReportingUris {
     @NonNull
     @ColumnInfo(name = "buyer_reporting_uri")
     public abstract Uri getBuyerReportingUri();
-
-    // TODO(b/287157063): Add beacon for interaction reporting
 
     /** Returns an AutoValue builder for a {@link DBReportingUris} entity. */
     @NonNull

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -83,12 +85,16 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Context context = getApplicationContext();
+
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            OTAResourcesManager.applyOTAResources(context, true);
         }
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithUx(this, getApplicationContext());
+
+        if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
+                || isUxStatesReady(this)) {
+            initWithUx(this, context);
         } else {
             initFragment();
         }

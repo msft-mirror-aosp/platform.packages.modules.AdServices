@@ -22,14 +22,17 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
+import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.DeviceConfig;
@@ -160,6 +163,25 @@ public class SdkSandboxControllerUnitTest {
 
         List<SandboxedSdk> sandboxedSdks = controller.getSandboxedSdks();
         assertThat(sandboxedSdks).isEqualTo(sandboxedSdksMock);
+    }
+
+    @Test
+    public void testLoadSdk() throws RemoteException {
+        final SdkSandboxController controller = new SdkSandboxController(mSandboxedSdkContext);
+
+        // Mock singleton methods
+        ISdkToServiceCallback serviceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        Mockito.when(mSdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(serviceCallback);
+
+        controller.loadSdk("testSdk", new Bundle(), Runnable::run, new FakeLoadSdkCallback());
+        Mockito.verify(serviceCallback, Mockito.times(1))
+                .loadSdk(
+                        Mockito.anyString(),
+                        Mockito.anyString(),
+                        Mockito.anyLong(),
+                        Mockito.any(Bundle.class),
+                        Mockito.any(ILoadSdkCallback.class));
     }
 
     @Test

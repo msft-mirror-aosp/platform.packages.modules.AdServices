@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -22,7 +24,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activitydelegates.BlockedAppsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.BlockedAppsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
@@ -45,7 +46,7 @@ public class BlockedAppsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!isUxStatesReady(this)) {
             initFragment();
         }
     }

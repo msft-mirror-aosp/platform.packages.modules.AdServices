@@ -16,8 +16,6 @@
   -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.tests.providers.adidsdk">
-     <!-- Permissions to access PP APIs. -->
-     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
 
     <application>
         <sdk-library android:name="com.android.tests.providers.adidsdk"

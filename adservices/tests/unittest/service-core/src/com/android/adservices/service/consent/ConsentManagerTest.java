@@ -261,6 +261,7 @@ public class ConsentManagerTest {
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
         doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
+        doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
         doReturn(mAdServicesLoggerImplMock).when(AdServicesLoggerImpl::getInstance);
         doReturn(true).when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         doReturn(true)
@@ -2979,6 +2980,7 @@ public class ConsentManagerTest {
         when(mAppSearchConsentManagerMock.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
         when(mockEditor.commit()).thenReturn(true);
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
                 mContextSpy,
