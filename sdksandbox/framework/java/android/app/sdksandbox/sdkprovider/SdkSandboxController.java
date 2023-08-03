@@ -152,6 +152,7 @@ public class SdkSandboxController {
      *     LoadSdkException}.
      * @throws UnsupportedOperationException if the controller is obtained from an unexpected
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context
+     * @hide
      */
     public void loadSdk(
             @NonNull String sdkName,
