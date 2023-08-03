@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -23,7 +25,6 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.settings.activitydelegates.MainActivityActionDelegate;
@@ -66,8 +67,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         }
         UiStatsLogger.logSettingsPageDisplayed(getApplication());
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()
-                && ConsentManager.getInstance(this).getUx() != null) {
+        if (!isUxStatesReady(this)) {
             initMainFragment();
         }
     }
@@ -86,8 +86,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()
-                && ConsentManager.getInstance(getApplicationContext()).getUx() != null) {
+        if (isUxStatesReady(this)) {
             initWithUx(this, getApplicationContext());
         }
     }
