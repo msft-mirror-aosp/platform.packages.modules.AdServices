@@ -152,7 +152,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        enableStrictMode();
+        // TODO(b/294188354): This is temporarily disabled to unblock testing. Re-enable later.
+        // enableStrictMode();
         super.onCreate(savedInstanceState);
 
         setAppTitle();

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
@@ -133,6 +135,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
@@ -352,7 +355,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     private DBCustomAudience createDBCustomAudience(final AdTechIdentifier buyer) {
@@ -471,17 +475,23 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     @Test
-    public void testRunAdSelectionSuccessWithAdCost() throws AdServicesException {
+    public void testRunAdSelectionSuccessWithBuyerContextualSignals() throws AdServicesException {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
         AdCost adCost1 = new AdCost(1.5, NUM_BITS_STOCHASTIC_ROUNDING);
         BuyerContextualSignals buyerContextualSignals1 =
-                BuyerContextualSignals.builder().setAdCost(adCost1).build();
+                BuyerContextualSignals.builder()
+                        .setAdCost(adCost1)
+                        .setDataVersion(DATA_VERSION_1)
+                        .build();
 
         AdCost adCost2 = new AdCost(3.0, NUM_BITS_STOCHASTIC_ROUNDING);
         BuyerContextualSignals buyerContextualSignals2 =
-                BuyerContextualSignals.builder().setAdCost(adCost2).build();
+                BuyerContextualSignals.builder()
+                        .setAdCost(adCost2)
+                        .setDataVersion(DATA_VERSION_2)
+                        .build();
 
         mAdBiddingOutcomeForBuyer1 =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilderWithBuyerContextualSignals(
@@ -917,7 +927,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1177,7 +1188,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
         mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByValidateRequest();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -2296,7 +2308,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
 
         mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByValidateRequest();
 
@@ -2964,7 +2977,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         .setCallerPackageName(callerPackageName)
                         .build();
 
-        adSelectionRunner.runAdSelection(input, adSelectionTestCallback);
+        adSelectionRunner.runAdSelection(
+                input, adSelectionTestCallback, DevContext.createForDevOptionsDisabled());
         try {
             adSelectionTestCallback.mCountDownLatch.await();
         } catch (InterruptedException e) {

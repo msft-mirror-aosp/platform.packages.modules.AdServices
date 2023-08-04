@@ -41,6 +41,10 @@
       "name": "AdExtServicesApkUnitTests[com.google.android.extservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUISettingsGaUXSelectorTests.
+      "name": "AdServicesApkUISettingsGaUXSelectorTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesCobaltUnitTests.
       "name": "AdServicesCobaltUnitTests[com.google.android.adservices.apex]"
     },
@@ -263,6 +267,15 @@
     },
     {
       "name": "AdServicesApkUISettingsGaOtaTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUISettingsGaUXSelectorTests",
       "options": [
         {
           // Exclude tests that are marked flaky

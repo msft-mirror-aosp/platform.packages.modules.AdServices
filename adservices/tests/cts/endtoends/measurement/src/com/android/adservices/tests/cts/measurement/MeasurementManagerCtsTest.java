@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import android.adservices.common.OutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -31,7 +32,6 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
-import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
 import android.test.suitebuilder.annotation.SmallTest;
 import android.text.TextUtils;
@@ -102,7 +102,7 @@ public class MeasurementManagerCtsTest {
     public void setup() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                    CompatAdServicesTestUtils.getAndOverrideMsmtApiAppAllowList(
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
@@ -118,6 +118,7 @@ public class MeasurementManagerCtsTest {
         overrideMeasurementKillSwitches(true);
 
         mMeasurementManager = MeasurementManager.get(sContext);
+        Objects.requireNonNull(mMeasurementManager);
 
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
@@ -126,7 +127,7 @@ public class MeasurementManagerCtsTest {
     @After
     public void tearDown() {
         if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setMsmtApiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
         resetAllowSandboxPackageNameAccessMeasurementApis();
@@ -135,8 +136,22 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterSource_withCallbackButNoServerSetup_NoErrors() throws Exception {
+    public void testRegisterSource_withNoServerSetupWithCallbackOsReceiver_noErrors()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerSource(
+                SOURCE_REGISTRATION_URI,
+                /* inputEvent= */ null,
+                CALLBACK_EXECUTOR,
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterSource_withNoServerSetupWithCallbackCustomReceiver_noErrors()
+            throws Exception {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerSource(
                 SOURCE_REGISTRATION_URI,
@@ -147,25 +162,37 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterSource_withCallbackButNoServerSetup_NoErrors_customReceiver()
+    public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithOsReceiver_fails()
             throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        CompletableFuture<Void> future = new CompletableFuture<>();
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final android.os.OutcomeReceiver<Object, Exception> osCallback =
+                new android.os.OutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull Object ignoredResult) {
+                        fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        countDownLatch.countDown();
+                        future.complete(null);
+                        assertTrue(error instanceof SecurityException);
+                    }
+                };
         mMeasurementManager.registerSource(
-                SOURCE_REGISTRATION_URI,
-                /* inputEvent= */ null,
-                CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
+                LOCALHOST, /* inputEvent= */ null, CALLBACK_EXECUTOR, osCallback);
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        Assert.assertNull(future.get());
     }
 
     @Test
-    public void testRegisterSource_localhostUriNonDebuggableCaller_fails() throws Exception {
-        final MeasurementManager manager = MeasurementManager.get(sContext);
-        Objects.requireNonNull(manager);
+    public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithCustomReceiver_fails()
+            throws Exception {
         CompletableFuture<Void> future = new CompletableFuture<>();
         final CountDownLatch countDownLatch = new CountDownLatch(1);
-        OutcomeReceiver<Object, Exception> callback =
+        final OutcomeReceiver<Object, Exception> osCallback =
                 new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {
@@ -179,17 +206,15 @@ public class MeasurementManagerCtsTest {
                         assertTrue(error instanceof SecurityException);
                     }
                 };
-        manager.registerSource(
-                LOCALHOST,
-                /* inputEvent= */ null,
-                CALLBACK_EXECUTOR,
-                callback);
+        mMeasurementManager.registerSource(
+                LOCALHOST, /* inputEvent= */ null, CALLBACK_EXECUTOR, osCallback);
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         Assert.assertNull(future.get());
     }
 
     @Test
-    public void testRegisterSource_verifyRateLimitReached() throws Exception {
+    public void testRegisterSource_withCallbackOsReceiver_verifyRateLimitReached()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
 
         // Rate limit hasn't reached yet
@@ -220,7 +245,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterSource_verifyRateLimitReached_customReceiver() throws Exception {
+    public void testRegisterSource_withCallbackCustomReceiver_verifyRateLimitReached()
+            throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
@@ -248,8 +274,21 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
+    public void testRegisterTrigger_withNoServerSetupWithCallbackOsReceiver_noErrors()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerTrigger(
+                TRIGGER_REGISTRATION_URI,
+                CALLBACK_EXECUTOR,
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterTrigger_withNoServerSetupWithCallbackCustomReceiver_noErrors()
+            throws Exception {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerTrigger(
                 TRIGGER_REGISTRATION_URI,
@@ -259,19 +298,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors_customReceiver()
+    public void testRegisterTrigger_withCallbackOsReceiver_verifyRateLimitReached()
             throws Exception {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.registerTrigger(
-                TRIGGER_REGISTRATION_URI,
-                CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-    }
-
-    @Test
-    public void testRegisterTrigger_verifyRateLimitReached() throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
@@ -301,7 +329,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterTrigger_verifyRateLimitReached_customReceiver() throws Exception {
+    public void testRegisterTrigger_withCallbackCustomReceiver_verifyRateLimitReached()
+            throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
@@ -330,8 +359,33 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void registerWebSource_withCallback_NoErrors() throws Exception {
+    public void testRegisterWebSource_withCallbackOsReceiver_noErrors() throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        WebSourceParams webSourceParams =
+                new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
+                        .setDebugKeyAllowed(false)
+                        .build();
+
+        WebSourceRegistrationRequest webSourceRegistrationRequest =
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(webSourceParams), SOURCE_REGISTRATION_URI)
+                        .setInputEvent(null)
+                        .setAppDestination(OS_DESTINATION)
+                        .setWebDestination(WEB_DESTINATION)
+                        .setVerifiedDestination(null)
+                        .build();
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerWebSource(
+                webSourceRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterWebSource_withCallbackCustomReceiver_noErrors() throws Exception {
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
                         .setDebugKeyAllowed(false)
@@ -355,32 +409,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void registerWebSource_withCallback_NoErrors_customReceiver() throws Exception {
-        WebSourceParams webSourceParams =
-                new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
-                        .setDebugKeyAllowed(false)
-                        .build();
-
-        WebSourceRegistrationRequest webSourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder(
-                                Collections.singletonList(webSourceParams), SOURCE_REGISTRATION_URI)
-                        .setInputEvent(null)
-                        .setAppDestination(OS_DESTINATION)
-                        .setWebDestination(WEB_DESTINATION)
-                        .setVerifiedDestination(null)
-                        .build();
-
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.registerWebSource(
-                webSourceRegistrationRequest,
-                CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-    }
-
-    @Test
-    public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
+    public void testRegisterWebSource_withCallbackOsReceiver_verifyRateLimitReached()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
 
         // Rate limit hasn't reached yet
@@ -411,7 +441,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterWebSource_verifyRateLimitReached_customReceiver() throws Exception {
+    public void testRegisterWebSource_withCallbackCustomReceiver_verifyRateLimitReached()
+            throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
@@ -440,8 +471,26 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void registerWebTrigger_withCallback_NoErrors() throws Exception {
+    public void testRegisterWebTrigger_withCallbackOsReceiver_noErrors() throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        WebTriggerParams webTriggerParams =
+                new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
+        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(webTriggerParams), DESTINATION)
+                        .build();
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerWebTrigger(
+                webTriggerRegistrationRequest,
+                CALLBACK_EXECUTOR,
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterWebTrigger_withCallbackCustomReceiver_noErrors() throws Exception {
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -458,25 +507,7 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void registerWebTrigger_withCallback_NoErrors_customReceiver() throws Exception {
-        WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
-        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder(
-                                Collections.singletonList(webTriggerParams), DESTINATION)
-                        .build();
-
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.registerWebTrigger(
-                webTriggerRegistrationRequest,
-                CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-    }
-
-    @Test
-    public void testRegisterWebTrigger_verifyRateLimitReached() throws Exception {
+    public void testRegisterWebTrigger_withOsReceiver_verifyRateLimitReached() throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
@@ -506,7 +537,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testRegisterWebTrigger_verifyRateLimitReached_customReceiver() throws Exception {
+    public void testRegisterWebTrigger_withCustomReceiver_verifyRateLimitReached()
+            throws Exception {
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
@@ -535,9 +567,23 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
+    public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackOsReceiver_noErrors()
             throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest,
+                CALLBACK_EXECUTOR,
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
+            throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -549,25 +595,32 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void
-            testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors_customReceiver()
-                    throws Exception {
+    public void testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackOsReceiver_noErrors()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> firstCountDownLatch.countDown());
+        assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        // Call it once more to ensure that there is no error when recording deletions back-to-back
+        TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
+        final CountDownLatch secondCountDownLatch = new CountDownLatch(1);
+        mMeasurementManager.deleteRegistrations(
+                deletionRequest,
+                CALLBACK_EXECUTOR,
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> secondCountDownLatch.countDown());
+        assertThat(secondCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
     public void
-            testDeleteRegistrations_multiple_withRequest_noOrigin_noRange_withCallback_NoErrors()
+            testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
                     throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
         final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
@@ -586,32 +639,26 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void
-            testDeleteRegistrations_multiple_withRequest_noOrigin_noRange_withCallback_NoErrors_customReceiver()
-                    throws Exception {
-        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
+    public void testDeleteRegistrations_WithNoRangeWithCallbackOsReceiver_noErrors()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder()
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .build();
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> firstCountDownLatch.countDown());
-        assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        // Call it once more to ensure that there is no error when recording deletions back-to-back
-        TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
-        final CountDownLatch secondCountDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> secondCountDownLatch.countDown());
-        assertThat(secondCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+                (android.os.OutcomeReceiver<Object, Exception>)
+                        result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
+    public void testDeleteRegistrations_withNoRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -626,27 +673,28 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void
-            testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors_customReceiver()
-                    throws Exception {
+    public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackOsReceiver_noErrors()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
-                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
-                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .setOriginUris(Collections.emptyList())
+                        .setDomainUris(Collections.emptyList())
+                        .setStart(Instant.ofEpochMilli(0))
+                        .setEnd(Instant.now())
                         .build();
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
+                (android.os.OutcomeReceiver<Object, Exception>)
                         result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withEmptyLists_withRange_withCallback_NoErrors()
+    public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.emptyList())
@@ -663,13 +711,13 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void
-            testDeleteRegistrations_withRequest_withEmptyLists_withRange_withCallback_NoErrors_customReceiver()
-                    throws Exception {
+    public void testDeleteRegistrations_withUrisWithRangeWithCallbackOsReceiver_noErrors()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
-                        .setOriginUris(Collections.emptyList())
-                        .setDomainUris(Collections.emptyList())
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
@@ -677,15 +725,14 @@ public class MeasurementManagerCtsTest {
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
+                (android.os.OutcomeReceiver<Object, Exception>)
                         result -> countDownLatch.countDown());
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withUris_withRange_withCallback_NoErrors()
+    public void testDeleteRegistrations_withUrisWithRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -702,29 +749,42 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void
-            testDeleteRegistrations_withRequest_withUris_withRange_withCallback_NoErrors_customReceiver()
-                    throws Exception {
-        DeletionRequest deletionRequest =
+    public void testDeleteRegistrations_withInvalidArgumentsWithCallbackOsReceiver_hasError()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        final MeasurementManager manager = MeasurementManager.get(sContext);
+        Objects.requireNonNull(manager);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        android.os.OutcomeReceiver<Object, Exception> callback =
+                new android.os.OutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull Object ignoredResult) {
+                        fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        future.complete(null);
+                        assertTrue(error instanceof IllegalArgumentException);
+                    }
+                };
+        DeletionRequest request =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
-                        .setStart(Instant.ofEpochMilli(0))
+                        .setStart(Instant.now().plusMillis(1000))
                         .setEnd(Instant.now())
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        mMeasurementManager.deleteRegistrations(
-                deletionRequest,
-                CALLBACK_EXECUTOR,
-                (android.adservices.common.OutcomeReceiver<Object, Exception>)
-                        result -> countDownLatch.countDown());
-        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+
+        manager.deleteRegistrations(request, mExecutorService, callback);
+
+        Assert.assertNull(future.get());
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
+    public void testDeleteRegistrations_withInvalidArgumentsWithCallbackCustomReceiver_hasError()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         final MeasurementManager manager = MeasurementManager.get(sContext);
         Objects.requireNonNull(manager);
 
@@ -756,41 +816,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void
-            testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError_customReceiver()
-                    throws Exception {
-        final MeasurementManager manager = MeasurementManager.get(sContext);
-        Objects.requireNonNull(manager);
-
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        android.adservices.common.OutcomeReceiver<Object, Exception> callback =
-                new android.adservices.common.OutcomeReceiver<>() {
-                    @Override
-                    public void onResult(@NonNull Object ignoredResult) {
-                        fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        future.complete(null);
-                        assertTrue(error instanceof IllegalArgumentException);
-                    }
-                };
-        DeletionRequest request =
-                new DeletionRequest.Builder()
-                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
-                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
-                        .setStart(Instant.now().plusMillis(1000))
-                        .setEnd(Instant.now())
-                        .build();
-
-        manager.deleteRegistrations(request, mExecutorService, callback);
-
-        Assert.assertNull(future.get());
-    }
-
-    @Test
-    public void testMeasurementApiStatus_returnEnabled() throws Exception {
+    public void testMeasurementApiStatus_killSwitchGlobalOffWithOsReceiver_returnEnabled()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         enableGlobalKillSwitch(/* enabled= */ false);
         enableMeasurementKillSwitch(/* enabled= */ false);
@@ -800,7 +827,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_returnEnabled_customReceiver() throws Exception {
+    public void testMeasurementApiStatus_killSwitchGlobalOffWithCustomReceiver_returnEnabled()
+            throws Exception {
         enableGlobalKillSwitch(/* enabled= */ false);
         enableMeasurementKillSwitch(/* enabled= */ false);
         allowAllPackageNamesAccessToMeasurementApis();
@@ -809,7 +837,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_killSwitchGlobalOn_returnDisabled() throws Exception {
+    public void testMeasurementApiStatus_killSwitchGlobalOnWithOsReceiver_returnDisabled()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         enableGlobalKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
@@ -817,7 +846,7 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_killSwitchGlobalOn_returnDisabled_customReceiver()
+    public void testMeasurementApiStatus_killSwitchGlobalOnWithCustomReceiver_returnDisabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
@@ -825,7 +854,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_killSwitchMeasurementOn_returnDisabled() throws Exception {
+    public void testMeasurementApiStatus_killSwitchMeasurementOnWithOsReceiver_returnDisabled()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         enableMeasurementKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
@@ -833,7 +863,7 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_killSwitchMeasurementOn_returnDisabled_customReceiver()
+    public void testMeasurementApiStatus_killSwitchMeasurementOnWithCustomReceiver_returnDisabled()
             throws Exception {
         enableMeasurementKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
@@ -841,7 +871,8 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_notInAllowList_returnDisabled() throws Exception {
+    public void testMeasurementApiStatus_notInAllowListWithOsReceiver_returnDisabled()
+            throws Exception {
         Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
         enableGlobalKillSwitch(/* enabled= */ true);
         blockAllPackageNamesAccessToMeasurementApis();
@@ -850,7 +881,7 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_notInAllowList_returnDisabled_customReceiver()
+    public void testMeasurementApiStatus_notInAllowListWithCustomReceiver_returnDisabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ true);
         blockAllPackageNamesAccessToMeasurementApis();
@@ -872,7 +903,7 @@ public class MeasurementManagerCtsTest {
         if (useCustomReceiver) {
             manager.getMeasurementApiStatus(
                     mExecutorService,
-                    (android.adservices.common.OutcomeReceiver<Integer, Exception>)
+                    (OutcomeReceiver<Integer, Exception>)
                             result -> {
                                 resultCodes.add(result);
                                 countDownLatch.countDown();
@@ -880,7 +911,7 @@ public class MeasurementManagerCtsTest {
         } else {
             manager.getMeasurementApiStatus(
                     mExecutorService,
-                    (OutcomeReceiver<Integer, Exception>)
+                    (android.os.OutcomeReceiver<Integer, Exception>)
                             result -> {
                                 resultCodes.add(result);
                                 countDownLatch.countDown();
@@ -896,7 +927,7 @@ public class MeasurementManagerCtsTest {
     private void allowAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "*";
         ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + packageName);
+                "device_config put adservices msmt_api_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + packageName);
     }
@@ -904,7 +935,7 @@ public class MeasurementManagerCtsTest {
     private void blockAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "";
         ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + packageName);
+                "device_config put adservices msmt_api_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + packageName);
     }
@@ -915,7 +946,7 @@ public class MeasurementManagerCtsTest {
     }
 
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
+        ShellUtils.runShellCommand("device_config put adservices msmt_api_app_allow_list null");
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
     }
@@ -973,11 +1004,22 @@ public class MeasurementManagerCtsTest {
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            manager.registerSource(
-                    SOURCE_REGISTRATION_URI,
-                    null,
-                    CALLBACK_EXECUTOR,
-                    createOsCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+            final android.os.OutcomeReceiver<Object, Exception> osCallback =
+                    new android.os.OutcomeReceiver<>() {
+                        @Override
+                        public void onResult(@NonNull Object result) {
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            if (error instanceof LimitExceededException) {
+                                reachedLimit.set(true);
+                            }
+                            countDownLatch.countDown();
+                        }
+                    };
+            manager.registerSource(SOURCE_REGISTRATION_URI, null, CALLBACK_EXECUTOR, osCallback);
         }
 
         countDownLatch.await();
@@ -1009,10 +1051,22 @@ public class MeasurementManagerCtsTest {
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            manager.registerWebSource(
-                    webSourceRegistrationRequest,
-                    CALLBACK_EXECUTOR,
-                    createOsCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+            final android.os.OutcomeReceiver<Object, Exception> osCallback =
+                    new android.os.OutcomeReceiver<>() {
+                        @Override
+                        public void onResult(@NonNull Object result) {
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            if (error instanceof LimitExceededException) {
+                                reachedLimit.set(true);
+                            }
+                            countDownLatch.countDown();
+                        }
+                    };
+            manager.registerWebSource(webSourceRegistrationRequest, CALLBACK_EXECUTOR, osCallback);
         }
 
         countDownLatch.await();
@@ -1030,10 +1084,22 @@ public class MeasurementManagerCtsTest {
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            manager.registerTrigger(
-                    TRIGGER_REGISTRATION_URI,
-                    CALLBACK_EXECUTOR,
-                    createOsCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+            final android.os.OutcomeReceiver<Object, Exception> osCallback =
+                    new android.os.OutcomeReceiver<>() {
+                        @Override
+                        public void onResult(@NonNull Object result) {
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            if (error instanceof LimitExceededException) {
+                                reachedLimit.set(true);
+                            }
+                            countDownLatch.countDown();
+                        }
+                    };
+            manager.registerTrigger(TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, osCallback);
         }
 
         countDownLatch.await();
@@ -1058,36 +1124,30 @@ public class MeasurementManagerCtsTest {
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
+            final android.os.OutcomeReceiver<Object, Exception> osCallback =
+                    new android.os.OutcomeReceiver<>() {
+                        @Override
+                        public void onResult(@NonNull Object result) {
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            if (error instanceof LimitExceededException) {
+                                reachedLimit.set(true);
+                            }
+                            countDownLatch.countDown();
+                        }
+                    };
             manager.registerWebTrigger(
-                    webTriggerRegistrationRequest,
-                    CALLBACK_EXECUTOR,
-                    createOsCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+                    webTriggerRegistrationRequest, CALLBACK_EXECUTOR, osCallback);
         }
 
         countDownLatch.await();
         return reachedLimit.get();
     }
 
-    private android.adservices.common.OutcomeReceiver<Object, Exception>
-            createCallbackWithCountdownOnLimitExceeded(
-                    CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new android.adservices.common.OutcomeReceiver<>() {
-            @Override
-            public void onResult(@NonNull Object result) {
-                countDownLatch.countDown();
-            }
-
-            @Override
-            public void onError(@NonNull Exception error) {
-                if (error instanceof LimitExceededException) {
-                    reachedLimit.set(true);
-                }
-                countDownLatch.countDown();
-            }
-        };
-    }
-
-    private OutcomeReceiver<Object, Exception> createOsCallbackWithCountdownOnLimitExceeded(
+    private OutcomeReceiver<Object, Exception> createCallbackWithCountdownOnLimitExceeded(
             CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
         return new OutcomeReceiver<>() {
             @Override

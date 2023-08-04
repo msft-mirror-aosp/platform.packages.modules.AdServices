@@ -255,7 +255,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        () -> Throttler.getInstance(FlagsFactory.getFlags())),
+                        Throttler.getInstance(FlagsFactory.getFlags())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),
@@ -301,6 +301,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         int callingUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
                     GetAdSelectionDataRunner runner =
@@ -309,10 +310,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mCustomAudienceDao,
                                     mAuctionServerAdSelectionDao,
                                     mAdSelectionServiceFilter,
+                                    mAdFilteringFeatureFactory.getAdFilterer(),
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
                                     mFlags,
-                                    callingUid);
+                                    callingUid,
+                                    devContext);
                     runner.run(inputParams, callback);
                 });
     }
@@ -344,6 +347,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         int callingUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
@@ -353,7 +357,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdSelectionServiceFilter,
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
-                                    callingUid);
+                                    callingUid,
+                                    devContext);
                     runner.run(inputParams, callback);
                 });
     }
@@ -437,7 +442,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         new DebugReporting(mFlags, mAdServicesHttpsClient),
                         callerUid);
-        runner.runAdSelection(inputParams, callback);
+        runner.runAdSelection(inputParams, callback, devContext);
     }
 
     private void runOffDeviceAdSelection(
@@ -466,7 +471,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdRenderIdValidator,
                         new DebugReporting(mFlags, mAdServicesHttpsClient),
                         callerUid);
-        runner.runAdSelection(inputParams, callback);
+        runner.runAdSelection(inputParams, callback, devContext);
     }
 
     /**
@@ -584,6 +589,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         int callerUid = getCallingUid(apiName);
+        DevContext devContext = mDevContextFilter.createDevContext();
 
         InteractionReporter interactionReporter =
                 new InteractionReporter(
@@ -595,7 +601,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         callerUid,
-                        mFledgeAuthorizationFilter);
+                        mFledgeAuthorizationFilter,
+                        devContext);
 
         interactionReporter.reportInteraction(inputParams, callback);
     }
@@ -627,7 +634,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
-                        getCallingUid(apiName));
+                        getCallingUid(apiName),
+                        mDevContextFilter.createDevContext());
         setter.setAppInstallAdvertisers(request, callback);
     }
 
@@ -680,7 +688,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
-                        callingUid);
+                        callingUid,
+                        mDevContextFilter.createDevContext());
 
         worker.updateAdCounterHistogram(inputParams, callback);
     }
@@ -1095,7 +1104,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
         try {
-            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext);
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
             jsScriptEngine.shutdown();
         } catch (JSSandboxIsNotAvailableException exception) {
             sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");

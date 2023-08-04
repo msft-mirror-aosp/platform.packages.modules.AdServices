@@ -39,6 +39,13 @@ import java.util.Objects;
 // TODO(b/233280314): investigate on adSelectionConfig optimization by merging mCustomAudienceBuyers
 //  and mPerBuyerSignals.
 public final class AdSelectionConfig implements Parcelable {
+    /**
+     * {@link AdSelectionConfig} with empty values for each field.
+     *
+     * @hide
+     */
+    @NonNull public static final AdSelectionConfig EMPTY = new AdSelectionConfig();
+
     @NonNull private final AdTechIdentifier mSeller;
     @NonNull private final Uri mDecisionLogicUri;
     @NonNull private final List<AdTechIdentifier> mCustomAudienceBuyers;
@@ -62,6 +69,17 @@ public final class AdSelectionConfig implements Parcelable {
                     return new AdSelectionConfig[size];
                 }
             };
+
+    private AdSelectionConfig() {
+        this.mSeller = AdTechIdentifier.fromString("");
+        this.mDecisionLogicUri = Uri.EMPTY;
+        this.mCustomAudienceBuyers = Collections.emptyList();
+        this.mAdSelectionSignals = AdSelectionSignals.EMPTY;
+        this.mSellerSignals = AdSelectionSignals.EMPTY;
+        this.mPerBuyerSignals = Collections.emptyMap();
+        this.mBuyerContextualAds = Collections.emptyMap();
+        this.mTrustedScoringSignalsUri = Uri.EMPTY;
+    }
 
     private AdSelectionConfig(
             @NonNull AdTechIdentifier seller,

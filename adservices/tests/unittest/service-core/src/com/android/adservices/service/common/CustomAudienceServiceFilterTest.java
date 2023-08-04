@@ -45,6 +45,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -56,8 +57,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
-
-import java.util.function.Supplier;
 
 public class CustomAudienceServiceFilterTest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -93,8 +92,6 @@ public class CustomAudienceServiceFilterTest {
 
     @Mock private Throttler mMockThrottler;
 
-    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
-
     private MockitoSession mStaticMockSession = null;
 
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -121,7 +118,7 @@ public class CustomAudienceServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
 
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
     }
@@ -145,7 +142,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -163,7 +161,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -182,7 +181,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -198,7 +198,8 @@ public class CustomAudienceServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -212,7 +213,7 @@ public class CustomAudienceServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
@@ -228,7 +229,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -240,7 +242,8 @@ public class CustomAudienceServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());
@@ -262,7 +265,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -277,7 +281,8 @@ public class CustomAudienceServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -296,7 +301,8 @@ public class CustomAudienceServiceFilterTest {
                                 true,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -311,7 +317,8 @@ public class CustomAudienceServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -327,7 +334,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -346,7 +354,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -366,7 +375,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -392,7 +402,8 @@ public class CustomAudienceServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -424,7 +435,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -439,7 +451,8 @@ public class CustomAudienceServiceFilterTest {
                         false,
                         MY_UID,
                         API_NAME,
-                        Throttler.ApiKey.UNKNOWN);
+                        Throttler.ApiKey.UNKNOWN,
+                        DevContext.createForDevOptionsDisabled());
 
         // Assert URI host is extracted as the ad tech identifier
         assertThat(seller).isEqualTo(SELLER_VALID);
@@ -478,7 +491,8 @@ public class CustomAudienceServiceFilterTest {
                                 false,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -503,7 +517,8 @@ public class CustomAudienceServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -531,7 +546,8 @@ public class CustomAudienceServiceFilterTest {
                                 true,
                                 MY_UID,
                                 API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 
     @Test
@@ -556,6 +572,7 @@ public class CustomAudienceServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 }
