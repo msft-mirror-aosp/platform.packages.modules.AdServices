@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -65,7 +67,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         }
         UiStatsLogger.logSettingsPageDisplayed(getApplication());
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (!isUxStatesReady(this)) {
             initMainFragment();
         }
     }
@@ -84,7 +86,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (isUxStatesReady(this)) {
             initWithUx(this, getApplicationContext());
         }
     }

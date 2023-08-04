@@ -61,6 +61,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -73,7 +74,6 @@ import com.google.protobuf.ByteString;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -103,6 +103,7 @@ public class GetAdSelectionDataRunnerTest {
     @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+    @Spy private AdFilterer mAdFiltererSpy = new AdFiltererNoOpImpl();
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
     private MockitoSession mStaticMockSession = null;
 
@@ -142,17 +143,20 @@ public class GetAdSelectionDataRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
         mGetAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
                         mObliviousHttpEncryptorMock,
                         mCustomAudienceDao,
                         mServerAdSelectionDaoSpy,
                         mAdSelectionServiceFilterMock,
+                        mAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -162,7 +166,7 @@ public class GetAdSelectionDataRunnerTest {
         }
     }
 
-    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
+    //    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -171,7 +175,7 @@ public class GetAdSelectionDataRunnerTest {
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
 
-        createAndPersistDBCustomAudiences();
+        createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
                         .setAdSelectionDataRequest(
@@ -197,6 +201,7 @@ public class GetAdSelectionDataRunnerTest {
                                         callback.mGetAdSelectionDataResponse.getAdSelectionId())
                                 .setSeller(SELLER)
                                 .build());
+        verify(mAdFiltererSpy).filterCustomAudiences(any());
     }
 
     @Test
@@ -211,7 +216,8 @@ public class GetAdSelectionDataRunnerTest {
                         eq(true),
                         eq(CALLER_UID),
                         eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA));
+                        eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
+                        eq(DevContext.createForDevOptionsDisabled()));
 
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
@@ -226,6 +232,7 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertNull(callback.mGetAdSelectionDataResponse);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mServerAdSelectionDaoSpy);
+        verifyZeroInteractions(mAdFiltererSpy);
     }
 
     @Test
@@ -259,7 +266,7 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertEquals(result.getGenerationId(), String.valueOf(adSelectionId));
     }
 
-    private void createAndPersistDBCustomAudiences() {
+    private void createAndPersistDBCustomAudiencesWithAdRenderId() {
         Map<String, AdTechIdentifier> nameAndBuyers =
                 Map.of(
                         "Shoes CA of Buyer 1", BUYER_1,
@@ -270,7 +277,8 @@ public class GetAdSelectionDataRunnerTest {
             AdTechIdentifier buyer = entry.getValue();
             String name = entry.getKey();
             DBCustomAudience thisCustomAudience =
-                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+                    DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
+                            .build();
             mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
         }
     }

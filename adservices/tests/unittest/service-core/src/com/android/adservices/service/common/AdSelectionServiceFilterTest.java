@@ -46,6 +46,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -58,8 +59,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
-
-import java.util.function.Supplier;
 
 public class AdSelectionServiceFilterTest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -104,8 +103,6 @@ public class AdSelectionServiceFilterTest {
 
     @Mock private Throttler mMockThrottler;
 
-    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
-
     private MockitoSession mStaticMockSession = null;
 
     private AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -132,7 +129,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
     }
 
@@ -153,7 +150,8 @@ public class AdSelectionServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -166,7 +164,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -177,7 +175,8 @@ public class AdSelectionServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -193,7 +192,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(FledgeAuthorizationFilter.CallerMismatchException.class);
     }
@@ -213,7 +213,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause()).isInstanceOf(LimitExceededException.class);
     }
 
@@ -234,7 +235,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(AppImportanceFilter.WrongCallingApplicationStateException.class);
     }
@@ -252,7 +254,8 @@ public class AdSelectionServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -267,7 +270,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
@@ -283,7 +286,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
     }
@@ -304,7 +308,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(FledgeAllowListsFilter.AppNotAllowedException.class);
     }
@@ -323,7 +328,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause()).isInstanceOf(ConsentManager.RevokedConsentException.class);
     }
 
@@ -337,7 +343,8 @@ public class AdSelectionServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
         verifyNoMoreInteractions(mConsentManagerMock);
     }
 
@@ -352,7 +359,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -367,7 +374,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause()).isInstanceOf(ConsentManager.RevokedConsentException.class);
     }
 
@@ -376,7 +384,14 @@ public class AdSelectionServiceFilterTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         mAdSelectionServiceFilter.filterRequest(
-                null, CALLER_PACKAGE_NAME, false, true, MY_UID, API_NAME, Throttler.ApiKey.UNKNOWN);
+                null,
+                CALLER_PACKAGE_NAME,
+                false,
+                true,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());

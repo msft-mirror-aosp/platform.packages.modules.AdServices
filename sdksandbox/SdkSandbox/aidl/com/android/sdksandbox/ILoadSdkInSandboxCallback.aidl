@@ -21,7 +21,7 @@ import android.os.Bundle;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.LoadSdkException;
-import com.android.sdksandbox.SandboxLatencyInfo;
+import android.app.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface ILoadSdkInSandboxCallback {

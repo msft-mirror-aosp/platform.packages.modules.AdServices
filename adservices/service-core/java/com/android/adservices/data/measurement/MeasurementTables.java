@@ -117,6 +117,7 @@ public final class MeasurementTables {
         String INSTALL_COOLDOWN_WINDOW = "install_cooldown_window";
         String IS_INSTALL_ATTRIBUTED = "is_install_attributed";
         String FILTER_DATA = "filter_data";
+        String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
         String AGGREGATE_SOURCE = "aggregate_source";
         String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
         String DEBUG_KEY = "debug_key";
@@ -197,6 +198,7 @@ public final class MeasurementTables {
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String TRIGGER_SUMMARY_BUCKET = "trigger_summary_bucket";
     }
 
     /** Contract for Attribution rate limit. */
@@ -502,7 +504,9 @@ public final class MeasurementTables {
                     + SourceContract.EVENT_REPORT_WINDOWS
                     + " TEXT, "
                     + SourceContract.SHARED_DEBUG_KEY
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =
@@ -716,6 +720,8 @@ public final class MeasurementTables {
                     + EventReportContract.TRIGGER_ID
                     + " TEXT, "
                     + EventReportContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + EventReportContract.TRIGGER_SUMMARY_BUCKET
                     + " TEXT, "
                     + "FOREIGN KEY ("
                     + EventReportContract.SOURCE_ID

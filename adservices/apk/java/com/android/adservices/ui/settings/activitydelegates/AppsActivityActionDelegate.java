@@ -209,12 +209,20 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_APPS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInAppsDialog(mActivity);
+                                }
                                 mAppsViewModel.setAppsConsent(true);
                                 mAppsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_APPS:
-                                mAppsViewModel.setAppsConsent(false);
-                                mAppsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutAppsDialog(
+                                            mActivity, mAppsViewModel);
+                                } else {
+                                    mAppsViewModel.setAppsConsent(false);
+                                    mAppsViewModel.refresh();
+                                }
                                 break;
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected(mActivity);

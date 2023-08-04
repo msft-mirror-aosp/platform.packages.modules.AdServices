@@ -27,8 +27,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.measurement.util.Web;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -130,7 +130,7 @@ public class MeasurementDbMigratorV14 extends AbstractMeasurementDbMigrator {
                     continue;
                 }
                 Optional<Uri> reportingOrigin =
-                        Web.originAndScheme(Uri.parse(reportingUrls.get(0)));
+                        WebAddresses.originAndScheme(Uri.parse(reportingUrls.get(0)));
                 reportingOrigin.ifPresent(
                         uri -> enrollmentIdToReportingUrl.putIfAbsent(enrollmentId, uri));
             }

@@ -30,6 +30,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -43,7 +44,6 @@ import com.android.adservices.service.measurement.attribution.TriggerContentProv
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -584,7 +584,7 @@ public class AsyncRegistrationQueueRunner {
             Uri topOrigin, @EventSurfaceType int publisherType) {
         return publisherType == EventSurfaceType.APP
                 ? Optional.of(topOrigin)
-                : Web.topPrivateDomainAndScheme(topOrigin);
+                : WebAddresses.topPrivateDomainAndScheme(topOrigin);
     }
 
     private Uri getPublisher(AsyncRegistration request) {

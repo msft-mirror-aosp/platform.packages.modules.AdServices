@@ -138,7 +138,7 @@ public class SimpleActivity extends Activity {
         public Intent doWait(long timeoutMillis) throws TimeoutException {
             final long endTime = SystemClock.uptimeMillis() + timeoutMillis;
 
-            synchronized (this) {
+            synchronized (mWaitMonitor) {
                 while (!mHasResult) {
                     final long now = SystemClock.uptimeMillis();
                     if (now >= endTime) {
@@ -146,7 +146,7 @@ public class SimpleActivity extends Activity {
                         throw new TimeoutException("Timed out waiting for broadcast " + action);
                     }
                     try {
-                        wait(endTime - now);
+                        mWaitMonitor.wait(endTime - now);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
