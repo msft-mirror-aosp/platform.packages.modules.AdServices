@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"इससे, किसी ऐप्लिकेशन को AdService API को चालू या बंद करने की स्थिति को ऐक्सेस करने की अनुमति मिलती है."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager के एपीआई का ऐक्सेस"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"इससे किसी ऐप्लिकेशन को, AdServicesManager के एपीआई को ऐक्सेस करने की अनुमति मिलती है."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android System"</string>
+    <string name="app_label" msgid="5844694701336604490">"विज्ञापन देखने वाले की निजता बनाए रखना"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"विज्ञापन देखने वालों की निजता से जुड़ी Android की नीति के बीटा प्रोग्राम में शामिल हों"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android, ऐप्लिकेशन के लिए निजता से जुड़े ऐसे और तरीके बनाने पर काम कर रहा है जिनका इस्तेमाल, आपको विज्ञापन दिखाने के लिए किया जा सके"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ज़्यादा जानें"</string>

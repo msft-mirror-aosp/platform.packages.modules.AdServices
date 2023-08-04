@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite a uma aplicação aceder à API do estado de ativação do AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Aceda às APIs de AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permite que uma aplicação aceda às APIs de AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privacidade dos anúncios"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Adira à versão beta da privacidade de anúncios do Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"O Android está a explorar formas mais privadas de as apps lhe mostrarem anúncios"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Saiba mais"</string>
