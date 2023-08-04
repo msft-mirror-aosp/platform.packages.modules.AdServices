@@ -110,7 +110,11 @@ public class TopicsManagerTest {
             new AdServicesDeviceSupportedRule();
 
     // Check test behavior whether or not the feature is enabled
-    @Rule(order = 1)
+    //    @Rule(order = 1)
+    // TODO(b/284971005): re-add @Rule once there is a runner to set the flag and/or a new rule
+    // to set device config flags, otherwise tests will fail on T- (notice that this rule was not
+    // really working before for that same reason, i.e., it would always run the tests in the
+    // SUPPORTED mode)
     public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
 
     @Before
