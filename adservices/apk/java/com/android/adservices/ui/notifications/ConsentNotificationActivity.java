@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,7 +29,6 @@ import androidx.fragment.app.FragmentActivity;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxSelector;
@@ -92,8 +93,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         }
 
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
-                || (FlagsFactory.getFlags().getEnableAdServicesSystemApi()
-                        && ConsentManager.getInstance(context).getUx() != null)) {
+                || isUxStatesReady(this)) {
             initWithUx(this, context);
         } else {
             initFragment();

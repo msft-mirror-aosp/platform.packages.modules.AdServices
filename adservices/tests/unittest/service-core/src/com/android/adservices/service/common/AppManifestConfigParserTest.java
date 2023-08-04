@@ -104,6 +104,21 @@ public class AppManifestConfigParserTest {
     }
 
     @Test
+    public void testValidXml_missingValues() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_missing_values);
+
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
+        assertThat(appManifestConfig).isNotNull();
+
+        assertThat(appManifestConfig.getAttributionConfig().getAllowAllToAccess()).isFalse();
+        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess()).isFalse();
+        assertThat(appManifestConfig.getTopicsConfig().getAllowAllToAccess()).isFalse();
+    }
+
+    @Test
     public void testInvalidXml_repeatTags() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
