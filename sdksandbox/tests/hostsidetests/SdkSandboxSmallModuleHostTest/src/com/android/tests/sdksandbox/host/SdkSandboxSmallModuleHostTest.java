@@ -116,13 +116,29 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
     public void testVerifyAdServicesAreUnavailableOnSmallModule() throws Exception {
         if (isAdServicesApkPresent()) {
             // Device does not have small module pre-installed. Prepare it.
-            runPhase("testVerifyAdServicesAreUnavailable_preSmallModuleInstall");
+            runPhase("testVerifyAdServicesAreAvailable_preSmallModuleInstall");
 
-            runPhase("installSmallModulePendingReboot");
-            getDevice().reboot();
+            installSmallModule();
         }
-
         runPhase("testVerifyAdServicesAreUnavailable_postSmallModuleInstall");
+    }
+
+    @Test
+    public void testLoadSdk() throws Exception {
+        if (isAdServicesApkPresent()) {
+            // Device does not have small module pre-installed and loadSdk should work
+            // Test that loadSdk works
+            runPhase("testLoadSdkWithAdServiceApk");
+
+            installSmallModule();
+        }
+        // Test that loadSdk returns error when AdServices apk is not present
+        runPhase("testLoadSdkWithoutAdServiceApk");
+    }
+
+    private void installSmallModule() throws Exception {
+        runPhase("installSmallModulePendingReboot");
+        getDevice().reboot();
     }
 
     private boolean isSmallModuleUpdatePossible() throws Exception {
