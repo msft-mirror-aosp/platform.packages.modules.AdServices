@@ -51,13 +51,13 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.ComponentName;
 import android.content.Context;
@@ -104,6 +104,7 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -203,11 +204,11 @@ public class SdkSandboxManagerServiceUnitTest {
 
     private String mInitialEnforceRestrictions;
 
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
     @Before
     public void setup() {
-        assumeTrue(
-                DeviceSupportUtils.isSdkSandboxSupported(
-                        InstrumentationRegistry.getInstrumentation().getContext()));
         StaticMockitoSessionBuilder mockitoSessionBuilder =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
@@ -219,6 +220,7 @@ public class SdkSandboxManagerServiceUnitTest {
             mockitoSessionBuilder =
                     mockitoSessionBuilder.mockStatic(ActivityInterceptorCallbackRegistry.class);
         }
+
         mStaticMockSession = mockitoSessionBuilder.startMocking();
 
         if (SdkLevel.isAtLeastU()) {
@@ -320,6 +322,7 @@ public class SdkSandboxManagerServiceUnitTest {
         if (sSdkSandboxSettingsListener != null) {
             sSdkSandboxSettingsListener.unregisterPropertiesListener();
         }
+
         mStaticMockSession.finishMocking();
 
         resetDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, mInitialEnforceRestrictions);

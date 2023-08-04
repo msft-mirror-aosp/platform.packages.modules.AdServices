@@ -24,6 +24,7 @@ java_test_host {
     ],
     static_libs: [
         "cts-install-lib-host",
+        "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
     data: [
