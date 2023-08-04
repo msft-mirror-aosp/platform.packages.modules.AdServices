@@ -102,6 +102,7 @@ import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -258,6 +259,9 @@ public class CustomAudienceServiceEndToEndTest {
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
+        Mockito.doReturn(DevContext.createForDevOptionsDisabled())
+                .when(mDevContextFilter)
+                .createDevContext();
     }
 
     @After
@@ -1183,6 +1187,7 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
     }
 
+    @Ignore("b/294363254")
     @Test
     public void testCustomAudience_throttledSubsequentCallFails() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);

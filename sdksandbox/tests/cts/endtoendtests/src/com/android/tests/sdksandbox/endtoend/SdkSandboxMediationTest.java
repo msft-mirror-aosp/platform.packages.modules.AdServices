@@ -18,6 +18,8 @@ package com.android.tests.sdksandbox.endtoend;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -35,6 +37,7 @@ import com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,8 +51,9 @@ import java.util.stream.Collectors;
 @RunWith(JUnit4.class)
 public class SdkSandboxMediationTest {
 
-    private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.mediationtest";
-    private static final String SDK_NAME_2 = "com.android.ctssdkprovider";
+    private static final String MEDIATOR_SDK_NAME =
+            "com.android.sdksandbox.cts.provider.mediationtest";
+    private static final String MEDIATEE_SDK_NAME = "com.android.ctssdkprovider";
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME =
             "com.android.ctsappownedsdksandboxinterface";
 
@@ -70,8 +74,8 @@ public class SdkSandboxMediationTest {
         mRule.getScenario();
 
         // unload SDK to fix flakiness
-        mSdkSandboxManager.unloadSdk(SDK_NAME);
-        mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+        mSdkSandboxManager.unloadSdk(MEDIATOR_SDK_NAME);
+        mSdkSandboxManager.unloadSdk(MEDIATEE_SDK_NAME);
         mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
                 APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
         mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
@@ -82,8 +86,8 @@ public class SdkSandboxMediationTest {
     public void tearDown() {
         // unload SDK to fix flakiness
         if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_NAME);
-            mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+            mSdkSandboxManager.unloadSdk(MEDIATOR_SDK_NAME);
+            mSdkSandboxManager.unloadSdk(MEDIATEE_SDK_NAME);
             mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
                     APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
             mSdkSandboxManager.unregisterAppOwnedSdkSandboxInterface(
@@ -173,7 +177,7 @@ public class SdkSandboxMediationTest {
     @Test
     public void testGetSandboxedSdk_MultipleSdks() throws Exception {
         loadMediatorSdkAndPopulateInterface();
-        loadSdk2();
+        loadMediateeSdk();
 
         final List<SandboxedSdk> sandboxedSdks = mSdk.getSandboxedSdks();
         assertThat(sandboxedSdks).hasSize(2);
@@ -196,18 +200,69 @@ public class SdkSandboxMediationTest {
                         "com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi");
     }
 
+    @Test
+    @Ignore
+    public void testLoadSdkByOtherSdk() throws Exception {
+        loadMediatorSdkAndPopulateInterface();
+        mSdk.loadSdkBySdk(MEDIATEE_SDK_NAME);
+
+        final List<SandboxedSdk> sandboxedSdks = mSdk.getSandboxedSdks();
+        assertThat(sandboxedSdks).hasSize(2);
+        Set<String> loadedSdks =
+                sandboxedSdks.stream()
+                        .map(
+                                s -> {
+                                    return s.getSharedLibraryInfo().getName();
+                                })
+                        .collect(Collectors.toSet());
+
+        assertThat(loadedSdks).contains(MEDIATEE_SDK_NAME);
+    }
+
+    @Test
+    @Ignore
+    public void testLoadSdkBySameSdk() throws Exception {
+        loadMediatorSdkAndPopulateInterface();
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class, () -> mSdk.loadSdkBySdk(MEDIATOR_SDK_NAME));
+        assertThat(exception.getMessage())
+                .isEqualTo(
+                        "java.lang.AssertionError: Load SDK was not successful. errorCode: 101,"
+                                + " errorMsg: "
+                                + MEDIATOR_SDK_NAME
+                                + " has been loaded already");
+    }
+
+    @Test
+    @Ignore
+    public void testLoadSdkThatDoesNotExist() throws Exception {
+        loadMediatorSdkAndPopulateInterface();
+        final String nonExistingSdk = "non-existing-sdk";
+        IllegalStateException exception =
+                assertThrows(IllegalStateException.class, () -> mSdk.loadSdkBySdk(nonExistingSdk));
+        assertThat(exception.getMessage())
+                .isEqualTo(
+                        "java.lang.AssertionError: "
+                                + "Load SDK was not successful. "
+                                + "errorCode: 100, "
+                                + "errorMsg: "
+                                + nonExistingSdk
+                                + " not found for loading");
+    }
+
     private void loadMediatorSdkAndPopulateInterface() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(MEDIATOR_SDK_NAME, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IMediationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
     }
 
-    private void loadSdk2() {
+    private void loadMediateeSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME_2, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(MEDIATEE_SDK_NAME, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
     }
 }

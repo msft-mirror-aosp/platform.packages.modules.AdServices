@@ -33,6 +33,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
@@ -157,7 +158,10 @@ public abstract class AbstractFledgeServiceFilter {
      *     to perform the operation
      */
     protected void assertFledgeEnrollment(
-            AdTechIdentifier adTech, String callerPackageName, int apiName)
+            AdTechIdentifier adTech,
+            String callerPackageName,
+            int apiName,
+            @NonNull DevContext devContext)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
         if (!mFlags.getDisableFledgeEnrollmentCheck()) {
             mFledgeAuthorizationFilter.assertAdTechAllowed(
@@ -213,5 +217,6 @@ public abstract class AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey);
+            @NonNull Throttler.ApiKey apiKey,
+            @NonNull DevContext devContext);
 }

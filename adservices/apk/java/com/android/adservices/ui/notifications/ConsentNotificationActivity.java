@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -91,7 +93,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         }
 
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
-                || FlagsFactory.getFlags().getEnableAdServicesSystemApi(context)) {
+                || isUxStatesReady(this)) {
             initWithUx(this, context);
         } else {
             initFragment();

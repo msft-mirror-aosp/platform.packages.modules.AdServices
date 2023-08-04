@@ -64,12 +64,15 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        // TODO(b/292998823): Turn this into AbstractSupportedFeatureRule
         assumeTrue(
                 "Device needs to support SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+
+        // Determine if Small module related test can be run on the device
+        boolean canBeUpdatedWithSmallModule = isSmallModuleUpdatePossible();
+        boolean alreadyHasSmallModuleInstalled = !isAdServicesApkPresent();
         assumeTrue(
-                "Device needs to have com.android.adservices APEX installed",
-                getDevice().doesFileExist(SYSTEM_APEX_PATH));
+                "Device has com.android.adservices APEX or small module pre-installed",
+                canBeUpdatedWithSmallModule || alreadyHasSmallModuleInstalled);
 
         removeUpdatedApexIfNecessary();
     }
@@ -81,7 +84,10 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSmallModuleCanBeInstalled() throws Exception {
-        assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isTrue();
+        // This test only makes sense for devices where we can install the small module apex
+        assumeTrue(
+                "Device has com.android.adservices APEX pre-installed",
+                isSmallModuleUpdatePossible());
 
         runPhase("installSmallModulePendingReboot");
         getDevice().reboot();
@@ -89,15 +95,54 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
         assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isFalse();
     }
 
-    /** Verify services exported from AdServices APK are unavailable on small module. */
     @Test
-    public void testVerifyAdServicesAreUnavailableOnSmallModule() throws Exception {
-        runPhase("testVerifyAdServicesAreUnavailable_preSmallModuleInstall");
+    public void testSmallModuleCanBeInstalled_andThenUpdatedToFullModule() throws Exception {
+        // This test only makes sense for devices where we can install the small module apex
+        assumeTrue(
+                "Device has com.android.adservices APEX pre-installed",
+                isSmallModuleUpdatePossible());
 
         runPhase("installSmallModulePendingReboot");
         getDevice().reboot();
 
+        runPhase("installFullModulePendingReboot");
+        getDevice().reboot();
+
+        assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isTrue();
+    }
+
+    /** Verify services exported from AdServices APK are unavailable on small module. */
+    @Test
+    public void testVerifyAdServicesAreUnavailableOnSmallModule() throws Exception {
+        if (isAdServicesApkPresent()) {
+            // Device does not have small module pre-installed. Prepare it.
+            runPhase("testVerifyAdServicesAreAvailable_preSmallModuleInstall");
+
+            installSmallModule();
+        }
         runPhase("testVerifyAdServicesAreUnavailable_postSmallModuleInstall");
+    }
+
+    @Test
+    public void testLoadSdk() throws Exception {
+        if (isAdServicesApkPresent()) {
+            // Device does not have small module pre-installed and loadSdk should work
+            // Test that loadSdk works
+            runPhase("testLoadSdkWithAdServiceApk");
+
+            installSmallModule();
+        }
+        // Test that loadSdk returns error when AdServices apk is not present
+        runPhase("testLoadSdkWithoutAdServiceApk");
+    }
+
+    private void installSmallModule() throws Exception {
+        runPhase("installSmallModulePendingReboot");
+        getDevice().reboot();
+    }
+
+    private boolean isSmallModuleUpdatePossible() throws Exception {
+        return getDevice().doesFileExist(SYSTEM_APEX_PATH);
     }
 
     private boolean isAdServicesApkPresent() throws Exception {
@@ -118,15 +163,6 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
                 getDevice().reboot();
                 assertWithMessage("Module update removed").that(isAdServicesApkPresent()).isTrue();
             }
-        }
-
-        // If active apex isn't found but apk is still missing, then we just need
-        // to reboot
-        if (!activeApexFound && !isAdServicesApkPresent()) {
-            getDevice().reboot();
-            assertWithMessage("Module update removed")
-                    .that(isAdServicesApkPresent())
-                    .isTrue();
         }
     }
 }

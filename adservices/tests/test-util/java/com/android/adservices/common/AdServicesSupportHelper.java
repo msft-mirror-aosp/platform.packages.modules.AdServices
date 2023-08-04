@@ -15,18 +15,17 @@
  */
 package com.android.adservices.common;
 
-import static android.provider.DeviceConfig.NAMESPACE_ADSERVICES;
-
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.SystemProperties;
-import android.provider.DeviceConfig;
 import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.adservices.service.PhFlags;
 
 import java.util.function.Supplier;
 
@@ -38,11 +37,6 @@ public final class AdServicesSupportHelper {
     private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
     private static final String SYSPROP_SDK_SANDBOX_SUPPORTED =
             "debug.adservices.sdk_sandbox_supported";
-
-    // TODO(b/284971005): reuse from PhFlags ?
-    private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
-    private static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
-    private static final boolean GLOBAL_KILL_SWITCH = true;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -114,25 +108,12 @@ public final class AdServicesSupportHelper {
                 () -> isSdkSandboxSupportedOnDeviceByDefault(context));
     }
 
-    /** Checks whether AdServices is enabled in the device. */
-    public static boolean isFeatureSupported() throws Exception {
-        // TODO(b/284744130): there's more logic than that, we might need to refactor the PhFlags
-        // logic into a separate library used both by the production and test code
-        // TODO(b/284744130): once moved to common code, use the adservice_enabled /
-        // getAdServicesEnabled()  flag instead (and perhaps even rename this method to
-        // isAdServicesEnabled()
-        return invokeStaticMethodWithShellPermissions(
-                () ->
-                        !SystemProperties.getBoolean(
-                                getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
-                                /* defaultValue= */ DeviceConfig.getBoolean(
-                                        NAMESPACE_ADSERVICES,
-                                        /* flagName= */ KEY_GLOBAL_KILL_SWITCH,
-                                        /* defaultValue= */ GLOBAL_KILL_SWITCH)));
-    }
-
-    private static String getSystemPropertyName(String key) {
-        return SYSTEM_PROPERTY_PREFIX + key;
+    /** Gets the value of AdServices global kill switch. */
+    public static boolean getGlobalKillSwitch() throws Exception {
+        PhFlags flags = PhFlags.getInstance();
+        boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
+        Log.v(TAG, "getGlobalKillSwitch(): " + value);
+        return value;
     }
 
     private AdServicesSupportHelper() {

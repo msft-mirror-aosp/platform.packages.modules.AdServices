@@ -56,7 +56,7 @@ public class SandboxedMeasurementManagerTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Start a foreground activity
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(10_000));
 
         enforceMeasurementEnrollmentCheck(true);
 

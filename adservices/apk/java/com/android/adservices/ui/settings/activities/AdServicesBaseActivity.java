@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,7 +49,7 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, false);
         }
-        if (FlagsFactory.getFlags().getEnableAdServicesSystemApi()) {
+        if (isUxStatesReady(this)) {
             initWithUx(this, context);
         }
     }

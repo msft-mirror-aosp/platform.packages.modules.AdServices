@@ -19,7 +19,6 @@ package com.android.adservices.service;
 import static java.lang.Float.parseFloat;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 import android.text.TextUtils;
@@ -27,7 +26,6 @@ import android.text.TextUtils;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -462,6 +460,9 @@ public final class PhFlags implements Flags {
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+
+    static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // AdServices APK sha certs.
@@ -659,6 +660,12 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION =
+            "measurement_max_aggregate_keys_per_source_registration";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
+            "measurement_max_aggregate_keys_per_trigger_registration";
 
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
             "measurement_min_event_report_delay_millis";
@@ -2192,6 +2199,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
+    @Override
+    public String getMsmtApiAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MSMT_API_APP_ALLOW_LIST,
+                /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
+    }
+
     // AdServices APK SHA certs.
     @Override
     public String getAdservicesApkShaCertificate() {
@@ -3141,6 +3157,24 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION);
+    }
+
+    @Override
     public long getMeasurementMinEventReportDelayMillis() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -3313,6 +3347,7 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getPpapiAppSignatureAllowList());
         writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println("\t" + KEY_MSMT_API_APP_ALLOW_LIST + " = " + getMsmtApiAppAllowList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -4257,6 +4292,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
                         + " = "
                         + getMeasurementMaxAggregateReportsPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregateKeysPerSourceRegistration());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregateKeysPerTriggerRegistration());
     }
 
     @VisibleForTesting
@@ -4423,17 +4468,6 @@ public final class PhFlags implements Flags {
     }
 
     static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
-
-    @Override
-    public boolean getEnableAdServicesSystemApi(Context context) {
-        // The getUx check is necessary to handle the edge cases where the flag is used before the
-        // enableAdServices API is called.
-        return ConsentManager.getInstance(context).getUx() != null
-                && DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ENABLE_AD_SERVICES_SYSTEM_API,
-                        /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
-    }
 
     @Override
     public boolean getEnableAdServicesSystemApi() {

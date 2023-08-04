@@ -22,19 +22,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.runner.AndroidJUnit4;
-
 import com.google.cobalt.ReleaseStage;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class CobaltReleaseStagesTest {
+public final class CobaltReleaseStagesTest {
 
     @Test
     public void defaultStage_isGa() throws Exception {
-        assertThat(getReleaseStage(CobaltReleaseStages.DEFAULT_RELEASE_STAGE))
+        assertThat(getReleaseStage(CobaltConstants.DEFAULT_RELEASE_STAGE))
                 .isEqualTo(ReleaseStage.GA);
     }
 
@@ -51,31 +47,17 @@ public class CobaltReleaseStagesTest {
     public void unknownStages_throwsCobaltInitializationException() throws Exception {
         assertThrows(
                 CobaltInitializationException.class,
-                () -> {
-                    getReleaseStage("RELEASE_STAGE_UNKNOWN");
-                });
-        assertThrows(
-                CobaltInitializationException.class,
-                () -> {
-                    getReleaseStage("other");
-                });
+                () -> getReleaseStage("RELEASE_STAGE_UNKNOWN"));
+        assertThrows(CobaltInitializationException.class, () -> getReleaseStage("other"));
     }
 
     @Test
     public void emptyStage_throwsCobaltInitializationException() throws Exception {
-        assertThrows(
-                CobaltInitializationException.class,
-                () -> {
-                    getReleaseStage("");
-                });
+        assertThrows(CobaltInitializationException.class, () -> getReleaseStage(""));
     }
 
     @Test
     public void nullStage_throwsNullPointerException() throws Exception {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    getReleaseStage(null);
-                });
+        assertThrows(NullPointerException.class, () -> getReleaseStage(null));
     }
 }

@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.UserHandle;
 
 import java.util.Objects;
@@ -34,6 +35,7 @@ public final class CallingInfo {
     private final int mUid;
     private final String mPackageName;
     private final @Nullable IBinder mAppProcessToken;
+    private boolean mIsCallFromSdkSandbox;
 
     private static void enforceCallingPackageBelongsToUid(
             Context context, int uid, String packageName) {
@@ -55,6 +57,7 @@ public final class CallingInfo {
         mUid = uid;
         mPackageName = Objects.requireNonNull(packageName);
         mAppProcessToken = processTokenBinder;
+        mIsCallFromSdkSandbox = Process.isSdkSandboxUid(mUid);
     }
 
     public CallingInfo(int uid, String packageName) {
@@ -63,7 +66,9 @@ public final class CallingInfo {
 
     static CallingInfo fromExternal(Context context, int uid, String packageNameUnchecked) {
         enforceCallingPackageBelongsToUid(context, uid, packageNameUnchecked);
-        return new CallingInfo(uid, packageNameUnchecked);
+        CallingInfo callingInfo = new CallingInfo(uid, packageNameUnchecked);
+        callingInfo.mIsCallFromSdkSandbox = true;
+        return callingInfo;
     }
 
     static CallingInfo fromBinder(Context context, String packageNameUnchecked) {
@@ -90,6 +95,10 @@ public final class CallingInfo {
 
     public String getPackageName() {
         return mPackageName;
+    }
+
+    public boolean isCallFromSdkSandbox() {
+        return mIsCallFromSdkSandbox;
     }
 
     @Override

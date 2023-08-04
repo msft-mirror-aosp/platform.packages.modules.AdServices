@@ -116,7 +116,7 @@ public class MeasurementCompatibleManagerTest {
     public void setUp() throws TimeoutException {
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                    CompatAdServicesTestUtils.getAndOverrideMsmtApiAppAllowList(
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
@@ -130,7 +130,7 @@ public class MeasurementCompatibleManagerTest {
         resetDisableAppSearchOnR();
 
         if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setMsmtApiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
 
