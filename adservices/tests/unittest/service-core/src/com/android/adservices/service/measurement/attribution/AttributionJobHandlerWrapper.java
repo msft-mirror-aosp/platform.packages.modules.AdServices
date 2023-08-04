@@ -44,7 +44,8 @@ public class AttributionJobHandlerWrapper {
                         debugReportApi,
                         eventReportWindowCalcDelegate,
                         sourceNoiseHandler,
-                        logger);
+                        logger,
+                        new XnaSourceCreator(flags));
     }
 
     public boolean performPendingAttributions() {

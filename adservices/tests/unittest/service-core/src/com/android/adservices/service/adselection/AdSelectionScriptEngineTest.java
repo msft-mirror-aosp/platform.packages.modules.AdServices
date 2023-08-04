@@ -43,7 +43,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -396,13 +396,8 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_2, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_1).build(),
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_2).build());
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
+                .containsExactly(AD_COST_1, AD_COST_2);
     }
 
     @Test
@@ -450,10 +445,7 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_2, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
                 .containsExactly(null, null);
     }
 
@@ -496,9 +488,10 @@ public class AdSelectionScriptEngineTest {
         verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
         for (GenerateBidResult result : results) {
-            LogUtil.i(result.getAdWithBid().getAdData().toString());
+            LoggerFactory.getFledgeLogger().i(result.getAdWithBid().getAdData().toString());
         }
-        LogUtil.i(new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2).getAdData().toString());
+        LoggerFactory.getFledgeLogger()
+                .i(new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2).getAdData().toString());
         assertThat(
                         results.stream()
                                 .map(GenerateBidResult::getAdWithBid)
@@ -506,12 +499,8 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_1).build(), null);
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
+                .containsExactly(AD_COST_1, null);
     }
 
     @Test
@@ -1095,6 +1084,69 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testGenerateBidV3ReturnDebugReportingNoUrl_WhenDisabled() throws Exception {
+        mAdSelectionScriptEngine =
+                new AdSelectionScriptEngine(
+                        sContext,
+                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                        new AdCounterKeyCopierImpl(),
+                        new DebugReportingScriptDisabledStrategy(),
+                        false);
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
+        final List<GenerateBidResult> results =
+                generateBidsV3(
+                        "function generateBid(custom_audience, auction_signals,"
+                                + " per_buyer_signals,\n"
+                                + "    trusted_bidding_signals, contextual_signals) {\n"
+                                + "    const ads = custom_audience.ads;\n"
+                                + "    let result = null;\n"
+                                + "; \n"
+                                + "    for (const ad of ads) {\n"
+                                + "        if (!result || ad.metadata.result > result.metadata"
+                                + ".result)"
+                                + " {\n"
+                                + "            result = ad;\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "    forDebuggingOnly.reportAdAuctionWin("
+                                + "\"https://example-win.com\");"
+                                + "    forDebuggingOnly.reportAdAuctionLoss("
+                                + "\"https://example-loss.com\");"
+                                + "    return { 'status': 0, 'ad': result, 'bid':"
+                                + " result.metadata.result, 'render': result.render_uri };\n"
+                                + "}",
+                        DBCustomAudience.fromServiceObject(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .setAds(AD_DATA_WITH_DOUBLE_RESULT_LIST)
+                                        .build(),
+                                CustomAudienceFixture.VALID_OWNER,
+                                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                                CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
+                                AD_DATA_CONVERSION_STRATEGY),
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY);
+        loggerLatch.await();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
+        assertThat(results.size()).isEqualTo(1);
+        assertThat(results.get(0).getWinDebugReportUri()).isEqualTo(Uri.EMPTY);
+        assertThat(results.get(0).getLossDebugReportUri()).isEqualTo(Uri.EMPTY);
+    }
+
+    @Test
     public void testGenerateBidV3ReturnDebugReportingNoBadUrl() throws Exception {
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
@@ -1347,6 +1399,57 @@ public class AdSelectionScriptEngineTest {
                                 .map(Uri::toString)
                                 .collect(Collectors.toList()))
                 .containsExactly("http://example.com/1", "http://example.com/2");
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock).endScoreAds();
+    }
+
+    @Test
+    public void testScoreAdsReturnsNoDebugReportingUrlWhenDisabled() throws Exception {
+        mAdSelectionScriptEngine =
+                new AdSelectionScriptEngine(
+                        sContext,
+                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                        new AdCounterKeyCopierNoOpImpl(),
+                        new DebugReportingScriptDisabledStrategy(),
+                        false);
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdSelectionExecutionLoggerMock)
+                .endScoreAds();
+        final List<ScoreAdResult> results =
+                scoreAds(
+                        "function scoreAd(ad, bid, auction_config, seller_signals, "
+                                + "trusted_scoring_signals, contextual_signal, user_signal, "
+                                + "custom_audience_signal) { \n"
+                                + "  let url = 'http://example.com/1';"
+                                + "  if (bid == 1.1) {\n"
+                                + "    url = 'http://example.com/2';\n"
+                                + "  }\n"
+                                + "  forDebuggingOnly.reportAdAuctionWin(url);\n"
+                                + "  return {'status': 0, 'score': bid };\n"
+                                + "}",
+                        AD_WITH_BID_LIST,
+                        anAdSelectionConfig(),
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
+        loggerLatch.await();
+        assertThat(
+                        results.stream()
+                                .map(ScoreAdResult::getWinDebugReportUri)
+                                .filter(Objects::nonNull)
+                                .filter(uri -> uri != Uri.EMPTY)
+                                .map(Uri::toString)
+                                .collect(Collectors.toList()))
+                .isEmpty();
         verify(mAdSelectionExecutionLoggerMock).startScoreAds();
         verify(mAdSelectionExecutionLoggerMock).endScoreAds();
     }

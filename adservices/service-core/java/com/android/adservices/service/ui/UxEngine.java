@@ -16,14 +16,18 @@
 
 package com.android.adservices.service.ui;
 
+import static com.android.adservices.service.ui.constants.DebugMessages.NO_ENROLLMENT_CHANNEL_AVAILABLE_MESSAGE;
+
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.util.UxEngineUtil;
@@ -62,24 +66,35 @@ public class UxEngine {
     }
 
     /**
-     * Starts the UxEgine. In which the general UX flow would be carried out as the engine
-     * orchestrates tasks and events between vairous UX components.
+     * Starts the UxEngine. In which the general UX flow would be carried out as the engine
+     * orchestrates tasks and events between various UX components.
      */
     public void start(AdServicesStates adServicesStates) {
         mUxStatesManager.persistAdServicesStates(adServicesStates);
 
         PrivacySandboxUxCollection eligibleUx =
                 mUxEngineUtil.getEligibleUxCollection(mConsentManager, mUxStatesManager);
-        mConsentManager.setUx(eligibleUx);
 
         PrivacySandboxEnrollmentChannelCollection eligibleEnrollmentChannel =
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
                         eligibleUx, mConsentManager, mUxStatesManager);
-        mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
 
         // TO-DO: Add an UNSUPPORTED_ENROLLMENT_CHANNEL, rather than using null handling.
-        // Entry point request should not trigger entrollment.
-        if (!adServicesStates.isPrivacySandboxUiRequest() && eligibleEnrollmentChannel != null) {
+        if (eligibleEnrollmentChannel != null) {
+            // UX and channel should only be updated when an enrollment channel exists.
+            mConsentManager.setUx(eligibleUx);
+            mConsentManager.setEnrollmentChannel(eligibleUx, eligibleEnrollmentChannel);
+            LogUtil.d(
+                    String.format(
+                            "Ux: %s, Enrollment Channel: %s",
+                            eligibleUx, eligibleEnrollmentChannel));
+
+            // Entry point request should not trigger enrollment but should refresh the UX states.
+            if (adServicesStates.isPrivacySandboxUiRequest()) {
+                UiStatsLogger.logEntryPointClicked(mContext);
+                return;
+            }
+
             eligibleUx
                     .getUx()
                     .handleEnrollment(
@@ -89,6 +104,10 @@ public class UxEngine {
 
             mUxEngineUtil.startBackgroundTasksUponConsent(
                     eligibleUx, mContext, FlagsFactory.getFlags());
+
+            return;
         }
+
+        LogUtil.d(NO_ENROLLMENT_CHANNEL_AVAILABLE_MESSAGE);
     }
 }

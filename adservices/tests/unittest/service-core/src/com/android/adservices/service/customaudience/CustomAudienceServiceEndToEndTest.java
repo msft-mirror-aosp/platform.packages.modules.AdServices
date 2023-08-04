@@ -16,8 +16,17 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
+
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -45,8 +54,11 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
+import android.adservices.http.MockWebServerRule;
 import android.content.Context;
+import android.net.Uri;
 import android.os.IBinder;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
@@ -54,6 +66,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -84,19 +97,24 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.mockwebserver.MockResponse;
+import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Supplier;
 
 public class CustomAudienceServiceEndToEndTest {
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
@@ -124,6 +142,8 @@ public class CustomAudienceServiceEndToEndTest {
                     .build();
 
     private static final String MY_APP_PACKAGE_NAME = "com.google.ppapi.test";
+    private static final AdTechIdentifier LOCALHOST_BUYER =
+            AdTechIdentifier.fromString("localhost");
     private static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("BUYER_1");
     private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("BUYER_2");
     private static final String NAME_1 = "NAME_1";
@@ -151,9 +171,9 @@ public class CustomAudienceServiceEndToEndTest {
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
     @Mock private Throttler mMockThrottler;
-    private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
     @Mock private AppImportanceFilter mAppImportanceFilter;
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+    private Uri mFetchUri;
 
     @Before
     public void setup() {
@@ -168,6 +188,8 @@ public class CustomAudienceServiceEndToEndTest {
                         .startMocking();
 
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
@@ -223,12 +245,15 @@ public class CustomAudienceServiceEndToEndTest {
                                         mAdServicesLogger),
                                 new FledgeAllowListsFilter(
                                         CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                mThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
 
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(true);
+        Mockito.lenient()
+                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_FETCH_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
@@ -283,7 +308,7 @@ public class CustomAudienceServiceEndToEndTest {
                                         mAdServicesLogger),
                                 new FledgeAllowListsFilter(
                                         CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                mThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
 
@@ -299,7 +324,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
     }
 
     @Test
@@ -319,7 +344,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
     }
 
     @Test
@@ -340,7 +365,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -351,7 +376,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
     }
@@ -390,7 +415,126 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_overridesJoinCustomAudience() throws Exception {
+        // Join a custom audience using the joinCustomAudience API.
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Fetch and join a custom audience with the same owner, buyer and name but a different
+        // value for one of fields. In this case, we'll use a different activation time.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseString(
+                                                        LOCALHOST_BUYER))));
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
+        resultLatch.await();
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(fetchAndJoinCallback.mIsSuccess);
+
+        // Assert persisted custom audience's activation time is from the fetched custom audience.
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
+        assertEquals(VALID_DELAYED_ACTIVATION_TIME, persistedCustomAudience.getActivationTime());
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_overriddenByJoinCustomAudience() throws Exception {
+        // Fetch and join a custom audience.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseString(
+                                                        LOCALHOST_BUYER))));
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
+        resultLatch.await();
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(fetchAndJoinCallback.mIsSuccess);
+
+        // Join a custom audience using the joinCustomAudience API with the same owner, buyer and
+        // name but a different value for one of fields. In this case, we'll use a different
+        // activation time.
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Assert persisted custom audience's activation time is from the joined custom audience.
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
+        assertEquals(VALID_ACTIVATION_TIME, persistedCustomAudience.getActivationTime());
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_leaveSuccessfully() throws Exception {
+        // Fetch and join a custom audience.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseString(
+                                                        LOCALHOST_BUYER))));
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
+                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
+        resultLatch.await();
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(fetchAndJoinCallback.mIsSuccess);
+
+        // Leave the fetched and joined custom audience.
+        ResultCapturingCallback leaveCallback = new ResultCapturingCallback();
+        mService.leaveCustomAudience(VALID_OWNER, LOCALHOST_BUYER, VALID_NAME, leaveCallback);
+        assertTrue(leaveCallback.mIsSuccess);
+
+        // Assert the custom audience does not exist in the DB.
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME));
     }
 
     @Test
@@ -436,7 +580,7 @@ public class CustomAudienceServiceEndToEndTest {
                                         mAdServicesLogger),
                                 new FledgeAllowListsFilter(
                                         CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                mThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDao, mFrequencyCapDao, CommonFixture.FLAGS_FOR_TEST));
 
@@ -447,7 +591,7 @@ public class CustomAudienceServiceEndToEndTest {
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.VALID_BUYER_1,
-                                CustomAudienceFixture.VALID_NAME,
+                                VALID_NAME,
                                 callback));
     }
 
@@ -455,10 +599,7 @@ public class CustomAudienceServiceEndToEndTest {
     public void testLeaveCustomAudience_callerPackageNameMismatch_fail() {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
-                "other_owner",
-                CommonFixture.VALID_BUYER_1,
-                CustomAudienceFixture.VALID_NAME,
-                callback);
+                "other_owner", CommonFixture.VALID_BUYER_1, VALID_NAME, callback);
 
         assertFalse(callback.isSuccess());
         assertTrue(callback.getException() instanceof SecurityException);
@@ -486,20 +627,20 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
                 CommonFixture.VALID_BUYER_1,
-                CustomAudienceFixture.VALID_NAME,
+                VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
     }
@@ -531,20 +672,20 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
                 CommonFixture.VALID_BUYER_1,
-                CustomAudienceFixture.VALID_NAME,
+                VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
     }
@@ -598,7 +739,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
     }
 
     @Test
@@ -1093,7 +1234,7 @@ public class CustomAudienceServiceEndToEndTest {
                                                 mAdServicesLogger),
                                         new FledgeAllowListsFilter(
                                                 CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                        () -> Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST)),
+                                        Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST)),
                                 new AdFilteringFeatureFactory(
                                         mAppInstallDao,
                                         mFrequencyCapDao,
@@ -1115,7 +1256,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        CustomAudienceFixture.VALID_NAME));
+                        VALID_NAME));
 
         assertFalse(callbackSubsequentCall.isSuccess());
         assertTrue(callbackSubsequentCall.getException() instanceof LimitExceededException);

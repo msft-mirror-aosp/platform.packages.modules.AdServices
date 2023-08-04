@@ -18,8 +18,9 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.clients.measurement.MeasurementClient;
+import android.adservices.common.OutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -36,13 +37,13 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,8 @@ import org.junit.runners.JUnit4;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -64,7 +67,6 @@ import java.util.concurrent.TimeoutException;
 public class MeasurementCtsDebuggableTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static MeasurementClient sMeasurementClient;
     private static UiDevice sDevice;
 
     private static final String SERVER_BASE_URI = replaceTestDomain("https://localhost");
@@ -95,19 +97,15 @@ public class MeasurementCtsDebuggableTest {
     private static final String TRIGGER_PATH = "/trigger";
     private static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
             "/.well-known/attribution-reporting/report-aggregate-attribution";
-    public static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
+    private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             "/.well-known/attribution-reporting/report-event-attribution";
+
+    private MeasurementManager mMeasurementManager;
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        sMeasurementClient =
-                new MeasurementClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
         setFlagsForMeasurement();
     }
 
@@ -116,17 +114,48 @@ public class MeasurementCtsDebuggableTest {
         resetFlagsForMeasurement();
     }
 
+    @Before
+    public void setup() throws Exception {
+        mMeasurementManager = MeasurementManager.get(sContext);
+        Objects.requireNonNull(mMeasurementManager);
+    }
+
     @Test
-    public void testRegisterSourceAndTriggerAndRunAttributionAndReporting() throws Exception {
-        executeDeleteRegistrations();
+    public void registerSourceAndTriggerAndRunAttributionAndEventReporting() throws Exception {
         executeRegisterSource();
         executeRegisterTrigger();
+        executeAttribution();
+        executeEventReporting();
+        executeDeleteRegistrations();
+    }
+
+    @Test
+    public void registerSourceAndTriggerAndRunAttributionAndAggregateReporting() throws Exception {
+        executeRegisterSource();
+        executeRegisterTrigger();
+        executeAttribution();
+        executeAggregateReporting();
+        executeDeleteRegistrations();
+    }
+
+    @Test
+    public void registerWebSourceAndWebTriggerAndRunAttributionAndEventReporting()
+            throws Exception {
+        executeRegisterWebSource();
+        executeRegisterWebTrigger();
+        executeAttribution();
+        executeEventReporting();
+        executeDeleteRegistrations();
+    }
+
+    @Test
+    public void registerWebSourceAndWebTriggerAndRunAttributionAndAggregateReporting()
+            throws Exception {
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
         executeAggregateReporting();
-        // TODO (b/288332990) make min event report delay configurable.
-        // executeEventReporting();
+        executeDeleteRegistrations();
     }
 
     private static UiDevice getUiDevice() {
@@ -172,7 +201,7 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private static void sleep() {
-        sleep(2L);
+        sleep(1L);
     }
 
     private static void sleep(long seconds) {
@@ -331,12 +360,9 @@ public class MeasurementCtsDebuggableTest {
         executeJob(ATTRIBUTION_REPORTING_JOB_ID);
     }
 
-    // TODO (b/288332990) make min event report delay configurable.
-    /*
     private void executeEventReportingJob() {
         executeJob(EVENT_REPORTING_JOB_ID);
     }
-    */
 
     private void executeAggregateReportingJob() {
         executeJob(AGGREGATE_REPORTING_JOB_ID);
@@ -349,9 +375,13 @@ public class MeasurementCtsDebuggableTest {
         try {
             final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
 
-            ListenableFuture<Void> future =
-                    sMeasurementClient.registerSource(Uri.parse(path), null);
-            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            mMeasurementManager.registerSource(
+                    Uri.parse(path),
+                    /* inputEvent= */ null,
+                    CALLBACK_EXECUTOR,
+                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+            assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
             executeAsyncRegistrationJob();
@@ -360,7 +390,7 @@ public class MeasurementCtsDebuggableTest {
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(SOURCE_PATH);
             assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
             throw new IllegalStateException("Error while registering source", e);
         } finally {
             shutdownServer(mockWebServer);
@@ -374,8 +404,12 @@ public class MeasurementCtsDebuggableTest {
         try {
             final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
 
-            ListenableFuture<Void> future = sMeasurementClient.registerTrigger(Uri.parse(path));
-            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            mMeasurementManager.registerTrigger(
+                    Uri.parse(path),
+                    CALLBACK_EXECUTOR,
+                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+            assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
             executeAsyncRegistrationJob();
@@ -384,7 +418,7 @@ public class MeasurementCtsDebuggableTest {
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(TRIGGER_PATH);
             assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
             throw new IllegalStateException("Error while registering trigger", e);
         } finally {
             shutdownServer(mockWebServer);
@@ -404,8 +438,12 @@ public class MeasurementCtsDebuggableTest {
                             .setWebDestination(Uri.parse(WEB_DESTINATION))
                             .build();
 
-            ListenableFuture<Void> future = sMeasurementClient.registerWebSource(request);
-            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            mMeasurementManager.registerWebSource(
+                    request,
+                    CALLBACK_EXECUTOR,
+                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+            assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
             executeAsyncRegistrationJob();
@@ -414,7 +452,7 @@ public class MeasurementCtsDebuggableTest {
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(SOURCE_PATH);
             assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
             throw new IllegalStateException("Error while registering web source", e);
         } finally {
             shutdownServer(mockWebServer);
@@ -433,8 +471,12 @@ public class MeasurementCtsDebuggableTest {
                                     Collections.singletonList(params), Uri.parse(WEB_DESTINATION))
                             .build();
 
-            ListenableFuture<Void> future = sMeasurementClient.registerWebTrigger(request);
-            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            mMeasurementManager.registerWebTrigger(
+                    request,
+                    CALLBACK_EXECUTOR,
+                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+            assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
             executeAsyncRegistrationJob();
@@ -443,7 +485,7 @@ public class MeasurementCtsDebuggableTest {
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(TRIGGER_PATH);
             assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
             throw new IllegalStateException("Error while registering web trigger", e);
         } finally {
             shutdownServer(mockWebServer);
@@ -463,8 +505,6 @@ public class MeasurementCtsDebuggableTest {
         }
     }
 
-    // TODO (b/288332990) make min event report delay configurable.
-    /*
     private void executeEventReporting() {
         final MockResponse mockResponse = createEventReportUploadResponse();
         final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse, mockResponse);
@@ -475,12 +515,11 @@ public class MeasurementCtsDebuggableTest {
 
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(EVENT_ATTRIBUTION_REPORT_URI_PATH);
-            assertThat(mockWebServer.getRequestCount()).isEqualTo(2);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
         } finally {
             shutdownServer(mockWebServer);
         }
     }
-    */
 
     private void executeAggregateReporting() {
         final MockResponse aggregateReportMockResponse = createAggregateReportUploadResponse();
@@ -498,7 +537,7 @@ public class MeasurementCtsDebuggableTest {
 
             RecordedRequest recordedRequest = takeRequestTimeoutWrapper(aggregateReportWebServer);
             assertThat(recordedRequest.getPath()).isEqualTo(AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
-            assertThat(aggregateReportWebServer.getRequestCount()).isEqualTo(2);
+            assertThat(aggregateReportWebServer.getRequestCount()).isEqualTo(1);
         } finally {
             shutdownServer(aggregateReportWebServer);
             shutdownServer(keysReportWebServer);
@@ -507,10 +546,18 @@ public class MeasurementCtsDebuggableTest {
 
     private void executeDeleteRegistrations() {
         try {
-            DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-            ListenableFuture<Void> future = sMeasurementClient.deleteRegistrations(deletionRequest);
-            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            DeletionRequest deletionRequest =
+                    new DeletionRequest.Builder()
+                            // Preserve none since empty origin and site lists are provided.
+                            .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                            .build();
+            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            mMeasurementManager.deleteRegistrations(
+                    deletionRequest,
+                    CALLBACK_EXECUTOR,
+                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+            assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
+        } catch (InterruptedException e) {
             throw new IllegalStateException("Error while deleting registrations", e);
         }
     }
@@ -537,8 +584,9 @@ public class MeasurementCtsDebuggableTest {
                 "setprop debug.adservices.consent_manager_debug_mode true");
 
         // Override the flag to allow current package to call APIs.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + PACKAGE_NAME);
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices msmt_api_app_allow_list " + PACKAGE_NAME);
 
         // Override the flag to allow current package to call web API.
         getUiDevice().executeShellCommand(
@@ -588,6 +636,10 @@ public class MeasurementCtsDebuggableTest {
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
+                + "measurement_min_event_report_delay_millis 0");
+
+        getUiDevice().executeShellCommand(
+                "device_config put adservices "
                 + "measurement_enable_configurable_aggregate_report_delay true");
 
         getUiDevice().executeShellCommand(
@@ -612,8 +664,8 @@ public class MeasurementCtsDebuggableTest {
                 "setprop debug.adservices.consent_manager_debug_mode null");
 
         // Reset allowed packages.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices ppapi_app_allow_list null");
+        getUiDevice()
+                .executeShellCommand("device_config put adservices msmt_api_app_allow_list null");
 
         // Reset the flag to allow current package to call web API.
         getUiDevice().executeShellCommand(
@@ -659,6 +711,10 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows null");
+
+        getUiDevice().executeShellCommand(
+                "device_config put adservices "
+                + "measurement_min_event_report_delay_millis null");
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "

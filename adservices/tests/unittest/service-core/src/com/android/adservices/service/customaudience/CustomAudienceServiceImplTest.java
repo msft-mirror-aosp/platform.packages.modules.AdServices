@@ -103,7 +103,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
 public class CustomAudienceServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -127,7 +126,6 @@ public class CustomAudienceServiceImplTest {
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private Throttler mMockThrottler;
-    private Supplier<Throttler> mMockThrottlerSupplier = () -> mMockThrottler;
 
     private static final int MY_UID = Process.myUid();
 
@@ -168,7 +166,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -302,7 +300,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -483,6 +481,7 @@ public class CustomAudienceServiceImplTest {
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
     }
 
+
     @Test
     public void testFetchCustomAudience_nullCallback() {
         assertThrows(
@@ -518,6 +517,52 @@ public class CustomAudienceServiceImplTest {
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 STATUS_INVALID_ARGUMENT);
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_notInBinderThread() {
+        mService =
+                new CustomAudienceServiceImpl(
+                        CONTEXT,
+                        mCustomAudienceImplMock,
+                        mFledgeAuthorizationFilterMock,
+                        mConsentManagerMock,
+                        mDevContextFilterMock,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerMock,
+                        mAppImportanceFilterMock,
+                        mFlagsWithAllCheckEnabled,
+                        CallingAppUidSupplierFailureImpl.create(),
+                        new CustomAudienceServiceFilter(
+                                CONTEXT,
+                                mConsentManagerMock,
+                                mFlagsWithAllCheckEnabled,
+                                mAppImportanceFilterMock,
+                                mFledgeAuthorizationFilterMock,
+                                mFledgeAllowListsFilterMock,
+                                mMockThrottler),
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                mFlagsWithAllCheckEnabled));
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mService.fetchAndJoinCustomAudience(
+                                new FetchAndJoinCustomAudienceInput.Builder(
+                                                CustomAudienceFixture.getValidFetchUriByBuyer(
+                                                        CommonFixture.VALID_BUYER_1),
+                                                CustomAudienceFixture.VALID_OWNER)
+                                        .build(),
+                                mFetchAndJoinCustomAudienceCallbackMock));
+
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+        verifyLoggerMock(
+                AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -620,7 +665,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -893,7 +938,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -983,7 +1028,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1097,7 +1142,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1198,7 +1243,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1276,7 +1321,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1465,7 +1510,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1560,7 +1605,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,

@@ -30,6 +30,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.exceptions.AdServicesNetworkException;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
@@ -71,6 +72,7 @@ import org.mockito.junit.MockitoRule;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -306,8 +308,8 @@ public class AdServicesHttpsClientTest {
                 "The request should have been ongoing, until being force-cancelled now",
                 futureResponse.cancel(true));
         // Given the resources are set to be eventually closed, we add a timeout
-        verify(mInputStreamMock, timeout(waitForEventualCompletionMs).atLeast(1)).close();
         verify(mURLConnectionMock, timeout(waitForEventualCompletionMs).atLeast(1)).disconnect();
+        verify(mInputStreamMock, timeout(waitForEventualCompletionMs).atLeast(1)).close();
     }
 
     @Test
@@ -665,9 +667,8 @@ public class AdServicesHttpsClientTest {
 
     @Test
     public void testFailedResponseWithStatusCode() throws Exception {
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        ImmutableList.of(new MockResponse().setResponseCode(305)));
+        MockResponse response = new MockResponse().setResponseCode(429);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(ImmutableList.of(response));
         URL url = server.getUrl(mFetchPayloadPath);
 
         // Assert future chain throws an AdServicesNetworkException.
@@ -680,10 +681,29 @@ public class AdServicesHttpsClientTest {
         AdServicesNetworkException exception =
                 (AdServicesNetworkException) wrapperException.getCause();
         assertThat(exception.getErrorCode())
-                .isEqualTo(AdServicesNetworkException.ERROR_REDIRECTION);
-        assertThat(exception.getRetryAfter())
-                .isEqualTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE);
-        assertThat(exception.getMessage()).isNull();
+                .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
+    }
+
+    @Test
+    public void testFailedResponseWithStatusCodeAndRetryAfter() throws Exception {
+        MockResponse response =
+                new MockResponse().setResponseCode(429).setHeader("Retry-After", 1000);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(ImmutableList.of(response));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        // Assert future chain throws an AdServicesNetworkException.
+        Exception wrapperException =
+                assertThrows(
+                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+        assertThat(wrapperException.getCause())
+                .isInstanceOf(RetryableAdServicesNetworkException.class);
+
+        // Assert the expected RetryableAdServicesNetworkException is thrown.
+        RetryableAdServicesNetworkException exception =
+                (RetryableAdServicesNetworkException) wrapperException.getCause();
+        assertThat(exception.getErrorCode())
+                .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
+        assertThat(exception.getRetryAfter()).isEqualTo(Duration.ofMillis(1000));
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri) throws Exception {

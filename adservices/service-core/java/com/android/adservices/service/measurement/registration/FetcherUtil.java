@@ -28,13 +28,14 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.util.AdIdEncryption;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Common handling for Response Based Registration
@@ -51,6 +54,7 @@ import java.util.Map;
 class FetcherUtil {
     static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
     static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
+    static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
      * Determine all redirects.
@@ -80,6 +84,34 @@ class FetcherUtil {
         return (responseCode / 100) == 2;
     }
 
+    /** Validates both string type and unsigned long parsing */
+    public static Optional<UnsignedLong> extractUnsignedLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!(maybeValue instanceof String)) {
+                return Optional.empty();
+            }
+            return Optional.of(new UnsignedLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LogUtil.d(e, "extractUnsignedLong: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    /** Validates both string type and long parsing */
+    public static Optional<Long> extractLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!(maybeValue instanceof String)) {
+                return Optional.empty();
+            }
+            return Optional.of(Long.parseLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LogUtil.d(e, "extractLong: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
     /**
      * Validate aggregate key ID.
      */
@@ -103,15 +135,30 @@ class FetcherUtil {
     /**
      * Validate aggregate key-piece.
      */
-    static boolean isValidAggregateKeyPiece(String keyPiece) {
+    static boolean isValidAggregateKeyPiece(String keyPiece, Flags flags) {
         if (keyPiece == null) {
             return false;
         }
         int length = keyPiece.getBytes().length;
-        // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have at
-        // most 32 digits.
-        return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
-                && 2 < length && length < 35;
+        if (flags.getMeasurementEnableAraParsingAlignmentV1()) {
+            if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
+                return false;
+            }
+            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+            // at most 32 digits.
+            if (length < 3 || length > 34) {
+                return false;
+            }
+            if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
+                return false;
+            }
+            return true;
+        } else {
+            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+            // at most 32 digits.
+            return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
+                    && 2 < length && length < 35;
+        }
     }
 
     /**
@@ -171,7 +218,7 @@ class FetcherUtil {
 
         if (headerSize > maxSize) {
             adTechDomain =
-                    Web.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
+                    WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
                             .orElse(null);
         }
@@ -229,18 +276,6 @@ class FetcherUtil {
         }
 
         return size;
-    }
-
-    public static String getEncryptedPlatformAdIdIfPresent(
-            AsyncRegistration asyncRegistration, String enrollmentId) {
-        if (asyncRegistration.isAppRequest()
-                && asyncRegistration.hasAdIdPermission()
-                && asyncRegistration.getPlatformAdId() != null) {
-            return AdIdEncryption.encryptAdIdAndEnrollmentSha256(
-                    asyncRegistration.getPlatformAdId(), enrollmentId);
-        } else {
-            return null;
-        }
     }
 
     private static int getRegistrationType(AsyncRegistration asyncRegistration) {
@@ -323,6 +358,7 @@ class FetcherUtil {
             return RegistrationEnumsValues.FAILURE_TYPE_UNKNOWN;
         }
     }
+
     /** AdservicesMeasurementRegistrations atom enum values. */
     public interface RegistrationEnumsValues {
         int TYPE_UNKNOWN = 0;

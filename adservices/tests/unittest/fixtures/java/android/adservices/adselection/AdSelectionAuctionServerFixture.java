@@ -16,10 +16,14 @@
 
 package android.adservices.adselection;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorGzip;
+import com.android.adservices.service.adselection.AuctionServerPayloadFormattedData;
 import com.android.adservices.service.adselection.AuctionServerPayloadFormatter;
+import com.android.adservices.service.adselection.AuctionServerPayloadFormatterFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0;
+import com.android.adservices.service.adselection.AuctionServerPayloadUnformattedData;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
@@ -43,7 +47,7 @@ public class AdSelectionAuctionServerFixture {
                 AuctionResult.newBuilder()
                         .setAdRenderUrl("https://foo.bar")
                         .setCustomAudienceName("test CA")
-                        .setCustomAudienceOwner("test owner")
+                        .setBuyer("test-buyer.com")
                         .setScore(1.4f)
                         .setBid(1.2f)
                         .setIsChaff(false)
@@ -55,12 +59,15 @@ public class AdSelectionAuctionServerFixture {
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressorV0.compress(uncompressedData);
 
-        AuctionServerPayloadFormatterV0 formatterV0 = new AuctionServerPayloadFormatterV0();
+        AuctionServerPayloadFormatter formatterV0 =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        AuctionServerPayloadFormatterV0.VERSION,
+                        FlagsFactory.getFlagsForTest().getFledgeAuctionServerPayloadBucketSizes());
 
-        AuctionServerPayloadFormatter.UnformattedData input =
-                AuctionServerPayloadFormatter.UnformattedData.create(compressedData.getData());
+        AuctionServerPayloadUnformattedData input =
+                AuctionServerPayloadUnformattedData.create(compressedData.getData());
 
-        AuctionServerPayloadFormatter.FormattedData formatted = formatterV0.apply(input, 0);
+        AuctionServerPayloadFormattedData formatted = formatterV0.apply(input, 0);
 
         return formatted.getData();
     }

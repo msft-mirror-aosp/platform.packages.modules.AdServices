@@ -29,12 +29,12 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -78,6 +78,7 @@ public class DebugReportApi {
         String TRIGGER_EVENT_STORAGE_LIMIT = "trigger-event-storage-limit";
         String TRIGGER_UNKNOWN_ERROR = "trigger-unknown-error";
         String TRIGGER_AGGREGATE_STORAGE_LIMIT = "trigger-aggregate-storage-limit";
+        String TRIGGER_AGGREGATE_EXCESSIVE_REPORTS = "trigger-aggregate-excessive-reports";
     }
 
     /** Defines different verbose debug report body parameters. */
@@ -115,6 +116,7 @@ public class DebugReportApi {
                 new SourceNoiseHandler(flags));
     }
 
+    // TODO(b/292009320): Keep only one constructor in DebugReportApi
     @VisibleForTesting
     DebugReportApi(
             Context context,
@@ -126,6 +128,20 @@ public class DebugReportApi {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
+    }
+
+    @VisibleForTesting
+    public DebugReportApi(
+            Context context,
+            Flags flags,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler,
+            DatastoreManager datastoreManager) {
+        mContext = context;
+        mFlags = flags;
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
+        mDatastoreManager = datastoreManager;
     }
 
     /** Schedules the Source Success Debug Report */
@@ -480,7 +496,7 @@ public class DebugReportApi {
         List<Uri> webDestinations = source.getWebDestinations();
         if (webDestinations != null) {
             for (Uri webDestination : webDestinations) {
-                Optional<Uri> webUri = Web.topPrivateDomainAndScheme(webDestination);
+                Optional<Uri> webUri = WebAddresses.topPrivateDomainAndScheme(webDestination);
                 webUri.ifPresent(destinations::add);
             }
         }
@@ -491,7 +507,7 @@ public class DebugReportApi {
         if (source.getPublisherType() == EventSurfaceType.APP) {
             return source.getPublisher();
         } else {
-            return Web.topPrivateDomainAndScheme(source.getPublisher()).orElse(null);
+            return WebAddresses.topPrivateDomainAndScheme(source.getPublisher()).orElse(null);
         }
     }
 

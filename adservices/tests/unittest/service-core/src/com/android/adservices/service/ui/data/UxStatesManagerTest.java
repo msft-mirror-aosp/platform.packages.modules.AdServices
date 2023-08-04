@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.ui.data;
 
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -197,5 +198,39 @@ public class UxStatesManagerTest {
                                         .isEqualTo(channel);
                             }
                         });
+    }
+
+    @Test
+    public void isEnrolledUserTest_gaNoticeDisplayed() {
+        doReturn(true).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+    }
+
+    @Test
+    public void isEnrolledUserTest_betaNoticeDisplayed() {
+        doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
+
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+    }
+
+    @Test
+    public void isEnrolledUserTest_U18NoticeDisplayed() {
+        doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
+
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+    }
+
+    @Test
+    public void isEnrolledUserTest_noNoticeDisplayed() {
+        doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
+
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
     }
 }

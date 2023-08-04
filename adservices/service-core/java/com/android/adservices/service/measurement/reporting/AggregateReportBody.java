@@ -17,9 +17,11 @@
 package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
+import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -43,6 +45,8 @@ public class AggregateReportBody {
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
 
+    private Uri mAggregationCoordinatorOrigin;
+
     private static final String API_NAME = "attribution-reporting";
 
     private interface PayloadBodyKeys {
@@ -50,6 +54,7 @@ public class AggregateReportBody {
         String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 
     private interface AggregationServicePayloadKeys {
@@ -68,7 +73,7 @@ public class AggregateReportBody {
         String API_VERSION = "version";
     }
 
-    private AggregateReportBody() { };
+    private AggregateReportBody() {}
 
     private AggregateReportBody(AggregateReportBody other) {
         mAttributionDestination = other.mAttributionDestination;
@@ -80,6 +85,7 @@ public class AggregateReportBody {
         mDebugCleartextPayload = other.mDebugCleartextPayload;
         mSourceDebugKey = other.mSourceDebugKey;
         mTriggerDebugKey = other.mTriggerDebugKey;
+        mAggregationCoordinatorOrigin = other.mAggregationCoordinatorOrigin;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
@@ -97,6 +103,11 @@ public class AggregateReportBody {
         }
         if (mTriggerDebugKey != null) {
             aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
+        }
+        if (FlagsFactory.getFlags().getMeasurementAggregationCoordinatorOriginEnabled()) {
+            aggregateBodyJson.put(
+                    PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
+                    mAggregationCoordinatorOrigin.toString());
         }
 
         return aggregateBodyJson;
@@ -222,6 +233,12 @@ public class AggregateReportBody {
             return this;
         }
 
+        /** Origin of aggregation coordinator used for this report. */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
         /**
          * Build the AggregateReportBody.
          */
@@ -229,5 +246,4 @@ public class AggregateReportBody {
             return new AggregateReportBody(mBuilding);
         }
     }
-
 }

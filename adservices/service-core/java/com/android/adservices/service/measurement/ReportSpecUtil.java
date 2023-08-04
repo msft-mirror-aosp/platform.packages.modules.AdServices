@@ -16,14 +16,19 @@
 
 package com.android.adservices.service.measurement;
 
+import android.annotation.NonNull;
 import android.util.Pair;
 
+import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -31,14 +36,12 @@ import java.util.stream.Collectors;
 public class ReportSpecUtil {
     /** The JSON keys for flexible event report API input */
     public interface FlexEventReportJsonKeys {
-        String TRIGGER_ID = "trigger_id";
         String VALUE = "value";
         String PRIORITY = "priority";
         String TRIGGER_TIME = "trigger_time";
-        String DEDUP_KEY = "dedup_key";
         String TRIGGER_DATA = "trigger_data";
         String FLIP_PROBABILITY = "flip_probability";
-        String END_TIME = "end_times";
+        String END_TIMES = "end_times";
         String START_TIME = "start_time";
         String SUMMARY_WINDOW_OPERATOR = "summary_window_operator";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
@@ -66,16 +69,16 @@ public class ReportSpecUtil {
             // No competing condition.
             return new Pair<>(new ArrayList<>(), bucketIncrements);
         }
-        long currentTime = System.currentTimeMillis();
+        long triggerTime = proposedEventReport.getTriggerTime();
         reportSpec.insertAttributedTrigger(proposedEventReport);
         List<EventReport> pendingEventReports =
                 currentReports.stream()
-                        .filter((r) -> r.getReportTime() > currentTime)
+                        .filter((r) -> r.getReportTime() > triggerTime)
                         .collect(Collectors.toList());
         int numDeliveredReport =
                 (int)
                         currentReports.stream()
-                                .filter((r) -> r.getReportTime() <= currentTime)
+                                .filter((r) -> r.getReportTime() <= triggerTime)
                                 .count();
 
         for (EventReport report : currentReports) {
@@ -126,7 +129,7 @@ public class ReportSpecUtil {
             ReportSpec reportSpec, EventReport proposedEventReport) {
         UnsignedLong proposedTriggerData = proposedEventReport.getTriggerData();
         List<Long> summaryWindows =
-                findSummaryBucketForTriggerData(reportSpec, proposedTriggerData);
+                getSummaryBucketsForTriggerData(reportSpec, proposedTriggerData);
         if (summaryWindows == null) {
             return 0;
         }
@@ -151,6 +154,20 @@ public class ReportSpecUtil {
     }
 
     /**
+     * @param index the index of the summary bucket
+     * @param summaryBuckets the summary bucket
+     * @return return single summary bucket of the index
+     */
+    public static Pair<Long, Long> getSummaryBucketFromIndex(
+            int index, @NonNull List<Long> summaryBuckets) {
+        return new Pair<>(
+                summaryBuckets.get(index),
+                index < summaryBuckets.size() - 1
+                        ? summaryBuckets.get(index + 1) - 1
+                        : Integer.MAX_VALUE - 1);
+    }
+
+    /**
      * @param reportSpec the report specification to process the report
      * @param deletingEventReport the report proposed to be deleted
      * @return number of bucket eliminated
@@ -159,7 +176,7 @@ public class ReportSpecUtil {
             ReportSpec reportSpec, EventReport deletingEventReport) {
         UnsignedLong proposedEventReportDataType = deletingEventReport.getTriggerData();
         List<Long> summaryWindows =
-                findSummaryBucketForTriggerData(reportSpec, proposedEventReportDataType);
+                getSummaryBucketsForTriggerData(reportSpec, proposedEventReportDataType);
         if (summaryWindows == null) {
             return 0;
         }
@@ -217,6 +234,49 @@ public class ReportSpecUtil {
         return -1;
     }
 
+    /**
+     * Reset the summary bucket for all reports with the same source from scratch
+     *
+     * @param source the reports' source
+     * @param measurementDao DB operator
+     * @throws DatastoreException data store exception
+     */
+    public static void resetSummaryBucketForAllEventReport(
+            @NonNull Source source, IMeasurementDao measurementDao) throws DatastoreException {
+        List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
+        Map<UnsignedLong, List<EventReport>> triggerDataToEventReports = new HashMap<>();
+        for (EventReport eventReport : sourceEventReports) {
+            if (eventReport.getStatus() == EventReport.Status.MARKED_TO_DELETE) {
+                // TODO: b/293612788 for user requested deletion
+                continue;
+            }
+            triggerDataToEventReports
+                    .computeIfAbsent(eventReport.getTriggerData(), k -> new ArrayList<>())
+                    .add(eventReport);
+        }
+        for (UnsignedLong triggerData : triggerDataToEventReports.keySet()) {
+            List<EventReport> eventReports = triggerDataToEventReports.get(triggerData);
+            int index = 0;
+            List<Long> summaryBuckets =
+                    getSummaryBucketsForTriggerData(source.getFlexEventReportSpec(), triggerData);
+            List<EventReport> orderedEventReports =
+                    eventReports.stream()
+                            .sorted(Comparator.comparingLong(EventReport::getTriggerTime))
+                            .collect(Collectors.toList());
+            for (EventReport eventReport : orderedEventReports) {
+                Pair<Long, Long> newSummaryBucket =
+                        ReportSpecUtil.getSummaryBucketFromIndex(index, summaryBuckets);
+                index++;
+                if (!newSummaryBucket.equals(eventReport.getTriggerSummaryBucket())) {
+                    eventReport.updateSummaryBucket(newSummaryBucket);
+                    measurementDao.updateEventReportSummaryBucket(
+                            eventReport.getId(),
+                            eventReport.getStringEncodedTriggerSummaryBucket());
+                }
+            }
+        }
+    }
+
     private static Long findReportingStartTimeForTriggerData(
             ReportSpec reportSpec, UnsignedLong triggerData) {
         for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
@@ -241,7 +301,7 @@ public class ReportSpecUtil {
      * @param triggerData the trigger data
      * @return the summary bucket for specific trigger data
      */
-    private static List<Long> findSummaryBucketForTriggerData(
+    public static List<Long> getSummaryBucketsForTriggerData(
             ReportSpec reportSpec, UnsignedLong triggerData) {
         for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
             if (triggerSpec.getTriggerData().contains(triggerData)) {

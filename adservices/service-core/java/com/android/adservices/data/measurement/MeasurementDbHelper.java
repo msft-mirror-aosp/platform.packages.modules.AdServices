@@ -38,6 +38,11 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV1
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV16;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV17;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV18;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV19;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV20;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV21;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV22;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV23;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
@@ -56,7 +61,7 @@ import java.util.stream.Stream;
 public class MeasurementDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "adservices_msmt.db";
 
-    public static final int CURRENT_DATABASE_VERSION = 18;
+    public static final int CURRENT_DATABASE_VERSION = 23;
     public static final int OLD_DATABASE_FINAL_VERSION = 6;
 
     private static MeasurementDbHelper sSingleton = null;
@@ -95,6 +100,8 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                 "MeasurementDbHelper.onCreate with version %d. Name: %s",
                 mDbVersion, mDbFile.getName());
         SQLiteDatabase oldDb = mDbHelper.safeGetWritableDatabase();
+        // Only migrate data if all V6 tables are present, else skip the migration because
+        // database is in an unexpected state.
         if (hasAllV6MeasurementTables(oldDb)) {
             LogUtil.d("MeasurementDbHelper.onCreate copying data from old db");
             // Migrate Data:
@@ -139,7 +146,12 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                 new MeasurementDbMigratorV15(mDbHelper),
                 new MeasurementDbMigratorV16(),
                 new MeasurementDbMigratorV17(),
-                new MeasurementDbMigratorV18());
+                new MeasurementDbMigratorV18(),
+                new MeasurementDbMigratorV19(),
+                new MeasurementDbMigratorV20(),
+                new MeasurementDbMigratorV21(),
+                new MeasurementDbMigratorV22(),
+                new MeasurementDbMigratorV23());
     }
 
     private boolean hasAllV6MeasurementTables(SQLiteDatabase db) {
