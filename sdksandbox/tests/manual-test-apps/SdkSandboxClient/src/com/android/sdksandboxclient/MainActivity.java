@@ -359,24 +359,32 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     Bundle params = new Bundle();
+                    OutcomeReceiver<SandboxedSdk, LoadSdkException> mediateeReceiver =
+                            new OutcomeReceiver<>() {
+                                @Override
+                                public void onResult(SandboxedSdk sandboxedSdk) {
+                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
+                                    mSdksLoaded = true;
+                                    refreshLoadSdksButtonText();
+                                    configureFeatureFlagSection();
+                                }
+
+                                @Override
+                                public void onError(LoadSdkException error) {
+                                    logAndDisplayMessage(
+                                            ERROR, "Failed to load all SDKs: %s", error);
+                                }
+                            };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
                             new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     mSandboxedSdk = sandboxedSdk;
-                                    IBinder binder = mSandboxedSdk.getInterface();
-                                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                                    try {
-                                        sdkApi.loadSdkBySdk(MEDIATEE_SDK_NAME);
-                                    } catch (Exception error) {
-                                        logAndDisplayMessage(
-                                                ERROR, "Failed to load all SDKs: %s", error);
-                                        return;
-                                    }
-                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
-                                    mSdksLoaded = true;
-                                    refreshLoadSdksButtonText();
-                                    configureFeatureFlagSection();
+                                    mSdkSandboxManager.loadSdk(
+                                            MEDIATEE_SDK_NAME,
+                                            params,
+                                            Runnable::run,
+                                            mediateeReceiver);
                                 }
 
                                 @Override
