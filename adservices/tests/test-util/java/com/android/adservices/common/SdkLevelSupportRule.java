@@ -70,6 +70,12 @@ public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
     }
 
     @Override
+    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
+        throw new AssertionError(
+                "test should have thrown an UnsupportedOperationException, but didn't throw any");
+    }
+
+    @Override
     protected boolean isFeatureSupportedAnnotation(Annotation annotation) {
         return annotation instanceof SdkLevelSupportRule.RequiresSdkLevelSupported;
     }
