@@ -96,6 +96,17 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         return new AdServicesFlagsSetterRule().setGlobalKillSwitch(false);
     }
 
+    /** Factory method for Topics end-to-end CTS tests. */
+    public static AdServicesFlagsSetterRule forTopicsE2ETests() {
+        return forGlobalKillSwitchDisabledTests()
+                .setTopicsKillSwitch(false)
+                .setTopicsOnDeviceClassifierKillSwitch(false)
+                .setTopicsClassifierForceUseBundleFiles(true)
+                .setDisableTopicsEnrollmentCheckForTests(true)
+                .setEnableEnrollmentTestSeed(true)
+                .setConsentManagerDebugMode(true);
+    }
+
     // NOTE: add more factory methods as needed
 
     /**
