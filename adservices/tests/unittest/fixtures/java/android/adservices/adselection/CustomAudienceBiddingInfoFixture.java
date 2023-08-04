@@ -29,7 +29,7 @@ public class CustomAudienceBiddingInfoFixture {
     public static final String VALID_BIDDING_LOGIC_URI_FORMAT = "https://%s/bidding/logic/here/";
 
     public static final int DATA_VERSION_1 = 1;
-    public static final int DATA_VERSION_2 = 2;
+    public static final int DATA_VERSION_2 = 1;
 
     public static final String BUYER_DECISION_LOGIC_JS =
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
