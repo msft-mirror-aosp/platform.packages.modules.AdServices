@@ -184,9 +184,10 @@ public class AppManifestConfigParser {
     }
 
     private static boolean getAllowAllToAccess(@NonNull XmlResourceParser parser) {
+        // getAttributeValue() returns null if the tag doesn't exist
         String allowAllToAccess =
                 parser.getAttributeValue(/* namespace */ null, ATTR_ALLOW_ALL_TO_ACCESS);
-        return allowAllToAccess.equals("false") ? false : true;
+        return "true".equals(allowAllToAccess);
     }
 
     private static List<String> getAllowAdPartnersToAccess(
