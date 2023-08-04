@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings;
 
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -151,6 +153,8 @@ public class DialogFragmentTest {
 
         doNothing().when(mConsentManager).enable(any(Context.class));
         doNothing().when(mConsentManager).disable(any(Context.class));
+        doReturn(GA_UX).when(mConsentManager).getUx();
+
         startActivityFromHomeAndCheckMainSwitch();
     }
 

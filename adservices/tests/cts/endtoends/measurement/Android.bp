@@ -62,9 +62,9 @@ android_test {
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
 }

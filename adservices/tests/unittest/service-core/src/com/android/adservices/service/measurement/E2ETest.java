@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.reporting.DebugReportSe
 import static com.android.adservices.service.measurement.reporting.EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH;
 
-import android.content.AttributionSource;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.database.Cursor;
@@ -122,7 +121,8 @@ public abstract class E2ETest {
                         "trigger_data",
                         "source_type",
                         "source_debug_key",
-                        "trigger_debug_key");
+                        "trigger_debug_key",
+                        "trigger_summary_bucket");
         String DOUBLE = "randomized_trigger_rate";
         String STRING_OR_ARRAY = "attribution_destination";
     }
@@ -198,6 +198,7 @@ public abstract class E2ETest {
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
         String ENROLL = "enroll";
+        String PLATFORM_AD_ID = "platform_ad_id";
     }
 
     private interface ApiConfigKeys {
@@ -447,12 +448,6 @@ public abstract class E2ETest {
         }
 
         return uriConfigMap;
-    }
-
-    // 'uid', the parameter passed to Builder(), is unimportant for this test; we only need the
-    // package name.
-    public static AttributionSource getAttributionSource(String source) {
-        return new AttributionSource.Builder(1).setPackageName(source).build();
     }
 
     public static InputEvent getInputEvent() {

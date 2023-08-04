@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import org.json.JSONArray;
 import org.junit.Test;
@@ -53,5 +54,17 @@ public class ReportUtilTest {
                         Uri.parse(DESTINATION_1));
         JSONArray expected = new JSONArray(List.of(DESTINATION_1, DESTINATION_2, DESTINATION_3));
         assertEquals(expected, ReportUtil.serializeAttributionDestinations(unordered));
+    }
+
+    @Test
+    public void serializeSummaryBucket_baseCase_returnsExpectedFormat() {
+        Pair<Long, Long> summaryBucket = new Pair<>(1L, 5L);
+        assertEquals("[1,5]", ReportUtil.serializeSummaryBucket(summaryBucket));
+    }
+
+    @Test
+    public void serializeSummaryBucket_largestBucket_returnsExpectedFormat() {
+        Pair<Long, Long> summaryBucket = new Pair<>(100L, Long.MAX_VALUE);
+        assertEquals("[100,9223372036854775807]", ReportUtil.serializeSummaryBucket(summaryBucket));
     }
 }

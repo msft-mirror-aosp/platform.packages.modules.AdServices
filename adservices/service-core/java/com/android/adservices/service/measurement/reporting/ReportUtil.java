@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.reporting;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.util.Pair;
 
 import org.json.JSONArray;
 
@@ -50,5 +51,19 @@ public class ReportUtil {
             return new JSONArray(
                     sortedDestinations.stream().map(Uri::toString).collect(Collectors.toList()));
         }
+    }
+
+    /**
+     * Prepare summary bucket for report JSON
+     *
+     * @param summaryBucket the summary bucket
+     * @return the string encoded summary bucket in format [start, end]
+     */
+    @Nullable
+    public static String serializeSummaryBucket(@NonNull Pair<Long, Long> summaryBucket) {
+        JSONArray result = new JSONArray();
+        result.put(summaryBucket.first);
+        result.put(summaryBucket.second);
+        return result.toString();
     }
 }

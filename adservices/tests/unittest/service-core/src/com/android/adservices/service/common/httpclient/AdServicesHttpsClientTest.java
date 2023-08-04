@@ -30,6 +30,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.exceptions.AdServicesNetworkException;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
@@ -681,9 +682,6 @@ public class AdServicesHttpsClientTest {
                 (AdServicesNetworkException) wrapperException.getCause();
         assertThat(exception.getErrorCode())
                 .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
-        assertThat(exception.getRetryAfter())
-                .isEqualTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE);
-        assertThat(exception.getMessage()).isNull();
     }
 
     @Test
@@ -697,15 +695,15 @@ public class AdServicesHttpsClientTest {
         Exception wrapperException =
                 assertThrows(
                         ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
-        assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(wrapperException.getCause())
+                .isInstanceOf(RetryableAdServicesNetworkException.class);
 
-        // Assert the expected AdServicesNetworkException is thrown.
-        AdServicesNetworkException exception =
-                (AdServicesNetworkException) wrapperException.getCause();
+        // Assert the expected RetryableAdServicesNetworkException is thrown.
+        RetryableAdServicesNetworkException exception =
+                (RetryableAdServicesNetworkException) wrapperException.getCause();
         assertThat(exception.getErrorCode())
                 .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
         assertThat(exception.getRetryAfter()).isEqualTo(Duration.ofMillis(1000));
-        assertThat(exception.getMessage()).isNull();
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri) throws Exception {

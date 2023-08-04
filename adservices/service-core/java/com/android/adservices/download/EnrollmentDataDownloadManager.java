@@ -16,6 +16,10 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -30,6 +34,9 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -45,7 +52,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /** Handles EnrollmentData download from MDD server to device. */
@@ -56,6 +65,9 @@ public class EnrollmentDataDownloadManager {
     private static volatile EnrollmentDataDownloadManager sEnrollmentDataDownloadManager;
     private final MobileDataDownload mMobileDataDownload;
     private final SynchronousFileStorage mFileStorage;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
+    private final EnrollmentUtil mEnrollmentUtil;
 
     private static final String GROUP_NAME = "adtech_enrollment_data";
     private static final String DOWNLOADED_ENROLLMENT_DATA_FILE_ID = "adtech_enrollment_data.csv";
@@ -64,9 +76,22 @@ public class EnrollmentDataDownloadManager {
 
     @VisibleForTesting
     EnrollmentDataDownloadManager(Context context, Flags flags) {
+        this(
+                context,
+                flags,
+                AdServicesLoggerImpl.getInstance(),
+                EnrollmentUtil.getInstance(context));
+    }
+
+    @VisibleForTesting
+    EnrollmentDataDownloadManager(
+            Context context, Flags flags, AdServicesLogger logger, EnrollmentUtil enrollmentUtil) {
         mContext = context.getApplicationContext();
         mMobileDataDownload = MobileDataDownloadFactory.getMdd(context, flags);
         mFileStorage = MobileDataDownloadFactory.getFileStorage(context);
+        mFlags = flags;
+        mLogger = logger;
+        mEnrollmentUtil = enrollmentUtil;
     }
 
     /** Gets an instance of EnrollmentDataDownloadManager to be used. */
@@ -75,7 +100,11 @@ public class EnrollmentDataDownloadManager {
             synchronized (EnrollmentDataDownloadManager.class) {
                 if (sEnrollmentDataDownloadManager == null) {
                     sEnrollmentDataDownloadManager =
-                            new EnrollmentDataDownloadManager(context, FlagsFactory.getFlags());
+                            new EnrollmentDataDownloadManager(
+                                    context,
+                                    FlagsFactory.getFlags(),
+                                    AdServicesLoggerImpl.getInstance(),
+                                    EnrollmentUtil.getInstance(context));
                 }
             }
         }
@@ -86,7 +115,7 @@ public class EnrollmentDataDownloadManager {
      * Find, open and read the enrollment data file from MDD and only insert new data into the
      * enrollment database.
      */
-    public ListenableFuture<DownloadStatus> readAndInsertEnrolmentDataFromMdd() {
+    public ListenableFuture<DownloadStatus> readAndInsertEnrollmentDataFromMdd() {
         LogUtil.d("Reading MDD data from file.");
         Pair<ClientFile, String> FileGroupAndBuildIdPair = getEnrollmentDataFile();
         if (FileGroupAndBuildIdPair == null || FileGroupAndBuildIdPair.first == null) {
@@ -104,22 +133,27 @@ public class EnrollmentDataDownloadManager {
                     fileGroupBuildId);
             return Futures.immediateFuture(DownloadStatus.SKIP);
         }
-
-        if (readDownloadedFile(enrollmentDataFile)) {
+        boolean shouldTrimEnrollmentData = mFlags.getEnrollmentMddRecordDeletionEnabled();
+        if (processDownloadedFile(enrollmentDataFile, shouldTrimEnrollmentData)) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.clear().putBoolean(fileGroupBuildId, true);
             if (!editor.commit()) {
                 // TODO(b/280579966): Add logging using CEL.
                 LogUtil.e("Saving to the enrollment file read status sharedpreference failed");
             }
-            LogUtil.d("Inserted new enrollment data build id = %s into DB.", fileGroupBuildId);
+            LogUtil.d(
+                    "Inserted new enrollment data build id = %s into DB. "
+                            + "Enrollment Mdd Record Deletion Feature Enabled: %b",
+                    fileGroupBuildId, shouldTrimEnrollmentData);
+            mEnrollmentUtil.logEnrollmentFileDownloadStats(mLogger, true, fileGroupBuildId);
             return Futures.immediateFuture(DownloadStatus.SUCCESS);
         } else {
+            mEnrollmentUtil.logEnrollmentFileDownloadStats(mLogger, false, fileGroupBuildId);
             return Futures.immediateFuture(DownloadStatus.PARSING_FAILED);
         }
     }
 
-    private boolean readDownloadedFile(ClientFile enrollmentDataFile) {
+    private boolean processDownloadedFile(ClientFile enrollmentDataFile, boolean trimTable) {
         LogUtil.d("Inserting MDD data into DB.");
         try {
             InputStream inputStream =
@@ -130,8 +164,10 @@ public class EnrollmentDataDownloadManager {
             String line = null;
             // While loop runs from the second line.
             EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(mContext);
+            List<EnrollmentData> newEnrollments = new ArrayList<>();
+
             while ((line = bufferedReader.readLine()) != null) {
-                // Constructs EnrollmentData object and save it into DB.
+                // Parses CSV into EnrollmentData list.
                 String[] data = line.split(",");
                 if (data.length == 8) {
                     String enrollmentId = data[0];
@@ -162,8 +198,14 @@ public class EnrollmentDataDownloadManager {
                                                     ? Arrays.asList(data[7].split(" "))
                                                     : Arrays.asList(data[7]))
                                     .build();
-                    enrollmentDao.insert(enrollmentData);
+                    newEnrollments.add(enrollmentData);
                 }
+            }
+            if (trimTable) {
+                return enrollmentDao.overwriteData(newEnrollments);
+            }
+            for (EnrollmentData enrollmentData : newEnrollments) {
+                enrollmentDao.insert(enrollmentData);
             }
             return true;
         } catch (IOException e) {
@@ -192,6 +234,9 @@ public class EnrollmentDataDownloadManager {
                 LogUtil.d("MDD has not downloaded the Enrollment Data Files yet.");
                 return null;
             }
+
+            // store file group status and build id in shared preference for logging purposes
+            commitFileGroupDataToSharedPref(fileGroup);
             String fileGroupBuildId = String.valueOf(fileGroup.getBuildId());
             ClientFile enrollmentDataFile = null;
             for (ClientFile file : fileGroup.getFileList()) {
@@ -204,6 +249,28 @@ public class EnrollmentDataDownloadManager {
         } catch (ExecutionException | InterruptedException e) {
             LogUtil.e(e, "Unable to load MDD file group.");
             return null;
+        }
+    }
+
+    private void commitFileGroupDataToSharedPref(ClientFileGroup fileGroup) {
+        Long buildId = fileGroup.getBuildId();
+        ClientFileGroup.Status fileGroupStatus = fileGroup.getStatus();
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        if (buildId != null) {
+            edit.putInt(BUILD_ID, buildId.intValue());
+        }
+        if (fileGroupStatus != null) {
+            edit.putInt(FILE_GROUP_STATUS, fileGroupStatus.getNumber());
+        }
+        if (buildId != null || fileGroupStatus != null) {
+            if (!edit.commit()) {
+                // TODO(b/280579966): Add logging using CEL.
+                LogUtil.e(
+                        "Saving shared preferences - %s , %s and %s failed",
+                        ENROLLMENT_SHARED_PREF, BUILD_ID, FILE_GROUP_STATUS);
+            }
         }
     }
 }

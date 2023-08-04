@@ -107,8 +107,9 @@ public final class AdServicesStates implements Parcelable {
 
     /**
      * Determines whether the user account is eligible for the U18 (under 18) privacy sandbox, in
-     * which all personalized Ads APIs are * permanently disabled. An account is considered an U18
-     * account if privacy sandbox has received signals that the user is a minor.
+     * which all ads relevancepersonalized Ads APIs are * permanently disabled and the ad
+     * measurement API can be enabled/disabled by the user. An account is considered a U18 account
+     * if privacy sandbox has received signals that the user is a minor.
      */
     @NonNull
     public boolean isU18Account() {
@@ -116,8 +117,8 @@ public final class AdServicesStates implements Parcelable {
     }
 
     /**
-     * Determines whether the user account is eligible for the adult or full fledged privacy
-     * sandbox, in which all Ads APIs can be * enabled/disabled based on user consent. An account is
+     * Determines whether the user account is eligible for the adult or full-fledged privacy
+     * sandbox, in which all Ads APIs can be * enabled/disabled by the user. An account is
      * considered an adult account if privacy sandbox has received signals that the user is an
      * adult.
      */

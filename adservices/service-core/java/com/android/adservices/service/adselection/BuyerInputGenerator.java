@@ -46,6 +46,7 @@ public class BuyerInputGenerator {
     private static final String EMPTY_USER_BIDDING_SIGNALS = "{}";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -53,15 +54,18 @@ public class BuyerInputGenerator {
 
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final Flags flags,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService) {
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
 
         mCustomAudienceDao = customAudienceDao;
+        mAdFilterer = adFilterer;
         mClock = Clock.systemUTC();
         mFlags = flags;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -77,21 +81,17 @@ public class BuyerInputGenerator {
     public FluentFuture<Map<AdTechIdentifier, BuyerInput>> createBuyerInputs() {
         sLogger.v("Starting create buyer input");
         return FluentFuture.from(getBuyersCustomAudience())
+                .transform(this::getFilteredCustomAudiences, mLightweightExecutorService)
                 .transform(
                         this::generateBuyerInputFromDBCustomAudience, mLightweightExecutorService);
     }
 
     private Map<AdTechIdentifier, BuyerInput> generateBuyerInputFromDBCustomAudience(
             @NonNull final List<DBCustomAudience> dbCustomAudiences) {
-        Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
-        AdTechIdentifier buyerName;
+        final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
         for (DBCustomAudience customAudience : dbCustomAudiences) {
-            if (!AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
-                    customAudience)) {
-                continue;
-            }
-
-            if (!buyerInputs.containsKey(buyerName = customAudience.getBuyer())) {
+            final AdTechIdentifier buyerName = customAudience.getBuyer();
+            if (!buyerInputs.containsKey(buyerName)) {
                 buyerInputs.put(buyerName, BuyerInput.newBuilder());
             }
 
@@ -103,7 +103,6 @@ public class BuyerInputGenerator {
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
         return buyerInputs.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
-
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {
@@ -120,6 +119,15 @@ public class BuyerInputGenerator {
                                     "Collected %s active CAs from device", numberOfCAsCollected));
                     return allActiveCAs;
                 });
+    }
+
+    private List<DBCustomAudience> getFilteredCustomAudiences(
+            @NonNull final List<DBCustomAudience> dbCustomAudiences) {
+        return mAdFilterer.filterCustomAudiences(dbCustomAudiences).stream()
+                .filter(
+                        AuctionServerCustomAudienceFilterer
+                                ::isValidCustomAudienceForServerSideAuction)
+                .collect(Collectors.toList());
     }
 
     private BuyerInput.CustomAudience buildCustomAudienceProtoFrom(

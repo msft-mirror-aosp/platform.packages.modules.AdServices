@@ -59,8 +59,6 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
-import java.util.function.Supplier;
-
 public class AdSelectionServiceFilterTest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
@@ -104,8 +102,6 @@ public class AdSelectionServiceFilterTest {
 
     @Mock private Throttler mMockThrottler;
 
-    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
-
     private MockitoSession mStaticMockSession = null;
 
     private AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -132,7 +128,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
     }
 
@@ -166,7 +162,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -267,7 +263,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
@@ -352,7 +348,7 @@ public class AdSelectionServiceFilterTest {
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
+                        mMockThrottler);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);

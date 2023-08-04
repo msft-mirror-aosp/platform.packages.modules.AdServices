@@ -17,6 +17,7 @@
 package com.android.adservices.service.common.httpclient;
 
 import android.adservices.exceptions.AdServicesNetworkException;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -189,6 +190,24 @@ public class AdServicesHttpsClient {
     /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @param headers keys of the headers we want in the response
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
+            @NonNull Uri uri, @NonNull ImmutableSet<String> headers) {
+        LogUtil.v("Fetching payload from uri: " + uri + " with headers: " + headers.toString());
+        return fetchPayload(
+                AdServicesHttpClientRequest.builder()
+                        .setUri(uri)
+                        .setResponseHeaderKeys(headers)
+                        .build());
+    }
+
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload.
+     *
      * @param request of type {@link AdServicesHttpClientRequest}
      * @return a string containing the fetched payload
      */
@@ -217,7 +236,7 @@ public class AdServicesHttpsClient {
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
             AdServicesHttpClientRequest request)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (request.getUseCache()) {
@@ -325,7 +344,7 @@ public class AdServicesHttpsClient {
     }
 
     private Void doGetAndReadNothing(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
@@ -376,7 +395,7 @@ public class AdServicesHttpsClient {
     }
 
     private Void doPostPlainText(URL url, String data, ClosingFuture.DeferredCloser closer)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
@@ -415,14 +434,13 @@ public class AdServicesHttpsClient {
     }
 
     private void throwError(final HttpsURLConnection urlConnection, int responseCode)
-            throws IOException {
+            throws AdServicesNetworkException {
         LogUtil.v("Error occurred while executing HTTP request.");
 
         // Default values for AdServiceNetworkException fields.
         @AdServicesNetworkException.ErrorCode
         int errorCode = AdServicesNetworkException.ERROR_OTHER;
-        Duration retryAfterDuration = AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
-        String serverResponse = null;
+        Duration retryAfterDuration = RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
 
         // Assign a relevant error code to the HTTP response code.
         switch (responseCode / 100) {
@@ -447,29 +465,17 @@ public class AdServicesHttpsClient {
         }
         LogUtil.v("Received %s error status code.", responseCode);
 
-        // TODO(b/287146167): Investigate why getErrorStream is null when using the MockWebServer
-        //  and corresponding tests.
-        // Extract message from the server, if any.
-        InputStream errorStream = urlConnection.getErrorStream();
-        long contentLength = urlConnection.getContentLengthLong();
-        if (!Objects.isNull(errorStream) && contentLength > 0) {
-            LogUtil.v("Error stream exists with %s length.", contentLength);
-            serverResponse = fromInputStream(urlConnection.getErrorStream(), contentLength);
-            LogUtil.v("Received %s from server as response.", serverResponse);
-        }
-
-        // Throw the appropriate AdServicesNetworkException exception.
-        LogUtil.e(
-                "Throwing the following AdServicesNetworkException:\n"
-                        + " Error code: %s\n"
-                        + " Error message: %s\n"
-                        + " Retry after: %s",
-                errorCode, serverResponse, retryAfterDuration);
-        if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
-            throw new AdServicesNetworkException(errorCode, serverResponse);
+        // Throw the appropriate exception.
+        AdServicesNetworkException exception;
+        if (retryAfterDuration.compareTo(
+                        RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE)
+                <= 0) {
+            exception = new AdServicesNetworkException(errorCode);
         } else {
-            throw new AdServicesNetworkException(errorCode, retryAfterDuration, serverResponse);
+            exception = new RetryableAdServicesNetworkException(errorCode, retryAfterDuration);
         }
+        LogUtil.e("Throwing %s.", exception.toString());
+        throw exception;
     }
 
     private static void maybeDisconnect(@Nullable URLConnection urlConnection) {
