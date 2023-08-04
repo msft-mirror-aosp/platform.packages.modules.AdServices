@@ -37,6 +37,7 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
@@ -64,7 +65,7 @@ public class PersistAdSelectionResultRunner {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final int mCallerUid;
-
+    @NonNull private final DevContext mDevContext;
     @NonNull private AuctionServerDataCompressor mDataCompressor;
     @NonNull private AuctionServerPayloadExtractor mPayloadExtractor;
 
@@ -74,12 +75,14 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
-            @NonNull final int callerUid) {
+            @NonNull final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(auctionServerAdSelectionDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(devContext);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAuctionServerAdSelectionDao = auctionServerAdSelectionDao;
@@ -87,6 +90,7 @@ public class PersistAdSelectionResultRunner {
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mCallerUid = callerUid;
+        mDevContext = devContext;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -116,8 +120,8 @@ public class PersistAdSelectionResultRunner {
                                             true,
                                             mCallerUid,
                                             apiName,
-                                            Throttler.ApiKey
-                                                    .FLEDGE_API_PERSIST_AD_SELECTION_RESULT);
+                                            Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT,
+                                            mDevContext);
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
