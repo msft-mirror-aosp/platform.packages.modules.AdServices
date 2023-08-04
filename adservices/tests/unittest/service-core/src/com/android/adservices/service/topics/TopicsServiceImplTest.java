@@ -84,6 +84,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -161,10 +162,9 @@ public class TopicsServiceImplTest {
     @Mock AppSearchConsentManager mAppSearchConsentManager;
 
     // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
-    // Android R since some tests require handling of unsupported PackageManager APIs. Remove this
-    // rule if Topics API will be launched on Android R in the future (b/290839573).
-    @Rule
-    public final SdkLevelSupportRule sdkLevelRule = new SdkLevelSupportRule(SdkLevel::isAtLeastS);
+    // Android R since some tests require handling of unsupported PackageManager APIs.
+    // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
+    @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -449,6 +449,13 @@ public class TopicsServiceImplTest {
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
@@ -463,6 +470,14 @@ public class TopicsServiceImplTest {
 
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
@@ -474,6 +489,14 @@ public class TopicsServiceImplTest {
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test

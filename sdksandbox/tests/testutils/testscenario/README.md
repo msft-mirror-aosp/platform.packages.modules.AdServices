@@ -11,8 +11,6 @@ Three public class are provided:
 and invoking test methods
 - SdkSandboxTestScenarioRunner: This is a custom SandboxedSdkProvider that manages test
 invocations and reporting the results from within a SDK Sandbox
-- KeepSdkSandboxAliveRule: This optional JUnit rule can be used to force the SDK Sandbox
-manager to stay alive between test runs
 
 ## Creating new SDK Runtime tests
 
@@ -156,20 +154,27 @@ data: [
 ...
 ```
 
-You can now invoke tests from your JUnit test suite:
+You can now invoke tests from your JUnit test suite as shown. Note that
+SdkSandboxScenarioRule, when annotated as a @ClassRule, will create a new
+activity for each test, but persist the same test SDK for all tests. If for some
+reason the SDK is not found by a test, it will attempt to reload it.
+
+If you wish to run your tests in a way such that the test SDK is reloaded after
+each test, you can simply annotate the SdkSandboxScenarioRule as a @Rule and
+everything else remains the same.
 
 ```java
 import android.app.sdksandbox.testutils.testscenario.SdkSandboxScenarioRule;
 
 public class ExampleSandboxTest {
     // This rule will automatically create a new test activity
-    // and load your test SDK between each test.
-    @Rule
-    public final SdkSandboxScenarioRule sdkTester = new SdkSandboxScenarioRule(
+    // and for each test but persist the Sdk.
+    @ClassRule
+    public static final SdkSandboxScenarioRule sdkTester = new SdkSandboxScenarioRule(
         "your.test.sdk.package");
 
     @Test
-    public void testExample() throws Exception {
+    public void testExample() throws Throwable {
         // This method will invoke a test and assert the results.
         sdkTester.assertSdkTestRunPasses("testExample");
 
@@ -276,24 +281,5 @@ public class ExampleSandboxTestSdk extends SdkSandboxTestScenarioRunner {
         binder.doesSomethingOutsideSdk();
         // ...
     }
-}
-
-```
-
-## Keeping the Sandbox manager alive
-
-For performance reasons, you may want to keep the SDK Sandbox manager alive between each
-unit test. The SDK Sandbox manager will shutdown when the last SDK is unloaded.
-To prevent this from happening, you can use the `KeepSdkSandboxAliveRule`. It expects to be
-provided with the SDK you wish to keep loaded during all your tests. This SDK should preferably
-not do anything·
-
-
-```java
-public class ExampleSandboxTest {
-    //
-    @ClassRule
-    public static final KeepSdkSandboxAliveRule sSdkTestSuiteSetup = new KeepSdkSandboxAliveRule(
-            "any.sdk.you.want");
 }
 ```

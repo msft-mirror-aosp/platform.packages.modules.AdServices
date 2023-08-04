@@ -231,6 +231,14 @@ public class AppSearchConsentManager {
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName) {
         Objects.requireNonNull(packageName);
 
+        boolean isRevoked =
+                mAppSearchConsentWorker
+                        .getAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT)
+                        .contains(packageName);
+
+        if (isRevoked) {
+            return true;
+        }
         return !mAppSearchConsentWorker.addAppWithConsent(
                 AppSearchAppConsentDao.APPS_WITH_CONSENT, packageName);
     }

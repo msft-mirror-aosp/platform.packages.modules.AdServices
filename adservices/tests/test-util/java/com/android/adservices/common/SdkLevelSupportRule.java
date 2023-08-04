@@ -20,6 +20,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.android.modules.utils.build.SdkLevel;
+
 import org.junit.AssumptionViolatedException;
 
 import java.lang.annotation.Annotation;
@@ -31,8 +33,11 @@ import java.util.function.Supplier;
  * Rule used to properly check a test behavior depending on whether the device supports a certain
  * SDK level constraint.
  */
+// TODO(b/284971005): add unit test coverage for rule.
 public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
-    private static final String TAG = SdkLevelSupportRule.class.getSimpleName();
+
+    private static final AndroidLogger sLogger = new AndroidLogger(SdkLevelSupportRule.class);
+
     private final Supplier<Boolean> mSdkLevelConstraint;
 
     public SdkLevelSupportRule(Supplier<Boolean> sdkLevelConstraint) {
@@ -40,22 +45,27 @@ public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
     }
 
     public SdkLevelSupportRule(Mode mode, Supplier<Boolean> sdkLevelConstraint) {
-        super(mode, TAG);
+        super(sLogger, mode);
         this.mSdkLevelConstraint = sdkLevelConstraint;
     }
 
+    /** Rule that ensures test is executed on Android S+. Skips test otherwise. */
+    public static SdkLevelSupportRule isAtLeastS() {
+        return new SdkLevelSupportRule(SdkLevel::isAtLeastS);
+    }
+
     @Override
-    boolean isFeatureSupported() {
+    public boolean isFeatureSupported() {
         return mSdkLevelConstraint.get();
     }
 
     @Override
-    protected void throwFeatureNotSupportedAVE() {
+    protected void throwFeatureNotSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device doesn't support desired SDK level.");
     }
 
     @Override
-    protected void throwFeatureSupportedAVE() {
+    protected void throwFeatureSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device supports SDK Level.");
     }
 

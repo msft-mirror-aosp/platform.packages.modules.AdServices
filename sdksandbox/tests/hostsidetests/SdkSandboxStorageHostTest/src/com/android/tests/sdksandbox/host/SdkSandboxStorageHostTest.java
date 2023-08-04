@@ -52,8 +52,6 @@ import javax.annotation.Nullable;
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
-    private boolean mWasRoot;
-
     private static final String TEST_APP_STORAGE_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_STORAGE_APK = "SdkSandboxStorageTestApp.apk";
     private static final String TEST_APP_STORAGE_V2_NO_SDK =
@@ -90,10 +88,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        // TODO(b/209061624): See if we can remove root privilege when instrumentation support for
-        // sdk sandbox is added.
-        mWasRoot = getDevice().isAdbRoot();
-        getDevice().enableAdbRoot();
         assumeTrue(mDeviceSupportUtils.isSdkSandboxSupported());
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
@@ -103,9 +97,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void tearDown() throws Exception {
         mUserUtils.removeSecondaryUserIfNecessary();
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
-        if (!mWasRoot) {
-            getDevice().disableAdbRoot();
-        }
     }
 
     @Test
@@ -135,10 +126,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     /**
-     * Verify that {@code /data/misc_{ce,de}/<user-id>/sdksandbox} is created when
-     * {@code <user-id>} is created.
+     * Verify that {@code /data/misc_{ce,de}/<user-id>/sdksandbox} is created when {@code <user-id>}
+     * is created.
      */
     @Test
+    @LargeTest // New User Created
     public void testSdkDataRootDirectory_IsCreatedOnUserCreate() throws Exception {
         assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
 
@@ -161,6 +153,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New User Created
     public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
         assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
 
@@ -191,11 +184,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New volume created
     public void testSdkSandboxDataMirrorDirectory_IsVolumeSpecific() throws Exception {
         // Sandbox data isolation fixes are in U+.
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
-
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
         installPackage(TEST_APP_STORAGE_APK);
 
         String mirrorCeVolPath;
@@ -347,7 +341,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @LargeTest
+    @LargeTest // Device reboot
     public void testSdkDataPackageDirectory_IsReconciled_InvalidAndMissingPackage()
             throws Exception {
 
@@ -376,7 +370,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @LargeTest
+    @LargeTest // Device reboot
     public void testSdkDataPackageDirectory_IsReconciled_IncludesDifferentVolumes()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
@@ -430,7 +424,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @LargeTest
+    @LargeTest // Create new volume
     public void testSdkDataPackageDirectory_IsReconciled_ChecksForPackageOnWrongVolume()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
@@ -469,7 +463,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @LargeTest
+    @LargeTest // Device reboot
     public void testSdkDataPackageDirectory_IsReconciled_MissingSubDirs() throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);
@@ -489,7 +483,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @LargeTest
+    @LargeTest // Device reboot
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepData() throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);
@@ -512,7 +506,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    @LargeTest
+    @LargeTest // Device reboot
     public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepNewVolumeData()
             throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
@@ -669,6 +663,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New user created
     public void testSdkDataPackageDirectory_IsUserSpecific() throws Exception {
         assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
 
@@ -949,6 +944,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New volume created
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable_DifferentVolume() throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
@@ -992,6 +988,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New volume created
     public void testSdkData_CanBeMovedToDifferentVolume() throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
@@ -1026,6 +1023,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New volume created
     public void testSdkSharedStorage_DifferentVolumeIsUsable() throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
@@ -1060,6 +1058,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest // New volume created
     public void testSdkData_ReconcileSdkDataSubDirsIncludesDifferentVolumes() throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 

@@ -162,6 +162,7 @@ public class SettingsActivityUiAutomatorTest {
                 .when(() -> UxStatesManager.getInstance(any(Context.class)));
         doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(BETA_UX).when(mUxStatesManager).getUx();
+        doReturn(BETA_UX).when(mConsentManager).getUx();
 
         startActivityFromHomeAndCheckMainSwitch();
     }

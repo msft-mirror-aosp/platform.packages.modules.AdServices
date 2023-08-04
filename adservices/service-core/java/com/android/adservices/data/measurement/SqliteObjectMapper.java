@@ -92,6 +92,10 @@ public class SqliteObjectMapper {
                 MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
                 registration_origin ->
                         builder.setRegistrationOrigin(Uri.parse(registration_origin)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                builder::setTriggerSummaryBucket);
         return builder.build();
     }
 
@@ -207,6 +211,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
                 builder::setSharedDebugKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                builder::setSharedFilterDataKeys);
         return builder.build();
     }
 

@@ -31,6 +31,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LogUtil;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
@@ -54,7 +55,6 @@ import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 
 import java.lang.annotation.Retention;
@@ -284,6 +284,7 @@ class LoadSdkSession {
     void handleLoadSuccess(
             long timeSystemServerReceivedCallFromSandbox, SandboxLatencyInfo sandboxLatencyInfo) {
         final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
@@ -310,7 +311,7 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), timeSystemServerCalledApp);
+            mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
         }
@@ -323,6 +324,7 @@ class LoadSdkSession {
             boolean successAtStage,
             SandboxLatencyInfo sandboxLatencyInfo) {
         final long timeSystemServerCalledApp = mInjector.getCurrentTime();
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
         if (stage != SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -351,7 +353,7 @@ class LoadSdkSession {
             }
         }
         try {
-            mLoadCallback.onLoadSdkFailure(exception, timeSystemServerCalledApp);
+            mLoadCallback.onLoadSdkFailure(exception, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadCodeFailure", e);
         }

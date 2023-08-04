@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
@@ -50,13 +51,14 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final int SCROLL_WAIT_TIME = 2000;
-    private static UiDevice sDevice =
+    private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private String mTestName;
 
     @BeforeClass
     public static void classSetup() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
     }
 
@@ -65,13 +67,13 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             CompatAdServicesTestUtils.setFlags();
         }
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_ad_services_system_api true");
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
         ShellUtils.runShellCommand(
                 "device_config put adservices eu_notif_flow_change_enabled true");
 
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -100,33 +102,25 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
+
+        clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
         assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
+
         rightControlButton.click();
         UiObject title2 = getElement(R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(title2.exists()).isTrue();
         leftControlButton = getElement(R.string.notificationUI_left_control_button_text_eu);
         rightControlButton = getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
-        moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
+
+        clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
         assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
+
         rightControlButton.click();
         assertThat(title2.exists()).isFalse();
     }
@@ -138,17 +132,11 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
+        clickMoreToBottom();
         assertThat(leftControlButton.exists()).isTrue();
         assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
         leftControlButton.click();
         UiObject topicsTitle = getElement(R.string.settingsUI_topics_ga_title);
         ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_topics_ga_title);
@@ -170,6 +158,21 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
         ApplicationProvider.getApplicationContext().startActivity(intent);
         sDevice.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+    }
+
+    private void clickMoreToBottom() throws UiObjectNotFoundException, InterruptedException {
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+        if (!moreButton.exists()) {
+            LogUtil.e("More Button not Found");
+            return;
+        }
+
+        int clickCount = 10;
+        while (moreButton.exists() && clickCount-- > 0) {
+            moreButton.click();
+            Thread.sleep(SCROLL_WAIT_TIME);
+        }
+        assertThat(moreButton.exists()).isFalse();
     }
 
     private String getString(int resourceId) {
