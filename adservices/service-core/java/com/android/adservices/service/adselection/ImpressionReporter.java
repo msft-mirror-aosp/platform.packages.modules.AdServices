@@ -116,6 +116,7 @@ public class ImpressionReporter {
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final DevContext mDevContext;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -144,6 +145,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(devContext);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
@@ -151,6 +153,7 @@ public class ImpressionReporter {
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
+        mDevContext = devContext;
         boolean isRegisterAdBeaconEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
 
@@ -252,7 +255,8 @@ public class ImpressionReporter {
                                         true,
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                                        mDevContext);
                                 validateAdSelectionConfig(adSelectionConfig);
                             } finally {
                                 sLogger.v("Completed filtering and validation.");
