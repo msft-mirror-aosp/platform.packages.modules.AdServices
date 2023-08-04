@@ -31,7 +31,8 @@ import java.util.Objects;
 
 /** Utility class to fetch the data version from trusted bidding/scoring signals. */
 public class DataVersionFetcher {
-    public static final String DATA_VERSION_HEADER_KEY = "x-fledge-bidding-signals-format-version";
+    @VisibleForTesting
+    static final String DATA_VERSION_HEADER_KEY = "x-fledge-bidding-signals-format-version";
 
     @VisibleForTesting static final int MAX_UNSIGNED_8_BIT = 255;
 
