@@ -515,8 +515,11 @@ public class AdSelectionScriptEngine {
                 if (mCpcBillingEnabled) {
                     double adCost = json.optDouble(AD_COST_FIELD_NAME);
                     if (!Double.isNaN(adCost) && !Double.isInfinite(adCost)) {
-                        generateBidResultBuilder.setAdCost(
-                                new AdCost(adCost, NUM_BITS_STOCHASTIC_ROUNDING));
+                        BuyerContextualSignals buyerContextualSignals =
+                                BuyerContextualSignals.builder()
+                                        .setAdCost(new AdCost(adCost, NUM_BITS_STOCHASTIC_ROUNDING))
+                                        .build();
+                        generateBidResultBuilder.setBuyerContextualSignals(buyerContextualSignals);
                     }
                 }
                 results.add(generateBidResultBuilder.build());
