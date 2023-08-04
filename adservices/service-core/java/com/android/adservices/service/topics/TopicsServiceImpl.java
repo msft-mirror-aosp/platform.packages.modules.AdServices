@@ -134,7 +134,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // Check the permission in the same thread since we're looking for caller's permissions.
         // Note: The permission check uses sdk sandbox calling package name since PackageManager
         // checks if the permission is declared in the manifest of that package name.
-        boolean hasTopicsPermission = PermissionHelper.hasTopicsPermission(mContext, callingUid);
+        boolean hasTopicsPermission =
+                PermissionHelper.hasTopicsPermission(mContext, packageName, callingUid);
 
         sBackgroundExecutor.execute(
                 () -> {
