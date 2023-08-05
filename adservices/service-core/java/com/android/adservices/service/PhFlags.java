@@ -54,9 +54,9 @@ public final class PhFlags implements Flags {
     static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
 
     // Topics keys
-    static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
+    public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
-    static final String KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC =
+    public static final String KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC =
             "topics_percentage_for_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
@@ -68,12 +68,13 @@ public final class PhFlags implements Flags {
     static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
 
     // Topics classifier keys
-    static final String KEY_CLASSIFIER_TYPE = "classifier_type";
-    static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
-    static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
+    public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
+    public static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS =
+            "classifier_number_of_top_labels";
+    public static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
     static final String KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS = "classifier_description_max_words";
     static final String KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH = "classifier_description_max_length";
-    static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
+    public static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
             "classifier_force_use_bundled_files";
 
     // Topics Cobalt keys
@@ -401,7 +402,7 @@ public final class PhFlags implements Flags {
             "mdd_topics_classifier_manifest_file_url";
 
     // Killswitch keys
-    static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
+    public static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
     static final String KEY_MEASUREMENT_KILL_SWITCH = "measurement_kill_switch";
     static final String KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH =
             "measurement_api_delete_registrations_kill_switch";
@@ -443,8 +444,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
-    static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
-    static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
+    public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
+    public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
@@ -460,6 +461,9 @@ public final class PhFlags implements Flags {
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+
+    static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
     // AdServices APK sha certs.
@@ -492,14 +496,15 @@ public final class PhFlags implements Flags {
     static final String KEY_ADSERVICES_ERROR_LOGGING_ENABLED = "adservice_error_logging_enabled";
 
     // Disable enrollment check
-    static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
+    public static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK =
+            "disable_topics_enrollment_check";
     static final String KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK = "disable_fledge_enrollment_check";
 
     // Disable Measurement enrollment check.
     static final String KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK =
             "disable_measurement_enrollment_check";
 
-    static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
+    public static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
 
     // Enrollment Mdd Deletion Feature Enabled check
 
@@ -507,7 +512,7 @@ public final class PhFlags implements Flags {
             "enable_enrollment_mdd_record_deletion";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
-    private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+    public static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
     // Consent Notification interval begin ms.
     static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
@@ -526,7 +531,7 @@ public final class PhFlags implements Flags {
             "consent_notification_debug_mode";
 
     // Consent Manager debug mode keys.
-    static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
+    public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
     // Consent notification activity debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
@@ -651,6 +656,18 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
+
+    static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
+            "measurement_enable_max_aggregate_reports_per_source";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
+            "measurement_max_aggregate_reports_per_source";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION =
+            "measurement_max_aggregate_keys_per_source_registration";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
+            "measurement_max_aggregate_keys_per_trigger_registration";
 
     static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
             "measurement_min_event_report_delay_millis";
@@ -2184,6 +2201,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
+    @Override
+    public String getMsmtApiAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MSMT_API_APP_ALLOW_LIST,
+                /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
+    }
+
     // AdServices APK SHA certs.
     @Override
     public String getAdservicesApkShaCertificate() {
@@ -3116,6 +3142,41 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateReportsPerSource() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION);
+    }
+
+    @Override
     public long getMeasurementMinEventReportDelayMillis() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -3288,6 +3349,7 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getPpapiAppSignatureAllowList());
         writer.println("\t" + KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println("\t" + KEY_MSMT_API_APP_ALLOW_LIST + " = " + getMsmtApiAppAllowList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -4222,6 +4284,26 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE
+                        + " = "
+                        + getMeasurementEnableMaxAggregateReportsPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAggregateReportsPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregateKeysPerSourceRegistration());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregateKeysPerTriggerRegistration());
     }
 
     @VisibleForTesting

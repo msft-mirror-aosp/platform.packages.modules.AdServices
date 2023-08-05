@@ -115,6 +115,7 @@ public class PerBuyerBiddingRunnerTest {
                         ExtendedMockito.anyMap(),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
+                        ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.isA(RunAdBiddingPerCAExecutionLogger.class));
 
         ExtendedMockito.doReturn(createDelayedBiddingOutcome(LONG_SLEEP_MS))
@@ -122,6 +123,7 @@ public class PerBuyerBiddingRunnerTest {
                 .runAdBiddingPerCA(
                         ExtendedMockito.argThat(mSlowResponseMatcher),
                         ExtendedMockito.anyMap(),
+                        ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.any(AdSelectionSignals.class),
                         ExtendedMockito.isA(RunAdBiddingPerCAExecutionLogger.class));

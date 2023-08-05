@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -46,7 +47,6 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -2490,7 +2490,7 @@ class MeasurementDao implements IMeasurementDao {
             return Optional.of(trigger.getAttributionDestination().toString());
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
-                    Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
+                    WebAddresses.topPrivateDomainAndScheme(trigger.getAttributionDestination());
             return topPrivateDomainAndScheme.map(Uri::toString);
         }
     }
@@ -2498,7 +2498,7 @@ class MeasurementDao implements IMeasurementDao {
     private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
-                : Web.topPrivateDomainAndScheme(uri);
+                : WebAddresses.topPrivateDomainAndScheme(uri);
     }
 
     private static String getPublisherWhereStatement(

@@ -26,7 +26,6 @@ import android.util.Pair;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
-import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -98,7 +97,7 @@ public class TrustedBiddingDataFetcher {
      * @param customAudiences the custom audiences from the same buyer.
      * @return trusted bidding data per base uri.
      */
-    public FluentFuture<Map<Uri, TrustedBiddingResponse>> getTrustedBiddingDataForBuyer(
+    public FluentFuture<Map<Uri, JSONObject>> getTrustedBiddingDataForBuyer(
             List<DBCustomAudience> customAudiences) {
         List<DBCustomAudience> customAudiencesWithoutOverride;
         if (mDevContext.getDevOptionsEnabled()) {
@@ -153,7 +152,7 @@ public class TrustedBiddingDataFetcher {
                         mLightweightExecutorService);
     }
 
-    private FluentFuture<TrustedBiddingResponse> getTrustedBiddingDataByBatch(
+    private FluentFuture<JSONObject> getTrustedBiddingDataByBatch(
             final Uri trustedBiddingUrl, final Set<String> keys) {
         Uri trustedBiddingUriWithKeys = getTrustedBiddingUriWithKeys(trustedBiddingUrl, keys);
         return FluentFuture.from(mAdServicesHttpsClient.fetchPayload(trustedBiddingUriWithKeys))
@@ -167,7 +166,18 @@ public class TrustedBiddingDataFetcher {
                         },
                         mLightweightExecutorService)
                 .transform(
-                        TrustedBiddingDataFetcher::extractTrustedBiddingResponseIntoJSON,
+                        s ->
+                                Optional.ofNullable(s.getResponseBody())
+                                        .map(
+                                                r -> {
+                                                    try {
+                                                        sLogger.v("Keys are: %s", r);
+                                                        return new JSONObject(r);
+                                                    } catch (JSONException e) {
+                                                        return null;
+                                                    }
+                                                })
+                                        .orElse(null),
                         mLightweightExecutorService)
                 .catching(
                         Exception.class,
@@ -186,36 +196,6 @@ public class TrustedBiddingDataFetcher {
         return Uri.parse(trustedBiddingUri.toString())
                 .buildUpon()
                 .appendQueryParameter(QUERY_PARAM_KEYS, keysQueryParams)
-                .build();
-    }
-
-    private static TrustedBiddingResponse extractTrustedBiddingResponseIntoJSON(
-            AdServicesHttpClientResponse response) {
-        JSONObject trustedBiddingResponse =
-                Optional.ofNullable(response.getResponseBody())
-                        .map(
-                                r -> {
-                                    try {
-                                        sLogger.v("Keys are: %s", r);
-                                        return new JSONObject(r);
-                                    } catch (JSONException e) {
-                                        return null;
-                                    }
-                                })
-                        .orElse(null);
-
-        JSONObject trustedBiddingHeaders =
-                Optional.ofNullable(response.getResponseHeaders())
-                        .map(
-                                h -> {
-                                    sLogger.v("Headers are: %s", h);
-                                    return new JSONObject(h);
-                                })
-                        .orElse(null);
-
-        return TrustedBiddingResponse.builder()
-                .setBody(trustedBiddingResponse)
-                .setHeaders(trustedBiddingHeaders)
                 .build();
     }
 }

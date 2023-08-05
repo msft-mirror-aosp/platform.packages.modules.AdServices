@@ -40,10 +40,10 @@ import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -204,7 +204,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         int buildId = mEnrollmentUtil.getBuildId();
         boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
         Optional<Uri> registrationBaseUri =
-                originMatch ? Web.originAndScheme(url) : Web.topPrivateDomainAndScheme(url);
+                originMatch ? WebAddresses.originAndScheme(url)
+                        : WebAddresses.topPrivateDomainAndScheme(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (!registrationBaseUri.isPresent()) {
             return null;
@@ -276,8 +277,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         for (String uri : enrolledUris) {
             Optional<Uri> enrolledBaseUri =
                     originMatch
-                            ? Web.originAndScheme(Uri.parse(uri))
-                            : Web.topPrivateDomainAndScheme(Uri.parse(uri));
+                            ? WebAddresses.originAndScheme(Uri.parse(uri))
+                            : WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }

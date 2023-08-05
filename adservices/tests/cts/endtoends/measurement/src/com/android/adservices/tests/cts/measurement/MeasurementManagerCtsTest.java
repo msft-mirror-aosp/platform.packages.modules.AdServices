@@ -102,7 +102,7 @@ public class MeasurementManagerCtsTest {
     public void setup() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                    CompatAdServicesTestUtils.getAndOverrideMsmtApiAppAllowList(
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
@@ -127,7 +127,7 @@ public class MeasurementManagerCtsTest {
     @After
     public void tearDown() {
         if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setMsmtApiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
         resetAllowSandboxPackageNameAccessMeasurementApis();
@@ -927,7 +927,7 @@ public class MeasurementManagerCtsTest {
     private void allowAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "*";
         ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + packageName);
+                "device_config put adservices msmt_api_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + packageName);
     }
@@ -935,7 +935,7 @@ public class MeasurementManagerCtsTest {
     private void blockAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "";
         ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + packageName);
+                "device_config put adservices msmt_api_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list " + packageName);
     }
@@ -946,7 +946,7 @@ public class MeasurementManagerCtsTest {
     }
 
     private void resetAllowSandboxPackageNameAccessMeasurementApis() {
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list null");
+        ShellUtils.runShellCommand("device_config put adservices msmt_api_app_allow_list null");
         ShellUtils.runShellCommand(
                 "device_config put adservices web_context_client_allow_list null");
     }

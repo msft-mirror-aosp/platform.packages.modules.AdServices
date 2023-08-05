@@ -27,6 +27,7 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+// TODO(b/278016822): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class FetchAndJoinCustomAudienceInputTest {
     public static final Uri VALID_FETCH_URI_1 =

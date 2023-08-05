@@ -19,9 +19,13 @@ package com.android.cobalt.crypto;
 import static com.android.cobalt.crypto.PublicKeys.ANALYZER_CONTEXT_INFO_BYTES;
 import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_DEV;
 import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_INDEX_DEV;
+import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_INDEX_PROD;
+import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_PROD;
 import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_CONTEXT_INFO_BYTES;
 import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_DEV;
 import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_DEV;
+import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_PROD;
+import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_PROD;
 import static com.android.cobalt.crypto.PublicKeys.X25519_PUBLIC_VALUE_LEN;
 
 import androidx.annotation.NonNull;
@@ -56,8 +60,12 @@ public final class HpkeEncrypter implements Encrypter {
 
         switch (type) {
             case PROD:
-                throw new IllegalArgumentException(
-                        "HpkeEncrypter cannot be used for PROD environment");
+                return new HpkeEncrypter(
+                        encrypter,
+                        SHUFFLER_KEY_PROD,
+                        SHUFFLER_KEY_INDEX_PROD,
+                        ANALYZER_KEY_PROD,
+                        ANALYZER_KEY_INDEX_PROD);
             case DEV:
                 return new HpkeEncrypter(
                         encrypter,

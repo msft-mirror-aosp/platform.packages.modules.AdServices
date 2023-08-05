@@ -32,6 +32,7 @@ java_test_host {
         "platformprotos",
     ],
     static_libs: [
+        "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
     data: [
@@ -56,6 +57,7 @@ java_test_host {
         "platformprotos",
     ],
     static_libs: [
+        "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
     data: [

@@ -33,7 +33,7 @@ import com.android.modules.utils.build.SdkLevel;
 import java.util.List;
 
 /** Class to place Adservices CTS related helper method. */
-public class AdservicesTestHelper {
+public final class AdservicesTestHelper {
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
     private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
     private static final String DEFAULT_LOG_TAG = "adservices";

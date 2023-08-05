@@ -32,6 +32,8 @@ import java.util.Objects;
 
 /**
  * Represents ad selection data collected from device for ad selection.
+ *
+ * @hide
  */
 public final class GetAdSelectionDataOutcome implements Parcelable {
     private final long mAdSelectionId;

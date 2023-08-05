@@ -115,14 +115,15 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         }
 
                         // TO-DO (b/286664178): remove the block after API is fully ramped up.
-                        if (!mFlags.getEnableAdServicesSystemApi()) {
-                            LogUtil.d(ENABLE_AD_SERVICES_API_DISABLED_MESSAGE);
-                            // Reconsent is already handled by the enableAdServices API.
-                            reconsentIfNeededForEU();
-                        } else {
+                        if (mFlags.getEnableAdServicesSystemApi()
+                                && ConsentManager.getInstance(mContext).getUx() != null) {
                             LogUtil.d(ENABLE_AD_SERVICES_API_ENABLED_MESSAGE);
                             // PS entry point should be hidden from unenrolled users.
                             isAdServicesEnabled &= mUxStatesManager.isEnrolledUser();
+                        } else {
+                            LogUtil.d(ENABLE_AD_SERVICES_API_DISABLED_MESSAGE);
+                            // Reconsent is already handled by the enableAdServices API.
+                            reconsentIfNeededForEU();
                         }
 
                         LogUtil.d("isAdServiceseEnabled: " + isAdServicesEnabled);

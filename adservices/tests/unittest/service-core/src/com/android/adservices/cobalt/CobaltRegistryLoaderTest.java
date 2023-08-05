@@ -70,6 +70,8 @@ public class CobaltRegistryLoaderTest {
             assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);
             assertThat(report.getLocalAggregationProcedure())
                     .isEqualTo(LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET);
+            assertThat(report.getSystemProfileFieldList()).isEmpty();
+            assertThat(report.getExperimentIdList()).isEmpty();
             assertThat(report.getSystemProfileSelection())
                     .isEqualTo(SystemProfileSelectionPolicy.REPORT_ALL);
             assertThat(report.getStringSketchParams())
