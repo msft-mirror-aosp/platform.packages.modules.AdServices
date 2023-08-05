@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
@@ -475,23 +473,17 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     @Test
-    public void testRunAdSelectionSuccessWithBuyerContextualSignals() throws AdServicesException {
+    public void testRunAdSelectionSuccessWithAdCost() throws AdServicesException {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFlags).when(FlagsFactory::getFlags);
         AdCost adCost1 = new AdCost(1.5, NUM_BITS_STOCHASTIC_ROUNDING);
         BuyerContextualSignals buyerContextualSignals1 =
-                BuyerContextualSignals.builder()
-                        .setAdCost(adCost1)
-                        .setDataVersion(DATA_VERSION_1)
-                        .build();
+                BuyerContextualSignals.builder().setAdCost(adCost1).build();
 
         AdCost adCost2 = new AdCost(3.0, NUM_BITS_STOCHASTIC_ROUNDING);
         BuyerContextualSignals buyerContextualSignals2 =
-                BuyerContextualSignals.builder()
-                        .setAdCost(adCost2)
-                        .setDataVersion(DATA_VERSION_2)
-                        .build();
+                BuyerContextualSignals.builder().setAdCost(adCost2).build();
 
         mAdBiddingOutcomeForBuyer1 =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilderWithBuyerContextualSignals(

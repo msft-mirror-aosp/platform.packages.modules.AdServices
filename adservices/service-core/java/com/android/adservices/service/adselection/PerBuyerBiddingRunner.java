@@ -35,6 +35,8 @@ import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -93,7 +95,7 @@ public class PerBuyerBiddingRunner {
                 partitionList(customAudienceList, getMaxConcurrentBiddingCount());
 
         sLogger.v("Fetching trusted bidding data for buyer: %s", buyer);
-        FluentFuture<Map<Uri, TrustedBiddingResponse>> trustedBiddingDataMap =
+        FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap =
                 mTrustedBiddingDataFetcher.getTrustedBiddingDataForBuyer(customAudienceList);
 
         List<ListenableFuture<AdBiddingOutcome>> buyerBiddingOutcomes =
@@ -122,7 +124,7 @@ public class PerBuyerBiddingRunner {
     private List<ListenableFuture<AdBiddingOutcome>> runBidPerCAWorkPartition(
             List<DBCustomAudience> customAudienceSubList,
             AdSelectionConfig adSelectionConfig,
-            FluentFuture<Map<Uri, TrustedBiddingResponse>> trustedBiddingDataMap) {
+            FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap) {
         ExecutionSequencer sequencer = ExecutionSequencer.create();
         sLogger.v("Bidding partition chunk size: %d", customAudienceSubList.size());
         return customAudienceSubList.stream()
@@ -144,7 +146,7 @@ public class PerBuyerBiddingRunner {
     private ListenableFuture<AdBiddingOutcome> runBiddingPerCA(
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig,
-            @NonNull final Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri) {
+            @NonNull final Map<Uri, JSONObject> trustedBiddingDataByBaseUri) {
         sLogger.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
@@ -159,6 +161,7 @@ public class PerBuyerBiddingRunner {
                 trustedBiddingDataByBaseUri,
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
+                AdSelectionSignals.EMPTY,
                 new RunAdBiddingPerCAExecutionLogger(
                         Clock.SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance()));
     }

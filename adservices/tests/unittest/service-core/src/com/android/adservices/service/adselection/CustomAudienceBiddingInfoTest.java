@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST;
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -115,7 +115,7 @@ public class CustomAudienceBiddingInfoTest {
                                         CommonFixture.VALID_BUYER_1))
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                        .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST)
+                        .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                         .build();
         assertEquals(
                 CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1),
@@ -123,7 +123,6 @@ public class CustomAudienceBiddingInfoTest {
         assertEquals(BUYER_DECISION_LOGIC_JS, customAudienceBiddingInfo.getBuyerDecisionLogicJs());
         assertEquals(CUSTOM_AUDIENCE_SIGNALS, customAudienceBiddingInfo.getCustomAudienceSignals());
         assertEquals(
-                BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST,
-                customAudienceBiddingInfo.getBuyerContextualSignals());
+                BUYER_CONTEXTUAL_SIGNALS, customAudienceBiddingInfo.getBuyerContextualSignals());
     }
 }

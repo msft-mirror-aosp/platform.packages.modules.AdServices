@@ -34,7 +34,7 @@ abstract class GenerateBidResult {
     abstract Uri getLossDebugReportUri();
 
     @Nullable
-    abstract AdCost getAdCost();
+    abstract BuyerContextualSignals getBuyerContextualSignals();
 
     static Builder builder() {
         return new AutoValue_GenerateBidResult.Builder();
@@ -48,7 +48,7 @@ abstract class GenerateBidResult {
 
         abstract Builder setLossDebugReportUri(Uri lossDebugReportUri);
 
-        abstract Builder setAdCost(AdCost adCost);
+        abstract Builder setBuyerContextualSignals(BuyerContextualSignals buyerContextualSignals);
 
         abstract GenerateBidResult build();
     }
