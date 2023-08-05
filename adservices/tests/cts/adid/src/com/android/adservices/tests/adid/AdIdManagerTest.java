@@ -32,9 +32,11 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +58,7 @@ public class AdIdManagerTest {
 
     @Before
     public void setup() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         overrideAdIdKillSwitch(true);
         mPreviousAppAllowList =
                 CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
@@ -84,7 +87,7 @@ public class AdIdManagerTest {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         CompletableFuture<AdId> future = new CompletableFuture<>();
         OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<AdId, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(AdId result) {
                         future.complete(result);
@@ -132,30 +135,26 @@ public class AdIdManagerTest {
         final AtomicBoolean reachedLimit = new AtomicBoolean(false);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        manager.getAdId(
-                CALLBACK_EXECUTOR,
-                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+        OutcomeReceiver<AdId, Exception> callback =
+                new OutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull AdId result) {
+                        countDownLatch.countDown();
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception error) {
+                        if (error instanceof LimitExceededException) {
+                            reachedLimit.set(true);
+                        }
+                        countDownLatch.countDown();
+                    }
+                };
+
+        manager.getAdId(CALLBACK_EXECUTOR, callback);
 
         countDownLatch.await();
         return reachedLimit.get();
-    }
-
-    private OutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
-            CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new OutcomeReceiver<AdId, Exception>() {
-            @Override
-            public void onResult(@NonNull AdId result) {
-                countDownLatch.countDown();
-            }
-
-            @Override
-            public void onError(@NonNull Exception error) {
-                if (error instanceof LimitExceededException) {
-                    reachedLimit.set(true);
-                }
-                countDownLatch.countDown();
-            }
-        };
     }
 
     private float getAdIdRequestPerSecond() {

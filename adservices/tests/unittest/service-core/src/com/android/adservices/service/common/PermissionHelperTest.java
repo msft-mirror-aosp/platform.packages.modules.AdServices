@@ -62,7 +62,9 @@ public class PermissionHelperTest {
         MockitoAnnotations.initMocks(this);
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions =
-                new String[] {ACCESS_ADSERVICES_AD_ID, ACCESS_ADSERVICES_ATTRIBUTION};
+                new String[] {
+                    ACCESS_ADSERVICES_AD_ID, ACCESS_ADSERVICES_ATTRIBUTION, ACCESS_ADSERVICES_TOPICS
+                };
         doReturn(packageInfoGrant)
                 .when(mMockPackageManagerGrant)
                 .getPackageInfo(anyString(), eq(PackageManager.GET_PERMISSIONS));
@@ -119,7 +121,10 @@ public class PermissionHelperTest {
     @Test
     public void testHasPermission_notUseSandboxCheck() {
         Context mockContext = getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, APP_CALLING_UID)).isTrue();
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
+                .isTrue();
         Context mockContext1 = getMockContext(ACCESS_ADSERVICES_AD_ID, mMockPackageManagerGrant);
         assertThat(
                         PermissionHelper.hasAdIdPermission(
@@ -137,7 +142,10 @@ public class PermissionHelperTest {
     @Test
     public void testNotHasPermission() {
         Context mockContext = getMockContext(FAKE_PERMISSION, mMockPackageManagerDeny);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, APP_CALLING_UID)).isFalse();
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
+                .isFalse();
         assertThat(
                         PermissionHelper.hasAdIdPermission(
                                 mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
@@ -165,7 +173,9 @@ public class PermissionHelperTest {
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
 
         Context mockContext = getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, SANDBOX_SDK_CALLING_UID))
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, SANDBOX_SDK_CALLING_UID))
                 .isTrue();
 
         // TODO(b/240718367): Check Sdk permission for adid.
@@ -199,7 +209,9 @@ public class PermissionHelperTest {
                 .thenReturn(PackageManager.PERMISSION_DENIED);
 
         Context mockContext = getMockContext(FAKE_PERMISSION, mMockPackageManagerDeny);
-        assertThat(PermissionHelper.hasTopicsPermission(mockContext, SANDBOX_SDK_CALLING_UID))
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mockContext, APP_PACKAGE_NAME, SANDBOX_SDK_CALLING_UID))
                 .isFalse();
 
         // TODO(b/240718367): Check Sdk permission for Adid.

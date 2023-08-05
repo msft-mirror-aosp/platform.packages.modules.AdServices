@@ -261,7 +261,7 @@ public class Combinatorics {
      * @param perTypeCapList limit of the increment of each trigger data
      * @return number of states
      */
-    public static int getNumStatesFlexAPI(
+    public static int getNumStatesFlexApi(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
         boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {

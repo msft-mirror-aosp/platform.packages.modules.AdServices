@@ -270,7 +270,11 @@ public final class AdData implements Parcelable {
             return this;
         }
 
-        /** @hide */
+        /**
+         * Sets ad render id
+         *
+         * @hide
+         */
         @NonNull
         public AdData.Builder setAdRenderId(@Nullable String adRenderId) {
             mAdRenderId = adRenderId;

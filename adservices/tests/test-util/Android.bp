@@ -47,17 +47,38 @@ android_library {
     min_sdk_version: "30",
     srcs: [
         ":adservices-test-utility-sources",
+        ":adservices-service-core-phflags-sources",
     ],
     libs: [
         "error_prone_annotations",
         "framework-adservices-lib",
         "framework-annotations-lib",
+        "framework-configinfrastructure",
     ],
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+}
+
+java_library_host {
+    name: "adservices-host-side-test-utility",
+    srcs: [
+        "host-side/**/*.java",
+        // TODO(b/284971005): move files below to pure-java and use filegroup
+        "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
+        "java/com/android/adservices/common/RequiresDeviceSupported.java",
+        "java/com/android/adservices/common/RequiresDeviceNotSupported.java",
+        "java/com/android/adservices/common/RequiresDeviceSupportedOrNot.java",
+        // TODO(b/284971005): files below should be provided by module-utils
+        "java/com/android/adservices/common/AbstractSupportedFeatureRule.java",
+        "java/com/android/adservices/common/Logger.java",
+        "java/com/android/adservices/common/Nullable.java",
+    ],
+    libs: [
+        "tradefed",
+    ],
 }
 
 java_defaults {

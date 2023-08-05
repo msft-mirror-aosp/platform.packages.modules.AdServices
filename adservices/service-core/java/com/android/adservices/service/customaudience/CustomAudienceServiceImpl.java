@@ -128,7 +128,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        () -> Throttler.getInstance(FlagsFactory.getFlags())),
+                        Throttler.getInstance(FlagsFactory.getFlags())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),
@@ -206,9 +206,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         sLogger.v("Running service");
         mExecutorService.execute(
-                () -> doJoinCustomAudience(customAudience, ownerPackageName, callback, callerUid));
+                () ->
+                        doJoinCustomAudience(
+                                customAudience, ownerPackageName, callback, callerUid, devContext));
     }
 
     /** Try to join the custom audience and signal back to the caller using the callback. */
@@ -216,10 +219,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull CustomAudience customAudience,
             @NonNull String ownerPackageName,
             @NonNull ICustomAudienceCallback callback,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(ownerPackageName);
         Objects.requireNonNull(callback);
+        Objects.requireNonNull(devContext);
 
         sLogger.v("Entering doJoinCustomAudience");
 
@@ -237,7 +242,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         false,
                         callerUid,
                         apiName,
-                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE);
+                        FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
+                        devContext);
 
                 shouldLog = true;
 
@@ -296,6 +302,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mExecutorService.execute(
                 () -> {
                     FetchCustomAudienceImpl impl =
@@ -317,7 +324,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                             mFlags.getFledgeAdSelectionFilteringEnabled(),
                                             mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
-                    impl.doFetchCustomAudience(input, callback);
+                    impl.doFetchCustomAudience(input, callback, devContext);
                 });
     }
 
@@ -379,8 +386,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mExecutorService.execute(
-                () -> doLeaveCustomAudience(ownerPackageName, buyer, name, callback, callerUid));
+                () ->
+                        doLeaveCustomAudience(
+                                ownerPackageName, buyer, name, callback, callerUid, devContext));
     }
 
     /** Try to leave the custom audience and signal back to the caller using the callback. */
@@ -389,11 +399,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull ICustomAudienceCallback callback,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(ownerPackageName);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
         Objects.requireNonNull(callback);
+        Objects.requireNonNull(devContext);
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
@@ -409,7 +421,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         false,
                         callerUid,
                         apiName,
-                        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE);
+                        FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
+                        devContext);
 
                 shouldLog = true;
 

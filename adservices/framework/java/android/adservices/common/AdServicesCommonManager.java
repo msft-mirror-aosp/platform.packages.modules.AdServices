@@ -169,8 +169,8 @@ public class AdServicesCommonManager {
      * Enable AdServices based on the AdServicesStates input parameter.
      *
      * <p>Based on the provided {@code AdServicesStates}, AdServices may be enabled. Specifically,
-     * users will be provided with an enrollment channel (such as consent notification) to become
-     * privacy sandbox users when:
+     * users will be provided with an enrollment channel (such as notification) to become privacy
+     * sandbox users when:
      *
      * <ul>
      *   <li>isAdServicesUiEnabled - true.

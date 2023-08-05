@@ -17,8 +17,10 @@ package com.android.adservices.service.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +43,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
+import com.android.adservices.service.topics.classifier.ClassifierManager;
 
 import com.google.common.collect.ImmutableList;
 
@@ -59,6 +62,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,6 +72,7 @@ import java.util.stream.Stream;
 public final class CacheManagerTest {
     @SuppressWarnings({"unused"})
     private static final String TAG = "CacheManagerTest";
+
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
@@ -80,6 +85,9 @@ public final class CacheManagerTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
+    @Mock ClassifierManager mClassifierManager;
+
+    @Mock Random mRandom;
 
     @Before
     public void setup() {
@@ -99,7 +107,7 @@ public final class CacheManagerTest {
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
         mGlobalBlockedTopicsManager =
-                new GlobalBlockedTopicsManager(/* globalBlockedTopicIds = */ new HashSet<>());
+                new GlobalBlockedTopicsManager(/* globalBlockedTopicIds= */ new HashSet<>());
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
                         mTopicsDao,
@@ -579,6 +587,25 @@ public final class CacheManagerTest {
 
     @Test
     public void testGetTopics_verifyLogs() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        GlobalBlockedTopicsManager globalBlockedTopicsManager =
+                new GlobalBlockedTopicsManager(/* globalBlockedTopicIds= */ new HashSet<>());
+        BlockedTopicsManager blockedTopicsManager =
+                new BlockedTopicsManager(
+                        topicsDao,
+                        mMockAdServicesManager,
+                        mAppSearchConsentManager,
+                        Flags.PPAPI_AND_SYSTEM_SERVER,
+                        /* enableAppSearchConsent= */ false);
+        CacheManager cacheManager =
+                new CacheManager(
+                        topicsDao,
+                        mMockFlags,
+                        mLogger,
+                        blockedTopicsManager,
+                        globalBlockedTopicsManager);
+
         ArgumentCaptor<GetTopicsReportedStats> argument =
                 ArgumentCaptor.forClass(GetTopicsReportedStats.class);
 
@@ -586,11 +613,29 @@ public final class CacheManagerTest {
         // epochs: epochId in {3, 2, 1}.
         long currentEpochId = 4L;
         // Mock Flags to make it independent of configuration
+        when(dbHelper.supportsLoggedTopicInReturnedTopicTable()).thenReturn(true);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+        when(mMockFlags.getTopicsPrivacyBudgetForTopicIdDistribution()).thenReturn(1f);
+        when(mMockFlags.getEnableLoggedTopic()).thenReturn(true);
+        when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
+        // Always log real topics
+        when(mRandom.nextDouble()).thenReturn(1d);
 
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+        Topic topic1 = Topic.create(
+                /* topic */ 1,
+                /* taxonomyVersion */ 1L,
+                /* modelVersion */ 1L,
+                /* loggedTopic */ 1);
+        Topic topic2 = Topic.create(
+                /* topic */ 2,
+                /* taxonomyVersion */ 1L,
+                /* modelVersion */ 1L,
+                /* loggedTopic */ 2);
+        Topic topic3 = Topic.create(
+                /* topic */ 3,
+                /* taxonomyVersion */ 1L,
+                /* modelVersion */ 1L,
+                /* loggedTopic */ 3);
 
         // EpochId 1
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap1 = new HashMap<>();
@@ -598,7 +643,7 @@ public final class CacheManagerTest {
         returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk1"), topic1);
         returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk2"), topic1);
 
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 1L, returnedAppSdkTopicsMap1);
+        topicsDao.persistReturnedAppTopicsMap(/* epochId */ 1L, returnedAppSdkTopicsMap1);
 
         // EpochId 2
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap2 = new HashMap<>();
@@ -607,7 +652,7 @@ public final class CacheManagerTest {
         returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk1"), topic2);
         returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk2"), topic2);
 
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, returnedAppSdkTopicsMap2);
+        topicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, returnedAppSdkTopicsMap2);
 
         // EpochId 3
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap3 = new HashMap<>();
@@ -616,15 +661,15 @@ public final class CacheManagerTest {
         returnedAppSdkTopicsMap3.put(Pair.create("app1", "sdk1"), topic2);
         returnedAppSdkTopicsMap3.put(Pair.create("app1", "sdk2"), topic1);
 
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
+        topicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
         // Mock IPC calls
         TopicParcel topicParcel2 = topic2.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel2)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // block topic 2.
-        mTopicsDao.recordBlockedTopic(topic2);
+        topicsDao.recordBlockedTopic(topic2);
 
-        mCacheManager.loadCache(currentEpochId);
+        cacheManager.loadCache(currentEpochId);
 
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
 
@@ -632,17 +677,17 @@ public final class CacheManagerTest {
         // Should return topic1, topic2 and topic3, but topic2 is blocked - so only topic1 and
         // topic3 are expected.
         assertThat(
-                        mCacheManager.getTopics(
+                        cacheManager.getTopics(
                                 /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
                 .containsExactlyElementsIn(Arrays.asList(topic1, topic3));
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                        mCacheManager.getTopics(
+                        cacheManager.getTopics(
                                 /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         assertThat(
-                        mCacheManager.getTopics(
+                        cacheManager.getTopics(
                                 /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
                 .containsExactlyElementsIn(Arrays.asList(topic1));
 
@@ -654,16 +699,154 @@ public final class CacheManagerTest {
         assertThat(argument.getAllValues().get(0).getFilteredBlockedTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(0).getDuplicateTopicCount()).isEqualTo(0);
         assertThat(argument.getAllValues().get(0).getTopicIdsCount()).isEqualTo(2);
+        assertThat(argument.getAllValues().get(0).getTopicIds())
+                .containsExactly(topic3.getTopic(), topic1.getTopic());
         // Should return topic1 and topic2, but topic2 is blocked 2 times - so only topic1 is
         // expected.
         assertThat(argument.getAllValues().get(1).getFilteredBlockedTopicCount()).isEqualTo(2);
         assertThat(argument.getAllValues().get(1).getDuplicateTopicCount()).isEqualTo(0);
         assertThat(argument.getAllValues().get(1).getTopicIdsCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(1).getTopicIds()).containsExactly(topic1.getTopic());
         // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
         // topic1 is deduplicated.
         assertThat(argument.getAllValues().get(2).getFilteredBlockedTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(2).getDuplicateTopicCount()).isEqualTo(1);
         assertThat(argument.getAllValues().get(2).getTopicIdsCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(2).getTopicIds()).containsExactly(topic1.getTopic());
+
+        // Verify IPC calls
+        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
+    }
+
+    @Test
+    public void testGetTopics_verifyLogsWithRandomizedResponse() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        GlobalBlockedTopicsManager globalBlockedTopicsManager =
+                new GlobalBlockedTopicsManager(/* globalBlockedTopicIds= */ new HashSet<>());
+        BlockedTopicsManager blockedTopicsManager =
+                new BlockedTopicsManager(
+                        topicsDao,
+                        mMockAdServicesManager,
+                        mAppSearchConsentManager,
+                        Flags.PPAPI_AND_SYSTEM_SERVER,
+                        /* enableAppSearchConsent= */ false);
+        CacheManager cacheManager =
+                new CacheManager(
+                        topicsDao,
+                        mMockFlags,
+                        mLogger,
+                        blockedTopicsManager,
+                        globalBlockedTopicsManager);
+
+        ArgumentCaptor<GetTopicsReportedStats> argument =
+                ArgumentCaptor.forClass(GetTopicsReportedStats.class);
+
+        // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
+        // epochs: epochId in {3, 2, 1}.
+        long currentEpochId = 4L;
+        // Mock Flags to make it independent of configuration
+        when(dbHelper.supportsLoggedTopicInReturnedTopicTable()).thenReturn(true);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
+        when(mMockFlags.getTopicsPrivacyBudgetForTopicIdDistribution()).thenReturn(1f);
+        when(mMockFlags.getEnableLoggedTopic()).thenReturn(true);
+        when(mMockFlags.getEnableDatabaseSchemaVersion8()).thenReturn(true);
+        // Always log randomized topics
+        when(mRandom.nextDouble()).thenReturn(0d);
+        when(mClassifierManager.getTopicsTaxonomy()).thenReturn(ImmutableList.of(11, 22, 33));
+        when(mRandom.nextInt(anyInt())).thenReturn(0, 1, 2, 3);
+
+        Topic topic1 = Topic.create(
+                /* topic */ 1,
+                /* taxonomyVersion */ 1L,
+                /* modelVersion */ 1L,
+                /* loggedTopic */ 11);
+        Topic topic2 = Topic.create(
+                /* topic */ 2,
+                /* taxonomyVersion */ 1L,
+                /* modelVersion */ 1L,
+                /* loggedTopic */ 22);
+        Topic topic3 = Topic.create(
+                /* topic */ 3,
+                /* taxonomyVersion */ 1L,
+                /* modelVersion */ 1L,
+                /* loggedTopic */ 33);
+
+        // EpochId 1
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap1 = new HashMap<>();
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", ""), topic1);
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk1"), topic1);
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk2"), topic1);
+
+        topicsDao.persistReturnedAppTopicsMap(/* epochId */ 1L, returnedAppSdkTopicsMap1);
+
+        // EpochId 2
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap2 = new HashMap<>();
+
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", ""), topic2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk1"), topic2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk2"), topic2);
+
+        topicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, returnedAppSdkTopicsMap2);
+
+        // EpochId 3
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap3 = new HashMap<>();
+
+        returnedAppSdkTopicsMap3.put(Pair.create("app1", ""), topic3);
+        returnedAppSdkTopicsMap3.put(Pair.create("app1", "sdk1"), topic2);
+        returnedAppSdkTopicsMap3.put(Pair.create("app1", "sdk2"), topic1);
+
+        topicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
+
+        // Mock IPC calls
+        TopicParcel topicParcel2 = topic2.convertTopicToTopicParcel();
+        doReturn(List.of(topicParcel2)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
+        // block topic 2.
+        topicsDao.recordBlockedTopic(topic2);
+
+        cacheManager.loadCache(currentEpochId);
+
+        verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
+
+        // Now look at epochId in [1,..,3] by setting numberOfLookBackEpochs = 3.
+        // Should return topic1, topic2 and topic3, but topic2 is blocked - so only topic1 and
+        // topic3 are expected.
+        assertThat(
+                cacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", ""))
+                .containsExactlyElementsIn(Arrays.asList(topic1, topic3));
+        // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
+        assertThat(
+                cacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk1"))
+                .containsExactlyElementsIn(Arrays.asList(topic1));
+        // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is expected.
+        assertThat(
+                cacheManager.getTopics(
+                        /* numberOfLookBackEpochs= */ 3, currentEpochId, "app1", "sdk2"))
+                .containsExactlyElementsIn(Arrays.asList(topic1));
+
+        // GetTopics is invoked 3 times.
+        verify(mLogger, times(3)).logGetTopicsReportedStats(argument.capture());
+        assertThat(argument.getAllValues()).hasSize(3);
+        // Should return topic1, topic2 and topic3, but topic2 is blocked - so only topic1 and
+        // topic3 are returned, then expected to be replaced with 11 and 13.
+        assertThat(argument.getAllValues().get(0).getFilteredBlockedTopicCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(0).getDuplicateTopicCount()).isEqualTo(0);
+        assertThat(argument.getAllValues().get(0).getTopicIdsCount()).isEqualTo(2);
+        assertThat(argument.getAllValues().get(0).getTopicIds()).containsExactly(11, 33);
+        // Should return topic1 and topic2, but topic2 is blocked 2 times - so only topic1 is
+        // returned, then expected to be replaced with 11.
+        assertThat(argument.getAllValues().get(1).getFilteredBlockedTopicCount()).isEqualTo(2);
+        assertThat(argument.getAllValues().get(1).getDuplicateTopicCount()).isEqualTo(0);
+        assertThat(argument.getAllValues().get(1).getTopicIdsCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(1).getTopicIds()).containsExactly(11);
+        // Should return topic1 and topic2, but topic2 is blocked - so only topic1 is returned,
+        // deduplicated, then expected to be replaced with 11.
+        assertThat(argument.getAllValues().get(2).getFilteredBlockedTopicCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(2).getDuplicateTopicCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(2).getTopicIdsCount()).isEqualTo(1);
+        assertThat(argument.getAllValues().get(2).getTopicIds()).containsExactly(11);
 
         // Verify IPC calls
         verify(mMockAdServicesManager).retrieveAllBlockedTopics();

@@ -18,6 +18,7 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
@@ -37,7 +38,6 @@ import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;

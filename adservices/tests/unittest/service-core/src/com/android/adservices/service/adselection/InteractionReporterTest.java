@@ -79,6 +79,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -197,7 +198,8 @@ public class InteractionReporterTest {
                         mFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
-                        mFledgeAuthorizationFilterMock);
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled());
 
         Uri baseBuyerUri = mMockWebServerRule.uriForPath(BUYER_INTERACTION_REPORTING_PATH);
 
@@ -588,7 +590,8 @@ public class InteractionReporterTest {
                         mFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
-                        mFledgeAuthorizationFilterMock);
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled());
 
         // Allow the first call and filter the second
         doNothing()
@@ -671,7 +674,8 @@ public class InteractionReporterTest {
                         mFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
-                        mFledgeAuthorizationFilterMock);
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled());
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
@@ -734,7 +738,8 @@ public class InteractionReporterTest {
                         true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -800,7 +805,8 @@ public class InteractionReporterTest {
                         true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -893,7 +899,8 @@ public class InteractionReporterTest {
                         true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
 
         // Immediately made subsequent call should fail
         ReportInteractionTestCallback callbackSubsequentCall = callReportInteraction(inputParams);
@@ -956,7 +963,8 @@ public class InteractionReporterTest {
                         true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -1016,7 +1024,8 @@ public class InteractionReporterTest {
                         true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -1227,7 +1236,8 @@ public class InteractionReporterTest {
                         flags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
-                        mFledgeAuthorizationFilterMock);
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled());
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);

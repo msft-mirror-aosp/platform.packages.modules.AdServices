@@ -103,6 +103,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -210,6 +211,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getAttributionMode(), source.getAttributionMode());
         assertEquals(validSource.getAggregateSource(), source.getAggregateSource());
         assertEquals(validSource.getFilterDataString(), source.getFilterDataString());
+        assertEquals(validSource.getSharedFilterDataKeys(), source.getSharedFilterDataKeys());
         assertEquals(validSource.getAggregateContributions(), source.getAggregateContributions());
         assertEquals(validSource.isDebugReporting(), source.isDebugReporting());
         assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
@@ -222,6 +224,7 @@ public class MeasurementDaoTest {
                 validSource.getCoarseEventReportDestinations(),
                 source.getCoarseEventReportDestinations());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
+        assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -279,11 +282,9 @@ public class MeasurementDaoTest {
                 validSource.getFlexEventReportSpec().getMaxReports(),
                 source.getMaxEventLevelReports().intValue());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJSON(),
+                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJson(),
                 source.getTriggerSpecs());
-        assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString(),
-                source.getEventAttributionStatus());
+        assertNull(source.getEventAttributionStatus());
         assertEquals(
                 validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
                 source.getPrivacyParameters());
@@ -2697,6 +2698,60 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getNumAggregateReportsPerSource_returnsExpected() {
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(2L))
+                                .setId("source2")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(3L))
+                                .setId("source3")
+                                .build());
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 1, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"), 2, "source1"),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"), 3, "source2"));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sources.forEach(source -> insertSource(source, source.getId()));
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        reports.forEach(aggregateReportConsumer);
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source1"))
+                                    .isEqualTo(2);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source2"))
+                                    .isEqualTo(1);
+                            assertThat(measurementDao.getNumAggregateReportsPerSource("source3"))
+                                    .isEqualTo(0);
+                        });
+    }
+
+    @Test
     public void getNumAggregateReportsPerDestination_returnsExpected() {
         List<AggregateReport> reportsWithPlainDestination =
                 Arrays.asList(
@@ -3263,7 +3318,7 @@ public class MeasurementDaoTest {
                         measurementDao ->
                                 measurementDao.updateSourceAttributedTriggers(
                                         originalSource.getId(),
-                                        originalSource.getFlexEventReportSpec()));
+                                        originalSource.attributedTriggersToJsonFlexApi()));
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
@@ -3751,11 +3806,9 @@ public class MeasurementDaoTest {
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-        values.put(
-                SourceContract.EVENT_ATTRIBUTION_STATUS,
-                source.getFlexEventReportSpec() == null
-                        ? ""
-                        : source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
+        if (source.getAttributedTriggers() != null) {
+            values.put(SourceContract.EVENT_ATTRIBUTION_STATUS, source.attributedTriggersToJson());
+        }
         db.insert(SourceContract.TABLE, null, values);
 
         // Insert source destinations
@@ -4430,6 +4483,62 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void constructEventReportFromCursor_missingTriggerSummaryBucket_noException() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<EventReport> eventReportList = new ArrayList<>();
+
+        // set a valid trigger summary bucket
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("2")
+                        .setTriggerSummaryBucket("10,99")
+                        .build());
+        // set null for trigger summary bucket explicitly
+        String emptySummaryBucket = null;
+        eventReportList.add(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("3")
+                        .setTriggerSummaryBucket(emptySummaryBucket)
+                        .build());
+
+        eventReportList.forEach(
+                eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(
+                            MeasurementTables.EventReportContract.ID, UUID.randomUUID().toString());
+                    values.put(
+                            MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                            eventReport.getStringEncodedTriggerSummaryBucket());
+                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        long count =
+                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
+        assertEquals(2, count);
+
+        List<EventReport> results = new ArrayList<>();
+        Cursor cursor =
+                db.query(
+                        EventReportContract.TABLE,
+                        /* columns */ null,
+                        /* selection */ null,
+                        /* selectionArgs */ null,
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+        while (cursor.moveToNext()) {
+            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+            results.add(eventReport);
+        }
+        assertEquals(
+                eventReportList.get(0).getStringEncodedTriggerSummaryBucket(),
+                results.get(0).getStringEncodedTriggerSummaryBucket());
+        assertEquals(
+                eventReportList.get(1).getStringEncodedTriggerSummaryBucket(),
+                results.get(1).getStringEncodedTriggerSummaryBucket());
+    }
+
+    @Test
     public void testDeleteAppRecordsNotPresentForAggregateReports() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<AggregateReport> aggregateReportList = new ArrayList<>();
@@ -5021,7 +5130,9 @@ public class MeasurementDaoTest {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
         List<AsyncRegistration> asyncRegistrationList = new ArrayList<>();
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
 
+        // Will be deleted by request time
         asyncRegistrationList.add(
                 new AsyncRegistration.Builder()
                         .setId("1")
@@ -5031,18 +5142,49 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
+                        .setRetryCount(retryLimit - 1L)
                         .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
+        // Will be deleted by either request time or retry limit
         asyncRegistrationList.add(
                 new AsyncRegistration.Builder()
                         .setId("2")
+                        .setOsDestination(Uri.parse("android-app://installed-app-destination"))
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setAdIdPermission(false)
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRequestTime(1)
+                        .setRetryCount(retryLimit)
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .build());
+
+        // Will not be deleted
+        asyncRegistrationList.add(
+                new AsyncRegistration.Builder()
+                        .setId("3")
                         .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
                         .setRegistrant(Uri.parse("android-app://installed-registrant"))
                         .setTopOrigin(Uri.parse("android-app://installed-registrant"))
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
+                        .setRetryCount(retryLimit - 1L)
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .build());
+
+        // Will be deleted due to retry limit
+        asyncRegistrationList.add(
+                new AsyncRegistration.Builder()
+                        .setId("4")
+                        .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
+                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
+                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setAdIdPermission(false)
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRequestTime(Long.MAX_VALUE)
+                        .setRetryCount(retryLimit)
                         .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
@@ -5068,6 +5210,9 @@ public class MeasurementDaoTest {
                             AsyncRegistrationContract.REQUEST_TIME,
                             asyncRegistration.getRequestTime());
                     values.put(
+                            AsyncRegistrationContract.RETRY_COUNT,
+                            asyncRegistration.getRetryCount());
+                    values.put(
                             AsyncRegistrationContract.REGISTRATION_ID,
                             asyncRegistration.getRegistrationId());
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
@@ -5076,14 +5221,15 @@ public class MeasurementDaoTest {
         long count =
                 DatabaseUtils.queryNumEntries(
                         db, AsyncRegistrationContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
+        assertEquals(4, count);
 
         long earliestValidInsertion = System.currentTimeMillis() - 2;
+
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
                                 measurementDao -> measurementDao.deleteExpiredRecords(
-                                        earliestValidInsertion)));
+                                        earliestValidInsertion, retryLimit)));
 
         count =
                 DatabaseUtils.queryNumEntries(
@@ -5100,7 +5246,7 @@ public class MeasurementDaoTest {
                         /* having */ null,
                         /* orderBy */ null);
 
-        Set<String> ids = new HashSet<>(Arrays.asList("2"));
+        Set<String> ids = new HashSet<>(Arrays.asList("3"));
         List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
         while (cursor.moveToNext()) {
             AsyncRegistration asyncRegistration =
@@ -5150,9 +5296,10 @@ public class MeasurementDaoTest {
                                 dao -> dao.insertAsyncRegistration(asyncRegistration)));
 
         long earliestValidInsertion = System.currentTimeMillis() - 60000;
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         assertTrue(
                 datastoreManager.runInTransaction(
-                        (dao) -> dao.deleteExpiredRecords(earliestValidInsertion)));
+                        (dao) -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit)));
 
         Cursor cursor =
                 db.query(
@@ -5291,10 +5438,12 @@ public class MeasurementDaoTest {
         db.insert(EventReportContract.TABLE, null, eventReport_expiredTrigger);
 
         long earliestValidInsertion = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
                         measurementDao ->
-                                measurementDao.deleteExpiredRecords(earliestValidInsertion));
+                                measurementDao.deleteExpiredRecords(
+                                        earliestValidInsertion, retryLimit));
 
         List<ContentValues> deletedReports =
                 List.of(eventReport_expiredSource, eventReport_expiredTrigger);
@@ -5753,6 +5902,7 @@ public class MeasurementDaoTest {
         values.put(SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(SourceContract.SHARED_FILTER_DATA_KEYS, source.getSharedFilterDataKeys());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, source.getAggregateContributions());
         values.put(SourceContract.DEBUG_REPORTING, source.isDebugReporting());
         values.put(SourceContract.INSTALL_TIME, source.getInstallTime());
@@ -5974,7 +6124,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testDeleteAsyncRegistrationsProvidedRegistrant() {
+    public void deleteAsyncRegistrations_success() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         AsyncRegistration ar1 =
                 new AsyncRegistration.Builder()
@@ -6031,12 +6181,8 @@ public class MeasurementDaoTest {
 
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
-                        (dao) -> {
-                            dao.deleteAsyncRegistrationsProvidedRegistrant(
-                                    "android-app://installed-registrant1");
-                            dao.deleteAsyncRegistrationsProvidedRegistrant(
-                                    "android-app://installed-registrant2");
-                        });
+                        (dao) ->
+                                dao.deleteAsyncRegistrations(List.of("1", "3")));
 
         assertThat(
                         db.query(
@@ -6059,7 +6205,7 @@ public class MeasurementDaoTest {
                                         /* selection */ MeasurementTables.AsyncRegistrationContract
                                                         .ID
                                                 + " = ? ",
-                                        /* selectionArgs */ new String[] {"3"},
+                                        /* selectionArgs */ new String[] {"2"},
                                         /* groupBy */ null,
                                         /* having */ null,
                                         /* orderedBy */ null)
@@ -6511,28 +6657,6 @@ public class MeasurementDaoTest {
             throws JSONException {
         // Setup
         ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("234567")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("345678")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -6540,8 +6664,11 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source1.buildFlexibleEventReportApi();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
@@ -6549,17 +6676,39 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source2.buildFlexibleEventReportApi();
 
-        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpecCountBased();
-        testReportSpecWithTriggers.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
+        List<ReportSpec> reportSpecs = List.of(
+                source1.getFlexEventReportSpec(),
+                source2.getFlexEventReportSpec());
+
+        for (ReportSpec reportSpec : reportSpecs) {
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("123456")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("234567")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("345678")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+        }
 
         Source source3 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -6568,8 +6717,19 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setFlexEventReportSpec(testReportSpecWithTriggers)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source3.buildFlexibleEventReportApi();
+
+        source3.getFlexEventReportSpec().insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
 
         List<Source> sources = List.of(source1, source2, source3);
 
@@ -6629,28 +6789,6 @@ public class MeasurementDaoTest {
             throws JSONException {
         // Setup
         ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("234567")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-        testReportSpec.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("345678")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
-
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -6658,8 +6796,12 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source1.buildFlexibleEventReportApi();
+
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
@@ -6667,17 +6809,39 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setFlexEventReportSpec(testReportSpec)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source2.buildFlexibleEventReportApi();
 
-        ReportSpec testReportSpecWithTriggers = SourceFixture.getValidReportSpecCountBased();
-        testReportSpecWithTriggers.insertAttributedTrigger(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setTriggerId("123456")
-                        .setTriggerData(new UnsignedLong(2L))
-                        .setTriggerPriority(1L)
-                        .setTriggerValue(1L)
-                        .build());
+        List<ReportSpec> reportSpecs = List.of(
+                source1.getFlexEventReportSpec(),
+                source2.getFlexEventReportSpec());
+
+        for (ReportSpec reportSpec : reportSpecs) {
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("123456")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("234567")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            reportSpec.insertAttributedTrigger(
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("345678")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+        }
 
         Source source3 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -6686,8 +6850,19 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setFlexEventReportSpec(testReportSpecWithTriggers)
+                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
+                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
+                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
                         .build();
+        source3.buildFlexibleEventReportApi();
+
+        source3.getFlexEventReportSpec().insertAttributedTrigger(
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
 
         List<Source> sources = List.of(source1, source2, source3);
 
@@ -6799,7 +6974,7 @@ public class MeasurementDaoTest {
                             // --- DELETE behaviour ---
                             // Delete Nothing
                             // No Matches
-                            List<String> actualSources =
+                            List<String> actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
@@ -6807,11 +6982,11 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(0, actualSources.size());
+                            assertEquals(0, actualTriggers.size());
 
-                            // 1 & 2 match registrant1 and "https://subdomain1.site1.test" publisher
-                            // origin
-                            actualSources =
+                            // 1 & 2 match registrant1 and "https://subdomain1.site1.test"
+                            // destination origin
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
@@ -6821,12 +6996,11 @@ public class MeasurementDaoTest {
                                                             "https://subdomain1.site1.test")),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(2, actualSources.size());
+                            assertEquals(2, actualTriggers.size());
 
                             // Only 2 matches registrant1 and "https://subdomain1.site1.test"
-                            // publisher origin within
-                            // the range
-                            actualSources =
+                            // destination origin within the range
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(8000),
@@ -6836,10 +7010,11 @@ public class MeasurementDaoTest {
                                                             "https://subdomain1.site1.test")),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(1, actualSources.size());
+                            assertEquals(1, actualTriggers.size());
 
-                            // 1,2 & 3 matches registrant1 and "https://site1.test" publisher origin
-                            actualSources =
+                            // 1,2 & 3 matches registrant1 and "https://site1.test" destination
+                            // origin
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
@@ -6847,10 +7022,10 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(WebUtil.validUri("https://site1.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(3, actualSources.size());
+                            assertEquals(3, actualTriggers.size());
 
                             // 3 matches origin and 4 matches domain URI
-                            actualSources =
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
@@ -6860,12 +7035,12 @@ public class MeasurementDaoTest {
                                                             "https://subdomain2.site1.test")),
                                             List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(2, actualSources.size());
+                            assertEquals(2, actualTriggers.size());
 
                             // --- PRESERVE (anti-match exception registrant) behaviour ---
                             // Preserve Nothing
                             // 1,2,3 & 4 are match registrant1
-                            actualSources =
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
@@ -6873,11 +7048,11 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(4, actualSources.size());
+                            assertEquals(4, actualTriggers.size());
 
                             // 3 & 4 match registrant1 and don't match
-                            // "https://subdomain1.site1.test" publisher origin
-                            actualSources =
+                            // "https://subdomain1.site1.test" destination origin
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
@@ -6887,11 +7062,11 @@ public class MeasurementDaoTest {
                                                             "https://subdomain1.site1.test")),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(2, actualSources.size());
+                            assertEquals(2, actualTriggers.size());
 
                             // 3 & 4 match registrant1, in range and don't match
                             // "https://subdomain1.site1.test"
-                            actualSources =
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(8000),
@@ -6901,11 +7076,11 @@ public class MeasurementDaoTest {
                                                             "https://subdomain1.site1.test")),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(2, actualSources.size());
+                            assertEquals(2, actualTriggers.size());
 
                             // Only 4 matches registrant1, in range and don't match
                             // "https://site1.test"
-                            actualSources =
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(0),
@@ -6913,11 +7088,11 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(WebUtil.validUri("https://site1.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(1, actualSources.size());
+                            assertEquals(1, actualTriggers.size());
 
                             // only 2 is registrant1 based, in range and does not match either
                             // site2.test or subdomain2.site1.test
-                            actualSources =
+                            actualTriggers =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
                                             Instant.ofEpochMilli(10000),
@@ -6927,7 +7102,210 @@ public class MeasurementDaoTest {
                                                             "https://subdomain2.site1.test")),
                                             List.of(WebUtil.validUri("https://site2.test")),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(1, actualSources.size());
+                            assertEquals(1, actualTriggers.size());
+                        });
+    }
+
+    @Test
+    public void fetchMatchingAsyncRegistrations_bringsMatchingAsyncRegistrations() {
+        // Setup
+        AsyncRegistration asyncRegistration1 =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(
+                                WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setRequestTime(5000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("asyncRegistration1")
+                        .build();
+        AsyncRegistration asyncRegistration2 =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(
+                                WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setRequestTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("asyncRegistration2")
+                        .build();
+        AsyncRegistration asyncRegistration3 =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(
+                                WebUtil.validUri("https://subdomain2.site1.test"))
+                        .setRequestTime(15000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("asyncRegistration3")
+                        .build();
+        AsyncRegistration asyncRegistration4 =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(
+                                WebUtil.validUri("https://subdomain2.site2.test"))
+                        .setRequestTime(15000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("asyncRegistration4")
+                        .build();
+        AsyncRegistration asyncRegistration5 =
+                AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                        .setTopOrigin(
+                                WebUtil.validUri("https://subdomain2.site1.test"))
+                        .setRequestTime(20000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant2"))
+                        .setId("asyncRegistration5")
+                        .build();
+        List<AsyncRegistration> asyncRegistrations = List.of(
+                asyncRegistration1, asyncRegistration2, asyncRegistration3, asyncRegistration4,
+                asyncRegistration5);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        asyncRegistrations.forEach(
+                asyncRegistration -> {
+                    ContentValues values = new ContentValues();
+                    values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
+                    values.put(
+                            AsyncRegistrationContract.TOP_ORIGIN,
+                            asyncRegistration.getTopOrigin().toString());
+                    values.put(AsyncRegistrationContract.REQUEST_TIME,
+                            asyncRegistration.getRequestTime());
+                    values.put(AsyncRegistrationContract.REGISTRANT,
+                            asyncRegistration.getRegistrant().toString());
+                    values.put(AsyncRegistrationContract.REGISTRATION_ID,
+                            UUID.randomUUID().toString());
+                    db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
+                });
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        dao -> {
+                            // --- DELETE behaviour ---
+                            // Delete Nothing
+                            // No Matches
+                            List<String> actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(),
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                            assertEquals(0, actualAsyncRegistrations.size());
+
+                            // 1 & 2 match registrant1 and "https://subdomain1.site1.test" top-
+                            // origin origin
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                            assertEquals(2, actualAsyncRegistrations.size());
+
+                            // Only 2 matches registrant1 and "https://subdomain1.site1.test"
+                            // top-origin origin within the range
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(8000),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                            assertEquals(1, actualAsyncRegistrations.size());
+
+                            // 1,2 & 3 matches registrant1 and "https://site1.test" top-origin
+                            // origin
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(),
+                                            List.of(WebUtil.validUri("https://site1.test")),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                            assertEquals(3, actualAsyncRegistrations.size());
+
+                            // 3 matches origin and 4 matches domain URI
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(10000),
+                                            Instant.ofEpochMilli(20000),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain2.site1.test")),
+                                            List.of(WebUtil.validUri("https://site2.test")),
+                                            DeletionRequest.MATCH_BEHAVIOR_DELETE);
+                            assertEquals(2, actualAsyncRegistrations.size());
+
+                            // --- PRESERVE (anti-match exception registrant) behaviour ---
+                            // Preserve Nothing
+                            // 1,2,3 & 4 are match registrant1
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(),
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                            assertEquals(4, actualAsyncRegistrations.size());
+
+                            // 3 & 4 match registrant1 and don't match
+                            // "https://subdomain1.site1.test" top-origin origin
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                            assertEquals(2, actualAsyncRegistrations.size());
+
+                            // 3 & 4 match registrant1, in range and don't match
+                            // "https://subdomain1.site1.test"
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(8000),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain1.site1.test")),
+                                            List.of(),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                            assertEquals(2, actualAsyncRegistrations.size());
+
+                            // Only 4 matches registrant1, in range and don't match
+                            // "https://site1.test"
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(0),
+                                            Instant.ofEpochMilli(50000),
+                                            List.of(),
+                                            List.of(WebUtil.validUri("https://site1.test")),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                            assertEquals(1, actualAsyncRegistrations.size());
+
+                            // only 2 is registrant1 based, in range and does not match either
+                            // site2.test or subdomain2.site1.test
+                            actualAsyncRegistrations =
+                                    dao.fetchMatchingAsyncRegistrations(
+                                            Uri.parse("android-app://com.registrant1"),
+                                            Instant.ofEpochMilli(10000),
+                                            Instant.ofEpochMilli(20000),
+                                            List.of(
+                                                    WebUtil.validUri(
+                                                            "https://subdomain2.site1.test")),
+                                            List.of(WebUtil.validUri("https://site2.test")),
+                                            DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
+                            assertEquals(1, actualAsyncRegistrations.size());
                         });
     }
 
@@ -7805,6 +8183,7 @@ public class MeasurementDaoTest {
                 .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
                 .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
+                .setSharedFilterDataKeys(SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(UUID.randomUUID().toString())
                 .setSharedAggregationKeys(SHARED_AGGREGATE_KEYS)
@@ -8056,6 +8435,15 @@ public class MeasurementDaoTest {
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
         return new AggregateReport.Builder()
                 .setId(String.valueOf(id))
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .build();
+    }
+
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setSourceId(sourceId)
                 .setAttributionDestination(Uri.parse(attributionDestination))
                 .build();
     }

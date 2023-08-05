@@ -33,4 +33,10 @@ public class UiConstants {
 
     public static final String SYSTEM_UI_RESOURCE_ID =
             "com.android.systemui:id/notification_stack_scroller";
+
+    public enum UX {
+        GA_UX,
+        BETA_UX,
+        U18_UX,
+    }
 }

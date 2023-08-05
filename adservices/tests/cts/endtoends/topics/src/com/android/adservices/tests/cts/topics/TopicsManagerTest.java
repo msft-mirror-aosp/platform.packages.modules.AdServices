@@ -25,10 +25,14 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesSupportRule;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesSupportedRule;
+import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupported;
+import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupportedOrNot;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
@@ -49,6 +53,7 @@ import java.util.concurrent.Executors;
 
 // TODO(b/243062789): Test should not use CountDownLatch or Sleep.
 @RunWith(JUnit4.class)
+@RequiresAdServicesSupportedOrNot
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
     // The JobId of the Epoch Computation.
@@ -100,16 +105,30 @@ public class TopicsManagerTest {
                     + " apex.";
 
     // Skip the test if it runs on unsupported platforms.
-    @Rule public final AdServicesSupportRule mAdServicesSupportRule = new AdServicesSupportRule();
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // Check test behavior whether or not the feature is enabled
+    //    @Rule(order = 1)
+    // TODO(b/284971005): re-add @Rule once there is a runner to set the flag and/or a new rule
+    // to set device config flags, otherwise tests will fail on T- (notice that this rule was not
+    // really working before for that same reason, i.e., it would always run the tests in the
+    // SUPPORTED mode)
+    public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
 
     @Before
     public void setup() throws Exception {
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
-        // We need to skip 3 epochs so that if there is any usage from other test runs, it will
-        // not be used for epoch retrieval.
-        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+        if (adServicesSupportedRule.isFeatureSupported()) {
+            // We need to skip 3 epochs so that if there is any usage from other test runs, it will
+            // not be used for epoch retrieval.
+            Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+        } else {
+            Log.v(TAG, "setup(): no need to sleep when adservices is not supported");
+        }
 
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
@@ -130,6 +149,7 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @RequiresAdServicesSupported
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         overrideTopicsKillSwitch(true);

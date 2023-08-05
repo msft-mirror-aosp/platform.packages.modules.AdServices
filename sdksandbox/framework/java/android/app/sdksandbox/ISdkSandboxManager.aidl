@@ -24,6 +24,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 
@@ -48,6 +49,7 @@ interface ISdkSandboxManager {
     List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, long timeAppCalledSystemServer);
     oneway void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
+    void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
     void logLatencyFromSystemServerToApp(in String method, int latency);
 
     // TODO(b/282239822): Remove this workaround on Android VIC

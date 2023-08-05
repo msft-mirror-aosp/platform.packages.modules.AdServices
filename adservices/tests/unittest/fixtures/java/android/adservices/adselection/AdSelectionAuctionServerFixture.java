@@ -47,7 +47,7 @@ public class AdSelectionAuctionServerFixture {
                 AuctionResult.newBuilder()
                         .setAdRenderUrl("https://foo.bar")
                         .setCustomAudienceName("test CA")
-                        .setCustomAudienceOwner("test owner")
+                        .setBuyer("test-buyer.com")
                         .setScore(1.4f)
                         .setBid(1.2f)
                         .setIsChaff(false)

@@ -32,13 +32,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -47,7 +47,6 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -289,6 +288,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(*) FROM %1$s WHERE %2$s = '%3$s'",
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.SOURCE_ID,
+                        sourceId);
+        return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
+    }
+
+    @Override
     public EventReport getEventReport(@NonNull String eventReportId) throws DatastoreException {
         try (Cursor cursor =
                 mSQLTransaction
@@ -393,6 +404,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getFilterDataString());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                source.getSharedFilterDataKeys());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         values.put(
                 MeasurementTables.SourceContract.DEBUG_KEY,
@@ -419,10 +433,7 @@ class MeasurementDao implements IMeasurementDao {
         if (source.getFlexEventReportSpec() != null) {
             values.put(
                     MeasurementTables.SourceContract.TRIGGER_SPECS,
-                    source.getFlexEventReportSpec().encodeTriggerSpecsToJSON());
-            values.put(
-                    MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
-                    source.getFlexEventReportSpec().encodeTriggerStatusToJSON().toString());
+                    source.getFlexEventReportSpec().encodeTriggerSpecsToJson());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                     source.getFlexEventReportSpec().encodePrivacyParametersToJSONString());
@@ -433,6 +444,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
                 source.getEventReportWindows());
+        values.put(
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
+                getNullableUnsignedLong(source.getSharedDebugKey()));
 
         long rowId =
                 mSQLTransaction
@@ -644,12 +658,12 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateSourceAttributedTriggers(@NonNull String sourceId, ReportSpec reportSpec)
-            throws DatastoreException {
+    public void updateSourceAttributedTriggers(@NonNull String sourceId,
+            @Nullable String attributionStatus) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(
                 MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
-                reportSpec.encodeTriggerStatusToJSON().toString());
+                attributionStatus);
         long rows =
                 mSQLTransaction
                         .getDatabase()
@@ -697,7 +711,26 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.EventReportContract.ID + " = ?",
                                 new String[] {eventReportId});
         if (rows != 1) {
-            throw new DatastoreException("EventReport update failed.");
+            throw new DatastoreException("EventReport status update failed.");
+        }
+    }
+
+    @Override
+    public void updateEventReportSummaryBucket(
+            @NonNull String eventReportId, @NonNull String summaryBucket)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET, summaryBucket);
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                MeasurementTables.EventReportContract.TABLE,
+                                values,
+                                MeasurementTables.EventReportContract.ID + " = ?",
+                                new String[] {eventReportId});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport summary bucket update failed.");
         }
     }
 
@@ -952,6 +985,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
                 eventReport.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                eventReport.getStringEncodedTriggerSummaryBucket());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -1559,7 +1595,8 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException {
+    public void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+            throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         String earliestValidInsertionStr = String.valueOf(earliestValidInsertion);
         // Deleting the sources and triggers will take care of deleting records from
@@ -1599,8 +1636,9 @@ class MeasurementDao implements IMeasurementDao {
         // Async Registration table
         db.delete(
                 MeasurementTables.AsyncRegistrationContract.TABLE,
-                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ?",
-                new String[] {earliestValidInsertionStr});
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ? OR "
+                        + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT + " >= ? ",
+                new String[] {earliestValidInsertionStr, String.valueOf(registrationRetryLimit)});
 
         // Cleanup unnecessary Registration Redirect Counts
         String subQuery =
@@ -1714,6 +1752,54 @@ class MeasurementDao implements IMeasurementDao {
         }
 
         return triggerIds.build();
+    }
+
+    @Override
+    public List<String> fetchMatchingAsyncRegistrations(
+            @NonNull Uri registrant,
+            @NonNull Instant start,
+            @NonNull Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            // TODO: change this to selection and invert selection mode
+            @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException {
+        Objects.requireNonNull(registrant);
+        Objects.requireNonNull(origins);
+        Objects.requireNonNull(domains);
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
+        validateRange(start, end);
+        Instant cappedStart = capDeletionRange(start);
+        Instant cappedEnd = capDeletionRange(end);
+        Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
+        Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
+        Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
+
+        final SQLiteDatabase db = mSQLTransaction.getDatabase();
+        ImmutableList.Builder<String> asyncRegistrationIds = new ImmutableList.Builder<>();
+        try (Cursor cursor =
+                db.query(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        new String[] {MeasurementTables.AsyncRegistrationContract.ID},
+                        mergeConditions(
+                                " AND ",
+                                registrantMatcher.apply(
+                                        MeasurementTables.AsyncRegistrationContract.REGISTRANT),
+                                siteMatcher.apply(
+                                        MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN),
+                                timeMatcher.apply(
+                                        MeasurementTables.AsyncRegistrationContract.REQUEST_TIME)),
+                        null,
+                        null,
+                        null,
+                        null)) {
+            while (cursor.moveToNext()) {
+                asyncRegistrationIds.add(cursor.getString(0));
+            }
+        }
+
+        return asyncRegistrationIds.build();
     }
 
     private static Function<String, String> getRegistrantMatcher(Uri registrant) {
@@ -2249,6 +2335,15 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.ID);
     }
 
+    @Override
+    public void deleteAsyncRegistrations(@NonNull List<String> asyncRegistrationIds)
+            throws DatastoreException {
+        deleteRecordsColumnBased(
+                asyncRegistrationIds,
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.ID);
+    }
+
     private void deleteRecordsColumnBased(
             List<String> columnValues, String tableName, String columnName)
             throws DatastoreException {
@@ -2395,7 +2490,7 @@ class MeasurementDao implements IMeasurementDao {
             return Optional.of(trigger.getAttributionDestination().toString());
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
-                    Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
+                    WebAddresses.topPrivateDomainAndScheme(trigger.getAttributionDestination());
             return topPrivateDomainAndScheme.map(Uri::toString);
         }
     }
@@ -2403,7 +2498,7 @@ class MeasurementDao implements IMeasurementDao {
     private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
-                : Web.topPrivateDomainAndScheme(uri);
+                : WebAddresses.topPrivateDomainAndScheme(uri);
     }
 
     private static String getPublisherWhereStatement(
@@ -2562,21 +2657,6 @@ class MeasurementDao implements IMeasurementDao {
             throw new DatastoreException("Async Registration already deleted");
         }
         LogUtil.d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
-    }
-
-    @Override
-    public void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri)
-            throws DatastoreException {
-        SQLiteDatabase db = mSQLTransaction.getDatabase();
-        int rows =
-                db.delete(
-                        MeasurementTables.AsyncRegistrationContract.TABLE,
-                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
-                        new String[] {uri});
-        LogUtil.d(
-                "MeasurementDao: deleteAsyncRegistrationsProvidedRegistrant: rows"
-                        + " affected="
-                        + rows);
     }
 
     @Override

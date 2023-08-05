@@ -126,7 +126,7 @@ public class FledgeMaintenanceTasksWorker {
         }
 
         Instant expirationInstant =
-                mClock.instant().minusSeconds(KeyedFrequencyCap.MAX_INTERVAL.toSeconds());
+                mClock.instant().minusSeconds(KeyedFrequencyCap.MAX_INTERVAL.getSeconds());
 
         sLogger.v(
                 "Clearing expired Frequency Cap histogram events older than %s", expirationInstant);

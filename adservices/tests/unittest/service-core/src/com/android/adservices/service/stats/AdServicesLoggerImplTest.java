@@ -87,6 +87,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
+import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 
@@ -597,5 +598,47 @@ public class AdServicesLoggerImplTest {
                 AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION);
         assertEquals(argumentCaptor.getValue().getRegistrationStatus(), UnknownEnumValue);
         assertEquals(argumentCaptor.getValue().getRegistrationDelay(), registrationDelay);
+    }
+
+    @Test
+    public void testLogEnrollmentDataStats() {
+        int transactionTypeEnumValue =
+                EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.ordinal();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEnrollmentDataStats(transactionTypeEnumValue, true, 100);
+        verify(mStatsdLoggerMock)
+                .logEnrollmentDataStats(eq(transactionTypeEnumValue), eq(true), eq(100));
+    }
+
+    @Test
+    public void testLogEnrollmentMatchStats() {
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEnrollmentMatchStats(true, 100);
+        verify(mStatsdLoggerMock).logEnrollmentMatchStats(eq(true), eq(100));
+    }
+
+    @Test
+    public void testLogEnrollmentFileDownloadStats() {
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEnrollmentFileDownloadStats(true, 100);
+        verify(mStatsdLoggerMock).logEnrollmentFileDownloadStats(eq(true), eq(100));
+    }
+
+    @Test
+    public void testLogEnrollmentFailedStats() {
+        int dataFileGroupStatusEnumValue =
+                EnrollmentStatus.DataFileGroupStatus.PENDING_CUSTOM_VALIDATION.ordinal();
+        int errorCauseEnumValue =
+                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.ordinal();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEnrollmentFailedStats(
+                100, dataFileGroupStatusEnumValue, 10, "SomeSdkName", errorCauseEnumValue);
+        verify(mStatsdLoggerMock)
+                .logEnrollmentFailedStats(
+                        eq(100),
+                        eq(dataFileGroupStatusEnumValue),
+                        eq(10),
+                        eq("SomeSdkName"),
+                        eq(errorCauseEnumValue));
     }
 }

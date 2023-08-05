@@ -18,12 +18,12 @@ package com.android.adservices.service.measurement.util;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import java.util.Optional;
@@ -53,9 +53,9 @@ public final class Enrollment {
             EnrollmentDao enrollmentDao,
             Context context,
             Flags flags) {
-        if (Web.isLocalhost(registrationUri)) {
+        if (WebAddresses.isLocalhost(registrationUri)) {
             return Optional.of(
-                    Web.isLocalhostIp(registrationUri)
+                    WebAddresses.isLocalhostIp(registrationUri)
                             ? LOCALHOST_IP_ENROLLMENT_ID
                             : LOCALHOST_ENROLLMENT_ID);
         }
@@ -78,10 +78,8 @@ public final class Enrollment {
                     registrationUri, enrollmentData.getEnrollmentId());
             return Optional.empty();
         }
-        // TODO(b/269798827): Enable for R.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && !AppManifestConfigHelper.isAllowedAttributionAccess(
-                        context, packageName, enrollmentData.getEnrollmentId())) {
+        if (!AppManifestConfigHelper.isAllowedAttributionAccess(
+                context, packageName, enrollmentData.getEnrollmentId())) {
             LogUtil.w(
                     "Enrollment check failed, Reason: Enrollment Id missing from "
                             + "App Manifest AdTech allowlist, "

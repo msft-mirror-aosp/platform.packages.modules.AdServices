@@ -185,7 +185,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             getRegisterSourceOrTriggerEnforcementForegroundStatus(
                                                     request, mFlags)),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -246,7 +246,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -319,7 +319,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -376,7 +376,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
@@ -421,7 +421,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                 mAppImportanceFilter,
                                                 enforceForeground),
                                         new AppPackageAccessResolver(
-                                                mFlags.getPpapiAppAllowList(),
+                                                mFlags.getMsmtApiAppAllowList(),
                                                 statusParam.getAppPackageName()));
 
                         final Optional<IAccessResolver> optionalResolver =

@@ -18,7 +18,7 @@ package com.android.sdksandbox;
 
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
-import com.android.sdksandbox.SandboxLatencyInfo;
+import android.app.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface IRequestSurfacePackageFromSdkCallback {

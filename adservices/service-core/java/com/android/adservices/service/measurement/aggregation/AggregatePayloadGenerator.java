@@ -82,6 +82,7 @@ public class AggregatePayloadGenerator {
             final BigInteger triggerDataKey;
             Optional<BigInteger> keyMappingForAdtech =
                     Optional.ofNullable(trigger.parseAdtechKeyMapping())
+                            // Derived source has parent source's enrollment ID
                             .map(map -> map.get(source.getEnrollmentId()));
             if (source.getParentId() != null && keyMappingForAdtech.isPresent()) {
                 int keyOffset =

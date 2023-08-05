@@ -21,6 +21,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -161,11 +162,15 @@ public class AdServicesCommonServiceImplTest {
         assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
     }
 
-    // For the new entry point logic, only enrolled user can see the entry point.
+    // For the new entry point logic, only enrolled user that has gone through UxEngine
+    // can see the entry point.
     @Test
-    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws InterruptedException {
+    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2()
+            throws InterruptedException {
         doReturn(false).when(mUxStatesManager).isEnrolledUser();
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(GA_UX).when(mConsentManager).getUx();
+
         mCommonService =
                 new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
         // Calling get adservice status, init set the flag to true, expect to return true

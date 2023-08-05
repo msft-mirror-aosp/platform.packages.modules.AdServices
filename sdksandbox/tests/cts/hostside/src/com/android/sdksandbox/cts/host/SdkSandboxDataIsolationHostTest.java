@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
+import android.platform.test.annotations.LargeTest;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -121,6 +122,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      * app exists, when trying to access other user data.
      */
     @Test
+    @LargeTest // Creates user
     public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
         // TODO(b/254608808,b/214241165): Remove once merged into QPR.
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
@@ -143,6 +145,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      * isolation has occurred.
      */
     @Test
+    @LargeTest // Creates volume
     public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes() throws Exception {
         // TODO(b/254608808,b/214241165): Remove once merged into QPR.
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());

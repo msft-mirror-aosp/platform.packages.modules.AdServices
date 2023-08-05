@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.util;
 
+import android.annotation.NonNull;
+import android.annotation.Nullable;
+
 import com.android.adservices.LogUtil;
 
 import java.security.MessageDigest;
@@ -27,7 +30,20 @@ public final class AdIdEncryption {
 
     private AdIdEncryption() {}
 
-    public static String encryptAdIdAndEnrollmentSha256(String adIdValue, String enrollmentId) {
+    /**
+     * Encrypts adId and enrollmentId combination with SHA-256 algorithm.
+     *
+     * @param adIdValue adId to be encrypted
+     * @param enrollmentId AdTech enrollment ID to encrypt with
+     * @return encrypted adId
+     */
+    public static String encryptAdIdAndEnrollmentSha256(
+            @Nullable String adIdValue, @NonNull String enrollmentId) {
+        if (adIdValue == null) {
+            LogUtil.d("Provided adId is null; not encrypting, returning null");
+            return null;
+        }
+
         StringBuilder adIdSha256 = new StringBuilder();
         String original = adIdValue + enrollmentId;
         try {

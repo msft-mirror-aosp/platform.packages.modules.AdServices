@@ -119,8 +119,9 @@ message AuctionResult {
   // Name of the Custom Audience, the remarketing ad belongs to.
   string custom_audience_name = 3;
 
-  // Domain of the Buyer who owns the custom audience that includes the ad.
-  string custom_audience_owner = 4;
+  // Domain of the Buyer who owns the winner the ad.
+  // Note: When compared to B&A this corresponds to interest_group_owner field.
+  string buyer = 4;
 
   // Score of the ad determined during the auction. Any value that is zero or
   // negative indicates that the ad cannot win the auction. The winner of the

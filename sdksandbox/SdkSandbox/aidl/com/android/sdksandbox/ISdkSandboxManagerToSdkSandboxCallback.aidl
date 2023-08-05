@@ -20,7 +20,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
+import android.app.sdksandbox.SandboxLatencyInfo;
 
 /** @hide */
 oneway interface ISdkSandboxManagerToSdkSandboxCallback {

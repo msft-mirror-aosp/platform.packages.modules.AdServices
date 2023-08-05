@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
@@ -59,7 +58,6 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WebUtil;
-import com.android.adservices.service.measurement.util.AdIdEncryption;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -227,6 +225,7 @@ public final class AsyncTriggerFetcherTest {
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
         when(mFlags.getMeasurementEnableAraParsingAlignmentV1())
                 .thenReturn(mAraParsingAlignmentV1Enabled);
+        when(mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()).thenReturn(20);
     }
 
     public void cleanup() throws InterruptedException {
@@ -3821,7 +3820,9 @@ public final class AsyncTriggerFetcherTest {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder tooManyKeys = new StringBuilder("[");
         tooManyKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
+                IntStream.range(
+                                0,
+                                mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration() + 1)
                         .mapToObj(i -> "aggregate-key-" + i)
                         .collect(Collectors.joining(",")));
         tooManyKeys.append("]");
@@ -4719,7 +4720,9 @@ public final class AsyncTriggerFetcherTest {
     public void testTriggerRequestWithAggregatableValues_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("{");
         tooManyKeys.append(
-                IntStream.range(0, MAX_AGGREGATE_KEYS_PER_REGISTRATION + 1)
+                IntStream.range(
+                                0,
+                                mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration() + 1)
                         .mapToObj(i -> String.format("\"key-%s\": 12345,", i))
                         .collect(Collectors.joining(",")));
         tooManyKeys.append("}");
@@ -5537,10 +5540,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
-
-        String expectedAdIdHash =
-                AdIdEncryption.encryptAdIdAndEnrollmentSha256(PLATFORM_AD_ID_VALUE, ENROLLMENT_ID);
-        assertEquals(expectedAdIdHash, result.getPlatformAdId());
+        assertEquals(PLATFORM_AD_ID_VALUE, result.getPlatformAdId());
     }
 
     @Test

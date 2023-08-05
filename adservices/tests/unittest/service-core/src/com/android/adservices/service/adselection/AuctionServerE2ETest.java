@@ -57,12 +57,12 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.adselection.DBEncryptionKey;
-import com.android.adservices.data.adselection.DBReportingUris;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -76,6 +76,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -137,7 +138,7 @@ public class AuctionServerE2ETest {
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
                     .setCustomAudienceName("test-name")
-                    .setCustomAudienceOwner("test-owner")
+                    .setBuyer("test-buyer.com")
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
@@ -166,7 +167,7 @@ public class AuctionServerE2ETest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private ReportingUrisDao mReportingUrisDao;
+    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private AdSelectionService mAdSelectionService;
@@ -208,7 +209,7 @@ public class AuctionServerE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mReportingUrisDao = serverDb.reportingUrisDao();
+        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         when(ConsentManager.getInstance(mContext)).thenReturn(mConsentManagerMock);
@@ -231,6 +232,10 @@ public class AuctionServerE2ETest {
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+
+        doReturn(DevContext.createForDevOptionsDisabled())
+                .when(mDevContextFilterMock)
+                .createDevContext();
     }
 
     @After
@@ -350,7 +355,7 @@ public class AuctionServerE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -416,6 +421,7 @@ public class AuctionServerE2ETest {
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
+                        .setSeller(SELLER)
                         .setAdSelectionId(adSelectionId)
                         .setAdSelectionResult(prepareAuctionResultBytes())
                         .build();
@@ -433,10 +439,13 @@ public class AuctionServerE2ETest {
                 adSelectionId,
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdSelectionId());
-        DBReportingUris dbReportingUris = mReportingUrisDao.getReportingUris(adSelectionId);
-        Assert.assertEquals(BUYER_REPORTING_URI, dbReportingUris.getBuyerReportingUri().toString());
+        DBAuctionServerAdSelection dbAuctionServerAdSelection =
+                mAuctionServerAdSelectionDao.getAuctionServerAdSelection(adSelectionId);
         Assert.assertEquals(
-                SELLER_REPORTING_URI, dbReportingUris.getSellerReportingUri().toString());
+                BUYER_REPORTING_URI, dbAuctionServerAdSelection.getBuyerReportingUri().toString());
+        Assert.assertEquals(
+                SELLER_REPORTING_URI,
+                dbAuctionServerAdSelection.getSellerReportingUri().toString());
     }
 
     @Test
@@ -463,7 +472,7 @@ public class AuctionServerE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -521,6 +530,7 @@ public class AuctionServerE2ETest {
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
+                        .setSeller(SELLER)
                         .setAdSelectionId(adSelectionId)
                         .setAdSelectionResult(responseBytes)
                         .build();
@@ -560,7 +570,7 @@ public class AuctionServerE2ETest {
                 mFrequencyCapDao,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
-                mReportingUrisDao,
+                mAuctionServerAdSelectionDao,
                 mAdServicesHttpsClientMock,
                 mDevContextFilterMock,
                 mLightweightExecutorService,

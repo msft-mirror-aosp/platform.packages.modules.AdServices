@@ -76,5 +76,5 @@
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex"/>
+            value="com.google.android.extservices.apex"/>
 </configuration>

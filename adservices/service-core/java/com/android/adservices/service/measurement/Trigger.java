@@ -21,13 +21,13 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
-import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -328,9 +328,8 @@ public class Trigger {
     }
 
     /**
-     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
-     * ID, to be matched with a web source's {@link Source#getDebugAdId()} value at the time of
-     * generating reports.
+     * Returns actual platform AdID from getAdId() on app trigger registration, to be matched with a
+     * web source's {@link Trigger#getDebugAdId()} value at the time of generating reports.
      */
     @Nullable
     public String getPlatformAdId() {
@@ -530,7 +529,7 @@ public class Trigger {
         if (mDestinationType == EventSurfaceType.APP) {
             return mAttributionDestination;
         } else {
-            Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
+            Optional<Uri> uri = WebAddresses.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
         }
     }

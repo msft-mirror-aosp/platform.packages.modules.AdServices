@@ -42,8 +42,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
-import com.android.adservices.data.adselection.DBReportingUris;
-import com.android.adservices.data.adselection.ReportingUrisDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -52,6 +52,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
@@ -78,7 +79,8 @@ public class PersistAdSelectionResultRunnerTest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
     private static final Uri AD_RENDER_URI = Uri.parse("test.com/render_uri");
-
+    private static final AdTechIdentifier WINNER_BUYER =
+            AdTechIdentifier.fromString("winner-buyer.com");
     private static final String BUYER_REPORTING_URI = "https://foobarbuyer.reporting";
     private static final String SELLER_REPORTING_URI = "https://foobarseller.reporting";
     private static final WinReportingUrls WIN_REPORTING_URLS =
@@ -94,10 +96,12 @@ public class PersistAdSelectionResultRunnerTest {
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
                     .setCustomAudienceName("test-name")
-                    .setCustomAudienceOwner("test-owner")
+                    .setBuyer(WINNER_BUYER.toString())
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
+    private static final AuctionResult CHAFF_AUCTION_RESULT =
+            AuctionResult.newBuilder().setIsChaff(true).build();
     private static final byte[] CIPHER_TEXT_BYTES =
             "encrypted-cipher-for-auction-result".getBytes();
     private static final long AD_SELECTION_ID = 12345L;
@@ -106,7 +110,7 @@ public class PersistAdSelectionResultRunnerTest {
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
-    @Spy private ReportingUrisDao mReportingUrisDaoSpy;
+    @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -119,10 +123,10 @@ public class PersistAdSelectionResultRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mReportingUrisDaoSpy =
+        mServerAdSelectionDaoSpy =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
-                        .reportingUrisDao();
+                        .auctionServerAdSelectionDao();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
@@ -143,11 +147,12 @@ public class PersistAdSelectionResultRunnerTest {
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
-                        mReportingUrisDaoSpy,
+                        mServerAdSelectionDaoSpy,
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -185,13 +190,46 @@ public class PersistAdSelectionResultRunnerTest {
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
-        verify(mReportingUrisDaoSpy, times(1))
-                .insertReportingUris(
-                        DBReportingUris.builder()
+        verify(mServerAdSelectionDaoSpy, times(1))
+                .updateAuctionServerAdSelection(
+                        DBAuctionServerAdSelection.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
+                                .setSeller(SELLER)
+                                .setWinnerBuyer(WINNER_BUYER)
+                                .setWinnerAdRenderUri(AD_RENDER_URI)
                                 .setBuyerReportingUri(Uri.parse(BUYER_REPORTING_URI))
                                 .setSellerReportingUri(Uri.parse(SELLER_REPORTING_URI))
                                 .build());
+    }
+
+    @Test
+    public void testRunner_persistAdSelectionResultChaff_noResultPersisted() throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(prepareDecryptedChaffAuctionResult())
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setPersistAdSelectionResultRequest(
+                                new PersistAdSelectionResultRequest.Builder()
+                                        .setSeller(SELLER)
+                                        .setAdSelectionId(AD_SELECTION_ID)
+                                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                                        .build())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        verifyZeroInteractions(mServerAdSelectionDaoSpy);
     }
 
     @Test
@@ -206,7 +244,8 @@ public class PersistAdSelectionResultRunnerTest {
                         eq(true),
                         eq(CALLER_UID),
                         eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT));
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -228,6 +267,18 @@ public class PersistAdSelectionResultRunnerTest {
 
     private byte[] prepareDecryptedAuctionResult() {
         byte[] auctionResultBytes = AUCTION_RESULT.toByteArray();
+        AuctionServerDataCompressor.CompressedData compressedData =
+                mDataCompressor.compress(
+                        AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
+        AuctionServerPayloadFormattedData formattedData =
+                mPayloadFormatter.apply(
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
+                        AuctionServerDataCompressorGzip.VERSION);
+        return formattedData.getData();
+    }
+
+    private byte[] prepareDecryptedChaffAuctionResult() {
+        byte[] auctionResultBytes = CHAFF_AUCTION_RESULT.toByteArray();
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
