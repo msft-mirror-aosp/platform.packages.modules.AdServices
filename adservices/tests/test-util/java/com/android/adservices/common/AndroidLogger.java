@@ -20,6 +20,9 @@ import android.util.Log;
 import com.android.adservices.common.Logger.LogLevel;
 import com.android.adservices.common.Logger.RealLogger;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 import java.util.Objects;
 
 public final class AndroidLogger implements RealLogger {
@@ -35,7 +38,8 @@ public final class AndroidLogger implements RealLogger {
     }
 
     @Override
-    public void log(LogLevel level, String msgFmt, Object... msgArgs) {
+    @FormatMethod
+    public void log(LogLevel level, @FormatString String msgFmt, Object... msgArgs) {
         String message = String.format(msgFmt, msgArgs);
         switch (level) {
             case ERROR:

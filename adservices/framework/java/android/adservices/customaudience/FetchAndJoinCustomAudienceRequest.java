@@ -35,7 +35,9 @@ import java.util.Objects;
  * Any field set by the caller cannot be overridden by the custom audience fetched from the {@code
  * fetchUri}. For more information about each field refer to {@link CustomAudience}.
  *
+ * @hide
  */
+// TODO(b/278016822): Unhide for fetchAndJoinCustomAudience API review.
 public class FetchAndJoinCustomAudienceRequest {
     @NonNull private final Uri mFetchUri;
     @Nullable private final String mName;

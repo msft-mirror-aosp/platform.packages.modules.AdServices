@@ -76,6 +76,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -231,6 +232,10 @@ public class AuctionServerE2ETest {
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+
+        doReturn(DevContext.createForDevOptionsDisabled())
+                .when(mDevContextFilterMock)
+                .createDevContext();
     }
 
     @After

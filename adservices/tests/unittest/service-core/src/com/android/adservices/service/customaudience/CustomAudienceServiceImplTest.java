@@ -181,6 +181,10 @@ public class CustomAudienceServiceImplTest {
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
+        Mockito.lenient()
+                .doReturn(DevContext.createForDevOptionsDisabled())
+                .when(mDevContextFilterMock)
+                .createDevContext();
     }
 
     @After
@@ -193,7 +197,6 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock,
                 mCustomAudienceOverrideCallbackMock,
                 mCustomAudienceDaoMock,
-                mDevContextFilterMock,
                 mAppImportanceFilterMock,
                 mConsentManagerMock,
                 mAdServicesLoggerMock);

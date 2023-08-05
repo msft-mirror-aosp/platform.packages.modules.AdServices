@@ -31,6 +31,7 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     data: [
+        ":EmptySdkProviderApp",
         ":SdkSandboxSmallModuleTestApp",
     ],
     test_suites: ["general-tests"],
@@ -46,9 +47,14 @@ android_test_helper_app {
         "androidx.core_core",
         "androidx.test.ext.junit",
         "cts-install-lib",
+        "SdkSandboxTestUtils",
+    ],
+    libs: [
+        "framework-adservices.impl",
     ],
     java_resources: [
-        ":com.android.adservices.withoutapk.test",
+        ":com.android.adservices.fullmodule",
+        ":com.android.adservices.smallmodule",
     ],
     min_sdk_version: "33",
     target_sdk_version: "33",
@@ -56,9 +62,19 @@ android_test_helper_app {
 }
 
 override_apex {
-    name: "com.android.adservices.withoutapk.test",
+    name: "com.android.adservices.smallmodule",
     base: "com.android.adservices",
     apps: ["SdkSandbox"],
+    package_name: "com.android.adservices",
+    certificate: ":com.android.adservices.certificate",
+    key: "com.android.adservices.key",
+    compressible: false,
+}
+
+override_apex {
+    name: "com.android.adservices.fullmodule",
+    base: "com.android.adservices",
+    apps: ["AdServicesApk", "SdkSandbox"],
     package_name: "com.android.adservices",
     certificate: ":com.android.adservices.certificate",
     key: "com.android.adservices.key",

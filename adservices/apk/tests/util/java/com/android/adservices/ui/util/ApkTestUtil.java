@@ -82,6 +82,7 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        obj.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (!obj.exists()) {
             obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
         }

@@ -20,4 +20,5 @@ import android.app.sdksandbox.SandboxedSdk;
 interface IMediationTestSdkApi {
     List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces();
     List<SandboxedSdk> getSandboxedSdks();
+    void loadSdkBySdk(String sdkName);
 }

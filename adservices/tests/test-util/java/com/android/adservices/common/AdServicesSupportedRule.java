@@ -81,7 +81,7 @@ public final class AdServicesSupportedRule extends AbstractSupportedFeatureRule 
 
     @Override
     public boolean isFeatureSupported() throws Exception {
-        boolean isSupported = AdServicesSupportHelper.isFeatureSupported();
+        boolean isSupported = !AdServicesSupportHelper.getGlobalKillSwitch();
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
     }

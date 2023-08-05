@@ -28,7 +28,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.common.WebAddresses;
 
 /** Resolves access related to development/testing context. */
 public class DevContextAccessResolver implements IAccessResolver {
@@ -39,7 +39,7 @@ public class DevContextAccessResolver implements IAccessResolver {
     public DevContextAccessResolver(
             @NonNull DevContext devContext,
             @NonNull RegistrationRequest registrationRequest) {
-        mIsAllowed = Web.isLocalhost(registrationRequest.getRegistrationUri())
+        mIsAllowed = WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
                 ? devContext.getDevOptionsEnabled()
                 : true;
     }
@@ -49,7 +49,7 @@ public class DevContextAccessResolver implements IAccessResolver {
             @NonNull WebSourceRegistrationRequest webRegistrationRequest) {
         boolean hasLocalhost = false;
         for (WebSourceParams params : webRegistrationRequest.getSourceParams()) {
-            if (Web.isLocalhost(params.getRegistrationUri())) {
+            if (WebAddresses.isLocalhost(params.getRegistrationUri())) {
                 hasLocalhost = true;
                 break;
             }
@@ -62,7 +62,7 @@ public class DevContextAccessResolver implements IAccessResolver {
             @NonNull WebTriggerRegistrationRequest webRegistrationRequest) {
         boolean hasLocalhost = false;
         for (WebTriggerParams params : webRegistrationRequest.getTriggerParams()) {
-            if (Web.isLocalhost(params.getRegistrationUri())) {
+            if (WebAddresses.isLocalhost(params.getRegistrationUri())) {
                 hasLocalhost = true;
                 break;
             }

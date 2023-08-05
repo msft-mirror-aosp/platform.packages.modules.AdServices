@@ -23,6 +23,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import java.util.Optional;
@@ -52,9 +53,9 @@ public final class Enrollment {
             EnrollmentDao enrollmentDao,
             Context context,
             Flags flags) {
-        if (Web.isLocalhost(registrationUri)) {
+        if (WebAddresses.isLocalhost(registrationUri)) {
             return Optional.of(
-                    Web.isLocalhostIp(registrationUri)
+                    WebAddresses.isLocalhostIp(registrationUri)
                             ? LOCALHOST_IP_ENROLLMENT_ID
                             : LOCALHOST_ENROLLMENT_ID);
         }

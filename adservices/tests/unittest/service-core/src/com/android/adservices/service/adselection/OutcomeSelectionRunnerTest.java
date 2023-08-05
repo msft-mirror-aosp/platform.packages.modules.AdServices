@@ -66,6 +66,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -164,7 +165,8 @@ public class OutcomeSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mContext,
                         mFlags,
-                        mAdSelectionServiceFilter);
+                        mAdSelectionServiceFilter,
+                        DevContext.createForDevOptionsDisabled());
 
         doNothing()
                 .when(mAdSelectionServiceFilter)
@@ -175,7 +177,8 @@ public class OutcomeSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -229,7 +232,8 @@ public class OutcomeSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
 
         List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
@@ -314,7 +318,8 @@ public class OutcomeSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mContext,
                         mFlags,
-                        mAdSelectionServiceFilter);
+                        mAdSelectionServiceFilter,
+                        DevContext.createForDevOptionsDisabled());
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(

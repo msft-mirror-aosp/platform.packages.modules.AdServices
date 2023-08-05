@@ -18,8 +18,10 @@ package com.android.cobalt.crypto;
 
 import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_DEV;
 import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_INDEX_DEV;
+import static com.android.cobalt.crypto.PublicKeys.ANALYZER_KEY_INDEX_PROD;
 import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_DEV;
 import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_DEV;
+import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_PROD;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -245,12 +247,12 @@ public class HpkeEncrypterTest {
     }
 
     @Test
-    public void prodEnvironment_throwsIllegalArgumentException() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        HpkeEncrypter.createForEnvironment(
-                                HpkeEncryptFactory.noOpHpkeEncrypt(), CobaltPipelineType.PROD));
+    public void checkKeyIndices_prodEnvironment() {
+        HpkeEncrypter hpkeEncrypter =
+                HpkeEncrypter.createForEnvironment(
+                        HpkeEncryptFactory.noOpHpkeEncrypt(), CobaltPipelineType.PROD);
+        assertThat(hpkeEncrypter.mShufflerKeyIndex).isEqualTo(SHUFFLER_KEY_INDEX_PROD);
+        assertThat(hpkeEncrypter.mAnalyzerKeyIndex).isEqualTo(ANALYZER_KEY_INDEX_PROD);
     }
 
     @Test
