@@ -185,7 +185,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             getRegisterSourceOrTriggerEnforcementForegroundStatus(
                                                     request, mFlags)),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -246,7 +246,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -272,7 +272,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull SourceRegistrationRequestInternal request,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IMeasurementCallback callback) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(callerMetadata);
+        Objects.requireNonNull(callback);
+
+        final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCES;
+        if (isThrottled(request.getAppPackageName(), apiKey, callback)) {
+            // TODO b/290121162: Log API stats
+            return;
+        }
         // TODO b/290121162: Implementation
+        try {
+            callback.onResult();
+        } catch (RemoteException e) {
+            // TODO b/290121162: Implementation
+        }
     }
 
     @Override
@@ -319,7 +333,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
@@ -376,7 +390,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             enforceForeground),
                                     new AppPackageAccessResolver(
-                                            mFlags.getPpapiAppAllowList(),
+                                            mFlags.getMsmtApiAppAllowList(),
                                             request.getAppPackageName()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
@@ -421,7 +435,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                 mAppImportanceFilter,
                                                 enforceForeground),
                                         new AppPackageAccessResolver(
-                                                mFlags.getPpapiAppAllowList(),
+                                                mFlags.getMsmtApiAppAllowList(),
                                                 statusParam.getAppPackageName()));
 
                         final Optional<IAccessResolver> optionalResolver =

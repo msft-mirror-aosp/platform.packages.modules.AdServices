@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.ui.data;
 
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -205,69 +201,36 @@ public class UxStatesManagerTest {
     }
 
     @Test
-    public void isEnrolledUserTest_unsupportUx() {
-        doReturn(UNSUPPORTED_UX).when(mMockConsentManager).getUx();
-
-        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
+    public void isEnrolledUserTest_gaNoticeDisplayed() {
         doReturn(true).when(mMockConsentManager).wasGaUxNotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-    }
-
-    @Test
-    public void isEnrolledUserTest_nullUx() {
-        doReturn(null).when(mMockConsentManager).getUx();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasGaUxNotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-    }
-
-    @Test
-    public void isEnrolledUserTest_betaUx() {
-        doReturn(BETA_UX).when(mMockConsentManager).getUx();
-
-        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
         assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
     }
 
     @Test
-    public void isEnrolledUserTest_u18Ux() {
-        doReturn(U18_UX).when(mMockConsentManager).getUx();
+    public void isEnrolledUserTest_betaNoticeDisplayed() {
+        doReturn(true).when(mMockConsentManager).wasNotificationDisplayed();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
-        assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
         assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
     }
 
     @Test
-    public void isEnrolledUserTest_gaUx() {
-        doReturn(GA_UX).when(mMockConsentManager).getUx();
+    public void isEnrolledUserTest_U18NoticeDisplayed() {
+        doReturn(true).when(mMockConsentManager).wasU18NotificationDisplayed();
+
+        mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
+        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
+    }
+
+    @Test
+    public void isEnrolledUserTest_noNoticeDisplayed() {
+        doReturn(false).when(mMockConsentManager).wasNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasGaUxNotificationDisplayed();
+        doReturn(false).when(mMockConsentManager).wasU18NotificationDisplayed();
 
         mUxStatesManager = new UxStatesManager(mContext, mMockFlags, mMockConsentManager);
         assertThat(mUxStatesManager.isEnrolledUser()).isFalse();
-
-        doReturn(true).when(mMockConsentManager).wasGaUxNotificationDisplayed();
-        assertThat(mUxStatesManager.isEnrolledUser()).isTrue();
     }
 }

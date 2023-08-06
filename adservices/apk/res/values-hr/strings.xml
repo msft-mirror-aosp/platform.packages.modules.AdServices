@@ -40,7 +40,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Dopušta aplikaciji da pristupi Enablement state API-ju AdServicea."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Pristup API-jima AdServicesManagera"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Dopušta aplikaciji da pristupi API-jima AdServicesManagera."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sustav Android"</string>
+    <!-- no translation found for app_label (5844694701336604490) -->
+    <skip />
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pridružite se beta verziji Androidovih značajki za zaštitu privatnosti u online oglašavanju"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android istražuje privatnije načine na koje vam aplikacije mogu prikazati oglase"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Saznajte više"</string>
@@ -224,7 +225,7 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Uobičajeno je da aplikacije koje upotrebljavate pamte stvari koje vas zanimaju radi personalizacije vašeg doživljaja. Podatke o vašim temama aplikacije mogu i pohranjivati u sustavu Android.\n\nNa primjer, ako upotrebljavate aplikaciju o treniranju za maraton, aplikacija može zaključiti da vas zanimaju tenisice za trčanje. Ako poslije budete upotrebljavali neku drugu aplikaciju, ta vam aplikacija može prikazivati oglas za tenisice za trčanje koji je predložila prva aplikacija.\n\nAndroid redovito automatski briše podatke koje predlažu aplikacije. Ako ponovo upotrijebite neku aplikaciju, ona se može opet pojaviti na popisu. Aplikaciji možete oduzeti mogućnost da vam predlaže oglase.\n\nOglasi koji vam se prikazuju u aplikacijama mogu biti personalizirani, ovisno o toj postavci, postavci tema oglasa, vašim postavkama za ID za oglašavanje te o tome personalizira li korištena aplikacija oglase."</string>
     <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Nova dostupna značajka zaštite privatnosti u online oglašavanju"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Između aplikacija dijele se samo vrlo ograničeni podaci radi mjerenja izvedbe oglasa"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Predstavljamo novu značajku zaštite privatnosti u online oglašavanju pod nazivom mjerenje oglasa. Android između aplikacija dijeli samo vrlo ograničene podatke, na primjer kad vam je oglas prikazan, kako bi aplikacije mjerile izvedbu oglasa."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Predstavljamo novu značajku zaštite privatnosti u online oglašavanju pod nazivom mjerenje oglasa. Android s aplikacijama dijeli samo vrlo ograničene podatke, na primjer vrijeme prikazivanja oglasa, kako bi aplikacije mjerile izvedbu oglasa."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Promjene možete unijeti u postavkama zaštite privatnosti u online oglašavanju."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikacije koje koristite od sustava Android mogu zatražiti informacije koje im pomažu izmjeriti uspješnost njihovih oglasa. Android dopušta aplikacijama prikupljanje samo ograničenih vrsta podataka."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Šarene ilustracije simbola koji predstavljaju teme od interesa, primjerice glazbu, vijesti i sport"</string>

@@ -37,8 +37,8 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.enrollment.SqliteObjectMapper;
 import com.android.adservices.data.shared.migration.ISharedDbMigrator;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -249,7 +249,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
             EnrollmentData enrollmentData =
                     SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
             Uri uri = Uri.parse(enrollmentData.getAttributionReportingUrl().get(0));
-            return Web.topPrivateDomainAndScheme(uri);
+            return WebAddresses.topPrivateDomainAndScheme(uri);
         } catch (IndexOutOfBoundsException ex) {
             return Optional.empty();
         }

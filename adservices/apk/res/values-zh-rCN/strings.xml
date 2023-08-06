@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"允许应用访问 AdService 的 enablement state API。"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"访问 AdServicesManager 的 API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"允许应用访问 AdServicesManager 的 API"</string>
-    <string name="app_label" msgid="5985320129629013968">"Android 系统"</string>
+    <string name="app_label" msgid="5844694701336604490">"广告隐私权"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"加入 Android 广告隐私权 Beta 版测试计划"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android 团队正在探索更注重保护隐私的方式以便应用向您展示广告"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"了解详情"</string>
@@ -57,7 +57,7 @@
     <string name="notificationUI_confirmation_accept_subtitle" msgid="6980730715078085252">"您已加入 Android 广告隐私权 Beta 版测试计划。我们已为您的设备开启 Privacy Sandbox。\n\n您随时可在隐私设置中了解详情或关闭 Beta 版。"</string>
     <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"您已选择不加入"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="4194388733937808440">"感谢您的回复。我们已为您的设备关闭 Privacy Sandbox。\n\n如果您改变了主意或想了解详情，请前往隐私设置。"</string>
-    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"隐私设置"</string>
+    <string name="notificationUI_confirmation_left_control_button_text" msgid="7459283556129950513">"隐私权设置"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"知道了"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"您已加入 Beta 版测试计划"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"您的设备已开启 Privacy Sandbox，因此应用已能测试这些更注重保护隐私的新方式来向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>

@@ -30,10 +30,12 @@ import static org.mockito.Mockito.verify;
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -47,9 +49,18 @@ public class ForegroundEnforcementAccessResolverTest {
     @Mock private Context mContext;
     @Mock private AppImportanceFilter mAppImportanceFilter;
 
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession().spyStatic(ErrorLogUtil.class).startMocking();
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -152,6 +163,25 @@ public class ForegroundEnforcementAccessResolverTest {
                                 1, 1, mAppImportanceFilter, () -> /* enforced */ true)
                         .isAllowed(mContext);
 
+        // Validation
+        assertFalse(result);
+        verify(mAppImportanceFilter, times(1))
+                .assertCallerIsInForeground(anyInt(), anyInt(), any());
+    }
+
+    @Test
+    public void testIsAllowed_CatchesAllExceptions_returnsFalse() {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        // Setup
+        doThrow(new SecurityException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(anyInt(), anyInt(), any());
+
+        // Execute
+        final boolean result =
+                new ForegroundEnforcementAccessResolver(
+                                1, 1, mAppImportanceFilter, () -> /* enforced */ true)
+                        .isAllowed(mContext);
         // Validation
         assertFalse(result);
         verify(mAppImportanceFilter, times(1))

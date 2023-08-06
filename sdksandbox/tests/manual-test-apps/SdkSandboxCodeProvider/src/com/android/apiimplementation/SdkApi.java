@@ -52,6 +52,8 @@ public class SdkApi extends ISdkApi.Stub {
     private static final String WEB_VIEW_LINK = "https://youtu.be/pQdzFbmlvOo";
     private static final String WEBSITE_LINK = "https://www.google.com";
     private static final String VIDEO_URL_KEY = "video-url";
+    private static final String SDK_NAME = "com.android.sdksandboxcode";
+    private static final String MEDIATEE_SDK_NAME = "com.android.sdksandboxcode_mediatee";
 
     private final Context mContext;
 
@@ -123,6 +125,22 @@ public class SdkApi extends ISdkApi.Stub {
         } catch (IOException e) {
             throw new RemoteException(e);
         }
+    }
+
+    @Override
+    public void loadSdkBySdk(String sdkName) {
+        //        Bundle params = new Bundle();
+        //        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        //
+        //        try {
+        //            mContext.getSystemService(SdkSandboxController.class)
+        //                    .loadSdk(sdkName, params, Runnable::run, callback);
+        //        } catch (Exception e) {
+        //            throw new IllegalStateException("Failed to load Mediatee SDK " +
+        // e.getMessage());
+        //        }
+        //
+        //        callback.assertLoadSdkIsSuccessful();
     }
 
     @Override

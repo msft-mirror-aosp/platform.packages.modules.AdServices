@@ -28,9 +28,9 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 
@@ -218,7 +218,7 @@ class FetcherUtil {
 
         if (headerSize > maxSize) {
             adTechDomain =
-                    Web.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
+                    WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
                             .orElse(null);
         }

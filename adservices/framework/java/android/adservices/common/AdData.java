@@ -153,13 +153,7 @@ public final class AdData implements Parcelable {
         return mAdFilters;
     }
 
-    /**
-     * Gets the ad render id for server auctions.
-     *
-     * <p>Ad render id is collected for each {@link AdData} when server auction request is received.
-     *
-     * <p>Any {@link AdData} without ad render id will be ineligible for server-side auction.
-     */
+    /** @hide */
     @Nullable
     public String getAdRenderId() {
         return mAdRenderId;
@@ -277,9 +271,9 @@ public final class AdData implements Parcelable {
         }
 
         /**
-         * Sets the ad render id for server auction
+         * Sets ad render id
          *
-         * <p>See {@link AdData#getAdRenderId()} for more information.
+         * @hide
          */
         @NonNull
         public AdData.Builder setAdRenderId(@Nullable String adRenderId) {
