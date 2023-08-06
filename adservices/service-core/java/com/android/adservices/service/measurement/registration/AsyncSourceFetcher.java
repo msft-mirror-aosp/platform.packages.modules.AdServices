@@ -111,10 +111,9 @@ public class AsyncSourceFetcher {
             Source.Builder builder,
             String enrollmentId)
             throws JSONException {
-        if (!hasRequiredParams(json)) {
-            throw new JSONException(
-                    String.format(
-                            "Expected %s and a destination", SourceHeaderContract.SOURCE_EVENT_ID));
+        if (json.isNull(SourceHeaderContract.DESTINATION)
+                && json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
+            throw new JSONException("Expected a destination");
         }
         long sourceEventTime = asyncRegistration.getRequestTime();
         UnsignedLong eventId = new UnsignedLong(0L);
@@ -692,11 +691,6 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             return Optional.empty();
         }
-    }
-
-    private static boolean hasRequiredParams(JSONObject json) {
-        return !json.isNull(SourceHeaderContract.DESTINATION)
-                || !json.isNull(SourceHeaderContract.WEB_DESTINATION);
     }
 
     /** Provided a testing hook. */

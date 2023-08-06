@@ -476,6 +476,8 @@ public final class PhFlags implements Flags {
             "appsetid_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_source_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_sources_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_web_source_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND =
@@ -2255,6 +2257,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementRegisterSourcesRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
     public float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         return getPermitsPerSecond(
                 KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND,
@@ -3325,6 +3334,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getMeasurementRegisterWebSourceRequestPermitsPerSecond());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getMeasurementRegisterSourcesRequestPermitsPerSecond());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND
