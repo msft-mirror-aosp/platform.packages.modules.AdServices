@@ -95,18 +95,50 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
         assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isFalse();
     }
 
+    @Test
+    public void testSmallModuleCanBeInstalled_andThenUpdatedToFullModule() throws Exception {
+        // This test only makes sense for devices where we can install the small module apex
+        assumeTrue(
+                "Device has com.android.adservices APEX pre-installed",
+                isSmallModuleUpdatePossible());
+
+        runPhase("installSmallModulePendingReboot");
+        getDevice().reboot();
+
+        runPhase("installFullModulePendingReboot");
+        getDevice().reboot();
+
+        assertWithMessage("AdServices APK is present").that(isAdServicesApkPresent()).isTrue();
+    }
+
     /** Verify services exported from AdServices APK are unavailable on small module. */
     @Test
     public void testVerifyAdServicesAreUnavailableOnSmallModule() throws Exception {
         if (isAdServicesApkPresent()) {
             // Device does not have small module pre-installed. Prepare it.
-            runPhase("testVerifyAdServicesAreUnavailable_preSmallModuleInstall");
+            runPhase("testVerifyAdServicesAreAvailable_preSmallModuleInstall");
 
-            runPhase("installSmallModulePendingReboot");
-            getDevice().reboot();
+            installSmallModule();
         }
-
         runPhase("testVerifyAdServicesAreUnavailable_postSmallModuleInstall");
+    }
+
+    @Test
+    public void testLoadSdk() throws Exception {
+        if (isAdServicesApkPresent()) {
+            // Device does not have small module pre-installed and loadSdk should work
+            // Test that loadSdk works
+            runPhase("testLoadSdkWithAdServiceApk");
+
+            installSmallModule();
+        }
+        // Test that loadSdk returns error when AdServices apk is not present
+        runPhase("testLoadSdkWithoutAdServiceApk");
+    }
+
+    private void installSmallModule() throws Exception {
+        runPhase("installSmallModulePendingReboot");
+        getDevice().reboot();
     }
 
     private boolean isSmallModuleUpdatePossible() throws Exception {

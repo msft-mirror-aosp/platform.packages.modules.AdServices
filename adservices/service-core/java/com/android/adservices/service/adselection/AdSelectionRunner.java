@@ -50,6 +50,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.profiling.Tracing;
@@ -262,7 +263,9 @@ public abstract class AdSelectionRunner {
      * @param callback used to notify the result back to the calling seller
      */
     public void runAdSelection(
-            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionInput inputParams,
+            @NonNull AdSelectionCallback callback,
+            @NonNull DevContext devContext) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
@@ -284,7 +287,8 @@ public abstract class AdSelectionRunner {
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                                            devContext);
                                     validateAdSelectionConfig(adSelectionConfig);
                                 } finally {
                                     sLogger.v("Completed filtering and validation.");
