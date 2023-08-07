@@ -61,6 +61,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.isA;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -584,11 +585,13 @@ public class AdSelectionE2ETest {
     @Mock private File mMockDBAdSelectionFile;
     @Mock private ConsentManager mConsentManagerMock;
 
-    FledgeAuthorizationFilter mFledgeAuthorizationFilter =
-            new FledgeAuthorizationFilter(
-                    mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
-                    mAdServicesLoggerMock);
+    private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
+            spy(
+                    new FledgeAuthorizationFilter(
+                            mContext.getPackageManager(),
+                            new EnrollmentDao(
+                                    mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
+                            mAdServicesLoggerMock));
 
     private MockitoSession mStaticMockSession = null;
     private ExecutorService mLightweightExecutorService;
@@ -684,7 +687,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -929,7 +932,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithCPCEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -1221,7 +1224,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithCPCDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -1433,7 +1436,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         prebuiltDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -1527,7 +1530,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -1709,7 +1712,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithCPCEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -1998,7 +2001,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithCPCDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -2534,7 +2537,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -2668,7 +2671,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithContextualAdsDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -3384,7 +3387,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -3498,7 +3501,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -3614,7 +3617,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -3733,7 +3736,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -3854,7 +3857,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -3988,7 +3991,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -5154,7 +5157,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -5399,7 +5402,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithLenientBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -5472,7 +5475,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithTightBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -5659,7 +5662,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithLenientBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -5732,7 +5735,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithTightBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -5848,7 +5851,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -6325,6 +6328,12 @@ public class AdSelectionE2ETest {
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
 
+        // Bypass the permission check since it's enforced before the package name check
+        doNothing()
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAppDeclaredPermission(
+                        mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
         doAnswer(
@@ -6386,6 +6395,10 @@ public class AdSelectionE2ETest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_UNAUTHORIZED),
                         geq(0));
+
+        verify(mFledgeAuthorizationFilterSpy)
+                .assertAppDeclaredPermission(
+                        mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
     }
 
     @Test
@@ -6511,7 +6524,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -6639,7 +6652,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         throttlingFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
@@ -6769,7 +6782,7 @@ public class AdSelectionE2ETest {
                         mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilter,
+                        mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
