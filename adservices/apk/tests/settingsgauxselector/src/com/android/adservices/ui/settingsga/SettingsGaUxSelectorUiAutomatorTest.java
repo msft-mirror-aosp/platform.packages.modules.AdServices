@@ -244,19 +244,40 @@ public class SettingsGaUxSelectorUiAutomatorTest {
         // open measurement view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
-        // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        UiObject resetButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(resetButton.exists()).isTrue();
+        // R Msmt UI is not scrollable
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            // click reset
+            ApkTestUtil.click(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            UiObject resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
 
-        // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        resetButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
-        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(resetButton.exists()).isTrue();
+            // click reset again
+            ApkTestUtil.click(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
+        } else {
+            // click reset
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            UiObject resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
+
+            // click reset again
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_measurement_view_reset_title);
+            resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(resetButton.exists()).isTrue();
+        }
     }
 
     @Test
