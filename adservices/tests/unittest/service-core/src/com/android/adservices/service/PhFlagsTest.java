@@ -6318,7 +6318,7 @@ public class PhFlagsTest {
     @Test
     public void testEnableFledgeAuctionServerJoinKeyFetch() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled())
+        assertThat(mPhFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled())
                 .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED);
 
         boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED;
