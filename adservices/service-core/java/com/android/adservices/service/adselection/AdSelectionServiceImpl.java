@@ -281,6 +281,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             CallerMetadata callerMetadata,
             GetAdSelectionDataCallback callback)
             throws RemoteException {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
@@ -320,6 +321,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     callingUid,
                                     devContext);
                     runner.run(inputParams, callback);
+                    Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
                 });
     }
 
