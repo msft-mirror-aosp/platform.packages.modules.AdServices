@@ -849,6 +849,7 @@ public interface Flags {
     long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT = 10; // Num entries
     long FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
             20 * 2; // Num characters * 2 bytes per char in UTF-8
+    long FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B = 400;
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -934,6 +935,14 @@ public interface Flags {
      */
     default long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
         return FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes of {@link
+     * DBRegisteredAdInteraction#getInteractionReportingUri()}
+     */
+    default long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
     }
 
     // 24 hours in seconds
