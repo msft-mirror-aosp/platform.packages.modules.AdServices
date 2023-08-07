@@ -227,7 +227,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "services_allowlist_per_targetSdkVersion";
 
     // Property for canary set for service restrictions
-    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST = "next_service_allowlist";
+    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
+            "sdksandbox_next_service_allowlist";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
@@ -235,24 +236,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * Property to enforce restrictions for SDK sandbox processes. If the value of this property is
      * {@code true}, the restrictions will be enforced.
      */
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
 
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
-            "broadcastreceiver_allowlist_per_targetSdkVersion";
+            "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
 
     // Property for the canary set allowlist indicating which broadcast receivers can be registered
     // by the sandbox.
     private static final String PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST =
-            "next_broadcastreceiver_allowlist";
+            "sdksandbox_next_broadcastreceiver_allowlist";
 
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
             "contentprovider_allowlist_per_targetSdkVersion";
 
     // Property indicating the ContentProvider canary allowlist.
     private static final String PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST =
-            "next_contentprovider_allowlist";
+            "sdksandbox_next_contentprovider_allowlist";
 
     private static final String WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER =
             "DeveloperModeContentProvider";
