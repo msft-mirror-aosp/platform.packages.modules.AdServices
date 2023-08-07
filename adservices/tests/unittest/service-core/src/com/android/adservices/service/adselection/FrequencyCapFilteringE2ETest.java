@@ -92,6 +92,7 @@ import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.After;
@@ -307,6 +308,14 @@ public class FrequencyCapFilteringE2ETest {
         doReturn(mHttpCacheMock).when(mAdServicesHttpsClientMock).getAssociatedCache();
         doReturn(
                         // Bidding signals
+                        Futures.immediateFuture(
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody("{}")
+                                        .build()))
+                .when(mAdServicesHttpsClientMock)
+                .fetchPayload(any(Uri.class), any(ImmutableSet.class));
+        doReturn(
+                        // Scoring signals
                         Futures.immediateFuture(
                                 AdServicesHttpClientResponse.builder()
                                         .setResponseBody("{}")
