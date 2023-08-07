@@ -48,6 +48,15 @@ public final class Tracing {
     public static final String JSSCRIPTENGINE_EVALUATE_ON_SANDBOX =
             "JSScriptEngine#evaluateOnSandbox";
     public static final String JSSCRIPTENGINE_CLOSE_ISOLATE = "JSScriptEngine#closeIsolate";
+    public static final String PERSIST_AD_SELECTION_RESULT =
+            "AdSelectionServiceImpl#persistAdSelectionResult";
+    public static final String ORCHESTRATE_PERSIST_AD_SELECTION_RESULT =
+            "PersistAdSelectionResultRunner#orchestratePersistAdSelectionResultRunner";
+    public static final String PERSIST_AUCTION_RESULTS =
+            "PersistAdSelectionResultRunner#persistAuctionResults";
+    public static final String OHTTP_DECRYPT_BYTES = "PersistAdSelectionResultRunner#decryptBytes";
+    public static final String PARSE_AD_SELECTION_RESULT =
+            "PersistAdSelectionResultRunner#parseAdSelectionResult";
 
     /**
      * Begins an asynchronous trace and generates random cookie.
