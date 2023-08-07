@@ -87,8 +87,9 @@ public class MeasurementCtsDebuggableTest {
     private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 20;
     private static final int AGGREGATE_REPORTING_JOB_ID = 7;
 
-    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            SERVER_BASE_URI + ":" + KEYS_PORT + "/keys";
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN =
+            SERVER_BASE_URI + ":" + KEYS_PORT;
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH = "keys";
     private static final String REGISTRATION_RESPONSE_SOURCE_HEADER =
             "Attribution-Reporting-Register-Source";
     private static final String REGISTRATION_RESPONSE_TRIGGER_HEADER =
@@ -619,10 +620,17 @@ public class MeasurementCtsDebuggableTest {
                 + "measurement_enforce_foreground_status_register_trigger false");
 
         // Set aggregate key URL.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_aggregate_encryption_key_coordinator_url "
-                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_default_aggregation_coordinator_origin"
+                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
+
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_aggregation_coordinator_path"
+                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH);
 
         // Set reporting windows
         // Assume trigger registration can happen within 8 seconds of source registration.
@@ -698,9 +706,14 @@ public class MeasurementCtsDebuggableTest {
                 + "measurement_enforce_foreground_status_register_trigger null");
 
         // Reset aggregate key URL.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_aggregate_encryption_key_coordinator_url null");
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_default_aggregation_coordinator_origin null");
+        getUiDevice()
+                .executeShellCommand(
+                        "device_config put adservices "
+                                + "measurement_aggregation_coordinator_path null");
 
         // Reset reporting windows
         // Assume trigger registration can happen within 8 seconds of source registration.
