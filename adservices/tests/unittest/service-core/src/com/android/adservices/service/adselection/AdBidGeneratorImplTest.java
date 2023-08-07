@@ -16,18 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_All;
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST;
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION;
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
@@ -172,9 +167,7 @@ public class AdBidGeneratorImplTest {
                             adWithBid ->
                                     GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setAdCost(
-                                                    BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST
-                                                            .getAdCost())
+                                            .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                                             .build())
                     .collect(Collectors.toList());
     // Winning ad doesn't have ad cost, but all others do
@@ -189,9 +182,7 @@ public class AdBidGeneratorImplTest {
                                 } else {
                                     return GenerateBidResult.builder()
                                             .setAdWithBid(adWithBid)
-                                            .setAdCost(
-                                                    BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST
-                                                            .getAdCost())
+                                            .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS)
                                             .build();
                                 }
                             })
@@ -318,7 +309,7 @@ public class AdBidGeneratorImplTest {
     private MockWebServer mServer;
     private DBCustomAudience mCustomAudienceWithAds;
     private DBTrustedBiddingData mTrustedBiddingData;
-    private Map<Uri, TrustedBiddingResponse> mTrustedBiddingDataByBaseUri;
+    private Map<Uri, JSONObject> mTrustedBiddingDataByBaseUri;
     private Uri mTrustedBiddingUri;
     private CustomAudienceSignals mCustomAudienceSignals;
     private CustomAudienceBiddingInfo mCustomAudienceBiddingInfo;
@@ -368,12 +359,7 @@ public class AdBidGeneratorImplTest {
                         .build();
 
         mTrustedBiddingDataByBaseUri =
-                ImmutableMap.of(
-                        mTrustedBiddingUri,
-                        TrustedBiddingResponse.builder()
-                                .setBody(new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP))
-                                .setHeaders(new JSONObject())
-                                .build());
+                ImmutableMap.of(mTrustedBiddingUri, new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP));
 
         mCustomAudienceWithAds =
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
@@ -475,6 +461,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -492,237 +479,6 @@ public class AdBidGeneratorImplTest {
                         eq(EMPTY_BUYER_SIGNALS),
                         argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
                         eq(EMPTY_CONTEXTUAL_SIGNALS),
-                        eq(mCustomAudienceSignals),
-                        eq(mRunAdBiddingPerCAExecutionLogger));
-        mMockWebServerRule.verifyMockServerRequests(
-                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
-        verifySuccessAdBiddingPerCALogging(
-                mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
-                TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
-    }
-
-    @Test
-    public void testRunAdBiddingPerCASuccess_preV3BiddingLogicWithDataVersionHeader()
-            throws Exception {
-        // Given we are using a direct executor and mock the returned result from the
-        // AdSelectionScriptEngine.generateBids for preparing the test,
-        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_PRE_V3);
-
-        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
-                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-
-        Map<Uri, TrustedBiddingResponse> trustedBiddingResponseAndHeadersMapWithDataVersionHeader =
-                ImmutableMap.of(
-                        mTrustedBiddingUri,
-                        TrustedBiddingResponse.builder()
-                                .setBody(new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP))
-                                .setHeaders(
-                                        new JSONObject(
-                                                ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_KEY,
-                                                        List.of(DATA_VERSION_1))))
-                                .build());
-
-        mAdBidGenerator =
-                new AdBidGeneratorImpl(
-                        mContext,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        mAdSelectionScriptEngine,
-                        customAudienceDevOverridesHelper,
-                        AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
-                        mIsolateSettings,
-                        mJsFetcher,
-                        mDebugReporting);
-        when(mAdSelectionScriptEngine.generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION.toAdSelectionSignals()),
-                        eq(mCustomAudienceSignals),
-                        isA(RunAdBiddingPerCAExecutionLogger.class)))
-                .thenAnswer(
-                        unUsedInvocation -> {
-                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
-                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
-                            return FluentFuture.from(
-                                    Futures.immediateFuture(GENERATE_BIDS_RESPONSE));
-                        });
-        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
-                .thenReturn(
-                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
-                        RUN_BIDDING_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
-                        GENERATE_BIDS_START_TIMESTAMP,
-                        GENERATE_BIDS_END_TIMESTAMP,
-                        RUN_BIDDING_END_TIMESTAMP,
-                        STOP_ELAPSED_TIMESTAMP);
-        // Logger calls come after the callback is returned
-        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            runAdBiddingPerCAProcessLoggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdServicesLoggerMock)
-                .logRunAdBiddingPerCAProcessReportedStats(any());
-
-        // When the call to runAdBiddingPerCA, and the computation of future is complete,
-        FluentFuture<AdBiddingOutcome> result =
-                mAdBidGenerator.runAdBiddingPerCA(
-                        mCustomAudienceWithAds,
-                        trustedBiddingResponseAndHeadersMapWithDataVersionHeader,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        mRunAdBiddingPerCAExecutionLogger);
-        // Create another CustomAudienceBiddingInfo with buyer contextual signals
-        CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                CustomAudienceBiddingInfo.create(
-                        mDecisionLogicUri,
-                        BUYER_DECISION_LOGIC_JS,
-                        mCustomAudienceSignals,
-                        BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION);
-        AdBiddingOutcome expectedAdBiddingOutcome =
-                AdBiddingOutcome.builder()
-                        .setAdWithBid(AD_WITH_BIDS.get(2))
-                        .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
-                        .build();
-        runAdBiddingPerCAProcessLoggerLatch.await();
-        // Then we can test the result by assertion,
-        assertEquals(expectedAdBiddingOutcome, result.get());
-        verify(mAdSelectionScriptEngine)
-                .generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION.toAdSelectionSignals()),
-                        eq(mCustomAudienceSignals),
-                        eq(mRunAdBiddingPerCAExecutionLogger));
-        mMockWebServerRule.verifyMockServerRequests(
-                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
-        verifySuccessAdBiddingPerCALogging(
-                mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
-                TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
-    }
-
-    @Test
-    public void
-            testRunAdBiddingPerCASuccess_preV3BiddingLogicWithDataVersionHeaderTakesFirstOfMultipleValues()
-                    throws Exception {
-        // Given we are using a direct executor and mock the returned result from the
-        // AdSelectionScriptEngine.generateBids for preparing the test,
-        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_PRE_V3);
-
-        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
-                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-
-        Map<Uri, TrustedBiddingResponse> trustedBiddingResponseAndHeadersMapWithDataVersionHeader =
-                ImmutableMap.of(
-                        mTrustedBiddingUri,
-                        TrustedBiddingResponse.builder()
-                                .setBody(new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP))
-                                .setHeaders(
-                                        new JSONObject(
-                                                ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_KEY,
-                                                        List.of(DATA_VERSION_1, DATA_VERSION_2))))
-                                .build());
-
-        mAdBidGenerator =
-                new AdBidGeneratorImpl(
-                        mContext,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        mAdSelectionScriptEngine,
-                        customAudienceDevOverridesHelper,
-                        AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
-                        mIsolateSettings,
-                        mJsFetcher,
-                        mDebugReporting);
-        when(mAdSelectionScriptEngine.generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION.toAdSelectionSignals()),
-                        eq(mCustomAudienceSignals),
-                        isA(RunAdBiddingPerCAExecutionLogger.class)))
-                .thenAnswer(
-                        unUsedInvocation -> {
-                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
-                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
-                            return FluentFuture.from(
-                                    Futures.immediateFuture(GENERATE_BIDS_RESPONSE));
-                        });
-        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
-                .thenReturn(
-                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
-                        RUN_BIDDING_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
-                        GENERATE_BIDS_START_TIMESTAMP,
-                        GENERATE_BIDS_END_TIMESTAMP,
-                        RUN_BIDDING_END_TIMESTAMP,
-                        STOP_ELAPSED_TIMESTAMP);
-        // Logger calls come after the callback is returned
-        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            runAdBiddingPerCAProcessLoggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdServicesLoggerMock)
-                .logRunAdBiddingPerCAProcessReportedStats(any());
-
-        // When the call to runAdBiddingPerCA, and the computation of future is complete,
-        FluentFuture<AdBiddingOutcome> result =
-                mAdBidGenerator.runAdBiddingPerCA(
-                        mCustomAudienceWithAds,
-                        trustedBiddingResponseAndHeadersMapWithDataVersionHeader,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        mRunAdBiddingPerCAExecutionLogger);
-        // Create another CustomAudienceBiddingInfo with buyer contextual signals
-        CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                CustomAudienceBiddingInfo.create(
-                        mDecisionLogicUri,
-                        BUYER_DECISION_LOGIC_JS,
-                        mCustomAudienceSignals,
-                        BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION);
-        AdBiddingOutcome expectedAdBiddingOutcome =
-                AdBiddingOutcome.builder()
-                        .setAdWithBid(AD_WITH_BIDS.get(2))
-                        .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
-                        .build();
-        runAdBiddingPerCAProcessLoggerLatch.await();
-        // Then we can test the result by assertion,
-        assertEquals(expectedAdBiddingOutcome, result.get());
-        verify(mAdSelectionScriptEngine)
-                .generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION.toAdSelectionSignals()),
                         eq(mCustomAudienceSignals),
                         eq(mRunAdBiddingPerCAExecutionLogger));
         mMockWebServerRule.verifyMockServerRequests(
@@ -800,6 +556,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         // Create another CustomAudienceBiddingInfo with buyer contextual signals
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
@@ -807,7 +564,7 @@ public class AdBidGeneratorImplTest {
                         mDecisionLogicUri,
                         BUYER_DECISION_LOGIC_JS,
                         mCustomAudienceSignals,
-                        BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST);
+                        BUYER_CONTEXTUAL_SIGNALS);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
                         .setAdWithBid(AD_WITH_BIDS.get(2))
@@ -903,6 +660,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         // Assume default custom audience bidding info since winning ad does not have adcost
         AdBiddingOutcome expectedAdBiddingOutcome =
@@ -921,121 +679,6 @@ public class AdBidGeneratorImplTest {
                         eq(EMPTY_BUYER_SIGNALS),
                         argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
                         eq(EMPTY_CONTEXTUAL_SIGNALS),
-                        eq(mCustomAudienceSignals),
-                        eq(mRunAdBiddingPerCAExecutionLogger));
-        mMockWebServerRule.verifyMockServerRequests(
-                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
-        verifySuccessAdBiddingPerCALogging(
-                mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
-                TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
-    }
-
-    @Test
-    public void testRunAdBiddingPerCASuccess_preV3BiddingLogicWithAdCostAndDataVersionHeader()
-            throws Exception {
-        // Given we are using a direct executor and mock the returned result from the
-        // AdSelectionScriptEngine.generateBids for preparing the test,
-        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_PRE_V3);
-
-        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
-                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-
-        Map<Uri, TrustedBiddingResponse> trustedBiddingResponseAndHeadersMapWithDataVersionHeader =
-                ImmutableMap.of(
-                        mTrustedBiddingUri,
-                        TrustedBiddingResponse.builder()
-                                .setBody(new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP))
-                                .setHeaders(
-                                        new JSONObject(
-                                                ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_KEY,
-                                                        List.of(DATA_VERSION_1))))
-                                .build());
-
-        mAdBidGenerator =
-                new AdBidGeneratorImpl(
-                        mContext,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        mAdSelectionScriptEngine,
-                        customAudienceDevOverridesHelper,
-                        AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
-                        mIsolateSettings,
-                        mJsFetcher,
-                        mDebugReporting);
-        when(mAdSelectionScriptEngine.generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION.toAdSelectionSignals()),
-                        eq(mCustomAudienceSignals),
-                        isA(RunAdBiddingPerCAExecutionLogger.class)))
-                .thenAnswer(
-                        unUsedInvocation -> {
-                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
-                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
-                            return FluentFuture.from(
-                                    Futures.immediateFuture(GENERATE_BIDS_RESPONSE_WITH_AD_COST));
-                        });
-        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
-                .thenReturn(
-                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
-                        RUN_BIDDING_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
-                        GENERATE_BIDS_START_TIMESTAMP,
-                        GENERATE_BIDS_END_TIMESTAMP,
-                        RUN_BIDDING_END_TIMESTAMP,
-                        STOP_ELAPSED_TIMESTAMP);
-        // Logger calls come after the callback is returned
-        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            runAdBiddingPerCAProcessLoggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdServicesLoggerMock)
-                .logRunAdBiddingPerCAProcessReportedStats(any());
-
-        // When the call to runAdBiddingPerCA, and the computation of future is complete,
-        FluentFuture<AdBiddingOutcome> result =
-                mAdBidGenerator.runAdBiddingPerCA(
-                        mCustomAudienceWithAds,
-                        trustedBiddingResponseAndHeadersMapWithDataVersionHeader,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        mRunAdBiddingPerCAExecutionLogger);
-        // Create another CustomAudienceBiddingInfo with buyer contextual signals
-        CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                CustomAudienceBiddingInfo.create(
-                        mDecisionLogicUri,
-                        BUYER_DECISION_LOGIC_JS,
-                        mCustomAudienceSignals,
-                        BUYER_CONTEXTUAL_SIGNALS_All);
-        AdBiddingOutcome expectedAdBiddingOutcome =
-                AdBiddingOutcome.builder()
-                        .setAdWithBid(AD_WITH_BIDS.get(2))
-                        .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
-                        .build();
-        runAdBiddingPerCAProcessLoggerLatch.await();
-        // Then we can test the result by assertion,
-        assertEquals(expectedAdBiddingOutcome, result.get());
-        verify(mAdSelectionScriptEngine)
-                .generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(BUYER_CONTEXTUAL_SIGNALS_WITH_DATA_VERSION.toAdSelectionSignals()),
                         eq(mCustomAudienceSignals),
                         eq(mRunAdBiddingPerCAExecutionLogger));
         mMockWebServerRule.verifyMockServerRequests(
@@ -1113,6 +756,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -1230,6 +874,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -1323,6 +968,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -1428,6 +1074,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -1547,6 +1194,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
 
         AdBiddingOutcome expectedAdBiddingOutcome =
@@ -1643,6 +1291,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -1742,6 +1391,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         AdBiddingOutcome expectedAdBiddingOutcome =
                 AdBiddingOutcome.builder()
@@ -1818,6 +1468,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         ExecutionException e = assertThrows(ExecutionException.class, result::get);
@@ -1923,6 +1574,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
 
         AdBiddingOutcome expectedAdBiddingOutcome =
@@ -2048,6 +1700,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
 
         AdBiddingOutcome expectedAdBiddingOutcome =
@@ -2141,6 +1794,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         // Then we can test the result by assertion,
@@ -2228,6 +1882,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         // Then we can test the result by assertion,
@@ -2318,6 +1973,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         // Then we can test the result by assertion
@@ -2397,6 +2053,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
@@ -2465,6 +2122,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
@@ -2577,6 +2235,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         AdBiddingOutcome expectedAdBiddingOutcome =
@@ -2651,6 +2310,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
@@ -2711,6 +2371,7 @@ public class AdBidGeneratorImplTest {
                         ImmutableMap.of(),
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         ExecutionException outException = assertThrows(ExecutionException.class, result::get);
@@ -2760,6 +2421,7 @@ public class AdBidGeneratorImplTest {
                         mTrustedBiddingDataByBaseUri,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
                         mRunAdBiddingPerCAExecutionLogger);
         runAdBiddingPerCAProcessLoggerLatch.await();
         // The result is an early return with a FluentFuture of Null, after checking the Ads list is
