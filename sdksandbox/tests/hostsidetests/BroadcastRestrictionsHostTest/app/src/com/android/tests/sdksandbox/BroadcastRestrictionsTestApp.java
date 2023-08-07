@@ -55,11 +55,11 @@ public class BroadcastRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
     private static final String PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS =
             "enforce_broadcast_receiver_restrictions";
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     // Keep consistent with SdkSandboxManagerService.PROPERTY_BROADCASTRECEIVER_ALLOWLIST
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
-            "broadcastreceiver_allowlist_per_targetSdkVersion";
+            "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
 
     // Keep the value consistent with
     // SdkSandboxManagerService.PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS.
@@ -69,7 +69,7 @@ public class BroadcastRestrictionsTestApp {
     // Keep the value consistent with
     // SdkSandboxManagerService.PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST.
     private static final String PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST =
-            "next_broadcastreceiver_allowlist";
+            "sdksandbox_next_broadcastreceiver_allowlist";
 
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.broadcasts";
