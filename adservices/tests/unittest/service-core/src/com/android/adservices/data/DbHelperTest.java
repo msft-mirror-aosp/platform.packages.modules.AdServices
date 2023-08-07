@@ -197,6 +197,22 @@ public class DbHelperTest {
     }
 
     @Test
+    public void testOnUpgrade_topicsV8Migration_loggedTopicColumnExist() {
+        String dbName = "test_db";
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, /* dbVersion */ 1);
+        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
+
+        assertEquals(1, db.getVersion());
+
+        DbHelper dbHelper = new DbHelper(sContext, dbName, /* dbVersion */ 7);
+        dbHelper.onUpgrade(db, /* oldDbVersion */ 7, /* newDbVersion */ 8);
+
+        // ReturnTopics table should have 8 columns in version 8 database
+        assertTrue(doesTableExistAndColumnCountMatch(
+                db, "topics_returned_topics", /* columnCount */8));
+    }
+
+    @Test
     public void testOnDowngrade() {
         DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
