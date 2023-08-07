@@ -160,8 +160,8 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
             ITestDevice device = getDevice();
             device.reboot();
             device.waitForDeviceAvailable();
-            // Sleep 30s to wait for AdExtBootCompletedReceiver execution
-            Thread.sleep(30000 /* ms */);
+            // Sleep 5 mins to wait for AdExtBootCompletedReceiver execution
+            Thread.sleep(300 * 1000 /* ms */);
         }
     }
 
