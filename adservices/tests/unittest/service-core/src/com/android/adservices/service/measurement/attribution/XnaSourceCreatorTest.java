@@ -59,6 +59,7 @@ public class XnaSourceCreatorTest {
     @Before
     public void setup() {
         doReturn(true).when(mFlags).getMeasurementEnableSharedSourceDebugKey();
+        doReturn(true).when(mFlags).getMeasurementEnableSharedFilterDataKeysXNA();
     }
 
     @Test
@@ -368,6 +369,97 @@ public class XnaSourceCreatorTest {
         assertEquals(expectedDerivedSources, actualDerivedSources);
     }
 
+    @Test
+    public void generateDerivedSources_withSharedFilterDataKeys_filtersAndGeneratesSources()
+            throws JSONException {
+        // Setup
+        doReturn(false).when(mFlags).getMeasurementEnableSharedSourceDebugKey();
+        String enrollment1 = "enrollment1";
+
+        JSONArray filters =
+                new JSONArray(
+                        Collections.singletonList(new JSONObject(buildMatchingSharedFilterData())));
+        AttributionConfig attributionConfig1 =
+                new AttributionConfig.Builder()
+                        .setSourceAdtech(enrollment1)
+                        .setSourceFilters(Filter.deserializeFilterSet(filters))
+                        .setSourceNotFilters(null)
+                        .setFilterData(Filter.deserializeFilterSet(filters))
+                        .setExpiry(50L)
+                        .setPriority(50L)
+                        .setPostInstallExclusivityWindow(5L)
+                        .setSourcePriorityRange(new Pair<>(1L, 100L))
+                        .build();
+        String attributionConfigsArray =
+                new JSONArray(Collections.singletonList(attributionConfig1.serializeAsJson()))
+                        .toString();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionConfig(attributionConfigsArray)
+                        .build();
+
+        // Aggregate source
+        JSONObject aggregatableSource = new JSONObject();
+        aggregatableSource.put("key1", "0x159");
+        aggregatableSource.put("key2", "0x1");
+        aggregatableSource.put("key3", "0x2");
+
+        // enrollment1 sources
+        Source source1Matches =
+                createValidSourceBuilder()
+                        .setId(UUID.randomUUID().toString())
+                        .setEnrollmentId(enrollment1)
+                        .setPriority(1L)
+                        .setAggregateSource(aggregatableSource.toString())
+                        .setSharedAggregationKeys(
+                                new JSONArray(Arrays.asList("key2", "key3")).toString())
+                        .setFilterData(buildMatchingSharedFilterData())
+                        .setSharedFilterDataKeys(new JSONArray(Arrays.asList("product")).toString())
+                        .setSharedDebugKey(SHARED_DEBUG_KEY_1)
+                        .setDebugAdId(AD_ID)
+                        .setDebugJoinKey(JOIN_KEY)
+                        .build();
+
+        JSONObject derivedAggregatableSource1 = new JSONObject();
+        derivedAggregatableSource1.put("key2", "0x1");
+        derivedAggregatableSource1.put("key3", "0x2");
+        Source expectedDerivedSource1 =
+                createValidSourceBuilder()
+                        .setId(UUID.randomUUID().toString())
+                        .setEnrollmentId(enrollment1)
+                        .setPriority(attributionConfig1.getPriority())
+                        .setFilterData(
+                                Filter.serializeFilterSet(attributionConfig1.getFilterData())
+                                        .toString())
+                        .setExpiryTime(source1Matches.getExpiryTime())
+                        .setInstallCooldownWindow(
+                                attributionConfig1.getPostInstallExclusivityWindow())
+                        .setParentId(source1Matches.getId())
+                        .setFilterData("{\"product\":[\"123\"]}")
+                        .setSharedFilterDataKeys(null)
+                        .setSharedAggregationKeys(
+                                new JSONArray(Arrays.asList("key2", "key3")).toString())
+                        .setAggregateSource(derivedAggregatableSource1.toString())
+                        // shared_debug_key is not shared when the feature is disabled
+                        .setDebugKey(null)
+                        // adId isn't shared
+                        .setDebugAdId(null)
+                        // join key isn't shared
+                        .setDebugJoinKey(null)
+                        .build();
+
+        List<Source> expectedDerivedSources = Collections.singletonList(expectedDerivedSource1);
+
+        // Execution
+        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mFlags);
+        List<Source> parentSources = Collections.singletonList(source1Matches);
+        List<Source> actualDerivedSources =
+                xnaSourceCreator.generateDerivedSources(trigger, parentSources);
+
+        // Assertion
+        assertEquals(expectedDerivedSources, actualDerivedSources);
+    }
+
     private Source.Builder createValidSourceBuilder() {
         return new Source.Builder()
                 .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
@@ -412,6 +504,20 @@ public class XnaSourceCreatorTest {
             filterMap.put(
                     "conversion_subdomain",
                     new JSONArray(Collections.singletonList("non.matching")));
+            return filterMap.toString();
+        } catch (JSONException e) {
+            LogUtil.e("JSONException when building aggregate filter data.");
+        }
+        return null;
+    }
+
+    private String buildMatchingSharedFilterData() {
+        try {
+            JSONObject filterMap = new JSONObject();
+            filterMap.put(
+                    "conversion_subdomain",
+                    new JSONArray(Collections.singletonList("electronics.megastore")));
+            filterMap.put("product", new JSONArray(Collections.singletonList("123")));
             return filterMap.toString();
         } catch (JSONException e) {
             LogUtil.e("JSONException when building aggregate filter data.");

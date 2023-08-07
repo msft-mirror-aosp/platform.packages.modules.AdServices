@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
@@ -32,8 +33,6 @@ import android.os.Bundle;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.sdksandbox.SandboxLatencyInfo;
 
 import org.junit.Before;
 import org.junit.Test;

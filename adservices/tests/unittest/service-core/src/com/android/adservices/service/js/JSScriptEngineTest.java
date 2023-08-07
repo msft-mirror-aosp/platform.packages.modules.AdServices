@@ -49,7 +49,7 @@ import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
@@ -111,6 +111,7 @@ public class JSScriptEngineTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static JSScriptEngine sJSScriptEngine;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
     private final IsolateSettings mDefaultIsolateSettings =
@@ -126,7 +127,8 @@ public class JSScriptEngineTest {
         when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(sSandboxInitWatch);
         if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
-            sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+            sJSScriptEngine =
+                    JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler, sLogger);
         }
     }
 
@@ -161,7 +163,7 @@ public class JSScriptEngineTest {
 
             ThrowingRunnable getFutureInstance =
                     () ->
-                            new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler)
+                            new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler, sLogger)
                                     .getFutureInstance(sContext);
 
             assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
@@ -374,7 +376,8 @@ public class JSScriptEngineTest {
                                         JSScriptEngine.createNewInstanceForTesting(
                                                 ApplicationProvider.getApplicationContext(),
                                                 mMockSandboxProvider,
-                                                sMockProfiler),
+                                                sMockProfiler,
+                                                sLogger),
                                         "function test() { return \"hello world\"; }",
                                         ImmutableList.of(),
                                         "test",
@@ -408,7 +411,8 @@ public class JSScriptEngineTest {
                                         JSScriptEngine.createNewInstanceForTesting(
                                                 ApplicationProvider.getApplicationContext(),
                                                 mMockSandboxProvider,
-                                                sMockProfiler),
+                                                sMockProfiler,
+                                                sLogger),
                                         "function test() { return \"hello world\"; }",
                                         ImmutableList.of(),
                                         "test",
@@ -439,7 +443,8 @@ public class JSScriptEngineTest {
                                         JSScriptEngine.createNewInstanceForTesting(
                                                 ApplicationProvider.getApplicationContext(),
                                                 mMockSandboxProvider,
-                                                sMockProfiler),
+                                                sMockProfiler,
+                                                sLogger),
                                         "function test() { return \"hello world\"; }",
                                         ImmutableList.of(),
                                         "test",
@@ -488,7 +493,8 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        sMockProfiler),
+                                        sMockProfiler,
+                                        sLogger),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
@@ -517,7 +523,8 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        sMockProfiler),
+                                        sMockProfiler,
+                                        sLogger),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
@@ -552,7 +559,8 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        sMockProfiler),
+                        sMockProfiler,
+                        sLogger),
                 "function test() { return \"hello world\"; }",
                 ImmutableList.of(),
                 "test",
@@ -589,7 +597,8 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        sMockProfiler),
+                                        sMockProfiler,
+                                        sLogger),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
@@ -612,7 +621,7 @@ public class JSScriptEngineTest {
         doAnswer(
                         invocation -> {
                             jsEvaluationStartedLatch.countDown();
-                            LogUtil.i("JS execution started");
+                            LoggerFactory.getFledgeLogger().i("JS execution started");
                             return callbackExecutor.submit(
                                     () -> {
                                         try {
@@ -620,7 +629,8 @@ public class JSScriptEngineTest {
                                         } catch (InterruptedException ignored) {
                                             Thread.currentThread().interrupt();
                                         }
-                                        LogUtil.i("JS execution completed,");
+                                        LoggerFactory.getFledgeLogger()
+                                                .i("JS execution completed,");
                                         return "hello world";
                                     });
                         })
@@ -629,7 +639,7 @@ public class JSScriptEngineTest {
 
         JSScriptEngine engine =
                 JSScriptEngine.createNewInstanceForTesting(
-                        sContext, mMockSandboxProvider, sMockProfiler);
+                        sContext, mMockSandboxProvider, sMockProfiler, sLogger);
         ListenableFuture<String> jsExecutionFuture =
                 engine.evaluate(
                         "function test() { return \"hello world\"; }",
@@ -657,7 +667,7 @@ public class JSScriptEngineTest {
         doAnswer(
                         invocation -> {
                             jsEvaluationStartedLatch.countDown();
-                            LogUtil.i("JS execution started");
+                            LoggerFactory.getFledgeLogger().i("JS execution started");
                             return callbackExecutor.submit(
                                     () -> {
                                         try {
@@ -665,7 +675,7 @@ public class JSScriptEngineTest {
                                         } catch (InterruptedException ignored) {
                                             Thread.currentThread().interrupt();
                                         }
-                                        LogUtil.i("JS execution completed");
+                                        LoggerFactory.getFledgeLogger().i("JS execution completed");
                                         return "hello world";
                                     });
                         })
@@ -676,7 +686,8 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        sMockProfiler);
+                        sMockProfiler,
+                        sLogger);
         ExecutionException timeoutException =
                 assertThrows(
                         ExecutionException.class,
@@ -713,7 +724,8 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        sMockProfiler);
+                        sMockProfiler,
+                        sLogger);
 
         assertThrows(
                 ExecutionException.class,

@@ -347,6 +347,9 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
                 source.getSharedAggregationKeys());
         values.put(
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                source.getSharedFilterDataKeys());
+        values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 source.getRegistrationOrigin().toString());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);

@@ -164,7 +164,7 @@ public class ReportImpressionScriptEngine {
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper) {
-        mJsEngine = JSScriptEngine.getInstance(context);
+        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;

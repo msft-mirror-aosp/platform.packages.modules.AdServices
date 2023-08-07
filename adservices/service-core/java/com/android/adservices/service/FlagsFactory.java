@@ -74,6 +74,16 @@ public class FlagsFactory {
             public boolean getMeasurementFlexibleEventReportingApiEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getEnableLoggedTopic() {
+                return true;
+            }
+
+            @Override
+            public boolean getEnableDatabaseSchemaVersion8() {
+                return true;
+            }
         };
     }
 }

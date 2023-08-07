@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATABLE_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 
 import android.annotation.NonNull;
@@ -30,6 +29,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
@@ -39,7 +39,6 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -113,7 +112,7 @@ public class AsyncTriggerFetcher {
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         builder.setTriggerTime(asyncRegistration.getRequestTime());
         Optional<Uri> registrationUriOrigin =
-                Web.originAndScheme(asyncRegistration.getRegistrationUri());
+                WebAddresses.originAndScheme(asyncRegistration.getRegistrationUri());
         if (!registrationUriOrigin.isPresent()) {
             LogUtil.d(
                     "AsyncTriggerFetcher: "
@@ -521,7 +520,9 @@ public class AsyncTriggerFetcher {
                     sourceKeys = aggregateTriggerData.getJSONArray("source_keys");
                 }
             }
-            if (sourceKeys == null || sourceKeys.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+            if (sourceKeys == null
+                    || sourceKeys.length()
+                            > mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()) {
                 LogUtil.d(
                         "Aggregate trigger data source-keys list failed to parse or has more"
                                 + " entries than permitted.");
@@ -570,7 +571,8 @@ public class AsyncTriggerFetcher {
     }
 
     private boolean isValidAggregateValues(JSONObject aggregateValues) throws JSONException {
-        if (aggregateValues.length() > MAX_AGGREGATE_KEYS_PER_REGISTRATION) {
+        if (aggregateValues.length()
+                > mFlags.getMeasurementMaxAggregateKeysPerTriggerRegistration()) {
             LogUtil.d(
                     "Aggregate values have more keys than permitted. %s", aggregateValues.length());
             return false;

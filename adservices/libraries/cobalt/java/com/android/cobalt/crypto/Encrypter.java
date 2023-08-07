@@ -38,7 +38,8 @@ public interface Encrypter {
     /**
      * Encrypt an observation.
      *
-     * @return empty Optional if the {@link ObservationToEncrypt} to encrypt is empty
+     * @return empty Optional if the {@link Observation} wrapped in {@link ObservationToEncrypt} to
+     *     encrypt is empty
      * @throws EncryptionFailedException if encryption fails
      */
     Optional<EncryptedMessage> encryptObservation(@NonNull ObservationToEncrypt observation)

@@ -40,6 +40,7 @@ import com.android.modules.utils.build.SdkLevel;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -87,6 +88,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentSystemServerOnlyTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -98,6 +100,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentPpApiOnlyTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
@@ -106,6 +109,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentSystemServerAndPpApiTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -116,6 +120,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentSystemServerOnlyDialogsOnTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -126,6 +131,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentPpApiOnlyDialogsOnTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
@@ -135,6 +141,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentSystemServerAndPpApiDialogsOnTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -145,6 +152,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
@@ -157,6 +165,7 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @Ignore("b/293366771")
     public void consentAppSearchOnlyDialogsOnTest() throws UiObjectNotFoundException {
         // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
         Assume.assumeTrue(!SdkLevel.isAtLeastT());

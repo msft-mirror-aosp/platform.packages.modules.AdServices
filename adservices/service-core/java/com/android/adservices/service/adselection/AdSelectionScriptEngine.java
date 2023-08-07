@@ -246,7 +246,7 @@ public class AdSelectionScriptEngine {
             AdCounterKeyCopier adCounterKeyCopier,
             DebugReportingScriptStrategy debugReportingScript,
             boolean cpcBillingEnabled) {
-        mJsEngine = JSScriptEngine.getInstance(context);
+        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);

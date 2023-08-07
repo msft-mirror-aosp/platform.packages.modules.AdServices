@@ -32,7 +32,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.media.MediaDrm;
 import android.media.UnsupportedSchemeException;
 import android.net.Uri;
@@ -44,7 +43,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -215,11 +213,9 @@ public class SdkSandboxRestrictionsTest {
                 () -> Runtime.getRuntime().exec(scriptPath.toString()));
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access app specific external storage
-     */
+    /** Tests that Sdk Sandbox cannot access app specific external storage */
     @Test
-    public void testSanboxCannotAccess_AppSpecificFiles() throws Exception {
+    public void testSandboxCannotAccess_AppSpecificFiles() throws Exception {
         // Check that the sandbox does not have legacy external storage access
         assertThat(Environment.isExternalStorageLegacy()).isFalse();
 
@@ -251,8 +247,16 @@ public class SdkSandboxRestrictionsTest {
 
     /** Tests that Sdk Sandbox cannot access app specific external storage */
     @Test
-    @Ignore("b/234563287")
-    public void testSanboxCannotAccess_MediaStoreApi() throws Exception {
+    public void testSandboxCannotAccess_MediaStoreApi() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        String errorMessage;
+        if (SdkLevel.isAtLeastV()) {
+            errorMessage = "ContentProvider access not allowed from sdk sandbox UID";
+        } else {
+            errorMessage = "SDK sandbox uid may not access contentprovider";
+        }
+
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final ContentResolver resolver = ctx.getContentResolver();
 
@@ -262,22 +266,25 @@ public class SdkSandboxRestrictionsTest {
         final ContentValues newItem = new ContentValues();
         newItem.put(MediaStore.Audio.Media.DISPLAY_NAME, "New Audio Item");
         newItem.put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg");
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> resolver.insert(audioCollection, newItem));
-        assertThat(thrown).hasMessageThat().contains("Unknown URL content");
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class, () -> resolver.insert(audioCollection, newItem));
+        assertThat(thrown).hasMessageThat().contains(errorMessage);
 
         // Cannot query on media store
         String[] projection = new String[] {
             MediaStore.Audio.Media._ID,
         };
-        try (Cursor cursor = resolver.query(audioCollection, projection, null, null, null, null)) {
-            assertThat(cursor).isNull();
-        }
+        thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () -> resolver.query(audioCollection, projection, null, null, null, null));
+        assertThat(thrown).hasMessageThat().contains(errorMessage);
     }
 
     /** Tests that Sdk Sandbox cannot access Storage Access Framework */
     @Test
-    public void testSanboxCannotAccess_StorageAccessFramework() throws Exception {
+    public void testSandboxCannotAccess_StorageAccessFramework() throws Exception {
         final String[] intentList = {
                 Intent.ACTION_CREATE_DOCUMENT,
                 Intent.ACTION_OPEN_DOCUMENT,

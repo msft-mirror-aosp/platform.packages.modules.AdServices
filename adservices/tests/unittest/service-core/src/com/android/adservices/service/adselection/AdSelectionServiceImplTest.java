@@ -378,7 +378,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
@@ -386,6 +387,8 @@ public class AdSelectionServiceImplTest {
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -2516,7 +2519,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
@@ -4497,7 +4501,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
+        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any(), any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4531,7 +4535,7 @@ public class AdSelectionServiceImplTest {
     public void testJSScriptEngineConnectionExceptionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
         doThrow(JSSandboxIsNotAvailableException.class)
-                .when(() -> JSScriptEngine.getInstance(any()));
+                .when(() -> JSScriptEngine.getInstance(any(), any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4578,7 +4582,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4966,7 +4971,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -5072,7 +5078,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5187,7 +5194,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -5353,7 +5361,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -5607,7 +5616,8 @@ public class AdSelectionServiceImplTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
 
         // Immediately made subsequent call should fail
         ReportImpressionTestCallback callbackSubsequentCall =

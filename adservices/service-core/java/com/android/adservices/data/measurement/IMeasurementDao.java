@@ -28,7 +28,6 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -89,6 +88,14 @@ public interface IMeasurementDao {
     int getNumAggregateReportsPerDestination(
             @NonNull Uri attributionDestination, @EventSurfaceType int destinationType)
             throws DatastoreException;
+
+    /**
+     * Fetches the count of aggregate reports for the provided source id.
+     *
+     * @param sourceId source id
+     * @return number of aggregate reports in the database attributed to the provided source id.
+     */
+    int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException;
 
     /**
      * Fetches the count of event reports for the provided destination.
@@ -208,11 +215,11 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * @param sourceId the source id
-     * @param reportSpec the new report specification in source
+     * @param sourceId the source ID
+     * @param attributionStatus the source's JSON-encoded attributed triggers
      * @throws DatastoreException throws DatastoreException
      */
-    void updateSourceAttributedTriggers(String sourceId, ReportSpec reportSpec)
+    void updateSourceAttributedTriggers(String sourceId, String attributionStatus)
             throws DatastoreException;
 
     /**
@@ -281,6 +288,17 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Change the summary bucket of the event report
+     *
+     * @param eventReportId the id of the event report to be updated
+     * @param summaryBucket the new summary bucket of the report
+     * @throws DatastoreException
+     */
+    void updateEventReportSummaryBucket(
+            @NonNull String eventReportId, @NonNull String summaryBucket) throws DatastoreException;
+    ;
+
+    /**
      * Change the status of an event debug report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated
@@ -345,7 +363,8 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.

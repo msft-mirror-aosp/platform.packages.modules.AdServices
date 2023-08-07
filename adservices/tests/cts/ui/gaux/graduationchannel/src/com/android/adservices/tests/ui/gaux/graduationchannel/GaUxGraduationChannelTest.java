@@ -59,6 +59,7 @@ public class GaUxGraduationChannelTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         UiUtils.enableNotificationPermission();
+        UiUtils.enableGa();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -123,7 +124,6 @@ public class GaUxGraduationChannelTest {
     public void testRowU18ToGaAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableU18Ux();
-        UiUtils.enableBeta();
 
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
@@ -150,8 +150,47 @@ public class GaUxGraduationChannelTest {
 
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
 
-        // No notifications should be shown as graduation channel is not yet implmeneted.
+        // No notifications should be shown as graduation channel is disabled.
         UiUtils.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
+    }
+
+    /**
+     * Verify that for beta, ROW devices with non zeroed-out AdId, the beta ROW notification is
+     * displayed.
+     */
+    @Test
+    public void testRowU18ToBetaAdIdEnabled() throws Exception {
+        UiUtils.setAsRowDevice();
+        UiUtils.enableU18Ux();
+
+        AdServicesStates u18States =
+                new AdServicesStates.Builder()
+                        .setU18Account(true)
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(false)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build();
+
+        mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
+
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
+
+        UiUtils.enableBeta();
+
+        AdServicesStates adultStates =
+                new AdServicesStates.Builder()
+                        .setU18Account(false)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build();
+
+        mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
+
+        // No notifications should be shown as there is no enrollment channel from U18 to Beta UX.
+        UiUtils.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.BETA_UX);
     }
 }

@@ -52,6 +52,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
@@ -95,7 +96,7 @@ public class PersistAdSelectionResultRunnerTest {
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
                     .setCustomAudienceName("test-name")
-                    .setCustomAudienceOwner(WINNER_BUYER.toString())
+                    .setBuyer(WINNER_BUYER.toString())
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
@@ -150,7 +151,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -242,7 +244,8 @@ public class PersistAdSelectionResultRunnerTest {
                         eq(true),
                         eq(CALLER_UID),
                         eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT));
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()

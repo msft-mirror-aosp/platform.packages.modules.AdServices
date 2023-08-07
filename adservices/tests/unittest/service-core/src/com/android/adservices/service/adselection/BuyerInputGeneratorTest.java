@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdTechIdentifier;
@@ -62,6 +64,7 @@ public class BuyerInputGeneratorTest {
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
+    private AdFilterer mAdFiltererSpy;
     private BuyerInputGenerator mBuyerInputGenerator;
     private MockitoSession mStaticMockSession = null;
 
@@ -76,9 +79,11 @@ public class BuyerInputGeneratorTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mAdFiltererSpy = ExtendedMockito.spy(new AdFiltererNoOpImpl());
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
+                        mAdFiltererSpy,
                         mFlags,
                         mLightweightExecutorService,
                         mBackgroundExecutorService);
@@ -131,6 +136,8 @@ public class BuyerInputGeneratorTest {
                 assertEqual(buyerInputsCA, deviceCA);
             }
         }
+
+        verify(mAdFiltererSpy).filterCustomAudiences(any());
     }
 
     /**

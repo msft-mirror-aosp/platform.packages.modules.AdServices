@@ -40,7 +40,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Ermöglicht einer App den Zugriff auf die Enablement State API von Adservice."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Zugriff auf die APIs von AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Erlaubt einer App den Zugriff auf die APIs von AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android System"</string>
+    <!-- no translation found for app_label (5844694701336604490) -->
+    <skip />
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Am Betaprogramm für Android-Datenschutz bei Anzeigen teilnehmen"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android testet privatere Möglichkeiten zum Anzeigen von Werbung"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Weitere Informationen"</string>
@@ -224,8 +225,8 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Es ist üblich, dass in Apps, die du verwendest, Themen gespeichert werden, die dich interessieren, um deine Nutzung zu personalisieren. Apps können auch in Android Informationen über deine Themen speichern.\n\nWenn du zum Beispiel eine App zum Marathontraining nutzt, könnte daraus geschlossen werden, dass du dich für Laufschuhe interessierst. Wenn du dann später eine andere App verwendest, zeigt dir diese App möglicherweise aufgrund von Vorschlägen der ersten App Werbung für Laufschuhe.\n\nIn Android werden Daten zu App-Vorschlägen regelmäßig automatisch gelöscht. Apps, die du wiederholt verwendest, können aber wieder in die Liste aufgenommen werden. Du kannst auch verhindern, dass eine App dir Werbung vorschlägt.\n\nOb in deinen Apps personalisierte Werbung angezeigt wird, hängt von dieser Einstellung, der Einstellung zu Anzeigenthemen, den Einstellungen zu deiner Werbe-ID und davon ab, ob die jeweilige App personalisierte Werbung nutzt."</string>
     <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Neue Funktion zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Nur sehr wenige Informationen werden zwischen Apps ausgetauscht, um die Leistung von Werbung messen zu können"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Wir führen eine neue Funktion zum Datenschutz bei Werbung ein. Diese Funktion heißt „Erfolgsmessung von Anzeigen“. Android gibt nur sehr begrenzte Informationen zwischen Apps weiter, z. B. wann dir Werbung gezeigt wurde, damit Apps die Leistung von Werbung messen können."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Du kannst Änderungen in den Datenschutzeinstellungen für Werbung vornehmen."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Wir führen eine neue Funktion zum Datenschutz bei Werbung ein: „Erfolgsmessung von Anzeigen“. Android gibt nur sehr wenige Informationen zwischen Apps weiter, z. B. wann dir Werbung gezeigt wurde, damit Apps die Leistung von Werbung messen können."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"In den Datenschutzeinstellungen für Werbung kannst du jederzeit Änderungen vornehmen."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Werbung zu messen. Android gibt Apps aber nur Zugang zu bestimmten Arten von Daten."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Farbige Abbildung von Symbolen, die Themen wie Musik, Nachrichten und Sport repräsentieren"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Farbige Abbildung eines Schlosses in einem Kreis"</string>

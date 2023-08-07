@@ -44,6 +44,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -90,7 +91,8 @@ public class UpdateAdCounterHistogramWorkerTest {
                         new FlagsOverridingAdFiltering(true),
                         mServiceFilterMock,
                         mConsentManagerMock,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder(
@@ -168,7 +170,8 @@ public class UpdateAdCounterHistogramWorkerTest {
                         new FlagsOverridingAdFiltering(false),
                         mServiceFilterMock,
                         mConsentManagerMock,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
@@ -194,7 +197,8 @@ public class UpdateAdCounterHistogramWorkerTest {
     public void testWorkerFilterFailureStopsAndNotifiesFailure() throws InterruptedException {
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
                 .when(mServiceFilterMock)
-                .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =

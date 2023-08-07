@@ -23,10 +23,10 @@ import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
-import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
-import com.android.adservices.service.common.cache.FledgeHttpCache;
-import com.android.adservices.service.measurement.PrivacyParams;
+// NOTE: do not import adservices classes that are only used on javadoc as this class is used by
+// tests that don't have them in the classpath - use the FQCN in the javadoc instead
+
+import com.android.adservices.cobalt.CobaltConstants;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -102,6 +102,14 @@ public interface Flags {
      */
     default int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
+    }
+
+    /** Privacy budget for logging topic ID distributions with randomized response. */
+    float TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION = 5f;
+
+    /** Returns the privacy budget for logging topic ID distributions with randomized response. */
+    default float getTopicsPrivacyBudgetForTopicIdDistribution() {
+        return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -355,6 +363,13 @@ public interface Flags {
         return MEASUREMENT_ENABLE_SHARED_SOURCE_DEBUG_KEY;
     }
 
+    boolean MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA = true;
+
+    /** Enable/disable shared_filter_data_keys processing from source RBR. */
+    default boolean getMeasurementEnableSharedFilterDataKeysXNA() {
+        return MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA;
+    }
+
     boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
 
     /** Returns whether verbose debug report generation is enabled. */
@@ -404,24 +419,26 @@ public interface Flags {
         return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * Returns the minimum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMinDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
     }
 
-    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+    long DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            TimeUnit.MINUTES.toMillis(5);
 
     /**
      * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
      * received.
      */
-    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
-        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    default long getMeasurementAsyncRegistrationJobTriggerMaxDelayMs() {
+        return DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
@@ -479,35 +496,35 @@ public interface Flags {
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
-    default float getMeasurementFlexAPIMaxInformationGainEvent() {
+    default float getMeasurementFlexApiMaxInformationGainEvent() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
-    default float getMeasurementFlexAPIMaxInformationGainNavigation() {
+    default float getMeasurementFlexApiMaxInformationGainNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
 
     /** Returns max event reports in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReports() {
+    default int getMeasurementFlexApiMaxEventReports() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS = 5;
 
     /** Returns max event report windows in Flexible Event API */
-    default int getMeasurementFlexAPIMaxEventReportWindows() {
+    default int getMeasurementFlexApiMaxEventReportWindows() {
         return MEASUREMENT_FLEX_API_MAX_EVENT_REPORT_WINDOWS;
     }
 
     int MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY = 32;
 
     /** Returns max trigger data cardinality in Flexible Event API */
-    default int getMeasurementFlexAPIMaxTriggerDataCardinality() {
+    default int getMeasurementFlexApiMaxTriggerDataCardinality() {
         return MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
     }
 
@@ -750,7 +767,10 @@ public interface Flags {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
+    /**
+     * Returns boolean, if the caching is enabled for {@link
+     * com.android.adservices.service.common.cache.FledgeHttpCache}
+     */
     default boolean getFledgeHttpCachingEnabled() {
         return FLEDGE_HTTP_CACHE_ENABLE;
     }
@@ -847,7 +867,7 @@ public interface Flags {
 
     /**
      * Returns the timeout constant in milliseconds that limits the {@link
-     * AdOutcomeSelectorImpl#runAdOutcomeSelector}
+     * com.android.adservices.service.adselection.AdOutcomeSelectorImpl#runAdOutcomeSelector}
      */
     default long getAdSelectionSelectingOutcomeTimeoutMs() {
         return FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
@@ -891,7 +911,8 @@ public interface Flags {
     }
 
     /**
-     * Returns the maximum number of {@link DBRegisteredAdInteraction} that can be in the {@code
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction} that can be in the {@code
      * registered_ad_interactions} database at any one time.
      */
     default long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
@@ -899,15 +920,17 @@ public interface Flags {
     }
 
     /**
-     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
-     * in one call to {@code reportImpression}.
+     * Returns the maximum number of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction} that an ad-tech can
+     * register in one call to {@code reportImpression}.
      */
     default long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
         return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
     }
 
     /**
-     * Returns the maximum size in bytes of {@link DBRegisteredAdInteraction#getInteractionKey()}
+     * Returns the maximum size in bytes of {@link
+     * com.android.adservices.data.adselection.DBRegisteredAdInteraction#getInteractionKey()}
      */
     default long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
         return FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
@@ -1901,6 +1924,47 @@ public interface Flags {
     }
 
     /*
+     * The allow-list for Measurement APIs. This list has the list of app package names that we
+     * allow using Measurement APIs.
+     */
+    String MSMT_API_APP_ALLOW_LIST =
+            "android.platform.test.scenario,"
+                    + "android.adservices.crystalball,"
+                    + "android.adservices.cts,"
+                    + "android.adservices.debuggablects,"
+                    + "com.android.adservices.endtoendtest,"
+                    + "com.android.adservices.servicecoretest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "com.android.adservices.tests.adid,"
+                    + "com.android.adservices.tests.appsetid,"
+                    + "com.android.sdksandboxclient,"
+                    + "com.android.tests.sandbox.adid,"
+                    + "com.android.tests.sandbox.appsetid,"
+                    + "com.android.tests.sandbox.fledge,"
+                    + "com.android.tests.sandbox.measurement,"
+                    + "com.example.adservices.samples.adid.app,"
+                    + "com.example.adservices.samples.appsetid.app,"
+                    + "com.example.adservices.samples.fledge.sampleapp,"
+                    + "com.example.adservices.samples.fledge.sampleapp1,"
+                    + "com.example.adservices.samples.fledge.sampleapp2,"
+                    + "com.example.adservices.samples.fledge.sampleapp3,"
+                    + "com.example.adservices.samples.fledge.sampleapp4,"
+                    + "com.example.measurement.sampleapp,"
+                    + "com.example.measurement.sampleapp2,"
+                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+
+    /*
+     * App Package Name that does not belong to this allow-list will not be able to use Measurement
+     * APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    default String getMsmtApiAppAllowList() {
+        return MSMT_API_APP_ALLOW_LIST;
+    }
+
+    /*
      * The allow-list for PP APIs. This list has the list of app signatures that we allow
      * using PP APIs. App Package signatures that do not belong to this allow-list will not be
      * able to use PP APIs, unless the package name of this app is in the bypass list.
@@ -1968,6 +2032,12 @@ public interface Flags {
     float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 25;
 
     /**
+     * PP API Rate Limit for measurement register sources. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND = 25;
+
+    /**
      * PP API Rate Limit for measurement register trigger. This is the max allowed QPS for one API
      * client to one PP API. Negative Value means skipping the rate limiting checking.
      */
@@ -2025,6 +2095,11 @@ public interface Flags {
     /** Returns the Measurement Register Source Request Permits Per Second. */
     default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Sources Request Permits Per Second. */
+    default float getMeasurementRegisterSourcesRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
     }
 
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
@@ -2598,6 +2673,41 @@ public interface Flags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
+    /** Disable maximum number of aggregatable reports per source by default. */
+    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
+
+    /**
+     * Returns true if maximum number of aggregatable reports per source is enabled, false
+     * otherwise.
+     */
+    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
+        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum Aggregate Reports per source. */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE = 20;
+
+    /** Returns maximum Aggregate Reports per source. */
+    default int getMeasurementMaxAggregateReportsPerSource() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Maximum number of aggregation keys allowed during source registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during source registration. */
+    default int getMeasurementMaxAggregateKeysPerSourceRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
+    }
+
+    /** Maximum number of aggregation keys allowed during trigger registration. */
+    int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION = 50;
+
+    /** Returns maximum number of aggregation keys allowed during trigger registration. */
+    default int getMeasurementMaxAggregateKeysPerTriggerRegistration() {
+        return MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
+    }
+
     /** Default minimum event report delay in milliseconds */
     long MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS = 3_600_000L;
 
@@ -2616,7 +2726,7 @@ public interface Flags {
 
     /**
      * Default early reporting windows for VTC type source. Derived from {@link
-     * PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     * com.android.adservices.service.measurement.PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
      */
     String MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS = "";
 
@@ -2630,7 +2740,7 @@ public interface Flags {
 
     /**
      * Default early reporting windows for CTC type source. Derived from {@link
-     * PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     * com.android.adservices.service.measurement.PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
      */
     String MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             String.join(
@@ -2656,8 +2766,8 @@ public interface Flags {
 
     /**
      * Default aggregate report delay. Derived from {@link
-     * PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and {@link
-     * PrivacyParams#AGGREGATE_REPORT_DELAY_SPAN}.
+     * com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and
+     * {@link com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_DELAY_SPAN}.
      */
     String MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             String.join(
@@ -2697,6 +2807,14 @@ public interface Flags {
     /** Returns whether Measurement ARA parsing alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraParsingAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement ARA parsing alignment v1 feature flag. */
+    boolean MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 = true;
+
+    /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
+    default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
+        return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
     }
 
     /** Default U18 UX feature flag.. */
@@ -2774,10 +2892,21 @@ public interface Flags {
     }
 
     /** Default value of Cobalt Adservices Api key. */
-    String COBALT_ADSERVICES_API_KEY_HEX = "cobalt-default-api-key";
+    String COBALT_ADSERVICES_API_KEY_HEX = CobaltConstants.DEFAULT_API_KEY;
 
     default String getCobaltAdservicesApiKeyHex() {
         return COBALT_ADSERVICES_API_KEY_HEX;
+    }
+
+    /**
+     * Default value of Adservices release stage for Cobalt. The value should correspond to {@link
+     * com.google.cobalt.ReleaseStage} enum.
+     */
+    String ADSERVICES_RELEASE_STAGE_FOR_COBALT = CobaltConstants.DEFAULT_RELEASE_STAGE;
+
+    /** Returns the value of Adservices release stage for Cobalt. */
+    default String getAdservicesReleaseStageForCobalt() {
+        return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
     }
 
     /**
@@ -2800,5 +2929,16 @@ public interface Flags {
     /** @return if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
+    }
+
+    /**
+     * Default whether to limit logging for enrollment metrics to avoid performance issues. This
+     * includes not logging data that requires database queries and downloading MDD files.
+     */
+    boolean ENROLLMENT_ENABLE_LIMITED_LOGGING = false;
+
+    /** Returns whether enrollment logging should be limited. */
+    default boolean getEnrollmentEnableLimitedLogging() {
+        return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 }

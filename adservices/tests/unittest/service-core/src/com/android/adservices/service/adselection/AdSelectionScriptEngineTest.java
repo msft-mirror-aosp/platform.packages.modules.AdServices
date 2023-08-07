@@ -43,7 +43,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -496,9 +496,10 @@ public class AdSelectionScriptEngineTest {
         verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
         for (GenerateBidResult result : results) {
-            LogUtil.i(result.getAdWithBid().getAdData().toString());
+            LoggerFactory.getFledgeLogger().i(result.getAdWithBid().getAdData().toString());
         }
-        LogUtil.i(new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2).getAdData().toString());
+        LoggerFactory.getFledgeLogger()
+                .i(new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2).getAdData().toString());
         assertThat(
                         results.stream()
                                 .map(GenerateBidResult::getAdWithBid)

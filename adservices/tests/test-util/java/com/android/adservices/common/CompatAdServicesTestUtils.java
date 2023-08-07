@@ -17,9 +17,11 @@
 package com.android.adservices.common;
 
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 /** Class to place back-compat Adservices related helper methods */
 public class CompatAdServicesTestUtils {
+    private static final int PPAPI_ONLY = 1;
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;
 
@@ -32,20 +34,37 @@ public class CompatAdServicesTestUtils {
      * related code on S- before running various PPAPI related tests.
      */
     public static void setFlags() {
-        setEnableBackCompatFlag(true);
-        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
-        setConsentSourceOfTruth(APPSEARCH_ONLY);
-        setEnableAppSearchConsentData(true);
-        setEnableMeasurementRollbackAppSearchKillSwitch(false);
+        if (SdkLevel.isAtLeastT()) {
+            // Do nothing; this method is intended to set flags for Android S- only.
+            return;
+        } else if (SdkLevel.isAtLeastS()) {
+            setEnableBackCompatFlag(true);
+            setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
+            setConsentSourceOfTruth(APPSEARCH_ONLY);
+            setEnableAppSearchConsentData(true);
+            setEnableMeasurementRollbackAppSearchKillSwitch(false);
+        } else {
+            setEnableBackCompatFlag(true);
+            // TODO (b/285208753): Update flags once AppSearch is supported on R.
+            setBlockedTopicsSourceOfTruth(PPAPI_ONLY);
+            setConsentSourceOfTruth(PPAPI_ONLY);
+            setEnableAppSearchConsentData(false);
+            setEnableMeasurementRollbackAppSearchKillSwitch(true);
+        }
     }
 
     /** Reset back-compat related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
+        if (SdkLevel.isAtLeastT()) {
+            // Do nothing; this method is intended to set flags for Android S- only.
+            return;
+        }
         setEnableBackCompatFlag(false);
-        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setEnableAppSearchConsentData(false);
-        setEnableMeasurementRollbackAppSearchKillSwitch(true);
+        // TODO (b/285208753): Set to AppSearch always once it's supported on R.
+        setBlockedTopicsSourceOfTruth(SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_ONLY);
+        setConsentSourceOfTruth(SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_ONLY);
+        setEnableAppSearchConsentData(SdkLevel.isAtLeastS());
+        setEnableMeasurementRollbackAppSearchKillSwitch(!SdkLevel.isAtLeastS());
     }
 
     public static void setPpapiAppAllowList(String allowList) {
@@ -57,6 +76,18 @@ public class CompatAdServicesTestUtils {
         String mPreviousAppAllowList =
                 ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
         setPpapiAppAllowList(mPreviousAppAllowList + "," + packageName);
+        return mPreviousAppAllowList;
+    }
+
+    public static void setMsmtApiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices msmt_api_app_allow_list " + allowList);
+    }
+
+    public static String getAndOverrideMsmtApiAppAllowList(String packageName) {
+        String mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices msmt_api_app_allow_list");
+        setMsmtApiAppAllowList(mPreviousAppAllowList + "," + packageName);
         return mPreviousAppAllowList;
     }
 
