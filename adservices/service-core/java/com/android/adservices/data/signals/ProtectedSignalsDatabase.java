@@ -25,6 +25,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -37,7 +38,8 @@ public abstract class ProtectedSignalsDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
     public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "protectedsignals.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("protectedsignals.db");
 
     private static volatile ProtectedSignalsDatabase sSingleton;
 
