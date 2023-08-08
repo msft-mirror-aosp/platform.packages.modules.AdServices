@@ -847,7 +847,6 @@ public final class SdkSandboxManagerTest {
 
         // Locking orientation to portrait should override device current orientation
         // (landscape) and restart the sandbox activity in the portrait orientation.
-        actionExecutor.setOrientationToPortrait();
         runAndWait(() -> actionExecutor.setOrientationToPortrait());
 
         assertThat(sUiDevice.getDisplayRotation()).isEqualTo(Surface.ROTATION_0);
