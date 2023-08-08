@@ -149,7 +149,8 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
     }
 
     /**
-     * Builder for {@link AdSelectionFromOutcomesConfig} objects.
+     * Builder for {@link AdSelectionFromOutcomesConfig} objects. All fields require non-null values
+     * to build.
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;

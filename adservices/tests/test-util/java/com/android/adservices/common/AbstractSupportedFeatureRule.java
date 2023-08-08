@@ -263,30 +263,19 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
      *
      * <p>By the default throws a {@link AssumptionViolatedException} with a generic message.
      */
-    protected void throwFeatureNotSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device doesn't support the feature");
-    }
+    protected abstract void throwFeatureNotSupportedAssumptionViolatedException();
 
     /**
      * Called before the test is run, when the device supports the feature and the test requires it
      * to not be supported.
-     *
-     * <p>By the default throws a {@link AssumptionViolatedException} with a generic message.
      */
-    protected void throwFeatureSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device supports the feature");
-    }
+    protected abstract void throwFeatureSupportedAssumptionViolatedException();
 
     /**
      * Called after the test is run, when the code under test was expected to throw an exception
      * because the device doesn't support the feature, but the test didn't thrown any exception.
-     *
-     * <p>By the default throws a {@link AssertionError} with a generic message.
      */
-    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
-        throw new AssertionError(
-                "test should have thrown an UnsupportedOperationException, but didn't throw any");
-    }
+    protected abstract void throwUnsupporteTestDidntThrowExpectedExceptionError();
 
     /**
      * Called after the test threw an exception when running in a device that doesn't support the

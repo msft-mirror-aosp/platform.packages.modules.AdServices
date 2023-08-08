@@ -31,15 +31,12 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdServicesSupportedRule;
-import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupported;
-import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupportedOrNot;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.GlobalKillSwitchRule;
+import com.android.adservices.common.RequiresGlobalKillSwitchDisabled;
+import com.android.adservices.common.RequiresGlobalKillSwitchDisabledOrEnabled;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +51,7 @@ import java.util.concurrent.Executors;
 
 // TODO(b/243062789): Test should not use CountDownLatch or Sleep.
 @RunWith(JUnit4.class)
-@RequiresAdServicesSupportedOrNot
+@RequiresGlobalKillSwitchDisabledOrEnabled
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
     // The JobId of the Epoch Computation.
@@ -110,13 +107,13 @@ public class TopicsManagerTest {
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
-    // Check test behavior whether or not the feature is enabled
+    // Check test behavior whether or not the global kill switch is enabled
     //    @Rule(order = 1)
     // TODO(b/284971005): re-add @Rule once there is a runner to set the flag and/or a new rule
     // to set device config flags, otherwise tests will fail on T- (notice that this rule was not
     // really working before for that same reason, i.e., it would always run the tests in the
     // SUPPORTED mode)
-    public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
+    public final GlobalKillSwitchRule globalKillSwitchRule = new GlobalKillSwitchRule();
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 2)
@@ -127,7 +124,7 @@ public class TopicsManagerTest {
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
-        if (adServicesSupportedRule.isFeatureSupported()) {
+        if (!globalKillSwitchRule.isKillSwitchEnabled()) {
             // We need to skip 3 epochs so that if there is any usage from other test runs, it will
             // not be used for epoch retrieval.
             Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -141,21 +138,10 @@ public class TopicsManagerTest {
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         // TODO(b/263297331): Handle rollback support for R and S.
-        if (!SdkLevel.isAtLeastT()) {
-            // TODO(b/294423183): move it to AdServicesFlagsSetterRule
-            CompatAdServicesTestUtils.setFlags();
-        }
-    }
-
-    @After
-    public void teardown() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
-    @RequiresAdServicesSupported
+    @RequiresGlobalKillSwitchDisabled
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         flags.setTopicsKillSwitch(true);
