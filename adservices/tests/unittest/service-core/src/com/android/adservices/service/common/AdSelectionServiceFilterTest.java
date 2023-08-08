@@ -109,6 +109,8 @@ public class AdSelectionServiceFilterTest {
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER_LOCALHOST =
+            AdTechIdentifier.fromString("localhost");
 
     private static final int API_NAME = 0;
 
@@ -392,6 +394,81 @@ public class AdSelectionServiceFilterTest {
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
                 DevContext.createForDevOptionsDisabled());
+
+        verify(mFledgeAuthorizationFilterSpy, never())
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+    }
+
+    @Test
+    public void testFilterRequest_withLocalhostDomain_doesNotPass() {
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
+                        mContext,
+                        mConsentManagerMock,
+                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mAppImportanceFilter,
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy,
+                        mMockThrottler);
+
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_LOCALHOST,
+                                        CALLER_PACKAGE_NAME,
+                                        false,
+                                        false,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
+
+        assertThat(exception.getCause())
+                .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
+    }
+
+    @Test
+    public void testFilterRequest_withDeveloperMode_succeeds() {
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                        .build());
+    }
+
+    @Test
+    public void testFilterRequest_withLocalhostDomainInDeveloperMode_skipCheck() {
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
+                        mContext,
+                        mConsentManagerMock,
+                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mAppImportanceFilter,
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy,
+                        mMockThrottler);
+
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_LOCALHOST,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                        .build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());
