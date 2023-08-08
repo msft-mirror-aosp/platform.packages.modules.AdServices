@@ -29,6 +29,7 @@ import static com.android.adservices.service.measurement.SourceFixture.ValidSour
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -80,7 +81,6 @@ import com.google.common.collect.ImmutableMultiset;
 
 import org.json.JSONException;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
@@ -7200,6 +7200,69 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testUpdateSourceAggregateReportDedupKeys_acceptsUnsignedLongValue() {
+        Source validSource = SourceFixture.getValidSource();
+        assertTrue(validSource.getAggregateReportDedupKeys().equals(new ArrayList<UnsignedLong>()));
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.insertSource(validSource));
+
+        String sourceId = getFirstSourceIdFromDatastore();
+        Source source =
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+
+        UnsignedLong dedupKeyValue = new UnsignedLong("17293822569102704640");
+        source.getAggregateReportDedupKeys().add(dedupKeyValue);
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.updateSourceAggregateReportDedupKeys(source));
+
+        Source sourceAfterUpdate =
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+
+        assertEquals(1, sourceAfterUpdate.getAggregateReportDedupKeys().size());
+        assertEquals(dedupKeyValue, sourceAfterUpdate.getAggregateReportDedupKeys().get(0));
+    }
+
+    @Test
+    public void testPersistAndRetrieveSource_handlesPreExistingNegativeValues() {
+        // Setup
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Source validSource = SourceFixture.getValidSource();
+        ContentValues values = new ContentValues();
+        values.put(SourceContract.ID, validSource.getId());
+        values.put(SourceContract.EVENT_ID, validSource.getEventId().toString());
+        values.put(SourceContract.ENROLLMENT_ID, validSource.getEnrollmentId());
+        values.put(SourceContract.REGISTRANT, validSource.getRegistrant().toString());
+        values.put(SourceContract.PUBLISHER, validSource.getPublisher().toString());
+        values.put(
+                SourceContract.REGISTRATION_ORIGIN, validSource.getRegistrationOrigin().toString());
+        // Existing invalid values
+        Long val1 = -123L;
+        Long val2 = Long.MIN_VALUE;
+        values.put(
+                SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
+                val1.toString() + "," + val2.toString());
+        db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
+        maybeInsertSourceDestinations(db, validSource, validSource.getId());
+
+        // Execution
+        Optional<Source> source =
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(validSource.getId()));
+        assertTrue(source.isPresent());
+        List<UnsignedLong> aggReportDedupKeys = source.get().getAggregateReportDedupKeys();
+        assertEquals(2, aggReportDedupKeys.size());
+        assertEquals(val1, (Long) aggReportDedupKeys.get(0).getValue());
+        assertEquals(val2, (Long) aggReportDedupKeys.get(1).getValue());
+    }
+
+    @Test
     public void fetchTriggerMatchingSourcesForXna_filtersSourcesCorrectly() {
         // Setup
         Uri matchingDestination = APP_ONE_DESTINATION;
@@ -8199,7 +8262,7 @@ public class MeasurementDaoTest {
             values.put("registrant", trigger.getRegistrant().toString());
             values.put("attribution_destination", trigger.getAttributionDestination().toString());
             long row = db.insert("msmt_trigger", null, values);
-            Assert.assertNotEquals("Trigger insertion failed", -1, row);
+            assertNotEquals("Trigger insertion failed", -1, row);
         }
     }
 
@@ -8312,13 +8375,24 @@ public class MeasurementDaoTest {
             int destinationType,
             List<Integer> expectedCounts) {
         IntStream.range(0, attributionDestinations.size())
-                .forEach(i -> Assert.assertEquals(expectedCounts.get(i),
-                        DatastoreManagerFactory.getDatastoreManager(sContext)
-                                .runInTransactionWithResult(measurementDao ->
-                                        measurementDao.getNumAggregateReportsPerDestination(
-                                                Uri.parse(attributionDestinations.get(i)),
-                                                destinationType))
-                                .orElseThrow()));
+                .forEach(
+                        i -> {
+                            DatastoreManager.ThrowingCheckedFunction<Integer>
+                                    aggregateReportCountPerDestination =
+                                            measurementDao ->
+                                                    measurementDao
+                                                            .getNumAggregateReportsPerDestination(
+                                                                    Uri.parse(
+                                                                            attributionDestinations
+                                                                                    .get(i)),
+                                                                    destinationType);
+                            assertEquals(
+                                    expectedCounts.get(i),
+                                    DatastoreManagerFactory.getDatastoreManager(sContext)
+                                            .runInTransactionWithResult(
+                                                    aggregateReportCountPerDestination)
+                                            .orElseThrow());
+                        });
     }
 
     private void assertEventReportCount(
@@ -8326,13 +8400,22 @@ public class MeasurementDaoTest {
             int destinationType,
             List<Integer> expectedCounts) {
         IntStream.range(0, attributionDestinations.size())
-                .forEach(i -> Assert.assertEquals(expectedCounts.get(i),
-                        DatastoreManagerFactory.getDatastoreManager(sContext)
-                                .runInTransactionWithResult(measurementDao ->
-                                        measurementDao.getNumEventReportsPerDestination(
-                                                Uri.parse(attributionDestinations.get(i)),
-                                                destinationType))
-                                .orElseThrow()));
+                .forEach(
+                        i -> {
+                            DatastoreManager.ThrowingCheckedFunction<Integer>
+                                    numEventReportsPerDestination =
+                                            measurementDao ->
+                                                    measurementDao.getNumEventReportsPerDestination(
+                                                            Uri.parse(
+                                                                    attributionDestinations.get(i)),
+                                                            destinationType);
+                            assertEquals(
+                                    expectedCounts.get(i),
+                                    DatastoreManagerFactory.getDatastoreManager(sContext)
+                                            .runInTransactionWithResult(
+                                                    numEventReportsPerDestination)
+                                            .orElseThrow());
+                        });
     }
 
     private List<String> createAppDestinationVariants(int destinationNum) {

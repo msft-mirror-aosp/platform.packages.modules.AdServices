@@ -1775,10 +1775,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private String listToCommaSeparatedString(List<UnsignedLong> list) {
-        return list.stream()
-                .map(UnsignedLong::getValue)
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
+        return list.stream().map(UnsignedLong::toString).collect(Collectors.joining(","));
     }
 
     private static Function<String, String> getTimeMatcher(Instant start, Instant end) {
