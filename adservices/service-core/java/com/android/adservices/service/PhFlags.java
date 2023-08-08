@@ -88,8 +88,6 @@ public final class PhFlags implements Flags {
             "measurement_event_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_event_fallback_reporting_job_period_ms";
-    static final String KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "measurement_aggregate_encryption_key_coordinator_url";
 
     static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED =
             "measurement_aggregation_coordination_origin_enabled";
@@ -971,15 +969,6 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
-    }
-
-    @Override
-    public String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getString(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
-                /* defaultValue */ MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
     }
 
     @Override
@@ -3467,11 +3456,6 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementEventFallbackReportingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL
-                        + " = "
-                        + getMeasurementAggregateEncryptionKeyCoordinatorUrl());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED

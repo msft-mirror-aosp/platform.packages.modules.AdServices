@@ -403,8 +403,6 @@ public class AggregateReportingJobServiceTest {
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(4))
                     .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
-            ExtendedMockito.doReturn("http://example.test")
-                    .when(AdServicesConfig::getMeasurementAggregateEncryptionKeyCoordinatorUrl);
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
