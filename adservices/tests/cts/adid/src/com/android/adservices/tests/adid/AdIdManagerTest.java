@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -38,6 +39,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,6 +57,10 @@ public class AdIdManagerTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     private String mPreviousAppAllowList;
+
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setup() throws Exception {
