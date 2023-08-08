@@ -15,8 +15,6 @@
  */
 package com.android.adservices.common;
 
-// TODO(b/284971005): try to merge it with AdServicesSupportedRule (for example, using a
-// builder that would tell whether to check for device support)
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
