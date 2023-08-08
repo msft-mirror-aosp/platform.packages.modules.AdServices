@@ -382,7 +382,14 @@ public class FledgeE2ETest {
         doNothing()
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
-                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                        any(),
+                        anyString(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
         when(ConsentManager.getInstance(CONTEXT_SPY)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
@@ -2974,7 +2981,14 @@ public class FledgeE2ETest {
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
-                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                        any(),
+                        anyString(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
 
         setupAdSelectionConfig();
 
@@ -3191,7 +3205,14 @@ public class FledgeE2ETest {
         doThrow(new FilterException(new NullPointerException("Intentional test failure")))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
-                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                        any(),
+                        anyString(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =

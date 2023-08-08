@@ -26,6 +26,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
@@ -73,7 +74,8 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey) {
+            @NonNull Throttler.ApiKey apiKey,
+            DevContext devContext) {
         try {
             Objects.requireNonNull(callerPackageName);
             Objects.requireNonNull(apiKey);
@@ -84,7 +86,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
                 assertForegroundCaller(callerUid, apiName);
             }
             if (!Objects.isNull(adTech)) {
-                assertFledgeEnrollment(adTech, callerPackageName, apiName);
+                assertFledgeEnrollment(adTech, callerPackageName, apiName, devContext);
             }
             assertAppInAllowList(callerPackageName, apiName);
             if (enforceConsent) {

@@ -31,6 +31,7 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     data: [
+        ":EmptySdkProviderApp",
         ":SdkSandboxSmallModuleTestApp",
     ],
     test_suites: ["general-tests"],
@@ -46,6 +47,7 @@ android_test_helper_app {
         "androidx.core_core",
         "androidx.test.ext.junit",
         "cts-install-lib",
+        "SdkSandboxTestUtils",
     ],
     libs: [
         "framework-adservices.impl",
