@@ -30,6 +30,7 @@ import androidx.room.migration.AutoMigrationSpec;
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -51,7 +52,8 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
 
     public static final int DATABASE_VERSION = 3;
     // TODO(b/230653780): Should we separate the DB.
-    public static final String DATABASE_NAME = "customaudience.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("customaudience.db");
 
     @RenameColumn(
             tableName = DBCustomAudience.TABLE_NAME,
