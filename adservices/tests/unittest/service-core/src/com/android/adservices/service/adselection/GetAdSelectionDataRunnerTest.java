@@ -250,7 +250,7 @@ public class GetAdSelectionDataRunnerTest {
 
         ProtectedAudienceInput result =
                 mGetAdSelectionDataRunner.composeProtectedAudienceInputBytes(
-                        buyerInputs, SELLER, adSelectionId);
+                        buyerInputs, CALLER_PACKAGE_NAME, adSelectionId);
 
         Map<String, ByteString> expectedBuyerInput =
                 ImmutableMap.of(
@@ -259,7 +259,7 @@ public class GetAdSelectionDataRunnerTest {
                         BUYER_2.toString(),
                         ByteString.copyFrom(buyer2data));
         Assert.assertEquals(result.getBuyerInput(), expectedBuyerInput);
-        Assert.assertEquals(result.getPublisherName(), SELLER.toString());
+        Assert.assertEquals(result.getPublisherName(), CALLER_PACKAGE_NAME);
         Assert.assertEquals(
                 result.getEnableDebugReporting(),
                 mFlags.getFledgeAuctionServerEnableDebugReporting());
