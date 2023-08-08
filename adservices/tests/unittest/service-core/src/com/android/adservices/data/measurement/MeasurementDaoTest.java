@@ -5964,6 +5964,7 @@ public class MeasurementDaoTest {
                     validAsyncRegistration.getDebugKeyAllowed());
             assertEquals(
                     asyncRegistration.getPlatformAdId(), validAsyncRegistration.getPlatformAdId());
+            assertEquals(asyncRegistration.getPostBody(), validAsyncRegistration.getPostBody());
         }
     }
 
