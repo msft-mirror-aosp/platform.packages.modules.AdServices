@@ -449,7 +449,7 @@ public final class PhFlags implements Flags {
             "topics_on_device_classifier_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
-    static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
+    public static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH =
@@ -460,9 +460,9 @@ public final class PhFlags implements Flags {
             "background_jobs_logging_kill_switch";
 
     // App/SDK AllowList/DenyList keys
-    static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+    public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
 
-    static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+    public static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
 
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
@@ -471,7 +471,8 @@ public final class PhFlags implements Flags {
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
-    static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
+    public static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND =
+            "adid_request_permits_per_second";
     static final String KEY_APPSETID_REQUEST_PERMITS_PER_SECOND =
             "appsetid_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND =
