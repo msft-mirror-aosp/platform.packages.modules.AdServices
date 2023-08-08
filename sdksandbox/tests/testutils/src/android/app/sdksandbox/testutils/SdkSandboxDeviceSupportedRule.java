@@ -60,6 +60,12 @@ public final class SdkSandboxDeviceSupportedRule extends AbstractSupportedFeatur
     }
 
     @Override
+    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
+        throw new AssertionError(
+                "test should have thrown an UnsupportedOperationException, but didn't throw any");
+    }
+
+    @Override
     protected void throwFeatureNotSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device doesn't support SdkSandbox");
     }
