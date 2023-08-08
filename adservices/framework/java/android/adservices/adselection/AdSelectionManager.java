@@ -151,8 +151,6 @@ public class AdSelectionManager {
      *
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
-     *
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void getAdSelectionData(
@@ -233,8 +231,6 @@ public class AdSelectionManager {
      *
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
-     *
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void persistAdSelectionResult(
@@ -296,6 +292,25 @@ public class AdSelectionManager {
      * AdSelectionConfig} object is transferred via a Binder call. For this reason, the total size
      * of these objects is bound to the Android IPC limitations. Failures to transfer the {@link
      * AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
+     *
+     * <p>The input {@code adSelectionConfig} contains {@code Decision Logic Uri} that could follow
+     * either the HTTPS or Ad Selection Prebuilt schemas.
+     *
+     * <p>If the URI follows HTTPS schema then the host should match the {@code seller}. Otherwise,
+     * {@link IllegalArgumentException} will be thrown.
+     *
+     * <p>Prebuilt URIs are a way of substituting a generic pre-built logics for the required
+     * JavaScripts for {@code scoreAds}. Prebuilt Uri for this endpoint should follow;
+     *
+     * <ul>
+     *   <li>{@code ad-selection-prebuilt://ad-selection/<name>?<script-generation-parameters>}
+     * </ul>
+     *
+     * <p>If an unsupported prebuilt URI is passed or prebuilt URI feature is disabled by the
+     * service then {@link IllegalArgumentException} will be thrown.
+     *
+     * <p>See {@link AdSelectionConfig.Builder#setDecisionLogicUri} for supported {@code <name>} and
+     * required {@code <script-generation-parameters>}.
      *
      * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
      * for a successful run, or an {@link Exception} includes the type of the exception thrown and
@@ -420,8 +435,6 @@ public class AdSelectionManager {
      *
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
-     *
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(

@@ -48,7 +48,7 @@ public class ContentProviderRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
 
     // Keep the value consistent with SdkSandboxmanagerService.ENFORCE_RESTRICTIONS
-    private static final String ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+    private static final String ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     // Keep the value consistent with SdkSandboxmanagerService.PROPERTY_CONTENTPROVIDER_ALLOWLIST.
     private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
@@ -62,7 +62,7 @@ public class ContentProviderRestrictionsTestApp {
     // Keep the value consistent with
     // SdkSandboxManagerService.PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST.
     private static final String PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST =
-            "next_contentprovider_allowlist";
+            "sdksandbox_next_contentprovider_allowlist";
 
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.contentproviders";
