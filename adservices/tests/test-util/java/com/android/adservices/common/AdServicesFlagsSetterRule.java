@@ -15,13 +15,17 @@
  */
 package com.android.adservices.common;
 
+import static android.os.Build.VERSION.SDK_INT;
+
 import android.provider.DeviceConfig;
 import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -60,6 +64,9 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     // instantiated using a builder-like approach - will be set to null after test starts.
     @Nullable private List<Pair<String, String>> mInitialSystemProperties = new ArrayList<>();
 
+    // TODO(b/294423183): remove once legacy usage is gone
+    private final boolean mUsedByLegacyHelper;
+
     @Override
     public Statement apply(Statement base, Description description) {
         setOrCacheSystemProperty("tag.adservices", "VERBOSE");
@@ -89,7 +96,13 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         };
     }
 
-    private AdServicesFlagsSetterRule() {}
+    private AdServicesFlagsSetterRule() {
+        this(/* usedByLegacyHelper= */ false);
+    }
+
+    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
+        mUsedByLegacyHelper = usedByLegacyHelper;
+    }
 
     /** Factory method that only disables the global kill switch. */
     public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
@@ -104,7 +117,26 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 .setTopicsClassifierForceUseBundleFiles(true)
                 .setDisableTopicsEnrollmentCheckForTests(true)
                 .setEnableEnrollmentTestSeed(true)
-                .setConsentManagerDebugMode(true);
+                .setConsentManagerDebugMode(true)
+                .setCompatModeFlags();
+    }
+
+    /**
+     * @deprecated temporary method used only by {@code CompatAdServicesTestUtils} and similar
+     *     helpers, it will be remove once such helpers are replaced by this rule.
+     * @return
+     */
+    @Deprecated
+    public static AdServicesFlagsSetterRule forLegacyHelpers(Class<?> helperClass) {
+        AdServicesFlagsSetterRule rule =
+                new AdServicesFlagsSetterRule(/* usedByLegacyHelper= */ true);
+
+        // This object won't be used as a JUnit rule, so we need to explicitly initialize it
+        String testName = helperClass.getSimpleName();
+        rule.setInitialSystemProperties(testName);
+        rule.setInitialFlags(testName);
+
+        return rule;
     }
 
     // NOTE: add more factory methods as needed
@@ -198,6 +230,91 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         return setOrCacheSystemProperty(PhFlags.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
     }
 
+    /** Overrides flag used by {@link PhFlags#getEnableBackCompat()}. */
+    public AdServicesFlagsSetterRule setEnableBackCompat(boolean value) {
+        return setOrCacheFlag(PhFlags.KEY_ENABLE_BACK_COMPAT, value);
+    }
+
+    /** Overrides flag used by {@link PhFlags#getConsentSourceOfTruth()}. */
+    public AdServicesFlagsSetterRule setConsentSourceOfTruth(int value) {
+        return setOrCacheFlag(PhFlags.KEY_CONSENT_SOURCE_OF_TRUTH, value);
+    }
+
+    /** Overrides flag used by {@link PhFlags#getBlockedTopicsSourceOfTruth()}. */
+    public AdServicesFlagsSetterRule setBlockedTopicsSourceOfTruth(int value) {
+        return setOrCacheFlag(PhFlags.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
+    }
+
+    /** Overrides flag used by {@link PhFlags#getEnableAppsearchConsentData()}. */
+    public AdServicesFlagsSetterRule setEnableAppsearchConsentData(boolean value) {
+        return setOrCacheFlag(PhFlags.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
+    }
+
+    /**
+     * Overrides flag used by {@link PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
+     */
+    public AdServicesFlagsSetterRule setMeasurementRollbackDeletionAppSearchKillSwitch(
+            boolean value) {
+        return setOrCacheFlag(
+                PhFlags.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
+    }
+
+    /**
+     * Sets all flags needed to enable compatibility mode, according to the Android version of the
+     * device running the test.
+     */
+    public AdServicesFlagsSetterRule setCompatModeFlags() {
+        if (SdkLevel.isAtLeastT()) {
+            Log.d(TAG, "setCompatModeFlags(): ignored on SDK " + SDK_INT);
+            // Do nothing; this method is intended to set flags for Android S- only.
+            return this;
+        }
+
+        if (SdkLevel.isAtLeastS()) {
+            Log.d(TAG, "setCompatModeFlags(): setting flags for S+");
+            setEnableBackCompat(true);
+            setBlockedTopicsSourceOfTruth(Flags.APPSEARCH_ONLY);
+            setConsentSourceOfTruth(Flags.APPSEARCH_ONLY);
+            setEnableAppsearchConsentData(true);
+            setMeasurementRollbackDeletionAppSearchKillSwitch(false);
+            return this;
+        }
+        Log.d(TAG, "setCompatModeFlags(): setting flags for R+");
+        setEnableBackCompat(true);
+        // TODO (b/285208753): Update flags once AppSearch is supported on R.
+        setBlockedTopicsSourceOfTruth(Flags.PPAPI_ONLY);
+        setConsentSourceOfTruth(Flags.PPAPI_ONLY);
+        setEnableAppsearchConsentData(false);
+        setMeasurementRollbackDeletionAppSearchKillSwitch(true);
+
+        return this;
+    }
+
+    /**
+     * @deprecated only used by {@code CompatAdServicesTestUtils.resetFlagsToDefault()} - flags are
+     *     automatically reset when used as a JUnit Rule.
+     */
+    @Deprecated
+    public void resetCompatModeFlags() {
+        Log.d(TAG, "resetCompatModeFlags()");
+        if (!mUsedByLegacyHelper) {
+            throw new UnsupportedOperationException("Only available for legacy helpers");
+        }
+        if (SdkLevel.isAtLeastT()) {
+            Log.v(TAG, "resetCompatModeFlags(): ignored on " + SDK_INT);
+            // Do nothing; this method is intended to set flags for Android S- only.
+            return;
+        }
+        Log.v(TAG, "resetCompatModeFlags(): setting flags on " + SDK_INT);
+        setEnableBackCompat(false);
+        // TODO (b/285208753): Set to AppSearch always once it's supported on R.
+        setBlockedTopicsSourceOfTruth(
+                SdkLevel.isAtLeastS() ? Flags.APPSEARCH_ONLY : Flags.PPAPI_ONLY);
+        setConsentSourceOfTruth(SdkLevel.isAtLeastS() ? Flags.APPSEARCH_ONLY : Flags.PPAPI_ONLY);
+        setEnableAppsearchConsentData(SdkLevel.isAtLeastS());
+        setMeasurementRollbackDeletionAppSearchKillSwitch(!SdkLevel.isAtLeastS());
+    }
+
     private AdServicesFlagsSetterRule setOrCacheFlag(String name, boolean value) {
         return setOrCacheFlag(name, Boolean.toString(value));
     }
@@ -247,7 +364,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     }
 
     private void setInitialSystemProperties(String testName) {
-        if (mInitialFlags == null) {
+        if (mInitialSystemProperties == null) {
             throw new IllegalStateException("already called");
         }
         if (mInitialSystemProperties.isEmpty()) {
