@@ -123,10 +123,13 @@ public class FledgeAuthorizationFilter {
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package did not declare custom audience permission
      */
-    public void assertAppDeclaredPermission(@NonNull Context context, int apiNameLoggingId)
+    public void assertAppDeclaredPermission(
+            @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
             throws SecurityException {
         Objects.requireNonNull(context);
-        if (!PermissionHelper.hasCustomAudiencesPermission(context)) {
+        Objects.requireNonNull(appPackageName);
+
+        if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
             sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
