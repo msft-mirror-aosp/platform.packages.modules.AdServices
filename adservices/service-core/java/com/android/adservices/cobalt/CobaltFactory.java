@@ -17,7 +17,6 @@
 package com.android.adservices.cobalt;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -33,10 +32,8 @@ import com.android.cobalt.impl.CobaltPeriodicJobImpl;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
-import com.android.cobalt.upload.Uploader;
 
 import com.google.cobalt.CobaltRegistry;
-import com.google.cobalt.EncryptedMessage;
 
 import java.security.SecureRandom;
 import java.util.Objects;
@@ -113,7 +110,7 @@ public final class CobaltFactory {
                                 new SystemData(),
                                 new PrivacyGenerator(getSecureRandom()),
                                 getSecureRandom(),
-                                getNoOpUploader(),
+                                new CobaltUploader(context, PIPELINE_TYPE),
                                 HpkeEncrypter.createForEnvironment(
                                         new HpkeEncryptImpl(), PIPELINE_TYPE),
                                 CobaltApiKeys.copyFromHexApiKey(
@@ -156,17 +153,5 @@ public final class CobaltFactory {
         }
 
         return sSingletonSecureRandom;
-    }
-
-    @NonNull
-    private static Uploader getNoOpUploader() {
-        return new Uploader() {
-            @Override
-            public void upload(EncryptedMessage encryptedMessage) {
-                Log.w(
-                        CobaltFactory.class.getSimpleName(),
-                        "Dropping encrypted message while upload is unimplemented");
-            }
-        };
     }
 }
