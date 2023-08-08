@@ -47,8 +47,10 @@ import java.util.UUID;
 public class UiUtils {
     private static final String PRIVACY_SANDBOX_PACKAGE_NAME = "android.adservices.ui.SETTINGS";
     private static final String NOTIFICATION_PACKAGE_NAME = "android.adservices.ui.NOTIFICATIONS";
-    private static final int LAUNCH_TIMEOUT = 5000;
+    public static final int LAUNCH_TIMEOUT = 5000;
     private static final int LONG_TIMEOUT = 15000;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
+    public static final int SCROLL_WAIT_TIME = 1000;
     private static final int MAX_SWIPES = 7;
 
     public static void refreshConsentResetToken() {
@@ -572,5 +574,41 @@ public class UiUtils {
         } else {
             mainSwitch.click();
         }
+    }
+
+    public static void setFlipFlow(boolean isFlip) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices eu_notif_flow_change_enabled " + isFlip);
+    }
+
+    public static String getString(Context context, int resourceId) {
+        return context.getResources().getString(resourceId);
+    }
+
+    public static void scrollAndClickButton(Context context, UiDevice device, int resId)
+            throws UiObjectNotFoundException, InterruptedException {
+        scrollTo(context, device, resId);
+        UiObject consentPageButton = getElement(context, device, resId);
+        consentPageButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(consentPageButton.exists()).isTrue();
+        consentPageButton.click();
+    }
+
+    public static UiObject scrollTo(Context context, UiDevice device, int resId)
+            throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+        UiObject element = getElement(context, device, resId);
+        scrollView.scrollIntoView(element);
+        return element;
+    }
+
+    public static UiObject getElement(Context context, UiDevice device, int resId) {
+        UiObject obj = device.findObject(new UiSelector().text(getString(context, resId)));
+        if (!obj.exists()) {
+            obj = device.findObject(new UiSelector().text(getString(context, resId).toUpperCase()));
+        }
+        return obj;
     }
 }
