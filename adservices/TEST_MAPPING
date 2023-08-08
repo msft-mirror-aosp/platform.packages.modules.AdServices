@@ -172,6 +172,7 @@
       // Install com.google.android.extservices_sminus.apex and run CtsAdExtServicesAppSetIdEndToEndTest.
       "name": "CtsAdExtServicesAppSetIdEndToEndTest[com.google.android.extservices_sminus.apex]"
     },
+    {
       // Install com.google.android.adservices.apex and run CtsAdServicesCobaltTest.
       "name": "CtsAdServicesCobaltTest[com.google.android.adservices.apex]"
     },
