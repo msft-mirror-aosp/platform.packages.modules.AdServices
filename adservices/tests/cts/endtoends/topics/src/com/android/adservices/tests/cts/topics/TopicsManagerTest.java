@@ -35,11 +35,8 @@ import com.android.adservices.common.AdServicesSupportedRule;
 import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupported;
 import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupportedOrNot;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -141,17 +138,6 @@ public class TopicsManagerTest {
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         // TODO(b/263297331): Handle rollback support for R and S.
-        if (!SdkLevel.isAtLeastT()) {
-            // TODO(b/294423183): move it to AdServicesFlagsSetterRule
-            CompatAdServicesTestUtils.setFlags();
-        }
-    }
-
-    @After
-    public void teardown() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test

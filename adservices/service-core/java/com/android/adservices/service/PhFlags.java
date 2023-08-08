@@ -444,7 +444,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
 
-    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
+    public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
     public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
@@ -542,8 +542,9 @@ public final class PhFlags implements Flags {
             "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
-    static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
-    static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH = "blocked_topics_source_of_truth";
+    public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+    public static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
+            "blocked_topics_source_of_truth";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -593,9 +594,9 @@ public final class PhFlags implements Flags {
     static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
             "adservices_consent_migration_logging_enabled";
 
-    static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
+    public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
-    static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
+    public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;

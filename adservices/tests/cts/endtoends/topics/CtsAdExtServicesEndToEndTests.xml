@@ -42,19 +42,7 @@
         <option name="package" value="com.android.adextservices.tests.cts.endtoendtest"/>
     </test>
 
-    <!-- NOTE: most DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule.
-          This file should contain only those relevant to ExtServices. -->
-
-    <!-- TODO(b/294423183) - set it in the rule -->
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-
-        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
-        <option name="teardown-command"
-                value="device_config put adservices enable_back_compat false"/>
-    </target_preparer>
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
