@@ -183,7 +183,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(new ArrayList<>(), getTestBundle());
 
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
@@ -198,7 +198,8 @@ public class SdkSandboxManagerServiceUnitTest {
             "apply_sdk_sandbox_next_restrictions";
 
     private String mInitialApplyNextSdkSandboxRestrictions = null;
-    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST = "next_service_allowlist";
+    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
+            "sdksandbox_next_service_allowlist";
     private String mInitialValueNextServiceAllowlist;
 
     private String mInitialEnforceRestrictions;
