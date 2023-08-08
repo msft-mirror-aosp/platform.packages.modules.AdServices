@@ -415,8 +415,6 @@ public class AggregateFallbackReportingJobServiceTest {
                     .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
             ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(24))
                     .when(AdServicesConfig::getMeasurementAggregateFallbackReportingJobPeriodMs);
-            ExtendedMockito.doReturn("http://example.test")
-                    .when(AdServicesConfig::getMeasurementAggregateEncryptionKeyCoordinatorUrl);
             ExtendedMockito.doReturn(mock(EnrollmentDao.class))
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)

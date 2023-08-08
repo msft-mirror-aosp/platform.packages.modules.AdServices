@@ -219,15 +219,6 @@ public interface Flags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
-    /* The default URL for fetching public encryption keys for aggregatable reports. */
-    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
-
-    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
-    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
-    }
-
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
