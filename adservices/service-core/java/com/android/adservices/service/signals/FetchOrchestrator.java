@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
 
@@ -23,6 +24,7 @@ import com.google.common.util.concurrent.FluentFuture;
 
 import org.json.JSONObject;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -31,16 +33,16 @@ public class FetchOrchestrator {
 
     @NonNull private final Executor mBackgroundExecutor;
     @NonNull private final UpdatesDownloader mUpdatesDownloader;
-    @NonNull private final UpdatesProcessor mUpdatesProcessor;
+    @NonNull private final UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
 
     public FetchOrchestrator(
             Executor backgroundExecutor,
             UpdatesDownloader updatesDownloader,
-            UpdatesProcessor updatesProcessor) {
+            UpdateProcessingOrchestrator updateProcessingOrchestrator) {
         Objects.requireNonNull(backgroundExecutor);
         mBackgroundExecutor = backgroundExecutor;
-        Objects.requireNonNull(updatesProcessor);
-        mUpdatesProcessor = updatesProcessor;
+        Objects.requireNonNull(updateProcessingOrchestrator);
+        mUpdateProcessingOrchestrator = updateProcessingOrchestrator;
         Objects.requireNonNull(updatesDownloader);
         mUpdatesDownloader = updatesDownloader;
     }
@@ -51,14 +53,15 @@ public class FetchOrchestrator {
      * @param validatedUri Validated Uri to fetch JSON from.
      * @param packageName The package name of the calling app.
      */
-    public void orchestrateFetch(Uri validatedUri, String packageName) {
+    public void orchestrateFetch(Uri validatedUri, AdTechIdentifier adtech, String packageName) {
         FluentFuture<JSONObject> jsonFuture =
                 mUpdatesDownloader.getUpdateJson(validatedUri, packageName);
         // We don't care about the return value here
         var unused =
                 jsonFuture.transform(
                         x -> {
-                            mUpdatesProcessor.processUpdates(x);
+                            mUpdateProcessingOrchestrator.processUpdates(
+                                    adtech, packageName, Instant.now(), x);
                             return null;
                         },
                         mBackgroundExecutor);
