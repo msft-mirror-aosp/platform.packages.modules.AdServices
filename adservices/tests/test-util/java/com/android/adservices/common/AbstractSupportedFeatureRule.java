@@ -130,18 +130,31 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
                     thrown = t;
                 }
                 mLog.d("Base evaluated: thrown=%s", thrown);
-                if (testShouldRunAsSupported) {
-                    if (thrown != null) {
-                        throw thrown;
-                    }
-                } else {
-                    if (thrown == null) {
-                        throwUnsupporteTestDidntThrowExpectedExceptionError();
-                    }
-                    assertUnsupportedTestThrewRightException(thrown);
-                }
+                afterTest(testShouldRunAsSupported, thrown);
             }
         };
+    }
+
+    /**
+     * Called after a test is finished.
+     *
+     * <p>By default, it assumes that on unsupported devices the test should throw an exception
+     * (which is defined by {@link #assertUnsupportedTestThrewRightException(Throwable)}), but
+     * subclasses can override it to change the behavior (for example, by always throwing the
+     * exception).
+     */
+    protected void afterTest(boolean testShouldRunAsSupported, @Nullable Throwable thrown)
+            throws Throwable {
+        if (testShouldRunAsSupported) {
+            if (thrown != null) {
+                throw thrown;
+            }
+        } else {
+            if (thrown == null) {
+                throwUnsupporteTestDidntThrowExpectedExceptionError();
+            }
+            assertUnsupportedTestThrewRightException(thrown);
+        }
     }
 
     private ExpectedTestBehavior getExpectedTestBehavior(Description description) {
