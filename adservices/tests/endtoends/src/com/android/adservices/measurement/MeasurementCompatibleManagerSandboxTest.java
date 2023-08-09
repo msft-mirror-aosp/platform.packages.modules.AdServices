@@ -47,14 +47,14 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -64,7 +64,7 @@ import java.util.concurrent.Executor;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-public class MeasurementCompatibleManagerSandboxTest {
+public final class MeasurementCompatibleManagerSandboxTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
@@ -83,12 +83,17 @@ public class MeasurementCompatibleManagerSandboxTest {
 
     private MeasurementCompatibleManager mMeasurementManager;
 
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // Ignore tests when device is not at least T
+    @Rule(order = 1)
+    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastT();
+
     @Before
     public void setUp() {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         mMockCallbackExecutor = mock(Executor.class);
         mMockOutcomeReceiver = mock(OutcomeReceiver.class);
         mMockMeasurementService = mock(IMeasurementService.class);
