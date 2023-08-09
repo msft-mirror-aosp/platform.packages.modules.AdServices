@@ -160,6 +160,7 @@ package android.adservices.adselection {
   public class ReportEventRequest {
     method public long getAdSelectionId();
     method @NonNull public String getData();
+    method @Nullable public android.view.InputEvent getInputEvent();
     method @NonNull public String getKey();
     method public int getReportingDestinations();
     field public static final int FLAG_REPORTING_DESTINATION_BUYER = 2; // 0x2
@@ -171,6 +172,7 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.ReportEventRequest build();
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setAdSelectionId(long);
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setData(@NonNull String);
+    method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setKey(@NonNull String);
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setReportingDestinations(int);
   }
