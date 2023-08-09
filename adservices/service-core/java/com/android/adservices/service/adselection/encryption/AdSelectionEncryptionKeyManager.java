@@ -32,6 +32,7 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -225,7 +226,9 @@ public class AdSelectionEncryptionKeyManager {
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");
         }
 
-        return FluentFuture.from(mAdServicesHttpsClient.fetchPayload(fetchUri))
+        return FluentFuture.from(
+                        mAdServicesHttpsClient.fetchPayload(
+                                fetchUri, DevContext.createForDevOptionsDisabled()))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)

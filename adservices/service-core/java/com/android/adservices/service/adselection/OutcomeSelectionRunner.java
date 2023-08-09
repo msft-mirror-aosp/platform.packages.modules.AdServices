@@ -167,7 +167,8 @@ public class OutcomeSelectionRunner {
                         mScheduledExecutor,
                         mAdServicesHttpsClient,
                         new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao),
-                        mFlags);
+                        mFlags,
+                        mDevContext);
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
