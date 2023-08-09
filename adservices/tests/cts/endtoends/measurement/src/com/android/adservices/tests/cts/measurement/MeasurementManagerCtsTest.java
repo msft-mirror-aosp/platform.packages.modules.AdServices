@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import android.adservices.common.OutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
+import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
@@ -35,6 +36,8 @@ import android.os.LimitExceededException;
 import android.os.SystemProperties;
 import android.test.suitebuilder.annotation.SmallTest;
 import android.text.TextUtils;
+import android.view.InputEvent;
+import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -83,9 +86,13 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
+    private static final InputEvent INPUT_EVENT =
+            new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
     private static final float DEFAULT_REQUEST_PER_SECOND = 25f;
     private static final String FLAG_REGISTER_SOURCE =
             "measurement_register_source_request_permits_per_second";
+    private static final String FLAG_REGISTER_SOURCES =
+            "measurement_register_sources_request_permits_per_second";
     private static final String FLAG_REGISTER_WEB_SOURCE =
             "measurement_register_web_source_request_permits_per_second";
     private static final String FLAG_REGISTER_TRIGGER =
@@ -265,6 +272,92 @@ public class MeasurementManagerCtsTest {
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
         final boolean reachedLimit =
                 registerSourceAndVerifyRateLimitReached(
+                        mMeasurementManager, /* useCustomReceiver= */ true);
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
+    }
+
+    @Test
+    public void testRegisterSourceMultiple_withNoServerSetupWithCallbackOsReceiver_noErrors()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        android.os.OutcomeReceiver<Object, Exception> callback =
+                result -> countDownLatch.countDown();
+        mMeasurementManager.registerSource(
+                createSourceRegistrationRequest(), CALLBACK_EXECUTOR, callback);
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterSourceMultiple_withNoServerSetupWithCallbackCustomReceiver_noErrors()
+            throws Exception {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        mMeasurementManager.registerSource(
+                createSourceRegistrationRequest(),
+                CALLBACK_EXECUTOR,
+                (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+        assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRegisterSourceMultiple_withCallbackOsReceiver_verifyRateLimitReached()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use android.os.OutcomeReceiver on R
+
+        // Rate limit hasn't reached yet
+        final long nowInMillis = System.currentTimeMillis();
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCES);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(
+                    registerSourceMultipleAndVerifyRateLimitReached(
+                            mMeasurementManager, /* useCustomReceiver= */ false));
+        }
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerSourceMultipleAndVerifyRateLimitReached(
+                mMeasurementManager, /* useCustomReceiver= */ false);
+
+        // Verify limit reached
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit =
+                registerSourceMultipleAndVerifyRateLimitReached(
+                        mMeasurementManager, /* useCustomReceiver= */ false);
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
+    }
+
+    @Test
+    public void testRegisterSourceMultiple_withCallbackCustomReceiver_verifyRateLimitReached()
+            throws Exception {
+        // Rate limit hasn't reached yet
+        final long nowInMillis = System.currentTimeMillis();
+        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCES);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(
+                    i + "th iteration; requestPerSecond" + requestPerSecond,
+                    registerSourceMultipleAndVerifyRateLimitReached(
+                            mMeasurementManager, /* useCustomReceiver= */ true));
+        }
+
+        // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
+        // triggering one more call without checking the outcome.
+        registerSourceMultipleAndVerifyRateLimitReached(
+                mMeasurementManager, /* useCustomReceiver= */ true);
+
+        // Verify limit reached
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit =
+                registerSourceMultipleAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ true);
         final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
@@ -1145,6 +1238,46 @@ public class MeasurementManagerCtsTest {
 
         countDownLatch.await();
         return reachedLimit.get();
+    }
+
+    private boolean registerSourceMultipleAndVerifyRateLimitReached(
+            MeasurementManager manager, boolean useCustomReceiver) throws InterruptedException {
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        if (useCustomReceiver) {
+            manager.registerSource(
+                    createSourceRegistrationRequest(),
+                    CALLBACK_EXECUTOR,
+                    createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+        } else {
+            final android.os.OutcomeReceiver<Object, Exception> osCallback =
+                    new android.os.OutcomeReceiver<>() {
+                        @Override
+                        public void onResult(@NonNull Object result) {
+                            countDownLatch.countDown();
+                        }
+
+                        @Override
+                        public void onError(@NonNull Exception error) {
+                            if (error instanceof LimitExceededException) {
+                                reachedLimit.set(true);
+                            }
+                            countDownLatch.countDown();
+                        }
+                    };
+            manager.registerSource(SOURCE_REGISTRATION_URI, null, CALLBACK_EXECUTOR, osCallback);
+        }
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private SourceRegistrationRequest createSourceRegistrationRequest() {
+        return new SourceRegistrationRequest.Builder(
+                        Collections.singletonList(SOURCE_REGISTRATION_URI))
+                .setInputEvent(INPUT_EVENT)
+                .build();
     }
 
     private OutcomeReceiver<Object, Exception> createCallbackWithCountdownOnLimitExceeded(
