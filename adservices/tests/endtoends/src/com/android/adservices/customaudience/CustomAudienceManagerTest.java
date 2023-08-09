@@ -39,7 +39,7 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresDeviceNotSupported;
+import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
@@ -209,8 +209,8 @@ public final class CustomAudienceManagerTest {
 
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
     @Test
-    @RequiresDeviceNotSupported
-    public void testGetchAndJoinCustomAudience_onUnsupportedDevice() {
+    @RequiresLowRamDevice
+    public void testGetchAndJoinCustomAudience_lowRamDevice() {
         OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
 
         CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
@@ -228,8 +228,8 @@ public final class CustomAudienceManagerTest {
 
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
     @Test
-    @RequiresDeviceNotSupported
-    public void testLeaveCustomAudienceRequest_onUnsupportedDevice() {
+    @RequiresLowRamDevice
+    public void testLeaveCustomAudienceRequest_lowRamDevice() {
         OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
         CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
         assertWithMessage("manager").that(manager).isNotNull();

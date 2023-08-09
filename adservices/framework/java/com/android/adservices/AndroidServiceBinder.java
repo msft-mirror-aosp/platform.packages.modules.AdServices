@@ -16,7 +16,6 @@
 package com.android.adservices;
 
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
-import static android.adservices.common.AdServicesStatusUtils.SERVICE_NOT_AVAILABLE_FOR_DEBUGGING_PURPOSES_ERROR_MESSAGE;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
@@ -28,7 +27,7 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
-import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE;
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
 
 import android.annotation.Nullable;
 import android.content.ComponentName;
@@ -41,6 +40,7 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemProperties;
+import android.text.TextUtils;
 
 import com.android.internal.annotations.GuardedBy;
 
@@ -79,28 +79,32 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @GuardedBy("mLock")
     private ServiceConnection mServiceConnection;
 
-    private final boolean mDisabledForDebuggingPurposes;
+    private final boolean mSimulatingLowRamDevice;
 
     protected AndroidServiceBinder(
             Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
         mContext = context;
         mBinderConverter = converter;
-        mDisabledForDebuggingPurposes =
-                isDebuggable()
-                        && !SystemProperties.getBoolean(
-                                SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE, true);
-        if (mDisabledForDebuggingPurposes) {
+        if (!isDebuggable()) {
+            mSimulatingLowRamDevice = false;
+        } else {
+            String propValue = SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            mSimulatingLowRamDevice = !TextUtils.isEmpty(propValue) && Boolean.valueOf(propValue);
+        }
+        if (mSimulatingLowRamDevice) {
             LogUtil.w(
                     "Service %s disabled because of system property %s",
-                    serviceIntentAction, SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
+                    serviceIntentAction, SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
         }
     }
 
     public T getService() {
-        if (mDisabledForDebuggingPurposes) {
+        if (mSimulatingLowRamDevice) {
             throw new IllegalStateException(
-                    SERVICE_NOT_AVAILABLE_FOR_DEBUGGING_PURPOSES_ERROR_MESSAGE);
+                    "Service is not bound (because of SystemProperty "
+                            + SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW
+                            + ")");
         }
 
         synchronized (mLock) {
@@ -235,10 +239,10 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     @Override
     public void unbindFromService() {
-        if (mDisabledForDebuggingPurposes) {
+        if (mSimulatingLowRamDevice) {
             LogUtil.d(
                     "unbindFromService(): ignored because it's disabled by system property %s",
-                    SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
+                    SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
             return;
         }
         synchronized (mLock) {

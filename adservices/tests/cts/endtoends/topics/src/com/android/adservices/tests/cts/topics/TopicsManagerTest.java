@@ -34,7 +34,7 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresDeviceNotSupported;
+import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
@@ -430,9 +430,9 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @RequiresDeviceNotSupported
+    @RequiresLowRamDevice
     @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
-    public void testGetTopics_whenDeviceNotSupported() throws Exception {
+    public void testGetTopics_lowRamDevice() throws Exception {
         TopicsManager manager = TopicsManager.get(sContext);
         assertWithMessage("manager").that(manager).isNotNull();
         OutcomeReceiverForTests<GetTopicsResponse> receiver = new OutcomeReceiverForTests<>();
