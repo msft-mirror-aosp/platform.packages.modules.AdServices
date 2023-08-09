@@ -37,9 +37,9 @@ public final class FlagsConstants {
     public static final int APPSEARCH_ONLY = 3;
     public static final float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
-    // *********************************************
-    // * Flag names (initially defined by PhFlags) *
-    // *********************************************
+    // **************************************************
+    // * Other constants (initially defined by PhFlags) *
+    // **************************************************
 
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     public static final String NAMESPACE_ADSERVICES = "adservices";
@@ -48,6 +48,10 @@ public final class FlagsConstants {
 
     // Maximum possible percentage for percentage variables
     public static final int MAX_PERCENTAGE = 100;
+
+    // *********************************************
+    // * Flag names (initially defined by PhFlags) *
+    // *********************************************
 
     /*
      * Keys for ALL the flags stored in DeviceConfig.
@@ -540,9 +544,6 @@ public final class FlagsConstants {
 
     public static final String KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED =
             "enable_enrollment_mdd_record_deletion";
-
-    // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
-    public static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
     // Consent Notification interval begin ms.
     public static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
