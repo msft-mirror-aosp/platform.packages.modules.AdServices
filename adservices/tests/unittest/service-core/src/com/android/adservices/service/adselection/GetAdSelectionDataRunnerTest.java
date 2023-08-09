@@ -47,6 +47,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -58,6 +61,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -70,11 +74,11 @@ import com.google.protobuf.ByteString;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
@@ -96,8 +100,10 @@ public class GetAdSelectionDataRunnerTest {
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
+    @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+    @Spy private AdFilterer mAdFiltererSpy = new AdFiltererNoOpImpl();
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
     private MockitoSession mStaticMockSession = null;
 
@@ -112,6 +118,10 @@ public class GetAdSelectionDataRunnerTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
+        mServerAdSelectionDaoSpy =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+                        .build()
+                        .auctionServerAdSelectionDao();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -133,16 +143,20 @@ public class GetAdSelectionDataRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
         mGetAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
                         mObliviousHttpEncryptorMock,
                         mCustomAudienceDao,
+                        mServerAdSelectionDaoSpy,
                         mAdSelectionServiceFilterMock,
+                        mAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mFlags,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -152,7 +166,7 @@ public class GetAdSelectionDataRunnerTest {
         }
     }
 
-    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
+    //    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -161,7 +175,7 @@ public class GetAdSelectionDataRunnerTest {
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
 
-        createAndPersistDBCustomAudiences();
+        createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
                         .setAdSelectionDataRequest(
@@ -180,6 +194,14 @@ public class GetAdSelectionDataRunnerTest {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1)).encryptBytes(any(), anyLong(), anyLong());
+        verify(mServerAdSelectionDaoSpy, times(1))
+                .insertAuctionServerAdSelection(
+                        DBAuctionServerAdSelection.builder()
+                                .setAdSelectionId(
+                                        callback.mGetAdSelectionDataResponse.getAdSelectionId())
+                                .setSeller(SELLER)
+                                .build());
+        verify(mAdFiltererSpy).filterCustomAudiences(any());
     }
 
     @Test
@@ -194,7 +216,8 @@ public class GetAdSelectionDataRunnerTest {
                         eq(true),
                         eq(CALLER_UID),
                         eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA));
+                        eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
+                        eq(DevContext.createForDevOptionsDisabled()));
 
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
@@ -208,6 +231,8 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNull(callback.mGetAdSelectionDataResponse);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
+        verifyZeroInteractions(mServerAdSelectionDaoSpy);
+        verifyZeroInteractions(mAdFiltererSpy);
     }
 
     @Test
@@ -225,7 +250,7 @@ public class GetAdSelectionDataRunnerTest {
 
         ProtectedAudienceInput result =
                 mGetAdSelectionDataRunner.composeProtectedAudienceInputBytes(
-                        buyerInputs, SELLER, adSelectionId);
+                        buyerInputs, CALLER_PACKAGE_NAME, adSelectionId);
 
         Map<String, ByteString> expectedBuyerInput =
                 ImmutableMap.of(
@@ -234,14 +259,14 @@ public class GetAdSelectionDataRunnerTest {
                         BUYER_2.toString(),
                         ByteString.copyFrom(buyer2data));
         Assert.assertEquals(result.getBuyerInput(), expectedBuyerInput);
-        Assert.assertEquals(result.getPublisherName(), SELLER.toString());
+        Assert.assertEquals(result.getPublisherName(), CALLER_PACKAGE_NAME);
         Assert.assertEquals(
                 result.getEnableDebugReporting(),
                 mFlags.getFledgeAuctionServerEnableDebugReporting());
         Assert.assertEquals(result.getGenerationId(), String.valueOf(adSelectionId));
     }
 
-    private void createAndPersistDBCustomAudiences() {
+    private void createAndPersistDBCustomAudiencesWithAdRenderId() {
         Map<String, AdTechIdentifier> nameAndBuyers =
                 Map.of(
                         "Shoes CA of Buyer 1", BUYER_1,
@@ -252,7 +277,8 @@ public class GetAdSelectionDataRunnerTest {
             AdTechIdentifier buyer = entry.getValue();
             String name = entry.getKey();
             DBCustomAudience thisCustomAudience =
-                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+                    DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
+                            .build();
             mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
         }
     }

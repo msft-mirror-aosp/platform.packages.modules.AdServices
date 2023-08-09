@@ -16,10 +16,7 @@
 
 package com.android.adservices.common;
 
-import android.annotation.Nullable;
-
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
+import com.android.adservices.common.Logger.RealLogger;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
@@ -48,21 +45,32 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
         /**
          * All tests are assumed to be running in a device that supports the feature, unless they
          * are annotated otherwise (by annotations defined by {@link
-         * AbstractSupportedFeatureRule#isFeatureNotSupportedAnnotation(Annotation)}).
+         * AbstractSupportedFeatureRule#isFeatureNotSupportedAnnotation(Annotation)} or {@link
+         * AbstractSupportedFeatureRule#isFeatureSupportedOrNotAnnotation(Annotation)}).
          */
         SUPPORTED_BY_DEFAULT,
 
         /**
          * All tests are assumed to be running in a device that does not support the platform,
          * unless they are annotated otherwise (by annotations defined by {@link
-         * AbstractSupportedFeatureRule#isFeatureSupportedAnnotation(Annotation)}).
+         * AbstractSupportedFeatureRule#isFeatureSupportedAnnotation(Annotation)} or {@link
+         * AbstractSupportedFeatureRule#isFeatureSupportedOrNotAnnotation(Annotation)}).
          */
         NOT_SUPPORTED_BY_DEFAULT,
 
         /**
-         * The behavior of each test is defined by the annotations (defined by {@link
-         * AbstractSupportedFeatureRule#isFeatureSupportedAnnotation(Annotation)} and {@link
+         * All tests are assumed to be running on any device (i.e., whether the device supports the
+         * feature or not, unless they are annotated otherwise (by annotations defined by {@link
+         * AbstractSupportedFeatureRule#isFeatureSupportedAnnotation(Annotation)} or {@link
          * AbstractSupportedFeatureRule#isFeatureNotSupportedAnnotation(Annotation)}).
+         */
+        SUPPORTED_OR_NOT_BY_DEFAULT,
+
+        /**
+         * The behavior of each test is defined by the annotations (defined by {@link
+         * AbstractSupportedFeatureRule#isFeatureSupportedAnnotation(Annotation)}, {@link
+         * AbstractSupportedFeatureRule#isFeatureNotSupportedAnnotation(Annotation)}, and {@link
+         * AbstractSupportedFeatureRule#isFeatureSupportedOrNotAnnotation(Annotation)}).
          *
          * <p>The annotations could be defined in the test method itself, its class, or its
          * superclasses - the method annotations have higher priority, then the class, and so on...
@@ -70,12 +78,14 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
         ANNOTATION_ONLY
     }
 
+    protected final Logger mLog;
     private final Mode mMode;
 
     /** Default constructor. */
-    public AbstractSupportedFeatureRule(Mode mode) {
+    public AbstractSupportedFeatureRule(RealLogger logger, Mode mode) {
         mMode = Objects.requireNonNull(mode);
-        logD("Constructor: mode=%s", mode);
+        mLog = new Logger(logger);
+        mLog.d("Constructor: logger=%s, mode=%s", logger, mode);
     }
 
     // NOTE: ideally should be final and provide proper hooks for subclasses, but we might make it
@@ -86,19 +96,32 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 boolean isFeatureSupported = isFeatureSupported();
-                boolean isTestSupported = isTestSupported(description);
-                logD(
-                        "Evaluating %s when feature supported is %b and test supported is %b",
-                        description, isFeatureSupported, isTestSupported);
-
-                if (isTestSupported) {
-                    if (!isFeatureSupported) {
-                        throwFeatureNotSupportedAVE();
-                    }
-                } else {
-                    if (isFeatureSupported) {
-                        throwFeatureSupportedAVE();
-                    }
+                ExpectedTestBehavior expectedTestBehavior = getExpectedTestBehavior(description);
+                mLog.d(
+                        "Evaluating %s when feature supported is %b and expected test behavior is"
+                                + " %s",
+                        description, isFeatureSupported, expectedTestBehavior);
+                boolean testShouldRunAsSupported = true; // will be used after the test
+                switch (expectedTestBehavior) {
+                    case SUPPORTED:
+                        if (!isFeatureSupported) {
+                            throwFeatureNotSupportedAssumptionViolatedException();
+                        }
+                        break;
+                    case NOT_SUPPORTED:
+                        if (isFeatureSupported) {
+                            throwFeatureSupportedAssumptionViolatedException();
+                        }
+                        testShouldRunAsSupported = false;
+                        break;
+                    case SUPPORTED_OR_NOT:
+                        testShouldRunAsSupported = isFeatureSupported;
+                        mLog.d(
+                                "not throwing AssumptionViolatedException because test should run"
+                                        + " when feature is supported or not, but setting"
+                                        + " testShouldRunAsSupported as %b",
+                                testShouldRunAsSupported);
+                        break;
                 }
                 Throwable thrown = null;
                 try {
@@ -106,8 +129,8 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
                 } catch (Throwable t) {
                     thrown = t;
                 }
-                logD("Base evaluated: thrown=%s", thrown);
-                if (isTestSupported) {
+                mLog.d("Base evaluated: thrown=%s", thrown);
+                if (testShouldRunAsSupported) {
                     if (thrown != null) {
                         throw thrown;
                     }
@@ -121,23 +144,23 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
         };
     }
 
-    private boolean isTestSupported(Description description) {
+    private ExpectedTestBehavior getExpectedTestBehavior(Description description) {
         // First, check the annotations in the test itself
-        Boolean supported =
-                isTestSupportedByAnnotations(
+        ExpectedTestBehavior expectedTestBehavior =
+                getExpectedTestBehaviorByAnnotations(
                         description.getMethodName(), description.getAnnotations());
-        if (supported != null) {
-            return supported;
+        if (expectedTestBehavior != null) {
+            return expectedTestBehavior;
         }
 
         // Then in the test class...
         Class<?> clazz = description.getTestClass();
         do {
-            supported =
-                    isTestSupportedByAnnotations(
+            expectedTestBehavior =
+                    getExpectedTestBehaviorByAnnotations(
                             clazz.getName(), Arrays.asList(clazz.getAnnotations()));
-            if (supported != null) {
-                return supported;
+            if (expectedTestBehavior != null) {
+                return expectedTestBehavior;
             }
             // ...and its superclasses
             clazz = clazz.getSuperclass();
@@ -146,11 +169,20 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
         // Finally, check the mode
         switch (mMode) {
             case SUPPORTED_BY_DEFAULT:
-                logV("isTestSupported(): no annotation found, returning true by default");
-                return true;
+                mLog.v(
+                        "getExpectedTestBehavior(): no annotation found, returning SUPPORTED by"
+                                + " default");
+                return ExpectedTestBehavior.SUPPORTED;
             case NOT_SUPPORTED_BY_DEFAULT:
-                logV("isTestSupported(): no annotation found, returning false by default");
-                return false;
+                mLog.v(
+                        "getExpectedTestBehavior(): no annotation found, returning NOT_SUPPORTED by"
+                                + " default");
+                return ExpectedTestBehavior.NOT_SUPPORTED;
+            case SUPPORTED_OR_NOT_BY_DEFAULT:
+                mLog.v(
+                        "getExpectedTestBehavior(): no annotation found, returning SUPPORTED_OR_NOT"
+                                + " by default");
+                return ExpectedTestBehavior.SUPPORTED_OR_NOT;
             case ANNOTATION_ONLY:
                 throw new IllegalStateException(
                         "No annotation found on "
@@ -158,30 +190,41 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
                                 + ", its class, or its superclasses");
         }
 
-        return true;
+        return ExpectedTestBehavior.SUPPORTED;
     }
 
     @Nullable
-    private Boolean isTestSupportedByAnnotations(String where, Collection<Annotation> annotations) {
+    private ExpectedTestBehavior getExpectedTestBehaviorByAnnotations(
+            String where, Collection<Annotation> annotations) {
         // TODO(b/284971005): should scan all annotations (instead of returning when one is found)
         // to make sure it doesn't have both supported and unsupported (but would unit unit tests
         // to do so)
         for (Annotation annotation : annotations) {
             if (isFeatureSupportedAnnotation(annotation)) {
-                logV(
-                        "isTestSupported(%s, %s): found 'supported' annotation %s, returning true",
+                mLog.v(
+                        "getExpectedTestBehaviorByAnnotations(%s, %s): found 'supported' annotation"
+                                + " %s, returning SUPPORTED",
                         where, annotations, annotation);
-                return true;
+                return ExpectedTestBehavior.SUPPORTED;
             }
             if (isFeatureNotSupportedAnnotation(annotation)) {
-                logV(
-                        "isTestSupported(%s, %s): found 'unsupported' annotation %s, returning"
-                                + " false",
+                mLog.v(
+                        "getExpectedTestBehaviorByAnnotations(%s, %s): found 'unsupported'"
+                                + " annotation %s, returning NOT_SUPPORTED",
                         where, annotations, annotation);
-                return false;
+                return ExpectedTestBehavior.NOT_SUPPORTED;
+            }
+            if (isFeatureSupportedOrNotAnnotation(annotation)) {
+                mLog.v(
+                        "getExpectedTestBehaviorByAnnotations(%s, %s): found 'supportedOrNot'"
+                                + " annotation %s, returning SUPPORTED_OR_NOT",
+                        where, annotations, annotation);
+                return ExpectedTestBehavior.SUPPORTED_OR_NOT;
             }
         }
-        logV("isTestSupported(%s, %s): found no annotation returning null", where, annotations);
+        mLog.v(
+                "getExpectedTestBehaviorByAnnotations(%s, %s): found no annotation returning null",
+                where, annotations);
         return null;
     }
 
@@ -190,7 +233,7 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
      * supports the feature.
      */
     protected boolean isFeatureSupportedAnnotation(Annotation annotation) {
-        logW("%s didn't override isFeatureSupportedAnnotation(); returning false", getClass());
+        mLog.w("%s didn't override isFeatureSupportedAnnotation(); returning false", getClass());
         return false;
     }
 
@@ -199,7 +242,18 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
      * not support the feature.
      */
     protected boolean isFeatureNotSupportedAnnotation(Annotation annotation) {
-        logW("%s didn't override isFeatureNotSupportedAnnotation(); returning false", getClass());
+        mLog.w("%s didn't override isFeatureNotSupportedAnnotation(); returning false", getClass());
+        return false;
+    }
+
+    /**
+     * Returns whether the given annotation indicates that the test should run on each case (i.e.,
+     * in a device that supports or does not support the feature.
+     */
+    protected boolean isFeatureSupportedOrNotAnnotation(Annotation annotation) {
+        mLog.w(
+                "%s didn't override isFeatureSupportedOrNotAnnotation(); returning false",
+                getClass());
         return false;
     }
 
@@ -209,30 +263,19 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
      *
      * <p>By the default throws a {@link AssumptionViolatedException} with a generic message.
      */
-    protected void throwFeatureNotSupportedAVE() {
-        throw new AssumptionViolatedException("Device doesn't support the feature");
-    }
+    protected abstract void throwFeatureNotSupportedAssumptionViolatedException();
 
     /**
      * Called before the test is run, when the device supports the feature and the test requires it
      * to not be supported.
-     *
-     * <p>By the default throws a {@link AssumptionViolatedException} with a generic message.
      */
-    protected void throwFeatureSupportedAVE() {
-        throw new AssumptionViolatedException("Device supports the feature");
-    }
+    protected abstract void throwFeatureSupportedAssumptionViolatedException();
 
     /**
      * Called after the test is run, when the code under test was expected to throw an exception
      * because the device doesn't support the feature, but the test didn't thrown any exception.
-     *
-     * <p>By the default throws a {@link AssertionError} with a generic message.
      */
-    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
-        throw new AssertionError(
-                "test should have thrown an UnsupportedOperationException, but didn't throw any");
-    }
+    protected abstract void throwUnsupporteTestDidntThrowExpectedExceptionError();
 
     /**
      * Called after the test threw an exception when running in a device that doesn't support the
@@ -243,7 +286,7 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
      */
     protected void assertUnsupportedTestThrewRightException(Throwable thrown) {
         if (thrown instanceof UnsupportedOperationException) {
-            logD("test threw UnsupportedOperationException as expected: %s", thrown);
+            mLog.d("test threw UnsupportedOperationException as expected: %s", thrown);
             return;
         }
         throw new AssertionError(
@@ -252,53 +295,13 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
                 thrown);
     }
 
-    /** Convenience method to log an error message. */
-    @FormatMethod
-    protected final void logE(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        log(LogLevel.WARNING, msgFmt, msgArgs);
-    }
-
-    /** Convenience method to log a warning message. */
-    @FormatMethod
-    protected final void logW(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        log(LogLevel.WARNING, msgFmt, msgArgs);
-    }
-
-    /** Convenience method to log a info message. */
-    @FormatMethod
-    protected final void logI(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        log(LogLevel.INFO, msgFmt, msgArgs);
-    }
-
-    /** Convenience method to log a debug message. */
-    @FormatMethod
-    protected final void logD(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        log(LogLevel.DEBUG, msgFmt, msgArgs);
-    }
-
-    /** Convenience method to log a verbose message. */
-    @FormatMethod
-    protected final void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        log(LogLevel.VERBOSE, msgFmt, msgArgs);
-    }
-
-    /** Logs a message in the given level. */
-    @FormatMethod
-    protected abstract void log(
-            LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs);
-
     /** Checks if the device supports the feature. */
-    abstract boolean isFeatureSupported();
+    public abstract boolean isFeatureSupported() throws Exception;
 
-    /**
-     * Defines the log level used on {@link AbstractSupportedFeatureRule#log(LogLevel, String,
-     * Object...)}
-     */
-    protected enum LogLevel {
-        ERROR,
-        WARNING,
-        INFO,
-        DEBUG,
-        VERBOSE
+    /** Defines the expected behavior of each test. */
+    private enum ExpectedTestBehavior {
+        SUPPORTED,
+        NOT_SUPPORTED,
+        SUPPORTED_OR_NOT
     }
 }

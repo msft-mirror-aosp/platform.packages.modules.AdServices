@@ -91,31 +91,29 @@
                 android:clipToPadding="false"
                 android:paddingHorizontal="24dp"
                 android:scrollbars="none" />
-
-            <LinearLayout
-                android:id="@+id/blocked_topics_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="24dp"
-                android:background="?android:attr/selectableItemBackground" >
-                <TextView
-                    android:id="@+id/blocked_topics_button_child"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:key="blocked_topics"
-                    android:text="@string/settingsUI_blocked_topics_title"
-                    android:textAppearance="@style/TextAppearance.H5"
-                    android:drawableStart="@drawable/ic_chevron_right_24dp"
-                    android:drawablePadding="28dp"/>
-            </LinearLayout>
-
             <LinearLayout
                 android:id="@+id/empty_topics_hidden_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingBottom="24dp" >
+                <LinearLayout
+                    android:id="@+id/blocked_topics_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="24dp"
+                    android:background="?android:attr/selectableItemBackground" >
+                    <TextView
+                        android:id="@+id/blocked_topics_button_child"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:key="blocked_topics"
+                        android:text="@string/settingsUI_blocked_topics_title"
+                        android:textAppearance="@style/TextAppearance.H5"
+                        android:drawableStart="@drawable/ic_chevron_right_24dp"
+                        android:drawablePadding="28dp"/>
+                </LinearLayout>
                 <LinearLayout
                     android:id="@+id/reset_topics_button"
                     android:layout_width="match_parent"

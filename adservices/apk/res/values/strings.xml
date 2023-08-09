@@ -80,7 +80,7 @@
     <!--*****************************************************************************************-->
 
     <!-- Text for the label of the app. This will appear as the app name on notifications sent by this app. [CHAR LIMIT=NONE] -->
-    <string name="app_label">Android System</string>
+    <string name="app_label">Ad Privacy</string>
 
     <!-- EU Notification UI strings *************************************************************-->
     <!-- Text for the main title of the EU notification. [CHAR LIMIT=NONE] -->

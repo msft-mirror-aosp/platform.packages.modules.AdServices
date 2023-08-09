@@ -23,12 +23,17 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.android.cobalt.crypto.Encrypter;
+import com.android.cobalt.crypto.EncryptionFailedException;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.AutoValue.CopyAnnotations;
+import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationToEncrypt;
 import com.google.cobalt.UnencryptedObservationBatch;
+
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Stores observations which have been generated, but not sent.
@@ -76,17 +81,21 @@ public abstract class ObservationStoreEntity {
     /**
      * Creates an {@link ObservationBatch} using the provided {@link Encrypter}.
      *
-     * @param encrypter the {@link Encrypter} to encrypt data with.
+     * @param encrypter the {@link Encrypter} to encrypt data with
      * @return an ObservationBatch
+     * @throws EncryptionFailedException if encryption failed
      */
     @NonNull
-    public ObservationBatch encrypt(@NonNull Encrypter encrypter) {
+    public ObservationBatch encrypt(@NonNull Encrypter encrypter) throws EncryptionFailedException {
+        Objects.requireNonNull(encrypter);
+
         ObservationBatch.Builder encryptedObservations =
                 ObservationBatch.newBuilder()
                         .setMetaData(unencryptedObservationBatch().getMetadata());
         for (ObservationToEncrypt toEncrypt :
                 unencryptedObservationBatch().getUnencryptedObservationsList()) {
-            encryptedObservations.addEncryptedObservation(encrypter.encryptObservation(toEncrypt));
+            Optional<EncryptedMessage> encryptionResult = encrypter.encryptObservation(toEncrypt);
+            encryptionResult.ifPresent(encryptedObservations::addEncryptedObservation);
         }
         return encryptedObservations.build();
     }

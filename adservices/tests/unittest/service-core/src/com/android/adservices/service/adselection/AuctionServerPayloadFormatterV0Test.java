@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatter.BYTES_CONVERSION_FACTOR;
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatter.META_INFO_LENGTH_BYTE;
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.AVAILABLE_BUCKET_SIZES_IN_BYTES;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.DATA_SIZE_PADDING_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.PAYLOAD_SIZE_EXCEEDS_LIMIT;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.BYTES_CONVERSION_FACTOR;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+
+import com.android.adservices.service.Flags;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,7 +41,7 @@ public class AuctionServerPayloadFormatterV0Test {
             0; // both formatter and compressor versions are 0
     private static final int DATA_START = META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE;
     private static final int MAXIMUM_PAYLOAD_SIZE_IN_BYTES =
-            AVAILABLE_BUCKET_SIZES_IN_BYTES.stream().mapToInt(i -> i).max().getAsInt();
+            Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES.stream().max(Integer::compare).get();
     private AuctionServerPayloadFormatterV0 mAuctionServerPayloadFormatterV0;
 
     private static byte[] getRandomByteArray(int size) {
@@ -52,7 +53,9 @@ public class AuctionServerPayloadFormatterV0Test {
 
     @Before
     public void setup() {
-        mAuctionServerPayloadFormatterV0 = new AuctionServerPayloadFormatterV0();
+        mAuctionServerPayloadFormatterV0 =
+                new AuctionServerPayloadFormatterV0(
+                        Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
     }
 
     @Test
@@ -111,8 +114,8 @@ public class AuctionServerPayloadFormatterV0Test {
 
     @Test
     public void testInputSizeLargerThenLargestBucket_throwISE() {
-        AuctionServerPayloadFormatter.UnformattedData input =
-                AuctionServerPayloadFormatter.UnformattedData.create(
+        AuctionServerPayloadUnformattedData input =
+                AuctionServerPayloadUnformattedData.create(
                         getRandomByteArray(MAXIMUM_PAYLOAD_SIZE_IN_BYTES));
         ThrowingRunnable runnable =
                 () -> mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
@@ -120,12 +123,12 @@ public class AuctionServerPayloadFormatterV0Test {
     }
 
     public void testDataPaddingAndDispadding(byte[] data, int expectedSizeInBytes) {
-        AuctionServerPayloadFormatter.UnformattedData input =
-                AuctionServerPayloadFormatter.UnformattedData.create(data);
+        AuctionServerPayloadUnformattedData input =
+                AuctionServerPayloadUnformattedData.create(data);
 
-        AuctionServerPayloadFormatter.FormattedData formatted =
+        AuctionServerPayloadFormattedData formatted =
                 mAuctionServerPayloadFormatterV0.apply(input, VALID_COMPRESSOR_VERSION);
-        AuctionServerPayloadFormatter.UnformattedData unformattedData =
+        AuctionServerPayloadUnformattedData unformattedData =
                 mAuctionServerPayloadFormatterV0.extract(formatted);
 
         assertArrayEquals(
@@ -135,9 +138,7 @@ public class AuctionServerPayloadFormatterV0Test {
     }
 
     private void validateFormattedData(
-            byte[] data,
-            int expectedSizeInBytes,
-            AuctionServerPayloadFormatter.FormattedData formatted) {
+            byte[] data, int expectedSizeInBytes, AuctionServerPayloadFormattedData formatted) {
         assertEquals(
                 "data length (bucket size) mismatch.",
                 expectedSizeInBytes,

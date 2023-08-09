@@ -182,6 +182,32 @@ public class ClassifierManager implements Classifier {
         }
     }
 
+    /**
+     * Gets the topics taxonomy based on the classifier type flag values.
+     *
+     * @return The topics taxonomy for the enabled classifier.
+     */
+    public List<Integer> getTopicsTaxonomy() {
+        Flags flags = FlagsFactory.getFlags();
+
+        if (flags.getTopicsOnDeviceClassifierKillSwitch()) {
+            sLogger.v(
+                    "On-device classifier disabled via topics on device classifier kill switch - "
+                            + "falling back to precomputed classifier");
+            return mPrecomputedClassifier.get().getLabels();
+        }
+
+        @ClassifierType int classifierTypeFlag = flags.getClassifierType();
+        // getLabels has the same implementation.
+        // If the loaded assets are same, the output will be same.
+        if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
+            return mOnDeviceClassifier.get().getLabels();
+        } else {
+            // Use getLabels from PrecomputedClassifier as default.
+            return mPrecomputedClassifier.get().getLabels();
+        }
+    }
+
     // Prefer precomputed values for topics if the list is not empty.
     private static List<Topic> combineTopics(
             List<Topic> onDeviceValue, List<Topic> precomputedValue) {

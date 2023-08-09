@@ -329,12 +329,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(
-                                                                    CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .build())
                                     .collect(Collectors.toList()));
                 };
@@ -443,11 +437,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .setWinDebugReportUri(winUri)
                                                             .setLossDebugReportUri(lossUri)
                                                             .setSellerRejectReason(
@@ -589,12 +578,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(
-                                                                    CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .build())
                                     .collect(Collectors.toList()));
                 };
@@ -716,11 +699,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .setWinDebugReportUri(
                                                                     Uri.parse(
                                                                             "http://example.com/1"))
@@ -898,12 +876,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(
-                                                                    CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .build())
                                     .collect(Collectors.toList()));
                 };
@@ -1044,12 +1016,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(
-                                                                    CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .build())
                                     .collect(Collectors.toList()));
                 };
@@ -1232,12 +1198,6 @@ public class AdsScoreGeneratorImplTest {
                                             score ->
                                                     ScoreAdResult.builder()
                                                             .setAdScore(score)
-                                                            .setCustomAudienceName("test_ca")
-                                                            .setCustomAudienceBuyer(BUYER_1)
-                                                            .setSeller(
-                                                                    CommonFixture.VALID_BUYER_1)
-                                                            .setOwnerAppPackage(
-                                                                    CommonFixture.TEST_PACKAGE_NAME)
                                                             .build())
                                     .collect(Collectors.toList()));
                 };

@@ -35,8 +35,6 @@ import java.util.Objects;
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#persistAdSelectionResult} methods in {@link AdSelectionManager}.
- *
- * @hide
  */
 public final class PersistAdSelectionResultRequest implements Parcelable {
     private final long mAdSelectionId;
@@ -132,10 +130,7 @@ public final class PersistAdSelectionResultRequest implements Parcelable {
         return Objects.hash(mAdSelectionId, mSeller, Arrays.hashCode(mAdSelectionResult));
     }
 
-    /** Builder for {@link PersistAdSelectionResultRequest} objects.
-     *
-     * @hide
-     */
+    /** Builder for {@link PersistAdSelectionResultRequest} objects. */
     public static final class Builder {
         private long mAdSelectionId;
         @Nullable private AdTechIdentifier mSeller;

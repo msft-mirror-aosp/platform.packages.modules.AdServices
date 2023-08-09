@@ -24,7 +24,7 @@
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex" />
+            value="com.google.android.extservices.apex" />
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
@@ -32,9 +32,9 @@
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent tests from running on Android R- -->
+    <!-- Prevent tests from running on Android Q- -->
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -42,20 +42,7 @@
         <option name="check-min-sdk" value="true" />
     </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
-        <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
-        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
-
-        <!-- Defaulting the API rate limit -->
-        <option name="run-command"
-                value="device_config put adservices adid_request_permits_per_second 25.0" />
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-    </target_preparer>
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.adextservices.tests.adid"/>

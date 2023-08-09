@@ -19,7 +19,5 @@ package android.adservices.adselection;
 /**
  * This defines the GetAdSelectionDataRequest class, a request created by SDKs which contains
  * contains the information for {@link getAdSelectionData} API.
- *
- * @hide
  */
 parcelable GetAdSelectionDataRequest;

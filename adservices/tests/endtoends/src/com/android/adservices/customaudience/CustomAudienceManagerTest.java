@@ -64,6 +64,10 @@ public class CustomAudienceManagerTest {
 
     @Before
     public void setUp() throws TimeoutException {
+        // Skip the test if it's on an unsupported SDK Level
+        // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+
         // Skip the test if it runs on unsupported platforms
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
@@ -76,16 +80,17 @@ public class CustomAudienceManagerTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
         // Disable API throttling
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
-        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
     }
 
     @After
     public void tearDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
+        // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+        if (!(SdkLevel.isAtLeastS() && AdservicesTestHelper.isDeviceSupported())) {
             return;
         }
 

@@ -16,9 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getMetaInfoByte;
+
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +32,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /** Data padding and padding removal class. */
-public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadFormatter {
+public class AuctionServerPayloadFormatterV0
+        implements AuctionServerPayloadFormatter, AuctionServerPayloadExtractor {
     public static final int VERSION = 0;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -38,15 +43,19 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
     private static final String DATA_SIZE_MISMATCH =
             "Data size extracted from padded bytes is longer than the rest of the data";
 
-    @VisibleForTesting
-    static final ImmutableList<Integer> AVAILABLE_BUCKET_SIZES_IN_BYTES =
-            ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
-
     @VisibleForTesting static final int DATA_SIZE_PADDING_LENGTH_BYTE = 4;
 
+    @NonNull private final ImmutableList<Integer> mAvailableBucketSizesInBytes;
+
+    AuctionServerPayloadFormatterV0(@NonNull ImmutableList<Integer> availableBucketSizesInBytes) {
+        Objects.requireNonNull(availableBucketSizesInBytes);
+
+        mAvailableBucketSizesInBytes = availableBucketSizesInBytes;
+    }
+
     /**
-     * Creates the payload of size [1KB, 2KB, 4KB, 8KB, 16KB, 32KB, 64KB]. If the payload is greater
-     * than 64KB throw exception.
+     * Creates the payload of size in {@link Flags#getFledgeAuctionServerPayloadBucketSizes()}. If
+     * the payload is greater than maximum size in the list, throw exception.
      *
      * <ul>
      *   <li>First 1 byte represents meta info
@@ -61,7 +70,8 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
      *
      * @throws IllegalArgumentException when payload size exceeds size limit
      */
-    public FormattedData apply(@NonNull UnformattedData unformattedData, int compressorVersion) {
+    public AuctionServerPayloadFormattedData apply(
+            @NonNull AuctionServerPayloadUnformattedData unformattedData, int compressorVersion) {
         Objects.requireNonNull(unformattedData);
 
         byte[] data = unformattedData.getData();
@@ -70,7 +80,7 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
         byte[] payload = new byte[getPayloadBucketSizeInBytes(data.length)];
 
         // Fill in
-        payload[0] = AuctionServerPayloadFormatter.getMetaInfoByte(compressorVersion, VERSION);
+        payload[0] = getMetaInfoByte(compressorVersion, VERSION);
         sLogger.v("Meta info byte added: %d", payload[0]);
 
         byte[] dataSizeBytes =
@@ -87,11 +97,12 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
                 META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE,
                 data.length);
 
-        return FormattedData.create(payload);
+        return AuctionServerPayloadFormattedData.create(payload);
     }
 
     /** Extracts the original payload from padded data and the compression algorithm identifier. */
-    public UnformattedData extract(FormattedData formattedData) {
+    public AuctionServerPayloadUnformattedData extract(
+            AuctionServerPayloadFormattedData formattedData) {
         byte[] payload = formattedData.getData();
 
         // Next 4 bytes encode the size of the data
@@ -110,14 +121,14 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
         System.arraycopy(
                 payload, META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE, data, 0, dataSize);
 
-        return UnformattedData.create(data);
+        return AuctionServerPayloadUnformattedData.create(data);
     }
 
     private int getPayloadBucketSizeInBytes(int dataLength) {
         int payloadSize = META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE + dataLength;
 
         // TODO(b/285182469): Implement payload size management
-        return AVAILABLE_BUCKET_SIZES_IN_BYTES.stream()
+        return mAvailableBucketSizesInBytes.stream()
                 .filter(bucketSize -> bucketSize >= payloadSize)
                 .mapToInt(i -> i)
                 .min()

@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"કોઈ ઍપ્લિકેશનને, AdServiceની સુવિધા ચાલુ કરવાના સ્ટેટસ સંબંધિત APIને ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManagerના APIsનો ઍક્સેસ"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ઍપ્લિકેશનને AdServicesManagerના APIs ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android સિસ્ટમ"</string>
+    <string name="app_label" msgid="5844694701336604490">"જાહેરાત સંબંધિત પ્રાઇવસી"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidની જાહેરાતો સંબંધિત પ્રાઇવસીના બીટા વર્ઝનમાં જોડાઓ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android તમને જાહેરાતો બતાવવા માટે, ઍપ માટે વધુ ખાનગી રીતોની શોધખોળ કરી રહ્યું છે"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"વધુ જાણો"</string>
@@ -222,7 +222,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"તમે બ્લૉક કરેલી ઍપ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ઍપ દ્વારા સૂચવેલા ડેટા રીસેટ કરો"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"તમારો અનુભવ મનગમતો બનાવવા માટે, તમે ઉપયોગમાં લો છો તે વિવિધ ઍપ દ્વારા તમે રુચિ ધરાવતા હો તેવી બાબતો યાદ રાખવી સામાન્ય વાત છે. ઍપ, તમારા વિષયો સંબંધિત માહિતી Androidની સહાયથી સ્ટોર પણ કરી શકે છે.\n\nઉદાહરણ તરીકે, જો તમે મેરેથોનના પ્રશિક્ષણ સંબંધિત કોઈ ઍપનો ઉપયોગ કરો, તો તે ઍપ નક્કી કરી શકે છે કે તમે દોડવા માટેના શૂઝમાં રુચિ ધરાવો છો. પછીથી, જો તમે બીજી કોઈ ઍપનો ઉપયોગ કરો તો તે ઍપ તમને પહેલી ઍપ દ્વારા સૂચવવામાં આવેલી દોડવાના શૂઝવાળી જાહેરાત બતાવી શકે છે.\n\nઍપ દ્વારા સૂચવેલી જાહેરાતો સંબંધિત ડેટાને Android નિયમિત, ઑટોમૅટિક રીતે ડિલીટ કરે છે. તમે ફરી ઉપયોગ કરો છો તે ઍપ સૂચિમાં ફરીથી દેખાઈ શકે છે. અથવા તમે કોઈ ઍપને તમને જાહેરાતોનું સૂચન આપવાથી બ્લૉક કરી શકો છો.\n\nતમારી ઍપમાં તમને જોવા મળતી જાહેરાત આ સેટિંગ, જાહેરાતના વિષયોના સેટિંગ, તમારા જાહેરાત IDના સેટિંગ અને તમે ઉપયોગમાં લઈ રહ્યાં હો તે ઍપ જાહેરાતોને મનગમતી બનાવે છે કે નહીં, તેના આધારે મનગમતી બનાવેલી હોઈ શકે છે."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"જાહેરાત સંબંધિત પ્રાઇવસીની નવી સુવિધા ઉપલબ્ધ છે"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"જાહેરાત સંબંધિત પ્રાઇવસીની નવી સુવિધાઓ હવે ઉપલબ્ધ છે"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"જાહેરાતનું પર્ફોર્મન્સ માપવામાં સહાય માટે ઍપ વચ્ચે ખૂબ જ મર્યાદિત માહિતી શેર કરવામાં આવે છે"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"અમે જાહેરાતની માપણી નામની નવી જાહેરાત સંબંધિત પ્રાઇવસી સુવિધા લૉન્ચ કરી રહ્યાં છીએ. ઍપને જાહેરાતોનું પર્ફોર્મન્સ માપવામાં સહાય માટે, Android, ઍપ વચ્ચે ખૂબ જ મર્યાદિત માહિતી શેર કરે છે, જેમ કે તમને જાહેરાત ક્યારે બતાવવામાં આવી."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"તમે જાહેરાત સંબંધી પ્રાઇવસી સેટિંગમાં જઈને તેમાં ફેરફાર કરી શકો છો."</string>

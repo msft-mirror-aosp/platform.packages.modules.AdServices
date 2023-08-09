@@ -749,7 +749,7 @@ public class MobileDataDownloadTest {
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
         // Verify enrollment data file read from MDD and insert the data into the enrollment
         // database.
-        assertThat(enrollmentDataDownloadManager.readAndInsertEnrolmentDataFromMdd().get())
+        assertThat(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())
                 .isEqualTo(SUCCESS);
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
         assertThat(enrollmentDao.deleteAll()).isTrue();

@@ -87,8 +87,9 @@ public class MeasurementRegisterCalls {
     private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 20;
     private static final int AGGREGATE_REPORTING_JOB_ID = 7;
 
-    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            SERVER_BASE_URI + ":" + KEYS_PORT + "/keys";
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN =
+            SERVER_BASE_URI + ":" + KEYS_PORT;
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH = "keys";
     private static final String REGISTRATION_RESPONSE_SOURCE_HEADER =
             "Attribution-Reporting-Register-Source";
     private static final String REGISTRATION_RESPONSE_TRIGGER_HEADER =
@@ -589,8 +590,14 @@ public class MeasurementRegisterCalls {
         // Set aggregate key URL.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_aggregate_encryption_key_coordinator_url",
-                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
+                "measurement_default_aggregation_coordinator_origin",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN,
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_path",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH,
                 /* makeDefault */ false);
 
         // Set flag to pre seed enrollment.
@@ -678,7 +685,12 @@ public class MeasurementRegisterCalls {
         // Reset aggregate key URL.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_aggregate_encryption_key_coordinator_url",
+                "measurement_default_aggregation_coordinator_origin",
+                "null",
+                /* makeDefault */ false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_path",
                 "null",
                 /* makeDefault */ false);
 

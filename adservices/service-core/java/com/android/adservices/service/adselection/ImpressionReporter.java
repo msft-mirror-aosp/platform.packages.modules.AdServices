@@ -40,7 +40,6 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -117,6 +116,7 @@ public class ImpressionReporter {
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final DevContext mDevContext;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -145,6 +145,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(devContext);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
@@ -152,6 +153,7 @@ public class ImpressionReporter {
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
+        mDevContext = devContext;
         boolean isRegisterAdBeaconEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
 
@@ -253,7 +255,8 @@ public class ImpressionReporter {
                                         true,
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+                                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                                        mDevContext);
                                 validateAdSelectionConfig(adSelectionConfig);
                             } finally {
                                 sLogger.v("Completed filtering and validation.");
@@ -443,10 +446,10 @@ public class ImpressionReporter {
         return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
                         dbAdSelectionEntry -> {
-                            LogUtil.v(
+                            sLogger.v(
                                     "DecisionLogicJs from db entry: "
                                             + dbAdSelectionEntry.getBuyerDecisionLogicJs());
-                            LogUtil.v(
+                            sLogger.v(
                                     "DecisionLogicUri from db entry: "
                                             + dbAdSelectionEntry.getBiddingLogicUri().toString());
                             ReportingContext ctx = new ReportingContext();
@@ -754,6 +757,9 @@ public class ImpressionReporter {
          * to the database. 2. We will not commit an entry to the database if {@link
          * InteractionUriRegistrationInfo#getInteractionKey()} is larger than {@link
          * ImpressionReporter#mFlags#getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySize()}
+         * or if {@link InteractionUriRegistrationInfo#getInteractionReportingUri()} is larger than
+         * {@link
+         * ImpressionReporter#mFlags#getFledgeReportImpressionMaxInteractionReportingUriSizeB()}
          */
         private void commitRegisteredAdInteractionsToDatabase(
                 @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
@@ -764,6 +770,8 @@ public class ImpressionReporter {
             long maxTableSize = mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
             long maxInteractionKeySize =
                     mFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB();
+            long maxInteractionReportingUriSize =
+                    mFlags.getFledgeReportImpressionMaxInteractionReportingUriSizeB();
             long maxNumRowsPerDestination =
                     mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
@@ -775,6 +783,18 @@ public class ImpressionReporter {
                         > maxInteractionKeySize) {
                     sLogger.v(
                             "InteractionKey size exceeds the maximum allowed! Skipping this entry");
+                    continue;
+                }
+
+                if (uriRegistrationInfo
+                                .getInteractionReportingUri()
+                                .toString()
+                                .getBytes(StandardCharsets.UTF_8)
+                                .length
+                        > maxInteractionReportingUriSize) {
+                    sLogger.v(
+                            "Interaction reporting uri size exceeds the maximum allowed! Skipping"
+                                    + " this entry");
                     continue;
                 }
 

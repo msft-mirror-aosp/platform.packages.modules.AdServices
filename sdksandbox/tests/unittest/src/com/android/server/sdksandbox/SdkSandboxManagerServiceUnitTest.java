@@ -48,6 +48,7 @@ import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.testutils.DeviceSupportUtils;
@@ -89,7 +90,6 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
@@ -141,6 +141,8 @@ public class SdkSandboxManagerServiceUnitTest {
     private ArgumentCaptor<ActivityInterceptorCallback> mInterceptorCallbackArgumentCaptor =
             ArgumentCaptor.forClass(ActivityInterceptorCallback.class);
     private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
+    private boolean mDisabledNetworkChecks;
+    private boolean mDisabledForegroundCheck;
 
     @Mock private IBinder mAdServicesManager;
 
@@ -181,7 +183,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(new ArrayList<>(), getTestBundle());
 
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
@@ -196,7 +198,8 @@ public class SdkSandboxManagerServiceUnitTest {
             "apply_sdk_sandbox_next_restrictions";
 
     private String mInitialApplyNextSdkSandboxRestrictions = null;
-    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST = "next_service_allowlist";
+    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
+            "sdksandbox_next_service_allowlist";
     private String mInitialValueNextServiceAllowlist;
 
     private String mInitialEnforceRestrictions;
@@ -344,15 +347,26 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     private void disableForegroundCheck() {
-        Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+        if (!mDisabledForegroundCheck) {
+            Mockito.doReturn(IMPORTANCE_FOREGROUND).when(mAmSpy).getUidImportance(Mockito.anyInt());
+            mDisabledForegroundCheck = true;
+        }
     }
 
     /* Ignores network permission checks. */
     private void disableNetworkPermissionChecks() {
-        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
-                Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
-        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
-                Mockito.eq("android.permission.ACCESS_NETWORK_STATE"), Mockito.anyString());
+        if (!mDisabledNetworkChecks) {
+            Mockito.doNothing()
+                    .when(mSpyContext)
+                    .enforceCallingPermission(
+                            Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
+            Mockito.doNothing()
+                    .when(mSpyContext)
+                    .enforceCallingPermission(
+                            Mockito.eq("android.permission.ACCESS_NETWORK_STATE"),
+                            Mockito.anyString());
+            mDisabledNetworkChecks = true;
+        }
     }
 
     @Test
@@ -1639,17 +1653,28 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testEnforceAllowedToStartOrBindService_disallowNonExistentPackage() {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName("nonexistent.package", "test"));
+        Intent intent = new Intent().setComponent(new ComponentName("nonexistent.package", "test"));
         assertThrows(
                 SecurityException.class,
                 () -> sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
     }
 
     @Test
-    public void testEnforceAllowedToStartOrBindService_allowedPackages() {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName(mService.getAdServicesPackageName(), "test"));
+    public void testEnforceAllowedToStartOrBindService_AdServicesApkNotPresent() throws Exception {
+        String adServicesPackageName = mInjector.getAdServicesPackageName();
+        Mockito.when(mInjector.getAdServicesPackageName()).thenReturn(null);
+        Intent intent = new Intent().setComponent(new ComponentName(adServicesPackageName, "test"));
+        assertThrows(
+                SecurityException.class,
+                () -> sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent));
+    }
+
+    @Test
+    public void testEnforceAllowedToStartOrBindService_allowedPackages() throws Exception {
+        Intent intent =
+                new Intent()
+                        .setComponent(
+                                new ComponentName(mInjector.getAdServicesPackageName(), "test"));
         sSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
     }
 
@@ -2063,8 +2088,8 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testAdServicesPackageIsResolved() {
-        assertThat(mService.getAdServicesPackageName()).contains("adservices");
+    public void testAdServicesPackageIsResolved() throws Exception {
+        assertThat(mInjector.getAdServicesPackageName()).contains("adservices");
     }
 
     @Test
@@ -3347,7 +3372,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSdkSandboxEnabledForEmulator() {
-        // SDK sandbox is enabled for an emulator, even if the killswitch is turned on.
+        // SDK sandbox is enabled for an emulator, even if the killswitch is turned on provided
+        // AdServices APK is present.
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
@@ -3356,6 +3382,26 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.clearSdkSandboxState();
         Mockito.when(mInjector.isEmulator()).thenReturn(false);
         sSdkSandboxSettingsListener.setKillSwitchState(true);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDisabledForEmulator() {
+        // SDK sandbox is disabled for an emulator, if AdServices APK is not present.
+        Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
+        Mockito.when(mInjector.isEmulator()).thenReturn(true);
+        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
+    }
+
+    @Test
+    public void testSdkSandboxDisabledForAdServiceApkMissing() {
+        Mockito.doReturn(true).when(mInjector).isAdServiceApkPresent();
+        sSdkSandboxSettingsListener.setKillSwitchState(false);
+        assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isFalse();
+
+        Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
+        sSdkSandboxSettingsListener.setKillSwitchState(false);
         assertThat(mService.isSdkSandboxDisabled(mSdkSandboxService)).isTrue();
     }
 

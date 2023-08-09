@@ -265,14 +265,9 @@ public class MockWebServerRule implements TestRule {
             final List<String> expectedRequests,
             final RequestMatcher<String> requestMatcher) {
 
-        assertEquals(
-                "Number of expected requests does not match actual request count",
-                expectedRequestCount,
-                mockWebServer.getRequestCount());
-
         // For parallel executions requests should be checked agnostic of order
         final Set<String> actualRequests = new HashSet<>();
-        for (int i = 0; i < expectedRequestCount; i++) {
+        for (int i = 0; i < mockWebServer.getRequestCount(); i++) {
             try {
                 actualRequests.add(mockWebServer.takeRequest().getPath());
             } catch (InterruptedException e) {
@@ -296,6 +291,11 @@ public class MockWebServerRule implements TestRule {
                             request),
                     wasPathRequested(actualRequests, request, requestMatcher));
         }
+
+        assertEquals(
+                "Number of expected requests does not match actual request count",
+                expectedRequestCount,
+                mockWebServer.getRequestCount());
     }
 
     private boolean wasPathRequested(

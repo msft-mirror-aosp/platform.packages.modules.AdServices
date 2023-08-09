@@ -53,6 +53,8 @@ public class TestAdSelectionManager {
         mAdSelectionManager = adSelectionManager;
     }
 
+    // TODO(b/289362476): Add override APIs for server auction key fetch
+
     /**
      * Overrides the AdSelection API for a given {@link AdSelectionConfig} to avoid fetching data
      * from remote servers and use the data provided in {@link AddAdSelectionOverrideRequest}
@@ -213,7 +215,6 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void overrideAdSelectionFromOutcomesConfigRemoteInfo(
@@ -266,7 +267,6 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
@@ -315,7 +315,6 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
@@ -365,7 +364,7 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
+    // TODO(b/265204820): Unhide for frequency cap dev override API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAdCounterHistogramOverride(
             @NonNull SetAdCounterHistogramOverrideRequest setRequest,
@@ -425,7 +424,7 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
+    // TODO(b/265204820): Unhide for frequency cap dev override API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void removeAdCounterHistogramOverride(
             @NonNull RemoveAdCounterHistogramOverrideRequest removeRequest,
@@ -482,7 +481,7 @@ public class TestAdSelectionManager {
      * @throws IllegalStateException if this API is not enabled for the caller
      * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
+    // TODO(b/265204820): Unhide for frequency cap dev override API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void resetAllAdCounterHistogramOverrides(
             @NonNull @CallbackExecutor Executor executor,

@@ -17,10 +17,6 @@
 <configuration description="TF Config for AdServices Ui Cts test">
     <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer"/>
 
-<!--    <target_preparer class="com.android.tradefed.targetprep.DeviceCleaner">-->
-<!--        <option name="cleanup-action" value="REBOOT"/>-->
-<!--    </target_preparer>-->
-
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
@@ -44,6 +40,9 @@
         <option
             name="run-command"
             value="device_config put adservices consent_notification_debug_mode false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices is_eea_device_feature_enabled true"/>
         <option
             name="run-command"
             value="device_config put adservices consent_notification_activity_debug_mode false"/>

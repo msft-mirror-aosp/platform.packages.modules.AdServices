@@ -47,6 +47,8 @@ public class SandboxedAdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.adidsdk";
 
+    private static final int LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC = 60;
+
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
@@ -71,13 +73,14 @@ public class SandboxedAdIdManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        final FakeLoadSdkCallback callback =
+                new FakeLoadSdkCallback(LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC);
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies that the adidsdk in the Sandbox gets back the correct adid.
         // If the adidsdk did not get correct adid, it will trigger the callback.onLoadSdkError.
-        callback.assertLoadSdkIsSuccessful();
+        callback.assertLoadSdkIsSuccessful("Load SDK from internet");
     }
 
     private void overridingBeforeTest() {

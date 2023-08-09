@@ -152,7 +152,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        enableStrictMode();
+        // TODO(b/294188354): This is temporarily disabled to unblock testing. Re-enable later.
+        // enableStrictMode();
         super.onCreate(savedInstanceState);
 
         setAppTitle();
@@ -358,32 +359,24 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     Bundle params = new Bundle();
-                    OutcomeReceiver<SandboxedSdk, LoadSdkException> mediateeReceiver =
-                            new OutcomeReceiver<>() {
-                                @Override
-                                public void onResult(SandboxedSdk sandboxedSdk) {
-                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
-                                    mSdksLoaded = true;
-                                    refreshLoadSdksButtonText();
-                                    configureFeatureFlagSection();
-                                }
-
-                                @Override
-                                public void onError(LoadSdkException error) {
-                                    logAndDisplayMessage(
-                                            ERROR, "Failed to load all SDKs: %s", error);
-                                }
-                            };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
                             new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     mSandboxedSdk = sandboxedSdk;
-                                    mSdkSandboxManager.loadSdk(
-                                            MEDIATEE_SDK_NAME,
-                                            params,
-                                            Runnable::run,
-                                            mediateeReceiver);
+                                    IBinder binder = mSandboxedSdk.getInterface();
+                                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                                    try {
+                                        sdkApi.loadSdkBySdk(MEDIATEE_SDK_NAME);
+                                    } catch (Exception error) {
+                                        logAndDisplayMessage(
+                                                ERROR, "Failed to load all SDKs: %s", error);
+                                        return;
+                                    }
+                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
+                                    mSdksLoaded = true;
+                                    refreshLoadSdksButtonText();
+                                    configureFeatureFlagSection();
                                 }
 
                                 @Override
@@ -658,12 +651,16 @@ public class MainActivity extends AppCompatActivity {
                     builder.setPositiveButton(
                             "Create",
                             (dialog, which) -> {
-                                final int sizeInMb = Integer.parseInt(input.getText().toString());
-                                if (sizeInMb <= 0 || sizeInMb > 100) {
+                                final String inputString = input.getText().toString();
+                                if (inputString.isEmpty()
+                                        || inputString.length() > 3
+                                        || Integer.parseInt(inputString) <= 0
+                                        || Integer.parseInt(inputString) > 100) {
                                     logAndDisplayMessage(
                                             WARN, "Please provide a value between 1 and 100");
                                     return;
                                 }
+                                final Integer sizeInMb = Integer.parseInt(inputString);
                                 IBinder binder = mSandboxedSdk.getInterface();
                                 ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
 

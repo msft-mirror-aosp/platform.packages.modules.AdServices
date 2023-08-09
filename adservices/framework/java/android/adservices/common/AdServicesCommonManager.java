@@ -17,7 +17,9 @@
 package android.adservices.common;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -105,7 +107,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @RequiresPermission(ACCESS_ADSERVICES_STATE)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Boolean, Exception> callback) {
@@ -149,11 +151,11 @@ public class AdServicesCommonManager {
      * </ul>
      *
      * @param adServicesEntryPointEnabled indicate entry point enabled or not
-     * @param adIdEnabled                 indicate user opt-out of adid or not
+     * @param adIdEnabled indicate user opt-out of adid or not
      * @hide
      */
     @SystemApi
-    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         final IAdServicesCommonService service = getService();
         try {
@@ -167,8 +169,8 @@ public class AdServicesCommonManager {
      * Enable AdServices based on the AdServicesStates input parameter.
      *
      * <p>Based on the provided {@code AdServicesStates}, AdServices may be enabled. Specifically,
-     * users will be provided with an enrollment channel (such as consent notification) to become
-     * privacy sandbox users when:
+     * users will be provided with an enrollment channel (such as notification) to become privacy
+     * sandbox users when:
      *
      * <ul>
      *   <li>isAdServicesUiEnabled - true.
@@ -177,17 +179,18 @@ public class AdServicesCommonManager {
      *
      * @param {@code AdServicesStates} parcel containing relevant AdServices state variables.
      * @return false if API is disabled, true if the API call completed successfully. Otherwise, it
-     * would return one of the following exceptions to the user:
-     * <ul>
-     *   <li>IllegalStateException - the default exception thrown when service crashes
-     *       unexpectedly.
-     *   <li>SecurityException - when the caller is not authorized to call this API.
-     *   <li>TimeoutException - when the services takes too long to respond.
-     * </ul>
+     *     would return one of the following exceptions to the user:
+     *     <ul>
+     *       <li>IllegalStateException - the default exception thrown when service crashes
+     *           unexpectedly.
+     *       <li>SecurityException - when the caller is not authorized to call this API.
+     *       <li>TimeoutException - when the services takes too long to respond.
+     *     </ul>
+     *
      * @hide
      */
     @SystemApi
-    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
             @NonNull @CallbackExecutor Executor executor,

@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_FOREGROUND_UNKNOWN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
 
@@ -63,8 +67,14 @@ public class ForegroundEnforcementAccessResolver implements IAccessResolver {
         } catch (AppImportanceFilter.WrongCallingApplicationStateException e) {
             LogUtil.e("App not running in foreground");
             return false;
+        } catch (Exception e) {
+            LogUtil.e(e, "Unexpected error occurred when asserting caller in foreground");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_FOREGROUND_UNKNOWN_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            return false;
         }
-
         return true;
     }
 

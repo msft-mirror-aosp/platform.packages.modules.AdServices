@@ -55,11 +55,9 @@ public final class DataService {
     private final DaoBuildingBlocks mDaoBuildingBlocks;
 
     public DataService(@NonNull ExecutorService executor, @NonNull CobaltDatabase cobaltDatabase) {
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(cobaltDatabase);
+        this.mExecutorService = Objects.requireNonNull(executor);
+        this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
 
-        this.mExecutorService = executor;
-        this.mCobaltDatabase = cobaltDatabase;
         this.mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
     }
 

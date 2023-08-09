@@ -22,7 +22,11 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
+import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -37,6 +41,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.content.Context;
 import android.net.Uri;
@@ -121,6 +126,27 @@ public class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeFetchAndJoinCustomAudience() {
+        AdvertisingCustomAudienceClient customAudienceClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                Uri.parse("https://buyer.example.com/fetch/ca"))
+                        .setName("exampleCustomAudience")
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> customAudienceClient.fetchAndJoinCustomAudience(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
@@ -223,6 +249,23 @@ public class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_selectAds_adSelectionFromOutcomesConfig() {
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
@@ -371,6 +414,79 @@ public class PermissionsNoPermTest {
                         ExecutionException.class,
                         () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
 
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeOverrideAdSelectionFromOutcomesConfigRemoteInfo() {
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        String selectionLogicJs = "function test() { return \"hello world\"; }";
+        AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+        AddAdSelectionFromOutcomesOverrideRequest request =
+                new AddAdSelectionFromOutcomesOverrideRequest(
+                        config, selectionLogicJs, selectionSignals);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            testAdSelectionClient
+                                    .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                                    .get();
+                        });
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeRemoveAdSelectionFromOutcomesConfigRemoteInfo() {
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+        RemoveAdSelectionFromOutcomesOverrideRequest request =
+                new RemoveAdSelectionFromOutcomesOverrideRequest(config);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            testAdSelectionClient
+                                    .removeAdSelectionFromOutcomesConfigRemoteInfoOverride(request)
+                                    .get();
+                        });
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_fledgeResetAllFromOutcomesConfigRemoteOverrides() {
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            testAdSelectionClient
+                                    .resetAllAdSelectionFromOutcomesConfigRemoteOverrides()
+                                    .get();
+                        });
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 }

@@ -2216,9 +2216,9 @@ public class AsyncRegistrationQueueRunnerTest {
     public void isSourceAllowedToInsert_flexEventApiValidNav_pass()
             throws DatastoreException, JSONException {
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         // setup
         String triggerSpecsString =
@@ -2289,9 +2289,9 @@ public class AsyncRegistrationQueueRunnerTest {
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -2360,9 +2360,9 @@ public class AsyncRegistrationQueueRunnerTest {
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2420,9 +2420,9 @@ public class AsyncRegistrationQueueRunnerTest {
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2479,9 +2479,9 @@ public class AsyncRegistrationQueueRunnerTest {
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -2551,9 +2551,9 @@ public class AsyncRegistrationQueueRunnerTest {
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
@@ -2622,9 +2622,9 @@ public class AsyncRegistrationQueueRunnerTest {
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainEvent())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexAPIMaxInformationGainNavigation())
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"

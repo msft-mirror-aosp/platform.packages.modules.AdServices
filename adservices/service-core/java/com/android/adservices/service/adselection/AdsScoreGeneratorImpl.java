@@ -497,8 +497,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         return DebugReport.builder()
                 .setWinDebugReportUri(adScore.getWinDebugReportUri())
                 .setLossDebugReportUri(adScore.getLossDebugReportUri())
-                .setCustomAudienceName(signals.getName())
-                .setCustomAudienceBuyer(signals.getBuyer())
+                .setCustomAudienceSignals(signals)
                 .setSeller(adSelectionConfig.getSeller())
                 .setSellerRejectReason(adScore.getSellerRejectReason())
                 .build();

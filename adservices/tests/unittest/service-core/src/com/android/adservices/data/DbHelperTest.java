@@ -44,7 +44,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
+import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -98,7 +99,7 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_classification_topics", 6));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_caller_can_learn_topic", 6));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_top_topics", 10));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 8));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
@@ -155,21 +156,44 @@ public class DbHelperTest {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
-        TopicDbMigratorV7 topicDbMigratorV7 = Mockito.spy(new TopicDbMigratorV7());
-        Mockito.doNothing().when(topicDbMigratorV7).performMigration(db);
+        TopicsDbMigratorV7 topicsDbMigratorV7 = Mockito.spy(new TopicsDbMigratorV7());
+        Mockito.doNothing().when(topicsDbMigratorV7).performMigration(db);
 
         // Ignore Measurement Migrators
         doReturn(false).when(dbHelper).hasV1MeasurementTables(db);
         doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
-        doReturn(List.of(topicDbMigratorV7)).when(dbHelper).topicsGetOrderedDbMigrators();
+        doReturn(List.of(topicsDbMigratorV7)).when(dbHelper).topicsGetOrderedDbMigrators();
 
         // Negative case - target version 5 is not in (oldVersion, newVersion]
         dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 5);
-        Mockito.verify(topicDbMigratorV7, Mockito.never()).performMigration(db);
+        Mockito.verify(topicsDbMigratorV7, Mockito.never()).performMigration(db);
 
         // Positive case - target version 5 is in (oldVersion, newVersion]
         dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 7);
-        Mockito.verify(topicDbMigratorV7).performMigration(db);
+        Mockito.verify(topicsDbMigratorV7).performMigration(db);
+    }
+
+    @Test
+    public void testOnUpgrade_topicsV8Migration() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+
+        // Do not actually perform queries but verify the invocation.
+        TopicsDbMigratorV8 topicsDbMigratorV8 = Mockito.spy(new TopicsDbMigratorV8());
+        Mockito.doNothing().when(topicsDbMigratorV8).performMigration(db);
+
+        // Ignore Measurement Migrators
+        doReturn(false).when(dbHelper).hasV1MeasurementTables(db);
+        doReturn(List.of()).when(dbHelper).getOrderedDbMigrators();
+        doReturn(List.of(topicsDbMigratorV8)).when(dbHelper).topicsGetOrderedDbMigrators();
+
+        // Negative case - target version 5 is not in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 5);
+        Mockito.verify(topicsDbMigratorV8, Mockito.never()).performMigration(db);
+
+        // Positive case - target version 5 is in (oldVersion, newVersion]
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 8);
+        Mockito.verify(topicsDbMigratorV8).performMigration(db);
     }
 
     @Test

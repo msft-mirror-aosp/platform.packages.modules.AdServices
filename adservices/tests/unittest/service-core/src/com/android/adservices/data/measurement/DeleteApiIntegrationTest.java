@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.service.FlagsFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -96,7 +97,7 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         MeasurementDataDeleter measurementDataDeleter =
-                new MeasurementDataDeleter(datastoreManager);
+                new MeasurementDataDeleter(datastoreManager, FlagsFactory.getFlagsForTest());
         measurementDataDeleter.delete(
                 new DeletionParam.Builder(
                                 originList,
