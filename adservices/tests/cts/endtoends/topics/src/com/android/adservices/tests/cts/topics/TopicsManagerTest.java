@@ -22,8 +22,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
+import android.adservices.topics.TopicsManager;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -31,6 +33,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresDeviceNotSupported;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -422,6 +427,28 @@ public class TopicsManagerTest {
         // Top 5 topic ids as listed in precomputed_app_list.csv
         List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+    }
+
+    @Test
+    @RequiresDeviceNotSupported
+    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
+    public void testGetTopics_whenDeviceNotSupported() throws Exception {
+        TopicsManager manager = TopicsManager.get(sContext);
+        assertWithMessage("manager").that(manager).isNotNull();
+        OutcomeReceiverForTests<GetTopicsResponse> receiver = new OutcomeReceiverForTests<>();
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        manager.getTopics(
+                                new GetTopicsRequest.Builder().build(),
+                                CALLBACK_EXECUTOR,
+                                receiver));
+
+        // TODO(b/295235571): remove assertThrows above and instead check the callback:
+        if (false) {
+            receiver.assertFailure(IllegalStateException.class);
+        }
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
