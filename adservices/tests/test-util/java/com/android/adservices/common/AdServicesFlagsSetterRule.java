@@ -25,16 +25,18 @@ import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteSt
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -72,6 +74,14 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     // TODO(b/294423183): remove once legacy usage is gone
     private final boolean mUsedByLegacyHelper;
 
+    private AdServicesFlagsSetterRule() {
+        this(/* usedByLegacyHelper= */ false);
+    }
+
+    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
+        mUsedByLegacyHelper = usedByLegacyHelper;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         setOrCacheSystemProperty("tag.adservices", "VERBOSE");
@@ -86,11 +96,17 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 setInitialFlags(testName);
                 List<Throwable> cleanUpErrors = new ArrayList<>();
                 Throwable testError = null;
+                StringBuilder dump = new StringBuilder("*** Flags before:\n");
+                dumpFlagsSafely(dump).append("\n\n*** SystemProperties before:\n");
+                dumpSystemPropertiesSafely(dump);
                 try {
                     base.evaluate();
                 } catch (Throwable t) {
                     testError = t;
                 } finally {
+                    dump.append("\n*** Flags after:\n");
+                    dumpFlagsSafely(dump).append("\n\n***SystemProperties after:\n");
+                    dumpSystemPropertiesSafely(dump);
                     runSafely(cleanUpErrors, () -> resetFlags(testName));
                     runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
                     runSafely(
@@ -100,19 +116,23 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 // TODO(b/294423183): ideally it should throw an exception if cleanUpErrors is not
                 // empty, but it's better to wait until this class is unit tested to do so (for now,
                 // it's just logging it)
-                if (testError != null) {
-                    throw testError;
-                }
+                throwIfNecessary(testName, dump, testError);
             }
         };
     }
 
-    private AdServicesFlagsSetterRule() {
-        this(/* usedByLegacyHelper= */ false);
-    }
-
-    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
-        mUsedByLegacyHelper = usedByLegacyHelper;
+    private void throwIfNecessary(
+            String testName, StringBuilder dump, @Nullable Throwable testError) throws Throwable {
+        if (testError == null) {
+            Log.v(TAG, "Good News, Everyone! " + testName + " passed.");
+            return;
+        }
+        if (testError instanceof AssumptionViolatedException) {
+            Log.i(TAG, testName + " is being ignored: " + testError);
+            throw testError;
+        }
+        Log.e(TAG, testName + " failed with " + testError + ".\n" + dump);
+        throw new TestFailure(testError, dump);
     }
 
     /** Factory method that only disables the global kill switch. */
@@ -167,17 +187,52 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      */
     @FormatMethod
     public void dumpFlags(@FormatString String reasonFmt, @Nullable Object... reasonArgs) {
-        String message =
-                "Logging all flags on " + TAG + ". Reason: " + String.format(reasonFmt, reasonArgs);
-        Log.i(TAG, message);
-        Log.v(
-                TAG,
-                ShellUtils.runShellCommand(
-                        "device_config list %s", DeviceConfig.NAMESPACE_ADSERVICES));
+        StringBuilder message =
+                new StringBuilder("Logging all flags on ")
+                        .append(TAG)
+                        .append(". Reason: ")
+                        .append(String.format(reasonFmt, reasonArgs))
+                        .append(". Flags: \n");
+        dumpFlagsSafely(message);
+        Log.i(TAG, message.toString());
     }
 
-    // TODO(b/294423183): add dumpProperties (need to filter output as
-    // runShellCommand("getprop | grep PREFIX") wouldn't work
+    private StringBuilder dumpFlagsSafely(StringBuilder dump) {
+        try {
+            mDeviceConfig.dumpFlags(dump);
+        } catch (Throwable t) {
+            dump.append("Failed to dump flags: ").append(t);
+        }
+        return dump;
+    }
+
+    /**
+     * Dumps all system properties using the {@value #TAG} tag.
+     *
+     * <p>Typically use for temporary debugging purposes like {@code
+     * dumpSystemProperties("getFoo(%s)", bar)}.
+     */
+    @FormatMethod
+    public void dumpSystemProperties(
+            @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
+        StringBuilder message =
+                new StringBuilder("Logging all SystemProperties on ")
+                        .append(TAG)
+                        .append(". Reason: ")
+                        .append(String.format(reasonFmt, reasonArgs))
+                        .append(". SystemProperties: \n");
+        dumpSystemPropertiesSafely(message);
+        Log.i(TAG, message.toString());
+    }
+
+    private StringBuilder dumpSystemPropertiesSafely(StringBuilder dump) {
+        try {
+            mSystemProperties.dump(dump);
+        } catch (Throwable t) {
+            dump.append("Failed to dump SystemProperties: ").append(t);
+        }
+        return dump;
+    }
 
     /** Overrides the flag that sets the global AdServices kill switch. */
     public AdServicesFlagsSetterRule setGlobalKillSwitch(boolean value) {
@@ -543,8 +598,41 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         try {
             r.run();
         } catch (Throwable e) {
-            Log.e(TAG, "runSafely() failed", e);
+            Log.e(TAG, "runSafely() failure", e);
             errors.add(e);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public static final class TestFailure extends Exception {
+
+        private final String mDump;
+
+        TestFailure(Throwable cause, StringBuilder dump) {
+            super(
+                    "Test failed (see flags / system proprties below the stack trace)",
+                    cause,
+                    /* enableSuppression= */ false,
+                    /* writableStackTrace= */ false);
+            mDump = "\n" + dump;
+            setStackTrace(cause.getStackTrace());
+        }
+
+        @Override
+        public void printStackTrace(PrintWriter s) {
+            super.printStackTrace(s);
+            s.println(mDump);
+        }
+
+        @Override
+        public void printStackTrace(PrintStream s) {
+            super.printStackTrace(s);
+            s.println(mDump);
+        }
+
+        /** Gets the flags / system properties state. */
+        public String getFlagsState() {
+            return mDump;
         }
     }
 
