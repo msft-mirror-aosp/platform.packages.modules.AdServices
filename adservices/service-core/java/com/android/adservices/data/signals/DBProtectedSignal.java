@@ -99,6 +99,7 @@ public abstract class DBProtectedSignal {
                 .build();
     }
 
+    /** Builder for creating an instance of {@link DBProtectedSignal} */
     @AutoValue.Builder
     public abstract static class Builder {
         /** For more details see {@link #getId()} */
