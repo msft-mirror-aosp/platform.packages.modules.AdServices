@@ -497,6 +497,16 @@ public interface Flags {
         return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
     }
 
+    int MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW = 1;
+
+    /**
+     * Returns the number of reporting origins per source site, reporting site,
+     * reporting-origin-update-window counted per source registration.
+     */
+    default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+        return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
+    }
+
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */

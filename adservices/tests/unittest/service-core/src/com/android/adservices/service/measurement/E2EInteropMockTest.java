@@ -52,8 +52,9 @@ import java.util.function.Supplier;
  * src/content/test/data/attribution_reporting/interop April 21, 2023. Files destination_limit.json,
  * max_aggregatable_reports_per_source.json, parse_failures.json, rate_limit_max_attributions.json,
  * event_level_report_time.json, aggregatable_report_window.json,
- * event_source_event_report_windows.json and
- * rate_limit_max_reporting_origins_per_source_reporting_site.json were updated with GitHub commit
+ * event_source_event_report_windows.json,
+ * rate_limit_max_reporting_origins_per_source_reporting_site.json,
+ * and rate_limit_max_attribution_reporting_endpoints.json were updated with GitHub commit
  * 71b156e24f8ef67378fbfba35edfb2fef514baf0
  */
 @RunWith(Parameterized.class)
@@ -64,7 +65,12 @@ public class E2EInteropMockTest extends E2EMockTest {
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags =
-            Map.of("max_event_info_gain", "measurement_flex_api_max_information_gain_event");
+            Map.of(
+                    "max_event_info_gain",
+                    "measurement_flex_api_max_information_gain_event",
+
+                    "rate_limit_max_reporting_origins_per_source_reporting_site",
+                    "measurement_max_reporting_origins_per_source_reporting_site_per_window");
 
     private static String preprocessor(String json) {
         return json.replaceAll("\\.test(?=[\"\\/])", ".com")
