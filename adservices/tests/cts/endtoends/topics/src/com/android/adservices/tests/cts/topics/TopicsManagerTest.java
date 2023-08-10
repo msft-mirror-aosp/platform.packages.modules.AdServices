@@ -160,6 +160,26 @@ public class TopicsManagerTest {
     }
 
     @Test
+    public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests() {
+        flags.setTopicsDisableDirectAppCalls(true);
+
+        AdvertisingTopicsClient advertisingTopicsClient =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        assertThat(
+                assertThrows(
+                        ExecutionException.class,
+                        () -> advertisingTopicsClient.getTopics().get())
+                        .getMessage())
+                .isEqualTo("java.lang.IllegalArgumentException");
+    }
+
+    @Test
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.

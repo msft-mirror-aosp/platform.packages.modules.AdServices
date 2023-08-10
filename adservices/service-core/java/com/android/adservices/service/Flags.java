@@ -96,6 +96,14 @@ public interface Flags {
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
+    /** Flag to disable direct app calls for Topics API. go/app-calls-for-topics-api */
+    boolean TOPICS_DISABLE_DIRECT_APP_CALLS = false;
+
+    /** Returns the flag to disable direct app calls for Topics API. */
+    default boolean getTopicsDisableDirectAppCalls() {
+        return TOPICS_DISABLE_DIRECT_APP_CALLS;
+    }
+
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
