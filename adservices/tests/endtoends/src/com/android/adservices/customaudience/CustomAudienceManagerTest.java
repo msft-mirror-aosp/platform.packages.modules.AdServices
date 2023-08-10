@@ -31,15 +31,16 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
@@ -62,14 +63,18 @@ public class CustomAudienceManagerTest {
 
     private String mPreviousAppAllowList;
 
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    // Ignore tests when device is not at least S
+    @Rule(order = 1)
+    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+
     @Before
     public void setUp() throws TimeoutException {
-        // Skip the test if it's on an unsupported SDK Level
-        // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
@@ -89,11 +94,6 @@ public class CustomAudienceManagerTest {
 
     @After
     public void tearDown() {
-        // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-        if (!(SdkLevel.isAtLeastS() && AdservicesTestHelper.isDeviceSupported())) {
-            return;
-        }
-
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
