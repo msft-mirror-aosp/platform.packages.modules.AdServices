@@ -150,6 +150,7 @@ import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.Flags.FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
@@ -168,7 +169,6 @@ import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
-import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
@@ -245,6 +245,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_T
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
@@ -397,6 +398,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_DEFAU
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
@@ -416,7 +418,6 @@ import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_PERIOD_
 import static com.android.adservices.service.PhFlags.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.PhFlags.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
-import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
@@ -501,6 +502,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_NETWORK_CON
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
@@ -1301,28 +1303,6 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnforceEnrollmentOriginMatch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
-                .isEqualTo(MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
-
-        String phOverridingValue =
-                MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL + "testCoordinatorUrl";
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
-                .isEqualTo(phOverridingValue);
-
-        assertThat(mTestFlags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
-                .isEqualTo(MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
     }
 
     @Test
@@ -4759,6 +4739,29 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementRegisterSourcesRequestPermitsPerSecond() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementRegisterSourcesRequestPermitsPerSecond())
+                .isEqualTo(MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND);
+
+        final float phOverridingValue = 7;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        // Now verify that the PhFlag value was overridden.
+        final Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementRegisterSourcesRequestPermitsPerSecond())
+                .isEqualTo(phOverridingValue);
+
+        final Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementRegisterSourcesRequestPermitsPerSecond())
+                .isEqualTo(MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
     public void testGetMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRegisterWebSourceRequestPermitsPerSecond())
@@ -5013,6 +5016,26 @@ public class PhFlagsTest {
                 false);
 
         assertThat(mPhFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeReportImpressionMaxInteractionReportingUriSizeB() {
+        // without any overriding, the value is hard coded constant
+        assertThat(
+                        FlagsFactory.getFlags()
+                                .getFledgeReportImpressionMaxInteractionReportingUriSizeB())
+                .isEqualTo(FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B);
+
+        long phOverridingValue = FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B + 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B,
+                Long.toString(phOverridingValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeReportImpressionMaxInteractionReportingUriSizeB())
                 .isEqualTo(phOverridingValue);
     }
 
@@ -6293,7 +6316,7 @@ public class PhFlagsTest {
     @Test
     public void testEnableFledgeAuctionServerJoinKeyFetch() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled())
+        assertThat(mPhFlags.getFledgeAuctionServerBackgroundJoinKeyFetchEnabled())
                 .isEqualTo(FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED);
 
         boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_BACKGROUND_JOIN_KEY_FETCH_ENABLED;

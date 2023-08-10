@@ -46,6 +46,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -108,6 +109,8 @@ public class AdSelectionServiceFilterTest {
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER_LOCALHOST =
+            AdTechIdentifier.fromString("localhost");
 
     private static final int API_NAME = 0;
 
@@ -149,7 +152,8 @@ public class AdSelectionServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -173,7 +177,8 @@ public class AdSelectionServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -189,7 +194,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(FledgeAuthorizationFilter.CallerMismatchException.class);
     }
@@ -209,7 +215,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause()).isInstanceOf(LimitExceededException.class);
     }
 
@@ -230,7 +237,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(AppImportanceFilter.WrongCallingApplicationStateException.class);
     }
@@ -248,7 +256,8 @@ public class AdSelectionServiceFilterTest {
                 true,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -279,7 +288,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
     }
@@ -300,7 +310,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause())
                 .isInstanceOf(FledgeAllowListsFilter.AppNotAllowedException.class);
     }
@@ -319,7 +330,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause()).isInstanceOf(ConsentManager.RevokedConsentException.class);
     }
 
@@ -333,7 +345,8 @@ public class AdSelectionServiceFilterTest {
                 false,
                 MY_UID,
                 API_NAME,
-                Throttler.ApiKey.UNKNOWN);
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
         verifyNoMoreInteractions(mConsentManagerMock);
     }
 
@@ -363,7 +376,8 @@ public class AdSelectionServiceFilterTest {
                                         true,
                                         MY_UID,
                                         API_NAME,
-                                        Throttler.ApiKey.UNKNOWN));
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
         assertThat(exception.getCause()).isInstanceOf(ConsentManager.RevokedConsentException.class);
     }
 
@@ -372,7 +386,89 @@ public class AdSelectionServiceFilterTest {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         mAdSelectionServiceFilter.filterRequest(
-                null, CALLER_PACKAGE_NAME, false, true, MY_UID, API_NAME, Throttler.ApiKey.UNKNOWN);
+                null,
+                CALLER_PACKAGE_NAME,
+                false,
+                true,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.createForDevOptionsDisabled());
+
+        verify(mFledgeAuthorizationFilterSpy, never())
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+    }
+
+    @Test
+    public void testFilterRequest_withLocalhostDomain_doesNotPass() {
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
+                        mContext,
+                        mConsentManagerMock,
+                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mAppImportanceFilter,
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy,
+                        mMockThrottler);
+
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_LOCALHOST,
+                                        CALLER_PACKAGE_NAME,
+                                        false,
+                                        false,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN,
+                                        DevContext.createForDevOptionsDisabled()));
+
+        assertThat(exception.getCause())
+                .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
+    }
+
+    @Test
+    public void testFilterRequest_withDeveloperMode_succeeds() {
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                        .build());
+    }
+
+    @Test
+    public void testFilterRequest_withLocalhostDomainInDeveloperMode_skipCheck() {
+        mAdSelectionServiceFilter =
+                new AdSelectionServiceFilter(
+                        mContext,
+                        mConsentManagerMock,
+                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mAppImportanceFilter,
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy,
+                        mMockThrottler);
+
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_LOCALHOST,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN,
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                        .build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());

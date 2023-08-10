@@ -54,9 +54,9 @@ public final class PhFlags implements Flags {
     static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
 
     // Topics keys
-    static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
+    public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
-    static final String KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC =
+    public static final String KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC =
             "topics_percentage_for_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
@@ -68,12 +68,13 @@ public final class PhFlags implements Flags {
     static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
 
     // Topics classifier keys
-    static final String KEY_CLASSIFIER_TYPE = "classifier_type";
-    static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS = "classifier_number_of_top_labels";
-    static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
+    public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
+    public static final String KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS =
+            "classifier_number_of_top_labels";
+    public static final String KEY_CLASSIFIER_THRESHOLD = "classifier_threshold";
     static final String KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS = "classifier_description_max_words";
     static final String KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH = "classifier_description_max_length";
-    static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
+    public static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
             "classifier_force_use_bundled_files";
 
     // Topics Cobalt keys
@@ -87,8 +88,6 @@ public final class PhFlags implements Flags {
             "measurement_event_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_event_fallback_reporting_job_period_ms";
-    static final String KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "measurement_aggregate_encryption_key_coordinator_url";
 
     static final String KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED =
             "measurement_aggregation_coordination_origin_enabled";
@@ -274,6 +273,8 @@ public final class PhFlags implements Flags {
     static final String
             KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
                     "fledge_report_impression_registered_ad_beacons_max_interaction_key_size_b";
+    static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B =
+            "fledge_report_impression_max_interaction_reporting_uri_size_b";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
     static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
@@ -401,7 +402,7 @@ public final class PhFlags implements Flags {
             "mdd_topics_classifier_manifest_file_url";
 
     // Killswitch keys
-    static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
+    public static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
     static final String KEY_MEASUREMENT_KILL_SWITCH = "measurement_kill_switch";
     static final String KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH =
             "measurement_api_delete_registrations_kill_switch";
@@ -441,14 +442,14 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
 
-    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
+    public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
-    static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
-    static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
+    public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
+    public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
-    static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
+    public static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH =
@@ -459,9 +460,9 @@ public final class PhFlags implements Flags {
             "background_jobs_logging_kill_switch";
 
     // App/SDK AllowList/DenyList keys
-    static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+    public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
 
-    static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+    public static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
 
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
@@ -470,11 +471,14 @@ public final class PhFlags implements Flags {
 
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
-    static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
+    public static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND =
+            "adid_request_permits_per_second";
     static final String KEY_APPSETID_REQUEST_PERMITS_PER_SECOND =
             "appsetid_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_source_request_permits_per_second";
+    static final String KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND =
+            "measurement_register_sources_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND =
             "measurement_register_web_source_request_permits_per_second";
     static final String KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND =
@@ -495,14 +499,15 @@ public final class PhFlags implements Flags {
     static final String KEY_ADSERVICES_ERROR_LOGGING_ENABLED = "adservice_error_logging_enabled";
 
     // Disable enrollment check
-    static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
+    public static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK =
+            "disable_topics_enrollment_check";
     static final String KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK = "disable_fledge_enrollment_check";
 
     // Disable Measurement enrollment check.
     static final String KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK =
             "disable_measurement_enrollment_check";
 
-    static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
+    public static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
 
     // Enrollment Mdd Deletion Feature Enabled check
 
@@ -510,7 +515,7 @@ public final class PhFlags implements Flags {
             "enable_enrollment_mdd_record_deletion";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
-    private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+    public static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
     // Consent Notification interval begin ms.
     static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
@@ -529,15 +534,16 @@ public final class PhFlags implements Flags {
             "consent_notification_debug_mode";
 
     // Consent Manager debug mode keys.
-    static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
+    public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
     // Consent notification activity debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
             "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
-    static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
-    static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH = "blocked_topics_source_of_truth";
+    public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+    public static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
+            "blocked_topics_source_of_truth";
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
@@ -587,9 +593,9 @@ public final class PhFlags implements Flags {
     static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
             "adservices_consent_migration_logging_enabled";
 
-    static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
+    public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
-    static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
+    public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
@@ -964,15 +970,6 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
-    }
-
-    @Override
-    public String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getString(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
-                /* defaultValue */ MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
     }
 
     @Override
@@ -1613,6 +1610,16 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B,
+                /* defaultValue */
+                FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B);
+    }
+
+    @Override
     public boolean getFledgeHttpCachingEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -2250,6 +2257,13 @@ public final class PhFlags implements Flags {
         return getPermitsPerSecond(
                 KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND,
                 MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getMeasurementRegisterSourcesRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND,
+                MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND);
     }
 
     @Override
@@ -3325,6 +3339,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementRegisterWebSourceRequestPermitsPerSecond());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getMeasurementRegisterSourcesRequestPermitsPerSecond());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_REGISTER_TRIGGER_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getMeasurementRegisterTriggerRequestPermitsPerSecond());
@@ -3438,11 +3457,6 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementEventFallbackReportingJobPeriodMs());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL
-                        + " = "
-                        + getMeasurementAggregateEncryptionKeyCoordinatorUrl());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_ENABLED
@@ -4115,6 +4129,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B
                         + " = "
                         + getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B
+                        + " = "
+                        + getFledgeReportImpressionMaxInteractionReportingUriSizeB());
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE

@@ -286,9 +286,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -300,7 +297,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw e;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, inputParams.getCallerPackageName(), apiName);
+
         int callingUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
                     GetAdSelectionDataRunner runner =
@@ -313,7 +315,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
                                     mFlags,
-                                    callingUid);
+                                    callingUid,
+                                    devContext);
                     runner.run(inputParams, callback);
                 });
     }
@@ -330,9 +333,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -344,7 +344,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw e;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, inputParams.getCallerPackageName(), apiName);
+
         int callingUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
@@ -354,7 +359,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdSelectionServiceFilter,
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
-                                    callingUid);
+                                    callingUid,
+                                    devContext);
                     runner.run(inputParams, callback);
                 });
     }
@@ -369,8 +375,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionExecutionLogger(
                         callerMetadata, Clock.SYSTEM_CLOCK, mContext, mAdServicesLogger);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -385,6 +390,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, inputParams.getCallerPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -438,7 +447,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         new DebugReporting(mFlags, mAdServicesHttpsClient),
                         callerUid);
-        runner.runAdSelection(inputParams, callback);
+        runner.runAdSelection(inputParams, callback, devContext);
     }
 
     private void runOffDeviceAdSelection(
@@ -467,7 +476,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdRenderIdValidator,
                         new DebugReporting(mFlags, mAdServicesHttpsClient),
                         callerUid);
-        runner.runAdSelection(inputParams, callback);
+        runner.runAdSelection(inputParams, callback, devContext);
     }
 
     /**
@@ -485,9 +494,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         // TODO(257134800): Add telemetry
         try {
             Objects.requireNonNull(inputParams);
@@ -501,6 +507,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw e;
         }
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, inputParams.getCallerPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -531,9 +541,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull ReportImpressionCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
@@ -542,6 +549,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, requestParams.getCallerPackageName(), apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -572,9 +583,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull ReportInteractionCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -584,7 +592,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, inputParams.getCallerPackageName(), apiName);
+
         int callerUid = getCallingUid(apiName);
+        DevContext devContext = mDevContextFilter.createDevContext();
 
         InteractionReporter interactionReporter =
                 new InteractionReporter(
@@ -596,7 +609,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         callerUid,
-                        mFledgeAuthorizationFilter);
+                        mFledgeAuthorizationFilter,
+                        devContext);
 
         interactionReporter.reportInteraction(inputParams, callback);
     }
@@ -608,8 +622,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         int apiName =
                 AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         try {
             Objects.requireNonNull(request);
@@ -620,6 +632,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, request.getCallerPackageName(), apiName);
+
         AppInstallAdvertisersSetter setter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDao,
@@ -628,7 +644,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
-                        getCallingUid(apiName));
+                        getCallingUid(apiName),
+                        mDevContextFilter.createDevContext());
         setter.setAppInstallAdvertisers(request, callback);
     }
 
@@ -638,9 +655,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull UpdateAdCounterHistogramCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -649,6 +663,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, inputParams.getCallerPackageName(), apiName);
 
         final int callingUid = getCallingUid(apiName);
         final int adCounterHistogramAbsoluteMaxTotalEventCount =
@@ -681,7 +699,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
-                        callingUid);
+                        callingUid,
+                        mDevContextFilter.createDevContext());
 
         worker.updateAdCounterHistogram(inputParams, callback);
     }
@@ -694,9 +713,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull BuyersDecisionLogic buyersDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
-
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
 
         try {
             Objects.requireNonNull(adSelectionConfig);
@@ -716,6 +732,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -763,9 +783,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(callback);
@@ -782,6 +799,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -813,9 +834,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
@@ -831,6 +849,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -863,9 +885,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(config);
             Objects.requireNonNull(selectionLogicJs);
@@ -885,6 +904,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -916,9 +939,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         // Auto-generated variable name is too long for lint check
         int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(config);
             Objects.requireNonNull(callback);
@@ -935,6 +955,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -965,9 +989,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         // Auto-generated variable name is too long for lint check
         int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
@@ -983,6 +1004,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1013,9 +1038,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -1024,6 +1046,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         // TODO(b/265204820): Implement service
         int status = STATUS_SUCCESS;
@@ -1042,9 +1076,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -1053,6 +1084,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         // TODO(b/265204820): Implement service
         int status = STATUS_SUCCESS;
@@ -1069,9 +1112,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void resetAllAdCounterHistogramOverrides(@NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
-        // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
-
         try {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
@@ -1079,6 +1119,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        // Caller permissions must be checked with a non-null callingAppPackageName
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName);
 
         // TODO(b/265204820): Implement service
         int status = STATUS_SUCCESS;

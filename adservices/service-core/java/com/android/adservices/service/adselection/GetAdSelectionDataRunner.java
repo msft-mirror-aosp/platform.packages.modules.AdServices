@@ -38,6 +38,7 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
@@ -75,6 +76,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final BuyerInputGenerator mBuyerInputGenerator;
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
     @NonNull private final AuctionServerPayloadFormatter mPayloadFormatter;
+    @NonNull private final DevContext mDevContext;
 
     public GetAdSelectionDataRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
@@ -85,7 +87,8 @@ public class GetAdSelectionDataRunner {
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final Flags flags,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adFilterer);
@@ -94,6 +97,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(devContext);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mCustomAudienceDao = customAudienceDao;
@@ -103,6 +107,7 @@ public class GetAdSelectionDataRunner {
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mFlags = flags;
         mCallerUid = callerUid;
+        mDevContext = devContext;
 
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mBuyerInputGenerator =
@@ -143,7 +148,8 @@ public class GetAdSelectionDataRunner {
                                             /*enforceConsent:*/ true,
                                             mCallerUid,
                                             apiName,
-                                            Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA);
+                                            Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
+                                            mDevContext);
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
@@ -156,7 +162,8 @@ public class GetAdSelectionDataRunner {
                                     ignoredVoid ->
                                             orchestrateGetAdSelectionDataRunner(
                                                     inputParams.getAdSelectionDataRequest(),
-                                                    adSelectionId),
+                                                    adSelectionId,
+                                                    inputParams.getCallerPackageName()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -197,14 +204,15 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull GetAdSelectionDataRequest request, long adSelectionId) {
+            @NonNull GetAdSelectionDataRequest request, long adSelectionId, String packageName) {
         Objects.requireNonNull(request);
+        Objects.requireNonNull(packageName);
 
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
                 .transform(
-                        buyerInputs -> createPayload(buyerInputs, request, adSelectionId),
+                        buyerInputs -> createPayload(buyerInputs, packageName, adSelectionId),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -221,14 +229,12 @@ public class GetAdSelectionDataRunner {
     }
 
     private AuctionServerPayloadFormattedData createPayload(
-            Map<AdTechIdentifier, BuyerInput> buyerInputs,
-            GetAdSelectionDataRequest request,
-            long adSelectionId) {
+            Map<AdTechIdentifier, BuyerInput> buyerInputs, String packageName, long adSelectionId) {
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
                 compressEachBuyerInput(buyerInputs);
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
-                        compressedBuyerInput, request.getSeller(), adSelectionId);
+                        compressedBuyerInput, packageName, adSelectionId);
         sLogger.v("ProtectedAudienceInput composed");
         return applyPayloadFormatter(protectedAudienceInput);
     }
@@ -267,7 +273,7 @@ public class GetAdSelectionDataRunner {
     @VisibleForTesting
     ProtectedAudienceInput composeProtectedAudienceInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
-            AdTechIdentifier seller,
+            String packageName,
             long adSelectionId) {
         sLogger.v("Composing ProtectedAudienceInput with buyer inputs and publisher");
         return ProtectedAudienceInput.newBuilder()
@@ -277,7 +283,7 @@ public class GetAdSelectionDataRunner {
                                         Collectors.toMap(
                                                 e -> e.getKey().toString(),
                                                 e -> ByteString.copyFrom(e.getValue().getData()))))
-                .setPublisherName(seller.toString())
+                .setPublisherName(packageName)
                 .setEnableDebugReporting(mFlags.getFledgeAuctionServerEnableDebugReporting())
                 // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
                 //  accessible in plaintext.

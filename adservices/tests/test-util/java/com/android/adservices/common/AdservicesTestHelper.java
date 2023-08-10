@@ -108,7 +108,7 @@ public final class AdservicesTestHelper {
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
      * @return if the device is supported.
-     * @deprecated use {@link AdServicesSupportedRule} or {@link AdServicesDeviceSupportedRule}
+     * @deprecated use {@link GlobalKillSwitchRule} or {@link AdServicesDeviceSupportedRule}
      *     instead.
      */
     @Deprecated
