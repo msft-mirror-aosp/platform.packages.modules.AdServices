@@ -22,7 +22,7 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "auto_value_annotations",
     ],
     srcs: ["src/**/*.java",],
@@ -65,7 +65,7 @@ android_test {
         "android.ext.adservices",
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "auto_value_annotations",
     ],
     srcs: ["src/**/*.java",],
@@ -110,7 +110,7 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
     ],
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
@@ -151,7 +151,7 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
     ],
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
@@ -191,7 +191,7 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "auto_value_annotations",
     ],
     srcs: [
