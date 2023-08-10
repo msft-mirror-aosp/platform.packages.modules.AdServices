@@ -245,11 +245,13 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getTopicsCobaltLoggingEnabled() {
+        // We check the getCobaltLoggingEnabled first.
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
-                /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+        return getCobaltLoggingEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                        /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
     }
 
     @Override
@@ -268,6 +270,37 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
                 /* defaultValue */ ADSERVICES_RELEASE_STAGE_FOR_COBALT);
+    }
+
+    @Override
+    public long getCobaltLoggingJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        long cobaltLoggingJobPeriodMs =
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS,
+                        /* defaultValue */ COBALT_LOGGING_JOB_PERIOD_MS);
+        if (cobaltLoggingJobPeriodMs < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "cobaltLoggingJobPeriodMs=%d. cobaltLoggingJobPeriodMs should >= 0",
+                            cobaltLoggingJobPeriodMs));
+        }
+        return cobaltLoggingJobPeriodMs;
+    }
+
+    @Override
+    public boolean getCobaltLoggingEnabled() {
+        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return !getGlobalKillSwitch()
+                && SystemProperties.getBoolean(
+                        getSystemPropertyName(FlagsConstants.KEY_COBALT_LOGGING_ENABLED),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants.KEY_COBALT_LOGGING_ENABLED,
+                                /* defaultValue */ COBALT_LOGGING_ENABLED));
     }
 
     @Override
