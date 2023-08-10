@@ -31,6 +31,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -85,15 +86,20 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 setInitialSystemProperties(testName);
                 setInitialFlags(testName);
                 List<Throwable> errors = new ArrayList<>();
+                Throwable testError = null;
                 try {
                     base.evaluate();
                 } catch (Throwable t) {
                     errors.add(t);
+                    testError = t;
                 } finally {
                     runSafely(errors, () -> resetFlags(testName));
                     runSafely(errors, () -> resetSystemProperties(testName));
                     runSafely(
                             errors, () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.NONE));
+                }
+                if (testError instanceof AssumptionViolatedException) {
+                    throw testError;
                 }
                 if (!errors.isEmpty()) {
                     throw new RuntimeException(
@@ -539,6 +545,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         try {
             r.run();
         } catch (Throwable e) {
+            Log.e(TAG, "runSafely() failed", e);
             errors.add(e);
         }
     }
