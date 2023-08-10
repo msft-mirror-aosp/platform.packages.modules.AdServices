@@ -17,13 +17,11 @@
 package com.android.adservices.data.signals;
 
 import android.adservices.common.AdTechIdentifier;
-import android.annotation.NonNull;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
-import androidx.room.Transaction;
 
 import java.util.List;
 
@@ -50,7 +48,7 @@ public abstract class ProtectedSignalsDao {
      * @param signals The signals to insert.
      */
     @Insert
-    public abstract void insertSignals(@NonNull List<DBProtectedSignal> signals);
+    public abstract void insertSignals(List<DBProtectedSignal> signals);
 
     /**
      * Deletes signals from the database.
@@ -58,19 +56,5 @@ public abstract class ProtectedSignalsDao {
      * @param signals The signals to delete.
      */
     @Delete
-    public abstract void deleteSignals(@NonNull List<DBProtectedSignal> signals);
-
-    /**
-     * Inserts and deletes signals in a single transaction.
-     *
-     * @param signalsToInsert The signals to insert.
-     * @param signalsToDelete The signals to delete.
-     */
-    @Transaction
-    public void insertAndDelete(
-            @NonNull List<DBProtectedSignal> signalsToInsert,
-            @NonNull List<DBProtectedSignal> signalsToDelete) {
-        insertSignals(signalsToInsert);
-        deleteSignals(signalsToDelete);
-    }
+    public abstract void deleteSignals(List<DBProtectedSignal> signals);
 }
