@@ -213,6 +213,15 @@
           "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
+    },
+    {
+      "name": "AdServicesBetaUxCtsRootTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "LegacyAdServicesGaUxCtsRootTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "AdServicesGaUxDebugChannelCtsRootTest[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
