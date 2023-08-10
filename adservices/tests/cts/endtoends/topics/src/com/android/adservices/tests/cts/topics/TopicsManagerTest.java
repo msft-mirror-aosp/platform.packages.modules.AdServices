@@ -25,7 +25,6 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -53,7 +52,6 @@ import java.util.concurrent.Executors;
 
 // TODO(b/243062789): Test should not use CountDownLatch or Sleep.
 @RunWith(JUnit4.class)
-@RequiresAdServicesSupportedOrNot
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
     // The JobId of the Epoch Computation.
@@ -109,26 +107,14 @@ public class TopicsManagerTest {
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
-    // Check test behavior whether or not the feature is enabled
-    //    @Rule(order = 1)
-    // TODO(b/284971005): re-add @Rule once there is a runner to set the flag and/or a new rule
-    // to set device config flags, otherwise tests will fail on T- (notice that this rule was not
-    // really working before for that same reason, i.e., it would always run the tests in the
-    // SUPPORTED mode)
-    public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
-
     @Before
     public void setup() throws Exception {
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
-        if (adServicesSupportedRule.isFeatureSupported()) {
-            // We need to skip 3 epochs so that if there is any usage from other test runs, it will
-            // not be used for epoch retrieval.
-            Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
-        } else {
-            Log.v(TAG, "setup(): no need to sleep when adservices is not supported");
-        }
+        // We need to skip 3 epochs so that if there is any usage from other test runs, it will
+        // not be used for epoch retrieval.
+        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
@@ -149,7 +135,7 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @RequiresAdServicesSupported
+    // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         overrideTopicsKillSwitch(true);
