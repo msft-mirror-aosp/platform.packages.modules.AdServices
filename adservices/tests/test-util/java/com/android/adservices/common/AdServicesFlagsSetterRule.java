@@ -84,18 +84,20 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.PERSISTENT);
                 setInitialSystemProperties(testName);
                 setInitialFlags(testName);
+                List<Throwable> errors = new ArrayList<>();
                 try {
                     base.evaluate();
+                } catch (Throwable t) {
+                    errors.add(t);
                 } finally {
-                    List<Throwable> errors = new ArrayList<>();
                     runSafely(errors, () -> resetFlags(testName));
                     runSafely(errors, () -> resetSystemProperties(testName));
                     runSafely(
                             errors, () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.NONE));
-                    if (!errors.isEmpty()) {
-                        throw new RuntimeException(
-                                errors.size() + " errors finalizing infra: " + errors);
-                    }
+                }
+                if (!errors.isEmpty()) {
+                    throw new RuntimeException(
+                            errors.size() + " errors finalizing infra: " + errors);
                 }
             }
         };
