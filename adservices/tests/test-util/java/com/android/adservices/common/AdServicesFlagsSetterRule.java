@@ -21,6 +21,7 @@ import android.provider.DeviceConfig;
 import android.util.Log;
 import android.util.Pair;
 
+import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
@@ -447,13 +448,31 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             String name, String value, @Nullable String separator) {
         Flag flag = new Flag(name, value, separator);
         if (mInitialFlags != null) {
-            // TODO(b/294423183): integrate with custom runner so it's ignored (or throw exception)
-            // when called to set a flag that is managed by it
+            if (isFlagManagedByRunner(name)) {
+                return this;
+            }
             Log.v(TAG, "Caching flag " + flag + " as test is not running yet");
             mInitialFlags.add(flag);
             return this;
         }
         return setFlag(flag);
+    }
+
+    private boolean isFlagManagedByRunner(String flag) {
+        FlagsRouletteState roulette = AbstractFlagsRouletteRunner.getFlagsRouletteState();
+        if (roulette == null || !roulette.flagNames.contains(flag)) {
+            return false;
+        }
+        Log.w(
+                TAG,
+                "Not setting flag "
+                        + flag
+                        + " as it's managed by "
+                        + roulette.runnerName
+                        + " (which manages "
+                        + roulette.flagNames
+                        + ")");
+        return true;
     }
 
     private AdServicesFlagsSetterRule setFlag(Flag flag) {
