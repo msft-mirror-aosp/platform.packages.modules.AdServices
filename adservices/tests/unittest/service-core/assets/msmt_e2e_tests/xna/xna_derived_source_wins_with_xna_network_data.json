@@ -331,7 +331,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech2.com",
+                    "source_network": "enrollment-id-ad-tech2.com",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -350,7 +350,7 @@
                   }
                 ],
                 "x_network_key_mapping" : {
-                  "enrollment-id-www.ad-tech2.com" : "0x2"
+                  "enrollment-id-ad-tech2.com" : "0x2"
                 }
               },
               "Location": null,
