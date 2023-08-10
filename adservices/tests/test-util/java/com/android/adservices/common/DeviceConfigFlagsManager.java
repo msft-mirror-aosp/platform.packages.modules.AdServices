@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 // TODO(b/284971005): add unit test and/or move to module-utils
-/** Implementation of {@link FlagsManager} that maps flags to {@link DeviceConfig} settiongs. */
+/** Implementation of {@link FlagsManager} that maps flags to {@link DeviceConfig} settings. */
 public final class DeviceConfigFlagsManager implements FlagsManager {
 
     private static final String TAG = DeviceConfigFlagsManager.class.getSimpleName();
