@@ -70,15 +70,15 @@ public final class CustomAudienceManagerTest {
 
     private String mPreviousAppAllowList;
 
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
     // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
     // Ignore tests when device is not at least S
-    @Rule(order = 1)
+    @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setUp() throws TimeoutException {

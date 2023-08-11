@@ -68,15 +68,15 @@ import java.lang.annotation.Annotation;
  * </pre>
  *
  * <p>Generally speaking, you should organize the rules using the order of feature dependency. For
- * example, if the test also required a given SDK level:
+ * example, if the test also requires a given SDK level:
  *
  * <pre class="prettyprint">
  * &#064;Rule(order = 0)
- * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
- *     new AdServicesDeviceSupportedRule();
+ *   @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
  *
  * &#064;Rule(order = 1)
- *   @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+ * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+ *     new AdServicesDeviceSupportedRule();
  *
  * &#064;Rule(order = 2)
  * public final GlobalKillSwitchRule globalKillSwitchRule = new GlobalKillSwitchRule();
