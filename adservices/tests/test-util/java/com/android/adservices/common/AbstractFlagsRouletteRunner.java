@@ -19,6 +19,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
@@ -70,7 +72,7 @@ public abstract class AbstractFlagsRouletteRunner extends BlockJUnit4ClassRunner
     // will throw a NPE if they access a field that's not initialized yet (that's why this class
     // doesn't provide a mLog but requires a log(), for example)
     private final FlagsManager mFlagsManager;
-    private List<String> mFlagsRoulette;
+    private List<String> mFlagsRoulette; // see getFlagsRoulette()
     private List<FrameworkMethod> mModifiedMethods;
 
     private static final ThreadLocal<FlagsRouletteState> sCurrentRunner = new ThreadLocal<>();
@@ -167,6 +169,9 @@ public abstract class AbstractFlagsRouletteRunner extends BlockJUnit4ClassRunner
                         .toArray(FlagState[]::new);
     }
 
+    // TODO(b/284971005):  this method (which is called by the constructor) is not only collecting
+    // errors but also initializing mFlagsRoulette, ideally we should split (and move the roulette
+    // initialization to some later stages)
     @Override
     protected final void collectInitializationErrors(List<Throwable> errors) {
         if (isDisabled()) {
@@ -196,6 +201,23 @@ public abstract class AbstractFlagsRouletteRunner extends BlockJUnit4ClassRunner
         super.collectInitializationErrors(errors);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>This method will create multiple {@link FlagSnapshotMethod FlagSnapshotMethods} for each
+     * "real" method, one with each of the required flag snapshots. For example, if the roulette
+     * contains flags {@code FlagA} and {@code FlagB}, it would by default return 4 {@link
+     * FlagSnapshotMethod FlagSnapshotMethods} for each method (for the 4 combinations of {@code
+     * true} and {@code false}, but it has some additional logic:
+     *
+     * <ul>
+     *   <li>Returns the original methods if the runner is {@link #isDisabled() disabled}.
+     *   <li>Ignores snapshots whose flags values would invalidate the flag requirements the method
+     *       is annotated with (for example, if method requires that {@code FlagA=true}, then it
+     *       would just return 2 snapshots for that method - {@code FlagA=true, FlagB=false} and
+     *       {@code FlagA=true, FlagB=true}).
+     * </ul>
+     */
     @Override
     protected final List<FrameworkMethod> computeTestMethods() {
         if (isDisabled()) {
@@ -208,8 +230,11 @@ public abstract class AbstractFlagsRouletteRunner extends BlockJUnit4ClassRunner
                         mModifiedMethods == null ? "null" : "" + mModifiedMethods.size());
 
         if (mModifiedMethods != null) {
-            // TODO(b/284971005): this method is called twice; figure out why so we the value
-            // doesn't need to be cached
+            // TODO(b/284971005): this method is called twice (by validate(), which is called by the
+            // constructor, and by getChildren(), which is called by runChildren()), so we're
+            // caching the results because it seems to be unnecessary to re-calculate them. But we
+            // need to investigate it further to make sure (for example, it's called by
+            // validateInstanceMethods(), which is @Deprecated)
             return mModifiedMethods;
         }
         List<FrameworkMethod> originalMethods = super.computeTestMethods();
@@ -344,14 +369,14 @@ public abstract class AbstractFlagsRouletteRunner extends BlockJUnit4ClassRunner
 
     // TODO(b/284971005): this is not the most optional way to combine the 2^N values, but it's fine
     // for now
-    private List<List<FlagState>> getFlagsSnapshots() {
+    private ImmutableList<List<FlagState>> getFlagsSnapshots() {
         if (mFlagsRoulette.isEmpty()) {
-            return Collections.emptyList();
+            return ImmutableList.of();
         }
         List<List<FlagState>> snapshots = new ArrayList<>();
         ArrayList<FlagState> flagsSnapshots = new ArrayList<>();
         getFlagSnapshots(snapshots, flagsSnapshots, 0);
-        return snapshots;
+        return ImmutableList.copyOf(snapshots);
     }
 
     private void getFlagSnapshots(
