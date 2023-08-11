@@ -22,7 +22,6 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-// TODO(b/293894199): add unit tests
 /**
  * Simple implementation of {@link OutcomeReceiver} for tests.
  *
@@ -70,11 +69,11 @@ public final class OutcomeReceiverForTests<T> implements OutcomeReceiver<T, Exce
     }
 
     private void setMethodCalled(String method, Object arg) {
-        String methocCalled = method + "(" + arg + ")";
-        Log.v(TAG, methocCalled);
+        String methodCalled = method + "(" + arg + ")";
+        Log.v(TAG, methodCalled);
         if (mMethodCalled != null) {
-            throw new IllegalStateException(methocCalled + " called after " + mMethodCalled);
+            throw new IllegalStateException(methodCalled + " called after " + mMethodCalled);
         }
-        mMethodCalled = methocCalled;
+        mMethodCalled = methodCalled;
     }
 }
