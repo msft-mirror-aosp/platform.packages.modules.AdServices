@@ -49,6 +49,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -81,6 +82,9 @@ public class PermissionsNoPermTest {
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
