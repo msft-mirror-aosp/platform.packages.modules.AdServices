@@ -74,7 +74,7 @@ public class ApkTestUtil {
                 500,
                 consentSwitch.getVisibleBounds().centerX(),
                 0,
-                1000);
+                100);
 
         return consentSwitch;
     }
