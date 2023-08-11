@@ -34,4 +34,17 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Will always throw the exception (if any), as AdService APIs should not throw exceptions
+     * when running on unsupported devices.
+     */
+    @Override
+    public void afterTest(boolean testShouldRunAsSupported, Throwable thrown) throws Throwable {
+        if (thrown != null) {
+            throw thrown;
+        }
+    }
 }
