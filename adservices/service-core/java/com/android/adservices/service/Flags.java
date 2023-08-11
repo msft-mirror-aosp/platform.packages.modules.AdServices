@@ -2941,4 +2941,12 @@ public interface Flags {
     default boolean getEnrollmentEnableLimitedLogging() {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
+
+    /** Default value for register interaction API */
+    boolean FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED = false;
+
+    /** Returns whether to enable register interaction API for PA + ARA */
+    default boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
+        return FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+    }
 }
