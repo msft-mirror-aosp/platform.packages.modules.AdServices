@@ -288,6 +288,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         try {
             Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(inputParams.getSeller());
             Objects.requireNonNull(callback);
         } catch (NullPointerException e) {
             sLogger.v("The getAdSelectionData() arguments should not be null!");
@@ -335,6 +336,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         try {
             Objects.requireNonNull(inputParams);
+            Objects.requireNonNull(inputParams.getSeller());
             Objects.requireNonNull(callback);
         } catch (NullPointerException e) {
             sLogger.v("The processAdSelectionResult() arguments should not be null!");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,20 @@
 
 package android.adservices.adselection;
 
-/**
- * This defines the PersistAdSelectionResultRequest class, a request created by SDKs which contains
- * the encrypted data client obtained from the Bidding and Auction server.
- */
-parcelable PersistAdSelectionResultRequest;
+import static com.google.common.truth.Truth.assertThat;
+
+import android.adservices.common.AdTechIdentifier;
+
+import org.junit.Test;
+
+public class GetAdSelectionDataRequestTest {
+    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
+
+    @Test
+    public void testGetAdSelectionDataRequest_validInput_success() {
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+
+        assertThat(request.getSeller()).isEqualTo(SELLER);
+    }
+}
