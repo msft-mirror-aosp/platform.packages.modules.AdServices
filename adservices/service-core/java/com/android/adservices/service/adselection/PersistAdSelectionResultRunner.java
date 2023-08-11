@@ -18,7 +18,6 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
-import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -101,7 +100,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(callback);
 
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
-        long adSelectionId = inputParams.getPersistAdSelectionResultRequest().getAdSelectionId();
+        long adSelectionId = inputParams.getAdSelectionId();
         try {
             ListenableFuture<Void> filteredRequest =
                     Futures.submit(
@@ -112,9 +111,7 @@ public class PersistAdSelectionResultRunner {
                                                     + " API.");
                                     // TODO(b/288371478): Validate seller owns the ad selection id
                                     mAdSelectionServiceFilter.filterRequest(
-                                            inputParams
-                                                    .getPersistAdSelectionResultRequest()
-                                                    .getSeller(),
+                                            inputParams.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             false,
                                             true,
@@ -132,9 +129,7 @@ public class PersistAdSelectionResultRunner {
                     FluentFuture.from(filteredRequest)
                             .transformAsync(
                                     ignoredVoid ->
-                                            orchestratePersistAdSelectionResultRunner(
-                                                    inputParams
-                                                            .getPersistAdSelectionResultRequest()),
+                                            orchestratePersistAdSelectionResultRunner(inputParams),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -177,20 +172,19 @@ public class PersistAdSelectionResultRunner {
     }
 
     private ListenableFuture<AuctionResult> orchestratePersistAdSelectionResultRunner(
-            @NonNull PersistAdSelectionResultRequest request) {
+            PersistAdSelectionResultInput request) {
         long adSelectionId = request.getAdSelectionId();
-
+        AdTechIdentifier seller = request.getSeller();
         return decryptBytes(request)
                 .transform(this::parseAdSelectionResult, mLightweightExecutorService)
                 .transformAsync(
                         auctionResult ->
-                                persistAuctionResults(
-                                        auctionResult, adSelectionId, request.getSeller()),
+                                persistAuctionResults(auctionResult, adSelectionId, seller),
                         mLightweightExecutorService);
         // TODO(b/278087551): Check if ad render uri is present on the device
     }
 
-    private FluentFuture<byte[]> decryptBytes(PersistAdSelectionResultRequest request) {
+    private FluentFuture<byte[]> decryptBytes(PersistAdSelectionResultInput request) {
         byte[] encryptedAuctionResult = request.getAdSelectionResult();
         long adSelectionId = request.getAdSelectionId();
 

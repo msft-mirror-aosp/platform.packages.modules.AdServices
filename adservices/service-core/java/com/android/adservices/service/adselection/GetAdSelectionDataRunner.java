@@ -18,7 +18,6 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
-import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -142,7 +141,7 @@ public class GetAdSelectionDataRunner {
                                 try {
                                     sLogger.v("Starting filtering for GetAdSelectionData API.");
                                     mAdSelectionServiceFilter.filterRequest(
-                                            inputParams.getAdSelectionDataRequest().getSeller(),
+                                            inputParams.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
@@ -161,7 +160,7 @@ public class GetAdSelectionDataRunner {
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateGetAdSelectionDataRunner(
-                                                    inputParams.getAdSelectionDataRequest(),
+                                                    inputParams.getSeller(),
                                                     adSelectionId,
                                                     inputParams.getCallerPackageName()),
                                     mLightweightExecutorService);
@@ -204,8 +203,8 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull GetAdSelectionDataRequest request, long adSelectionId, String packageName) {
-        Objects.requireNonNull(request);
+            @NonNull AdTechIdentifier seller, long adSelectionId, @NonNull String packageName) {
+        Objects.requireNonNull(seller);
         Objects.requireNonNull(packageName);
 
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
@@ -222,9 +221,7 @@ public class GetAdSelectionDataRunner {
                         },
                         mLightweightExecutorService)
                 .transformAsync(
-                        encrypted ->
-                                persistAdSelectionIdRequest(
-                                        adSelectionId, request.getSeller(), encrypted),
+                        encrypted -> persistAdSelectionIdRequest(adSelectionId, seller, encrypted),
                         mLightweightExecutorService);
     }
 

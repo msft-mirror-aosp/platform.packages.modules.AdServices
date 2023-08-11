@@ -154,10 +154,10 @@ public class AdSelectionManager {
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void getAdSelectionData(
-            @NonNull GetAdSelectionDataRequest getAdSelectionDataRequest,
+            @NonNull GetAdSelectionDataRequest request,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<GetAdSelectionDataOutcome, Exception> receiver) {
-        Objects.requireNonNull(getAdSelectionDataRequest);
+        Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -165,7 +165,7 @@ public class AdSelectionManager {
             final AdSelectionService service = getService();
             service.getAdSelectionData(
                     new GetAdSelectionDataInput.Builder()
-                            .setAdSelectionDataRequest(getAdSelectionDataRequest)
+                            .setSeller(request.getSeller())
                             .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new CallerMetadata.Builder()
@@ -234,10 +234,10 @@ public class AdSelectionManager {
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void persistAdSelectionResult(
-            @NonNull PersistAdSelectionResultRequest persistAdSelectionResultRequest,
+            @NonNull PersistAdSelectionResultRequest request,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
-        Objects.requireNonNull(persistAdSelectionResultRequest);
+        Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -245,7 +245,9 @@ public class AdSelectionManager {
             final AdSelectionService service = getService();
             service.persistAdSelectionResult(
                     new PersistAdSelectionResultInput.Builder()
-                            .setPersistAdSelectionResultRequest(persistAdSelectionResultRequest)
+                            .setSeller(request.getSeller())
+                            .setAdSelectionId(request.getAdSelectionId())
+                            .setAdSelectionResult(request.getAdSelectionResult())
                             .setCallerPackageName(getCallerPackageName())
                             .build(),
                     new CallerMetadata.Builder()
