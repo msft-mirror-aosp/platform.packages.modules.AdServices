@@ -29,6 +29,8 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -87,21 +89,7 @@ public class ReconsentNotificationTriggerTest {
      */
     @Test
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, true, true);
-
-        mDevice.pressHome();
-        UiUtils.restartAdservices();
-        UiUtils.enableGa();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+        reconsentNotificationTriggerHelper(true, false, true, AD_ID_DISABLED, true);
     }
 
     /**
@@ -111,21 +99,7 @@ public class ReconsentNotificationTriggerTest {
      */
     @Test
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, false, true);
-
-        mDevice.pressHome();
-        UiUtils.restartAdservices();
-        UiUtils.enableGa();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+        reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
     }
 
     /**
@@ -135,28 +109,19 @@ public class ReconsentNotificationTriggerTest {
      */
     @Test
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, false, true);
-
-        mDevice.pressHome();
-        UiUtils.restartAdservices();
-        UiUtils.enableGa();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ true);
+        reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
 
         mDevice.pressHome();
         UiUtils.restartAdservices();
 
         // second time call, notification should not displayed
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ false,
+                /* isEuTest */ false,
+                /* ux type */ UiConstants.UX.GA_UX);
     }
 
     /**
@@ -165,21 +130,7 @@ public class ReconsentNotificationTriggerTest {
      */
     @Test
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, false, false);
-
-        mDevice.pressHome();
-        UiUtils.restartAdservices();
-        UiUtils.enableGa();
-
-        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+        reconsentNotificationTriggerHelper(false, false, false, AD_ID_ENABLED, false);
     }
 
     /**
@@ -192,9 +143,14 @@ public class ReconsentNotificationTriggerTest {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, true, true);
+        AdservicesWorkflows.testClickNotificationFlow(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ true,
+                /* ux type */ UiConstants.UX.BETA_UX,
+                /* isFlipFlow */ false,
+                /* consent opt-in */ true);
 
         mDevice.pressHome();
         UiUtils.restartAdservices();
@@ -204,8 +160,12 @@ public class ReconsentNotificationTriggerTest {
 
         adServicesStatusResponse.get();
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ true,
+                /* ux type */ UiConstants.UX.GA_UX);
     }
 
     @Test
@@ -234,5 +194,44 @@ public class ReconsentNotificationTriggerTest {
                     // of returned future or error cases.
                     return "getStatus";
                 });
+    }
+
+    private void reconsentNotificationTriggerHelper(
+            boolean isDisplayed,
+            boolean isEuDevice,
+            boolean isEuNotification,
+            boolean isAdidEnabled,
+            boolean isOptin)
+            throws Exception {
+        if (isEuDevice) {
+            UiUtils.setAsEuDevice();
+        } else {
+            UiUtils.setAsRowDevice();
+        }
+        UiUtils.enableBeta();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, isAdidEnabled);
+
+        AdservicesWorkflows.testClickNotificationFlow(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ isEuNotification,
+                /* ux type */ UiConstants.UX.BETA_UX,
+                /* isFlipFlow */ false,
+                /* consent opt-in */ isOptin);
+
+        mDevice.pressHome();
+        UiUtils.enableGa();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, isAdidEnabled);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ isDisplayed,
+                /* isEuTest */ isEuNotification,
+                /* ux type */ UiConstants.UX.GA_UX);
     }
 }
