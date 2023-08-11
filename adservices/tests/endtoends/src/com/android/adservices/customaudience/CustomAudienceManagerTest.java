@@ -32,6 +32,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
@@ -90,6 +91,9 @@ public class CustomAudienceManagerTest {
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
     }
 
     @After
