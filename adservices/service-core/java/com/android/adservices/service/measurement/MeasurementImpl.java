@@ -29,6 +29,7 @@ import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.WorkerThread;
 import android.app.adservices.AdServicesManager;
 import android.content.ComponentName;
@@ -252,6 +253,18 @@ public final class MeasurementImpl {
         } finally {
             mReadWriteLock.readLock().unlock();
         }
+    }
+
+    /** Implement a source registration request from a report event */
+    public void registerEvent(
+            @NonNull Uri registrationUri,
+            @NonNull String appPackageName,
+            @NonNull String sdkPackageName,
+            @NonNull boolean isAdIdEnabled,
+            @Nullable String postBody,
+            @Nullable InputEvent inputEvent,
+            @Nullable String adIdValue) {
+        // TODO(b/295410450): Add registerEvent API implementation later
     }
 
     /**

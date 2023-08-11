@@ -17,6 +17,7 @@
 package android.adservices.test.scenario.adservices.utils;
 
 import android.Manifest;
+import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -52,6 +53,20 @@ public class SelectAdsFlagRule implements TestRule {
         extendAuctionTimeouts();
         // Disable backoff since we will be killing the process between tests
         disableBackoff();
+        modifyServerAuctionFlags();
+    }
+
+    private static void modifyServerAuctionFlags() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_ad_render_id_enabled "
+                        + "true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_kill_switch false");
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "fledge_auction_server_auction_key_fetch_uri",
+                "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2",
+                false);
     }
 
     private static void disableBackoff() {
@@ -87,6 +102,10 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_service_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_service_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
         // Extra flags to set for enabling AdServices on Android S-

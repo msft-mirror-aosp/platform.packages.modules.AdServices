@@ -21,6 +21,7 @@ import android.provider.DeviceConfig;
 import android.util.Log;
 import android.util.Pair;
 
+import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
@@ -83,18 +84,20 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.PERSISTENT);
                 setInitialSystemProperties(testName);
                 setInitialFlags(testName);
+                List<Throwable> errors = new ArrayList<>();
                 try {
                     base.evaluate();
+                } catch (Throwable t) {
+                    errors.add(t);
                 } finally {
-                    List<Throwable> errors = new ArrayList<>();
                     runSafely(errors, () -> resetFlags(testName));
                     runSafely(errors, () -> resetSystemProperties(testName));
                     runSafely(
                             errors, () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.NONE));
-                    if (!errors.isEmpty()) {
-                        throw new RuntimeException(
-                                errors.size() + " errors finalizing infra: " + errors);
-                    }
+                }
+                if (!errors.isEmpty()) {
+                    throw new RuntimeException(
+                            errors.size() + " errors finalizing infra: " + errors);
                 }
             }
         };
@@ -447,13 +450,31 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             String name, String value, @Nullable String separator) {
         Flag flag = new Flag(name, value, separator);
         if (mInitialFlags != null) {
-            // TODO(b/294423183): integrate with custom runner so it's ignored (or throw exception)
-            // when called to set a flag that is managed by it
+            if (isFlagManagedByRunner(name)) {
+                return this;
+            }
             Log.v(TAG, "Caching flag " + flag + " as test is not running yet");
             mInitialFlags.add(flag);
             return this;
         }
         return setFlag(flag);
+    }
+
+    private boolean isFlagManagedByRunner(String flag) {
+        FlagsRouletteState roulette = AbstractFlagsRouletteRunner.getFlagsRouletteState();
+        if (roulette == null || !roulette.flagNames.contains(flag)) {
+            return false;
+        }
+        Log.w(
+                TAG,
+                "Not setting flag "
+                        + flag
+                        + " as it's managed by "
+                        + roulette.runnerName
+                        + " (which manages "
+                        + roulette.flagNames
+                        + ")");
+        return true;
     }
 
     private AdServicesFlagsSetterRule setFlag(Flag flag) {

@@ -34,6 +34,6 @@ public final class DeviceSupportUtils {
      */
     @Deprecated
     public static boolean isSdkSandboxSupported(Context context) {
-        return AdServicesSupportHelper.isSdkSandboxSupportedOnDevice(context);
+        return AdServicesSupportHelper.isDeviceSupported();
     }
 }

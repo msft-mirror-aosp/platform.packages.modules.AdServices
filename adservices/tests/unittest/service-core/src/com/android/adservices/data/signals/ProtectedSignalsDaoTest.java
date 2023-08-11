@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ProtectedSignalsDaoTest {
@@ -130,6 +131,27 @@ public class ProtectedSignalsDaoTest {
         assertEquals(1, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(signal2, readResult.get(0));
+    }
+
+    @Test
+    public void testInsertAndDelete() {
+        // Insert two signals
+        mProtectedSignalsDao.insertAndDelete(
+                Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL),
+                Collections.emptyList());
+        // Get all the signals for the test buyer
+        List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        // Delete one of the signals and insert two more
+        mProtectedSignalsDao.insertAndDelete(
+                Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL),
+                readResult.subList(0, 1));
+        // Check that the deletions and insertion occurred
+        readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(3, readResult.size());
+        assertNotNull(readResult.get(0).getId());
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, readResult.get(0));
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, readResult.get(1));
+        assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, readResult.get(2));
     }
 
     private void assertEqualsExceptId(DBProtectedSignal expected, DBProtectedSignal actual) {

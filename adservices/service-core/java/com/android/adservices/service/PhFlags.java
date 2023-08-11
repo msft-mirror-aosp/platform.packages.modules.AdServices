@@ -691,6 +691,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
 
+    static final String KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED =
+            "fledge_measurement_report_and_register_event_api_enabled";
+
     static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
 
     // Database Schema Version Flags
@@ -3266,6 +3269,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
+                /* defaultValue */ FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("\t" + KEY_DEBUG_UX + " = " + getDebugUx());
         writer.println(
@@ -4321,6 +4332,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION
                         + " = "
                         + getMeasurementMaxAggregateKeysPerTriggerRegistration());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED
+                        + " = "
+                        + getFledgeMeasurementReportAndRegisterEventApiEnabled());
     }
 
     @VisibleForTesting

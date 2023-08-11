@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.test.scenario.adservices.fledge;
 
-/**
- * This defines the PersistAdSelectionResultRequest class, a request created by SDKs which contains
- * the encrypted data client obtained from the Bidding and Auction server.
- */
-parcelable PersistAdSelectionResultRequest;
+public class AdSelectionDataE2ETestMicroBenchmark extends AdSelectionDataE2ETest {}

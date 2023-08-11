@@ -22,6 +22,7 @@ import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COBALT_
 
 import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 import android.adservices.cobalt.IAdServicesCobaltUploadService;
+import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
@@ -33,16 +34,17 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.cobalt.EncryptedMessage;
 
+import java.util.Objects;
+
 /** Cobalt uploader for sending data via AdServices' upload protocol. */
 final class CobaltUploader implements Uploader {
     private static final String TAG = CobaltUploader.class.getSimpleName();
 
-    private final Context mContext;
     private final ServiceBinder<IAdServicesCobaltUploadService> mServiceBinder;
     private final int mEnvironment;
 
-    CobaltUploader(Context context, CobaltPipelineType pipelineType) {
-        mContext = context;
+    CobaltUploader(@NonNull Context context, CobaltPipelineType pipelineType) {
+        Objects.requireNonNull(context);
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
