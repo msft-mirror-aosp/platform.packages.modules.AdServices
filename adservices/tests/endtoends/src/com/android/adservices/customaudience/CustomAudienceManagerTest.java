@@ -16,14 +16,18 @@
 
 package com.android.adservices.customaudience;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
+import android.adservices.customaudience.CustomAudienceManager;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.customaudience.LeaveCustomAudienceRequest;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -33,6 +37,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresDeviceNotSupported;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
@@ -40,6 +46,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -47,7 +54,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-public class CustomAudienceManagerTest {
+public final class CustomAudienceManagerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
@@ -189,10 +196,48 @@ public class CustomAudienceManagerTest {
                 count++;
             }
         }
-        assertTrue(succeed);
+        assertWithMessage("success()").that(succeed).isTrue();
 
         measureJoinCustomAudience("with-kill, 2nd call");
         measureLeaveCustomAudience("with-kill, 1st call");
         measureLeaveCustomAudience("with-kill, 2nd call");
+    }
+
+    @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
+    @Test
+    @RequiresDeviceNotSupported
+    public void testGetchAndJoinCustomAudience_onUnsupportedDevice() {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
+
+        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.fetchAndJoinCustomAudience(
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                Uri.parse("https://buyer.example.com/fetch/ca"))
+                        .build(),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        receiver.assertFailure(IllegalStateException.class);
+    }
+
+    @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
+    @Test
+    @RequiresDeviceNotSupported
+    public void testLeaveCustomAudienceRequest_onUnsupportedDevice() {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
+        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.leaveCustomAudience(
+                new LeaveCustomAudienceRequest.Builder()
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setName("D.H.A.R.M.A.")
+                        .build(),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        receiver.assertFailure(IllegalStateException.class);
     }
 }
