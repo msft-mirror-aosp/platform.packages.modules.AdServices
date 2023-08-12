@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -56,7 +55,6 @@ public class UiSettingsMainPage {
     private static final int LAUNCH_TIMEOUT = 8000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
-    private static final String PRIVACY_SANDBOX_TEST_UI = "android.test.adservices.ui.MAIN";
     private static UiDevice sDevice;
 
     @Before
@@ -81,20 +79,14 @@ public class UiSettingsMainPage {
 
     @Test
     public void testSettingsPage() throws Exception {
-        String privacySandboxUi;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            privacySandboxUi = PRIVACY_SANDBOX_TEST_UI;
-        } else {
-            privacySandboxUi = PRIVACY_SANDBOX_UI;
-        }
         final long start = System.currentTimeMillis();
         // Launch the setting view.
-        Intent intent = new Intent(privacySandboxUi);
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         sContext.startActivity(intent);
 
         // Wait for the view to appear
-        sDevice.wait(Until.hasObject(By.pkg(privacySandboxUi).depth(0)), LAUNCH_TIMEOUT);
+        sDevice.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), LAUNCH_TIMEOUT);
 
         scrollAndClickButton(R.string.settingsUI_topics_ga_title);
         scrollAndClickButton(R.string.settingsUI_apps_ga_title);

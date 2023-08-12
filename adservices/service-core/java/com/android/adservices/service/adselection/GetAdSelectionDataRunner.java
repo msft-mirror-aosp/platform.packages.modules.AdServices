@@ -18,7 +18,6 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
-import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -142,7 +141,7 @@ public class GetAdSelectionDataRunner {
                                 try {
                                     sLogger.v("Starting filtering for GetAdSelectionData API.");
                                     mAdSelectionServiceFilter.filterRequest(
-                                            inputParams.getAdSelectionDataRequest().getSeller(),
+                                            inputParams.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
@@ -161,8 +160,9 @@ public class GetAdSelectionDataRunner {
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateGetAdSelectionDataRunner(
-                                                    inputParams.getAdSelectionDataRequest(),
-                                                    adSelectionId),
+                                                    inputParams.getSeller(),
+                                                    adSelectionId,
+                                                    inputParams.getCallerPackageName()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -203,14 +203,15 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull GetAdSelectionDataRequest request, long adSelectionId) {
-        Objects.requireNonNull(request);
+            @NonNull AdTechIdentifier seller, long adSelectionId, @NonNull String packageName) {
+        Objects.requireNonNull(seller);
+        Objects.requireNonNull(packageName);
 
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
                 .transform(
-                        buyerInputs -> createPayload(buyerInputs, request, adSelectionId),
+                        buyerInputs -> createPayload(buyerInputs, packageName, adSelectionId),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -220,21 +221,17 @@ public class GetAdSelectionDataRunner {
                         },
                         mLightweightExecutorService)
                 .transformAsync(
-                        encrypted ->
-                                persistAdSelectionIdRequest(
-                                        adSelectionId, request.getSeller(), encrypted),
+                        encrypted -> persistAdSelectionIdRequest(adSelectionId, seller, encrypted),
                         mLightweightExecutorService);
     }
 
     private AuctionServerPayloadFormattedData createPayload(
-            Map<AdTechIdentifier, BuyerInput> buyerInputs,
-            GetAdSelectionDataRequest request,
-            long adSelectionId) {
+            Map<AdTechIdentifier, BuyerInput> buyerInputs, String packageName, long adSelectionId) {
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
                 compressEachBuyerInput(buyerInputs);
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
-                        compressedBuyerInput, request.getSeller(), adSelectionId);
+                        compressedBuyerInput, packageName, adSelectionId);
         sLogger.v("ProtectedAudienceInput composed");
         return applyPayloadFormatter(protectedAudienceInput);
     }
@@ -273,7 +270,7 @@ public class GetAdSelectionDataRunner {
     @VisibleForTesting
     ProtectedAudienceInput composeProtectedAudienceInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
-            AdTechIdentifier seller,
+            String packageName,
             long adSelectionId) {
         sLogger.v("Composing ProtectedAudienceInput with buyer inputs and publisher");
         return ProtectedAudienceInput.newBuilder()
@@ -283,7 +280,7 @@ public class GetAdSelectionDataRunner {
                                         Collectors.toMap(
                                                 e -> e.getKey().toString(),
                                                 e -> ByteString.copyFrom(e.getValue().getData()))))
-                .setPublisherName(seller.toString())
+                .setPublisherName(packageName)
                 .setEnableDebugReporting(mFlags.getFledgeAuctionServerEnableDebugReporting())
                 // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
                 //  accessible in plaintext.

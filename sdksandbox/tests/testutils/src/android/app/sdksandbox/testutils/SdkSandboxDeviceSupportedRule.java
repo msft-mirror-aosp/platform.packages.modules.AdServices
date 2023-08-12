@@ -54,9 +54,15 @@ public final class SdkSandboxDeviceSupportedRule extends AbstractSupportedFeatur
 
     @Override
     public boolean isFeatureSupported() {
-        boolean isSupported = AdServicesSupportHelper.isSdkSandboxSupportedOnDevice();
+        boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
+    }
+
+    @Override
+    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
+        throw new AssertionError(
+                "test should have thrown an UnsupportedOperationException, but didn't throw any");
     }
 
     @Override

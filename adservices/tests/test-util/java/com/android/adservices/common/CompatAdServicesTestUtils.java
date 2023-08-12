@@ -19,8 +19,13 @@ package com.android.adservices.common;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-/** Class to place back-compat Adservices related helper methods */
-public class CompatAdServicesTestUtils {
+/**
+ * Class to place back-compat Adservices related helper methods.
+ *
+ * @deprecated tests should use {@link AdServicesFlagsSetterRule} instead.
+ */
+@Deprecated
+public final class CompatAdServicesTestUtils {
     private static final int PPAPI_ONLY = 1;
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;

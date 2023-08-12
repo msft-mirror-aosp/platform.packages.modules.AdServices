@@ -34,6 +34,7 @@ public class JoinEncryptionKeyTestUtil {
     public static final String JOIN_PUBLIC_KEY_1 =
             "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e"
                     + "79815500080001000100010003";
+
     static final DBEncryptionKey ENCRYPTION_KEY_JOIN =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("key_id_2")
@@ -49,6 +50,7 @@ public class JoinEncryptionKeyTestUtil {
                     .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_JOIN)
                     .setExpiryTtlSeconds(EXPIRY_TTL_1SEC)
                     .build();
+
     static final ImmutableMap<String, List<String>> DEFAULT_JOIN_HEADERS =
             ImmutableMap.of(CONTENT_TYPE_HEADER_LABEL, List.of(CONTENT_TYPE));
 

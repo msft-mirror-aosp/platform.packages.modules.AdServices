@@ -29,6 +29,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -65,7 +66,7 @@ public class GaUxReconsentChannelTest {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         UiUtils.refreshConsentResetToken();
-        UiUtils.restartAdservices();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.turnOnEnableAdsServicesAPI();
         UiUtils.disableConsentDebugMode();
         UiUtils.disableSchedulingParams();
@@ -112,6 +113,7 @@ public class GaUxReconsentChannelTest {
         assertThat(response).isTrue();
 
         mDevice.pressHome();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
@@ -127,29 +129,7 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowOptoutNoReconsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, false, false);
-
-        UiUtils.enableGa();
-        // Notifications should not be shown if beta consent false.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
+        reconsentTestHelper(false, false, false, true, false);
     }
 
     /**
@@ -158,29 +138,7 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowAdIdDisabledOptoutNoReconsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, true, false);
-
-        UiUtils.enableGa();
-        // Notifications should not be shown if beta consent false.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
+        reconsentTestHelper(false, false, true, false, false);
     }
 
     /**
@@ -189,29 +147,7 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaEuAdIdDisabledOptoutNoReconsent() throws Exception {
-        UiUtils.setAsEuDevice();
-        UiUtils.enableBeta();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, true, false);
-
-        UiUtils.enableGa();
-        // Notifications should not be shown if beta consent false.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
+        reconsentTestHelper(false, true, true, false, false);
     }
 
     /**
@@ -220,32 +156,7 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowOptinReconsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, false, true);
-
-        // Wait for consent operation finish
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        mDevice.pressHome();
-        UiUtils.enableGa();
-        // Notifications should show if beta consent true.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX);
+        reconsentTestHelper(true, false, false, true, true);
     }
 
     /**
@@ -254,31 +165,7 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaRowAdIdDisabledOptinReconsent() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableBeta();
-
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, true, true);
-
-        // Wait for consent operation finish
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiUtils.enableGa();
-        // Notifications should not be shown if beta consent false.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
+        reconsentTestHelper(true, false, true, false, true);
     }
 
     /**
@@ -287,30 +174,54 @@ public class GaUxReconsentChannelTest {
      */
     @Test
     public void testBetaEuAdIdDisabledOptinReconsent() throws Exception {
-        UiUtils.setAsEuDevice();
+        reconsentTestHelper(true, true, true, false, true);
+    }
+
+    private void reconsentTestHelper(
+            boolean isDisplayed,
+            boolean isEuDevice,
+            boolean isEuNotification,
+            boolean isAdidEnabled,
+            boolean isOptin)
+            throws Exception {
+        if (isEuDevice) {
+            UiUtils.setAsEuDevice();
+        } else {
+            UiUtils.setAsRowDevice();
+        }
         UiUtils.enableBeta();
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
+                        .setAdIdEnabled(isAdidEnabled)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
                         .build();
 
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
-        UiUtils.consentConfirmationScreen(sContext, mDevice, true, true);
+        AdservicesWorkflows.testClickNotificationFlow(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ isEuNotification,
+                /* ux type */ UX.BETA_UX,
+                /* isFlipFlow */ false,
+                /* consent opt-in */ isOptin);
 
         // Wait for consent operation finish
         Thread.sleep(LAUNCH_TIMEOUT_MS);
         UiUtils.enableGa();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         // Notifications should not be shown if beta consent false.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ isDisplayed,
+                /* isEuTest */ isEuNotification,
+                /* ux type */ UX.GA_UX);
     }
 }

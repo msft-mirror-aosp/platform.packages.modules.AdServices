@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -129,18 +130,17 @@ public class SdkApi extends ISdkApi.Stub {
 
     @Override
     public void loadSdkBySdk(String sdkName) {
-        //        Bundle params = new Bundle();
-        //        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        //
-        //        try {
-        //            mContext.getSystemService(SdkSandboxController.class)
-        //                    .loadSdk(sdkName, params, Runnable::run, callback);
-        //        } catch (Exception e) {
-        //            throw new IllegalStateException("Failed to load Mediatee SDK " +
-        // e.getMessage());
-        //        }
-        //
-        //        callback.assertLoadSdkIsSuccessful();
+        Bundle params = new Bundle();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        try {
+            mContext.getSystemService(SdkSandboxController.class)
+                    .loadSdk(sdkName, params, Runnable::run, callback);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load Mediatee SDK " + e.getMessage());
+        }
+
+        callback.assertLoadSdkIsSuccessful();
     }
 
     @Override

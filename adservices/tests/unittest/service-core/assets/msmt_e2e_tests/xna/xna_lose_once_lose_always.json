@@ -203,7 +203,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech1.com",
+                    "source_network": "enrollment-id-ad-tech1.com",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -217,7 +217,7 @@
                     "expiry": "172801"
                   },
                   {
-                    "source_network": "enrollment-id-www.ad-tech2.com",
+                    "source_network": "enrollment-id-ad-tech2.com",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -232,8 +232,8 @@
                   }
                 ],
                 "x_network_key_mapping" : {
-                  "enrollment-id-www.ad-tech1.com" : "0x1",
-                  "enrollment-id-www.ad-tech2.com" : "0x2"
+                  "enrollment-id-ad-tech1.com" : "0x1",
+                  "enrollment-id-ad-tech2.com" : "0x2"
                 }
               },
               "Location": null,
@@ -311,7 +311,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech1.com",
+                    "source_network": "enrollment-id-ad-tech1.com",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -325,7 +325,7 @@
                     "expiry": "172801"
                   },
                   {
-                    "source_network": "enrollment-id-www.ad-tech3.com",
+                    "source_network": "enrollment-id-ad-tech3.com",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -340,8 +340,8 @@
                   }
                 ],
                 "x_network_key_mapping" : {
-                  "enrollment-id-www.ad-tech1.com" : "0x1",
-                  "enrollment-id-www.ad-tech3.com" : "0x3"
+                  "enrollment-id-ad-tech1.com" : "0x1",
+                  "enrollment-id-ad-tech3.com" : "0x3"
                 }
               },
               "Location": null,

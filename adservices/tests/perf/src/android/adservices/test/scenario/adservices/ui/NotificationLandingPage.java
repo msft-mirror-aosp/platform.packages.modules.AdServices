@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -29,12 +28,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -56,8 +54,6 @@ public class NotificationLandingPage {
     private static final int LAUNCH_TIMEOUT = 8000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 1000;
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.NOTIFICATIONS";
-    private static final String PRIVACY_SANDBOX_TEST_UI =
-            "android.test.adservices.ui.NOTIFICATIONS";
     private static UiDevice sDevice;
 
     @Before
@@ -85,20 +81,14 @@ public class NotificationLandingPage {
 
     @Test
     public void testNotificationLandingPage() throws Exception {
-        String privacySandboxUi;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            privacySandboxUi = PRIVACY_SANDBOX_TEST_UI;
-        } else {
-            privacySandboxUi = PRIVACY_SANDBOX_UI;
-        }
         final long start = System.currentTimeMillis();
         // Launch the setting view.
-        Intent intent = new Intent(privacySandboxUi);
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         sContext.startActivity(intent);
 
         // Wait for the view to appear
-        sDevice.wait(Until.hasObject(By.pkg(privacySandboxUi).depth(0)), LAUNCH_TIMEOUT);
+        sDevice.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), LAUNCH_TIMEOUT);
 
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
@@ -153,21 +143,8 @@ public class NotificationLandingPage {
     }
 
     public static void restartAdservices() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-        ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
-    }
-
-    private UiObject scrollTo(int resId) throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        UiObject element = getPageElement(resId);
-        scrollView.scrollIntoView(element);
-        return element;
-    }
-
-    public UiObject getPageElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
+        final String packageName = AdservicesTestHelper.getAdServicesPackageName(sContext);
+        ShellUtils.runShellCommand("am force-stop " + packageName);
     }
 
     public String getString(int resourceId) {

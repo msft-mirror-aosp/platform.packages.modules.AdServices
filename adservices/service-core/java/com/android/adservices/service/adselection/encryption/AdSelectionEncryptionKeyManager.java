@@ -135,8 +135,7 @@ public class AdSelectionEncryptionKeyManager {
     public FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs) {
-        return FluentFuture.from(
-                        immediateFuture(getLatestActiveKeyOfType(adSelectionEncryptionKeyType)))
+        return FluentFuture.from(immediateFuture(getLatestKeyOfType(adSelectionEncryptionKeyType)))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
@@ -194,6 +193,7 @@ public class AdSelectionEncryptionKeyManager {
 
         return keys.isEmpty() ? null : selectRandomDbKeyAndParse(keys);
     }
+
     /**
      * For given AdSelectionKeyType, this method does the following - 1. Fetches the active key from
      * the server. 2. Once the active keys are fetched, it persists the fetched key to
@@ -231,8 +231,7 @@ public class AdSelectionEncryptionKeyManager {
                         mLightweightExecutor)
                 .transform(
                         result -> {
-                            sLogger.d(
-                                    "Persisting " + result.size() + " fetched active keys.");
+                            sLogger.d("Persisting " + result.size() + " fetched active keys.");
 
                             mEncryptionKeyDao.insertAllKeys(result);
                             mEncryptionKeyDao.deleteExpiredRowsByType(

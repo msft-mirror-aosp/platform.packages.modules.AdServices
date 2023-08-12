@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package android.adservices.customaudience;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-// TODO(b/278016822): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class FetchAndJoinCustomAudienceRequestTest {
     public static final Uri VALID_FETCH_URI_1 =

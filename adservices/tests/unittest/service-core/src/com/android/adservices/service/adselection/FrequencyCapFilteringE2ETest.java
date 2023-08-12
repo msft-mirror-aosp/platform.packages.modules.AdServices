@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -92,6 +93,7 @@ import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.After;
@@ -312,6 +314,14 @@ public class FrequencyCapFilteringE2ETest {
                                         .setResponseBody("{}")
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
+                .fetchPayload(any(Uri.class), any(ImmutableSet.class));
+        doReturn(
+                        // Scoring signals
+                        Futures.immediateFuture(
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody("{}")
+                                        .build()))
+                .when(mAdServicesHttpsClientMock)
                 .fetchPayload(any(Uri.class));
         doReturn(
                         // Bidding logic
@@ -371,6 +381,14 @@ public class FrequencyCapFilteringE2ETest {
     @Test
     public void testUpdateHistogramForAdSelectionFromOtherAppDoesNotAddHistogramEvents()
             throws InterruptedException {
+        // Bypass the permission check since it's enforced before the package name check
+        doNothing()
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAppDeclaredPermission(
+                        mContextSpy,
+                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
+
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         // Caller does not match previous ad selection
@@ -388,6 +406,12 @@ public class FrequencyCapFilteringE2ETest {
         assertWithMessage("Callback failed, was: %s", callback).that(callback.mIsSuccess).isTrue();
 
         verifyNoMoreInteractions(mFrequencyCapDaoSpy);
+
+        verify(mFledgeAuthorizationFilterSpy)
+                .assertAppDeclaredPermission(
+                        mContextSpy,
+                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
     }
 
     @Test
