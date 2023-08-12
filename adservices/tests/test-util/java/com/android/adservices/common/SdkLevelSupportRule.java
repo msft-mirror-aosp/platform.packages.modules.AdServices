@@ -54,6 +54,11 @@ public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
         return new SdkLevelSupportRule(SdkLevel::isAtLeastS);
     }
 
+    /** Rule that ensures test is executed on Android T+. Skips test otherwise. */
+    public static SdkLevelSupportRule isAtLeastT() {
+        return new SdkLevelSupportRule(SdkLevel::isAtLeastT);
+    }
+
     @Override
     public boolean isFeatureSupported() {
         return mSdkLevelConstraint.get();
@@ -67,6 +72,12 @@ public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
     @Override
     protected void throwFeatureSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device supports SDK Level.");
+    }
+
+    @Override
+    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
+        throw new AssertionError(
+                "test should have thrown an UnsupportedOperationException, but didn't throw any");
     }
 
     @Override

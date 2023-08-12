@@ -15,8 +15,6 @@
  */
 package com.android.adservices.common;
 
-// TODO(b/284971005): try to merge it with AdServicesSupportedRule (for example, using a
-// builder that would tell whether to check for device support)
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
@@ -35,5 +33,18 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
         boolean isSupported = AdServicesSupportHelper.isDeviceSupported();
         mLog.v("isFeatureSupported(): %b", isSupported);
         return isSupported;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Will always throw the exception (if any), as AdService APIs should not throw exceptions
+     * when running on unsupported devices.
+     */
+    @Override
+    public void afterTest(boolean testShouldRunAsSupported, Throwable thrown) throws Throwable {
+        if (thrown != null) {
+            throw thrown;
+        }
     }
 }

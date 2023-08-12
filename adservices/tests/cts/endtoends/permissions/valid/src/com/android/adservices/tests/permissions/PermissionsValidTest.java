@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
@@ -31,6 +33,7 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
 import android.net.Uri;
@@ -78,6 +81,9 @@ public class PermissionsValidTest {
             //  .ExtServices.xml are not executing in post-submit (b/276909363)
             setAdditionalFlags();
         }
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
@@ -150,6 +156,29 @@ public class PermissionsValidTest {
     }
 
     @Test
+    public void testValidPermissions_fledgeFetchAndJoinCustomAudience()
+            throws ExecutionException, InterruptedException {
+        AdvertisingCustomAudienceClient customAudienceClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                Uri.parse("https://buyer.example.com/fetch/ca"))
+                        .setName("exampleCustomAudience")
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> customAudienceClient.fetchAndJoinCustomAudience(request).get());
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+
+    @Test
     public void testValidPermissions_selectAds_adSelectionConfig() {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
@@ -169,7 +198,27 @@ public class PermissionsValidTest {
     }
 
     @Test
-    public void testValidPermissions_reportImpression() {
+    public void testValidPermissions_selectAds_adSelectionFromOutcomesConfig() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+
+    @Test
+    public void testValidPermissions_reportImpression()
+            throws ExecutionException, InterruptedException {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 

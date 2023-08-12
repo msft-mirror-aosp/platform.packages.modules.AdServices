@@ -24,6 +24,7 @@ import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
@@ -37,7 +38,6 @@ import com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,7 +60,12 @@ public class SdkSandboxMediationTest {
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME_2 =
             "com.android.ctsappownedsdksandboxinterface2";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final ActivityScenarioRule activityScenarioRule =
+            new ActivityScenarioRule<>(TestActivity.class);
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
@@ -71,7 +76,7 @@ public class SdkSandboxMediationTest {
         mContext = ApplicationProvider.getApplicationContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
-        mRule.getScenario();
+        activityScenarioRule.getScenario();
 
         // unload SDK to fix flakiness
         mSdkSandboxManager.unloadSdk(MEDIATOR_SDK_NAME);
@@ -201,7 +206,6 @@ public class SdkSandboxMediationTest {
     }
 
     @Test
-    @Ignore
     public void testLoadSdkByOtherSdk() throws Exception {
         loadMediatorSdkAndPopulateInterface();
         mSdk.loadSdkBySdk(MEDIATEE_SDK_NAME);
@@ -220,7 +224,6 @@ public class SdkSandboxMediationTest {
     }
 
     @Test
-    @Ignore
     public void testLoadSdkBySameSdk() throws Exception {
         loadMediatorSdkAndPopulateInterface();
         IllegalStateException exception =
@@ -235,7 +238,6 @@ public class SdkSandboxMediationTest {
     }
 
     @Test
-    @Ignore
     public void testLoadSdkThatDoesNotExist() throws Exception {
         loadMediatorSdkAndPopulateInterface();
         final String nonExistingSdk = "non-existing-sdk";

@@ -51,13 +51,13 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.ComponentName;
 import android.content.Context;
@@ -104,6 +104,7 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -183,7 +184,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final SharedPreferencesUpdate TEST_UPDATE =
             new SharedPreferencesUpdate(new ArrayList<>(), getTestBundle());
 
-    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "enforce_sdk_sandbox_restrictions";
+    private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
     private static final String PROPERTY_SERVICES_ALLOWLIST =
             "services_allowlist_per_targetSdkVersion";
@@ -198,16 +199,17 @@ public class SdkSandboxManagerServiceUnitTest {
             "apply_sdk_sandbox_next_restrictions";
 
     private String mInitialApplyNextSdkSandboxRestrictions = null;
-    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST = "next_service_allowlist";
+    private static final String PROPERTY_NEXT_SERVICE_ALLOWLIST =
+            "sdksandbox_next_service_allowlist";
     private String mInitialValueNextServiceAllowlist;
 
     private String mInitialEnforceRestrictions;
 
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
     @Before
     public void setup() {
-        assumeTrue(
-                DeviceSupportUtils.isSdkSandboxSupported(
-                        InstrumentationRegistry.getInstrumentation().getContext()));
         StaticMockitoSessionBuilder mockitoSessionBuilder =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
@@ -219,6 +221,7 @@ public class SdkSandboxManagerServiceUnitTest {
             mockitoSessionBuilder =
                     mockitoSessionBuilder.mockStatic(ActivityInterceptorCallbackRegistry.class);
         }
+
         mStaticMockSession = mockitoSessionBuilder.startMocking();
 
         if (SdkLevel.isAtLeastU()) {
@@ -320,6 +323,7 @@ public class SdkSandboxManagerServiceUnitTest {
         if (sSdkSandboxSettingsListener != null) {
             sSdkSandboxSettingsListener.unregisterPropertiesListener();
         }
+
         mStaticMockSession.finishMocking();
 
         resetDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, mInitialEnforceRestrictions);

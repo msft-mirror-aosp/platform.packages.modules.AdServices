@@ -172,7 +172,6 @@ public class MeasurementManager {
      * @param request app source registration request
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerSource(
