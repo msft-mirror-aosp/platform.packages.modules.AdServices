@@ -137,6 +137,7 @@ public abstract class AdSelectionRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
@@ -164,6 +165,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final DebugReporting debugReporting,
             final int callerUid) {
         Objects.requireNonNull(context);
@@ -176,6 +178,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
@@ -196,6 +199,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
@@ -217,6 +221,7 @@ public abstract class AdSelectionRunner {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final DebugReporting debugReporting) {
         Objects.requireNonNull(context);
@@ -232,6 +237,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
@@ -251,6 +257,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
@@ -609,7 +616,19 @@ public abstract class AdSelectionRunner {
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
                     dbAdSelection = adSelectionOrchestrationResult.mDbAdSelectionBuilder.build();
+
                     mAdSelectionExecutionLogger.startPersistAdSelection(dbAdSelection);
+
+                    try {
+                        mAdCounterHistogramUpdater.updateWinHistogram(dbAdSelection);
+                    } catch (Exception exception) {
+                        // Frequency capping is not crucial enough to crash the entire process
+                        sLogger.w(
+                                exception,
+                                "Error encountered updating ad counter histogram with win event; "
+                                        + "continuing ad selection persistence");
+                    }
+
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()

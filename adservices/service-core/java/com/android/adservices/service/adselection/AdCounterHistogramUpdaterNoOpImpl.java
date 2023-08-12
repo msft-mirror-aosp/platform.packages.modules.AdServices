@@ -19,25 +19,35 @@ package com.android.adservices.service.adselection;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
 
 import java.time.Instant;
+import java.util.Objects;
 
 /**
- * Interface for updating ad counter histograms either during ad selection or after the service is
- * called.
+ * No-op implementation for an {@link AdCounterHistogramUpdater} which does nothing when ad
+ * filtering is disabled.
  */
-public interface AdCounterHistogramUpdater {
-    /** Updates the ad counter histogram for the buyer and custom audience with a win event. */
-    void updateWinHistogram(@NonNull DBAdSelection dbAdSelection);
+public class AdCounterHistogramUpdaterNoOpImpl implements AdCounterHistogramUpdater {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    /**
-     * Updates the ad counter histogram for the ad associated with the given ad selection ID with a
-     * non-win event.
-     */
-    void updateNonWinHistogram(
+    public AdCounterHistogramUpdaterNoOpImpl() {}
+
+    @Override
+    public void updateWinHistogram(@NonNull DBAdSelection dbAdSelection) {
+        Objects.requireNonNull(dbAdSelection);
+        sLogger.v("Ad filtering is disabled; skipping win histogram update");
+    }
+
+    @Override
+    public void updateNonWinHistogram(
             long adSelectionId,
             @NonNull String callerPackageName,
             @FrequencyCapFilters.AdEventType int adEventType,
-            @NonNull Instant eventTimestamp);
+            @NonNull Instant eventTimestamp) {
+        Objects.requireNonNull(callerPackageName);
+        Objects.requireNonNull(eventTimestamp);
+        sLogger.v("Ad filtering is disabled; skipping non-win histogram update");
+    }
 }

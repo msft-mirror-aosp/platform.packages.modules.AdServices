@@ -449,6 +449,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         adSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
+                        mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                mAdSelectionEntryDao),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         new DebugReporting(mFlags, mAdServicesHttpsClient, devContext),
                         callerUid);
@@ -478,6 +480,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         adSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                mAdSelectionEntryDao),
                         mAdRenderIdValidator,
                         new DebugReporting(mFlags, mAdServicesHttpsClient, devContext),
                         callerUid);
