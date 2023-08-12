@@ -119,7 +119,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                 && ConsentManager.getInstance(mContext).getUx() != null) {
                             LogUtil.d(ENABLE_AD_SERVICES_API_ENABLED_MESSAGE);
                             // PS entry point should be hidden from unenrolled users.
-                            isAdServicesEnabled &= mUxStatesManager.isEnrolledUser();
+                            isAdServicesEnabled &= mUxStatesManager.isEnrolledUser(mContext);
                         } else {
                             LogUtil.d(ENABLE_AD_SERVICES_API_DISABLED_MESSAGE);
                             // Reconsent is already handled by the enableAdServices API.
