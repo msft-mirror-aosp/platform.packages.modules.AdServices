@@ -109,19 +109,13 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedScoringSignals();
   }
 
-  public final class GetAdSelectionDataOutcome implements android.os.Parcelable {
-    method public int describeContents();
+  public final class GetAdSelectionDataOutcome {
     method @Nullable public byte[] getAdSelectionData();
-    method @Nullable public long getAdSelectionId();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.GetAdSelectionDataOutcome> CREATOR;
+    method public long getAdSelectionId();
   }
 
-  public final class GetAdSelectionDataRequest implements android.os.Parcelable {
-    method public int describeContents();
+  public final class GetAdSelectionDataRequest {
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.GetAdSelectionDataRequest> CREATOR;
   }
 
   public static final class GetAdSelectionDataRequest.Builder {
@@ -130,13 +124,10 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
   }
 
-  public final class PersistAdSelectionResultRequest implements android.os.Parcelable {
-    method public int describeContents();
+  public final class PersistAdSelectionResultRequest {
     method public long getAdSelectionId();
     method @Nullable public byte[] getAdSelectionResult();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.PersistAdSelectionResultRequest> CREATOR;
   }
 
   public static final class PersistAdSelectionResultRequest.Builder {
@@ -160,6 +151,7 @@ package android.adservices.adselection {
   public class ReportEventRequest {
     method public long getAdSelectionId();
     method @NonNull public String getData();
+    method @Nullable public android.view.InputEvent getInputEvent();
     method @NonNull public String getKey();
     method public int getReportingDestinations();
     field public static final int FLAG_REPORTING_DESTINATION_BUYER = 2; // 0x2
@@ -171,6 +163,7 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.ReportEventRequest build();
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setAdSelectionId(long);
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setData(@NonNull String);
+    method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setKey(@NonNull String);
     method @NonNull public android.adservices.adselection.ReportEventRequest.Builder setReportingDestinations(int);
   }
@@ -496,11 +489,26 @@ package android.adservices.measurement {
     method @NonNull public static android.adservices.measurement.MeasurementManager get(@NonNull android.content.Context);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerSource(@NonNull android.adservices.measurement.SourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION) public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
     field public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
+  }
+
+  public final class SourceRegistrationRequest implements android.os.Parcelable {
+    method public int describeContents();
+    method @Nullable public android.view.InputEvent getInputEvent();
+    method @NonNull public java.util.List<android.net.Uri> getRegistrationUris();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.SourceRegistrationRequest> CREATOR;
+  }
+
+  public static final class SourceRegistrationRequest.Builder {
+    ctor public SourceRegistrationRequest.Builder(@NonNull java.util.List<android.net.Uri>);
+    method @NonNull public android.adservices.measurement.SourceRegistrationRequest build();
+    method @NonNull public android.adservices.measurement.SourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
   }
 
   public final class WebSourceParams implements android.os.Parcelable {

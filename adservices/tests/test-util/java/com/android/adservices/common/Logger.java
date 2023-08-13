@@ -61,7 +61,7 @@ public final class Logger {
 
     /** Logs a message in the given level. */
     @FormatMethod
-    private void log(LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs) {
+    void log(LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs) {
         mRealLogger.log(level, msgFmt, msgArgs);
     }
 

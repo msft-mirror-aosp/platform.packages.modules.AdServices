@@ -79,6 +79,9 @@ public class PermissionsAppOptOutTest {
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After

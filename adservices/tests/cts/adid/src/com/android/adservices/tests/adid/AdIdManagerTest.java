@@ -47,13 +47,14 @@ public final class AdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
+    // Ignore tests when device is not at least S
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+
+    // Ignore tests when device is not supported
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
-
-    // Ignore tests when device is not at least S
-    @Rule(order = 1)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 2)
