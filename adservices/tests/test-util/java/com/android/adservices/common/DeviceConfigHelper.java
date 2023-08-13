@@ -51,6 +51,12 @@ public final class DeviceConfigHelper {
         setOnly(name, value);
     }
 
+    public void setWithSeparator(String name, String value, String separator) {
+        String oldValue = savePreviousValue(name);
+        String newValue = oldValue == null ? value : oldValue + separator + value;
+        setOnly(name, newValue);
+    }
+
     public void reset() {
         int size = mFlagsToBeReset.size();
         if (size == 0) {
@@ -79,12 +85,15 @@ public final class DeviceConfigHelper {
         ShellUtils.runShellCommand("device_config set_sync_disabled_for_test %s", value);
     }
 
-    private String get(String name) {
+    // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
+    // AdServicesFlagsSetterRule
+    String get(String name) {
         return callWithDeviceConfigPermissions(
                 () -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
     }
 
-    private void savePreviousValue(String name) {
+    private String savePreviousValue(String name) {
+        String oldValue = get(name);
         if (mFlagsToBeReset.containsKey(name)) {
             Log.v(
                     TAG,
@@ -93,11 +102,11 @@ public final class DeviceConfigHelper {
                             + "("
                             + mFlagsToBeReset.get(name)
                             + ") already saved for reset()");
-            return;
+            return oldValue;
         }
-        String oldValue = get(name);
         Log.v(TAG, "Saving " + name + "=" + oldValue + " for reset");
         mFlagsToBeReset.put(name, oldValue);
+        return oldValue;
     }
 
     private void setOnly(String name, String value) {
@@ -117,7 +126,7 @@ public final class DeviceConfigHelper {
         }
     }
 
-    private static <T> T callWithDeviceConfigPermissions(Callable<T> c) {
+    static <T> T callWithDeviceConfigPermissions(Callable<T> c) {
         return invokeStaticMethodWithShellPermissions(
                 () -> {
                     try {

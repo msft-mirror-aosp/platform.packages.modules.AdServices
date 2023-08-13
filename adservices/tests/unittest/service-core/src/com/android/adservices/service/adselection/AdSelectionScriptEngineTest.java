@@ -396,13 +396,8 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_2, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_1).build(),
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_2).build());
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
+                .containsExactly(AD_COST_1, AD_COST_2);
     }
 
     @Test
@@ -450,10 +445,7 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_2, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
                 .containsExactly(null, null);
     }
 
@@ -507,12 +499,8 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_AD_COST_EMPTY, BID_2));
-        assertThat(
-                        results.stream()
-                                .map(GenerateBidResult::getBuyerContextualSignals)
-                                .collect(Collectors.toList()))
-                .containsExactly(
-                        BuyerContextualSignals.builder().setAdCost(AD_COST_1).build(), null);
+        assertThat(results.stream().map(GenerateBidResult::getAdCost).collect(Collectors.toList()))
+                .containsExactly(AD_COST_1, null);
     }
 
     @Test

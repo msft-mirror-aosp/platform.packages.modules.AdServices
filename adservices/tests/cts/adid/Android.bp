@@ -30,7 +30,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [

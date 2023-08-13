@@ -52,12 +52,10 @@ import java.lang.annotation.Annotation;
  * }
  * </pre>
  *
- * <p>When used together with similar rules (like {@link AdServicesSupportedRule}
- *
  * <p><b>NOTE: </b>this rule will mostly be used to skip test on unsupported platforms - if you want
- * to test that your API behaves correctly whether or not AdServices is enabled, you most likely
- * should use {@link AdServicesSupportedRule} instead. In fact, there might be cases where both
- * rules are used, in which case it's recommended to run this one first (so the test is skipped
+ * to test that your API behaves correctly whether or not the global kill switch is disabled, you
+ * most likely should use {@link GlobalKillSwitchRule} instead. In fact, there might be cases where
+ * both rules are used, in which case it's recommended to run this one first (so the test is skipped
  * right away when not supported). Example:
  *
  * <pre class="prettyprint">
@@ -66,22 +64,22 @@ import java.lang.annotation.Annotation;
  *     new AdServicesDeviceSupportedRule();
  *
  * &#064;Rule(order = 1)
- * public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
+ * public final GlobalKillSwitchRule globalKillSwitchRule = new GlobalKillSwitchRule();
  * </pre>
  *
  * <p>Generally speaking, you should organize the rules using the order of feature dependency. For
- * example, if the test also required a given SDK level:
+ * example, if the test also requires a given SDK level:
  *
  * <pre class="prettyprint">
  * &#064;Rule(order = 0)
+ *   @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+ *
+ * &#064;Rule(order = 1)
  * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
  *     new AdServicesDeviceSupportedRule();
  *
- * &#064;Rule(order = 1)
- *   @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
- *
  * &#064;Rule(order = 2)
- * public final AdServicesSupportedRule adServicesSupportedRule = new AdServicesSupportedRule();
+ * public final GlobalKillSwitchRule globalKillSwitchRule = new GlobalKillSwitchRule();
  * </pre>
  */
 public abstract class AbstractAdServicesDeviceSupportedRule extends AbstractSupportedFeatureRule {
@@ -98,6 +96,12 @@ public abstract class AbstractAdServicesDeviceSupportedRule extends AbstractSupp
     @Override
     protected void throwFeatureSupportedAssumptionViolatedException() {
         throw new AssumptionViolatedException("Device supports AdServices");
+    }
+
+    @Override
+    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
+        throw new AssertionError(
+                "test should have thrown an UnsupportedOperationException, but didn't throw any");
     }
 
     @Override

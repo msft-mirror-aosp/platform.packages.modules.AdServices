@@ -17,6 +17,7 @@ package com.android.adservices;
 
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.appsetid.AppSetIdProviderService;
+import android.adservices.cobalt.AdServicesCobaltUploadService;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
@@ -61,6 +62,10 @@ public class AdServicesCommon {
     /** Intent action to discover the AdServicesCommon service in the APK. */
     public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
             "android.adservices.AD_SERVICES_COMMON_SERVICE";
+
+    /** Intent action to discover the AdServices Cobalt upload service. */
+    public static final String ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE =
+            AdServicesCobaltUploadService.SERVICE_INTERFACE;
 
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
     // The AdExtServices APK package name suffix is android.ext.services.

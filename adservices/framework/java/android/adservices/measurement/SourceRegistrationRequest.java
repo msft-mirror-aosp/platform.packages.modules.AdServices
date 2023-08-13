@@ -32,8 +32,6 @@ import java.util.Objects;
 
 /**
  * Class to hold input to measurement source registration calls.
- *
- * @hide
  */
 public final class SourceRegistrationRequest implements Parcelable {
     private static final int REGISTRATION_URIS_MAX_COUNT = 20;

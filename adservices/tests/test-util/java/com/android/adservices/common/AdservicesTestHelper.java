@@ -26,7 +26,6 @@ import android.os.Build;
 import android.os.SystemProperties;
 import android.util.Log;
 
-import com.android.adservices.AdServicesCommon;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -38,6 +37,8 @@ public final class AdservicesTestHelper {
     private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
     private static final String DEFAULT_LOG_TAG = "adservices";
     private static final String FORCE_KILL_PROCESS_COMMAND = "am force-stop";
+    // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
+    private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
 
     /**
      * Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
@@ -53,7 +54,7 @@ public final class AdservicesTestHelper {
                 context.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
         final ServiceInfo serviceInfo =
-                AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
+                resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME, logTag);
         if (serviceInfo == null) {
             Log.e(logTag, "Failed to find serviceInfo for adServices service");
             return null;
@@ -82,6 +83,13 @@ public final class AdservicesTestHelper {
     public static void killAdservicesProcess(@NonNull Context context, @NonNull String logTag) {
         ShellUtils.runShellCommand(
                 "%s %s", FORCE_KILL_PROCESS_COMMAND, getAdServicesPackageName(context, logTag));
+
+        try {
+            // Sleep 100 ms to allow AdServices process to recover
+            Thread.sleep(/* millis= */ 100);
+        } catch (InterruptedException ignored) {
+            Log.e(logTag, "Recovery from restarting AdServices process interrupted", ignored);
+        }
     }
 
     /**
@@ -108,7 +116,7 @@ public final class AdservicesTestHelper {
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
      * @return if the device is supported.
-     * @deprecated use {@link AdServicesSupportedRule} or {@link AdServicesDeviceSupportedRule}
+     * @deprecated use {@link GlobalKillSwitchRule} or {@link AdServicesDeviceSupportedRule}
      *     instead.
      */
     @Deprecated
@@ -125,5 +133,69 @@ public final class AdservicesTestHelper {
             return Build.isDebuggable();
         }
         return SystemProperties.getInt("ro.debuggable", 0) == 1;
+    }
+
+    /**
+     * Resolve package name of the active AdServices APK on this device.
+     *
+     * <p>Copied from AdServicesCommon.
+     */
+    private static ServiceInfo resolveAdServicesService(
+            List<ResolveInfo> intentResolveInfos, String intentAction, String logTag) {
+        if (intentResolveInfos == null || intentResolveInfos.isEmpty()) {
+            Log.e(
+                    logTag,
+                    "Failed to find resolveInfo for adServices service. Intent action: "
+                            + intentAction);
+            return null;
+        }
+
+        // On T+ devices, we may have two versions of the services present due to b/263904312.
+        if (intentResolveInfos.size() > 2) {
+            StringBuilder intents = new StringBuilder("");
+            for (ResolveInfo intentResolveInfo : intentResolveInfos) {
+                if (intentResolveInfo != null && intentResolveInfo.serviceInfo != null) {
+                    intents.append(intentResolveInfo.serviceInfo.packageName);
+                }
+            }
+            Log.e(logTag, "Found multiple services " + intents + " for " + intentAction);
+            return null;
+        }
+
+        // On T+ devices, only use the service that comes from AdServices APK. The package name of
+        // AdService is com.[google.]android.adservices.api while the package name of ExtServices
+        // APK is com.[google.]android.ext.services.
+        ServiceInfo serviceInfo = null;
+
+        // We have already checked if there are 0 OR more than 2 services returned.
+        switch (intentResolveInfos.size()) {
+            case 2:
+                // In the case of 2, always use the one from AdServicesApk.
+                if (intentResolveInfos.get(0) != null
+                        && intentResolveInfos.get(0).serviceInfo != null
+                        && intentResolveInfos.get(0).serviceInfo.packageName != null
+                        && intentResolveInfos
+                                .get(0)
+                                .serviceInfo
+                                .packageName
+                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                    serviceInfo = intentResolveInfos.get(0).serviceInfo;
+                } else if (intentResolveInfos.get(1) != null
+                        && intentResolveInfos.get(1).serviceInfo != null
+                        && intentResolveInfos.get(1).serviceInfo.packageName != null
+                        && intentResolveInfos
+                                .get(1)
+                                .serviceInfo
+                                .packageName
+                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                    serviceInfo = intentResolveInfos.get(1).serviceInfo;
+                }
+                break;
+
+            case 1:
+                serviceInfo = intentResolveInfos.get(0).serviceInfo;
+                break;
+        }
+        return serviceInfo;
     }
 }

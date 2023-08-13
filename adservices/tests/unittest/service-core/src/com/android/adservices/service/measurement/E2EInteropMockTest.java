@@ -41,14 +41,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
- * src/content/test/data/attribution_reporting/interop April 21, 2023 //TODO(b/290124390): Re-add
- * event_report_window.json test
+ * src/content/test/data/attribution_reporting/interop April 21, 2023. Files destination_limit.json,
+ * max_aggregatable_reports_per_source.json, and rate_limit_max_attributions.json were updated with
+ * GitHub commit 29f6cbe0a585a74a5337306a1c764dfb3fc49ace
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -62,6 +64,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                 .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
+    private static Map<String, String> sPhFlagsForInterop = Map.of(
+            // TODO (b/295382171): remove this after the flag is removed.
+            "measurement_enable_max_aggregate_reports_per_source", "true");
+
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
         return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor);
@@ -74,7 +80,20 @@ public class E2EInteropMockTest extends E2EMockTest {
             String name,
             Map<String, String> phFlagsMap)
             throws RemoteException {
-        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
+        super(
+                actions,
+                expectedOutput,
+                paramsProvider,
+                name,
+                (
+                        (Supplier<Map<String, String>>) () -> {
+                            for (String key : sPhFlagsForInterop.keySet()) {
+                                phFlagsMap.put(key, sPhFlagsForInterop.get(key));
+                            }
+                            return phFlagsMap;
+                        }
+                ).get()
+        );
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
