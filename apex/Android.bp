@@ -38,6 +38,7 @@ apex {
     prebuilts: ["current_sdkinfo"],
     certificate: ":com.android.adservices.certificate",
     defaults: ["t-launched-apex-module"],
+    jni_libs: ["libtflite_support_classifiers_native", "libhpke_jni"],
 }
 
 sdk {
@@ -94,6 +95,7 @@ bootclasspath_fragment {
         // result in a build failure due to inconsistent flags.
         package_prefixes: [
             "android.adservices",
+            "android.app.adservices",
             "android.app.sdksandbox",
             "com.android.adservices",
         ],
