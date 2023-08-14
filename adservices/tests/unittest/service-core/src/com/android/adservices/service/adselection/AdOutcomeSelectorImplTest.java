@@ -93,6 +93,8 @@ public class AdOutcomeSelectorImplTest {
     private Dispatcher mDefaultDispatcher;
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
 
+    private DevContext mDevContext = DevContext.createForDevOptionsDisabled();
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -140,7 +142,8 @@ public class AdOutcomeSelectorImplTest {
                         mWebClient,
                         new AdSelectionDevOverridesHelper(
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
-                        mFlags);
+                        mFlags,
+                        mDevContext);
     }
 
     @Test
@@ -281,7 +284,8 @@ public class AdOutcomeSelectorImplTest {
                         mWebClient,
                         new AdSelectionDevOverridesHelper(
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
-                        flagsWithSmallerLimits);
+                        flagsWithSmallerLimits,
+                        mDevContext);
 
         List<AdSelectionIdWithBidAndRenderUri> adverts =
                 Collections.singletonList(
@@ -345,7 +349,8 @@ public class AdOutcomeSelectorImplTest {
                         mWebClient,
                         new AdSelectionDevOverridesHelper(
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
-                        prebuiltFlagEnabled);
+                        prebuiltFlagEnabled,
+                        mDevContext);
 
         String paramKey = "bidFloor";
         String paramValue = "bid_floor";

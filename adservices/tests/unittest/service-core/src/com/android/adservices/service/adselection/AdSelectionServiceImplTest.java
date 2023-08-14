@@ -258,6 +258,8 @@ public class AdSelectionServiceImplTest {
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
     private final int mBytesPerPeriod = 1;
 
+    private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
+
     @Spy
     private final AdServicesHttpsClient mClientSpy =
             new AdServicesHttpsClient(
@@ -1001,7 +1003,7 @@ public class AdSelectionServiceImplTest {
                         },
                         mLightweightExecutorService);
 
-        doReturn(failedFuture).when(mClientSpy).getAndReadNothing(sellerReportingUri);
+        doReturn(failedFuture).when(mClientSpy).getAndReadNothing(sellerReportingUri, mDevContext);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -1118,7 +1120,7 @@ public class AdSelectionServiceImplTest {
                         },
                         mLightweightExecutorService);
 
-        doReturn(failedFuture).when(mClientSpy).getAndReadNothing(buyerReportingUri);
+        doReturn(failedFuture).when(mClientSpy).getAndReadNothing(buyerReportingUri, mDevContext);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -6317,7 +6319,7 @@ public class AdSelectionServiceImplTest {
                                         .build()))
                 .when(mClientSpy)
                 .fetchPayload(any(AdServicesHttpClientRequest.class));
-        doReturn(Futures.immediateVoidFuture()).when(mClientSpy).getAndReadNothing(any());
+        doReturn(Futures.immediateVoidFuture()).when(mClientSpy).getAndReadNothing(any(), any());
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -6394,8 +6396,8 @@ public class AdSelectionServiceImplTest {
                 .isTrue();
 
         verify(mClientSpy).fetchPayload(any(AdServicesHttpClientRequest.class));
-        verify(mClientSpy).getAndReadNothing(eq(buyerReportingUriWithSubdomain));
-        verify(mClientSpy).getAndReadNothing(eq(sellerReportingUriWithSubdomain));
+        verify(mClientSpy).getAndReadNothing(eq(buyerReportingUriWithSubdomain), eq(mDevContext));
+        verify(mClientSpy).getAndReadNothing(eq(sellerReportingUriWithSubdomain), eq(mDevContext));
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
