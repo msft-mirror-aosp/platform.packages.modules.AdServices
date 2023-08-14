@@ -29,6 +29,7 @@ import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.WorkerThread;
 import android.app.adservices.AdServicesManager;
 import android.content.ComponentName;
@@ -50,10 +51,10 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackManager;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -93,7 +94,7 @@ public final class MeasurementImpl {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
-        mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
+        mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager, mFlags);
         mContentResolver = mContext.getContentResolver();
         deleteOnRollback();
     }
@@ -254,6 +255,18 @@ public final class MeasurementImpl {
         }
     }
 
+    /** Implement a source registration request from a report event */
+    public void registerEvent(
+            @NonNull Uri registrationUri,
+            @NonNull String appPackageName,
+            @NonNull String sdkPackageName,
+            @NonNull boolean isAdIdEnabled,
+            @Nullable String postBody,
+            @Nullable InputEvent inputEvent,
+            @Nullable String adIdValue) {
+        // TODO(b/295410450): Add registerEvent API implementation later
+    }
+
     /**
      * Implement a deleteRegistrations request, returning a r{@link
      * AdServicesStatusUtils.StatusCode}.
@@ -372,7 +385,7 @@ public final class MeasurementImpl {
         if (verifiedDestination == null) {
             return webDestination == null
                     ? true
-                    : Web.topPrivateDomainAndScheme(webDestination).isPresent();
+                    : WebAddresses.topPrivateDomainAndScheme(webDestination).isPresent();
         }
 
         return isVerifiedDestination(
@@ -417,9 +430,9 @@ public final class MeasurementImpl {
                 return false;
             } else {
                 Optional<Uri> webDestinationTopPrivateDomainAndScheme =
-                        Web.topPrivateDomainAndScheme(webDestination);
+                        WebAddresses.topPrivateDomainAndScheme(webDestination);
                 Optional<Uri> verifiedDestinationTopPrivateDomainAndScheme =
-                        Web.topPrivateDomainAndScheme(verifiedDestination);
+                        WebAddresses.topPrivateDomainAndScheme(verifiedDestination);
                 return webDestinationTopPrivateDomainAndScheme.isPresent()
                         && verifiedDestinationTopPrivateDomainAndScheme.isPresent()
                         && webDestinationTopPrivateDomainAndScheme.get().equals(
@@ -435,7 +448,7 @@ public final class MeasurementImpl {
 
     private static boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
         Uri destination = triggerRegistrationRequest.getDestination();
-        return Web.topPrivateDomainAndScheme(destination).isPresent();
+        return WebAddresses.topPrivateDomainAndScheme(destination).isPresent();
     }
 
     private static String getTargetPackageFromPlayStoreUri(Uri uri) {

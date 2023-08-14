@@ -40,7 +40,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ॲप्लिकेशन ला AdService चे सुरू करण्याच्या स्थितीसंबंधित API अ‍ॅक्सेस करू देते."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager च्या APIs चा अ‍ॅक्सेस"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"अ‍ॅप्लिकेशनला AdServicesManager चे APIs अ‍ॅक्सेस करण्याची अनुमती देते."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android सिस्‍टीम"</string>
+    <!-- no translation found for app_label (5844694701336604490) -->
+    <skip />
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android च्या जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्तीमध्ये सामील व्हा"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android हे तुम्हाला जाहिराती दाखवण्यासाठी ॲप्सकरिता अधिक खाजगी मार्ग एक्सप्लोर करत आहे"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"अधिक जाणून घ्या"</string>
@@ -222,7 +223,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"तुम्ही ब्लॉक केलेली अ‍ॅप्स"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"अ‍ॅपने सुचवलेला डेटा रीसेट करा"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"तुमचा अनुभव पर्सनलाइझ करण्यासाठी तुम्हाला स्वारस्य असलेल्या गोष्टी लक्षात ठेवणे ही अ‍ॅप्ससाठी सामान्य बाब आहे. अ‍ॅप्स ही तुमच्या विषयांबद्दल Android सह माहिती स्टोअरदेखील करू शकतात.\n\nउदाहरणार्थ, तुम्ही मॅरेथॉनच्या प्रशिक्षणाशी संबंधित अ‍ॅप वापरत असल्यास, तुम्हाला धावण्यासाठीच्या शूजमध्ये स्वारस्य आहे हे अ‍ॅप ठरवू शकते. त्यानंतर, तुम्ही वेगळे अ‍ॅप वापरत असल्यास, ते अ‍ॅप पहिल्या अ‍ॅपने सुचवलेली धावण्यासाठीच्या शूजची जाहिरात तुम्हाला दाखवू शकते.\n\nAndroid हे अ‍ॅपने सुचवलेला डेटा ऑटो-डिलीट करते. तुम्ही पुन्हा वापरत असलेले अ‍ॅप या सूचीमध्ये परत दिसू शकते. किंवा तुम्ही अ‍ॅपला तुम्हाला जाहिराती सुचवण्यापासून ब्लॉक करू शकता.\n\nतुमच्या अ‍ॅप्समध्ये, हे सेटिंग, जाहिरातीच्या विषयांचे सेटिंग, तुमच्या जाहिरात आयडीची सेटिंग्ज आणि तुम्ही वापरत असलेले अ‍ॅप जाहिराती पर्सनलाइझ करते की नाही यांनुसार तुम्ही पाहत असलेली जाहिरात पर्सनलाइझ केलेली असू शकते."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"नवीन जाहिरातविषयक गोपनीयता वैशिष्‍ट्य उपलब्ध आहे"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"नवीन जाहिरातविषयक गोपनीयता वैशिष्‍ट्ये आता उपलब्ध आहेत"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"जाहिरातीच्या परफॉर्मन्सचे मापन करण्यास मदत करण्यासाठी, खूपच मर्यादित माहिती शेअर केली जाते"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"आम्ही ads measurement नावाचे नवीन जाहिरातविषयक गोपनीयता वैशिष्‍ट्य लाँच करत आहोत. अ‍ॅप्सना जाहिरातींच्या परफॉर्मन्सचे मापन करण्यात मदत करण्यासाठी, Android हे अ‍ॅप्स दरम्यान खूपच मर्यादित माहिती शेअर करते, जसे की, तुम्हाला जाहिरात कधी दाखवली गेली होती."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"तुम्ही जाहिरातीसंबंधित गोपनीयता सेटिंग्जमध्ये बदल करू शकता."</string>

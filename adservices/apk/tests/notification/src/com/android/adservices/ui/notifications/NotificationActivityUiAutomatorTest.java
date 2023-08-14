@@ -188,6 +188,7 @@ public class NotificationActivityUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn("GA_UX").when(mMockFlags).getDebugUx();
 
         startActivity(true);
 
@@ -208,6 +209,7 @@ public class NotificationActivityUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn("GA_UX").when(mMockFlags).getDebugUx();
 
         startActivity(false);
 
@@ -225,6 +227,7 @@ public class NotificationActivityUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn("GA_UX").when(mMockFlags).getDebugUx();
 
         startActivity(true);
 
@@ -257,6 +260,7 @@ public class NotificationActivityUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn("GA_UX").when(mMockFlags).getDebugUx();
 
         startActivity(true);
 

@@ -29,7 +29,9 @@ import android.test.mock.MockContentResolver;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -67,7 +69,12 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags),
+                new DebugReportApi(
+                        ApplicationProvider.getApplicationContext(),
+                        flags,
+                        new EventReportWindowCalcDelegate(flags),
+                        new SourceNoiseHandler(flags),
+                        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
                 AdServicesLoggerImpl.getInstance());
@@ -92,7 +99,8 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            Flags flags) {
         SourceNoiseHandler sourceNoiseHandler =
                 spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
@@ -124,6 +132,7 @@ class TestObjectProvider {
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
-                sourceNoiseHandler);
+                sourceNoiseHandler,
+                flags);
     }
 }

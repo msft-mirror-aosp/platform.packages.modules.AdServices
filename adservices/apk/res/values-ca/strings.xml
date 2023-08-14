@@ -40,7 +40,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permet que una aplicació accedeixi a l\'API d\'estat d\'activació d\'AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Accés a les API d\'AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permet que una aplicació accedeixi a les API d\'AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
+    <!-- no translation found for app_label (5844694701336604490) -->
+    <skip />
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Uneix-te a la versió beta de la privadesa d\'anuncis d\'Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android està explorant maneres més privades perquè les aplicacions et mostrin anuncis"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Més informació"</string>
@@ -222,7 +223,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicacions que has bloquejat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restableix les dades suggerides per aplicacions"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"És habitual que les aplicacions que utilitzes recordin coses que t\'interessen per personalitzar la teva experiència. Les aplicacions també poden emmagatzemar informació amb Android sobre els teus temes.\n\nPer exemple, si utilitzes una aplicació sobre entrenament de maratons, l\'aplicació pot decidir que t\'interessen les sabatilles de córrer. Més endavant, si utilitzes una altra aplicació, aquesta aplicació pot mostrar-te un anunci de sabatilles de córrer suggerit per la primera aplicació.\n\nAndroid suprimeix automàticament les dades suggerides per aplicacions de manera regular. Pot ser que una aplicació que utilitzis de nou torni a aparèixer a la llista. O pots bloquejar una aplicació per impedir que et suggereixi anuncis.\n\nA les teves aplicacions, un anunci que vegis pot estar personalitzat, depenent d\'aquesta configuració, de la configuració de temes d\'anuncis, de la configuració d\'identificador de publicitat i de si l\'aplicació que utilitzes personalitza anuncis."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Nova funció de privadesa d\'anuncis disponible"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Ara hi ha una nova funció de privadesa d\'anuncis disponible"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Només es comparteix informació molt limitada entre aplicacions per ajudar a mesurar el rendiment dels anuncis"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Estem llançant una nova funció de privadesa d\'anuncis anomenada \"mesurament d\'anuncis\". Android comparteix només informació molt limitada entre aplicacions, com ara quan se t\'ha mostrat un anunci, per ajudar les aplicacions a mesurar el rendiment dels anuncis."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Pots fer canvis a la configuració de privadesa d\'anuncis."</string>
@@ -285,7 +286,7 @@
     <string name="topic10052" msgid="8213269199807045473">"Galeries d\'imatges en línia"</string>
     <string name="topic10053" msgid="1378192203082454197">"Vídeo en línia"</string>
     <string name="topic10054" msgid="3727401645405134505">"Reproducció de vídeo en directe"</string>
-    <string name="topic10055" msgid="4943174831732192854">"Reproducció de pel·lícules i televisió"</string>
+    <string name="topic10055" msgid="4943174831732192854">"Serveis de reproducció en continu de programes de televisió i pel·lícules"</string>
     <string name="topic10056" msgid="3066058636154255073">"Òpera"</string>
     <string name="topic10057" msgid="387445514677222034">"Guies i materials de consulta de televisió"</string>
     <string name="topic10058" msgid="9149178644022969766">"Emissores i cadenes de TV"</string>

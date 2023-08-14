@@ -54,7 +54,7 @@ public class AggregateReportingJobHandlerWrapper {
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         AggregateEncryptionKeyManager mockEncryptionManager =
                 Mockito.mock(AggregateEncryptionKeyManager.class);
-        when(mockEncryptionManager.getAggregateEncryptionKeys(captorNumberOfKeys.capture()))
+        when(mockEncryptionManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
                         invocation -> {
                             List<AggregateEncryptionKey> keys = new ArrayList<>();

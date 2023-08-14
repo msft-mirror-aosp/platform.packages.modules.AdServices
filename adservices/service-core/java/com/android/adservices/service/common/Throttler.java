@@ -86,6 +86,9 @@ public class Throttler {
         // Key to throttle Measurement Register Web Trigger API
         MEASUREMENT_API_REGISTER_WEB_TRIGGER,
 
+        // Key to throttle Measurement Register Sources API
+        MEASUREMENT_API_REGISTER_SOURCES,
+
         // Key to throttle Topics API based on the App Package Name.
         TOPICS_API_APP_PACKAGE_NAME,
 
@@ -169,6 +172,7 @@ public class Throttler {
         final double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
         final double registerWebSource =
                 flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        final double registerSources = flags.getMeasurementRegisterSourcesRequestPermitsPerSecond();
         final double registerTrigger = flags.getMeasurementRegisterTriggerRequestPermitsPerSecond();
         final double registerWebTrigger =
                 flags.getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
@@ -197,6 +201,7 @@ public class Throttler {
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_TRIGGER, registerTrigger);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE, registerWebSource);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER, registerWebTrigger);
+        mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_SOURCES, registerSources);
 
         mRateLimitPerApiMap.put(
                 ApiKey.TOPICS_API_APP_PACKAGE_NAME, topicsApiAppRequestPermitsPerSecond);

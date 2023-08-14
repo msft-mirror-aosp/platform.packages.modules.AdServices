@@ -56,6 +56,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -63,6 +64,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -93,6 +95,9 @@ public class AppSearchConsentWorkerTest {
 
     @Before
     public void setup() {
+        // TODO(b/290779036) - Enable when AppSearch is implemented on R
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+
         mTopics.addAll(List.of(TOPIC1, TOPIC2, TOPIC3));
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
@@ -107,7 +112,9 @@ public class AppSearchConsentWorkerTest {
 
     @After
     public void tearDown() {
-        mMockitoSession.finishMocking();
+        if (mMockitoSession != null) {
+            mMockitoSession.finishMocking();
+        }
     }
 
     @Test

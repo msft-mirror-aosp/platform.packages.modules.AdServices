@@ -18,17 +18,20 @@ package android.adservices.cobalt;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 /**
  * Parameters describing the encrypted Cobalt Envelope being sent.
  *
  * @hide
  */
+@SystemApi
 public final class EncryptedCobaltEnvelopeParams implements Parcelable {
     /**
      * Whether data is from a development or production device.
@@ -56,15 +59,13 @@ public final class EncryptedCobaltEnvelopeParams implements Parcelable {
             @Environment int environment, @NonNull int keyIndex, @NonNull byte[] ciphertext) {
         mEnvironment = environment;
         mKeyIndex = keyIndex;
-        mCiphertext = ciphertext;
+        mCiphertext = Objects.requireNonNull(ciphertext);
     }
 
     private EncryptedCobaltEnvelopeParams(@NonNull Parcel in) {
-        mCiphertext = null;
-
         mEnvironment = in.readInt();
         mKeyIndex = in.readInt();
-        in.readByteArray(mCiphertext);
+        mCiphertext = in.createByteArray();
     }
 
     public static final @NonNull Creator<EncryptedCobaltEnvelopeParams> CREATOR =

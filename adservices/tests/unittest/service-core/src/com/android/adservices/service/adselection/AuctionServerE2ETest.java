@@ -31,12 +31,10 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
-import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.adselection.ObliviousHttpEncryptorWithSeedImpl;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
-import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
@@ -57,12 +55,12 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.adselection.DBEncryptionKey;
-import com.android.adservices.data.adselection.DBReportingUris;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -76,6 +74,7 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
@@ -137,7 +136,7 @@ public class AuctionServerE2ETest {
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
                     .setCustomAudienceName("test-name")
-                    .setCustomAudienceOwner("test-owner")
+                    .setBuyer("test-buyer.com")
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
@@ -166,11 +165,12 @@ public class AuctionServerE2ETest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private ReportingUrisDao mReportingUrisDao;
+    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private AdSelectionService mAdSelectionService;
     private AuctionServerPayloadFormatter mPayloadFormatter;
+    private AuctionServerPayloadExtractor mPayloadExtractor;
     private AuctionServerDataCompressor mDataCompressor;
 
     @Mock AdSelectionEncryptionKeyManager mAdSelectionEncryptionKeyManagerMock;
@@ -207,7 +207,7 @@ public class AuctionServerE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mReportingUrisDao = serverDb.reportingUrisDao();
+        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         when(ConsentManager.getInstance(mContext)).thenReturn(mConsentManagerMock);
@@ -220,11 +220,20 @@ public class AuctionServerE2ETest {
         mAdSelectionService = createAdSelectionService();
 
         mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.getPayloadFormatter(
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
                         mFlags.getFledgeAuctionServerPayloadFormatVersion());
+
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+
+        doReturn(DevContext.createForDevOptionsDisabled())
+                .when(mDevContextFilterMock)
+                .createDevContext();
     }
 
     @After
@@ -239,22 +248,26 @@ public class AuctionServerE2ETest {
         mFlags = new AuctionServerE2ETestFlags(true);
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
 
-        GetAdSelectionDataRequest getAdSelectionDataRequest =
-                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataInput getAdSelectionDataInput =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
 
         ThrowingRunnable getAdSelectionDataRunnable =
-                () -> invokeGetAdSelectionData(mAdSelectionService, getAdSelectionDataRequest);
+                () -> invokeGetAdSelectionData(mAdSelectionService, getAdSelectionDataInput);
 
-        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
-                new PersistAdSelectionResultRequest.Builder()
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(123456L)
                         .setSeller(SELLER)
                         .setAdSelectionResult(new byte[42])
-                        .setAdSelectionId(123456L)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         ThrowingRunnable persistAdSelectionResultRunnable =
                 () ->
                         invokePersistAdSelectionResult(
-                                mAdSelectionService, persistAdSelectionResultRequest);
+                                mAdSelectionService, persistAdSelectionResultInput);
 
         Assert.assertThrows(
                 AUCTION_SERVER_API_IS_NOT_AVAILABLE,
@@ -284,11 +297,14 @@ public class AuctionServerE2ETest {
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
 
-        GetAdSelectionDataRequest getAdSelectionDataRequest =
-                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
 
         GetAdSelectionDataTestCallback callback =
-                invokeGetAdSelectionData(mAdSelectionService, getAdSelectionDataRequest);
+                invokeGetAdSelectionData(mAdSelectionService, input);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
@@ -344,7 +360,7 @@ public class AuctionServerE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -368,11 +384,13 @@ public class AuctionServerE2ETest {
                                 seedBytes,
                                 mLightweightExecutorService));
 
-        GetAdSelectionDataRequest getAdSelectionDataRequest =
-                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
 
-        GetAdSelectionDataTestCallback callback =
-                invokeGetAdSelectionData(service, getAdSelectionDataRequest);
+        GetAdSelectionDataTestCallback callback = invokeGetAdSelectionData(service, input);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
@@ -400,23 +418,27 @@ public class AuctionServerE2ETest {
         when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        GetAdSelectionDataRequest getAdSelectionDataRequest =
-                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
 
         GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
-                invokeGetAdSelectionData(mAdSelectionService, getAdSelectionDataRequest);
+                invokeGetAdSelectionData(mAdSelectionService, input);
         long adSelectionId =
                 getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
 
-        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
-                new PersistAdSelectionResultRequest.Builder()
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
                         .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
                         .setAdSelectionResult(prepareAuctionResultBytes())
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
         PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
-                invokePersistAdSelectionResult(
-                        mAdSelectionService, persistAdSelectionResultRequest);
+                invokePersistAdSelectionResult(mAdSelectionService, persistAdSelectionResultInput);
 
         Assert.assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
         Assert.assertEquals(
@@ -427,10 +449,13 @@ public class AuctionServerE2ETest {
                 adSelectionId,
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdSelectionId());
-        DBReportingUris dbReportingUris = mReportingUrisDao.getReportingUris(adSelectionId);
-        Assert.assertEquals(BUYER_REPORTING_URI, dbReportingUris.getBuyerReportingUri().toString());
+        DBAuctionServerAdSelection dbAuctionServerAdSelection =
+                mAuctionServerAdSelectionDao.getAuctionServerAdSelection(adSelectionId);
         Assert.assertEquals(
-                SELLER_REPORTING_URI, dbReportingUris.getSellerReportingUri().toString());
+                BUYER_REPORTING_URI, dbAuctionServerAdSelection.getBuyerReportingUri().toString());
+        Assert.assertEquals(
+                SELLER_REPORTING_URI,
+                dbAuctionServerAdSelection.getSellerReportingUri().toString());
     }
 
     @Test
@@ -457,7 +482,7 @@ public class AuctionServerE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -481,11 +506,14 @@ public class AuctionServerE2ETest {
                                 seedBytes,
                                 mLightweightExecutorService));
 
-        GetAdSelectionDataRequest getAdSelectionDataRequest =
-                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
 
         GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
-                invokeGetAdSelectionData(service, getAdSelectionDataRequest);
+                invokeGetAdSelectionData(service, input);
 
         long adSelectionId =
                 getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
@@ -513,14 +541,16 @@ public class AuctionServerE2ETest {
 
         byte[] responseBytes = BaseEncoding.base64().decode(cipherText);
 
-        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
-                new PersistAdSelectionResultRequest.Builder()
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
                         .setAdSelectionId(adSelectionId)
                         .setAdSelectionResult(responseBytes)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
         PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
-                invokePersistAdSelectionResult(service, persistAdSelectionResultRequest);
+                invokePersistAdSelectionResult(service, persistAdSelectionResultInput);
 
         Assert.assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
         Assert.assertEquals(
@@ -554,7 +584,7 @@ public class AuctionServerE2ETest {
                 mFrequencyCapDao,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
-                mReportingUrisDao,
+                mAuctionServerAdSelectionDao,
                 mAdServicesHttpsClientMock,
                 mDevContextFilterMock,
                 mLightweightExecutorService,
@@ -575,10 +605,8 @@ public class AuctionServerE2ETest {
             byte[] decryptedBytes) {
         try {
             byte[] unformatted =
-                    mPayloadFormatter
-                            .extract(
-                                    AuctionServerPayloadFormatter.FormattedData.create(
-                                            decryptedBytes))
+                    mPayloadExtractor
+                            .extract(AuctionServerPayloadFormattedData.create(decryptedBytes))
                             .getData();
             ProtectedAudienceInput protectedAudienceInput =
                     ProtectedAudienceInput.parseFrom(unformatted);
@@ -627,41 +655,30 @@ public class AuctionServerE2ETest {
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
-        AuctionServerPayloadFormatter.FormattedData formattedData =
+        AuctionServerPayloadFormattedData formattedData =
                 mPayloadFormatter.apply(
-                        AuctionServerPayloadFormatter.UnformattedData.create(
-                                compressedData.getData()),
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
                         AuctionServerDataCompressorGzip.VERSION);
         return formattedData.getData();
     }
 
     public GetAdSelectionDataTestCallback invokeGetAdSelectionData(
-            AdSelectionService service, GetAdSelectionDataRequest request)
+            AdSelectionService service, GetAdSelectionDataInput input)
             throws RemoteException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         GetAdSelectionDataTestCallback callback =
                 new GetAdSelectionDataTestCallback(countDownLatch);
-        GetAdSelectionDataInput input =
-                new GetAdSelectionDataInput.Builder()
-                        .setAdSelectionDataRequest(request)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .build();
         service.getAdSelectionData(input, null, callback);
         callback.mCountDownLatch.await();
         return callback;
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(
-            AdSelectionService service, PersistAdSelectionResultRequest request)
+            AdSelectionService service, PersistAdSelectionResultInput input)
             throws RemoteException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultTestCallback callback =
                 new PersistAdSelectionResultTestCallback(countDownLatch);
-        PersistAdSelectionResultInput input =
-                new PersistAdSelectionResultInput.Builder()
-                        .setPersistAdSelectionResultRequest(request)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .build();
         service.persistAdSelectionResult(input, null, callback);
         callback.mCountDownLatch.await();
         return callback;

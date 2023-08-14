@@ -1,0 +1,70 @@
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.android.adservices.common;
+
+import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.device.ITestDevice;
+
+/** Helper to check if AdServices is supported / enabled in a device. */
+public final class AdServicesSupportHelper {
+
+    private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
+    private static final String FEATURE_LEANBACK = "android.software.leanback";
+    private static final String FEATURE_RAM_LOW = "android.hardware.ram.low";
+    private static final String FEATURE_WATCH = "android.hardware.type.watch";
+
+    private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
+
+    private static final ConsoleLogger sConsoleLogger =
+            new ConsoleLogger(AdServicesDeviceSupportedRule.class);
+
+    private static final Logger sLogger = new Logger(sConsoleLogger);
+
+    public static boolean isDebuggable(ITestDevice device) throws DeviceNotAvailableException {
+        return "1".equals(device.getProperty("ro.debuggable"));
+    }
+
+    public static boolean isDeviceSupported(ITestDevice device) throws DeviceNotAvailableException {
+        if (isDebuggable(device)) {
+            String overriddenValue = device.getProperty(SYSPROP_ADSERVICES_SUPPORTED);
+            if (overriddenValue != null && !overriddenValue.isEmpty()) {
+                boolean supported = Boolean.valueOf(overriddenValue);
+                sLogger.i(
+                        "isDeviceSupported(): returning %b as defined by system property %s (%s)",
+                        supported, SYSPROP_ADSERVICES_SUPPORTED, overriddenValue);
+                return supported;
+            }
+        }
+
+        boolean supported = isDeviceSupportedByDefault(device);
+        sLogger.v("isDeviceSupported(): returning hardcoded value (%b)", supported);
+        return supported;
+    }
+
+    //  TODO(b/284971005): create another object to have this logic (which would take an interface
+    // that gets system properties) so it can be used by device and host sides
+    private static boolean isDeviceSupportedByDefault(ITestDevice device)
+            throws DeviceNotAvailableException {
+        return !device.hasFeature(FEATURE_RAM_LOW) // Android Go
+                && !device.hasFeature(FEATURE_WATCH)
+                && !device.hasFeature(FEATURE_AUTOMOTIVE)
+                && !device.hasFeature(FEATURE_LEANBACK);
+    }
+
+    private AdServicesSupportHelper() {
+        throw new UnsupportedOperationException("Provides only static methods");
+    }
+}

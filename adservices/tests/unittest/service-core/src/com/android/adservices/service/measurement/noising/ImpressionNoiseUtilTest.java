@@ -402,6 +402,6 @@ public class ImpressionNoiseUtilTest {
      * @throws JSONException JSON syntax error
      */
     private static ReportSpec getValidReportSpecForRandomOrderTest() throws JSONException {
-        return new ReportSpec(getValidTriggerSpec().toString(), "3");
+        return new ReportSpec(getValidTriggerSpec().toString(), "3", null);
     }
 }

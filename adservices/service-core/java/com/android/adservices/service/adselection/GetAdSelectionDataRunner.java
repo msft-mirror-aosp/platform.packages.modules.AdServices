@@ -18,7 +18,6 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
-import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -30,12 +29,15 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
@@ -62,6 +64,7 @@ public class GetAdSelectionDataRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -72,34 +75,44 @@ public class GetAdSelectionDataRunner {
     @NonNull private final BuyerInputGenerator mBuyerInputGenerator;
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
     @NonNull private final AuctionServerPayloadFormatter mPayloadFormatter;
+    @NonNull private final DevContext mDevContext;
 
     public GetAdSelectionDataRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final AuctionServerAdSelectionDao auctionServerAdSelectionDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final Flags flags,
-            final int callerUid) {
+            final int callerUid,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(auctionServerAdSelectionDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(devContext);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mCustomAudienceDao = customAudienceDao;
+        mAuctionServerAdSelectionDao = auctionServerAdSelectionDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mFlags = flags;
         mCallerUid = callerUid;
+        mDevContext = devContext;
 
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
+                        adFilterer,
                         mFlags,
                         mLightweightExecutorService,
                         mBackgroundExecutorService);
@@ -107,8 +120,9 @@ public class GetAdSelectionDataRunner {
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
         mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.getPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion());
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -127,13 +141,14 @@ public class GetAdSelectionDataRunner {
                                 try {
                                     sLogger.v("Starting filtering for GetAdSelectionData API.");
                                     mAdSelectionServiceFilter.filterRequest(
-                                            inputParams.getAdSelectionDataRequest().getSeller(),
+                                            inputParams.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
                                             mCallerUid,
                                             apiName,
-                                            Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA);
+                                            Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
+                                            mDevContext);
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
@@ -145,8 +160,9 @@ public class GetAdSelectionDataRunner {
                             .transformAsync(
                                     ignoredVoid ->
                                             orchestrateGetAdSelectionDataRunner(
-                                                    inputParams.getAdSelectionDataRequest(),
-                                                    adSelectionId),
+                                                    inputParams.getSeller(),
+                                                    adSelectionId,
+                                                    inputParams.getCallerPackageName()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -187,14 +203,15 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull GetAdSelectionDataRequest request, long adSelectionId) {
-        Objects.requireNonNull(request);
+            @NonNull AdTechIdentifier seller, long adSelectionId, @NonNull String packageName) {
+        Objects.requireNonNull(seller);
+        Objects.requireNonNull(packageName);
 
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
                 .transform(
-                        buyerInputs -> createPayload(buyerInputs, request, adSelectionId),
+                        buyerInputs -> createPayload(buyerInputs, packageName, adSelectionId),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -202,20 +219,34 @@ public class GetAdSelectionDataRunner {
                             return mObliviousHttpEncryptor.encryptBytes(
                                     formatted.getData(), adSelectionId, keyFetchTimeout);
                         },
+                        mLightweightExecutorService)
+                .transformAsync(
+                        encrypted -> persistAdSelectionIdRequest(adSelectionId, seller, encrypted),
                         mLightweightExecutorService);
     }
 
-    private AuctionServerPayloadFormatter.FormattedData createPayload(
-            Map<AdTechIdentifier, BuyerInput> buyerInputs,
-            GetAdSelectionDataRequest request,
-            long adSelectionId) {
+    private AuctionServerPayloadFormattedData createPayload(
+            Map<AdTechIdentifier, BuyerInput> buyerInputs, String packageName, long adSelectionId) {
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInput =
                 compressEachBuyerInput(buyerInputs);
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
-                        compressedBuyerInput, request.getSeller(), adSelectionId);
+                        compressedBuyerInput, packageName, adSelectionId);
         sLogger.v("ProtectedAudienceInput composed");
         return applyPayloadFormatter(protectedAudienceInput);
+    }
+
+    private ListenableFuture<byte[]> persistAdSelectionIdRequest(
+            long adSelectionId, AdTechIdentifier seller, byte[] encryptedBytes) {
+        return mBackgroundExecutorService.submit(
+                () -> {
+                    mAuctionServerAdSelectionDao.insertAuctionServerAdSelection(
+                            DBAuctionServerAdSelection.builder()
+                                    .setAdSelectionId(adSelectionId)
+                                    .setSeller(seller)
+                                    .build());
+                    return encryptedBytes;
+                });
     }
 
     private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
@@ -239,7 +270,7 @@ public class GetAdSelectionDataRunner {
     @VisibleForTesting
     ProtectedAudienceInput composeProtectedAudienceInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
-            AdTechIdentifier seller,
+            String packageName,
             long adSelectionId) {
         sLogger.v("Composing ProtectedAudienceInput with buyer inputs and publisher");
         return ProtectedAudienceInput.newBuilder()
@@ -249,7 +280,7 @@ public class GetAdSelectionDataRunner {
                                         Collectors.toMap(
                                                 e -> e.getKey().toString(),
                                                 e -> ByteString.copyFrom(e.getValue().getData()))))
-                .setPublisherName(seller.toString())
+                .setPublisherName(packageName)
                 .setEnableDebugReporting(mFlags.getFledgeAuctionServerEnableDebugReporting())
                 // TODO(b/288287435): Set generation ID as a UUID generated per request which is not
                 //  accessible in plaintext.
@@ -257,13 +288,12 @@ public class GetAdSelectionDataRunner {
                 .build();
     }
 
-    private AuctionServerPayloadFormatter.FormattedData applyPayloadFormatter(
+    private AuctionServerPayloadFormattedData applyPayloadFormatter(
             ProtectedAudienceInput protectedAudienceInput) {
         int version = mFlags.getFledgeAuctionServerCompressionAlgorithmVersion();
         sLogger.v("Applying formatter V" + version + " on protected audience input bytes");
-        AuctionServerPayloadFormatter.UnformattedData unformattedData =
-                AuctionServerPayloadFormatter.UnformattedData.create(
-                        protectedAudienceInput.toByteArray());
+        AuctionServerPayloadUnformattedData unformattedData =
+                AuctionServerPayloadUnformattedData.create(protectedAudienceInput.toByteArray());
         return mPayloadFormatter.apply(unformattedData, version);
     }
 

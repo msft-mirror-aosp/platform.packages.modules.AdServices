@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Membolehkan aplikasi mengakses API keadaan pendayaan AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Akses kepada API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Membenarkan aplikasi mengakses API AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privasi Iklan"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sertai beta privasi iklan Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android sedang meneroka lebih banyak cara yang peribadi untuk apl memaparkan iklan kepada anda"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Ketahui lebih lanjut"</string>
@@ -222,7 +222,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apl yang anda sekat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tetapkan semula data cadangan apl"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Apl yang anda gunakan biasanya akan mengingati perkara yang anda minati untuk memeribadikan pengalaman anda. Apl juga boleh menyimpan maklumat dengan Android tentang topik anda.\n\nSebagai contoh, jika anda menggunakan apl tentang latihan maraton, apl itu mungkin akan memutuskan bahawa anda berminat dengan kasut lari. Kemudian, jika anda menggunakan apl yang berbeza, apl itu boleh menunjukkan kepada anda iklan untuk kasut lari yang dicadangkan oleh apl pertama.\n\nAndroid akan autopadam data yang dicadangkan oleh apl secara kerap. Apl yang anda gunakan sekali lagi mungkin akan dipaparkan semula pada senarai. Anda juga boleh menyekat apl daripada mencadangkan iklan kepada anda.\n\nDalam apl anda, iklan yang anda lihat mungkin diperibadikan, bergantung pada tetapan ini, tetapan topik iklan, tetapan ID pengiklanan anda dan sama ada apl yang anda gunakan memeribadikan iklan."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Ciri privasi iklan baharu tersedia"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Ciri privasi iklan baharu kini tersedia"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Hanya maklumat yang sangat terhad dikongsi antara apl untuk membantu apl mengukur prestasi iklan"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Kami melancarkan ciri privasi iklan baharu yang dipanggil pengukuran iklan. Android hanya berkongsi maklumat yang sangat terhad antara apl, seperti apabila iklan dipaparkan kepada anda, untuk membantu apl mengukur prestasi iklan."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Anda boleh membuat perubahan dalam tetapan privasi iklan."</string>

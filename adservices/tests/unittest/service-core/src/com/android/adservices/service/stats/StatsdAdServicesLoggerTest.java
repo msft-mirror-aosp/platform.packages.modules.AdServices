@@ -17,6 +17,10 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
@@ -43,6 +47,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -63,6 +68,7 @@ public class StatsdAdServicesLoggerTest {
     private static final int EPOCH_COMPUTATION_CLASSIFIER_ATOM_ID = 537;
     private static final int TOPICS_REPORTED_COMPAT_ATOM_ID = 598;
     private static final int EPOCH_COMPUTATION_CLASSIFIER_COMPAT_ATOM_ID = 599;
+    private static final ImmutableList<Integer> TOPIC_IDS = ImmutableList.of(10230, 10227);
 
     // Test params for GetTopicsReportedStats
     private static final int FILTERED_BLOCKED_TOPIC_COUNT = 0;
@@ -74,10 +80,10 @@ public class StatsdAdServicesLoggerTest {
                     .setFilteredBlockedTopicCount(FILTERED_BLOCKED_TOPIC_COUNT)
                     .setDuplicateTopicCount(DUPLICATE_TOPIC_COUNT)
                     .setTopicIdsCount(TOPIC_IDS_COUNT)
+                    .setTopicIds(TOPIC_IDS)
                     .build();
 
     // Test params for EpochComputationClassifierStats
-    private static final ImmutableList<Integer> TOPIC_IDS = ImmutableList.of(10230, 10227);
     private static final int BUILD_ID = 8;
     private static final String ASSET_VERSION = "2";
 
@@ -120,7 +126,10 @@ public class StatsdAdServicesLoggerTest {
         when(mFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
         ExtendedMockito.doNothing()
-                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), any(byte[].class)));
         ExtendedMockito.doNothing()
                 .when(
                         () ->
@@ -134,16 +143,17 @@ public class StatsdAdServicesLoggerTest {
         ExtendedMockito.verify(
                 () ->
                         AdServicesStatsLog.write(
-                                TOPICS_REPORTED_COMPAT_ATOM_ID,
-                                FILTERED_BLOCKED_TOPIC_COUNT,
-                                DUPLICATE_TOPIC_COUNT,
-                                TOPIC_IDS_COUNT));
+                                eq(TOPICS_REPORTED_COMPAT_ATOM_ID),
+                                eq(FILTERED_BLOCKED_TOPIC_COUNT),
+                                eq(DUPLICATE_TOPIC_COUNT),
+                                eq(TOPIC_IDS_COUNT),
+                                any(byte[].class)));
         // Verify T+ logging
         ExtendedMockito.verify(
                 () ->
                         AdServicesStatsLog.write(
                                 TOPICS_REPORTED_ATOM_ID,
-                                /* topic_ids = */ new int[] {},
+                                TOPIC_IDS.stream().mapToInt(Integer::intValue).toArray(),
                                 FILTERED_BLOCKED_TOPIC_COUNT,
                                 DUPLICATE_TOPIC_COUNT,
                                 TOPIC_IDS_COUNT));
@@ -170,7 +180,7 @@ public class StatsdAdServicesLoggerTest {
                 () ->
                         AdServicesStatsLog.write(
                                 TOPICS_REPORTED_ATOM_ID,
-                                /* topic_ids = */ new int[] {},
+                                TOPIC_IDS.stream().mapToInt(Integer::intValue).toArray(),
                                 FILTERED_BLOCKED_TOPIC_COUNT,
                                 DUPLICATE_TOPIC_COUNT,
                                 TOPIC_IDS_COUNT));
@@ -184,7 +194,10 @@ public class StatsdAdServicesLoggerTest {
         when(mFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
         ExtendedMockito.doNothing()
-                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), any(byte[].class)));
 
         // Invoke logging call
         mLogger.logGetTopicsReportedStats(TOPICS_REPORTED_STATS_DATA);
@@ -193,10 +206,11 @@ public class StatsdAdServicesLoggerTest {
         ExtendedMockito.verify(
                 () ->
                         AdServicesStatsLog.write(
-                                TOPICS_REPORTED_COMPAT_ATOM_ID,
-                                FILTERED_BLOCKED_TOPIC_COUNT,
-                                DUPLICATE_TOPIC_COUNT,
-                                TOPIC_IDS_COUNT));
+                                eq(TOPICS_REPORTED_COMPAT_ATOM_ID),
+                                eq(FILTERED_BLOCKED_TOPIC_COUNT),
+                                eq(DUPLICATE_TOPIC_COUNT),
+                                eq(TOPIC_IDS_COUNT),
+                                any(byte[].class)));
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
@@ -673,6 +687,105 @@ public class StatsdAdServicesLoggerTest {
                                 eq(true),
                                 eq(uniqueAdIdValue),
                                 eq(uniqueAdIdLimit));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentData_success() {
+        int transactionTypeEnumValue =
+                EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.ordinal();
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyBoolean(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentDataStats(transactionTypeEnumValue, true, 100);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_DATA_STORED),
+                                eq(transactionTypeEnumValue),
+                                eq(true),
+                                eq(100));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentMatch_success() {
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyBoolean(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentMatchStats(true, 100);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_MATCHED), eq(true), eq(100));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentFileDownload_success() {
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyBoolean(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentFileDownloadStats(true, 100);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED), eq(true), eq(100));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logEnrollmentFailed_success() {
+        int dataFileGroupStatusEnumValue =
+                EnrollmentStatus.DataFileGroupStatus.PENDING_CUSTOM_VALIDATION.ordinal();
+        int errorCauseEnumValue =
+                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.ordinal();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyInt()));
+
+        // Invoke logging call
+        mLogger.logEnrollmentFailedStats(
+                100, dataFileGroupStatusEnumValue, 10, "SomeSdkName", errorCauseEnumValue);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ENROLLMENT_FAILED),
+                                eq(100),
+                                eq(dataFileGroupStatusEnumValue),
+                                eq(10),
+                                eq("SomeSdkName"),
+                                eq(errorCauseEnumValue));
 
         ExtendedMockito.verify(writeInvocation);
 

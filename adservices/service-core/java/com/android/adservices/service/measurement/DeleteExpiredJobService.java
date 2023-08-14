@@ -72,9 +72,12 @@ public final class DeleteExpiredJobService extends JobService {
                     long earliestValidInsertion =
                             System.currentTimeMillis()
                                     - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
+                    int retryLimit = FlagsFactory.getFlags()
+                            .getMeasurementMaxRetriesPerRegistrationRequest();
                     DatastoreManagerFactory.getDatastoreManager(this)
                             .runInTransaction(
-                                    dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+                                    dao -> dao.deleteExpiredRecords(
+                                            earliestValidInsertion, retryLimit));
 
                     boolean shouldRetry = false;
                     AdservicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)

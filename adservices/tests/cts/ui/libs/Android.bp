@@ -19,8 +19,7 @@ package {
 android_library {
     name: "adservices-ui-cts-root-test-lib",
     srcs: [
-        "UiConstants.java",
-        "UiUtils.java",
+        "src/**/*.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -29,6 +28,7 @@ android_library {
         "truth-prebuilt",
         "androidx.test.uiautomator_uiautomator",
         "adservices-test-utility",
+        "framework-adservices-lib",
     ],
     libs: [
         "android.test.base",

@@ -28,13 +28,12 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesSupportRule;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,7 +99,13 @@ public class TopicsManagerTest {
                     + " apex.";
 
     // Skip the test if it runs on unsupported platforms.
-    @Rule public final AdServicesSupportRule mAdServicesSupportRule = new AdServicesSupportRule();
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.forTopicsE2ETests();
 
     @Before
     public void setup() throws Exception {
@@ -111,31 +116,22 @@ public class TopicsManagerTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        // TODO(b/263297331): Handle rollback support for R and S.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-    }
+        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
 
-    @After
-    public void teardown() {
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
+        // We need to turn off random topic so that we can verify the returned topic.
+        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // TODO(b/263297331): Handle rollback support for R and S.
     }
 
     @Test
+    // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
-        overrideTopicsKillSwitch(true);
+        flags.setTopicsKillSwitch(true);
 
         // Set classifier flag to use precomputed-then-on-device classifier.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+        flags.setTopicsClassifierType(DEFAULT_CLASSIFIER_TYPE);
 
         // Default classifier uses the precomputed list first, then on-device classifier.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -153,19 +149,16 @@ public class TopicsManagerTest {
                         () -> advertisingTopicsClient.getTopics().get())
                         .getMessage())
                 .isEqualTo("java.lang.IllegalStateException: Service is not available.");
-
-        // Override Topics kill switch to enable Topics API.
-        overrideTopicsKillSwitch(false);
     }
 
     @Test
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.
-        overrideTopicsOnDeviceSwitch(true);
+        flags.setTopicsOnDeviceClassifierKillSwitch(true);
 
         // Set classifier flag to use on-device classifier.
-        overrideClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+        flags.setTopicsClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
 
         // The Test App has 1 SDK: sdk5
         // sdk3 calls the Topics API.
@@ -211,18 +204,15 @@ public class TopicsManagerTest {
         // override.
         List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
-
-        // Set classifier flag back to default.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
-
-        // Override Topics on device classifier kill switch to disable Topics API.
-        overrideTopicsOnDeviceSwitch(false);
     }
 
     @Test
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
+        // Bug: 295378824 to re-enable the tests on S once it is fixed.
+        if (SdkLevel.isAtLeastT()) {
+            testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
+        }
     }
 
     @Test
@@ -233,7 +223,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runDefaultClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use precomputed-then-on-device classifier.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+        flags.setTopicsClassifierType(DEFAULT_CLASSIFIER_TYPE);
 
         // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
@@ -298,7 +288,10 @@ public class TopicsManagerTest {
     @Test
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        testTopicsManager_runOnDeviceClassifier(true);
+        // Bug: 295378824 to re-enable the tests on S once it is fixed.
+        if (SdkLevel.isAtLeastT()) {
+            testTopicsManager_runOnDeviceClassifier(true);
+        }
     }
 
     @Test
@@ -309,12 +302,12 @@ public class TopicsManagerTest {
     private void testTopicsManager_runOnDeviceClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use on-device classifier.
-        overrideClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
+        flags.setTopicsClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
 
         // Set number of top labels returned by the on-device classifier to 5.
-        overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
+        flags.setTopicsClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Remove classifier threshold by setting it to 0.
-        overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+        flags.setTopicsClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
 
         // The Test App has 1 SDK: sdk3
         // sdk3 calls the Topics API.
@@ -371,20 +364,15 @@ public class TopicsManagerTest {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
-
-        // Set classifier flag back to default.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
-
-        // Set number of top labels returned by the on-device classifier back to default.
-        overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
-        // Set classifier threshold back to default.
-        overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
     }
 
     @Test
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
+        // Bug: 295378824 to re-enable the tests on S once it is fixed.
+        if (SdkLevel.isAtLeastT()) {
+            testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
+        }
     }
 
     @Test
@@ -395,7 +383,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use precomputed classifier.
-        overrideClassifierType(PRECOMPUTED_CLASSIFIER_TYPE);
+        flags.setTopicsClassifierType(PRECOMPUTED_CLASSIFIER_TYPE);
 
         // The Test App has 1 SDK: sdk4
         // sdk4 calls the Topics API.
@@ -440,56 +428,11 @@ public class TopicsManagerTest {
         // Top 5 topic ids as listed in precomputed_app_list.csv
         List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
-
-        // Set classifier flag back to default.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
-    }
-
-    private void overrideTopicsOnDeviceSwitch(boolean val) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices topics_on_device_classifier_kill_switch " + val);
-    }
-
-    private void overrideTopicsKillSwitch(boolean val) {
-        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch " + val);
-    }
-
-    // Override the flag to select classifier type.
-    private void overrideClassifierType(int val) {
-        ShellUtils.runShellCommand("device_config put adservices classifier_type " + val);
-    }
-
-    // Override the flag to change the number of top labels returned by on-device classifier type.
-    private void overrideClassifierNumberOfTopLabels(int val) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices classifier_number_of_top_labels " + val);
-    }
-
-    // Override the flag to change the threshold for the classifier.
-    private void overrideClassifierThreshold(float val) {
-        ShellUtils.runShellCommand("device_config put adservices classifier_threshold " + val);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    private void overrideConsentSourceOfTruth(Integer value) {
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }

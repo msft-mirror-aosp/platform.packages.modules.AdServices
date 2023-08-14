@@ -34,7 +34,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 public class ReportSpecTest {
@@ -43,34 +42,40 @@ public class ReportSpecTest {
     private static final String PRIVACY_PARAMETERS_JSON = "{\"flip_probability\" :0.0024}";
 
     @Test
-    public void equals_constructorTwoParameters_returnsTrue() throws JSONException {
+    public void equals_constructorThreeParameters_returnsTrue() throws JSONException {
         // Assertion
         assertEquals(
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3"),
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3"));
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null),
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null));
     }
 
     @Test
-    public void equals_constructorTwoParameters_maxBucketIncrementsDifferent_returnsFalse()
+    public void equals_constructorThreeParameters_maxBucketIncrementsDifferent_returnsFalse()
             throws JSONException {
         // Assertion
         assertNotEquals(
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3"),
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "4"));
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null),
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "4", null));
     }
 
     @Test
-    public void equals_constructorTwoParameters_triggerSpecContentDifferent_returnsFalse()
+    public void equals_constructorThreeParameters_triggerSpecContentDifferent_returnsFalse()
             throws JSONException {
         assertNotEquals(
-                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3"),
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3"));
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null),
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null));
     }
 
     @Test
-    public void constructorTwoParameters_completeExpectation_success() throws JSONException {
-        ReportSpec testObject =
-                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3");
+    public void constructorThreeParameters_completeExpectation_success() throws JSONException {
+        ReportSpec testObject = new ReportSpec(
+                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null);
 
         // Assertion
         assertEquals(3, testObject.getMaxReports());
@@ -108,46 +113,36 @@ public class ReportSpecTest {
         triggerRecord1.put("value", 2L);
         triggerRecord1.put("priority", 1L);
         triggerRecord1.put("trigger_time", BASE_TIME);
-        triggerRecord1.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord1.put("dedup_key", new UnsignedLong(34567L).getValue());
+        triggerRecord1.put("trigger_data", new UnsignedLong(1L).toString());
+        triggerRecord1.put("dedup_key", new UnsignedLong(34567L).toString());
 
         JSONObject triggerRecord2 = new JSONObject();
         triggerRecord2.put("trigger_id", "200");
         triggerRecord2.put("value", 3L);
         triggerRecord2.put("priority", 4L);
         triggerRecord2.put("trigger_time", BASE_TIME + 100);
-        triggerRecord2.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).getValue());
+        triggerRecord2.put("trigger_data", new UnsignedLong(1L).toString());
+        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).toString());
         existingAttributes.put(triggerRecord1);
         existingAttributes.put(triggerRecord2);
-        // Assertion
-        assertEquals(
-                new ReportSpec(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
-                        "3",
-                        existingAttributes.toString(),
-                        PRIVACY_PARAMETERS_JSON),
-                new ReportSpec(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
-                        "3",
-                        existingAttributes.toString(),
-                        PRIVACY_PARAMETERS_JSON));
-    }
 
-    @Test
-    public void constructorFourParameters_attributionStatusEmptyOrNull_buildsEqualObjects()
-            throws JSONException {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        source.buildAttributedTriggers();
         // Assertion
         assertEquals(
                 new ReportSpec(
                         SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
                         "3",
-                        null,
+                        source,
                         PRIVACY_PARAMETERS_JSON),
                 new ReportSpec(
                         SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
                         "3",
-                        "",
+                        source,
                         PRIVACY_PARAMETERS_JSON));
     }
 
@@ -157,7 +152,7 @@ public class ReportSpecTest {
         // Assertion
         assertEquals(
                 new ReportSpec(triggerSpecsString, "3", null, PRIVACY_PARAMETERS_JSON),
-                new ReportSpec(triggerSpecsString, "3", "", PRIVACY_PARAMETERS_JSON));
+                new ReportSpec(triggerSpecsString, "3", null, PRIVACY_PARAMETERS_JSON));
     }
 
     @Test
@@ -165,14 +160,17 @@ public class ReportSpecTest {
         String triggerSpecsString = SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline();
         // Assertion
         assertEquals(
-                new ReportSpec(triggerSpecsString, "3"), new ReportSpec(triggerSpecsString, "3"));
+                new ReportSpec(triggerSpecsString, "3", null),
+                new ReportSpec(triggerSpecsString, "3", null));
     }
 
     @Test
     public void equals_twoParamConstructorFromRawJSONInvalidArguments_throws() {
         String triggerSpecsString = SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline();
         // Assertion
-        assertThrows(NumberFormatException.class, () -> new ReportSpec(triggerSpecsString, "a"));
+        assertThrows(
+                NumberFormatException.class,
+                () -> new ReportSpec(triggerSpecsString, "a", null));
     }
 
     @Test
@@ -189,13 +187,15 @@ public class ReportSpecTest {
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         // Assertion
-        assertThrows(NumberFormatException.class, () -> new ReportSpec(triggerSpecsString, "3"));
+        assertThrows(
+                NumberFormatException.class,
+                () -> new ReportSpec(triggerSpecsString, "3", null));
     }
 
     @Test
     public void equals_fourParamConstructor_differentAttributions_returnsFalse()
             throws JSONException {
-        JSONArray existingAttributes = new JSONArray();
+        JSONArray existingAttributes1 = new JSONArray();
         JSONArray existingAttributes2 = new JSONArray();
 
         JSONObject triggerRecord1 = new JSONObject();
@@ -203,178 +203,62 @@ public class ReportSpecTest {
         triggerRecord1.put("value", 2L);
         triggerRecord1.put("priority", 1L);
         triggerRecord1.put("trigger_time", BASE_TIME);
-        triggerRecord1.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord1.put("dedup_key", new UnsignedLong(34567L).getValue());
+        triggerRecord1.put("trigger_data", new UnsignedLong(1L).toString());
+        triggerRecord1.put("dedup_key", new UnsignedLong(34567L).toString());
 
         JSONObject triggerRecord2 = new JSONObject();
         triggerRecord2.put("trigger_id", "200");
         triggerRecord2.put("value", 3L);
         triggerRecord2.put("priority", 4L);
         triggerRecord2.put("trigger_time", BASE_TIME + 100);
-        triggerRecord2.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).getValue());
-        existingAttributes.put(triggerRecord1);
+        triggerRecord2.put("trigger_data", new UnsignedLong(1L).toString());
+        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).toString());
+        existingAttributes1.put(triggerRecord1);
         existingAttributes2.put(triggerRecord2);
+
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes1.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        source1.buildAttributedTriggers();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventAttributionStatus(existingAttributes2.toString())
+                        .setAttributedTriggers(null)
+                        .build();
+        source2.buildAttributedTriggers();
 
         // Assertion
         assertNotEquals(
                 new ReportSpec(
                         SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
                         "3",
-                        existingAttributes.toString(),
+                        source1,
                         PRIVACY_PARAMETERS_JSON),
                 new ReportSpec(
                         SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
                         "3",
-                        existingAttributes2.toString(),
+                        source2,
                         PRIVACY_PARAMETERS_JSON));
     }
 
     @Test
-    public void encodeTriggerSpecsToJSON_equal() throws JSONException {
-        ReportSpec testObject1 =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "3");
+    public void encodeTriggerSpecsToJson_equal() throws JSONException {
+        ReportSpec testObject1 = new ReportSpec(
+                SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "3", null);
 
-        String encodedJSON = testObject1.encodeTriggerSpecsToJSON();
+        String encodedJSON = testObject1.encodeTriggerSpecsToJson();
 
-        ReportSpec testObject2 = new ReportSpec(new JSONArray(encodedJSON).toString(), "3");
+        ReportSpec testObject2 = new ReportSpec(new JSONArray(encodedJSON).toString(), "3", null);
         // Assertion
         assertEquals(testObject1, testObject2);
     }
 
     @Test
-    public void encodeTriggerStatusToJSON_equal() throws JSONException {
-        JSONArray existingAttributes = new JSONArray();
-        JSONObject triggerRecord1 = new JSONObject();
-        triggerRecord1.put("trigger_id", "100");
-        triggerRecord1.put("value", 2L);
-        triggerRecord1.put("priority", 1L);
-        triggerRecord1.put("trigger_time", BASE_TIME);
-        triggerRecord1.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord1.put("dedup_key", new UnsignedLong(34567L).getValue());
-
-        JSONObject triggerRecord2 = new JSONObject();
-        triggerRecord2.put("trigger_id", "200");
-        triggerRecord2.put("value", 3L);
-        triggerRecord2.put("priority", 4L);
-        triggerRecord2.put("trigger_time", BASE_TIME + 100);
-        triggerRecord2.put("trigger_data", new UnsignedLong(1L).getValue());
-        triggerRecord2.put("dedup_key", new UnsignedLong(45678L).getValue());
-        existingAttributes.put(triggerRecord1);
-        existingAttributes.put(triggerRecord2);
-
-        ReportSpec raw =
-                new ReportSpec(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
-                        "3",
-                        existingAttributes.toString(),
-                        PRIVACY_PARAMETERS_JSON);
-        JSONArray encodedTriggerStatus = raw.encodeTriggerStatusToJSON();
-        ReportSpec afterDecodingEncoding =
-                new ReportSpec(
-                        SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(),
-                        "3",
-                        encodedTriggerStatus.toString(),
-                        PRIVACY_PARAMETERS_JSON);
-
-        // Assertion
-        for (Iterator<String> it = triggerRecord1.keys(); it.hasNext(); ) {
-            String key = it.next();
-            assertEquals(
-                    triggerRecord1.get(key).toString(),
-                    encodedTriggerStatus.getJSONObject(0).get(key).toString());
-            assertEquals(
-                    triggerRecord2.get(key).toString(),
-                    encodedTriggerStatus.getJSONObject(1).get(key).toString());
-        }
-
-        for (int i = 0; i < raw.getAttributedTriggers().size(); i++) {
-            assertEquals(
-                    raw.getAttributedTriggers().get(i),
-                    afterDecodingEncoding.getAttributedTriggers().get(i));
-        }
-        assertEquals(
-                raw.getAttributedTriggers().size(),
-                afterDecodingEncoding.getAttributedTriggers().size());
-    }
-
-    @Test
-    public void testInvalidCaseDuplicateTriggerData_throws() {
-        String triggerSpecsString =
-                "[{\"trigger_data\": [1, 2, 3],"
-                        + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
-                        + String.format(
-                                "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}, "
-                        + "{\"trigger_data\": [3],"
-                        + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
-                        + String.format(
-                                "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1]} "
-                        + "]";
-
-        // Assertion
-        assertThrows(IllegalArgumentException.class, () -> new ReportSpec(triggerSpecsString, "3"));
-    }
-
-    @Test
-    public void validateParameters_testInvalidCaseTotalCardinalityOverLimit_throws()
-            throws JSONException {
-        JSONObject jsonTriggerSpec1 = new JSONObject();
-        jsonTriggerSpec1.put("trigger_data", new JSONArray(new int[] {0, 1, 2, 3, 4}));
-        JSONObject windows = new JSONObject();
-        windows.put("start_time", 0);
-        windows.put("end_times", new JSONArray(new int[] {1}));
-        jsonTriggerSpec1.put("event_report_windows", windows);
-        jsonTriggerSpec1.put("summary_buckets", new JSONArray(new int[] {1}));
-        JSONObject jsonTriggerSpec2 = new JSONObject();
-        jsonTriggerSpec2.put("trigger_data", new JSONArray(new int[] {5, 6, 7, 8, 9}));
-        jsonTriggerSpec2.put("event_report_windows", windows);
-        jsonTriggerSpec2.put("summary_buckets", new JSONArray(new int[] {1}));
-
-        // Assertion
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new ReportSpec(
-                                new JSONArray(new JSONObject[] {jsonTriggerSpec1, jsonTriggerSpec2})
-                                        .toString(),
-                                "3"));
-    }
-
-    @Test
-    public void testInvalidCaseTotalNumberReportOverLimit_throws() throws JSONException {
-        JSONObject jsonTriggerSpec = new JSONObject();
-        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {0, 1, 2, 3, 4}));
-        JSONObject windows = new JSONObject();
-        windows.put("start_time", 0);
-        windows.put("end_times", new JSONArray(new int[] {1}));
-        jsonTriggerSpec.put("event_report_windows", windows);
-        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 2, 3, 4, 5, 6}));
-
-        // Assertion
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new ReportSpec(
-                                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString(),
-                                "21"));
-    }
-
-    @Test
     public void getPrivacyParamsForComputation_equal() throws JSONException {
-        ReportSpec testObject =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3");
+        ReportSpec testObject = new ReportSpec(
+                SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null);
         // Assertion
         assertEquals(3, testObject.getPrivacyParamsForComputation()[0][0]);
         assertArrayEquals(new int[] {3, 3, 3}, testObject.getPrivacyParamsForComputation()[1]);
@@ -392,8 +276,8 @@ public class ReportSpecTest {
 
     @Test
     public void getNumberState_equal() throws JSONException {
-        ReportSpec testObject =
-                new ReportSpec(SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3");
+        ReportSpec testObject = new ReportSpec(
+                SourceFixture.getTriggerSpecCountEncodedJSONValidBaseline(), "3", null);
         // Assertion
         assertEquals(
                 220, testObject.getNumberState()); // Privacy parameter is {3, {3, 3, 3}, {4, 4, 4}}
@@ -401,8 +285,8 @@ public class ReportSpecTest {
 
     @Test
     public void getTriggerDataValue_equal() throws JSONException {
-        ReportSpec reportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3");
+        ReportSpec reportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null);
         // Assertion
         assertEquals(new UnsignedLong(1L), reportSpec.getTriggerDataValue(0));
         assertEquals(new UnsignedLong(3L), reportSpec.getTriggerDataValue(2));
@@ -414,7 +298,10 @@ public class ReportSpecTest {
     public void insertAttributedTrigger_threeTriggerDataTypes_findsAccumulatedValues()
             throws JSONException {
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "2",
+                        SourceFixture.getValidSource());
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -466,7 +353,10 @@ public class ReportSpecTest {
     @Test
     public void deleteFromAttributedValue_singleEntry_deletes() throws JSONException {
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "2",
+                        SourceFixture.getValidSource());
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -518,7 +408,10 @@ public class ReportSpecTest {
     public void deleteFromAttributedValue_multipleEntries_deletesForTriggerType()
             throws JSONException {
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "2",
+                        SourceFixture.getValidSource());
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -558,7 +451,10 @@ public class ReportSpecTest {
     @Test
     public void deleteFromAttributedValue_noTriggerRecord_returnsFalse() throws JSONException {
         ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(), "2");
+                new ReportSpec(
+                        SourceFixture.getTriggerSpecValueSumEncodedJSONValidBaseline(),
+                        "2",
+                        SourceFixture.getValidSource());
         EventReport existingReport_1 =
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerData(new UnsignedLong(1L))
@@ -592,8 +488,8 @@ public class ReportSpecTest {
     @Test
     public void containsTriggerData_variousTriggerDataTypes_correctlyDetermines()
             throws JSONException {
-        ReportSpec testReportSpec =
-                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3");
+        ReportSpec testReportSpec = new ReportSpec(
+                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null);
         // Assertion
         assertTrue(testReportSpec.containsTriggerData(new UnsignedLong(1L)));
         assertTrue(testReportSpec.containsTriggerData(new UnsignedLong(2L)));

@@ -18,6 +18,10 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -31,6 +35,8 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APP_RESTRICTIONS_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_BROADCAST_RESTRICTIONS_APK =
             "BroadcastRestrictionsTestApp.apk";
+
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -49,6 +55,7 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
         installPackage(TEST_APP_BROADCAST_RESTRICTIONS_APK);
     }
 
@@ -70,6 +77,14 @@ public class BroadcastRestrictionsHostTest extends BaseHostJUnit4Test {
     @Test
     public void testRegisterBroadcastReceiver_restrictionsNotApplied() throws Exception {
         runPhase("testRegisterBroadcastReceiver_restrictionsNotApplied");
+    }
+
+    @Test
+    public void testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied() throws Exception {
+        runPhase("testRegisterBroadcastReceiver_DeviceConfigEmptyAllowlistApplied");
+        runPhase("testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied");
+        runPhase("testRegisterBroadcastReceiver_DeviceConfigNextAllowlistApplied");
+        runPhase("testRegisterBroadcastReceiver_DeviceConfigNextRestrictions_AllowlistNotSet");
     }
 
     @Test

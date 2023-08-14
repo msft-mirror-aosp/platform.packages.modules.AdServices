@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
@@ -32,8 +33,6 @@ import android.os.Bundle;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.sdksandbox.SandboxLatencyInfo;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +46,7 @@ public class LoadSdkSessionUnitTest {
     private SdkSandboxManagerService.Injector mInjector;
     private FakeSdkSandboxService mSdkSandboxService;
     private CallingInfo mTestCallingInfo;
+    private SandboxLatencyInfo mSandboxLatencyInfo;
 
     @Before
     public void setup() {
@@ -54,6 +54,7 @@ public class LoadSdkSessionUnitTest {
         mInjector = new SdkSandboxManagerService.Injector(mContext);
         mSdkSandboxService = new FakeSdkSandboxService();
         mTestCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+        mSandboxLatencyInfo = new SandboxLatencyInfo();
 
         // Required for using MATCH_ANY_USER when fetching installed SDK.
         InstrumentationRegistry.getInstrumentation()
@@ -115,7 +116,7 @@ public class LoadSdkSessionUnitTest {
                         callback);
 
         // Load the SDK in this session and fail it.
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
@@ -138,7 +139,7 @@ public class LoadSdkSessionUnitTest {
                         callback);
 
         // Load the SDK in this session and fail it.
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
@@ -146,7 +147,13 @@ public class LoadSdkSessionUnitTest {
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1));
+                () ->
+                        sdkSession.load(
+                                mSdkSandboxService,
+                                new ApplicationInfo(),
+                                -1,
+                                -1,
+                                mSandboxLatencyInfo));
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
 
@@ -158,7 +165,13 @@ public class LoadSdkSessionUnitTest {
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1));
+                () ->
+                        sdkSession.load(
+                                mSdkSandboxService,
+                                new ApplicationInfo(),
+                                -1,
+                                -1,
+                                mSandboxLatencyInfo));
         // Since the SDK had already been loaded, its status should still show as loaded regardless
         // of any invalid requests.
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
@@ -180,7 +193,7 @@ public class LoadSdkSessionUnitTest {
 
         // Throw a DeadObjectException when loading the SDK.
         mSdkSandboxService.dieOnLoad = true;
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
@@ -210,7 +223,7 @@ public class LoadSdkSessionUnitTest {
                         callback);
 
         // Load the SDK in this session.
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
 
         // Before invoking the callback, kill the sandbox.
         sdkSession.onSandboxDeath();
@@ -235,7 +248,7 @@ public class LoadSdkSessionUnitTest {
 
         // Load the SDK in this session with customized application info
         final ApplicationInfo customizedInfo = new ApplicationInfo();
-        sdkSession.load(mSdkSandboxService, customizedInfo, -1, -1);
+        sdkSession.load(mSdkSandboxService, customizedInfo, -1, -1, mSandboxLatencyInfo);
 
         assertThat(mSdkSandboxService.getCustomizedInfo()).isSameInstanceAs(customizedInfo);
     }
@@ -266,7 +279,7 @@ public class LoadSdkSessionUnitTest {
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
 
         // Request to load the SDK in this session, but don't complete the request.
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
 
         // Unloading SDK should throw exception.
         assertThrows(IllegalArgumentException.class, () -> sdkSession.unload(-1));
@@ -293,7 +306,7 @@ public class LoadSdkSessionUnitTest {
                         callback);
 
         // Load the SDK in this session and fail it.
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
@@ -330,7 +343,13 @@ public class LoadSdkSessionUnitTest {
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1));
+                () ->
+                        sdkSession.load(
+                                mSdkSandboxService,
+                                new ApplicationInfo(),
+                                -1,
+                                -1,
+                                mSandboxLatencyInfo));
     }
 
     @Test
@@ -342,7 +361,7 @@ public class LoadSdkSessionUnitTest {
                 new FakeRequestSurfacePackageCallbackBinder();
         sdkSession.requestSurfacePackage(
                 new Binder(), 0, 500, 500, -1, new Bundle(), surfacePackageCallback);
-        mSdkSandboxService.sendSurfacePackageReady(new SandboxLatencyInfo());
+        mSdkSandboxService.sendSurfacePackageReady(mSandboxLatencyInfo);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -400,7 +419,7 @@ public class LoadSdkSessionUnitTest {
                         callback);
 
         // Load the SDK in this session.
-        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1, mSandboxLatencyInfo);
         // Assert it was successful
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);

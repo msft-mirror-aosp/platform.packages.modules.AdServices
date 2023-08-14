@@ -16,6 +16,8 @@
   -->
 <configuration description="Config for Ad Services E2E tests">
     <option name="test-tag" value="AdExtServicesEndToEndTests" />
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.extservices.apex"/>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -57,6 +59,16 @@
         <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
         <option name="package" value="com.android.adextservices.endtoendtest"/>
     </test>
+
+    <!-- Prevent test from running on Android T+ -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
+        <option name="max-sdk-level" value="32"/>
+    </object>
+
+    <!-- Prevent tests from running on Android Q- -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
 
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">

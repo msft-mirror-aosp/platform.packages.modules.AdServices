@@ -19,14 +19,13 @@ package com.android.adservices.service.common;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.exception.XmlParseException;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -36,25 +35,10 @@ import java.util.Objects;
 /** Helper class for parsing and checking the app manifest config (<ad-services-config>). */
 // TODO(b/213488783): Add persistence, so that lookup/parse is not on every request.
 // Also consider if this should execute in the background.
-// TODO(b/269798827): Enable for R.
-@RequiresApi(Build.VERSION_CODES.S)
 public class AppManifestConfigHelper {
     public static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
-
-    private static XmlResourceParser getXmlParser(
-            @NonNull Context context, @NonNull String appPackageName)
-            throws PackageManager.NameNotFoundException, XmlParseException {
-        PackageManager pm = context.getPackageManager();
-        PackageManager.Property property =
-                pm.getProperty(AD_SERVICES_CONFIG_PROPERTY, appPackageName);
-        if (property == null) {
-            throw new XmlParseException("Property not found");
-        }
-        int resId = property.getResourceId();
-        Resources resources = pm.getResourcesForApplication(appPackageName);
-        return resources.getXml(resId);
-    }
+    private static final String ANDROID_MANIFEST_FILE = "AndroidManifest.xml";
 
     /**
      * Parses the app's manifest config to determine whether this sdk is permitted to use the
@@ -81,7 +65,7 @@ public class AppManifestConfigHelper {
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
-        } catch (XmlParseException | XmlPullParserException | IOException e) {
+        } catch (Exception e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
         return false;
@@ -110,7 +94,7 @@ public class AppManifestConfigHelper {
             return appManifestConfig.isAllowedCustomAudiencesAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
-        } catch (XmlParseException | XmlPullParserException | IOException e) {
+        } catch (Exception e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
         return false;
@@ -155,9 +139,46 @@ public class AppManifestConfigHelper {
             return appManifestConfig.isAllowedTopicsAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
-        } catch (XmlParseException | XmlPullParserException | IOException e) {
+        } catch (Exception e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
         return false;
+    }
+
+    private static XmlResourceParser getXmlParser(
+            @NonNull Context context, @NonNull String appPackageName)
+            throws PackageManager.NameNotFoundException, XmlParseException, XmlPullParserException,
+                    IOException {
+        final Resources resources =
+                context.getPackageManager().getResourcesForApplication(appPackageName);
+        final int resId =
+                SdkLevel.isAtLeastS()
+                        ? getAdServicesConfigResourceIdOnSPlus(context, appPackageName)
+                        : getAdServicesConfigResourceIdOnRMinus(context, resources, appPackageName);
+
+        return resources.getXml(resId);
+    }
+
+    private static int getAdServicesConfigResourceIdOnSPlus(
+            @NonNull Context context, @NonNull String appPackageName)
+            throws PackageManager.NameNotFoundException, XmlParseException {
+        final PackageManager pm = context.getPackageManager();
+        final PackageManager.Property property =
+                pm.getProperty(AD_SERVICES_CONFIG_PROPERTY, appPackageName);
+        if (property == null) {
+            throw new XmlParseException("Property not found");
+        }
+        return property.getResourceId();
+    }
+
+    private static int getAdServicesConfigResourceIdOnRMinus(
+            @NonNull Context context, @NonNull Resources resources, @NonNull String appPackageName)
+            throws PackageManager.NameNotFoundException, XmlPullParserException, IOException {
+        // PackageManager::getProperty(..) API is only available on S+. For R-, we will need to load
+        // app's manifest and parse. See go/rbp-manifest.
+        final AssetManager assetManager =
+                context.createPackageContext(appPackageName, 0).getAssets();
+        final XmlResourceParser parser = assetManager.openXmlResourceParser(ANDROID_MANIFEST_FILE);
+        return AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources);
     }
 }

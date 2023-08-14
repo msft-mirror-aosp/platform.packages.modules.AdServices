@@ -23,8 +23,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -37,6 +35,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -59,6 +58,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -69,6 +69,8 @@ import java.util.stream.IntStream;
 public final class FetcherUtilTest {
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
+    private static final String KEY = "key";
+
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
 
@@ -173,6 +175,71 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void extractUnsignedLong_maxValue_success() throws JSONException {
+        String unsignedLongString = "18446744073709551615";
+        JSONObject obj = new JSONObject().put(KEY, unsignedLongString);
+        assertEquals(
+                Optional.of(new UnsignedLong(unsignedLongString)),
+                FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_negative_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "-123");
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_notAString_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, 123);
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_tooLarge_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "18446744073709551616");
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractUnsignedLong_notAnInt_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "123p");
+        assertEquals(Optional.empty(), FetcherUtil.extractUnsignedLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_maxValue_success() throws JSONException {
+        String longString = "9223372036854775807";
+        JSONObject obj = new JSONObject().put(KEY, longString);
+        assertEquals(Optional.of(Long.parseLong(longString)), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_negative_success() throws JSONException {
+        String longString = "-935";
+        JSONObject obj = new JSONObject().put(KEY, longString);
+        assertEquals(Optional.of(Long.parseLong(longString)), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_notAString_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, 123);
+        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_tooLarge_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "9223372036854775808");
+        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_notAnInt_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "123p");
+        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
     public void testIsValidAggregateKeyId_valid() {
         assertTrue(FetcherUtil.isValidAggregateKeyId("abcd"));
     }
@@ -193,27 +260,27 @@ public final class FetcherUtilTest {
 
     @Test
     public void testIsValidAggregateKeyPiece_valid() {
-        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0x15A"));
+        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0x15A", mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_validWithUpperCasePrefix() {
-        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0X15A"));
+        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0X15A", mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_null() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece(null));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece(null, mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_missingPrefix() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234"));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234", mFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_tooShort() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("0x"));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("0x", mFlags));
     }
 
     @Test
@@ -222,7 +289,7 @@ public final class FetcherUtilTest {
         for (int i = 0; i < 33; i++) {
             keyPiece.append("1");
         }
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece(keyPiece.toString()));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece(keyPiece.toString(), mFlags));
     }
 
     @Test
@@ -499,62 +566,6 @@ public final class FetcherUtilTest {
     @Test
     public void isValidAggregateDeduplicationKey_nullValue_success() {
         assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_webRegistration_null() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.WEB_SOURCE)
-                        .setAdIdPermission(true)
-                        .setPlatformAdId("not-null-ad-id")
-                        .build();
-
-        assertNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_missingAdIdPermission_null() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                        .setAdIdPermission(false)
-                        .setPlatformAdId("not-null-ad-id")
-                        .build();
-
-        assertNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_nullAdIdValue_null() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                        .setAdIdPermission(true)
-                        .setPlatformAdId(null)
-                        .build();
-
-        assertNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
-    }
-
-    @Test
-    public void getEncryptedPlatformAdIdIfPresent_adIdValuePresent_notNull() {
-        AsyncRegistration asyncRegistration =
-                new AsyncRegistration.Builder()
-                        .setRegistrationId(UUID.randomUUID().toString())
-                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                        .setAdIdPermission(true)
-                        .setPlatformAdId("not-null-ad-id")
-                        .build();
-
-        assertNotNull(
-                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, "enrollment_id"));
     }
 
     private Map<String, List<String>> createHeadersMap() {
