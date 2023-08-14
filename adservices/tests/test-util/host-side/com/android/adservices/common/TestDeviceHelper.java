@@ -43,7 +43,9 @@ final class TestDeviceHelper {
     public static ITestDevice getTestDevice() {
         ITestDevice device = sDevice.get();
         if (device == null) {
-            throw new IllegalStateException("Device not set yet!");
+            throw new IllegalStateException(
+                    "setTestDevice() not set yet - test must either explicitly call it @Before, or"
+                            + " extend AdServicesHostSideTestCase");
         }
         return device;
     }
@@ -51,8 +53,15 @@ final class TestDeviceHelper {
     @FormatMethod
     public static String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs)
             throws DeviceNotAvailableException {
+        return runShellCommand(getTestDevice(), cmdFmt, cmdArgs);
+    }
+
+    @FormatMethod
+    public static String runShellCommand(
+            ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs)
+            throws DeviceNotAvailableException {
         String cmd = String.format(cmdFmt, cmdArgs);
-        String result = getTestDevice().executeShellCommand(cmd);
+        String result = device.executeShellCommand(cmd);
         sLogger.d("runShellCommand(%s): %s", cmd, result);
         return result;
     }
