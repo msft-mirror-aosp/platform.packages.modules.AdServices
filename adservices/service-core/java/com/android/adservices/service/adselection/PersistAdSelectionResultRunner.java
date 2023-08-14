@@ -38,6 +38,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -173,18 +174,26 @@ public class PersistAdSelectionResultRunner {
 
     private ListenableFuture<AuctionResult> orchestratePersistAdSelectionResultRunner(
             PersistAdSelectionResultInput request) {
+        int traceCookie =
+                Tracing.beginAsyncSection(Tracing.ORCHESTRATE_PERSIST_AD_SELECTION_RESULT);
         long adSelectionId = request.getAdSelectionId();
         AdTechIdentifier seller = request.getSeller();
         return decryptBytes(request)
                 .transform(this::parseAdSelectionResult, mLightweightExecutorService)
                 .transformAsync(
-                        auctionResult ->
-                                persistAuctionResults(auctionResult, adSelectionId, seller),
+                        auctionResult -> {
+                            ListenableFuture<AuctionResult> auctionResultFuture =
+                                    persistAuctionResults(auctionResult, adSelectionId, seller);
+                            Tracing.endAsyncSection(
+                                    Tracing.ORCHESTRATE_PERSIST_AD_SELECTION_RESULT, traceCookie);
+                            return auctionResultFuture;
+                        },
                         mLightweightExecutorService);
         // TODO(b/278087551): Check if ad render uri is present on the device
     }
 
     private FluentFuture<byte[]> decryptBytes(PersistAdSelectionResultInput request) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.OHTTP_DECRYPT_BYTES);
         byte[] encryptedAuctionResult = request.getAdSelectionResult();
         long adSelectionId = request.getAdSelectionId();
 
@@ -192,12 +201,16 @@ public class PersistAdSelectionResultRunner {
                 mLightweightExecutorService.submit(
                         () -> {
                             sLogger.v("Decrypting auction result data for :" + adSelectionId);
-                            return mObliviousHttpEncryptor.decryptBytes(
-                                    encryptedAuctionResult, adSelectionId);
+                            byte[] decryptedBytes =
+                                    mObliviousHttpEncryptor.decryptBytes(
+                                            encryptedAuctionResult, adSelectionId);
+                            Tracing.endAsyncSection(Tracing.OHTTP_DECRYPT_BYTES, traceCookie);
+                            return decryptedBytes;
                         }));
     }
 
     private AuctionResult parseAdSelectionResult(byte[] resultBytes) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.PARSE_AD_SELECTION_RESULT);
         initializeDataCompressor(resultBytes);
         initializePayloadFormatter(resultBytes);
 
@@ -211,7 +224,9 @@ public class PersistAdSelectionResultRunner {
                         AuctionServerDataCompressor.CompressedData.create(
                                 unformattedResult.getData()));
 
-        return composeAuctionResult(uncompressedResult);
+        AuctionResult auctionResult = composeAuctionResult(uncompressedResult);
+        Tracing.endAsyncSection(Tracing.PARSE_AD_SELECTION_RESULT, traceCookie);
+        return auctionResult;
     }
 
     private void initializeDataCompressor(@NonNull byte[] resultBytes) {
@@ -244,6 +259,7 @@ public class PersistAdSelectionResultRunner {
 
     private ListenableFuture<AuctionResult> persistAuctionResults(
             AuctionResult auctionResult, long adSelectionId, AdTechIdentifier seller) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
         return mBackgroundExecutorService.submit(
                 () -> {
                     WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
@@ -277,7 +293,7 @@ public class PersistAdSelectionResultRunner {
                                                         : Uri.parse(sellerReportingUrl))
                                         .build());
                     }
-
+                    Tracing.endAsyncSection(Tracing.PERSIST_AUCTION_RESULTS, traceCookie);
                     return auctionResult;
                 });
     }

@@ -96,6 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -328,6 +329,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             CallerMetadata callerMetadata,
             PersistAdSelectionResultCallback callback)
             throws RemoteException {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
@@ -364,6 +366,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     callingUid,
                                     devContext);
                     runner.run(inputParams, callback);
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
     }
 
