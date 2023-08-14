@@ -144,6 +144,9 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         return mLastSyncUpdate;
     }
 
+    @Override
+    public void notifySdkSandboxClientImportanceChange(boolean isForeground) {}
+
     public int getInitializationCount() {
         return mInitializationCount;
     }

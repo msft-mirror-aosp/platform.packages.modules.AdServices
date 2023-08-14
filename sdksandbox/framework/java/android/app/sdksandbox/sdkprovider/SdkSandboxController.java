@@ -18,6 +18,7 @@ package android.app.sdksandbox.sdkprovider;
 import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemService;
 import android.app.Activity;
@@ -41,8 +42,10 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.modules.utils.build.SdkLevel;
+import com.android.sdksandbox.flags.Flags;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -259,6 +262,62 @@ public class SdkSandboxController {
     public String getClientPackageName() {
         enforceSandboxedSdkContextInitialization();
         return ((SandboxedSdkContext) mContext).getClientPackageName();
+    }
+
+    /**
+     * Registers a listener to be notified of changes in the client's {@link
+     * android.app.ActivityManager.RunningAppProcessInfo#importance}.
+     *
+     * @param listener an implementation of {@link SdkSandboxClientImportanceListener} to register.
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
+     */
+    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
+    public void registerSdkSandboxClientImportanceListener(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull SdkSandboxClientImportanceListener listener) {
+        Objects.requireNonNull(executor, "executor should not be null");
+        Objects.requireNonNull(listener, "listener should not be null");
+        enforceSandboxedSdkContextInitialization();
+        SdkSandboxLocalSingleton.getExistingInstance()
+                .registerSdkSandboxClientImportanceListener(
+                        new SdkSandboxClientImportanceListenerProxy(executor, listener));
+    }
+
+    /**
+     * Unregisters a listener previously registered using {@link
+     * SdkSandboxController#registerSdkSandboxClientImportanceListener(Executor,
+     * SdkSandboxClientImportanceListener)}
+     *
+     * @param listener an implementation of {@link SdkSandboxClientImportanceListener} to
+     *     unregister.
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
+     */
+    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
+    public void unregisterSdkSandboxClientImportanceListener(
+            @NonNull SdkSandboxClientImportanceListener listener) {
+        Objects.requireNonNull(listener, "listener should not be null");
+        enforceSandboxedSdkContextInitialization();
+        SdkSandboxLocalSingleton.getExistingInstance()
+                .unregisterSdkSandboxClientImportanceListener(listener);
+    }
+
+    /** @hide */
+    public static class SdkSandboxClientImportanceListenerProxy {
+        private final Executor mExecutor;
+        public final SdkSandboxClientImportanceListener listener;
+
+        SdkSandboxClientImportanceListenerProxy(
+                Executor executor, SdkSandboxClientImportanceListener listener) {
+            mExecutor = executor;
+            this.listener = listener;
+        }
+
+        /** @hide */
+        public void onForegroundImportanceChanged(boolean isForeground) {
+            mExecutor.execute(() -> listener.onForegroundImportanceChanged(isForeground));
+        }
     }
 
     private void enforceSandboxedSdkContextInitialization() {
