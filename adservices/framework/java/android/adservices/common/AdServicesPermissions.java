@@ -70,6 +70,15 @@ public class AdServicesPermissions {
             "android.permission.MODIFY_ADSERVICES_STATE";
 
     /**
+     * The permission that lets it modify AdService's enablement state modification API on S-.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String MODIFY_ADSERVICES_STATE_COMPAT =
+            "android.permission.MODIFY_ADSERVICES_STATE_COMPAT";
+
+    /**
      * The permission that lets it access AdService's enablement state modification API.
      *
      * @hide
@@ -79,10 +88,30 @@ public class AdServicesPermissions {
             "android.permission.ACCESS_ADSERVICES_STATE";
 
     /**
+     * The permission that lets it access AdService's enablement state modification API on S-.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String ACCESS_ADSERVICES_STATE_COMPAT =
+            "android.permission.ACCESS_ADSERVICES_STATE_COMPAT";
+
+    /**
      * The permission needed to call AdServicesManager APIs
      *
      * @hide
      */
     public static final String ACCESS_ADSERVICES_MANAGER =
             "android.permission.ACCESS_ADSERVICES_MANAGER";
+
+    /**
+     * This is a signature permission needs to be declared by the AdServices apk to access API for
+     * AdServices Cobalt upload service provided by another provider service. The signature
+     * permission is required to make sure that only AdServices is permitted to access this api.
+     *
+     * @hide
+     */
+    @SystemApi
+    public static final String ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD =
+            "android.permission.ACCESS_PRIVILEGED_AD_SERVICES_COBALT_UPLOAD";
 }

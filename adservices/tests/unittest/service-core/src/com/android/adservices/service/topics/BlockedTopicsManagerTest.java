@@ -44,6 +44,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
@@ -451,5 +452,43 @@ public class BlockedTopicsManagerTest {
         doNothing().when(mMockIAdServicesManager).clearAllBlockedTopics();
 
         return blockedTopicsManager;
+    }
+
+    @Test
+    public void testHandleBlockedTopicsMigrationIfNeeded_ExtServices() throws RemoteException {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(BlockedTopicsManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        ExtendedMockito.doNothing()
+                .when(() -> resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                mayMigratePpApiBlockedTopicsToSystemService(
+                                        mContextSpy, mTopicsDao, mAdServicesManager));
+        ExtendedMockito.doNothing().when(() -> mayClearPpApiBlockedTopics(mContextSpy, mTopicsDao));
+        ExtendedMockito.doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                .when(mContextSpy)
+                .getPackageName();
+
+        try {
+            handleBlockedTopicsMigrationIfNeeded(mContextSpy, mTopicsDao, mAdServicesManager, 2);
+
+            ExtendedMockito.verify(
+                    () -> resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED),
+                    never());
+            ExtendedMockito.verify(
+                    () ->
+                            mayMigratePpApiBlockedTopicsToSystemService(
+                                    mContextSpy, mTopicsDao, mAdServicesManager),
+                    never());
+            ExtendedMockito.verify(
+                    () -> mayClearPpApiBlockedTopics(mContextSpy, mTopicsDao), never());
+        } finally {
+            session.finishMocking();
+        }
     }
 }

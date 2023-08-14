@@ -35,8 +35,4 @@ public interface PrivacySandboxUx {
             PrivacySandboxEnrollmentChannel enrollmentChannel,
             Context context,
             ConsentManager consentManager);
-
-    /** Select a specific mode of the UX for the user. */
-    void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager);
 }

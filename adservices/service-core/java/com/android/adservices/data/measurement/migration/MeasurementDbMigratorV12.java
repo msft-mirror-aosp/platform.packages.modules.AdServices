@@ -34,7 +34,7 @@ public class MeasurementDbMigratorV12 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS),
+                MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS),
     };
 
     public MeasurementDbMigratorV12() {

@@ -175,7 +175,7 @@ public final class ImpressionNoiseUtil {
             updatedPerTypeNumWindowList[i] = params[1][i] * destinationMultiplier;
         }
         int numStates =
-                Combinatorics.getNumStatesFlexAPI(
+                Combinatorics.getNumStatesFlexApi(
                         params[0][0], updatedPerTypeNumWindowList, params[2]);
         int sequenceIndex = rand.nextInt(numStates);
         List<Combinatorics.AtomReportState> rawFakeReports =

@@ -164,7 +164,8 @@ public class JsFetcherTest {
                         ImmutableMap.of(
                                 JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
                                 BUYER_BIDDING_LOGIC_JS_VERSION),
-                        false);
+                        false,
+                        mDevContext);
         mDefaultDispatcher =
                 new Dispatcher() {
                     @Override
@@ -185,7 +186,8 @@ public class JsFetcherTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mWebClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
     }
 
     @After
@@ -359,7 +361,10 @@ public class JsFetcherTest {
         ImmutableMap<Integer, Long> versionMap =
                 mJsFetcher.getVersionMap(
                         JsVersionHelper.getRequestWithVersionHeader(
-                                mFetchJsUri, ImmutableMap.of(payloadType, version), false),
+                                mFetchJsUri,
+                                ImmutableMap.of(payloadType, version),
+                                false,
+                                mDevContext),
                         AdServicesHttpClientResponse.builder()
                                 .setResponseHeaders(
                                         ImmutableMap.of(

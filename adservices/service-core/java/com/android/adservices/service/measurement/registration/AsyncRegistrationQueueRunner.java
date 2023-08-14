@@ -30,6 +30,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -43,7 +44,6 @@ import com.android.adservices.service.measurement.attribution.TriggerContentProv
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
-import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -64,14 +64,16 @@ public class AsyncRegistrationQueueRunner {
     private final ContentResolver mContentResolver;
     private final DebugReportApi mDebugReportApi;
     private final SourceNoiseHandler mSourceNoiseHandler;
+    private final Flags mFlags;
 
     private AsyncRegistrationQueueRunner(Context context) {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mAsyncSourceFetcher = new AsyncSourceFetcher(context);
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mContentResolver = context.getContentResolver();
-        mDebugReportApi = new DebugReportApi(context, FlagsFactory.getFlags());
-        mSourceNoiseHandler = new SourceNoiseHandler(FlagsFactory.getFlags());
+        mFlags = FlagsFactory.getFlags();
+        mDebugReportApi = new DebugReportApi(context, mFlags);
+        mSourceNoiseHandler = new SourceNoiseHandler(mFlags);
     }
 
     @VisibleForTesting
@@ -81,13 +83,15 @@ public class AsyncRegistrationQueueRunner {
             AsyncTriggerFetcher asyncTriggerFetcher,
             DatastoreManager datastoreManager,
             DebugReportApi debugReportApi,
-            SourceNoiseHandler sourceNoiseHandler) {
+            SourceNoiseHandler sourceNoiseHandler,
+            Flags flags) {
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
         mContentResolver = contentResolver;
         mDebugReportApi = debugReportApi;
         mSourceNoiseHandler = sourceNoiseHandler;
+        mFlags = flags;
     }
 
     /**
@@ -105,9 +109,8 @@ public class AsyncRegistrationQueueRunner {
 
     /** Processes records in the AsyncRegistration Queue table. */
     public void runAsyncRegistrationQueueWorker() {
-        Flags flags = FlagsFactory.getFlags();
-        int recordServiceLimit = flags.getMeasurementMaxRegistrationsPerJobInvocation();
-        int retryLimit = flags.getMeasurementMaxRetriesPerRegistrationRequest();
+        int recordServiceLimit = mFlags.getMeasurementMaxRegistrationsPerJobInvocation();
+        int retryLimit = mFlags.getMeasurementMaxRetriesPerRegistrationRequest();
 
         Set<Uri> failedOrigins = new HashSet<>();
         for (int i = 0; i < recordServiceLimit; i++) {
@@ -271,21 +274,6 @@ public class AsyncRegistrationQueueRunner {
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return false;
         }
-        int numOfOriginExcludingRegistrationOrigin =
-                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                        source.getRegistrationOrigin(),
-                        publisher.get(),
-                        publisherType,
-                        source.getEnrollmentId(),
-                        source.getEventTime(),
-                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
-        if (numOfOriginExcludingRegistrationOrigin > 0) {
-            LogUtil.d(
-                    "insertSources: Max limit of 1 reporting origin for publisher - %s and"
-                            + " enrollment - %s reached.",
-                    publisher, source.getEnrollmentId());
-            return false;
-        }
         if (source.getAppDestinations() != null
                 && !isDestinationWithinBounds(
                         debugReportApi,
@@ -315,7 +303,22 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
-        if (!source.isFlexEventApiValueValid()) {
+        int numOfOriginExcludingRegistrationOrigin =
+                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        source.getRegistrationOrigin(),
+                        publisher.get(),
+                        publisherType,
+                        source.getEnrollmentId(),
+                        source.getEventTime(),
+                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
+        if (numOfOriginExcludingRegistrationOrigin > 0) {
+            LogUtil.d(
+                    "insertSources: Max limit of 1 reporting origin for publisher - %s and"
+                            + " enrollment - %s reached.",
+                    publisher, source.getEnrollmentId());
+            return false;
+        }
+        if (!source.hasValidInformationGain(FlagsFactory.getFlags())) {
             debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
             return false;
         }
@@ -581,7 +584,7 @@ public class AsyncRegistrationQueueRunner {
             Uri topOrigin, @EventSurfaceType int publisherType) {
         return publisherType == EventSurfaceType.APP
                 ? Optional.of(topOrigin)
-                : Web.topPrivateDomainAndScheme(topOrigin);
+                : WebAddresses.topPrivateDomainAndScheme(topOrigin);
     }
 
     private Uri getPublisher(AsyncRegistration request) {

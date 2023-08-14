@@ -20,6 +20,7 @@ import static com.android.adservices.service.topics.EpochManager.PADDED_TOP_TOPI
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -43,6 +44,9 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
+import com.android.adservices.service.topics.classifier.ClassifierManager;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +91,8 @@ public final class EpochManagerTest {
     @Mock Classifier mMockClassifier;
     @Mock Clock mMockClock;
     @Mock Flags mMockFlag;
+    @Mock ClassifierManager mClassifierManager;
+    @Mock Random mRandom;
 
     @Before
     public void setup() {
@@ -96,7 +102,13 @@ public final class EpochManagerTest {
         mTopicsDao = new TopicsDao(mDbHelper);
         mEpochManager =
                 new EpochManager(
-                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, mFlags, mMockClock);
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        mFlags,
+                        mMockClock,
+                        mClassifierManager);
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -199,7 +211,8 @@ public final class EpochManagerTest {
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
                         mFlags,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -239,7 +252,8 @@ public final class EpochManagerTest {
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
                         mFlags,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -261,10 +275,16 @@ public final class EpochManagerTest {
                 new EpochManager(
                         mTopicsDao,
                         mDbHelper,
-                        new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                        new MockRandom(
+                                new long[] {1, 5, 6, 7, 8, 9},
+                                // Use a positive double greater than 1 to ensure that loggedTopic
+                                // must be the same as the topic.
+                                new double[] {2d}
+                        ),
                         mMockClassifier,
                         mFlags,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -395,7 +415,8 @@ public final class EpochManagerTest {
                         new Random(),
                         mMockClassifier,
                         mMockFlag,
-                        mMockClock);
+                        mMockClock,
+                        mClassifierManager);
 
         // For table except CallerCanLearnTopicsContract, epoch to delete from is 7-3-1 = epoch 3
         final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
@@ -484,10 +505,15 @@ public final class EpochManagerTest {
                         new EpochManager(
                                 topicsDao,
                                 mDbHelper,
-                                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                                new MockRandom(
+                                        new long[] {1, 5, 6, 7, 8, 9},
+                                        // Use a positive double greater than 1 to ensure that
+                                        // loggedTopic must be the same as the topic.
+                                        new double[] {2d}),
                                 mMockClassifier,
                                 mFlags,
-                                mMockClock));
+                                mMockClock,
+                                mClassifierManager));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         doReturn(epochId).when(epochManager).getCurrentEpochId();
@@ -682,7 +708,8 @@ public final class EpochManagerTest {
                                 new Random(),
                                 mMockClassifier,
                                 mFlags,
-                                mMockClock));
+                                mMockClock,
+                                mClassifierManager));
 
         // To mimic the scenario that there was no usage in last epoch.
         // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
@@ -877,7 +904,13 @@ public final class EpochManagerTest {
         // Initialize a local instance of epochManager to use mocked Flags.
         EpochManager epochManager =
                 new EpochManager(
-                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, flags, mMockClock);
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        flags,
+                        mMockClock,
+                        mClassifierManager);
 
         // Mock clock so that:
         // 1st call: There is no origin and will set 0 as origin.
@@ -1010,6 +1043,90 @@ public final class EpochManagerTest {
                 .isEqualTo(expectedTopTopicsToContributorsMap);
     }
 
+    @Test
+    public void testGetTopicIdForLogging() {
+        // Set topicsPrivacyBudgetForTopicIdDistribution to 1.0. Set taxonomy list to
+        // [10, 20, 30, 40, 50]. According to equation:
+        // (taxonomySize - 1) / (e^privacyBudget + taxonomySize - 1), there is a 59.5% probability
+        // of getting a random topic different from the real topic when we log the topic.
+        float topicsPrivacyBudgetForTopicIdDistribution = 1f;
+        when(mMockFlag.getTopicsPrivacyBudgetForTopicIdDistribution())
+                .thenReturn(topicsPrivacyBudgetForTopicIdDistribution);
+        when(mClassifierManager.getTopicsTaxonomy())
+                .thenReturn(ImmutableList.of(10, 20, 30, 40, 50));
+        when(mRandom.nextInt(anyInt())).thenReturn(4, 2, 0, 1);
+        EpochManager epochManager =
+                new EpochManager(
+                        mTopicsDao,
+                        mDbHelper,
+                        mRandom,
+                        mMockClassifier,
+                        mMockFlag,
+                        mMockClock,
+                        mClassifierManager);
+
+        // The first random double is 0.1, it's smaller than 0.595,
+        // loggedTopic should be a random topic 50.
+        when(mRandom.nextDouble()).thenReturn(0.1d);
+        Topic topic1 =
+                Topic.create(/* topic */ 10, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic1 = epochManager.getTopicIdForLogging(topic1);
+        assertThat(loggedTopic1).isEqualTo(50);
+
+        // The second random double is 0.2, it's smaller than 0.595,
+        // loggedTopic should be a random topic 30.
+        when(mRandom.nextDouble()).thenReturn(0.2d);
+        Topic topic2 =
+                Topic.create(/* topic */ 20, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic2 = epochManager.getTopicIdForLogging(topic2);
+        assertThat(loggedTopic2).isEqualTo(30);
+
+        // The third random double is 0.9, it's larger than 0.595,
+        // loggedTopic should be a real topic.
+        when(mRandom.nextDouble()).thenReturn(0.9d);
+        Topic topic3 =
+                Topic.create(/* topic */ 30, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic3 = epochManager.getTopicIdForLogging(topic3);
+        assertThat(loggedTopic3).isEqualTo(topic3.getTopic());
+
+        // The forth random double is 0.55, it's smaller than 0.595,
+        // loggedTopic should be a random topic 20.
+        when(mRandom.nextDouble()).thenReturn(0.55d);
+        Topic topic4 =
+                Topic.create(/* topic */ 40, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic4 = epochManager.getTopicIdForLogging(topic4);
+        assertThat(loggedTopic4).isEqualTo(10);
+
+        // The fifth random double is 0.6, it's larger than 0.595,
+        // loggedTopic should be a real topic.
+        when(mRandom.nextDouble()).thenReturn(0.6d);
+        Topic topic5 =
+                Topic.create(/* topic */ 50, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic5 = epochManager.getTopicIdForLogging(topic5);
+        assertThat(loggedTopic5).isEqualTo(topic5.getTopic());
+
+        // Verify that when the taxonomy size is 1, even if the random double is smaller than
+        // the probability, the function still returns the original topic.
+        when(mClassifierManager.getTopicsTaxonomy()).thenReturn(ImmutableList.of(100));
+        when(mRandom.nextDouble()).thenReturn(0.1d);
+        when(mRandom.nextInt(anyInt())).thenReturn(0);
+        Topic topic6 =
+                Topic.create(/* topic */ 100, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic6 = epochManager.getTopicIdForLogging(topic6);
+        assertThat(loggedTopic6).isEqualTo(topic6.getTopic());
+
+        // Verify that when there is a bug with random generation,
+        // if the random double is smaller than the probability, the function will not be stuck in
+        // an infinite loop because of the maximum attempts.
+        when(mClassifierManager.getTopicsTaxonomy()).thenReturn(ImmutableList.of(1000, 2000));
+        when(mRandom.nextDouble()).thenReturn(0.1d);
+        when(mRandom.nextInt(anyInt())).thenReturn(0);
+        Topic topic7 =
+                Topic.create(/* topic */ 1000, /* taxonomyVersion */ 1l, /* modelVersion */ 1l);
+        int loggedTopic7 = epochManager.getTopicIdForLogging(topic7);
+        assertThat(loggedTopic7).isEqualTo(topic7.getTopic());
+    }
+
     private Topic createTopic(int topicId) {
         return Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
     }
@@ -1020,6 +1137,12 @@ public final class EpochManagerTest {
 
     private EpochManager createEpochManagerWithMockedFlag() {
         return new EpochManager(
-                mTopicsDao, mDbHelper, new Random(), mMockClassifier, mMockFlag, mMockClock);
+                mTopicsDao,
+                mDbHelper,
+                new Random(),
+                mMockClassifier,
+                mMockFlag,
+                mMockClock,
+                mClassifierManager);
     }
 }

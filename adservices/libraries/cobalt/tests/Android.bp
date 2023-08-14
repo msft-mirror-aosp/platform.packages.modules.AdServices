@@ -24,6 +24,7 @@ android_test {
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
+        "adservices-service-core",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -32,9 +33,13 @@ android_test {
         "apache-commons-math",
         "truth-prebuilt",
     ],
+    jni_libs: [
+        "libhpke_jni",
+    ],
     libs: [
         "android.test.base",
         "android.test.runner",
+        "mockito",
     ],
     sdk_version: "test_current",
     test_suites: [

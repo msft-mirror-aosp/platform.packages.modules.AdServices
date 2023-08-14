@@ -135,6 +135,42 @@
         "sourceId": "S2",
         "triggerId": "T2"
       }
+    ],
+    "async_registrations": [
+      {
+        "registrationId": "AR1",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate1.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733601,
+        "adIdPermission": false,
+        "id": "id1",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
+      },
+      {
+        "registrationId": "AR2",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate2.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733605,
+        "adIdPermission": false,
+        "id": "id2",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
+      }
     ]
   },
   "output": {
@@ -270,6 +306,42 @@
         "registrant": "android-app://com.registrant2",
         "sourceId": "S2",
         "triggerId": "T2"
+      }
+    ],
+    "async_registrations": [
+      {
+        "registrationId": "AR1",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate1.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733601,
+        "adIdPermission": false,
+        "id": "id1",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
+      },
+      {
+        "registrationId": "AR2",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate2.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733605,
+        "adIdPermission": false,
+        "id": "id2",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1
       }
     ]
   },

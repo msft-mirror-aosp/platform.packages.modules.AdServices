@@ -35,6 +35,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -48,12 +50,22 @@ public class FledgeAuthorizationFilter {
     @NonNull private final PackageManager mPackageManager;
     @NonNull private final EnrollmentDao mEnrollmentDao;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    private EnrollmentUtil mEnrollmentUtil;
 
     @VisibleForTesting
     public FledgeAuthorizationFilter(
             @NonNull PackageManager packageManager,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull AdServicesLogger adServicesLogger) {
+        this(packageManager, enrollmentDao, adServicesLogger, null);
+    }
+
+    @VisibleForTesting
+    public FledgeAuthorizationFilter(
+            @NonNull PackageManager packageManager,
+            @NonNull EnrollmentDao enrollmentDao,
+            @NonNull AdServicesLogger adServicesLogger,
+            EnrollmentUtil enrollmentUtil) {
         Objects.requireNonNull(packageManager);
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(adServicesLogger);
@@ -61,6 +73,7 @@ public class FledgeAuthorizationFilter {
         mPackageManager = packageManager;
         mEnrollmentDao = enrollmentDao;
         mAdServicesLogger = adServicesLogger;
+        mEnrollmentUtil = enrollmentUtil;
     }
 
     /** Creates an instance of {@link FledgeAuthorizationFilter}. */
@@ -69,7 +82,10 @@ public class FledgeAuthorizationFilter {
         Objects.requireNonNull(context);
 
         return new FledgeAuthorizationFilter(
-                context.getPackageManager(), EnrollmentDao.getInstance(context), adServicesLogger);
+                context.getPackageManager(),
+                EnrollmentDao.getInstance(context),
+                adServicesLogger,
+                EnrollmentUtil.getInstance(context));
     }
 
     /**
@@ -107,10 +123,13 @@ public class FledgeAuthorizationFilter {
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package did not declare custom audience permission
      */
-    public void assertAppDeclaredPermission(@NonNull Context context, int apiNameLoggingId)
+    public void assertAppDeclaredPermission(
+            @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
             throws SecurityException {
         Objects.requireNonNull(context);
-        if (!PermissionHelper.hasCustomAudiencesPermission(context)) {
+        Objects.requireNonNull(appPackageName);
+
+        if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
             sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
@@ -140,6 +159,13 @@ public class FledgeAuthorizationFilter {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(adTechIdentifier);
 
+        int buildId = -1;
+        int dataFileGroupStatus = 0;
+        if (mEnrollmentUtil != null) {
+            buildId = mEnrollmentUtil.getBuildId();
+            dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
+        }
+        int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
         EnrollmentData enrollmentData =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
 
@@ -148,6 +174,15 @@ public class FledgeAuthorizationFilter {
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            if (mEnrollmentUtil != null) {
+                mEnrollmentUtil.logEnrollmentFailedStats(
+                        mAdServicesLogger,
+                        buildId,
+                        dataFileGroupStatus,
+                        enrollmentRecordsCount,
+                        adTechIdentifier.toString(),
+                        EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            }
             throw new AdTechNotAllowedException();
         }
 
@@ -158,6 +193,13 @@ public class FledgeAuthorizationFilter {
                             + " API %d",
                     appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    adTechIdentifier.toString(),
+                    EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue());
             throw new AdTechNotAllowedException();
         }
 
@@ -168,6 +210,13 @@ public class FledgeAuthorizationFilter {
                             + " API %d",
                     appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    adTechIdentifier.toString(),
+                    EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue());
             throw new AdTechNotAllowedException();
         }
     }
@@ -194,6 +243,13 @@ public class FledgeAuthorizationFilter {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(uriForAdTech);
 
+        int buildId = -1;
+        int dataFileGroupStatus = 0;
+        if (mEnrollmentUtil != null) {
+            buildId = mEnrollmentUtil.getBuildId();
+            dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
+        }
+        int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(uriForAdTech);
 
@@ -202,21 +258,41 @@ public class FledgeAuthorizationFilter {
                     "Enrollment data match not found for URI \"%s\" while calling API %d",
                     uriForAdTech, apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    uriForAdTech.toString(),
+                    EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
             throw new AdTechNotAllowedException();
         }
 
         AdTechIdentifier adTechIdentifier = enrollmentResult.first;
         EnrollmentData enrollmentData = enrollmentResult.second;
 
-        if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        context, appPackageName, enrollmentData.getEnrollmentId())
-                || PhFlags.getInstance()
-                        .isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+        boolean isAllowedCustomAudiencesAccess =
+                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                        context, appPackageName, enrollmentData.getEnrollmentId());
+        boolean isEnrollmentBlocklisted =
+                PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+        int errorCause = EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue();
+        if (isAllowedCustomAudiencesAccess && isEnrollmentBlocklisted) {
+            errorCause = EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue();
+        }
+        if (!isAllowedCustomAudiencesAccess || isEnrollmentBlocklisted) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" from URI \"%s\" not"
                             + " authorized to call API %d",
                     appPackageName, adTechIdentifier.toString(), uriForAdTech, apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    uriForAdTech.toString(),
+                    errorCause);
             throw new AdTechNotAllowedException();
         }
 
@@ -243,6 +319,20 @@ public class FledgeAuthorizationFilter {
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+
+            int buildId = -1;
+            int dataFileGroupStatus = 0;
+            if (mEnrollmentUtil != null) {
+                buildId = mEnrollmentUtil.getBuildId();
+                dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
+            }
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    mEnrollmentDao.getEnrollmentRecordCountForLogging(),
+                    adTechIdentifier.toString(),
+                    EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
             throw new AdTechNotAllowedException();
         }
     }

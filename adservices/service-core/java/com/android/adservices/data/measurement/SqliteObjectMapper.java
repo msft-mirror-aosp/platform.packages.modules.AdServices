@@ -21,6 +21,7 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
+
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -92,6 +93,10 @@ public class SqliteObjectMapper {
                 MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
                 registration_origin ->
                         builder.setRegistrationOrigin(Uri.parse(registration_origin)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
+                builder::setTriggerSummaryBucket);
         return builder.build();
     }
 
@@ -187,10 +192,10 @@ public class SqliteObjectMapper {
                 builder::setCoarseEventReportDestinations);
         setTextColumn(
                 cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
-        setTextColumn(
+        setIntColumn(
                 cursor,
-                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
-                builder::setMaxBucketIncrements);
+                MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
+                builder::setMaxEventLevelReports);
         setTextColumn(
                 cursor,
                 MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
@@ -199,6 +204,18 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
                 builder::setPrivacyParameters);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_REPORT_WINDOWS,
+                builder::setEventReportWindows);
+        setUnsignedLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
+                builder::setSharedDebugKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
+                builder::setSharedFilterDataKeys);
         return builder.build();
     }
 
@@ -266,6 +283,10 @@ public class SqliteObjectMapper {
                 MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
                 registration_origin ->
                         builder.setRegistrationOrigin(Uri.parse(registration_origin)));
+        setUriColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
+                builder::setAggregationCoordinatorOrigin);
         return builder.build();
     }
 
@@ -313,6 +334,10 @@ public class SqliteObjectMapper {
                 MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
                 registration_origin ->
                         builder.setRegistrationOrigin(Uri.parse(registration_origin)));
+        setUriColumn(
+                cursor,
+                MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                builder::setAggregationCoordinatorOrigin);
         return builder.build();
     }
 
@@ -329,6 +354,10 @@ public class SqliteObjectMapper {
                 builder::setPublicKey);
         setLongColumn(cursor, MeasurementTables.AggregateEncryptionKey.EXPIRY,
                 builder::setExpiry);
+        setUriColumn(
+                cursor,
+                MeasurementTables.AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN,
+                builder::setAggregationCoordinatorOrigin);
         return builder.build();
     }
 
@@ -480,7 +509,18 @@ public class SqliteObjectMapper {
         return Arrays.stream(concatArray.split(","))
                 .map(String::trim)
                 .filter(not(String::isEmpty))
-                .map(UnsignedLong::new)
+                // TODO (b/295059367): Negative numbers handling to be reverted
+                .map(parseCleanUnsignedLong())
                 .collect(Collectors.toList());
+    }
+
+    private static Function<String, UnsignedLong> parseCleanUnsignedLong() {
+        return string -> {
+            if (string.startsWith("-")) {
+                // It's in the long range
+                return new UnsignedLong(Long.parseLong(string));
+            }
+            return new UnsignedLong(string);
+        };
     }
 }

@@ -105,6 +105,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    @NonNull private final DevContext mDevContext;
 
     /**
      * @param adSelectionEntryDao DAO to access ad selection storage
@@ -149,6 +150,7 @@ public class OutcomeSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mContext = context;
         mFlags = flags;
+        mDevContext = devContext;
 
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
         mAdOutcomeSelector =
@@ -165,7 +167,8 @@ public class OutcomeSelectionRunner {
                         mScheduledExecutor,
                         mAdServicesHttpsClient,
                         new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao),
-                        mFlags);
+                        mFlags,
+                        mDevContext);
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
@@ -182,7 +185,8 @@ public class OutcomeSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Context context,
             @NonNull final Flags flags,
-            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter) {
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final DevContext devContext) {
         Objects.requireNonNull(adOutcomeSelector);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -192,6 +196,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
+        Objects.requireNonNull(devContext);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -209,6 +214,7 @@ public class OutcomeSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mDevContext = devContext;
     }
 
     /**
@@ -240,7 +246,8 @@ public class OutcomeSelectionRunner {
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                                            mDevContext);
                                     validateAdSelectionFromOutcomesConfig(inputParams);
                                 } finally {
                                     sLogger.v("Completed filtering and validation.");

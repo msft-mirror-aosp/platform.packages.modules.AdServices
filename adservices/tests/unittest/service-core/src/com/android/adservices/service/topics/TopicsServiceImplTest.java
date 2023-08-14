@@ -42,7 +42,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,17 +56,18 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Process;
-import android.test.mock.MockContext;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -83,6 +86,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -94,6 +98,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -130,7 +135,7 @@ public class TopicsServiceImplTest {
             "0000000000000000000000000000000000000000000000000000000000000000";
     private static final byte[] BYTE_ARRAY = new byte[32];
 
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final Context mSpyContext = spy(ApplicationProvider.getApplicationContext());
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
@@ -158,6 +163,11 @@ public class TopicsServiceImplTest {
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
 
+    // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
+    // Android R since some tests require handling of unsupported PackageManager APIs.
+    // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
+    @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -181,7 +191,7 @@ public class TopicsServiceImplTest {
                         mLogger,
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
-                                /* globalBlockedTopicsManager = */ new HashSet<>()));
+                                /* globalBlockedTopicsManager= */ new HashSet<>()));
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -217,6 +227,20 @@ public class TopicsServiceImplTest {
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(Process.myUid());
+
+        // Grant Permission to access Topics API
+        PackageManager mPackageManagerWithPerm = spy(mSpyContext.getPackageManager());
+        when(mPackageManagerWithPerm.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
+                .thenReturn(Process.myUid());
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_TOPICS};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerWithPerm)
+                .getPackageInfo(anyString(), eq(PackageManager.GET_PERMISSIONS));
+        doReturn(packageInfoGrant)
+                .when(mPackageManager)
+                .getPackageInfo(anyString(), eq(PackageManager.GET_PERMISSIONS));
+        when(mSpyContext.getPackageManager()).thenReturn(mPackageManagerWithPerm);
 
         // Allow all for signature allow list check
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(AllowLists.ALLOW_ALL);
@@ -257,7 +281,7 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.REVOKED);
         invokeGetTopicsAndVerifyError(
-                mContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
+                mSpyContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -267,7 +291,7 @@ public class TopicsServiceImplTest {
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
                 .thenReturn(AdServicesApiConsent.REVOKED);
         invokeGetTopicsAndVerifyError(
-                mContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
+                mSpyContext, STATUS_USER_CONSENT_REVOKED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -277,7 +301,7 @@ public class TopicsServiceImplTest {
 
         // Add test app into allow list
         ExtendedMockito.doReturn(BYTE_ARRAY)
-                .when(() -> AllowLists.getAppSignatureHash(mContext, TEST_APP_PACKAGE_NAME));
+                .when(() -> AllowLists.getAppSignatureHash(mSpyContext, TEST_APP_PACKAGE_NAME));
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn(HEX_STRING);
 
         runGetTopics(mTopicsServiceImpl);
@@ -289,7 +313,7 @@ public class TopicsServiceImplTest {
         // Empty allow list and bypass list.
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
         invokeGetTopicsAndVerifyError(
-                mContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mSpyContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -299,7 +323,7 @@ public class TopicsServiceImplTest {
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getTopics API.
         invokeGetTopicsAndVerifyError(
-                mContext, STATUS_RATE_LIMIT_REACHED, /* checkLoggingStatus */ false);
+                mSpyContext, STATUS_RATE_LIMIT_REACHED, /* checkLoggingStatus */ false);
     }
 
     @Test
@@ -318,7 +342,7 @@ public class TopicsServiceImplTest {
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getTopics API.
         invokeGetTopicsAndVerifyError(
-                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
+                mSpyContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
@@ -338,7 +362,7 @@ public class TopicsServiceImplTest {
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
 
         invokeGetTopicsAndVerifyError(
-                mContext, STATUS_BACKGROUND_CALLER, mRequest, /* checkLoggingStatus */ true);
+                mSpyContext, STATUS_BACKGROUND_CALLER, mRequest, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -404,22 +428,20 @@ public class TopicsServiceImplTest {
     }
 
     @Test
-    public void checkNoPermission() throws InterruptedException {
+    public void checkNoPermission()
+            throws InterruptedException, PackageManager.NameNotFoundException {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
-        MockContext context =
-                new MockContext() {
-                    @Override
-                    public int checkCallingOrSelfPermission(String permission) {
-                        return PackageManager.PERMISSION_DENIED;
-                    }
 
-                    @Override
-                    public PackageManager getPackageManager() {
-                        return mPackageManager;
-                    }
-                };
+        // No Permission for Topics API
+        PackageInfo packageInfoGrant = new PackageInfo();
+        PackageManager packageManagerWithoutPerm = mock(PackageManager.class);
+        doReturn(packageInfoGrant)
+                .when(packageManagerWithoutPerm)
+                .getPackageInfo(anyString(), eq(PackageManager.GET_PERMISSIONS));
+        when(mSpyContext.getPackageManager()).thenReturn(packageManagerWithoutPerm);
+
         invokeGetTopicsAndVerifyError(
-                context, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
+                mSpyContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -441,6 +463,13 @@ public class TopicsServiceImplTest {
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
@@ -455,6 +484,14 @@ public class TopicsServiceImplTest {
 
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
@@ -466,13 +503,22 @@ public class TopicsServiceImplTest {
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
                 mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        verify(mAdServicesLogger)
+                .logEnrollmentFailedStats(
+                        anyInt(),
+                        anyInt(),
+                        anyInt(),
+                        eq(mRequest.getSdkName()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
     }
 
     @Test
     public void getTopicsFromApp_SdkNotIncluded() throws Exception {
         Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
-                mContext.getPackageManager()
+                mSpyContext
+                        .getPackageManager()
                         .getProperty(
                                 "android.adservices.AD_SERVICES_CONFIG.sdkMissing",
                                 TEST_APP_PACKAGE_NAME);
@@ -481,7 +527,7 @@ public class TopicsServiceImplTest {
                 .thenReturn(property);
 
         Resources resources =
-                mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
+                mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
         when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
@@ -493,7 +539,8 @@ public class TopicsServiceImplTest {
     public void getTopicsFromApp_SdkTagMissing() throws Exception {
         Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
-                mContext.getPackageManager()
+                mSpyContext
+                        .getPackageManager()
                         .getProperty(
                                 "android.adservices.AD_SERVICES_CONFIG.sdkTagMissing",
                                 TEST_APP_PACKAGE_NAME);
@@ -502,7 +549,7 @@ public class TopicsServiceImplTest {
                 .thenReturn(property);
 
         Resources resources =
-                mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
+                mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
         when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
@@ -527,7 +574,8 @@ public class TopicsServiceImplTest {
     public void getTopicsSdk() throws Exception {
         Mockito.lenient().when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         PackageManager.Property property =
-                mContext.getPackageManager()
+                mSpyContext
+                        .getPackageManager()
                         .getProperty(
                                 AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY,
                                 TEST_APP_PACKAGE_NAME);
@@ -535,7 +583,7 @@ public class TopicsServiceImplTest {
                         AppManifestConfigHelper.AD_SERVICES_CONFIG_PROPERTY, TEST_APP_PACKAGE_NAME))
                 .thenReturn(property);
         Resources resources =
-                mContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
+                mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
         runGetTopics(createTopicsServiceImplInstance_SandboxContext());
@@ -1215,7 +1263,7 @@ public class TopicsServiceImplTest {
     @NonNull
     private TopicsServiceImpl createTestTopicsServiceImplInstance() {
         return new TopicsServiceImpl(
-                mContext,
+                mSpyContext,
                 mTopicsWorker,
                 mConsentManager,
                 mAdServicesLogger,
@@ -1243,7 +1291,7 @@ public class TopicsServiceImplTest {
     @NonNull
     private TopicsServiceImpl createTestTopicsServiceImplInstance_spyTopicsWorker() {
         return new TopicsServiceImpl(
-                mContext,
+                mSpyContext,
                 mSpyTopicsWorker,
                 mConsentManager,
                 mAdServicesLogger,

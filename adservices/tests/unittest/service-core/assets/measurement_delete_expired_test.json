@@ -165,7 +165,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           },
           {
             "id": "old report time - deleted",
@@ -175,7 +176,8 @@
             "scheduledReportTime": 8640000002,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           },
           {
             "id": "delivered report - deleted",
@@ -185,7 +187,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 1,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           }
         ]
       },
@@ -199,7 +202,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           }
         ]
       }
@@ -251,6 +255,114 @@
             "enrollmentId": "enrollment-id-1",
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "1 non-expired AsyncRegistration, 1 expired AsyncRegistration, 1 AsyncRegistration both expired and past retry limit, and 1 AsyncRegistration only past retry limit",
+      "input": {
+        "sources": [],
+        "source_destinations": [
+        ],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [
+          {
+            "registrationId": "AR1",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 33203622330000,
+            "adIdPermission": false,
+            "id": "id1",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 1,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1
+          },
+          {
+            "registrationId": "AR2",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant": "android-app://com.registrant2",
+            "osDestination": "https://foo.com",
+            "requestTime": 8640000002,
+            "adIdPermission": false,
+            "id": "id2",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 1,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1
+          },
+          {
+            "registrationId": "AR3",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 8640000002,
+            "adIdPermission": false,
+            "id": "id3",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 5,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1
+          },
+          {
+            "registrationId": "AR4",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 33203622330000,
+            "adIdPermission": false,
+            "id": "id4",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 5,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [
+        ],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [
+          {
+            "registrationId": "AR1",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 33203622330000,
+            "adIdPermission": false,
+            "id": "id1",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 1,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1
           }
         ]
       }

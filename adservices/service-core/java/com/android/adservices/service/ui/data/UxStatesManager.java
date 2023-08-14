@@ -25,6 +25,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
@@ -93,6 +94,9 @@ public class UxStatesManager {
 
     /** Returns process statble UX flags. */
     public boolean getFlag(String uxFlagKey) {
+        if (!mUxFlags.containsKey(uxFlagKey)) {
+            LogUtil.e("Key not found in cached UX flags: ", uxFlagKey);
+        }
         Boolean value = mUxFlags.get(uxFlagKey);
         return value != null ? value : false;
     }
@@ -123,5 +127,12 @@ public class UxStatesManager {
     /** Returns a common shared preference for storing temporary UX states. */
     public SharedPreferences getUxSharedPreferences() {
         return mUxSharedPreferences;
+    }
+
+    /** Returns whether the user is already enrolled for the current UX. */
+    public boolean isEnrolledUser() {
+        return mConsentManager.wasGaUxNotificationDisplayed()
+                || mConsentManager.wasU18NotificationDisplayed()
+                || mConsentManager.wasNotificationDisplayed();
     }
 }

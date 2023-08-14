@@ -40,7 +40,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Tillader, at en app får adgang til API\'en for aktiveringstilstand for AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Adgang til AdServicesManager’s API\'er"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Giver en app adgang til AdServicesManager’s API\'er."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android-system"</string>
+    <!-- no translation found for app_label (5844694701336604490) -->
+    <skip />
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Tilmeld dig Privatliv ved annoncering i Android (beta)"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android undersøger, hvordan apps kan vise dig annoncer på en mere privat måde"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Få flere oplysninger"</string>
@@ -222,7 +223,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps, du har blokeret"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nulstil data om foreslåede annoncer fra apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er helt normalt, at de apps, du bruger, husker de ting, du er interesseret i, for at personligt tilpasse din brugeroplevelse. Apps kan også gemme oplysninger om dine emner i Android.\n\nHvis du bruger en app til maratontræning, kan appen f.eks. skønne, at du er interesseret i løbesko. Hvis du derefter bruger en anden app, kan den pågældende app vise dig en annonce om løbesko, som er foreslået af den første app.\n\nAndroid sletter automatisk data for foreslåede annoncer fra apps med jævne mellemrum. Når du bruger en app igen, kan den dukke op på listen igen. Du kan også blokere en app, så den ikke kan foreslå annoncer til dig.\n\nI dine apps kan en annonce, du får vist, være personligt tilpasset i henhold til denne indstilling, indstillingen for annonceemner, dine indstillinger for annoncerings-id, og om den app, du bruger, tilpasser annoncer."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"En ny privatlivsfunktion til annoncer er tilgængelig"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Nye privatlivsfunktioner til annoncer er nu tilgængelige"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Der deles kun meget begrænsede oplysninger mellem apps for at hjælpe apps med at måle annonceeffektivitet"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Vi lancerer en ny privatlivsfunktion til annoncer ved navn Annoncemåling. Android deler kun meget begrænsede oplysninger mellem apps, f.eks. hvornår en annonce er vist til dig, for at hjælpe apps med at måle annonceeffektivitet."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Du kan ændre indstillingerne for privatliv ved annoncering."</string>

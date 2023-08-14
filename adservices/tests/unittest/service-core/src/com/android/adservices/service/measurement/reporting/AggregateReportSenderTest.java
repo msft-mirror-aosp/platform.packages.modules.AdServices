@@ -51,6 +51,7 @@ public class AggregateReportSenderTest {
     private static final String VERSION = "1234";
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
+    private static final String COORDINATOR_ORIGIN = "https://coordinator.origin";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
@@ -64,6 +65,7 @@ public class AggregateReportSenderTest {
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .build();
     }
 

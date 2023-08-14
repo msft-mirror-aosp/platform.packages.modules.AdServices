@@ -19,11 +19,13 @@ package {
 java_library_host {
     name: "BackCompatLintChecker",
     srcs: [
+        "java/**/*.java",
         "java/**/*.kt",
     ],
     plugins: ["auto_service_plugin"],
     libs: [
         "auto_service_annotations",
+        "core-xml-for-host", // For org.xmlpull.v1.*
         "lint_api",
     ],
     kotlincflags: ["-Xjvm-default=all"],

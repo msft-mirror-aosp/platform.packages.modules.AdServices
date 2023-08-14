@@ -22,12 +22,14 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -54,6 +56,7 @@ import dalvik.system.PathClassLoader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -143,6 +146,9 @@ public class SdkSandboxTest {
             return sSdkSandboxActivityRegistry;
         }
     }
+
+    @Rule
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @BeforeClass
     public static void setupClass() {

@@ -25,7 +25,7 @@ import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxDisabledCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import com.android.sdksandbox.IUnloadSdkCallback;
-import com.android.sdksandbox.SandboxLatencyInfo;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 
 /** @hide */

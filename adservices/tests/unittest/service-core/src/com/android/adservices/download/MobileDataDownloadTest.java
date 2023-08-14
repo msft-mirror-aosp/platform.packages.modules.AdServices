@@ -110,8 +110,11 @@ public class MobileDataDownloadTest {
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/922/217081737fd739c74dd3ca5c407813d818526577";
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1800/29dbe982cc8bf8f4ae05557b96cc7d8f69c4c0e4";
+
+    // Production enrollment data.
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1985/bd113c890bf7597f84367df33e1e75c03bead6f6";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2215/42c38a4e7cbe3f16f19d16f86b1c99aaa1e7ebe6";
+
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
@@ -120,7 +123,7 @@ public class MobileDataDownloadTest {
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 3;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 17;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
@@ -205,9 +208,9 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         FlagsFactory.getFlagsForTest(),
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .build()); // Pass in an empty list of FileGroupPopulator. Add ad
-        // hoc datafilegroup to MDD manually below.
+                        // Pass in an empty list of FileGroupPopulator. Add ad hoc DataFileGroup
+                        // to MDD manually below.
+                        ImmutableList.of());
 
         DataFileGroup dataFileGroup =
                 createDataFileGroup(
@@ -605,7 +608,7 @@ public class MobileDataDownloadTest {
      * @return a MobileDataDownload instance.
      */
     @NonNull
-    private MobileDataDownload getMddForTesting(
+    private static MobileDataDownload getMddForTesting(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull ImmutableList<FileGroupPopulator> fileGroupPopulators) {
@@ -657,10 +660,9 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         mMockFlags,
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .add(fileGroupPopulator)
-                                .build()); // List of FileGroupPopulator that contains Measurement
-        // FileGroupPopulator only.
+                        // List of FileGroupPopulator that contains Measurement FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
 
         // Calling handleTask directly to trigger the MDD's background download on wifi. This should
         // be done in tests only.
@@ -682,10 +684,8 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         mMockFlags,
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .add(fileGroupPopulator)
-                                .build()); // List of FileGroupPopulator that contains Topics
-        // FileGroupPopulator only.
+                        // List of FileGroupPopulator that contains Topics FileGroupPopulator only.
+                        ImmutableList.of(fileGroupPopulator));
 
         // Calling handleTask directly to trigger the MDD's background download on wifi. This should
         // be done in tests only.
@@ -707,10 +707,9 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         mMockFlags,
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .add(fileGroupPopulator)
-                                .build()); // List of FileGroupPopulator that contains UI OTA String
-        // FileGroupPopulator only.
+                        // List of FileGroupPopulator that contains UI OTA String FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
 
         // Calling handleTask directly to trigger the MDD's background download on wifi. This should
         // be done in tests only.
@@ -749,13 +748,13 @@ public class MobileDataDownloadTest {
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
         // Verify enrollment data file read from MDD and insert the data into the enrollment
         // database.
-        assertThat(enrollmentDataDownloadManager.readAndInsertEnrolmentDataFromMdd().get())
+        assertThat(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())
                 .isEqualTo(SUCCESS);
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
         assertThat(enrollmentDao.deleteAll()).isTrue();
     }
 
-    private void overridingMddLoggingLevel(String loggingLevel) {
+    private static void overridingMddLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.MDD %s", loggingLevel);
     }
 }

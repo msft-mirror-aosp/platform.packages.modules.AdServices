@@ -35,4 +35,15 @@ public class MathUtils {
         }
         return value;
     }
+
+    /** See {@code long extractValidNumberInRange} */
+    public static UnsignedLong extractValidNumberInRange(
+            UnsignedLong value, UnsignedLong lowerLimit, UnsignedLong upperLimit) {
+        if (value.compareTo(lowerLimit) < 0) {
+            return lowerLimit;
+        } else if (value.compareTo(upperLimit) > 0) {
+            return upperLimit;
+        }
+        return value;
+    }
 }

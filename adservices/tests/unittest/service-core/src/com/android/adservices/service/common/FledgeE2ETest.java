@@ -16,13 +16,17 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
+
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.ImpressionReporter.CALLER_PACKAGE_NAME_MISMATCH;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
+import static com.android.adservices.service.customaudience.FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
@@ -82,6 +86,7 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
@@ -102,14 +107,18 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.ReportingUrisDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdCost;
@@ -126,6 +135,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
+import com.android.adservices.service.customaudience.CustomAudienceBlobFixture;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceQuantityChecker;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
@@ -171,11 +181,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 public class FledgeE2ETest {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
+    private static final String FETCH_CA_PATH = "/fetch";
     public static final AppInstallFilters CURRENT_APP_FILTER =
             new AppInstallFilters.Builder()
                     .setPackageNames(new HashSet<>(Arrays.asList(CommonFixture.TEST_PACKAGE_NAME)))
@@ -190,7 +200,10 @@ public class FledgeE2ETest {
                                                     Duration.ofDays(1))
                                             .build()))
                     .build();
-    @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    @Spy private static final Context CONTEXT_SPY = ApplicationProvider.getApplicationContext();
+
+    private static final AdTechIdentifier LOCALHOST_BUYER =
+            AdTechIdentifier.fromString("localhost");
     private static final Uri BUYER_DOMAIN_1 =
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER_1, "");
     private static final Uri BUYER_DOMAIN_2 =
@@ -202,7 +215,13 @@ public class FledgeE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
+    private static final String SELLER_DEBUG_REPORT_WIN_PATH = "/seller/reportWin";
+    private static final String SELLER_DEBUG_REPORT_LOSS_PATH = "/seller/reportLoss";
+    private static final String DEBUG_REPORT_WINNING_BID_PARAM = "?wb=${winningBid}";
+    private static final String DEBUG_REPORT_WINNING_BID_RESPONSE = "?wb=10.0";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
+    private static final String BUYER_DEBUG_REPORT_WIN_PATH = "/buyer/reportWin";
+    private static final String BUYER_DEBUG_REPORT_LOSS_PATH = "/buyer/reportLoss";
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -256,8 +275,7 @@ public class FledgeE2ETest {
     @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
     // This object access some system APIs
-    @Mock private DevContextFilter mDevContextFilter;
-    @Mock private AppImportanceFilter mAppImportanceFilter;
+    @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private Throttler mMockThrottler;
     private AdSelectionConfig mAdSelectionConfig;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -267,7 +285,7 @@ public class FledgeE2ETest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private ReportingUrisDao mReportingUrisDao;
+    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -275,10 +293,9 @@ public class FledgeE2ETest {
     private AdSelectionServiceImpl mAdSelectionService;
 
     private static final Flags DEFAULT_FLAGS =
-            new FledgeE2ETestFlags(false, true, true, true, false);
+            new FledgeE2ETestFlags(false, true, true, true, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
-    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
 
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
@@ -290,9 +307,9 @@ public class FledgeE2ETest {
 
     @Mock private File mMockDBAdSelectionFile;
 
-    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
-    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
 
     @Before
     public void setUp() throws Exception {
@@ -315,24 +332,24 @@ public class FledgeE2ETest {
         doReturn(DEFAULT_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
 
         mAdSelectionEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
         SharedStorageDatabase sharedDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mReportingUrisDao = serverDb.reportingUrisDao();
+        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, DEFAULT_FLAGS);
 
@@ -354,17 +371,26 @@ public class FledgeE2ETest {
                 .thenReturn(true);
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
+        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_FETCH_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(true);
         when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
 
         mLocalhostBuyerDomain = Uri.parse(mMockWebServerRule.getServerBaseAddress());
-        when(CONTEXT.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(CONTEXT_SPY.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
-                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
-        when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
+                        any(),
+                        anyString(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
+        when(ConsentManager.getInstance(CONTEXT_SPY)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
         doNothing()
@@ -395,7 +421,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -457,7 +483,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -525,7 +551,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -702,7 +728,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -769,7 +795,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -840,7 +866,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -907,7 +933,7 @@ public class FledgeE2ETest {
                 mMockWebServerRule.startMockWebServer(
                         request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -961,7 +987,7 @@ public class FledgeE2ETest {
         // reporting
         // due to package mismatch
         PackageManager packageManagerMock = mock(PackageManager.class);
-        when(CONTEXT.getPackageManager()).thenReturn(packageManagerMock);
+        when(CONTEXT_SPY.getPackageManager()).thenReturn(packageManagerMock);
         when(packageManagerMock.getPackagesForUid(Process.myUid()))
                 .thenReturn(new String[] {CommonFixture.TEST_PACKAGE_NAME, otherPackageName});
 
@@ -975,21 +1001,21 @@ public class FledgeE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        CONTEXT_SPY,
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptorMock);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1052,7 +1078,7 @@ public class FledgeE2ETest {
 
         mMockWebServerRule.startMockWebServer(request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1119,7 +1145,7 @@ public class FledgeE2ETest {
         // reporting
         // due to package mismatch
         PackageManager packageManagerMock = mock(PackageManager.class);
-        when(CONTEXT.getPackageManager()).thenReturn(packageManagerMock);
+        when(CONTEXT_SPY.getPackageManager()).thenReturn(packageManagerMock);
         when(packageManagerMock.getPackagesForUid(Process.myUid()))
                 .thenReturn(new String[] {CommonFixture.TEST_PACKAGE_NAME, otherPackageName});
 
@@ -1133,21 +1159,21 @@ public class FledgeE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        CONTEXT_SPY,
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptorMock);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1170,7 +1196,7 @@ public class FledgeE2ETest {
 
         mMockWebServerRule.startMockWebServer(request -> new MockResponse().setResponseCode(404));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1243,7 +1269,7 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1329,7 +1355,7 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1462,7 +1488,7 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
@@ -1648,9 +1674,63 @@ public class FledgeE2ETest {
     }
 
     @Test
+    public void testFledgeFlowSuccessWithDebugReporting() throws Exception {
+        initClients(false, false, true, false, false, true);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        setupAdSelectionConfig();
+        joinCustomAudienceAndAssertSuccess(
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1));
+        joinCustomAudienceAndAssertSuccess(
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2));
+        CountDownLatch debugReportingLatch = new CountDownLatch(4);
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicJsWithDebugReporting(
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        SELLER_DEBUG_REPORT_WIN_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM,
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        SELLER_DEBUG_REPORT_LOSS_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM),
+                        getBiddingLogicWithDebugReporting(
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        BUYER_DEBUG_REPORT_WIN_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM,
+                                mLocalhostBuyerDomain.buildUpon().path(
+                                        BUYER_DEBUG_REPORT_LOSS_PATH).build()
+                                        + DEBUG_REPORT_WINNING_BID_PARAM),
+                        /* debugReportingLatch= */ debugReportingLatch);
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        debugReportingLatch.await(10, TimeUnit.SECONDS);
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                9,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS,
+                        BUYER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE,
+                        BUYER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE,
+                        SELLER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE,
+                        SELLER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
     public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
             throws Exception {
-        initClients(false, true, true, false, false);
+        initClients(false, true, true, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -1848,6 +1928,666 @@ public class FledgeE2ETest {
                 server,
                 39,
                 ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudienceFlow_noFilters()
+            throws Exception {
+        initClients(true, true, false);
+        doReturn(LOCALHOST_BUYER)
+                .when(mFledgeAuthorizationFilterMock)
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        // Using the same generic key across all ads in the CA
+        List<Set<Integer>> adCounterKeysForCa2 =
+                Arrays.asList(
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1));
+        /* The final ad with the highest bid has both fcap and app install filters, the second ad
+         * with the middle bid has only an app install filter and the first ad with the lowest bid
+         * in this ca has only a fcap filter.
+         */
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        new AdFilters.Builder()
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build(),
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build(),
+                        new AdFilters.Builder()
+                                .setAppInstallFilters(CURRENT_APP_FILTER)
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build());
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain,
+                        CUSTOM_AUDIENCE_SEQ_2,
+                        BIDS_FOR_BUYER_2,
+                        adCounterKeysForCa2,
+                        adFiltersForCa2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        // Prepare the custom audiences as json responses we expect from the server.
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, true);
+        List<DBAdData> ads1 = new ArrayList<>();
+        for (AdData ad : customAudience1.getAds()) {
+            ads1.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience1JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience1.getName(),
+                        customAudience1.getActivationTime(),
+                        customAudience1.getExpirationTime(),
+                        customAudience1.getDailyUpdateUri(),
+                        customAudience1.getBiddingLogicUri(),
+                        customAudience1.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience1.getTrustedBiddingData()),
+                        ads1);
+        List<DBAdData> ads2 = new ArrayList<>();
+        for (AdData ad : customAudience2.getAds()) {
+            ads2.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience2JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience2.getName(),
+                        customAudience2.getActivationTime(),
+                        customAudience2.getExpirationTime(),
+                        customAudience2.getDailyUpdateUri(),
+                        customAudience2.getBiddingLogicUri(),
+                        customAudience2.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience2.getTrustedBiddingData()),
+                        ads2);
+        HashMap<String, String> remoteCustomAudiencesMap = new HashMap<>();
+        String customAudience1Id = String.valueOf(customAudience1.hashCode());
+        String customAudience2Id = String.valueOf(customAudience2.hashCode());
+        remoteCustomAudiencesMap.put(customAudience1Id, customAudience1JsonString);
+        remoteCustomAudiencesMap.put(customAudience2Id, customAudience2JsonString);
+
+        MockWebServer server =
+                getMockWebServer(
+                        remoteCustomAudiencesMap,
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
+                        true);
+
+        // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
+        // doNothing()
+        //      .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience1Id),
+                                VALID_OWNER)
+                        .build());
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience2Id),
+                                VALID_OWNER)
+                        .build());
+
+        // TODO(b/289276159): Verify background fetch is scheduled if needed once added to fetchCA.
+        // verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)))
+
+        // Run Ad Selection no filters active
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+
+        // 2 fetch CA requests and 10 requests for the auction with both CAs
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                12,
+                ImmutableList.of(
+                        FETCH_CA_PATH + "/" + customAudience1Id,
+                        FETCH_CA_PATH + "/" + customAudience2Id,
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudience_appInstallFilters()
+            throws Exception {
+        initClients(true, true, false);
+        doReturn(LOCALHOST_BUYER)
+                .when(mFledgeAuthorizationFilterMock)
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        // Using the same generic key across all ads in the CA
+        List<Set<Integer>> adCounterKeysForCa2 =
+                Arrays.asList(
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1));
+        /* The final ad with the highest bid has both fcap and app install filters, the second ad
+         * with the middle bid has only an app install filter and the first ad with the lowest bid
+         * in this ca has only a fcap filter.
+         */
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        new AdFilters.Builder()
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build(),
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build(),
+                        new AdFilters.Builder()
+                                .setAppInstallFilters(CURRENT_APP_FILTER)
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build());
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain,
+                        CUSTOM_AUDIENCE_SEQ_2,
+                        BIDS_FOR_BUYER_2,
+                        adCounterKeysForCa2,
+                        adFiltersForCa2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        // Prepare the custom audiences as json responses we expect from the server.
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+        List<DBAdData> ads1 = new ArrayList<>();
+        for (AdData ad : customAudience1.getAds()) {
+            ads1.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience1JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience1.getName(),
+                        customAudience1.getActivationTime(),
+                        customAudience1.getExpirationTime(),
+                        customAudience1.getDailyUpdateUri(),
+                        customAudience1.getBiddingLogicUri(),
+                        customAudience1.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience1.getTrustedBiddingData()),
+                        ads1);
+        List<DBAdData> ads2 = new ArrayList<>();
+        for (AdData ad : customAudience2.getAds()) {
+            ads2.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience2JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience2.getName(),
+                        customAudience2.getActivationTime(),
+                        customAudience2.getExpirationTime(),
+                        customAudience2.getDailyUpdateUri(),
+                        customAudience2.getBiddingLogicUri(),
+                        customAudience2.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience2.getTrustedBiddingData()),
+                        ads2);
+        HashMap<String, String> remoteCustomAudiencesMap = new HashMap<>();
+        String customAudience1Id = String.valueOf(customAudience1.hashCode());
+        String customAudience2Id = String.valueOf(customAudience2.hashCode());
+        remoteCustomAudiencesMap.put(customAudience1Id, customAudience1JsonString);
+        remoteCustomAudiencesMap.put(customAudience2Id, customAudience2JsonString);
+
+        MockWebServer server =
+                getMockWebServer(
+                        remoteCustomAudiencesMap,
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
+                        true);
+
+        // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
+        // doNothing()
+        //      .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience1Id),
+                                VALID_OWNER)
+                        .build());
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience2Id),
+                                VALID_OWNER)
+                        .build());
+
+        // TODO(b/289276159): Verify background fetch is scheduled if needed once added to fetchCA.
+        // verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)))
+
+        // Run Ad Selection with app install filtering
+        registerForAppInstallFiltering();
+        long adSelectionId =
+                selectAdsAndReport(
+                        CommonFixture.getUri(
+                                mLocalhostBuyerDomain.getAuthority(),
+                                AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad1"),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore);
+
+        // 2 fetch CA requests and 10 requests for the auctions with both CAs.
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                12,
+                ImmutableList.of(
+                        FETCH_CA_PATH + "/" + customAudience1Id,
+                        FETCH_CA_PATH + "/" + customAudience2Id,
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudienceFlow_bothFilters()
+            throws Exception {
+        initClients(true, true, false);
+        doReturn(LOCALHOST_BUYER)
+                .when(mFledgeAuthorizationFilterMock)
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        // Using the same generic key across all ads in the CA
+        List<Set<Integer>> adCounterKeysForCa2 =
+                Arrays.asList(
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1));
+        /* The final ad with the highest bid has both fcap and app install filters, the second ad
+         * with the middle bid has only an app install filter and the first ad with the lowest bid
+         * in this ca has only a fcap filter.
+         */
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        new AdFilters.Builder()
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build(),
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build(),
+                        new AdFilters.Builder()
+                                .setAppInstallFilters(CURRENT_APP_FILTER)
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build());
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain,
+                        CUSTOM_AUDIENCE_SEQ_2,
+                        BIDS_FOR_BUYER_2,
+                        adCounterKeysForCa2,
+                        adFiltersForCa2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        // Prepare the custom audiences as json responses we expect from the server.
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+        List<DBAdData> ads1 = new ArrayList<>();
+        for (AdData ad : customAudience1.getAds()) {
+            ads1.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience1JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience1.getName(),
+                        customAudience1.getActivationTime(),
+                        customAudience1.getExpirationTime(),
+                        customAudience1.getDailyUpdateUri(),
+                        customAudience1.getBiddingLogicUri(),
+                        customAudience1.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience1.getTrustedBiddingData()),
+                        ads1);
+        List<DBAdData> ads2 = new ArrayList<>();
+        for (AdData ad : customAudience2.getAds()) {
+            ads2.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience2JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience2.getName(),
+                        customAudience2.getActivationTime(),
+                        customAudience2.getExpirationTime(),
+                        customAudience2.getDailyUpdateUri(),
+                        customAudience2.getBiddingLogicUri(),
+                        customAudience2.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience2.getTrustedBiddingData()),
+                        ads2);
+        HashMap<String, String> remoteCustomAudiencesMap = new HashMap<>();
+        String customAudience1Id = String.valueOf(customAudience1.hashCode());
+        String customAudience2Id = String.valueOf(customAudience2.hashCode());
+        remoteCustomAudiencesMap.put(customAudience1Id, customAudience1JsonString);
+        remoteCustomAudiencesMap.put(customAudience2Id, customAudience2JsonString);
+
+        MockWebServer server =
+                getMockWebServer(
+                        remoteCustomAudiencesMap,
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
+                        true);
+
+        // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
+        // doNothing()
+        //      .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience1Id),
+                                VALID_OWNER)
+                        .build());
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience2Id),
+                                VALID_OWNER)
+                        .build());
+
+        // TODO(b/289276159): Verify background fetch is scheduled if needed once added to fetchCA.
+        // verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)))
+
+        // Run Ad Selection with app install filtering
+        registerForAppInstallFiltering();
+        long adSelectionId =
+                selectAdsAndReport(
+                        CommonFixture.getUri(
+                                mLocalhostBuyerDomain.getAuthority(),
+                                AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad1"),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore);
+
+        // Run Ad Selection with both filters
+        updateHistogramAndAssertSuccess(adSelectionId, FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+
+        // 2 fetch CA requests, 10 requests for the auction with both CAs and 9 requests for the
+        // auctions with one CA.
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                21,
+                ImmutableList.of(
+                        FETCH_CA_PATH + "/" + customAudience1Id,
+                        FETCH_CA_PATH + "/" + customAudience2Id,
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_fetchAndJoinCustomAudienceFlow_fcapFilters()
+            throws Exception {
+        initClients(true, true, false);
+        doReturn(LOCALHOST_BUYER)
+                .when(mFledgeAuthorizationFilterMock)
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        // Using the same generic key across all ads in the CA
+        List<Set<Integer>> adCounterKeysForCa2 =
+                Arrays.asList(
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1));
+        /* The final ad with the highest bid has both fcap and app install filters, the second ad
+         * with the middle bid has only an app install filter and the first ad with the lowest bid
+         * in this ca has only a fcap filter.
+         */
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        new AdFilters.Builder()
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build(),
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build(),
+                        new AdFilters.Builder()
+                                .setAppInstallFilters(CURRENT_APP_FILTER)
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build());
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain,
+                        CUSTOM_AUDIENCE_SEQ_2,
+                        BIDS_FOR_BUYER_2,
+                        adCounterKeysForCa2,
+                        adFiltersForCa2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        // Prepare the custom audiences as json responses we expect from the server.
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+        List<DBAdData> ads1 = new ArrayList<>();
+        for (AdData ad : customAudience1.getAds()) {
+            ads1.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience1JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience1.getName(),
+                        customAudience1.getActivationTime(),
+                        customAudience1.getExpirationTime(),
+                        customAudience1.getDailyUpdateUri(),
+                        customAudience1.getBiddingLogicUri(),
+                        customAudience1.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience1.getTrustedBiddingData()),
+                        ads1);
+        List<DBAdData> ads2 = new ArrayList<>();
+        for (AdData ad : customAudience2.getAds()) {
+            ads2.add(
+                    new DBAdData.Builder()
+                            .setRenderUri(ad.getRenderUri())
+                            .setMetadata(ad.getMetadata())
+                            .setAdCounterKeys(ad.getAdCounterKeys())
+                            .setAdFilters(ad.getAdFilters())
+                            .build());
+        }
+        String customAudience2JsonString =
+                CustomAudienceBlobFixture.asJSONObjectString(
+                        null,
+                        null,
+                        customAudience2.getName(),
+                        customAudience2.getActivationTime(),
+                        customAudience2.getExpirationTime(),
+                        customAudience2.getDailyUpdateUri(),
+                        customAudience2.getBiddingLogicUri(),
+                        customAudience2.getUserBiddingSignals().toString(),
+                        DBTrustedBiddingData.fromServiceObject(
+                                customAudience2.getTrustedBiddingData()),
+                        ads2);
+        HashMap<String, String> remoteCustomAudiencesMap = new HashMap<>();
+        String customAudience1Id = String.valueOf(customAudience1.hashCode());
+        String customAudience2Id = String.valueOf(customAudience2.hashCode());
+        remoteCustomAudiencesMap.put(customAudience1Id, customAudience1JsonString);
+        remoteCustomAudiencesMap.put(customAudience2Id, customAudience2JsonString);
+
+        MockWebServer server =
+                getMockWebServer(
+                        remoteCustomAudiencesMap,
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        /*debugReportingLatch=*/ null,
+                        true);
+
+        // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
+        // doNothing()
+        //      .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience1Id),
+                                VALID_OWNER)
+                        .build());
+        fetchAndJoinCustomAudienceAndAssertSuccess(
+                new FetchAndJoinCustomAudienceInput.Builder(
+                                CommonFixture.getUri(
+                                        mLocalhostBuyerDomain.getAuthority(),
+                                        FETCH_CA_PATH + "/" + customAudience2Id),
+                                VALID_OWNER)
+                        .build());
+
+        // TODO(b/289276159): Verify background fetch is scheduled if needed once added to fetchCA.
+        // verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)))
+
+        // Run Ad Selection no filters active
+        long adSelectionId =
+                selectAdsAndReport(
+                        CommonFixture.getUri(
+                                mLocalhostBuyerDomain.getAuthority(),
+                                AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore);
+
+        // Run Ad Selection with just fcap filtering
+        updateHistogramAndAssertSuccess(adSelectionId, FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad2"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+
+        // 2 fetch CA requests and 20 requests for the 2 auctions with both CAs.
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                22,
+                ImmutableList.of(
+                        FETCH_CA_PATH + "/" + customAudience1Id,
+                        FETCH_CA_PATH + "/" + customAudience2Id,
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
@@ -2073,7 +2813,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallFlagOffWithMockServer() throws Exception {
-        initClients(false, true, false, true, false);
+        initClients(false, true, false, true, false, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -2239,9 +2979,16 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
-                .when(mAdSelectionServiceFilter)
+                .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
-                        any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                        any(),
+                        anyString(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
 
         setupAdSelectionConfig();
 
@@ -2448,6 +3195,42 @@ public class FledgeE2ETest {
                 mRequestMatcherPrefixMatch);
     }
 
+    @Test
+    public void testSelectAdsWithFilterExceptionFromNullPointerExceptionDoesNotCrash()
+            throws Exception {
+        initClients(false, false, false);
+        setupConsentGivenStubs();
+        setupAdSelectionConfig();
+
+        doThrow(new FilterException(new NullPointerException("Intentional test failure")))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        any(),
+                        anyString(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
+
+        // Run Ad Selection
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertWithMessage("Callback success").that(resultsCallback.mIsSuccess).isFalse();
+        assertWithMessage("Callback AdSelectionResponse")
+                .that(resultsCallback.mAdSelectionResponse)
+                .isNull();
+        assertWithMessage("Callback FledgeErrorResponse")
+                .that(resultsCallback.mFledgeErrorResponse)
+                .isNotNull();
+        assertWithMessage("Callback FledgeErrorResponse")
+                .that(resultsCallback.mFledgeErrorResponse.getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+    }
+
     private void updateHistogramAndAssertSuccess(long adSelectionId, int adEventType)
             throws InterruptedException {
         UpdateAdCounterHistogramInput inputParams =
@@ -2628,6 +3411,16 @@ public class FledgeE2ETest {
                 + "}";
     }
 
+    private String getDecisionLogicJsWithDebugReporting(String reportWinUrl, String reportLossUrl) {
+        return "function scoreAd(ad, bid, auction_config, seller_signals,"
+                + " trusted_scoring_signals, contextual_signal, user_signal,"
+                + " custom_audience_signal) { \n"
+                + "  forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
+                + "  forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "  return {'status': 0, 'score': bid };\n"
+                + "}";
+    }
+
     private String getBiddingLogicWithBeacons() {
         return "function generateBid(ad, auction_signals, per_buyer_signals,"
                 + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
@@ -2644,6 +3437,23 @@ public class FledgeE2ETest {
                 + " return {'status': 0, 'results': {'reporting_uri': '"
                 + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                 + "' } };\n"
+                + "}";
+    }
+
+    private String getBiddingLogicWithDebugReporting(String reportWinUrl, String reportLossUrl) {
+        return "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                + "    trusted_bidding_signals, contextual_signals) {\n"
+                + "    const ads = custom_audience.ads;\n"
+                + "    let result = null;\n"
+                + "    for (const ad of ads) {\n"
+                + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                + "            result = ad;\n"
+                + "            forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
+                + "            forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "        }\n"
+                + "    }\n"
+                + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                + "'render': result.render_uri };\n"
                 + "}";
     }
 
@@ -2697,13 +3507,48 @@ public class FledgeE2ETest {
             Semaphore interactionReportingSemaphore,
             boolean jsVersioning)
             throws Exception {
+        return getMockWebServer(
+                new HashMap<>(),
+                decisionLogicJs,
+                biddingLogicJs,
+                impressionReportingSemaphore,
+                interactionReportingSemaphore,
+                null,
+                jsVersioning);
+    }
+
+    private MockWebServer getMockWebServer(
+            String decisionLogicJs,
+            String biddingLogicJs,
+            CountDownLatch debugReportingLatch)
+            throws Exception {
+        return getMockWebServer(
+                new HashMap<>(),
+                decisionLogicJs,
+                biddingLogicJs,
+                null,
+                null,
+                debugReportingLatch,
+                true);
+    }
+
+    private MockWebServer getMockWebServer(
+            HashMap<String, String> remoteCustomAudiencesMap,
+            String decisionLogicJs,
+            String biddingLogicJs,
+            Semaphore impressionReportingSemaphore,
+            Semaphore interactionReportingSemaphore,
+            CountDownLatch debugReportingLatch,
+            boolean jsVersioning)
+            throws Exception {
         String versionHeaderName =
                 JsVersionHelper.getVersionHeaderName(
                         JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
         long jsVersion = JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
         return mMockWebServerRule.startMockWebServer(
                 request -> {
-                    switch (request.getPath()) {
+                    String requestPath = request.getPath();
+                    switch (requestPath) {
                         case SELLER_DECISION_LOGIC_URI_PATH:
                             return new MockResponse().setBody(decisionLogicJs);
                         case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
@@ -2720,6 +3565,14 @@ public class FledgeE2ETest {
                             } else {
                                 return new MockResponse().setBody(biddingLogicJs);
                             }
+                        case BUYER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                        case BUYER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                        case SELLER_DEBUG_REPORT_WIN_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                        case SELLER_DEBUG_REPORT_LOSS_PATH + DEBUG_REPORT_WINNING_BID_RESPONSE:
+                            if (Objects.nonNull(debugReportingLatch)) {
+                                debugReportingLatch.countDown();
+                            }
+                            return new MockResponse().setResponseCode(200);
                         case CLICK_SELLER_PATH: // Intentional fallthrough
                         case CLICK_BUYER_PATH:
                             interactionReportingSemaphore.release();
@@ -2728,6 +3581,17 @@ public class FledgeE2ETest {
                         case BUYER_REPORTING_PATH:
                             impressionReportingSemaphore.release();
                             return new MockResponse().setResponseCode(200);
+                    }
+
+                    if (requestPath.contains(FETCH_CA_PATH)) {
+                        String[] pathSegments = requestPath.split("/");
+                        String customAudienceId = pathSegments[pathSegments.length - 1];
+                        if (remoteCustomAudiencesMap.containsKey(customAudienceId)) {
+                            return new MockResponse()
+                                    .setBody(remoteCustomAudiencesMap.get(customAudienceId));
+                        } else {
+                            return new MockResponse().setResponseCode(404);
+                        }
                     }
 
                     // Case where adCost is reported in the Uri
@@ -2879,9 +3743,18 @@ public class FledgeE2ETest {
         assertTrue(joinCallback.isSuccess());
     }
 
+    private void fetchAndJoinCustomAudienceAndAssertSuccess(FetchAndJoinCustomAudienceInput request)
+            throws InterruptedException {
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
+        mCustomAudienceService.fetchAndJoinCustomAudience(request, callback);
+        resultLatch.await();
+        assertTrue(callback.isSuccess());
+    }
+
     private void initClients(
             boolean gaUXEnabled, boolean registerAdBeaconEnabled, boolean cpcBillingEnabled) {
-        initClients(gaUXEnabled, registerAdBeaconEnabled, true, true, cpcBillingEnabled);
+        initClients(gaUXEnabled, registerAdBeaconEnabled, true, true, cpcBillingEnabled, false);
     }
 
     private void initClients(
@@ -2889,18 +3762,20 @@ public class FledgeE2ETest {
             boolean registerAdBeaconEnabled,
             boolean filtersEnabled,
             boolean enrollmentCheckDisabled,
-            boolean cpcBillingEnabled) {
+            boolean cpcBillingEnabled,
+            boolean debugReportingEnabled) {
         Flags flags =
                 new FledgeE2ETestFlags(
                         gaUXEnabled,
                         registerAdBeaconEnabled,
                         filtersEnabled,
                         enrollmentCheckDisabled,
-                        cpcBillingEnabled);
+                        cpcBillingEnabled,
+                        debugReportingEnabled);
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT,
+                        CONTEXT_SPY,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 new CustomAudienceQuantityChecker(mCustomAudienceDao, flags),
@@ -2915,23 +3790,23 @@ public class FledgeE2ETest {
                                 flags),
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger,
-                        mAppImportanceFilter,
+                        mAppImportanceFilterMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT,
+                                CONTEXT_SPY,
                                 mConsentManagerMock,
                                 flags,
-                                mAppImportanceFilter,
+                                mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
-                                mThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
 
-        when(mDevContextFilter.createDevContext())
+        when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags);
@@ -2945,21 +3820,21 @@ public class FledgeE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mReportingUrisDao,
+                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
-                        mDevContextFilter,
+                        mDevContextFilterMock,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        CONTEXT_SPY,
                         mAdServicesLogger,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
-                        mAdSelectionServiceFilter,
+                        mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor);
+                        mObliviousHttpEncryptorMock);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
@@ -3423,18 +4298,21 @@ public class FledgeE2ETest {
         private final boolean mFiltersEnabled;
         private final boolean mEnrollmentCheckDisabled;
         private final boolean mCpcBillingEnabled;
+        private final boolean mDebugReportingEnabled;
 
         FledgeE2ETestFlags(
                 boolean isGaUxEnabled,
                 boolean registerAdBeaconEnabled,
                 boolean filtersEnabled,
                 boolean enrollmentCheckDisabled,
-                boolean cpcBillingEnabled) {
+                boolean cpcBillingEnabled,
+                boolean debugReportingEnabled) {
             mIsGaUxEnabled = isGaUxEnabled;
             mRegisterAdBeaconEnabled = registerAdBeaconEnabled;
             mFiltersEnabled = filtersEnabled;
             mEnrollmentCheckDisabled = enrollmentCheckDisabled;
             mCpcBillingEnabled = cpcBillingEnabled;
+            mDebugReportingEnabled = debugReportingEnabled;
         }
 
         @Override
@@ -3496,6 +4374,16 @@ public class FledgeE2ETest {
         @Override
         public boolean getFledgeCpcBillingEnabled() {
             return mCpcBillingEnabled;
+        }
+
+        @Override
+        public boolean getFledgeFetchCustomAudienceEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportingEnabled() {
+            return mDebugReportingEnabled;
         }
     }
 }

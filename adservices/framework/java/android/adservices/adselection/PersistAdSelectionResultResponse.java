@@ -68,6 +68,21 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o instanceof PersistAdSelectionResultResponse) {
+            PersistAdSelectionResultResponse response = (PersistAdSelectionResultResponse) o;
+            return mAdSelectionId == response.mAdSelectionId
+                    && Objects.equals(mAdRenderUri, response.mAdRenderUri);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mAdSelectionId, mAdRenderUri);
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -111,7 +126,7 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
 
         /** Sets the adRenderUri. */
         @NonNull
-        public PersistAdSelectionResultResponse.Builder setAdRenderUri(Uri adRenderUri) {
+        public PersistAdSelectionResultResponse.Builder setAdRenderUri(@NonNull Uri adRenderUri) {
             Objects.requireNonNull(adRenderUri);
 
             this.mAdRenderUri = adRenderUri;
