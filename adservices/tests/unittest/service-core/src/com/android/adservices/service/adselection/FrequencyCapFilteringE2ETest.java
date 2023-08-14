@@ -704,7 +704,7 @@ public class FrequencyCapFilteringE2ETest {
         // higher than a certain minimum version.
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
-        class FlagsWithLowEventCounts implements Flags {
+        class FlagsWithLowEventCounts extends FlagsOverridingAdFiltering implements Flags {
             @Override
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;
@@ -814,7 +814,8 @@ public class FrequencyCapFilteringE2ETest {
                 "JS Sandbox is not available",
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
-        final class FlagsWithLowPerBuyerEventCounts implements Flags {
+        final class FlagsWithLowPerBuyerEventCounts extends FlagsOverridingAdFiltering
+                implements Flags {
             @Override
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;

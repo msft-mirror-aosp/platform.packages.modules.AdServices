@@ -502,6 +502,8 @@ public final class FlagsConstants {
             "fledge_auction_server_kill_switch";
     public static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
             "background_jobs_logging_kill_switch";
+    public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH =
+            "fledge_on_device_auction_kill_switch";
 
     public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
             "protected_signals_service_kill_switch";

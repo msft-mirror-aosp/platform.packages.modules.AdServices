@@ -4684,5 +4684,10 @@ public class FledgeE2ETest {
         public boolean getFledgeDataVersionHeaderEnabled() {
             return mDataVersionHeaderEnabled;
         }
+
+        @Override
+        public boolean getFledgeOnDeviceAuctionKillSwitch() {
+            return false;
+        }
     }
 }
