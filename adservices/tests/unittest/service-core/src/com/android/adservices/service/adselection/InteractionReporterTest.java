@@ -355,7 +355,10 @@ public class InteractionReporterTest {
 
         Uri reportingUri = mDBRegisteredAdInteractionSellerClick.getInteractionReportingUri();
 
-        doReturn(failedFuture).when(mHttpClient).postPlainText(reportingUri, mInteractionData);
+        doReturn(failedFuture)
+                .when(mHttpClient)
+                .postPlainText(
+                        reportingUri, mInteractionData, DevContext.createForDevOptionsDisabled());
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
@@ -425,7 +428,10 @@ public class InteractionReporterTest {
 
         Uri reportingUri = mDBRegisteredAdInteractionBuyerClick.getInteractionReportingUri();
 
-        doReturn(failedFuture).when(mHttpClient).postPlainText(reportingUri, mInteractionData);
+        doReturn(failedFuture)
+                .when(mHttpClient)
+                .postPlainText(
+                        reportingUri, mInteractionData, DevContext.createForDevOptionsDisabled());
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);

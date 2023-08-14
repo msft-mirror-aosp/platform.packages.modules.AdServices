@@ -314,7 +314,7 @@ public class FrequencyCapFilteringE2ETest {
                                         .setResponseBody("{}")
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
-                .fetchPayload(any(Uri.class), any(ImmutableSet.class));
+                .fetchPayload(any(Uri.class), any(ImmutableSet.class), any(DevContext.class));
         doReturn(
                         // Scoring signals
                         Futures.immediateFuture(
@@ -322,7 +322,7 @@ public class FrequencyCapFilteringE2ETest {
                                         .setResponseBody("{}")
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
-                .fetchPayload(any(Uri.class));
+                .fetchPayload(any(Uri.class), any(DevContext.class));
         doReturn(
                         // Bidding logic
                         Futures.immediateFuture(

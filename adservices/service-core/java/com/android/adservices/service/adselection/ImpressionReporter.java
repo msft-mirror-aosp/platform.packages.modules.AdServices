@@ -193,7 +193,8 @@ public class ImpressionReporter {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
     }
@@ -399,7 +400,8 @@ public class ImpressionReporter {
             // We don't need to verify enrollment since that is done during request filtering
             // Perform reporting if no exception was thrown
             sellerFuture =
-                    mAdServicesHttpsClient.getAndReadNothing(reportingUris.sellerReportingUri);
+                    mAdServicesHttpsClient.getAndReadNothing(
+                            reportingUris.sellerReportingUri, mDevContext);
         } catch (IllegalArgumentException e) {
             sLogger.d(e, "Seller reporting URI validation failed!");
             sellerFuture = Futures.immediateFuture(null);
@@ -427,7 +429,8 @@ public class ImpressionReporter {
                 }
                 // Perform reporting if no exception was thrown
                 buyerFuture =
-                        mAdServicesHttpsClient.getAndReadNothing(reportingUris.buyerReportingUri);
+                        mAdServicesHttpsClient.getAndReadNothing(
+                                reportingUris.buyerReportingUri, mDevContext);
             } catch (IllegalArgumentException
                     | FledgeAuthorizationFilter.AdTechNotAllowedException e) {
                 sLogger.d(e, "Buyer reporting URI validation failed!");
@@ -508,6 +511,7 @@ public class ImpressionReporter {
                 AdServicesHttpClientRequest.builder()
                         .setUri(ctx.mAdSelectionConfig.getDecisionLogicUri())
                         .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .setDevContext(mDevContext)
                         .build();
 
         return mJsFetcher
@@ -536,6 +540,7 @@ public class ImpressionReporter {
                 AdServicesHttpClientRequest.builder()
                         .setUri(ctx.mDBAdSelectionEntry.getBiddingLogicUri())
                         .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .setDevContext(mDevContext)
                         .build();
 
         return mJsFetcher.getBuyerReportingLogic(

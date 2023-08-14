@@ -134,7 +134,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         adServicesHttpsClient,
-                        flags);
+                        flags,
+                        devContext);
     }
 
     @VisibleForTesting

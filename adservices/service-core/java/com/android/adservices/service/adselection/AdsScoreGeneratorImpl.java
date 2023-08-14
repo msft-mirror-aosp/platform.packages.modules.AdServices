@@ -91,6 +91,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @NonNull private final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     @NonNull private final JsFetcher mJsFetcher;
     @NonNull private final boolean mDebugReportingEnabled;
+    @NonNull private final DevContext mDevContext;
 
     public AdsScoreGeneratorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
@@ -119,8 +120,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         mLightweightExecutorService = lightweightExecutor;
         mBackgroundExecutorService = backgroundExecutor;
         mScheduledExecutor = scheduledExecutor;
+        mDevContext = devContext;
         mAdSelectionDevOverridesHelper =
-                new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
+                new AdSelectionDevOverridesHelper(mDevContext, adSelectionEntryDao);
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mJsFetcher =
@@ -128,7 +130,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
         mDebugReportingEnabled = debugReporting.isEnabled();
     }
 
@@ -154,6 +157,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 AdServicesHttpClientRequest.builder()
                         .setUri(adSelectionConfig.getDecisionLogicUri())
                         .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .setDevContext(mDevContext)
                         .build();
 
         ListenableFuture<String> scoreAdJs =
@@ -358,7 +362,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 sLogger.v("Fetching trusted scoring signals from server");
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
-                                                trustedScoringSignalsUri),
+                                                trustedScoringSignalsUri, mDevContext),
                                         s ->
                                                 s == null
                                                         ? null

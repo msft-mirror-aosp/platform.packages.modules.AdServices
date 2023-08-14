@@ -161,7 +161,8 @@ public class TrustedBiddingDataFetcher {
         return FluentFuture.from(
                         mAdServicesHttpsClient.fetchPayload(
                                 trustedBiddingUriWithKeys,
-                                ImmutableSet.of(DATA_VERSION_HEADER_KEY)))
+                                ImmutableSet.of(DATA_VERSION_HEADER_KEY),
+                                mDevContext))
                 .catching(
                         Exception.class,
                         e -> {
