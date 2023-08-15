@@ -228,6 +228,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Mock private AdServicesHttpsClient mMockHttpClient;
     @Mock private AdCounterKeyCopier mAdCounterKeyCopierMock;
     @Mock private FrequencyCapAdDataValidator mFrequencyCapAdDataValidatorMock;
+    @Mock private AdCounterHistogramUpdater mAdCounterHistogramUpdaterMock;
     @Mock private DebugReporting mDebugReportingMock;
     @Mock private DebugReportSenderStrategy mDebugReportSenderMock;
 
@@ -276,6 +277,8 @@ public class OnDeviceAdSelectionRunnerTest {
     private final AdCounterKeyCopier mAdCounterKeyCopier = new AdCounterKeyCopierNoOpImpl();
     private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator =
             new FrequencyCapAdDataValidatorNoOpImpl();
+    private final AdCounterHistogramUpdater mAdCounterHistogramUpdater =
+            new AdCounterHistogramUpdaterNoOpImpl();
 
     @Mock AdSelectionServiceFilter mAdSelectionServiceFilterMock;
 
@@ -401,6 +404,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         // Populating the Custom Audience DB
@@ -536,6 +540,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         // Populating the Custom Audience DB
@@ -678,6 +683,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         new AdFiltererNoOpImpl(),
                         new AdCounterKeyCopierNoOpImpl(),
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         // Populating the Custom Audience DB
@@ -869,6 +875,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -965,6 +972,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1074,6 +1082,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1147,6 +1156,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         AdSelectionTestCallback resultsCallback =
@@ -1211,6 +1221,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         AdSelectionTestCallback resultsCallback =
@@ -1272,6 +1283,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         AdSelectionTestCallback resultsCallback =
@@ -1324,6 +1336,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1467,6 +1480,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1581,6 +1595,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1674,6 +1689,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1772,6 +1788,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1873,6 +1890,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -1995,6 +2013,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2107,6 +2126,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2248,6 +2268,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2333,6 +2354,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2389,6 +2411,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                 mPerBuyerBiddingRunnerMock,
                                 mAdFilterer,
                                 mAdCounterKeyCopier,
+                                mAdCounterHistogramUpdater,
                                 mFrequencyCapAdDataValidator,
                                 mDebugReportingMock);
         Throwable throwable =
@@ -2420,6 +2443,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mMockAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         List<DBAdData> adsToNotFilter =
@@ -2499,6 +2523,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mMockAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
         AppInstallFilters appFilters =
@@ -2571,6 +2596,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2623,6 +2649,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2693,6 +2720,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2758,6 +2786,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2826,6 +2855,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mMockAdFilterer,
                         mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidator,
                         mDebugReportingMock);
 
@@ -2887,6 +2917,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mPerBuyerBiddingRunnerMock,
                         mAdFilterer,
                         mAdCounterKeyCopierMock,
+                        mAdCounterHistogramUpdater,
                         mFrequencyCapAdDataValidatorMock,
                         mDebugReportingMock);
 
@@ -2945,6 +2976,144 @@ public class OnDeviceAdSelectionRunnerTest {
         assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
         assertThat(histogramInfo.getAdCounterKeys())
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
+    }
+
+    @Test
+    public void testAdCounterHistogramIsUpdatedWithWinEvent() throws Exception {
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mAdFilterer,
+                        mAdCounterKeyCopierMock,
+                        mAdCounterHistogramUpdaterMock,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        DBAdSelection.Builder dbAdSelectionBuilder =
+                new DBAdSelection.Builder()
+                        .setWinningAdBid(
+                                mAdScoringOutcomeForBuyer1.getAdWithScore().getAdWithBid().getBid())
+                        .setCustomAudienceSignals(
+                                mAdScoringOutcomeForBuyer1.getCustomAudienceSignals())
+                        .setWinningAdRenderUri(
+                                mAdScoringOutcomeForBuyer1
+                                        .getAdWithScore()
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri())
+                        .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
+                        .setBuyerContextualSignals("{}")
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys());
+
+        // Note that regardless of the input, this copier stubs the actual output of the auction
+        doReturn(dbAdSelectionBuilder)
+                .when(mAdCounterKeyCopierMock)
+                .copyAdCounterKeys(any(DBAdSelection.Builder.class), any(AdScoringOutcome.class));
+
+        AdSelectionTestCallback callback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        assertThat(callback.mIsSuccess).isTrue();
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        verify(mAdCounterKeyCopierMock)
+                .copyAdCounterKeys(any(DBAdSelection.Builder.class), any(AdScoringOutcome.class));
+
+        verify(mAdCounterHistogramUpdaterMock).updateWinHistogram(eq(dbAdSelectionBuilder.build()));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        callback.mAdSelectionResponse.getAdSelectionId()));
+    }
+
+    @Test
+    public void testFailedAdCounterHistogramWinUpdateDoesNotStopAdSelection() throws Exception {
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContextSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mAdFilterer,
+                        mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdaterMock,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        doThrow(new RuntimeException("Failing ad counter histogram update for test"))
+                .when(mAdCounterHistogramUpdaterMock)
+                .updateWinHistogram(any());
+
+        AdSelectionTestCallback callback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        assertThat(callback.mIsSuccess).isTrue();
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        verify(mAdCounterHistogramUpdaterMock).updateWinHistogram(any());
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExist(
+                        callback.mAdSelectionResponse.getAdSelectionId()));
     }
 
     private void verifyErrorMessageIsCorrect(
