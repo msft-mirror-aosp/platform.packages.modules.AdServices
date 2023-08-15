@@ -31,7 +31,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -85,25 +84,24 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                 mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.PERSISTENT);
                 setInitialSystemProperties(testName);
                 setInitialFlags(testName);
-                List<Throwable> errors = new ArrayList<>();
+                List<Throwable> cleanUpErrors = new ArrayList<>();
                 Throwable testError = null;
                 try {
                     base.evaluate();
                 } catch (Throwable t) {
-                    errors.add(t);
                     testError = t;
                 } finally {
-                    runSafely(errors, () -> resetFlags(testName));
-                    runSafely(errors, () -> resetSystemProperties(testName));
+                    runSafely(cleanUpErrors, () -> resetFlags(testName));
+                    runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
                     runSafely(
-                            errors, () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.NONE));
+                            cleanUpErrors,
+                            () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.NONE));
                 }
-                if (testError instanceof AssumptionViolatedException) {
+                // TODO(b/294423183): ideally it should throw an exception if cleanUpErrors is not
+                // empty, but it's better to wait until this class is unit tested to do so (for now,
+                // it's just logging it)
+                if (testError != null) {
                     throw testError;
-                }
-                if (!errors.isEmpty()) {
-                    throw new RuntimeException(
-                            errors.size() + " errors finalizing infra: " + errors);
                 }
             }
         };
