@@ -212,7 +212,7 @@
     <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{På / # app}other{På / # apper}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"På"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Av"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesseemner er basert på appene du har brukt nylig, og de brukes av apper for å vise deg personlig tilpassede annonser.\n\nDu kan blokkere emner du ikke vil at skal deles med apper. Android sletter også regelmessig emner automatisk"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Interesseemner er basert på appene du har brukt nylig, og de brukes av apper for å vise deg personlig tilpassede annonser.\n\nDu kan blokkere emner du ikke vil at skal deles med apper. Android sletter også regelmessig emner automatisk."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Tillat annonseemner"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Annonseemner du har blokkert"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Tilbakestill alle annonseemner"</string>
