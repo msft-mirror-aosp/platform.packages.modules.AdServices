@@ -2261,6 +2261,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeDataVersionHeaderEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED,
+                /* defaultValue */ FLEDGE_DATA_VERSION_HEADER_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3887,6 +3895,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED
                         + " = "
                         + getFledgeCpcBillingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
+                        + " = "
+                        + getFledgeDataVersionHeaderEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED
