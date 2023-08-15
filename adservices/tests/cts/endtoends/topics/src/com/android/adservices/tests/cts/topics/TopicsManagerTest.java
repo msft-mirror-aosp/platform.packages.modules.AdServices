@@ -34,6 +34,7 @@ import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesS
 import com.android.adservices.common.AdServicesSupportedRule.RequiresAdServicesSupportedOrNot;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -369,7 +370,7 @@ public class TopicsManagerTest {
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
         // Top 5 classifications for empty string with v4 model are:
-        // S-: [10420, 10189, 10301, 10230, 10276].
+        // S-: [10420, 10189, 10301, 10230, 10010].
         // T+: [10166, 10010, 10301, 10230, 10184].
         // V4 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
@@ -378,7 +379,7 @@ public class TopicsManagerTest {
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10276);
+            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
