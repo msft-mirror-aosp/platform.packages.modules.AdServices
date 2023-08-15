@@ -31,8 +31,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -98,13 +99,16 @@ public class TopicsManagerTest {
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
 
-    // Skip the test if it runs on unsupported platforms.
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevelSupportRule = SdkLevelSupportRule.isAtLeastR();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
     // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.forTopicsE2ETests();
 
     @Before
@@ -207,12 +211,10 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "TODO(b/295378824) re-enable tests on S once it is fixed")
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        // Bug: 295378824 to re-enable the tests on S once it is fixed.
-        if (SdkLevel.isAtLeastT()) {
-            testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
-        }
+        testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
@@ -286,12 +288,10 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "TODO(b/295378824) re-enable tests on S once it is fixed")
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        // Bug: 295378824 to re-enable the tests on S once it is fixed.
-        if (SdkLevel.isAtLeastT()) {
-            testTopicsManager_runOnDeviceClassifier(true);
-        }
+        testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
@@ -367,12 +367,10 @@ public class TopicsManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "TODO(b/295378824) re-enable tests on S once it is fixed")
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        // Bug: 295378824 to re-enable the tests on S once it is fixed.
-        if (SdkLevel.isAtLeastT()) {
-            testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
-        }
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
     }
 
     @Test
