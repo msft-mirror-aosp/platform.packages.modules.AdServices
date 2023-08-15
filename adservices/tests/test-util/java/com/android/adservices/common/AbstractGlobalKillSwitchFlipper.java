@@ -35,9 +35,11 @@ abstract class AbstractGlobalKillSwitchFlipper extends AbstractFlagsRouletteRunn
 
     public static final String FLAG = KEY_GLOBAL_KILL_SWITCH;
 
-    private static final Logger LOG = new Logger(new AndroidLogger(GlobalKillSwitchFlipper.class));
     private static final String[] FLAGS = {FLAG};
     private static final String PROP_DISABLED = "debug.adservices.GlobalKillSwitchFlipper.disabled";
+
+    private static final Logger sLogger =
+            new Logger(AndroidLogger.getInstance(), GlobalKillSwitchFlipper.class);
 
     protected AbstractGlobalKillSwitchFlipper(Class<?> testClass) throws InitializationError {
         super(testClass, new DeviceConfigFlagsManager(DeviceConfig.NAMESPACE_ADSERVICES));
@@ -50,7 +52,7 @@ abstract class AbstractGlobalKillSwitchFlipper extends AbstractFlagsRouletteRunn
 
     @Override
     protected Logger log() {
-        return LOG;
+        return sLogger;
     }
 
     @Override
@@ -70,7 +72,7 @@ abstract class AbstractGlobalKillSwitchFlipper extends AbstractFlagsRouletteRunn
         if (requiredFlag == null) {
             return null;
         }
-        LOG.v("getRequiredFlags(): returning [%s] for %s", requiredFlag, method.getName());
+        sLogger.v("getRequiredFlags(): returning [%s] for %s", requiredFlag, method.getName());
         return new FlagState[] {requiredFlag};
     }
 

@@ -31,7 +31,8 @@ import java.util.Objects;
  */
 final class TestDeviceHelper {
 
-    private static final Logger sLogger = new Logger(new ConsoleLogger(TestDeviceHelper.class));
+    private static final Logger sLogger =
+            new Logger(ConsoleLogger.getInstance(), TestDeviceHelper.class);
 
     private static final ThreadLocal<ITestDevice> sDevice = new ThreadLocal<>();
 

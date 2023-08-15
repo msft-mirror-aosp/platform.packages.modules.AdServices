@@ -34,9 +34,10 @@ import org.junit.runners.model.InitializationError;
  */
 public abstract class DeviceConfigFlagsRouletteRunner extends AbstractFlagsRouletteRunner {
 
-    private static final Logger LOG =
-            new Logger(new AndroidLogger(DeviceConfigFlagsRouletteRunner.class));
     private static final String PROP_DISABLED = "debug.DeviceConfigFlagsRouletteRunner.disabled";
+
+    private static final Logger sLogger =
+            new Logger(AndroidLogger.getInstance(), DeviceConfigFlagsRouletteRunner.class);
 
     /**
      * Subclass should provide a constructor that takes just {@code Class<?> testClass} and call
@@ -49,7 +50,7 @@ public abstract class DeviceConfigFlagsRouletteRunner extends AbstractFlagsRoule
 
     @Override
     protected Logger log() {
-        return LOG;
+        return sLogger;
     }
 
     @Override

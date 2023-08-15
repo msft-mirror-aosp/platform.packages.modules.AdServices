@@ -21,10 +21,8 @@ import com.android.tradefed.device.ITestDevice;
 /** See {@link AbstractSdkLevelSupportedRule}. */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private static final ConsoleLogger sLogger = new ConsoleLogger(SdkLevelSupportRule.class);
-
     private SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(sLogger, level);
+        super(ConsoleLogger.getInstance(), level);
     }
 
     public void setDevice(ITestDevice device) {

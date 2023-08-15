@@ -60,8 +60,6 @@ import java.lang.annotation.Annotation;
  */
 public final class GlobalKillSwitchRule extends AbstractSupportedFeatureRule {
 
-    private static final AndroidLogger sLogger = new AndroidLogger(GlobalKillSwitchRule.class);
-
     /** Creates a rule using {@link Mode#NOT_SUPPORTED_BY_DEFAULT}. */
     public GlobalKillSwitchRule() {
         this(Mode.SUPPORTED_BY_DEFAULT);
@@ -69,7 +67,7 @@ public final class GlobalKillSwitchRule extends AbstractSupportedFeatureRule {
 
     /** Creates a rule with the given mode. */
     public GlobalKillSwitchRule(Mode mode) {
-        super(sLogger, mode);
+        super(AndroidLogger.getInstance(), mode);
     }
 
     @Override

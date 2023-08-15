@@ -40,6 +40,8 @@ import java.util.Objects;
  */
 public abstract class AbstractSupportedFeatureRule implements TestRule {
 
+    private static final String TAG = "SupportedFeatureRule";
+
     /** Defines the rule behavior. */
     public enum Mode {
         /**
@@ -84,7 +86,7 @@ public abstract class AbstractSupportedFeatureRule implements TestRule {
     /** Default constructor. */
     public AbstractSupportedFeatureRule(RealLogger logger, Mode mode) {
         mMode = Objects.requireNonNull(mode);
-        mLog = new Logger(logger);
+        mLog = new Logger(logger, TAG);
         mLog.d("Constructor: logger=%s, mode=%s", logger, mode);
     }
 

@@ -33,10 +33,8 @@ public final class AdServicesSupportHelper {
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "feature_android.hardware.ram.low";
 
-    private static final ConsoleLogger sConsoleLogger =
-            new ConsoleLogger(AdServicesDeviceSupportedRule.class);
-
-    private static final Logger sLogger = new Logger(sConsoleLogger);
+    private static final Logger sLogger =
+            new Logger(ConsoleLogger.getInstance(), AdServicesDeviceSupportedRule.class);
 
     public static boolean isDebuggable(ITestDevice device) throws DeviceNotAvailableException {
         return "1".equals(device.getProperty("ro.debuggable"));
