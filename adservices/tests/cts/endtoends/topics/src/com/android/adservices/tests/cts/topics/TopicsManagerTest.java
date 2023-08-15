@@ -31,7 +31,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -211,7 +210,6 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "TODO(b/295378824) re-enable tests on S once it is fixed")
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
@@ -288,7 +286,6 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "TODO(b/295378824) re-enable tests on S once it is fixed")
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
@@ -350,7 +347,7 @@ public class TopicsManagerTest {
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
         // Top 5 classifications for empty string with v4 model are:
-        // S-: [10420, 10189, 10301, 10230, 10276].
+        // S-: [10420, 10189, 10301, 10230, 10010].
         // T+: [10166, 10010, 10301, 10230, 10184].
         // V4 model uses package name as part of input, which differs between
         // versions for back-compat, changing the returned topics for each version.
@@ -359,7 +356,7 @@ public class TopicsManagerTest {
         // Returned topic is one of the 5 classification topics of the test app.
         List<Integer> expectedTopTopicIds;
         if (ADSERVICES_PACKAGE_NAME.contains("ext.services")) {
-            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10276);
+            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10010);
         } else {
             expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
         }
@@ -367,7 +364,6 @@ public class TopicsManagerTest {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "TODO(b/295378824) re-enable tests on S once it is fixed")
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
