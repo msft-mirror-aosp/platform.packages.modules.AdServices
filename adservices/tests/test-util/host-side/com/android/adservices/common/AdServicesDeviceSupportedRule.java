@@ -20,27 +20,27 @@ import com.android.tradefed.device.ITestDevice;
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
-    private ITestDevice mDevice;
-
     /** Default constructor. */
     public AdServicesDeviceSupportedRule() {
         super(new ConsoleLogger(AdServicesDeviceSupportedRule.class));
     }
 
     public void setDevice(ITestDevice device) {
-        mDevice = device;
+        TestDeviceHelper.setTestDevice(device);
     }
 
     @Override
     public boolean isAdServicesSupportedOnDevice() throws Exception {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported(mDevice);
+        boolean isSupported =
+                AdServicesSupportHelper.isDeviceSupported(TestDeviceHelper.getTestDevice());
         mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }
 
     @Override
     public boolean isLowRamDevice() throws Exception {
-        boolean isLowRamDevice = AdServicesSupportHelper.isLowRamDevice(mDevice);
+        boolean isLowRamDevice =
+                AdServicesSupportHelper.isLowRamDevice(TestDeviceHelper.getTestDevice());
         mLog.v("isLowRamDevice(): %b", isLowRamDevice);
         return isLowRamDevice;
     }

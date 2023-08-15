@@ -74,7 +74,7 @@ public final class CustomAudienceManagerTest {
     // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
     // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)
