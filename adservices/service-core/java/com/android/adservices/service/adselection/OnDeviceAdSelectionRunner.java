@@ -90,6 +90,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
             final int callerUid) {
@@ -106,6 +107,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 debugReporting,
                 callerUid);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -178,6 +180,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting) {
         super(
@@ -195,6 +198,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
                 debugReporting);
 
