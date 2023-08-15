@@ -18,6 +18,7 @@ package com.android.adservices.common;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.provider.DeviceConfig;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -83,6 +84,12 @@ public final class DeviceConfigHelper {
         String value = mode.name().toLowerCase();
         Log.v(TAG, "setSyncDisabledMode(" + value + ")");
         ShellUtils.runShellCommand("device_config set_sync_disabled_for_test %s", value);
+    }
+
+    public void dumpFlags(StringBuilder dump) {
+        String flags = ShellUtils.runShellCommand("device_config list %s", mNamespace);
+        dump.append(
+                TextUtils.isEmpty(flags) ? "(no flags on namespace " + mNamespace + ")" : flags);
     }
 
     // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
