@@ -373,7 +373,7 @@ package android.adservices.customaudience {
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
-  public class FetchAndJoinCustomAudienceRequest {
+  public final class FetchAndJoinCustomAudienceRequest {
     method @Nullable public java.time.Instant getActivationTime();
     method @Nullable public java.time.Instant getExpirationTime();
     method @NonNull public android.net.Uri getFetchUri();
