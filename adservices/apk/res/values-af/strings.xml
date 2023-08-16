@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Gee ’n program toegang tot AdService se aktiveringstaat-API."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Toegang tot AdServicesManager se API’s"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Gee ’n app toegang tot AdServicesManager se API’s."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android-stelsel"</string>
+    <string name="app_label" msgid="5844694701336604490">"Advertensieprivaatheid"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sluit aan by Android se advertensieprivaatheidbeta"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android verken meer private maniere waarop programme vir jou advertensies kan wys"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Kom meer te wete"</string>
