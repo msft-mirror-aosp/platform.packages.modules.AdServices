@@ -18,8 +18,11 @@ package com.android.adservices.common;
 import com.android.adservices.common.Logger.RealLogger;
 
 import org.junit.AssumptionViolatedException;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-import java.lang.annotation.Annotation;
+import java.util.Objects;
 
 // NOTE: this class is used by device and host side, so it cannot have any Android dependency
 /**
@@ -38,37 +41,14 @@ import java.lang.annotation.Annotation;
  * supports {@code AdServices} - if the device doesn't support it, the test will be skipped (with an
  * {@link AssumptionViolatedException}).
  *
- * <p>The rule can also be used to make sure APIs throw {@link UnsupportedOperationException} when
- * the device doesn't support {@code AdServices}; in that case, you annotate the test method with
- * {@link RequiresDeviceNotSupported}, then simply call the API that should throw the exception on
- * its body - the rule will make sure the exception is thrown (and fail the test if it isn't).
- * Example:
+ * <p>This rule can also be used in the opposite case, i.e., to only run a test when the device
+ * doesn't support {@code AdServices} (and skip it when it does), in which case the test must be
+ * annotated with {@link RequiresDeviceNotSupported}.
  *
- * <pre class="prettyprint">
- * &#064;Test
- * &#064;RequiresDeviceNotSupported
- * public void testFoo_notSupported() {
- *    mObjectUnderTest.foo();
- * }
- * </pre>
- *
- * <p><b>NOTE: </b>this rule will mostly be used to skip test on unsupported platforms - if you want
- * to test that your API behaves correctly whether or not the global kill switch is disabled, you
- * most likely should use {@link GlobalKillSwitchRule} instead. In fact, there might be cases where
- * both rules are used, in which case it's recommended to run this one first (so the test is skipped
- * right away when not supported). Example:
- *
- * <pre class="prettyprint">
- * &#064;Rule(order = 0)
- * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
- *     new AdServicesDeviceSupportedRule();
- *
- * &#064;Rule(order = 1)
- * public final GlobalKillSwitchRule globalKillSwitchRule = new GlobalKillSwitchRule();
- * </pre>
- *
- * <p>Generally speaking, you should organize the rules using the order of feature dependency. For
- * example, if the test also requires a given SDK level:
+ * <p>When used with another similar rules, you should organize them using the order of feature
+ * dependency. For example, if the test also requires a given SDK level, you should check use that
+ * rule first, as the device's SDK level is immutable (while whether or not {@code AdServices}
+ * supports a device depends on the device). Example:
  *
  * <pre class="prettyprint">
  * &#064;Rule(order = 0)
@@ -77,54 +57,54 @@ import java.lang.annotation.Annotation;
  * &#064;Rule(order = 1)
  * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
  *     new AdServicesDeviceSupportedRule();
- *
- * &#064;Rule(order = 2)
- * public final GlobalKillSwitchRule globalKillSwitchRule = new GlobalKillSwitchRule();
  * </pre>
  */
-public abstract class AbstractAdServicesDeviceSupportedRule extends AbstractSupportedFeatureRule {
+public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule {
 
-    protected AbstractAdServicesDeviceSupportedRule(RealLogger logger, Mode mode) {
-        super(logger, mode);
+    protected final Logger mLog;
+
+    /** Default constructor. */
+    public AbstractAdServicesDeviceSupportedRule(RealLogger logger) {
+        mLog = new Logger(Objects.requireNonNull(logger));
+        mLog.d("Constructor: logger=%s", logger);
     }
 
-    @Override
-    protected void throwFeatureNotSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device doesn't support AdServices");
-    }
+    /** Checks whether {@code AdServices} is supported by the device. */
+    public abstract boolean isAdServicesSupportedOnDevice() throws Exception;
 
     @Override
-    protected void throwFeatureSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device supports AdServices");
-    }
+    public Statement apply(Statement base, Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                String testName = description.getDisplayName();
+                boolean isDeviceSupported = isAdServicesSupportedOnDevice();
+                RequiresDeviceSupported requiresSupported =
+                        description.getAnnotation(RequiresDeviceSupported.class);
+                RequiresDeviceNotSupported requiresNotSupported =
+                        description.getAnnotation(RequiresDeviceNotSupported.class);
+                mLog.d(
+                        "apply(): testName=%s, isDeviceSupported=%b, requiresSupported=%s,"
+                                + " requiresNotSupported=%s",
+                        testName, isDeviceSupported, requiresSupported, requiresNotSupported);
 
-    @Override
-    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
-        throw new AssertionError(
-                "test should have thrown an UnsupportedOperationException, but didn't throw any");
-    }
-
-    @Override
-    protected void assertUnsupportedTestThrewRightException(Throwable thrown) {
-        if (!(thrown instanceof UnsupportedOperationException)
-                && (thrown.getCause() instanceof UnsupportedOperationException)) {
-            return;
-        }
-        super.assertUnsupportedTestThrewRightException(thrown);
-    }
-
-    @Override
-    protected boolean isFeatureSupportedAnnotation(Annotation annotation) {
-        return annotation instanceof RequiresDeviceSupported;
-    }
-
-    @Override
-    protected boolean isFeatureNotSupportedAnnotation(Annotation annotation) {
-        return annotation instanceof RequiresDeviceNotSupported;
-    }
-
-    @Override
-    protected boolean isFeatureSupportedOrNotAnnotation(Annotation annotation) {
-        return annotation instanceof RequiresDeviceSupportedOrNot;
+                if (requiresSupported != null && requiresNotSupported != null) {
+                    throw new IllegalArgumentException(
+                            "Test annotated with both @RequiresDeviceSupported and"
+                                    + " @RequiresDeviceNotSupported");
+                }
+                if (!isDeviceSupported && requiresSupported != null) {
+                    throw new AssumptionViolatedException(
+                            "Test annotated with @RequiresDeviceSupported and device doesn't"
+                                    + " support it");
+                }
+                if (isDeviceSupported && requiresNotSupported != null) {
+                    throw new AssumptionViolatedException(
+                            "Test annotated with @RequiresDeviceNotSupported and device doesn't"
+                                    + " support it");
+                }
+                base.evaluate();
+            }
+        };
     }
 }
