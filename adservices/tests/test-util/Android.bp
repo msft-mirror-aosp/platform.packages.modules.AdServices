@@ -66,6 +66,7 @@ java_library_host {
     name: "adservices-host-side-test-utility",
     srcs: [
         "host-side/**/*.java",
+        ":adservices-service-core-flags-constants-sources",
         // TODO(b/284971005): move files below to pure-java and use filegroup
         "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
         "java/com/android/adservices/common/RequiresDeviceSupported.java",
