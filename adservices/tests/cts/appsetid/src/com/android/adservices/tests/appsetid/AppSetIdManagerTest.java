@@ -25,6 +25,7 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -56,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(AndroidJUnit4.class)
 public class AppSetIdManagerTest {
+    private static final String TAG = AppSetIdManagerTest.class.getSimpleName();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
@@ -120,6 +122,7 @@ public class AppSetIdManagerTest {
 
                     @Override
                     public void onError(Exception error) {
+                        Log.e(TAG, "Failed to get AppSet Id!", error);
                         Assert.fail();
                     }
                 };
