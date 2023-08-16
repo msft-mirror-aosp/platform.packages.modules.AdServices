@@ -32,7 +32,6 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -76,7 +75,6 @@ public class NotificationLandingPage {
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
-        restartAdservices();
     }
 
     @Test
@@ -140,11 +138,6 @@ public class NotificationLandingPage {
         ShellUtils.runShellCommand(
                 "device_config put adservices is_eea_device_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices is_eea_device true");
-    }
-
-    public static void restartAdservices() {
-        final String packageName = AdservicesTestHelper.getAdServicesPackageName(sContext);
-        ShellUtils.runShellCommand("am force-stop " + packageName);
     }
 
     public String getString(int resourceId) {
