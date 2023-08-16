@@ -1324,18 +1324,18 @@ public interface Flags {
     @interface ConsentSourceOfTruth {}
 
     /** Write and read consent from system server only. */
-    int SYSTEM_SERVER_ONLY = 0;
+    int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
     /** Write and read consent from PPAPI only */
-    int PPAPI_ONLY = 1;
+    int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
-    int PPAPI_AND_SYSTEM_SERVER = 2;
+    int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
      * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
      * running on S- for all consent requests and on T+ once after OTA.
      */
-    int APPSEARCH_ONLY = 3;
+    int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
      * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
@@ -2011,7 +2011,7 @@ public interface Flags {
      * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
      * Negative Value means skipping the rate limiting checking.
      */
-    float ADID_REQUEST_PERMITS_PER_SECOND = 25;
+    float ADID_REQUEST_PERMITS_PER_SECOND = FlagsConstants.ADID_REQUEST_PERMITS_PER_SECOND;
 
     /**
      * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
