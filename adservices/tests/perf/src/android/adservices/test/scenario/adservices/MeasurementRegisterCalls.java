@@ -130,6 +130,7 @@ public class MeasurementRegisterCalls {
         executeDeleteRegistrations();
         executeRegisterSource();
         executeRegisterTrigger();
+        executeAttribution();
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
@@ -614,6 +615,13 @@ public class MeasurementRegisterCalls {
                 Boolean.toString(false),
                 /* makeDefault */ false);
 
+        // Set aggregate encryption key coordinator origin list.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_origin_list",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN,
+                /* makeDefault */ false);
+
         // Set flags for back-compat AdServices functionality for Android S-.
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setFlags();
@@ -705,6 +713,13 @@ public class MeasurementRegisterCalls {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "measurement_enforce_enrollment_origin_match",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset aggregate encryption key coordinator origin list.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_origin_list",
                 "null",
                 /* makeDefault */ false);
 
