@@ -22,14 +22,9 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
 
     private ITestDevice mDevice;
 
-    /** Creates a rule using {@link Mode#SUPPORTED_BY_DEFAULT}. */
+    /** Default constructor. */
     public AdServicesDeviceSupportedRule() {
-        this(Mode.SUPPORTED_BY_DEFAULT);
-    }
-
-    /** Creates a rule with the given mode. */
-    public AdServicesDeviceSupportedRule(Mode mode) {
-        super(new ConsoleLogger(AdServicesDeviceSupportedRule.class), mode);
+        super(new ConsoleLogger(AdServicesDeviceSupportedRule.class));
     }
 
     public void setDevice(ITestDevice device) {
@@ -37,9 +32,9 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
     }
 
     @Override
-    public boolean isFeatureSupported() throws Exception {
+    public boolean isAdServicesSupportedOnDevice() throws Exception {
         boolean isSupported = AdServicesSupportHelper.isDeviceSupported(mDevice);
-        mLog.v("isFeatureSupported(): %b", isSupported);
+        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }
 }
