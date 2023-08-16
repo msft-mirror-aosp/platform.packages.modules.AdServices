@@ -71,7 +71,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
@@ -111,9 +111,6 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {}
-
-    @Override
-    public void logLatencyFromSystemServerToApp(String method, int latency) {}
 
     @Override
     public IBinder getAdServicesManager() {
