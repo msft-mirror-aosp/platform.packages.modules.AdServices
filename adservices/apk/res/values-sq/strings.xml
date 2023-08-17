@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Lejon një aplikacion të ketë qasje tek API-ja e gjendjes së aktivizimit të AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Qasja te API-të e AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Lejon një aplikacion të qaset te API-të e AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistemi Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privatësia e reklamave"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bashkohu në versionin beta të privatësisë së reklamave të Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android po eksploron mënyra më private për aplikacionet për të të shfaqur reklama"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Mëso më shumë"</string>
@@ -224,7 +224,7 @@
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Zakonisht aplikacionet që ti përdor kujtojnë gjërat që të interesojnë për të personalizuar përvojën tënde. Gjithashtu, aplikacionet mund të ruajnë informacione me Android rreth temave të tua.\n\nPër shembull, nëse ti përdor një aplikacion për trajnim për maratonë, aplikacioni mund të vendosë që të interesojnë atlete vrapimi. Më vonë, nëse përdor një aplikacion tjetër, ai aplikacion mund të të shfaqë një reklamë për atlete vrapimi me sugjerim të aplikacionit të parë.\n\nAndroid fshin automatikisht të dhëna të sugjeruara nga aplikacionet rregullisht. Një aplikacion që ti e përdor sërish mund të rishfaqet në listë. Ose mund të bllokosh një aplikacion që mos të të sugjerojë reklama.\n\nNë aplikacionet e tua, një reklamë mund të jetë e personalizuar në varësi të këtij cilësimi, cilësimit të temave të reklamave, cilësimeve të tua për ID-në e reklamimit dhe nëse aplikacioni që ti po përdor i personalizon reklamat."</string>
     <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Tani ofrohet veçori e re e privatësisë së reklamave"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Mes aplikacioneve ndahen vetëm informacione shumë të kufizuara për të ndihmuar në performancën e reklamave"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Ne po prezantojmë një veçori të re të privatësisë së reklamave të quajtur matja e reklamave. Android ndan vetëm informacione shumë të kufizuara mes aplikacioneve, si p.sh. kur të shfaqet një reklamë, për t\'i ndihmuar aplikacionet të matin performancën e reklamave."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Ne po prezantojmë një veçori të re të privatësisë së reklamave të quajtur \"Matja e reklamave\". Android ndan vetëm informacione shumë të kufizuara mes aplikacioneve, si p.sh. kur të shfaqet një reklamë, për t\'i ndihmuar aplikacionet të matin performancën e reklamave."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Mund të bësh ndryshime te cilësimet e privatësisë së reklamave."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikacionet që përdor ti mund t\'i kërkojnë informacione Android për t\'i ndihmuar të matin performancën e reklamave të tyre. Android i lejon aplikacionet të mbledhin vetëm lloje të kufizuara të dhënash."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrim me ngjyra i simboleve që përfaqësojnë tema interesi, si p.sh. muzika, lajmet dhe sportet"</string>
@@ -604,7 +604,7 @@
     <string name="topic10371" msgid="8229818210867472466">"Kimi"</string>
     <string name="topic10372" msgid="6400467418954574231">"Ekologjia dhe mjedisi"</string>
     <string name="topic10373" msgid="6990757247198163741">"Gjeologji"</string>
-    <string name="topic10374" msgid="8057983193031950119">"Nxënie automatike dhe inteligjencë artificiale"</string>
+    <string name="topic10374" msgid="8057983193031950119">"Të mësuarit automatik dhe inteligjenca artificiale"</string>
     <string name="topic10375" msgid="8511185098682306025">"Matematikë"</string>
     <string name="topic10376" msgid="6387800251638760737">"Fizikë"</string>
     <string name="topic10377" msgid="7834619927563362042">"Robotikë"</string>
