@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.signals.updateprocessors;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,12 +24,11 @@ import java.util.stream.Collectors;
 /** Selector class for getting the appropriate update processor */
 public class UpdateProcessorSelector {
 
-    private static final List<UpdateProcessor> PROCESSORS = new ArrayList<>();
+    private static final List<UpdateProcessor> PROCESSORS =
+            Arrays.asList(new Append(), new Put(), new PutIfNotPresent(), new Remove());
     private final Map<String, UpdateProcessor> mProcessorMap;
 
     public UpdateProcessorSelector() {
-        // Add UpdateProcessor instances to the list here
-
         mProcessorMap =
                 PROCESSORS.stream().collect(Collectors.toMap(UpdateProcessor::getName, p -> p));
     }

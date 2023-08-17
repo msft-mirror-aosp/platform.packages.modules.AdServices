@@ -36,7 +36,8 @@ public interface UpdateProcessor {
 
     /**
      * @param updates A JSONObject or JSONArray describing the updates to be made by this processor.
-     * @param current A map from keys to signals currently under those keys.
+     * @param current A map from keys to signals currently under those keys. Note that byte buffers
+     *     must have been generated with .wrap().
      * @return An output object describing: 1. Which keys this processor has modified or could have
      *     modified. 2. Which signals should be removed. 3. Which signals should be added.
      * @throws JSONException In the event the passed in JSON is invalid
