@@ -19,7 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.getDataVersion;
+import static com.android.adservices.service.adselection.DataVersionFetcher.getBuyerDataVersion;
 
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
@@ -538,7 +538,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri) {
         Objects.requireNonNull(trustedBiddingDataByBaseUri);
         try {
-            int dataVersion = getDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri);
+            int dataVersion = getBuyerDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri);
             return BuyerContextualSignals.builder()
                     .setDataVersion(dataVersion)
                     .build()
@@ -555,7 +555,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         BuyerContextualSignals.Builder builder = BuyerContextualSignals.builder().setAdCost(adCost);
 
         try {
-            builder.setDataVersion(getDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri));
+            builder.setDataVersion(
+                    getBuyerDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri));
         } catch (IllegalStateException e) {
             LogUtil.v("Data version Header does not exist!");
         }
