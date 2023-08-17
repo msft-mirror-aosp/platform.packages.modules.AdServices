@@ -22,7 +22,8 @@ import android.annotation.Nullable;
 import androidx.room.ColumnInfo;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableSet;
+
+import java.util.Set;
 
 /**
  * This class represents the data related to a custom audience which has won an ad selection run.
@@ -46,7 +47,7 @@ public abstract class DBWinningCustomAudience {
     @AutoValue.CopyAnnotations
     @Nullable
     @ColumnInfo(name = "ad_counter_int_keys")
-    public abstract ImmutableSet<Integer> getAdCounterIntKeys();
+    public abstract Set<Integer> getAdCounterIntKeys();
 
     /** Builder for {@link DBWinningCustomAudience} */
     @NonNull
@@ -63,7 +64,7 @@ public abstract class DBWinningCustomAudience {
     public static DBWinningCustomAudience create(
             @Nullable String name,
             @Nullable String owner,
-            @Nullable ImmutableSet<Integer> adCounterIntKeys) {
+            @Nullable Set<Integer> adCounterIntKeys) {
         return builder()
                 .setName(name)
                 .setOwner(owner)
@@ -81,8 +82,7 @@ public abstract class DBWinningCustomAudience {
         public abstract Builder setOwner(@Nullable String owner);
 
         /** Sets the ad counter keys for the winning ad in the winning custom audience. */
-        public abstract Builder setAdCounterIntKeys(
-                @Nullable ImmutableSet<Integer> adCounterIntKeys);
+        public abstract Builder setAdCounterIntKeys(@Nullable Set<Integer> adCounterIntKeys);
 
         /** Builds a {@link DBWinningCustomAudience} object. */
         public abstract DBWinningCustomAudience build();
