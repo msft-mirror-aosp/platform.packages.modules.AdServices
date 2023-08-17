@@ -25,6 +25,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -2381,7 +2382,7 @@ public final class PhFlags implements Flags {
 
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
-        return FlagsConstants.SYSTEM_PROPERTY_PREFIX + key;
+        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
     }
 
     @Override

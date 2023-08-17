@@ -15,6 +15,7 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.content.Context;
@@ -32,8 +33,6 @@ public final class AdServicesSupportHelper {
 
     private static final String TAG = AdServicesSupportHelper.class.getSimpleName();
 
-    private static final String SYSPROP_ADSERVICES_SUPPORTED = "debug.adservices.supported";
-
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
 
@@ -48,7 +47,8 @@ public final class AdServicesSupportHelper {
     /** Checks whether AdServices is supported by the device / form factor. */
     public static boolean isDeviceSupported() {
         if (AdservicesTestHelper.isDebuggable()) {
-            String overriddenValue = SystemProperties.get(SYSPROP_ADSERVICES_SUPPORTED);
+            String overriddenValue =
+                    SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
             if (!TextUtils.isEmpty(overriddenValue)) {
                 boolean supported = Boolean.valueOf(overriddenValue);
                 Log.i(
@@ -56,7 +56,7 @@ public final class AdServicesSupportHelper {
                         "isDeviceSupported(): returning"
                                 + supported
                                 + " as defined by system property "
-                                + SYSPROP_ADSERVICES_SUPPORTED
+                                + SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE
                                 + " ("
                                 + overriddenValue
                                 + ")");

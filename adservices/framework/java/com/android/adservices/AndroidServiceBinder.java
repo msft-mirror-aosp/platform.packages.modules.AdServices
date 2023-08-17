@@ -16,6 +16,7 @@
 package com.android.adservices;
 
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
+import static android.adservices.common.AdServicesStatusUtils.SERVICE_NOT_AVAILABLE_FOR_DEBUGGING_PURPOSES_ERROR_MESSAGE;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
@@ -27,6 +28,7 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE;
 
 import android.annotation.Nullable;
 import android.content.ComponentName;
@@ -36,7 +38,9 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemProperties;
 
 import com.android.internal.annotations.GuardedBy;
 
@@ -75,14 +79,30 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @GuardedBy("mLock")
     private ServiceConnection mServiceConnection;
 
+    private final boolean mDisabledForDebuggingPurposes;
+
     protected AndroidServiceBinder(
             Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
         mContext = context;
         mBinderConverter = converter;
+        mDisabledForDebuggingPurposes =
+                isDebuggable()
+                        && !SystemProperties.getBoolean(
+                                SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE, true);
+        if (mDisabledForDebuggingPurposes) {
+            LogUtil.w(
+                    "Service %s disabled because of system property %s",
+                    serviceIntentAction, SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
+        }
     }
 
     public T getService() {
+        if (mDisabledForDebuggingPurposes) {
+            throw new IllegalStateException(
+                    SERVICE_NOT_AVAILABLE_FOR_DEBUGGING_PURPOSES_ERROR_MESSAGE);
+        }
+
         synchronized (mLock) {
             // If we already have a service, just return it.
             if (mService != null) {
@@ -215,6 +235,12 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     @Override
     public void unbindFromService() {
+        if (mDisabledForDebuggingPurposes) {
+            LogUtil.d(
+                    "unbindFromService(): ignored because it's disabled by system property %s",
+                    SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE);
+            return;
+        }
         synchronized (mLock) {
             if (mServiceConnection != null) {
                 LogUtil.d("unbinding...");
@@ -223,5 +249,23 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             mServiceConnection = null;
             mService = null;
         }
+    }
+
+    // TODO(b/293894199, b/284744130): members below were adapted from BuildCompatUtils, it would
+    // be better to move BuildCompatUtils to this package
+
+    private static final boolean IS_DEBUGGABLE = computeIsDebuggable();
+
+    private static boolean isDebuggable() {
+        return IS_DEBUGGABLE;
+    }
+
+    private static boolean computeIsDebuggable() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return Build.isDebuggable();
+        }
+
+        // Build.isDebuggable was added in S; duplicate that functionality for R.
+        return SystemProperties.getInt("ro.debuggable", 0) == 1;
     }
 }
