@@ -78,8 +78,15 @@ public class BroadcastRestrictionsTestApp {
     private String mInitialApplySdkSandboxNextRestrictionsValue;
     private String mInitialNextBroadcastReceiverAllowlistValue;
 
-    private static final List<String> INTENT_ACTIONS =
-            new ArrayList<>(Arrays.asList(Intent.ACTION_SEND, Intent.ACTION_VIEW));
+    private static final List<String> UNPROTECTED_INTENT_ACTIONS =
+            new ArrayList<>(
+                    Arrays.asList(
+                            Intent.ACTION_WEB_SEARCH,
+                            Intent.ACTION_VOICE_ASSIST,
+                            Intent.ACTION_CALL_BUTTON,
+                            Intent.ACTION_VOICE_COMMAND,
+                            Intent.ACTION_SET_WALLPAPER,
+                            Intent.ACTION_SHOW_WORK_APPS));
 
     private IBroadcastSdkApi mBroadcastSdkApi;
     private ConfigListener mConfigListener;
@@ -164,7 +171,7 @@ public class BroadcastRestrictionsTestApp {
     public void testRegisterBroadcastReceiver_defaultValueRestrictionsApplied() throws Exception {
         assertThrows(
                 SecurityException.class,
-                () -> mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+                () -> mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS));
     }
 
     /**
@@ -178,10 +185,16 @@ public class BroadcastRestrictionsTestApp {
         SecurityException thrown =
                 assertThrows(
                         SecurityException.class,
-                        () -> mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+                        () ->
+                                mBroadcastSdkApi.registerBroadcastReceiver(
+                                        UNPROTECTED_INTENT_ACTIONS));
 
-        assertThat(thrown).hasMessageThat().contains("android.intent.action.SEND");
-        assertThat(thrown).hasMessageThat().contains("android.intent.action.VIEW");
+        assertThat(thrown).hasMessageThat().contains(Intent.ACTION_VOICE_COMMAND);
+        assertThat(thrown).hasMessageThat().contains(Intent.ACTION_SET_WALLPAPER);
+        assertThat(thrown).hasMessageThat().contains(Intent.ACTION_SHOW_WORK_APPS);
+        assertThat(thrown).hasMessageThat().contains(Intent.ACTION_CALL_BUTTON);
+        assertThat(thrown).hasMessageThat().contains(Intent.ACTION_WEB_SEARCH);
+        assertThat(thrown).hasMessageThat().contains(Intent.ACTION_VOICE_ASSIST);
         assertThat(thrown)
                 .hasMessageThat()
                 .contains(
@@ -196,7 +209,7 @@ public class BroadcastRestrictionsTestApp {
     public void testRegisterBroadcastReceiver_restrictionsNotApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
 
-        mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
+        mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS);
     }
 
     @Test
@@ -209,7 +222,7 @@ public class BroadcastRestrictionsTestApp {
 
         assertThrows(
                 SecurityException.class,
-                () -> mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+                () -> mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS));
 
         // Even protected broadcasts should be blocked.
         assertThrows(
@@ -249,7 +262,7 @@ public class BroadcastRestrictionsTestApp {
                                 new ArrayList<>(Arrays.asList(Intent.ACTION_SEND))));
         assertThrows(
                 SecurityException.class,
-                () -> mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+                () -> mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS));
     }
 
     @Test
@@ -270,7 +283,8 @@ public class BroadcastRestrictionsTestApp {
         // Intent.ACTION_VIEW and Intent.ACTION_SEND.
         mBroadcastSdkApi.registerBroadcastReceiver(new ArrayList<>(List.of(Intent.ACTION_VIEW)));
         mBroadcastSdkApi.registerBroadcastReceiver(new ArrayList<>(List.of(Intent.ACTION_SEND)));
-        mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
+        mBroadcastSdkApi.registerBroadcastReceiver(
+                new ArrayList<>(List.of(Intent.ACTION_SEND, Intent.ACTION_VIEW)));
         assertThrows(
                 SecurityException.class,
                 () ->
@@ -297,7 +311,7 @@ public class BroadcastRestrictionsTestApp {
                 new ArrayList<>(List.of(Intent.ACTION_SCREEN_OFF)));
         assertThrows(
                 SecurityException.class,
-                () -> mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS));
+                () -> mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS));
     }
 
     /**
@@ -323,6 +337,11 @@ public class BroadcastRestrictionsTestApp {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
 
         mBroadcastSdkApi.registerBroadcastReceiver(
-                new ArrayList<>(Arrays.asList(Intent.ACTION_SCREEN_OFF)));
+                new ArrayList<>(
+                        Arrays.asList(
+                                Intent.ACTION_SHOW_FOREGROUND_SERVICE_MANAGER,
+                                Intent.ACTION_BOOT_COMPLETED,
+                                Intent.ACTION_SCREEN_ON,
+                                Intent.ACTION_SCREEN_OFF)));
     }
 }
