@@ -28,4 +28,11 @@ public class DBTrustedBiddingDataFixture {
                 .setUri(TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer(buyer))
                 .setKeys(TrustedBiddingDataFixture.getValidTrustedBiddingKeys());
     }
+
+    public static DBTrustedBiddingData.Builder getValidBuilderByBuyerWithLargeKeySet(
+            AdTechIdentifier buyer) {
+        return new DBTrustedBiddingData.Builder()
+                .setUri(TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer(buyer))
+                .setKeys(TrustedBiddingDataFixture.getValidLargeTrustedBiddingKeys());
+    }
 }
