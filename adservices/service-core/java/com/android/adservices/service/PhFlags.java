@@ -16,6 +16,9 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+
 import static java.lang.Float.parseFloat;
 
 import android.annotation.NonNull;
@@ -2715,9 +2718,18 @@ public final class PhFlags implements Flags {
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
+                /* flagName */ KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
                 /* defaultValue */ FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
+        String flagName = KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+        boolean defaultValue = FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+
+        return getFledgeMeasurementReportAndRegisterEventApiEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue);
     }
 
     @Override
@@ -3894,10 +3906,14 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxAggregateKeysPerTriggerRegistration());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED
+                        + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED
                         + " = "
                         + getFledgeMeasurementReportAndRegisterEventApiEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED
+                        + " = "
+                        + getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled());
     }
 
     @VisibleForTesting

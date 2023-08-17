@@ -726,6 +726,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED =
             "fledge_measurement_report_and_register_event_api_enabled";
 
+    public static final String
+            KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED =
+                    "fledge_measurement_report_and_register_event_api_fallback_enabled";
+
     public static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
 
     // Database Schema Version Flags
