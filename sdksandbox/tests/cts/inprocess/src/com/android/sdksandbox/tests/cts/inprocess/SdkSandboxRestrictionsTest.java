@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.NotificationManager;
+import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -280,6 +281,14 @@ public class SdkSandboxRestrictionsTest {
                         SecurityException.class,
                         () -> resolver.query(audioCollection, projection, null, null, null, null));
         assertThat(thrown).hasMessageThat().contains(errorMessage);
+    }
+
+    @Test
+    public void testSdkCannotAccessSdkSandboxManager() throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SdkSandboxManager sdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+
+        assertThat(sdkSandboxManager).isNull();
     }
 
     /** Tests that Sdk Sandbox cannot access Storage Access Framework */
