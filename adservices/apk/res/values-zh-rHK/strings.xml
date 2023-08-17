@@ -81,7 +81,7 @@
     <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"你日後使用的應用程式可要求取得此資料，包括廣告主題或你使用過的應用程式的廣告建議。"</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android 會定期自動刪除主題和應用程式建議的資料。你亦可封鎖你不希望建議廣告的特定主題和應用程式。"</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"評估廣告成效"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"你使用的應用程式可要求 Android 提供資料，以協助評估廣告成效。Android 只允許應用程式收集特定類型的資料，例如在一天中向使用者放送廣告的時段。"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"你使用的應用程式可要求 Android 提供資料，以協助評估廣告成效。Android 允許應用程式收集有限類型的資料，例如在一天中向使用者放送廣告的時段。"</string>
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"試用全新廣告私隱權功能"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"利用廣告主題進一步控制向你顯示的廣告"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"查看詳情"</string>
@@ -136,7 +136,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"私隱沙箱"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推測的興趣"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"會推測興趣的應用程式"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告評估功能"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告成效評估"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可使用私隱沙箱評估廣告成效。為此，廣告客戶可透過 Android 暫時儲存你與其廣告和應用程式之間互動的資料。他們可儲存的資料量有限，且會定期刪除。\n\n你可隨時停用私隱沙箱以刪除這些資料。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 會定期根據你所用的應用程式，推測你最感興趣的類別。應用程式可要求 Android 運用那些興趣，向你顯示更相關的廣告。\n\n如果你封鎖某個興趣，清單就不會再顯示該興趣，直至你解除封鎖為止。你可能仍會看到部分相關的廣告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"封鎖"</string>
@@ -204,7 +204,7 @@
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"應用程式建議的廣告"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android 會根據你最近使用的應用程式及其使用頻率，記住你感興趣的主題。"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"你使用的應用程式亦可以根據你的使用方式，判斷你喜歡的內容。"</string>
-    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"你使用的應用程式可要求 Android 提供相關資料，協助應用程式評估廣告成效。Android 只允許應用程式收集特定類型的資料。"</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"你使用的應用程式可要求 Android 提供相關資料，以協助評估廣告成效。Android 允許應用程式收集有限類型的資料。"</string>
     <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"進一步瞭解 "<a href="https://support.google.com/android?p=ad_privacy">"Android 上的廣告私隱權"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{已開啟/# 個主題}other{已開啟/# 個主題}}"</string>
@@ -223,10 +223,10 @@
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式通常會記住你感興趣的項目，以便為你提供個人化體驗。應用程式亦會儲存你在 Android 中的相關主題資料。\n\n例如，如果你使用關於馬拉松訓練的應用程式，該應用程式便可能會判斷你對跑步鞋有興趣。如果你日後使用其他應用程式，該應用程式就可以根據第一個應用程式建議的感興趣項目，向你顯示跑步鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。如你再次使用應用程式，該應用程式便可能會再次在清單中顯示。你亦可禁止應用程式為你建議廣告。\n\n你在應用程式中看到的廣告可能是個人化廣告，視乎此設定、廣告主題設定、你的廣告 ID 設定，以及你使用的應用程式是否將廣告個人化而定。"</string>
     <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"全新廣告私隱功能現已推出"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"應用程式之間只會分享非常有限的資料，以協助應用程式評估廣告成效"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我們即將推出名為「廣告成效評估」的全新廣告私隱功能。Android 只會在應用程式之間分享非常有限的資料，例如何時放送廣告，為協助應用程式評估廣告成效。"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"應用程式之間只會分享非常有限的資料以協助評估廣告成效"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我們即將推出名為「廣告成效評估」的全新廣告私隱功能。Android 只會在網站和應用程式間分享非常有限的資料 (例如向使用者放送廣告的時段)，以協助評估廣告成效。"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"你可前往「廣告私隱權設定」作出變更。"</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"你使用的應用程式可要求 Android 提供相關資料，以評估廣告成效。Android 只允許應用程式收集特定類型的資料。"</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"你使用的應用程式可要求 Android 提供相關資料，以協助評估廣告成效。Android 只允許應用程式收集有限類型的資料。"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"呢張彩色插圖入面嘅符號代表音樂、新聞同體育賽事之類嘅興趣主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"呢張彩色插圖入面嘅圓圈入面有一個鎖"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"呢張細嘅黑白插圖入面有由九個圓點組成嘅正方形"</string>
