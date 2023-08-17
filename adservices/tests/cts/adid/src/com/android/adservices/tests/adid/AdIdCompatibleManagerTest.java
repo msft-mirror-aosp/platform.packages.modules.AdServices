@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Context;
 import android.os.LimitExceededException;
 
@@ -66,8 +66,8 @@ public final class AdIdCompatibleManagerTest {
     public void testAdIdCompatibleManager() throws Exception {
         AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
         CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<>() {
+        AdServicesOutcomeReceiver<AdId, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdId result) {
                         future.complete(result);
@@ -123,9 +123,9 @@ public final class AdIdCompatibleManagerTest {
         return reachedLimit.get();
     }
 
-    private OutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
+    private AdServicesOutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
             CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new OutcomeReceiver<>() {
+        return new AdServicesOutcomeReceiver<>() {
             @Override
             public void onResult(@NonNull AdId result) {
                 countDownLatch.countDown();
