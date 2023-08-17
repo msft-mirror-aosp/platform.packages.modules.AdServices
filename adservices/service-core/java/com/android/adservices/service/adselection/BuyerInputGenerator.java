@@ -151,6 +151,7 @@ public class BuyerInputGenerator {
 
         return customAudienceBuilder
                 .setName(customAudience.getName())
+                .setOwner(customAudience.getOwner())
                 .setUserBiddingSignals(getUserBiddingSignals(customAudience))
                 .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience))
                 .addAllAdRenderIds(getAdRenderIds(customAudience))
