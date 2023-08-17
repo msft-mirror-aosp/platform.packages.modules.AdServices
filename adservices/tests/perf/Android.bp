@@ -27,6 +27,7 @@ java_library {
         "mockwebserver",
         "platform-test-annotations",
         "adservices-test-utility",
+        "adservices-ui-cts-root-test-lib",
         "adservices-profile-text-protos-genrule",
         "longevity-device-lib",
     ],
