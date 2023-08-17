@@ -28,13 +28,16 @@ public class UpdateProcessorSelectorTest {
     @Test
     public void testInvalid() {
         assertThrows(
+                "Selector should throw an exception when given an invalid processor name",
                 IllegalArgumentException.class,
                 () -> mUpdateProcessorSelector.getUpdateProcessor("Not a valid command"));
     }
 
     @Test
     public void testValidCommands() {
-        UpdateProcessor[] processors = {};
+        UpdateProcessor[] processors = {
+            new Append(), new Put(), new PutIfNotPresent(), new Remove()
+        };
         for (int i = 0; i < processors.length; i++) {
             UpdateProcessor fetchedProcessor =
                     mUpdateProcessorSelector.getUpdateProcessor(processors[i].getName());
