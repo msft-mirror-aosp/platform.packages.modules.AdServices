@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 import static com.android.adservices.service.adselection.AdSelectionServiceImpl.AUCTION_SERVER_API_IS_NOT_AVAILABLE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -407,6 +409,76 @@ public class AuctionServerE2ETest {
     }
 
     @Test
+    public void testGetAdSelectionData_withEncrypt_reachPayloadLimit_validRequest_success()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        Map<String, AdTechIdentifier> nameAndBuyersMap = new HashMap<>();
+
+        for (int i = 0; i < 50; i++) {
+            nameAndBuyersMap.put("Shoes " + i, BUYER_1);
+            nameAndBuyersMap.put("Shirts " + i, BUYER_2);
+        }
+        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
+        Map<String, DBCustomAudience> namesAndCustomAudiences =
+                createAndPersistLargeDBCustomAudiences(nameAndBuyersMap);
+
+        DBEncryptionKey dbEncryptionKey =
+                DBEncryptionKey.builder()
+                        .setPublicKey("bSHP4J++pRIvnrwusqafzE8GQIzVSqyTTwEudvzc72I=")
+                        .setKeyIdentifier("050bed24-c62f-46e0-a1ad-211361ad771a")
+                        .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                        .setExpiryTtlSeconds(TimeUnit.DAYS.toSeconds(7))
+                        .build();
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(dbEncryptionKey));
+
+        String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
+        byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
+        AdSelectionService service =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mAuctionServerAdSelectionDao,
+                        mAdServicesHttpsClientMock,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        new ObliviousHttpEncryptorWithSeedImpl(
+                                new AdSelectionEncryptionKeyManager(
+                                        mEncryptionKeyDao,
+                                        mFlags,
+                                        mAdServicesHttpsClientMock,
+                                        mLightweightExecutorService),
+                                mEncryptionContextDao,
+                                seedBytes,
+                                mLightweightExecutorService));
+
+        GetAdSelectionDataInput getAdSelectionDataRequest =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(service, getAdSelectionDataRequest);
+
+        Assert.assertFalse(callback.mIsSuccess);
+        Assert.assertEquals(STATUS_INTERNAL_ERROR, callback.mFledgeErrorResponse.getStatusCode());
+    }
+
+    @Test
     public void testPersistAdSelectionResult_withoutDecrypt_validRequest_success()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -644,6 +716,20 @@ public class AuctionServerE2ETest {
             DBCustomAudience thisCustomAudience =
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
+            customAudiences.put(name, thisCustomAudience);
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
+        }
+        return customAudiences;
+    }
+
+    private Map<String, DBCustomAudience> createAndPersistLargeDBCustomAudiences(
+            Map<String, AdTechIdentifier> nameAndBuyers) {
+        Map<String, DBCustomAudience> customAudiences = new HashMap<>();
+        for (Map.Entry<String, AdTechIdentifier> entry : nameAndBuyers.entrySet()) {
+            AdTechIdentifier buyer = entry.getValue();
+            String name = entry.getKey();
+            DBCustomAudience thisCustomAudience =
+                    DBCustomAudienceFixture.getValidLargeBuilderByBuyer(buyer, name).build();
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
         }
