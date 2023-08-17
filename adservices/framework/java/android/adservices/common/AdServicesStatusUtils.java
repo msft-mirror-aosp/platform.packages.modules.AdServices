@@ -16,6 +16,8 @@
 
 package android.adservices.common;
 
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE;
+
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
@@ -132,6 +134,16 @@ public class AdServicesStatusUtils {
 
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
+
+    /**
+     * Same as {@link AdServicesStatusUtils#ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE}, but thrown when
+     * the service is not available for debugging purposes.
+     */
+    public static final String SERVICE_NOT_AVAILABLE_FOR_DEBUGGING_PURPOSES_ERROR_MESSAGE =
+            "Service is not available (because of SystemProperty "
+                    + SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE
+                    + ")";
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
     /**

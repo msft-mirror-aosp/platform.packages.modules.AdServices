@@ -17,11 +17,14 @@ package com.android.adservices.common;
 
 import static android.os.Build.VERSION.SDK_INT;
 
+import android.provider.DeviceConfig;
 import android.util.Log;
 import android.util.Pair;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlags;
 import com.android.modules.utils.build.SdkLevel;
@@ -54,13 +57,13 @@ public final class AdServicesFlagsSetterRule implements TestRule {
 
     private static final String TAG = AdServicesFlagsSetterRule.class.getSimpleName();
 
-    private static final String ALLOWLIST_SEPARATOR = FlagsConstants.ARRAY_SPLITTER_COMMA;
-
     private final DeviceConfigHelper mDeviceConfig =
-            new DeviceConfigHelper(FlagsConstants.NAMESPACE_ADSERVICES);
+            new DeviceConfigHelper(DeviceConfig.NAMESPACE_ADSERVICES);
 
     private final SystemPropertiesHelper mSystemProperties =
-            new SystemPropertiesHelper(FlagsConstants.SYSTEM_PROPERTY_PREFIX);
+            new SystemPropertiesHelper(AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
+
+    private static final String ALLOWLIST_SEPARATOR = ",";
 
     // Cache flags that were set before the test started, so the rule can be instantiated using a
     // builder-like approach - will be set to null after test starts.
@@ -361,11 +364,10 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             return DeviceConfigHelper.callWithDeviceConfigPermissions(
                     () -> PhFlags.getInstance().getAdIdRequestPermitsPerSecond());
         } catch (Throwable t) {
-            float defaultValue = FlagsConstants.ADID_REQUEST_PERMITS_PER_SECOND;
+            float defaultValue = Flags.ADID_REQUEST_PERMITS_PER_SECOND;
             Log.e(
                     TAG,
-                    "FlagsConstants.getAdIdRequestPermitsPerSecond() failed, returning default"
-                            + " value ("
+                    "PhFlags.getAdIdRequestPermitsPerSecond() failed, returning default value ("
                             + defaultValue
                             + ")",
                     t);
@@ -387,8 +389,8 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         if (SdkLevel.isAtLeastS()) {
             Log.d(TAG, "setCompatModeFlags(): setting flags for S+");
             setEnableBackCompat(true);
-            setBlockedTopicsSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
-            setConsentSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
+            setBlockedTopicsSourceOfTruth(Flags.APPSEARCH_ONLY);
+            setConsentSourceOfTruth(Flags.APPSEARCH_ONLY);
             setEnableAppsearchConsentData(true);
             setMeasurementRollbackDeletionAppSearchKillSwitch(false);
             return this;
@@ -396,8 +398,8 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         Log.d(TAG, "setCompatModeFlags(): setting flags for R+");
         setEnableBackCompat(true);
         // TODO (b/285208753): Update flags once AppSearch is supported on R.
-        setBlockedTopicsSourceOfTruth(FlagsConstants.PPAPI_ONLY);
-        setConsentSourceOfTruth(FlagsConstants.PPAPI_ONLY);
+        setBlockedTopicsSourceOfTruth(Flags.PPAPI_ONLY);
+        setConsentSourceOfTruth(Flags.PPAPI_ONLY);
         setEnableAppsearchConsentData(false);
         setMeasurementRollbackDeletionAppSearchKillSwitch(true);
 
@@ -436,9 +438,8 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         setEnableBackCompat(false);
         // TODO (b/285208753): Set to AppSearch always once it's supported on R.
         setBlockedTopicsSourceOfTruth(
-                SdkLevel.isAtLeastS() ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY);
-        setConsentSourceOfTruth(
-                SdkLevel.isAtLeastS() ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY);
+                SdkLevel.isAtLeastS() ? Flags.APPSEARCH_ONLY : Flags.PPAPI_ONLY);
+        setConsentSourceOfTruth(SdkLevel.isAtLeastS() ? Flags.APPSEARCH_ONLY : Flags.PPAPI_ONLY);
         setEnableAppsearchConsentData(SdkLevel.isAtLeastS());
         setMeasurementRollbackDeletionAppSearchKillSwitch(!SdkLevel.isAtLeastS());
     }
