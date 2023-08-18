@@ -17,11 +17,12 @@ package com.android.adservices.common;
 
 import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
+
 import android.provider.DeviceConfig;
 import android.util.Log;
 import android.util.Pair;
 
-import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
 import com.android.adservices.service.Flags;
@@ -61,7 +62,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             new DeviceConfigHelper(DeviceConfig.NAMESPACE_ADSERVICES);
 
     private final SystemPropertiesHelper mSystemProperties =
-            new SystemPropertiesHelper(AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
+            new SystemPropertiesHelper(SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
 
     private static final String ALLOWLIST_SEPARATOR = ",";
 
