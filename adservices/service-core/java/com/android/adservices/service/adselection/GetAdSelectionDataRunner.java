@@ -39,6 +39,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -207,6 +208,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(seller);
         Objects.requireNonNull(packageName);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA);
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
@@ -221,7 +223,13 @@ public class GetAdSelectionDataRunner {
                         },
                         mLightweightExecutorService)
                 .transformAsync(
-                        encrypted -> persistAdSelectionIdRequest(adSelectionId, seller, encrypted),
+                        encrypted -> {
+                            ListenableFuture<byte[]> encryptedBytes =
+                                    persistAdSelectionIdRequest(adSelectionId, seller, encrypted);
+                            Tracing.endAsyncSection(
+                                    Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA, traceCookie);
+                            return encryptedBytes;
+                        },
                         mLightweightExecutorService);
     }
 
@@ -238,6 +246,7 @@ public class GetAdSelectionDataRunner {
 
     private ListenableFuture<byte[]> persistAdSelectionIdRequest(
             long adSelectionId, AdTechIdentifier seller, byte[] encryptedBytes) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST);
         return mBackgroundExecutorService.submit(
                 () -> {
                     mAuctionServerAdSelectionDao.insertAuctionServerAdSelection(
@@ -245,6 +254,7 @@ public class GetAdSelectionDataRunner {
                                     .setAdSelectionId(adSelectionId)
                                     .setSeller(seller)
                                     .build());
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST, traceCookie);
                     return encryptedBytes;
                 });
     }

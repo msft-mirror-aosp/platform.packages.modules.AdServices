@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ॲप्लिकेशन ला AdService चे सुरू करण्याच्या स्थितीसंबंधित API अ‍ॅक्सेस करू देते."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager च्या APIs चा अ‍ॅक्सेस"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"अ‍ॅप्लिकेशनला AdServicesManager चे APIs अ‍ॅक्सेस करण्याची अनुमती देते."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android सिस्‍टीम"</string>
+    <string name="app_label" msgid="5844694701336604490">"जाहिरात गोपनीयता"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android च्या जाहिरातींशी संबंधित गोपनीयतेची बीटा आवृत्तीमध्ये सामील व्हा"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android हे तुम्हाला जाहिराती दाखवण्यासाठी ॲप्सकरिता अधिक खाजगी मार्ग एक्सप्लोर करत आहे"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"अधिक जाणून घ्या"</string>

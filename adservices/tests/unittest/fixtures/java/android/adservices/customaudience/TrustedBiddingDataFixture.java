@@ -36,6 +36,16 @@ public class TrustedBiddingDataFixture {
         return new ArrayList<>(VALID_TRUSTED_BIDDING_KEYS);
     }
 
+    public static List<String> getValidLargeTrustedBiddingKeys() {
+        List<String> keys = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            String suffix = Integer.toString(i);
+            VALID_TRUSTED_BIDDING_KEYS.stream().forEach(s -> keys.add(s + suffix));
+        }
+
+        return keys;
+    }
+
     public static Uri getValidTrustedBiddingUriByBuyer(AdTechIdentifier buyer) {
         return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URI_PATH);
     }

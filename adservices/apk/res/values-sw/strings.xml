@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Inaruhusu programu kufikia enablement state API ya AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Uwezo wa kufikia API za AdServicesManager’s"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Inaruhusu programu kufikia API za AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Mfumo wa Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Faragha ya Matangazo"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Jiunge na toleo la beta la faragha ya matangazo kwenye Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android inaendelea kugundua njia za faragha zaidi za programu kukuonyesha matangazo"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Pata maelezo zaidi"</string>
@@ -226,7 +226,7 @@
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Data mahususi pekee ndiyo hushirikiwa kati ya programu ili kusaidia kupima utendaji wa matangazo"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Tunazindua kipengele kipya cha faragha ya matangazo kinachojulikana kama upimaji wa matangazo. Android hushiriki data mahususi pekee kati ya programu, kama vile wakati ulipoonyeshwa tangazo, ili kuwezesha programu kupima utendaji wa matangazo."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Unaweza kutekeleza mabadiliko kwenye mipangilio ya faragha ya matangazo."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Programu unazotumia zinaweza kuomba idhini ya kufikia data mahususi kwenye Android ili kuziwezesha kupima utendaji wa matangazo. Android huziwezesha programu kukusanya aina chache za data."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Programu unazotumia zinaweza kuomba idhini ya kufikia data mahususi kwenye Android ili kuziwezesha kupima utendaji wa matangazo. Android huziwezesha programu kukusanya aina chache tu za data."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Mchoro unaovutia wa ishara unaowakilisha mada unazopendelea kama vile muziki, habari na michezo"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Mchoro unaovutia wa kufuli ikiwa ndani ya duara"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Mchoro mdogo wenye rangi nyeusi na nyeupe ulio na nukta tisa unaounda umbo mraba"</string>

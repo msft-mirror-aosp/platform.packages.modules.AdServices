@@ -79,6 +79,16 @@ public class AdServicesCommon {
      */
     public static final String EXTSERVICES_APEX_NAME_SUFFIX = "android.extservices";
 
+    /**
+     * Prefix for system properties used for debugging purposes (like simulating unsupported devices
+     * or change some behavior without changing a flag).
+     */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
+
+    /** System property used to simulate AdServices behavior in a device that doesn't support it. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
+
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(
             List<ResolveInfo> intentResolveInfos, String intentAction) {

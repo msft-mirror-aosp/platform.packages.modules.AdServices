@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ API ສະຖານະການເປີດນຳໃຊ້ຂອງ AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"ເຂົ້າເຖິງ API ຂອງ AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ອະນຸຍາດໃຫ້ແອັບພລິເຄຊັນເຂົ້າເຖິງ API ຂອງ AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"ລະບົບ Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"ຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"ເຂົ້າຮ່ວມເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ກຳລັງສຳຫຼວດການສະແດງໂຄສະນາທີ່ມີຄວາມເປັນສ່ວນຕົວຫຼາຍຂຶ້ນສຳລັບແອັບໃຫ້ແກ່ທ່ານ."</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ສຶກສາເພີ່ມເຕີມ"</string>
