@@ -261,6 +261,11 @@ package android.adservices.common {
     field public static final android.adservices.common.AdSelectionSignals EMPTY;
   }
 
+  public interface AdServicesOutcomeReceiver<R, E extends java.lang.Throwable> {
+    method public default void onError(@NonNull E);
+    method public void onResult(R);
+  }
+
   public class AdServicesPermissions {
     field public static final String ACCESS_ADSERVICES_AD_ID = "android.permission.ACCESS_ADSERVICES_AD_ID";
     field public static final String ACCESS_ADSERVICES_ATTRIBUTION = "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
