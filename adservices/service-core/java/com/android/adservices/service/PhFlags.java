@@ -2694,6 +2694,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableLookbackWindowFilter() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
+                /* defaultValue */ MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER);
+    }
+
+    @Override
     public boolean isEnrollmentBlocklisted(String enrollmentId) {
         return getEnrollmentBlocklist().contains(enrollmentId);
     }
@@ -3906,7 +3915,13 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxAggregateKeysPerTriggerRegistration());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER
+                        + " = "
+                        + getMeasurementEnableLookbackWindowFilter());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED
                         + " = "
                         + getFledgeMeasurementReportAndRegisterEventApiEnabled());
         writer.println(
