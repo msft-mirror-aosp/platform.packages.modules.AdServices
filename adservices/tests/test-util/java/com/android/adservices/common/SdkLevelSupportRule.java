@@ -98,22 +98,4 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     public boolean isDeviceAtLeastV() {
         return SdkLevel.isAtLeastV();
     }
-
-    // TODO(b/295321663): remove 2 methods below once in-flight CLs are merged
-
-    /**
-     * @deprecated - use {@link #forAtLeastS()} instead
-     */
-    @Deprecated
-    public static SdkLevelSupportRule isAtLeastS() {
-        return forAtLeastS();
-    }
-
-    /**
-     * @deprecated - use {@link #forAtLeastT()} instead
-     */
-    @Deprecated
-    public static SdkLevelSupportRule isAtLeastT() {
-        return forAtLeastT();
-    }
 }
