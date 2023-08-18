@@ -155,7 +155,7 @@ public class PersistAdSelectionResultRunner {
                                 // internally.
 
                                 // Fail Silently by notifying success to caller
-                                notifyEmptySuccessToCaller(callback);
+                                notifyEmptySuccessToCaller(callback, adSelectionId);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
                                     notifyFailureToCaller(t.getCause(), callback);
@@ -314,12 +314,17 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
-    private void notifyEmptySuccessToCaller(@NonNull PersistAdSelectionResultCallback callback) {
+    private void notifyEmptySuccessToCaller(
+            @NonNull PersistAdSelectionResultCallback callback, long adSelectionId) {
         try {
             // TODO(b/288368908): Determine what is an appropriate empty response for revoked
             //  consent
             // TODO(b/288370270): Collect API metrics
-            callback.onSuccess(null);
+            callback.onSuccess(
+                    new PersistAdSelectionResultResponse.Builder()
+                            .setAdSelectionId(adSelectionId)
+                            .setAdRenderUri(Uri.EMPTY)
+                            .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
         } finally {

@@ -54,6 +54,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -63,6 +64,7 @@ import java.util.stream.Collectors;
 @RequiresApi(Build.VERSION_CODES.S)
 public class GetAdSelectionDataRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @VisibleForTesting static final int REVOKED_CONSENT_RANDOM_DATA_SIZE = 1024;
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
@@ -328,7 +330,13 @@ public class GetAdSelectionDataRunner {
         try {
             // TODO(b/259522822): Determine what is an appropriate empty response for revoked
             //  consent for selectAdsFromOutcomes
-            callback.onSuccess(null);
+            byte[] bytes = new byte[REVOKED_CONSENT_RANDOM_DATA_SIZE];
+            new SecureRandom().nextBytes(bytes);
+            callback.onSuccess(
+                    new GetAdSelectionDataResponse.Builder()
+                            .setAdSelectionId(mAdSelectionIdGenerator.generateId())
+                            .setAdSelectionData(bytes)
+                            .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
         } finally {
