@@ -49,7 +49,7 @@ public final class AdIdCompatibleManagerTest {
 
     // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)

@@ -152,22 +152,22 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     }
 
     /** Gets whether the device supports at least Android {@code R}. */
-    public abstract boolean isDeviceAtLeastR();
+    public abstract boolean isDeviceAtLeastR() throws Exception;
 
     /** Gets whether the device supports at least Android {@code S}. */
-    public abstract boolean isDeviceAtLeastS();
+    public abstract boolean isDeviceAtLeastS() throws Exception;
 
     /** Gets whether the device supports at least Android {@code S_V2}. */
-    public abstract boolean isDeviceAtLeastS_V2();
+    public abstract boolean isDeviceAtLeastS_V2() throws Exception;
 
     /** Gets whether the device supports at least Android {@code T}. */
-    public abstract boolean isDeviceAtLeastT();
+    public abstract boolean isDeviceAtLeastT() throws Exception;
 
     /** Gets whether the device supports at least Android {@code U}. */
-    public abstract boolean isDeviceAtLeastU();
+    public abstract boolean isDeviceAtLeastU() throws Exception;
 
     /** Gets whether the device supports at least Android {@code V}. */
-    public abstract boolean isDeviceAtLeastV();
+    public abstract boolean isDeviceAtLeastV() throws Exception;
 
     // This must match Build.VERSION_CODES.CUR_DEVELOPMENT
     private static final int CUR_DEVELOPMENT = 10_000;
@@ -193,6 +193,10 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
         boolean isAtLeast(AndroidSdkLevel level) {
             return mLevel >= level.mLevel;
+        }
+
+        int getLevel() {
+            return mLevel;
         }
     }
 }
