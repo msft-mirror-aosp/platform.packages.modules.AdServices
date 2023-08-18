@@ -174,6 +174,7 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_ATTRIBUTION)
     public void registerSource(
             @NonNull SourceRegistrationRequest request,
