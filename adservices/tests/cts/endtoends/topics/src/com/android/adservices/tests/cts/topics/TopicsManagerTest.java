@@ -104,7 +104,7 @@ public class TopicsManagerTest {
                     + " apex.";
 
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelSupportRule = SdkLevelSupportRule.isAtLeastR();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)

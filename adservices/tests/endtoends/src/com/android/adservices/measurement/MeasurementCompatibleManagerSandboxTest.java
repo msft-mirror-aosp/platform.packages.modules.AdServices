@@ -85,7 +85,7 @@ public final class MeasurementCompatibleManagerSandboxTest {
 
     // Ignore tests when device is not at least T
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastT();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)
