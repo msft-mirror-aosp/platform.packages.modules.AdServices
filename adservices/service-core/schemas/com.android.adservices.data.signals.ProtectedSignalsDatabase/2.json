@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "21aba243cf820a69d2d0190771017474",
+    "identityHash": "b54933c1ca742f760d687daca864e65c",
     "entities": [
       {
         "tableName": "protected_signals",
@@ -105,12 +105,54 @@
           }
         ],
         "foreignKeys": []
+      },
+      {
+        "tableName": "encoder_logics",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`buyer` TEXT NOT NULL, `version` INTEGER NOT NULL, `creation_time` INTEGER NOT NULL, PRIMARY KEY(`buyer`))",
+        "fields": [
+          {
+            "fieldPath": "buyer",
+            "columnName": "buyer",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationTime",
+            "columnName": "creation_time",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "buyer"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_encoder_logics_creation_time",
+            "unique": false,
+            "columnNames": [
+              "creation_time"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_encoder_logics_creation_time` ON `${TABLE_NAME}` (`creation_time`)"
+          }
+        ],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '21aba243cf820a69d2d0190771017474')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b54933c1ca742f760d687daca864e65c')"
     ]
   }
 }
