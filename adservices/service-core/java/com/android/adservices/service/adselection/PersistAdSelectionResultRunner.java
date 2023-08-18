@@ -24,6 +24,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -62,6 +63,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.nio.charset.StandardCharsets;
@@ -72,12 +74,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Runner class for ProcessAdSelectionResultRunner service */
 @RequiresApi(Build.VERSION_CODES.S)
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
+    @VisibleForTesting
+    static final String PERSIST_AD_SELECTION_RESULT_TIMED_OUT =
+            "PersistAdSelectionResult exceeded allowed time limit";
 
     @VisibleForTesting
     static final String BUYER_WIN_REPORTING_URI_FIELD_NAME = "buyer win reporting uri";
@@ -97,7 +106,9 @@ public class PersistAdSelectionResultRunner {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     private final int mCallerUid;
+    @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutorService;
     @NonNull private final DevContext mDevContext;
+    private final long mOverallTimeout;
     // TODO(b/291680065): Remove when owner field is returned from B&A
     private final boolean mForceSearchOnAbsentOwner;
     private ReportingRegistrationLimits mReportingLimits;
@@ -111,8 +122,10 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutorService,
             final int callerUid,
             @NonNull final DevContext devContext,
+            final long overallTimeout,
             final boolean forceContinueOnAbsentOwner,
             final ReportingRegistrationLimits reportingLimits) {
         Objects.requireNonNull(obliviousHttpEncryptor);
@@ -121,6 +134,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
+        Objects.requireNonNull(scheduledExecutorService);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(reportingLimits);
 
@@ -130,8 +144,10 @@ public class PersistAdSelectionResultRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
+        mScheduledExecutorService = scheduledExecutorService;
         mCallerUid = callerUid;
         mDevContext = devContext;
+        mOverallTimeout = overallTimeout;
         mForceSearchOnAbsentOwner = forceContinueOnAbsentOwner;
         mReportingLimits = reportingLimits;
     }
@@ -248,6 +264,11 @@ public class PersistAdSelectionResultRunner {
                                     orchestrationCookie);
                             return validResult;
                         },
+                        mLightweightExecutorService)
+                .withTimeout(mOverallTimeout, TimeUnit.MILLISECONDS, mScheduledExecutorService)
+                .catching(
+                        TimeoutException.class,
+                        this::handleTimeoutError,
                         mLightweightExecutorService);
     }
 
@@ -323,6 +344,12 @@ public class PersistAdSelectionResultRunner {
 
     private void validateAuctionResult(AuctionResult auctionResult) {
         new AuctionResultValidator().validate(auctionResult);
+    }
+
+    @Nullable
+    private AuctionResult handleTimeoutError(TimeoutException e) {
+        sLogger.e(e, PERSIST_AD_SELECTION_RESULT_TIMED_OUT);
+        throw new UncheckedTimeoutException(PERSIST_AD_SELECTION_RESULT_TIMED_OUT);
     }
 
     private FluentFuture<byte[]> decryptBytes(PersistAdSelectionResultInput request) {

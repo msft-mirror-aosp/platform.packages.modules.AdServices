@@ -21,10 +21,14 @@ import static android.adservices.adselection.DataHandlersFixture.getAdSelectionR
 import static android.adservices.adselection.DataHandlersFixture.getReportingData;
 import static android.adservices.adselection.DataHandlersFixture.getWinningCustomAudience;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -33,6 +37,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
@@ -87,6 +92,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
@@ -95,6 +102,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class PersistAdSelectionResultRunnerTest {
     private static final int CALLER_UID = Process.myUid();
@@ -102,14 +110,14 @@ public class PersistAdSelectionResultRunnerTest {
     private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier DIFFERENT_SELLER = AdSelectionConfigFixture.SELLER_1;
-    private static final Uri INVALID_AD_RENDER_URI = Uri.parse("invalid-adtech.com/render_uri");
     private static final Uri AD_RENDER_URI_1 = Uri.parse("test2.com/render_uri");
     private static final Uri AD_RENDER_URI_2 = Uri.parse("test3.com/render_uri");
     private static final AdTechIdentifier WINNER_BUYER =
             AdTechIdentifier.fromString("winner-buyer.com");
     private static final AdTechIdentifier DIFFERENT_BUYER =
             AdTechIdentifier.fromString("different-buyer.com");
-    private static final Uri WINNER_AD_RENDER_URI = CommonFixture.getUri(WINNER_BUYER, "/render_uri");
+    private static final Uri WINNER_AD_RENDER_URI =
+            CommonFixture.getUri(WINNER_BUYER, "/render_uri");
     private static final String BUYER_REPORTING_URI =
             CommonFixture.getUri(WINNER_BUYER, "/reporting").toString();
     private static final String BUYER_REPORTING_URI_DIFFERENT_BUYER =
@@ -319,6 +327,7 @@ public class PersistAdSelectionResultRunnerTest {
     private Flags mFlags;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
@@ -326,6 +335,7 @@ public class PersistAdSelectionResultRunnerTest {
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
+    private long mOverallTimeout;
     private boolean mForceContinueOnAbsentOwner;
     private PersistAdSelectionResultRunner.ReportingRegistrationLimits mReportingLimits;
     private MockitoSession mStaticMockSession = null;
@@ -336,6 +346,7 @@ public class PersistAdSelectionResultRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
         mAdSelectionEntryDaoSpy =
                 spy(
                         Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
@@ -357,6 +368,7 @@ public class PersistAdSelectionResultRunnerTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         MockitoAnnotations.initMocks(this); // init @Mock mocks
+        mOverallTimeout = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
         mForceContinueOnAbsentOwner = false;
         mReportingLimits =
                 PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
@@ -377,8 +389,10 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        mScheduledExecutor,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
                         mForceContinueOnAbsentOwner,
                         mReportingLimits);
     }
@@ -593,8 +607,10 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        mScheduledExecutor,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
                         forceSearchOnAbsentOwner,
                         mReportingLimits);
 
@@ -641,8 +657,10 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        mScheduledExecutor,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
                         forceSearchOnAbsentOwner,
                         mReportingLimits);
 
@@ -710,6 +728,50 @@ public class PersistAdSelectionResultRunnerTest {
                         anyLong(),
                         anyLong(),
                         eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
+    }
+
+    @Test
+    public void testRunner_persistAdSelectionResult_timeoutFailure() throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mOverallTimeout = 200;
+        when(mObliviousHttpEncryptorMock.decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID))
+                .thenAnswer(
+                        new AnswersWithDelay(
+                                2 * mOverallTimeout,
+                                new Returns(prepareDecryptedAuctionResult(AUCTION_RESULT))));
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        Assert.assertFalse(callback.mIsSuccess);
+        assertNotNull(callback.mFledgeErrorResponse);
+        assertEquals(STATUS_TIMEOUT, callback.mFledgeErrorResponse.getStatusCode());
     }
 
     @Test
@@ -874,8 +936,10 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        mScheduledExecutor,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
                         mForceContinueOnAbsentOwner,
                         reportingLimits);
         PersistAdSelectionResultTestCallback callback =
@@ -946,6 +1010,11 @@ public class PersistAdSelectionResultRunnerTest {
     }
 
     public static class PersistAdSelectionResultRunnerTestFlags implements Flags {
+        @Override
+        public long getFledgeAuctionServerOverallTimeoutMs() {
+            return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+        }
+
         @Override
         public long getFledgeCustomAudienceActiveTimeWindowInMs() {
             return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;

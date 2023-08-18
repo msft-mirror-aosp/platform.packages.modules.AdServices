@@ -370,6 +370,8 @@ public final class FlagsConstants {
             "fledge_auction_server_encryption_algorithm_aead_id";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS =
             "fledge_auction_server_auction_key_fetch_timeout_ms";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS =
+            "fledge_auction_server_overall_timeout_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED =
             "fledge_auction_server_background_key_fetch_job_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED =
