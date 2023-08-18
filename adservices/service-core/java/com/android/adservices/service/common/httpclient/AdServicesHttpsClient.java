@@ -173,6 +173,7 @@ public class AdServicesHttpsClient {
         // Setting true explicitly to follow redirects
         if (WebAddresses.isLocalhost(Uri.parse(url.toString()))
                 && devContext.getDevOptionsEnabled()) {
+            LogUtil.v("Using unsafe HTTPS");
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         }
         urlConnection.setInstanceFollowRedirects(true);
