@@ -723,6 +723,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
 
+    public static final String KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER =
+            "measurement_enable_lookback_window_filter";
+
     public static final String KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED =
             "fledge_measurement_report_and_register_event_api_enabled";
 
