@@ -51,19 +51,18 @@ import static org.junit.Assert.assertEquals;
 import android.provider.DeviceConfig;
 
 /**
- * In order to use this test fixture, make sure your test class includes a TestableDeviceConfigRule
- * Rule or adopts shell permissions as below.
+ * In order to use this test fixture, make sure your UNIT test class includes a {@link
+ * TestableDeviceConfigRule} like the following:
  *
- * <p>{@code @Rule public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
- * new TestableDeviceConfig.TestableDeviceConfigRule(); }
+ * <p>{@code @Rule public final TestableDeviceConfig.TestableDeviceConfigRule deviceConfigRule = new
+ * TestableDeviceConfig.TestableDeviceConfigRule(); }
  *
- * <p>OR
- *
- * <p>{@code
- * InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
- * Manifest.permission.WRITE_DEVICE_CONFIG);}
+ * <p>If you're using it on CTS tests, you need to make sure the callers have the {@code
+ * Manifest.permission.WRITE_DEVICE_CONFIG}, but a better approach would be to use {@link
+ * com.android.adservices.common.AdServicesFlagsSetterRule} instead (as that rule will take care of
+ * automatically resetting the flags to the initial value, among other features).
  */
-public class PhFlagsFixture {
+public final class PhFlagsFixture {
     public static final long DEFAULT_API_RATE_LIMIT_SLEEP_MS =
             (long) (1500 / SDK_REQUEST_PERMITS_PER_SECOND) + 100L;
 

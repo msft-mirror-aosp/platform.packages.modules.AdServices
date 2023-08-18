@@ -81,6 +81,8 @@ public final class CustomAudienceManagerTest {
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
+
     @Before
     public void setUp() throws TimeoutException {
 
@@ -109,6 +111,10 @@ public final class CustomAudienceManagerTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        // TODO(b/294423183): remove adoptShellPermission call once using AdServicesFlagsSetterRule
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 
