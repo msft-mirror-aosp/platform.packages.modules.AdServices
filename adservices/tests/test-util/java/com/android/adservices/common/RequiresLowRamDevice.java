@@ -23,12 +23,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to indicate that a test should always run, whether the device supports {@code
- * AdServices} or not.
- *
- * <p>Typically used to override the behavior defined in the rule constructor or annotations defined
- * in the class / superclass.
+ * Annotation used to indicate that a test should only run when the {@link
+ * android.content.pm.PackageManager#FEATURE_RAM_LOW device has low ram}.
  */
 @Retention(RUNTIME)
 @Target({TYPE, METHOD})
-public @interface RequiresDeviceSupportedOrNot {}
+public @interface RequiresLowRamDevice {}

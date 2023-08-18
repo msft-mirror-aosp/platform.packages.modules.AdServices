@@ -71,7 +71,7 @@ java_library_host {
         "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
         "java/com/android/adservices/common/RequiresDeviceSupported.java",
         "java/com/android/adservices/common/RequiresDeviceNotSupported.java",
-        "java/com/android/adservices/common/RequiresDeviceSupportedOrNot.java",
+        "java/com/android/adservices/common/RequiresLowRamDevice.java",
         // TODO(b/284971005): files below should be provided by module-utils
         "java/com/android/adservices/common/AbstractSupportedFeatureRule.java",
         "java/com/android/adservices/common/Logger.java",

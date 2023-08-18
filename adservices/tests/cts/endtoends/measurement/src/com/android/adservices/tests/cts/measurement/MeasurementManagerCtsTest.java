@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.measurement;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -44,8 +45,9 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -53,6 +55,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -106,6 +109,10 @@ public class MeasurementManagerCtsTest {
 
     private String mPreviousAppAllowList;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @Before
     public void setup() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
@@ -114,8 +121,6 @@ public class MeasurementManagerCtsTest {
                             sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
         }
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // To grant access to all pp api app
         allowAllPackageNamesAccessToMeasurementApis();
@@ -141,6 +146,17 @@ public class MeasurementManagerCtsTest {
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
         overrideMeasurementKillSwitches(false);
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testMeasurementApiDisabled_lowRamDevice() throws Exception {
+        MeasurementManager manager = MeasurementManager.get(sContext);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        boolean result = callMeasurementApiStatus(false);
+
+        assertWithMessage("Msmt Api Enabled").that(result).isFalse();
     }
 
     @Test
