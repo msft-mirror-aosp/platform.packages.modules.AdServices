@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -115,7 +116,7 @@ public class GaUxDebugChannelTest {
                     }
                 });
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -140,8 +141,12 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, /* isGa */ true);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false, /* isGa */
+                UiConstants.UX.GA_UX);
     }
 
     /** Verify that when request sent from entry point, we won't trigger notification. */
@@ -160,7 +165,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -183,7 +188,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -209,7 +214,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -234,7 +239,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -282,7 +287,7 @@ public class GaUxDebugChannelTest {
                 Executors.newCachedThreadPool(),
                 mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */

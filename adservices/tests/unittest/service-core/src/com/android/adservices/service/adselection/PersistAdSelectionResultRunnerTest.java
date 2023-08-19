@@ -251,7 +251,10 @@ public class PersistAdSelectionResultRunnerTest {
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
 
         Assert.assertTrue(callback.mIsSuccess);
-        Assert.assertNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
     }
 

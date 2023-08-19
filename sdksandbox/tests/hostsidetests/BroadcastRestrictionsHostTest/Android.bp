@@ -24,20 +24,22 @@ java_test_host {
     ],
     static_libs: [
         "cts-install-lib-host",
+        "modules-utils-build-testing",
         "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
     data: [
         ":BroadcastRestrictionsTestSdkProvider",
         ":BroadcastRestrictionsTestApp",
+        ":BroadcastRestrictionsPreUTestApp",
     ],
 }
 
 android_test_helper_app {
-    name: "BroadcastRestrictionsTestApp",
-    manifest: "app/BroadcastRestrictionsTestAppManifest.xml",
+    name: "BroadcastRestrictionsPreUTestApp",
+    manifest: "app/BroadcastRestrictionsPreUTestAppManifest.xml",
     srcs: [
-            "app/src/**/BroadcastRestrictionsTestApp.java",
+            "app/src/**/BroadcastRestrictionsPreUTestApp.java",
             ":framework-sdksandbox-sources",
             ":sdksandbox_aidl",
             ":sdksandbox-sources",
@@ -56,6 +58,31 @@ android_test_helper_app {
         platform_apis: true,
         min_sdk_version: "33",
         target_sdk_version: "33",
+}
+
+android_test_helper_app {
+    name: "BroadcastRestrictionsTestApp",
+    manifest: "app/BroadcastRestrictionsTestAppManifest.xml",
+    srcs: [
+        "app/src/**/BroadcastRestrictionsTestApp.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+        "sdkprovider/src/**/*.aidl",
+    ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.ext.junit",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+        "BroadcastsSdkInterfaces",
+        "modules-utils-build",
+    ],
+    test_suites: ["general-tests"],
+    platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {

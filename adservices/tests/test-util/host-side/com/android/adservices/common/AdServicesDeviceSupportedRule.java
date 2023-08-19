@@ -20,26 +20,28 @@ import com.android.tradefed.device.ITestDevice;
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
-    private ITestDevice mDevice;
-
-    /** Creates a rule using {@link Mode#SUPPORTED_BY_DEFAULT}. */
+    /** Default constructor. */
     public AdServicesDeviceSupportedRule() {
-        this(Mode.SUPPORTED_BY_DEFAULT);
-    }
-
-    /** Creates a rule with the given mode. */
-    public AdServicesDeviceSupportedRule(Mode mode) {
-        super(new ConsoleLogger(AdServicesDeviceSupportedRule.class), mode);
+        super(new ConsoleLogger(AdServicesDeviceSupportedRule.class));
     }
 
     public void setDevice(ITestDevice device) {
-        mDevice = device;
+        TestDeviceHelper.setTestDevice(device);
     }
 
     @Override
-    public boolean isFeatureSupported() throws Exception {
-        boolean isSupported = AdServicesSupportHelper.isDeviceSupported(mDevice);
-        mLog.v("isFeatureSupported(): %b", isSupported);
+    public boolean isAdServicesSupportedOnDevice() throws Exception {
+        boolean isSupported =
+                AdServicesSupportHelper.isDeviceSupported(TestDeviceHelper.getTestDevice());
+        mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
+    }
+
+    @Override
+    public boolean isLowRamDevice() throws Exception {
+        boolean isLowRamDevice =
+                AdServicesSupportHelper.isLowRamDevice(TestDeviceHelper.getTestDevice());
+        mLog.v("isLowRamDevice(): %b", isLowRamDevice);
+        return isLowRamDevice;
     }
 }

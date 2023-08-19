@@ -31,9 +31,8 @@ package android.adservices.cobalt {
   }
 
   public final class EncryptedCobaltEnvelopeParams implements android.os.Parcelable {
-    ctor public EncryptedCobaltEnvelopeParams(int, @NonNull int, @NonNull byte[]);
     method public int describeContents();
-    method @NonNull public byte[] getCiphertext();
+    method @NonNull public byte[] getCipherText();
     method @NonNull public int getEnvironment();
     method @NonNull public int getKeyIndex();
     method public void writeToParcel(@NonNull android.os.Parcel, int);

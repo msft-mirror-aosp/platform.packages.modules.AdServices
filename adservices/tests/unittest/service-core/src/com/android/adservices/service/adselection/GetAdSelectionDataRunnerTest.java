@@ -203,7 +203,7 @@ public class GetAdSelectionDataRunnerTest {
     }
 
     @Test
-    public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
+    public void testRunner_revokedUserConsent_returnsRandomResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -226,7 +226,11 @@ public class GetAdSelectionDataRunnerTest {
                 invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
 
         Assert.assertTrue(callback.mIsSuccess);
-        Assert.assertNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertEquals(
+                GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE,
+                callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mServerAdSelectionDaoSpy);
         verifyZeroInteractions(mAdFiltererSpy);

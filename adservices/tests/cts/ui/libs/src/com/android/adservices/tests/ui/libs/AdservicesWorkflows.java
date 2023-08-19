@@ -23,7 +23,6 @@ import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.test.uiautomator.By;
@@ -35,43 +34,24 @@ import com.android.adservices.tests.ui.libs.pages.SettingsPages;
 
 public class AdservicesWorkflows {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
-
     private static final String SETTINGS_PACKAGE = "android.adservices.ui.SETTINGS";
-    private static final String SETTINGS_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
-    private static final String NOTIFICATION_TEST_PACKAGE =
-            "android.test.adservices.ui.NOTIFICATIONS";
 
     public static void startNotificationActivity(
             Context context, UiDevice device, boolean isEUActivity) {
-
-        String notificationPackage =
-                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                        ? NOTIFICATION_TEST_PACKAGE
-                        : NOTIFICATION_PACKAGE;
-
-        Log.d("adservices", "notification package is " + notificationPackage);
         if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.d("adservices", "this does not have read_device_config permission");
         } else {
             Log.d("adservices", "this has read_device_config permission");
         }
-        Intent intent = new Intent(notificationPackage);
+        Intent intent = new Intent(NOTIFICATION_PACKAGE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
         context.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
     public static void startSettingsActivity(Context context, UiDevice device) {
-        String settingsPackage;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            settingsPackage = SETTINGS_TEST_PACKAGE;
-        } else {
-            settingsPackage = SETTINGS_PACKAGE;
-        }
-
-        Log.d("adservices", "settings package is " + settingsPackage);
         if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
                 != PackageManager.PERMISSION_GRANTED) {
             Log.d("adservices", "this does not have read_device_config permission");
@@ -79,11 +59,11 @@ public class AdservicesWorkflows {
             Log.d("adservices", "this has read_device_config permission");
         }
         // Launch the setting view.
-        Intent intent = new Intent(settingsPackage);
+        Intent intent = new Intent(SETTINGS_PACKAGE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
         // Wait for the view to appear
-        device.wait(Until.hasObject(By.pkg(settingsPackage).depth(0)), LAUNCH_TIMEOUT);
+        device.wait(Until.hasObject(By.pkg(SETTINGS_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
     public static void testNotificationActivityFlow(
@@ -129,7 +109,7 @@ public class AdservicesWorkflows {
                 break;
         }
         startSettingsActivity(context, device);
-        SettingsPages.testSettingsPageConsents(context, device, ux, isOptin);
+        SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, true);
     }
 
     public static void verifyNotification(
@@ -205,7 +185,7 @@ public class AdservicesWorkflows {
 
         // if decide to go settings page, then we test settings page consent
         if (isGoSettings) {
-            SettingsPages.testSettingsPageConsents(context, device, ux, isOptin);
+            SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, false);
         }
     }
 }

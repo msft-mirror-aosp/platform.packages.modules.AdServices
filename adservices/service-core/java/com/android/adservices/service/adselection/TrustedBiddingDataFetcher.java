@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.data.customaudience.DBTrustedBiddingData.QUERY_PARAM_KEYS;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
 
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
@@ -161,7 +161,8 @@ public class TrustedBiddingDataFetcher {
         return FluentFuture.from(
                         mAdServicesHttpsClient.fetchPayload(
                                 trustedBiddingUriWithKeys,
-                                ImmutableSet.of(DATA_VERSION_HEADER_KEY)))
+                                ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY),
+                                mDevContext))
                 .catching(
                         Exception.class,
                         e -> {

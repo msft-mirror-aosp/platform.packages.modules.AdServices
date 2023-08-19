@@ -40,8 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Lehetővé teszi egy alkalmazás számára, hogy hozzáférjen az AdService enablement state API-jához."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Hozzáférés az AdServicesManager API-jaihoz"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Lehetővé teszi egy alkalmazás számára, hogy hozzáférjen az AdServicesManager API-jaihoz."</string>
-    <!-- no translation found for app_label (5844694701336604490) -->
-    <skip />
+    <string name="app_label" msgid="5844694701336604490">"Hirdetésekhez kapcsolódó adatvédelem"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Csatlakozzon Ön is az Android hirdetésekhez kapcsolódó adatvédelmi bétaprogramjához"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Az Android folyamatosan privátabb jellegű módokat keres az alkalmazások számára a hirdetések megjelenítéséhez"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"További információ"</string>

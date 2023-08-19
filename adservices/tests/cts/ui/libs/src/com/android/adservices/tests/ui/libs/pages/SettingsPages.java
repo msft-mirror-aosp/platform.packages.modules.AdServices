@@ -33,26 +33,30 @@ import com.android.adservices.tests.ui.libs.UiConstants;
 
 public class SettingsPages {
     public static void testSettingsPageConsents(
-            Context context, UiDevice device, UiConstants.UX ux, boolean isOptin)
+            Context context,
+            UiDevice device,
+            UiConstants.UX ux,
+            boolean isOptin,
+            boolean flipConsent)
             throws UiObjectNotFoundException, InterruptedException {
         switch (ux) {
             case GA_UX:
                 enterTopicsConsentPage(context, device);
-                flipConsent(device, isOptin);
+                flipConsent(device, isOptin, flipConsent);
                 device.pressBack();
                 enterFledgeConsentPage(context, device);
-                flipConsent(device, isOptin);
+                flipConsent(device, isOptin, flipConsent);
                 device.pressBack();
                 enterMsmtConsentPage(context, device);
-                flipConsent(device, isOptin);
+                flipConsent(device, isOptin, flipConsent);
                 device.pressBack();
                 break;
             case BETA_UX:
-                flipConsent(device, isOptin);
+                flipConsent(device, isOptin, flipConsent);
                 break;
             case U18_UX:
                 enterMsmtConsentPage(context, device);
-                flipConsent(device, isOptin);
+                flipConsent(device, isOptin, flipConsent);
         }
     }
 
@@ -71,14 +75,18 @@ public class SettingsPages {
         scrollAndClickButton(context, device, R.string.settingsUI_apps_ga_title);
     }
 
-    public static void flipConsent(UiDevice device, boolean isOptin)
+    public static void flipConsent(UiDevice device, boolean isOptin, boolean flipConsent)
             throws UiObjectNotFoundException, InterruptedException {
         UiObject consentSwitch =
                 device.findObject(new UiSelector().className("android.widget.Switch"));
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(consentSwitch.exists()).isTrue();
         boolean consentStatus = consentSwitch.isChecked();
-        if (isOptin) {
+        if (flipConsent) {
+            consentSwitch.click();
+            Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(consentSwitch.isChecked()).isEqualTo(!consentStatus);
+        } else if (isOptin) {
             if (!consentStatus) {
                 consentSwitch.click();
             }

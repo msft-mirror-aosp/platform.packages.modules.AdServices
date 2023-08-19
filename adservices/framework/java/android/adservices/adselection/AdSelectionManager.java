@@ -52,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -175,15 +176,15 @@ public class AdSelectionManager {
                         @Override
                         public void onSuccess(GetAdSelectionDataResponse resultParcel) {
                             executor.execute(
-                                    () ->
-                                            receiver.onResult(
-                                                    new GetAdSelectionDataOutcome.Builder()
-                                                            .setAdSelectionId(
-                                                                    resultParcel.getAdSelectionId())
-                                                            .setAdSelectionData(
-                                                                    resultParcel
-                                                                            .getAdSelectionData())
-                                                            .build()));
+                                    () -> {
+                                        receiver.onResult(
+                                                new GetAdSelectionDataOutcome.Builder()
+                                                        .setAdSelectionId(
+                                                                resultParcel.getAdSelectionId())
+                                                        .setAdSelectionData(
+                                                                resultParcel.getAdSelectionData())
+                                                        .build());
+                                    });
                         }
 
                         @Override
