@@ -16,10 +16,10 @@
 
 package com.android.adservices.common;
 
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
-
-import com.android.adservices.service.PhFlags;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
@@ -33,7 +33,7 @@ import java.util.List;
  */
 abstract class AbstractGlobalKillSwitchFlipper extends AbstractFlagsRouletteRunner {
 
-    public static final String FLAG = PhFlags.KEY_GLOBAL_KILL_SWITCH;
+    public static final String FLAG = KEY_GLOBAL_KILL_SWITCH;
 
     private static final Logger LOG = new Logger(new AndroidLogger(GlobalKillSwitchFlipper.class));
     private static final String[] FLAGS = {FLAG};

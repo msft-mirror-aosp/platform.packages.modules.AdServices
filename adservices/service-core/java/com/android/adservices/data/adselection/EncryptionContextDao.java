@@ -22,6 +22,11 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import com.android.adservices.data.adselection.datahandlers.DBValidator;
+import com.android.adservices.data.adselection.datahandlers.EncryptionContext;
+import com.android.adservices.ohttp.EncapsulatedSharedSecret;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 
 /** Dao to manage access to entities in Encryption Context table. */
 @Dao
@@ -39,4 +44,41 @@ public abstract class EncryptionContextDao {
     /** Inserts the given EncryptionContext in table. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insertEncryptionContext(DBEncryptionContext context);
+
+    /** Persists the encryption context in the {@link DBEncryptionContext} table. */
+    public void persistEncryptionContext(long contextId, EncryptionContext encryptionContext) {
+        DBValidator.validateEncryptionContext(encryptionContext);
+
+        ObliviousHttpRequestContext requestContext = encryptionContext.getOhttpRequestContext();
+        insertEncryptionContext(
+                DBEncryptionContext.builder()
+                        .setContextId(contextId)
+                        .setEncryptionKeyType(encryptionContext.getAdSelectionEncryptionKeyType())
+                        .setSeed(requestContext.seed())
+                        .setKeyConfig(requestContext.keyConfig().serializeKeyConfigToBytes())
+                        .setSharedSecret(
+                                requestContext.encapsulatedSharedSecret().serializeToBytes())
+                        .build());
+    }
+
+    /**
+     * Method to get {@link EncryptionContext} associated with the given adSelectionId and key type.
+     */
+    public EncryptionContext getEncryptionContextForIdAndKeyType(
+            long contextId, @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType)
+            throws Exception {
+        DBEncryptionContext dbEncryptionContext =
+                getEncryptionContext(contextId, encryptionKeyType);
+
+        return EncryptionContext.builder()
+                .setAdSelectionEncryptionKeyType(encryptionKeyType)
+                .setOhttpRequestContext(
+                        ObliviousHttpRequestContext.create(
+                                ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                                        dbEncryptionContext.getKeyConfig()),
+                                EncapsulatedSharedSecret.create(
+                                        dbEncryptionContext.getSharedSecret()),
+                                dbEncryptionContext.getSeed()))
+                .build();
+    }
 }

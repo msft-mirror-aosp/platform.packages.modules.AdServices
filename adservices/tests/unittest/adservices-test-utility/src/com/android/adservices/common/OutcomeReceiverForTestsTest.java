@@ -28,7 +28,7 @@ public final class OutcomeReceiverForTestsTest {
     private static final String RESULT = "Saul Goodman!";
     private static final Exception ERROR = new UnsupportedOperationException("D'OH!");
 
-    @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule public final Expect expect = Expect.create();
 

@@ -362,7 +362,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         if (SdkLevel.isAtLeastT()) {
@@ -454,11 +453,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-        // Re-set disable enrollment test seed to true
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_enrollment_test_seed false");
 
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);

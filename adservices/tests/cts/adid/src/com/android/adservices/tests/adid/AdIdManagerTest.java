@@ -23,6 +23,7 @@ import android.adservices.adid.AdIdManager;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -44,12 +45,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AdIdManagerTest {
+    private static final String TAG = AdIdManagerTest.class.getSimpleName();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
 
     // Ignore tests when device is not supported
     @Rule(order = 1)
@@ -79,6 +81,7 @@ public final class AdIdManagerTest {
 
                     @Override
                     public void onError(Exception error) {
+                        Log.e(TAG, "Failed to get Ad Id!", error);
                         Assert.fail();
                     }
                 };

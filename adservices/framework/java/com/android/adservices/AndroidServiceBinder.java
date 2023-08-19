@@ -27,6 +27,7 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
 
 import android.annotation.Nullable;
 import android.content.ComponentName;
@@ -36,7 +37,10 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemProperties;
+import android.text.TextUtils;
 
 import com.android.internal.annotations.GuardedBy;
 
@@ -75,14 +79,34 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @GuardedBy("mLock")
     private ServiceConnection mServiceConnection;
 
+    private final boolean mSimulatingLowRamDevice;
+
     protected AndroidServiceBinder(
             Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
         mContext = context;
         mBinderConverter = converter;
+        if (!isDebuggable()) {
+            mSimulatingLowRamDevice = false;
+        } else {
+            String propValue = SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            mSimulatingLowRamDevice = !TextUtils.isEmpty(propValue) && Boolean.valueOf(propValue);
+        }
+        if (mSimulatingLowRamDevice) {
+            LogUtil.w(
+                    "Service %s disabled because of system property %s",
+                    serviceIntentAction, SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+        }
     }
 
     public T getService() {
+        if (mSimulatingLowRamDevice) {
+            throw new IllegalStateException(
+                    "Service is not bound (because of SystemProperty "
+                            + SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW
+                            + ")");
+        }
+
         synchronized (mLock) {
             // If we already have a service, just return it.
             if (mService != null) {
@@ -215,6 +239,12 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     @Override
     public void unbindFromService() {
+        if (mSimulatingLowRamDevice) {
+            LogUtil.d(
+                    "unbindFromService(): ignored because it's disabled by system property %s",
+                    SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            return;
+        }
         synchronized (mLock) {
             if (mServiceConnection != null) {
                 LogUtil.d("unbinding...");
@@ -223,5 +253,23 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             mServiceConnection = null;
             mService = null;
         }
+    }
+
+    // TODO(b/293894199, b/284744130): members below were adapted from BuildCompatUtils, it would
+    // be better to move BuildCompatUtils to this package
+
+    private static final boolean IS_DEBUGGABLE = computeIsDebuggable();
+
+    private static boolean isDebuggable() {
+        return IS_DEBUGGABLE;
+    }
+
+    private static boolean computeIsDebuggable() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return Build.isDebuggable();
+        }
+
+        // Build.isDebuggable was added in S; duplicate that functionality for R.
+        return SystemProperties.getInt("ro.debuggable", 0) == 1;
     }
 }

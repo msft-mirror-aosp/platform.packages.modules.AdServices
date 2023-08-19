@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.common;
 
-package com.android.adservices.service.signals;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import org.json.JSONObject;
-import org.junit.Test;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-public class UpdatesProcessorTest {
-    private final UpdatesProcessor mUpdatesProcessor = new UpdatesProcessor();
-
-    // TODO(b/293476333) Implement JSON processing
-    @Test
-    public void testUpdatesProcessor() {
-        mUpdatesProcessor.processUpdates(new JSONObject());
-    }
+/**
+ * Used by {@link AbstractSdkLevelSupportedRule SdkLevelSupportedRule} to skip a test if the Android
+ * SDK level of the device is not at least {@code R}.
+ */
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface RequiresSdkLevelAtLeastR {
+    /** Reason why the test should be skipped. */
+    String reason() default "";
 }
