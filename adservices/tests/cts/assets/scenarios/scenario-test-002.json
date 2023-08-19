@@ -17,24 +17,6 @@
         "body": "ScoringLogic.js.txt"
       },
       "verify_called": true
-    },
-    {
-      "request": {
-        "path": "scoring/trusted"
-      },
-      "response": {
-        "body": "ScoringSignals.json"
-      },
-      "verify_called": true
-    },
-    {
-      "request": {
-        "path": "bidding/trusted"
-      },
-      "response": {
-        "body": "BiddingSignals.json"
-      },
-      "verify_called": true
     }
   ],
   "substitutions": {
