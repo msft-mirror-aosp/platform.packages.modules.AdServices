@@ -27,6 +27,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -134,7 +135,7 @@ public class U18UxDetentionChannelTest {
 
         mCommonManager.enableAdServices(adServicesAdultStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice,
                 /* isDisplayed= */ true,
@@ -153,7 +154,7 @@ public class U18UxDetentionChannelTest {
         mCommonManager.enableAdServices(adServicesU18States, CALLBACK_EXECUTOR, mCallback);
 
         // Verify no U18 UX notification can be triggered.
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice,
                 /* isDisplayed= */ false,
@@ -177,7 +178,7 @@ public class U18UxDetentionChannelTest {
 
         mCommonManager.enableAdServices(adServicesAdultStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice,
                 /* isDisplayed= */ true,
@@ -196,7 +197,7 @@ public class U18UxDetentionChannelTest {
         mCommonManager.enableAdServices(adServicesU18States, CALLBACK_EXECUTOR, mCallback);
 
         // Verify no U18 UX notification can be triggered.
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice,
                 /* isDisplayed= */ false,

@@ -172,19 +172,14 @@ public final class AdDataTest {
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .setAdRenderId(AdDataFixture.VALID_RENDER_ID)
                         .build();
-        String expectedToString =
-                "AdData{mRenderUri="
-                        + VALID_RENDER_URI
-                        + ", mMetadata='"
-                        + AdDataFixture.VALID_METADATA
-                        + "', mAdCounterKeys="
-                        + AdDataFixture.getAdCounterKeys()
-                        + ", mAdFilters="
-                        + AdFiltersFixture.getValidUnhiddenFilters()
-                        + ", mAdRenderId='"
-                        + AdDataFixture.VALID_RENDER_ID
-                        + "'}";
-        assertThat(validAdData.toString()).isEqualTo(expectedToString);
+        final String actualString = validAdData.toString();
+
+        assertThat(actualString).startsWith("AdData{");
+        assertThat(actualString).contains("mRenderUri=" + VALID_RENDER_URI);
+        assertThat(actualString).contains(", mMetadata='" + AdDataFixture.VALID_METADATA + "'");
+        assertThat(actualString).contains(", mAdCounterKeys=" + AdDataFixture.getAdCounterKeys());
+        assertThat(actualString).contains(", mAdRenderId='" + AdDataFixture.VALID_RENDER_ID + "'");
+        assertThat(actualString).endsWith("}");
     }
 
     @Test

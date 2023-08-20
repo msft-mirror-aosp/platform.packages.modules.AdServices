@@ -42,11 +42,13 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.cache.CacheDatabase;
 import com.android.adservices.service.common.cache.CacheEntryDao;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 import com.android.adservices.service.common.cache.HttpCache;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,6 +94,10 @@ public class AdServicesHttpsClientTest {
     private static final String REQUEST_PROPERTY_VALUE = "Fake_Value";
     private static final long MAX_AGE_SECONDS = 120;
     private static final long MAX_ENTRIES = 20;
+    private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
+    private static final DevContext DEV_CONTEXT_ENABLED =
+            DevContext.builder().setDevOptionsEnabled(true).build();
+
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
@@ -128,7 +134,16 @@ public class AdServicesHttpsClientTest {
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
 
-        assertThat(getAndReadNothing(Uri.parse(url.toString()))).isNull();
+        assertThat(getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED)).isNull();
+    }
+
+    @Test
+    public void testGetAndReadNothingSuccessfulResponse_DevOptionsEnabled() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+
+        assertThat(getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_ENABLED)).isNull();
     }
 
     @Test
@@ -136,7 +151,7 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        getAndReadNothing(Uri.parse(url.toString()));
+        getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mReportingPath, request1.getPath());
@@ -153,7 +168,7 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> getAndReadNothing(Uri.parse(url.toString())));
+                        () -> getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
@@ -163,7 +178,8 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class, () -> getAndReadNothing(Uri.parse(mFakeUrl)));
+                        ExecutionException.class,
+                        () -> getAndReadNothing(Uri.parse(mFakeUrl), DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -172,7 +188,9 @@ public class AdServicesHttpsClientTest {
         ExecutionException wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> getAndReadNothing(Uri.parse("http://google.com")));
+                        () ->
+                                getAndReadNothing(
+                                        Uri.parse("http://google.com"), DEV_CONTEXT_DISABLED));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
@@ -185,7 +203,20 @@ public class AdServicesHttpsClientTest {
                         ImmutableList.of(new MockResponse().setBody(mJsScript)));
         URL url = server.getUrl(mFetchPayloadPath);
 
-        AdServicesHttpClientResponse result = fetchPayload(Uri.parse(url.toString()));
+        AdServicesHttpClientResponse result =
+                fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
+        assertEquals(mJsScript, result.getResponseBody());
+    }
+
+    @Test
+    public void testFetchPayloadSuccessfulResponse_DevOptionsEnabled() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(mJsScript)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse result =
+                fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_ENABLED);
         assertEquals(mJsScript, result.getResponseBody());
     }
 
@@ -195,7 +226,7 @@ public class AdServicesHttpsClientTest {
                 mMockWebServerRule.startMockWebServer(
                         ImmutableList.of(new MockResponse().setBody(mJsScript)));
         URL url = server.getUrl(mFetchPayloadPath);
-        fetchPayload(Uri.parse(url.toString()));
+        fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mFetchPayloadPath, request1.getPath());
@@ -211,7 +242,8 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
@@ -220,7 +252,9 @@ public class AdServicesHttpsClientTest {
         mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
 
         Exception exception =
-                assertThrows(ExecutionException.class, () -> fetchPayload(Uri.parse(mFakeUrl)));
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(mFakeUrl), DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -241,7 +275,8 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -250,7 +285,7 @@ public class AdServicesHttpsClientTest {
         Exception wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchPayload(Uri.parse("http://google.com")));
+                        () -> fetchPayload(Uri.parse("http://google.com"), DEV_CONTEXT_DISABLED));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
@@ -271,7 +306,8 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -299,7 +335,7 @@ public class AdServicesHttpsClientTest {
                 .getResponseCode();
 
         ListenableFuture<AdServicesHttpClientResponse> futureResponse =
-                mClient.fetchPayload(Uri.parse((mFakeUrl)));
+                mClient.fetchPayload(Uri.parse((mFakeUrl)), DEV_CONTEXT_DISABLED);
 
         // There could be some lag between fetch call and connection opening
         verify(mUrlMock, timeout(delayMs)).openConnection();
@@ -334,7 +370,7 @@ public class AdServicesHttpsClientTest {
         doReturn(202).when(mURLConnectionMock).getResponseCode();
 
         ListenableFuture<AdServicesHttpClientResponse> futureResponse =
-                mClient.fetchPayload(Uri.parse((mFakeUrl)));
+                mClient.fetchPayload(Uri.parse((mFakeUrl)), DEV_CONTEXT_DISABLED);
 
         // There could be some lag between fetch call and connection opening
         verify(mUrlMock, timeout(delayMs)).openConnection();
@@ -363,6 +399,7 @@ public class AdServicesHttpsClientTest {
                                         .setUri(Uri.parse(url.toString()))
                                         .setUseCache(false)
                                         .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                        .setDevContext(DEV_CONTEXT_DISABLED)
                                         .build())
                         .get();
         assertEquals(mJsScript, response.getResponseBody());
@@ -392,6 +429,7 @@ public class AdServicesHttpsClientTest {
                                 .setRequestProperties(
                                         ImmutableMap.of(
                                                 REQUEST_PROPERTY_KEY, REQUEST_PROPERTY_VALUE))
+                                .setDevContext(DEV_CONTEXT_DISABLED)
                                 .build())
                 .get();
     }
@@ -419,7 +457,31 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
-                        uri, requestProperties, responseHeaderKeys, false);
+                        uri, requestProperties, responseHeaderKeys, false, DEV_CONTEXT_DISABLED);
+
+        assertEquals(uri, request.getUri());
+        assertEquals(requestProperties, request.getRequestProperties());
+        assertEquals(responseHeaderKeys, request.getResponseHeaderKeys());
+        assertFalse(request.getUseCache());
+
+        final String body = "Fake response body";
+        final ImmutableMap responseHeaders = ImmutableMap.of("key", List.of("value1", "value2"));
+        AdServicesHttpClientResponse response =
+                AdServicesHttpClientResponse.create(body, responseHeaders);
+
+        assertEquals(body, response.getResponseBody());
+        assertEquals(responseHeaders, response.getResponseHeaders());
+    }
+
+    @Test
+    public void testCreateAdServicesRequestResponse_Success_DevOptionsEnabled() {
+        final Uri uri = Uri.parse("www.google.com");
+        final ImmutableMap requestProperties = ImmutableMap.of("key", "value");
+        final ImmutableSet responseHeaderKeys = ImmutableSet.of("entry1", "entry2");
+
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.create(
+                        uri, requestProperties, responseHeaderKeys, false, DEV_CONTEXT_ENABLED);
 
         assertEquals(uri, request.getUri());
         assertEquals(requestProperties, request.getRequestProperties());
@@ -444,6 +506,7 @@ public class AdServicesHttpsClientTest {
                             .setUri(Uri.parse(mFakeUrl))
                             .setUseCache(false)
                             .setRequestProperties(ImmutableMap.of(null, null))
+                            .setDevContext(DEV_CONTEXT_DISABLED)
                             .build();
                 });
     }
@@ -468,6 +531,7 @@ public class AdServicesHttpsClientTest {
                                 .setUri(Uri.parse(url.toString()))
                                 .setUseCache(true)
                                 .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                .setDevContext(DEV_CONTEXT_DISABLED)
                                 .build())
                 .get();
         RecordedRequest request1 = server.takeRequest();
@@ -514,7 +578,7 @@ public class AdServicesHttpsClientTest {
                         });
         URL url = server.getUrl(mFetchPayloadPath);
 
-        mClient.fetchPayload(Uri.parse(url.toString()));
+        mClient.fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mFetchPayloadPath, request1.getPath());
@@ -522,7 +586,7 @@ public class AdServicesHttpsClientTest {
         assertEquals(1, server.getRequestCount());
 
         AdServicesHttpClientResponse response =
-                mClient.fetchPayload(Uri.parse(url.toString())).get();
+                fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
         assertEquals(mJsScript, response.getResponseBody());
         assertEquals("This call should not have been cached", 2, server.getRequestCount());
     }
@@ -541,7 +605,7 @@ public class AdServicesHttpsClientTest {
                         });
         URL url = server.getUrl(mFetchPayloadPath);
 
-        mClient.fetchPayload(Uri.parse(url.toString()));
+        mClient.fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mFetchPayloadPath, request1.getPath());
@@ -549,7 +613,7 @@ public class AdServicesHttpsClientTest {
         assertEquals(1, server.getRequestCount());
 
         AdServicesHttpClientResponse response =
-                mClient.fetchPayload(Uri.parse(url.toString())).get();
+                fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
         assertEquals(mJsScript, response.getResponseBody());
         assertEquals("This call should not have been cached", 2, server.getRequestCount());
     }
@@ -582,6 +646,7 @@ public class AdServicesHttpsClientTest {
                 AdServicesHttpClientRequest.builder()
                         .setUri(Uri.parse(url.toString()))
                         .setUseCache(true)
+                        .setDevContext(DEV_CONTEXT_DISABLED)
                         .build());
 
         RecordedRequest request1 = server.takeRequest();
@@ -594,6 +659,7 @@ public class AdServicesHttpsClientTest {
                                 AdServicesHttpClientRequest.builder()
                                         .setUri(Uri.parse(url.toString()))
                                         .setUseCache(true)
+                                        .setDevContext(DEV_CONTEXT_DISABLED)
                                         .build())
                         .get();
         assertEquals(mJsScript, response.getResponseBody());
@@ -605,7 +671,7 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        assertThat(postJson(Uri.parse(url.toString()), mData)).isNull();
+        assertThat(postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED)).isNull();
     }
 
     @Test
@@ -613,7 +679,19 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        postJson(Uri.parse(url.toString()), mData);
+        postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED);
+
+        RecordedRequest request1 = server.takeRequest();
+        assertEquals(mReportingPath, request1.getPath());
+        assertEquals("POST", request1.getMethod());
+    }
+
+    @Test
+    public void testPostJsonCorrectPath_DevOptionsEnabled() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_ENABLED);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals(mReportingPath, request1.getPath());
@@ -625,7 +703,7 @@ public class AdServicesHttpsClientTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
         URL url = server.getUrl(mReportingPath);
-        postJson(Uri.parse(url.toString()), mData);
+        postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
         assertEquals("POST", request1.getMethod());
@@ -641,7 +719,8 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class, () -> postJson(Uri.parse(url.toString()), mData));
+                        ExecutionException.class,
+                        () -> postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
@@ -650,7 +729,9 @@ public class AdServicesHttpsClientTest {
         mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
 
         Exception exception =
-                assertThrows(ExecutionException.class, () -> postJson(Uri.parse(mFakeUrl), mData));
+                assertThrows(
+                        ExecutionException.class,
+                        () -> postJson(Uri.parse(mFakeUrl), mData, DEV_CONTEXT_DISABLED));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -659,7 +740,11 @@ public class AdServicesHttpsClientTest {
         ExecutionException wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> postJson(Uri.parse("http://google.com"), mData));
+                        () ->
+                                postJson(
+                                        Uri.parse("http://google.com"),
+                                        mData,
+                                        DEV_CONTEXT_DISABLED));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
@@ -674,7 +759,8 @@ public class AdServicesHttpsClientTest {
         // Assert future chain throws an AdServicesNetworkException.
         Exception wrapperException =
                 assertThrows(
-                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
 
         // Assert the expected AdServicesNetworkException is thrown.
@@ -694,7 +780,8 @@ public class AdServicesHttpsClientTest {
         // Assert future chain throws an AdServicesNetworkException.
         Exception wrapperException =
                 assertThrows(
-                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         assertThat(wrapperException.getCause())
                 .isInstanceOf(RetryableAdServicesNetworkException.class);
 
@@ -706,15 +793,54 @@ public class AdServicesHttpsClientTest {
         assertThat(exception.getRetryAfter()).isEqualTo(Duration.ofMillis(1000));
     }
 
-    private AdServicesHttpClientResponse fetchPayload(Uri uri) throws Exception {
-        return mClient.fetchPayload(uri).get();
+    @Test
+    public void testFetchPayloadDomainIsLocalhost_DevOptionsDisabled() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setResponseCode(305)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
+        // Verify we are pinging a local domain.
+        assertThat(WebAddresses.isLocalhost(Uri.parse(url.toString()))).isTrue();
+        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
     }
 
-    private Void getAndReadNothing(Uri uri) throws Exception {
-        return mClient.getAndReadNothing(uri).get();
+    @Test
+    public void testFetchPayloadDomainIsLocalhost_DevOptionsEnabled() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                return new MockResponse()
+                                        .setBody(mJsScript)
+                                        .addHeader(NO_CACHE_HEADER);
+                            }
+                        });
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_ENABLED).get();
+
+        // Verify we are pinging a local domain.
+        assertThat(WebAddresses.isLocalhost(Uri.parse(url.toString()))).isTrue();
+        assertEquals(mJsScript, response.getResponseBody());
     }
 
-    private Void postJson(Uri uri, String data) throws Exception {
-        return mClient.postPlainText(uri, data).get();
+    private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)
+            throws Exception {
+        return mClient.fetchPayload(uri, devContext).get();
+    }
+
+    private Void getAndReadNothing(Uri uri, DevContext devContext) throws Exception {
+        return mClient.getAndReadNothing(uri, devContext).get();
+    }
+
+    private Void postJson(Uri uri, String data, DevContext devContext) throws Exception {
+        return mClient.postPlainText(uri, data, devContext).get();
     }
 }

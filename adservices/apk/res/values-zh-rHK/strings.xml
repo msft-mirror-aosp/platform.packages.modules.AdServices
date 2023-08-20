@@ -40,7 +40,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"允許應用程式存取 AdService 啟用狀態 API。"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager 的 API 存取權"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"允許應用程式存取 AdServicesManager 的 API。"</string>
-    <string name="app_label" msgid="5844694701336604490">"廣告隱私權"</string>
+    <string name="app_label" msgid="5844694701336604490">"廣告私隱權"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"加入 Android 廣告私隱權 Beta 版本測試計劃"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android 不斷探索如何透過更能保護私隱的方式，讓應用程式向你顯示廣告"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"瞭解詳情"</string>

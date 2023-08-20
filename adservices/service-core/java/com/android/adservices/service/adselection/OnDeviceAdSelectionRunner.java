@@ -90,6 +90,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
             final int callerUid) {
@@ -106,6 +107,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 debugReporting,
                 callerUid);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -178,6 +180,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting) {
         super(
@@ -195,6 +198,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
                 debugReporting);
 
@@ -418,6 +422,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
         sLogger.v("Creating Ad Selection result from scoring winner");
         String buyerContextualSignalsString;
+        String sellerContextualSignalsString;
         // There should always be a winner.
         AdScoringOutcome scoringWinner = winningAdScoringOutcomeAndContext.first;
         if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
@@ -426,13 +431,20 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             buyerContextualSignalsString = scoringWinner.getBuyerContextualSignals().toString();
         }
 
+        if (Objects.isNull(scoringWinner.getSellerContextualSignals())) {
+            sellerContextualSignalsString = "{}";
+        } else {
+            sellerContextualSignalsString = scoringWinner.getSellerContextualSignals().toString();
+        }
+
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
-                .setBuyerContextualSignals(buyerContextualSignalsString);
+                .setBuyerContextualSignals(buyerContextualSignalsString)
+                .setSellerContextualSignals(sellerContextualSignalsString);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =

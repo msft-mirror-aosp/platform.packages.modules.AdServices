@@ -39,6 +39,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -53,6 +54,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -62,6 +64,7 @@ import java.util.stream.Collectors;
 @RequiresApi(Build.VERSION_CODES.S)
 public class GetAdSelectionDataRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @VisibleForTesting static final int REVOKED_CONSENT_RANDOM_DATA_SIZE = 1024;
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
@@ -207,6 +210,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(seller);
         Objects.requireNonNull(packageName);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA);
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         return mBuyerInputGenerator
                 .createBuyerInputs()
@@ -221,7 +225,13 @@ public class GetAdSelectionDataRunner {
                         },
                         mLightweightExecutorService)
                 .transformAsync(
-                        encrypted -> persistAdSelectionIdRequest(adSelectionId, seller, encrypted),
+                        encrypted -> {
+                            ListenableFuture<byte[]> encryptedBytes =
+                                    persistAdSelectionIdRequest(adSelectionId, seller, encrypted);
+                            Tracing.endAsyncSection(
+                                    Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA, traceCookie);
+                            return encryptedBytes;
+                        },
                         mLightweightExecutorService);
     }
 
@@ -238,6 +248,7 @@ public class GetAdSelectionDataRunner {
 
     private ListenableFuture<byte[]> persistAdSelectionIdRequest(
             long adSelectionId, AdTechIdentifier seller, byte[] encryptedBytes) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST);
         return mBackgroundExecutorService.submit(
                 () -> {
                     mAuctionServerAdSelectionDao.insertAuctionServerAdSelection(
@@ -245,6 +256,7 @@ public class GetAdSelectionDataRunner {
                                     .setAdSelectionId(adSelectionId)
                                     .setSeller(seller)
                                     .build());
+                    Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST, traceCookie);
                     return encryptedBytes;
                 });
     }
@@ -318,7 +330,13 @@ public class GetAdSelectionDataRunner {
         try {
             // TODO(b/259522822): Determine what is an appropriate empty response for revoked
             //  consent for selectAdsFromOutcomes
-            callback.onSuccess(null);
+            byte[] bytes = new byte[REVOKED_CONSENT_RANDOM_DATA_SIZE];
+            new SecureRandom().nextBytes(bytes);
+            callback.onSuccess(
+                    new GetAdSelectionDataResponse.Builder()
+                            .setAdSelectionId(mAdSelectionIdGenerator.generateId())
+                            .setAdSelectionData(bytes)
+                            .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
         } finally {

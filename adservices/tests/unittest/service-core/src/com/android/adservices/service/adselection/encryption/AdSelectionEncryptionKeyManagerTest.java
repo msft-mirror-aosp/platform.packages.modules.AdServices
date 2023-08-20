@@ -40,6 +40,7 @@ import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -65,6 +66,7 @@ public class AdSelectionEncryptionKeyManagerTest {
 
     private static final String AUCTION_KEY_FETCH_URI = "https://foo.bar/auctionkey";
     private static final String JOIN_KEY_FETCH_URI = "https://foo.bar/joinkey";
+    private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
 
     @Rule public final MockitoRule mockito = MockitoJUnit.rule();
     @Mock private AdServicesHttpsClient mMockHttpClient;
@@ -237,7 +239,7 @@ public class AdSelectionEncryptionKeyManagerTest {
     @Test
     public void test_fetchAndPersistAuctionKey_fetchSuccess_returnsLatestActiveAuctionKey()
             throws Exception {
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI)))
+        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));
@@ -260,7 +262,8 @@ public class AdSelectionEncryptionKeyManagerTest {
     @Test
     public void test_fetchAndPersistJoinKey_fetchSuccess_returnsLatestActiveJoinKey()
             throws Exception {
-        when(mMockHttpClient.fetchPayload(Uri.parse(JOIN_KEY_FETCH_URI)))
+        when(mMockHttpClient.fetchPayload(
+                        Uri.parse(JOIN_KEY_FETCH_URI), DevContext.createForDevOptionsDisabled()))
                 .thenReturn(
                         Futures.immediateFuture(
                                 JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
@@ -328,7 +331,7 @@ public class AdSelectionEncryptionKeyManagerTest {
                     throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
         addDelayToExpireKeys(EXPIRY_TTL_1SEC);
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI)))
+        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture
@@ -356,7 +359,7 @@ public class AdSelectionEncryptionKeyManagerTest {
             test_getLatestActiveOhttpKeyConfigOfType_withNoKey_shouldFetchPersistAndReturnNewKey()
                     throws Exception {
         addDelayToExpireKeys(EXPIRY_TTL_1SEC);
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI)))
+        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture

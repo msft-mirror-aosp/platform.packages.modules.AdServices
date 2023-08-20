@@ -16,19 +16,18 @@
 package com.android.adservices.common;
 
 import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to indicate that a test should always run, whether the device supports {@code
- * AdServices} or not.
- *
- * <p>Typically used to override the behavior defined in the rule constructor or annotations defined
- * in the class / superclass.
+ * Used by {@link AbstractSdkLevelSupportedRule SdkLevelSupportedRule} to skip a test if the Android
+ * SDK level of the device is not at least {@code T}.
  */
 @Retention(RUNTIME)
-@Target({TYPE, METHOD})
-public @interface RequiresDeviceSupportedOrNot {}
+@Target(METHOD)
+public @interface RequiresSdkLevelAtLeastT {
+    /** Reason why the test should be skipped. */
+    String reason() default "";
+}

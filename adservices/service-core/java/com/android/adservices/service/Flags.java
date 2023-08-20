@@ -526,6 +526,13 @@ public interface Flags {
         return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
     }
 
+    boolean MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER = false;
+
+    /** Returns true if lookback window filter is enabled else false. */
+    default boolean getMeasurementEnableLookbackWindowFilter() {
+        return MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -1324,18 +1331,18 @@ public interface Flags {
     @interface ConsentSourceOfTruth {}
 
     /** Write and read consent from system server only. */
-    int SYSTEM_SERVER_ONLY = 0;
+    int SYSTEM_SERVER_ONLY = FlagsConstants.SYSTEM_SERVER_ONLY;
     /** Write and read consent from PPAPI only */
-    int PPAPI_ONLY = 1;
+    int PPAPI_ONLY = FlagsConstants.PPAPI_ONLY;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
-    int PPAPI_AND_SYSTEM_SERVER = 2;
+    int PPAPI_AND_SYSTEM_SERVER = FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
     /**
      * Write consent data to AppSearch only. To store consent data in AppSearch the flag
      * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
      * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
      * running on S- for all consent requests and on T+ once after OTA.
      */
-    int APPSEARCH_ONLY = 3;
+    int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
      * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
@@ -2011,7 +2018,7 @@ public interface Flags {
      * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
      * Negative Value means skipping the rate limiting checking.
      */
-    float ADID_REQUEST_PERMITS_PER_SECOND = 25;
+    float ADID_REQUEST_PERMITS_PER_SECOND = FlagsConstants.ADID_REQUEST_PERMITS_PER_SECOND;
 
     /**
      * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
@@ -2942,11 +2949,50 @@ public interface Flags {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 
-    /** Default value for register interaction API */
+    /**
+     * Default value for if events will be registered as a source of attribution in addition to
+     * being reported.
+     */
     boolean FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED = false;
 
-    /** Returns whether to enable register interaction API for PA + ARA */
+    /**
+     * Returns if events will be registered as a source of attribution in addition to being
+     * reported.
+     *
+     * <p>This, unlocked by the short-term integration between Protected Audience (PA) and
+     * Measurement's ARA, enables the {@link
+     * android.adservices.adselection.AdSelectionManager#reportEvent} API to report an event and
+     * register it as source of attribution, using a single API call, unified under the hood.
+     *
+     * <ul>
+     *   <li>When enabled, by default: ARA will report and register the event.
+     *   <li>When enabled, with fallback: PA will report the event and ARA will register the event.
+     *   <li>When disabled, when {@link
+     *       android.adservices.adselection.AdSelectionManager#reportEvent} is called, only PA will
+     *       report the event.
+     * </ul>
+     */
     default boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+    }
+
+    /** Default value for if the fallback for event reporting and source registration is enabled. */
+    boolean FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED = false;
+
+    /**
+     * Returns if the fallback for event reporting and source registration is enabled.
+     *
+     * <ul>
+     *   <li>Only relevant if {@link #getFledgeMeasurementReportAndRegisterEventApiEnabled} is
+     *       {@code true}.
+     *   <li>When enabled, PA will report the event and ARA will register the event.
+     *   <li>When disabled, ARA will report and register the event.
+     * </ul>
+     *
+     * <p>If enabled
+     */
+    default boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
+        return getFledgeMeasurementReportAndRegisterEventApiEnabled()
+                && FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
     }
 }
