@@ -245,7 +245,7 @@ public class FetchCustomAudienceImpl {
                 sLogger.v("fetchCustomAudience is enabled.");
                 // TODO(b/282017342): Evaluate correctness of futures chain.
                 filterAndValidateRequest(request, devContext)
-                        .transformAsync(this::performFetch, mExecutorService)
+                        .transformAsync(ignoredVoid -> performFetch(devContext), mExecutorService)
                         .transformAsync(this::validateResponse, mExecutorService)
                         .transformAsync(this::persistResponse, mExecutorService)
                         .addCallback(
@@ -325,7 +325,8 @@ public class FetchCustomAudienceImpl {
                         }));
     }
 
-    private ListenableFuture<AdServicesHttpClientResponse> performFetch(Void ignoredVoid) {
+    private ListenableFuture<AdServicesHttpClientResponse> performFetch(
+            @NonNull DevContext devContext) {
         sLogger.v("In fetchCustomAudience performFetch");
 
         // Optional fields as a json string.
@@ -346,6 +347,7 @@ public class FetchCustomAudienceImpl {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(mFetchUri)
+                        .setDevContext(devContext)
                         .build());
     }
 

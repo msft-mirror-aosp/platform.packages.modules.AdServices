@@ -31,6 +31,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
@@ -63,20 +64,24 @@ public class JsFetcher {
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    @NonNull private final DevContext mDevContext;
 
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(devContext);
 
         mBackgroundExecutorService = backgroundExecutorService;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
+        mDevContext = devContext;
     }
 
     /**
@@ -125,6 +130,7 @@ public class JsFetcher {
                 AdServicesHttpClientRequest.builder()
                         .setUri(biddingLogicUri)
                         .setUseCache(useCaching)
+                        .setDevContext(mDevContext)
                         .build();
 
         return resolveJsScriptSource(jsOverrideFuture, biddingLogicRequest)

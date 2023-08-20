@@ -89,7 +89,7 @@ public final class CobaltUploaderTest {
         EncryptedCobaltEnvelopeParams params = allParams.get(0);
         mExpect.that(params.getEnvironment()).isEqualTo(ENVIRONMENT_DEV);
         mExpect.that(params.getKeyIndex()).isEqualTo(KEY_INDEX);
-        mExpect.that(params.getCiphertext()).isEqualTo(BYTES);
+        mExpect.that(params.getCipherText()).isEqualTo(BYTES);
     }
 
     @Test
@@ -112,7 +112,7 @@ public final class CobaltUploaderTest {
         EncryptedCobaltEnvelopeParams params = allParams.get(0);
         mExpect.that(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         mExpect.that(params.getKeyIndex()).isEqualTo(KEY_INDEX);
-        mExpect.that(params.getCiphertext()).isEqualTo(BYTES);
+        mExpect.that(params.getCipherText()).isEqualTo(BYTES);
     }
 
     @Test

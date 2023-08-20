@@ -166,7 +166,7 @@ public class TopicsServiceImplTest {
     // We are not expecting to launch Topics API on Android R. Hence, skipping this test on
     // Android R since some tests require handling of unsupported PackageManager APIs.
     // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
-    @Rule public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

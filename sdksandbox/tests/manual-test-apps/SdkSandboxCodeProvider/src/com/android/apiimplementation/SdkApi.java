@@ -62,7 +62,9 @@ public class SdkApi extends ISdkApi.Stub {
 
     public SdkApi(Context sdkContext) {
         mContext = sdkContext;
-        preloadWebViewForActivity(sdkContext);
+        if (SdkLevel.isAtLeastU()) {
+            preloadWebViewForActivity(sdkContext);
+        }
     }
 
     @Override

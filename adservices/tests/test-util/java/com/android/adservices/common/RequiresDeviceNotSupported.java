@@ -28,7 +28,10 @@ import java.lang.annotation.Target;
  *
  * <p>Typically used to override the behavior defined in the rule constructor or annotations defined
  * in the class / superclass.
+ *
+ * @deprecated most likely you should be using {@link RequiresLowRamDevice}.
  */
 @Retention(RUNTIME)
 @Target({TYPE, METHOD})
+@Deprecated // TODO(b/284971005): remove if not used anymore
 public @interface RequiresDeviceNotSupported {}
