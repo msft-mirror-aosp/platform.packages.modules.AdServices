@@ -19,7 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.getDataVersion;
+import static com.android.adservices.service.adselection.DataVersionFetcher.getBuyerDataVersion;
 
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
@@ -89,6 +89,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             "Bidding failed for unexpected error";
 
     @NonNull private final Context mContext;
+    @NonNull private final DevContext mDevContext;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -122,6 +123,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(flags);
 
         mContext = context;
+        mDevContext = devContext;
         mLightweightExecutorService = lightweightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
         mScheduledExecutor = scheduledExecutor;
@@ -142,7 +144,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         backgroundExecutorService,
                         lightweightExecutorService,
                         adServicesHttpsClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
         mDebugReportingEnabled = debugReporting.isEnabled();
     }
 
@@ -158,7 +161,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Flags flags,
             @NonNull IsolateSettings isolateSettings,
             @NonNull JsFetcher jsFetcher,
-            @NonNull DebugReporting debugReporting) {
+            @NonNull DebugReporting debugReporting,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightWeightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
@@ -169,6 +173,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(isolateSettings);
         Objects.requireNonNull(jsFetcher);
+        Objects.requireNonNull(devContext);
 
         mContext = context;
         mLightweightExecutorService = lightWeightExecutorService;
@@ -180,6 +185,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mFlags = flags;
         mJsFetcher = jsFetcher;
         mDebugReportingEnabled = debugReporting.isEnabled();
+        mDevContext = devContext;
     }
 
     @Override
@@ -224,7 +230,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 JsVersionHelper.getRequestWithVersionHeader(
                         customAudience.getBiddingLogicUri(),
                         jsVersionMap,
-                        mFlags.getFledgeHttpJsCachingEnabled());
+                        mFlags.getFledgeHttpJsCachingEnabled(),
+                        mDevContext);
 
         FluentFuture<DecisionLogic> buyerDecisionLogic =
                 mJsFetcher.getBuyerDecisionLogicWithLogger(
@@ -531,7 +538,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri) {
         Objects.requireNonNull(trustedBiddingDataByBaseUri);
         try {
-            int dataVersion = getDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri);
+            int dataVersion = getBuyerDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri);
             return BuyerContextualSignals.builder()
                     .setDataVersion(dataVersion)
                     .build()
@@ -548,7 +555,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         BuyerContextualSignals.Builder builder = BuyerContextualSignals.builder().setAdCost(adCost);
 
         try {
-            builder.setDataVersion(getDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri));
+            builder.setDataVersion(
+                    getBuyerDataVersion(trustedBiddingData, trustedBiddingDataByBaseUri));
         } catch (IllegalStateException e) {
             LogUtil.v("Data version Header does not exist!");
         }

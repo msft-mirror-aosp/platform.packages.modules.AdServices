@@ -96,6 +96,8 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
     private boolean mIsDebugMode;
     private String mPreviousAppAllowList;
 
+    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
+
     @Before
     public void setup() {
         // Skip the test if it runs on unsupported platforms
@@ -139,6 +141,10 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        // TODO(b/294423183): remove adoptShellPermission call once using AdServicesFlagsSetterRule
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 

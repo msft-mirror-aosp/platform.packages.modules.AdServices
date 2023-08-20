@@ -147,6 +147,7 @@ public class BuyerInputGeneratorTest {
     private void assertEqual(
             BuyerInput.CustomAudience buyerInputCA, DBCustomAudience dbCustomAudience) {
         Assert.assertEquals(buyerInputCA.getName(), dbCustomAudience.getName());
+        Assert.assertEquals(buyerInputCA.getOwner(), dbCustomAudience.getOwner());
         Assert.assertNotNull(dbCustomAudience.getTrustedBiddingData());
         Assert.assertEquals(
                 buyerInputCA.getBiddingSignalsKeysList(),

@@ -28,9 +28,8 @@ import android.annotation.NonNull;
  *
  * @param <R> The type of the result that's being sent.
  * @param <E> The type of the {@link Throwable} that contains more information about the error.
- * @hide
  */
-public interface OutcomeReceiver<R, E extends Throwable> {
+public interface AdServicesOutcomeReceiver<R, E extends Throwable> {
     /**
      * Called when the asynchronous operation succeeds and delivers a result value.
      *

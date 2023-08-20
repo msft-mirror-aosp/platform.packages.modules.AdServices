@@ -81,6 +81,12 @@
                 android:description="@string/permdesc_adServicesAccessAppSetId"
                 android:protectionLevel="signature"/>
 
+    <!-- Allows AdServices to access API for AdServices Cobalt upload. -->
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT"
+                android:label="@string/permlab_adServicesAccessAdServicesCobaltUpload"
+                android:description="@string/permdesc_adServicesAccessAdServicesCobaltUpload"
+                android:protectionLevel="signature"/>
+
     <!-- Allows the caller to modify AdService's state via Common Service. -->
     <permission android:name="android.permission.MODIFY_ADSERVICES_STATE_COMPAT"
                 android:label="@string/permlab_modifyAdServicesState"
@@ -95,6 +101,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT" />
 
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>

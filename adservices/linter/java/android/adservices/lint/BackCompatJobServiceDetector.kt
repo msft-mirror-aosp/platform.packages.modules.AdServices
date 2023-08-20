@@ -25,7 +25,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.JavaContext
-import com.intellij.psi.impl.source.PsiMethodImpl
+import com.intellij.psi.PsiMethod;
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
@@ -113,7 +113,7 @@ class BackCompatJobServiceDetector : Detector(), SourceCodeScanner {
             // Check whether unsafe classes are used in reference
             is UReferenceExpression -> {
                 val resolved = initializer.resolve()
-                if (resolved != null && resolved is PsiMethodImpl) {
+                if (resolved != null && resolved is PsiMethod) {
                     val typeName = resolved.getContainingClass()?.getQualifiedName()
                     SAFE_CLASSES.contains(typeName)
                 } else {
@@ -123,7 +123,7 @@ class BackCompatJobServiceDetector : Detector(), SourceCodeScanner {
             // Check whether unsafe classes are used in function call
             is UCallExpression -> {
                 val resolved = initializer.resolve()
-                if (resolved != null && resolved is PsiMethodImpl) {
+                if (resolved != null && resolved is PsiMethod) {
                     val typeName = resolved.getContainingClass()?.getQualifiedName()
                     SAFE_CLASSES.contains(typeName)
                 } else {

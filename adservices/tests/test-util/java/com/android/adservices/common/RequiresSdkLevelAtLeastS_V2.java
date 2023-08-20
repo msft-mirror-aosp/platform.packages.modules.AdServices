@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.common;
 
-package com.android.adservices.service.signals;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import org.json.JSONObject;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-/** Applies JSON signal updates to the DB. */
-public class UpdatesProcessor {
-
-    /**
-     * Takes a signal update JSON and adds/removes signals based on it.
-     *
-     * @param json The JSON to process.
-     */
-    public void processUpdates(JSONObject json) {
-        // TODO(b/293476333) Implement JSON processing.
-    }
+/**
+ * Used by {@link AbstractSdkLevelSupportedRule SdkLevelSupportedRule} to skip a test if the Android
+ * SDK level of the device is not at least {@code S_V2}.
+ */
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface RequiresSdkLevelAtLeastS_V2 {
+    /** Reason why the test should be skipped. */
+    String reason() default "";
 }

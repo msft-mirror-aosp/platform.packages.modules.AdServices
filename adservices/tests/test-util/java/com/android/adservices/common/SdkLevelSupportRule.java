@@ -16,99 +16,104 @@
 
 package com.android.adservices.common;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.AssumptionViolatedException;
-
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.function.Supplier;
-
 /**
- * Rule used to properly check a test behavior depending on whether the device supports a certain
- * SDK level constraint.
+ * Device-side version of {@link AbstractSdkLevelSupportedRule}.
+ *
+ * <p>See {@link AbstractSdkLevelSupportedRule} for usage and examples.
  */
-// TODO(b/284971005): add unit test coverage for rule.
-public final class SdkLevelSupportRule extends AbstractSupportedFeatureRule {
+public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
     private static final AndroidLogger sLogger = new AndroidLogger(SdkLevelSupportRule.class);
 
-    private final Supplier<Boolean> mSdkLevelConstraint;
-
-    public SdkLevelSupportRule(Supplier<Boolean> sdkLevelConstraint) {
-        this(Mode.SUPPORTED_BY_DEFAULT, sdkLevelConstraint);
+    private SdkLevelSupportRule(AndroidSdkLevel level) {
+        super(sLogger, level);
     }
 
-    public SdkLevelSupportRule(Mode mode, Supplier<Boolean> sdkLevelConstraint) {
-        super(sLogger, mode);
-        this.mSdkLevelConstraint = sdkLevelConstraint;
+    /**
+     * Gets a rule that ensures test is executed on every Android version, unless the test is
+     * explicitly annotated with a {@code RequiresSdkLevel...} annotation.
+     */
+    public static SdkLevelSupportRule forAnyLevel() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.ANY);
     }
 
-    /** Rule that ensures test is executed on Android S+. Skips test otherwise. */
+    /** Gets a rule that ensures test is executed on Android R+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastR() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.R);
+    }
+
+    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastS() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.S);
+    }
+
+    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastS_V2() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.S_V2);
+    }
+
+    /** Gets a rule that ensures test is executed on Android T+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastT() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.T);
+    }
+
+    /** Gets a rule that ensures test is executed on Android U+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastU() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.U);
+    }
+
+    /** Gets a rule that ensures test is executed on Android V+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastV() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.V);
+    }
+
+    @Override
+    public boolean isDeviceAtLeastR() {
+        return SdkLevel.isAtLeastR();
+    }
+
+    @Override
+    public boolean isDeviceAtLeastS() {
+        return SdkLevel.isAtLeastS();
+    }
+
+    @Override
+    public boolean isDeviceAtLeastS_V2() {
+        return SdkLevel.isAtLeastSv2();
+    }
+
+    @Override
+    public boolean isDeviceAtLeastT() {
+        return SdkLevel.isAtLeastT();
+    }
+
+    @Override
+    public boolean isDeviceAtLeastU() {
+        return SdkLevel.isAtLeastU();
+    }
+
+    @Override
+    public boolean isDeviceAtLeastV() {
+        return SdkLevel.isAtLeastV();
+    }
+
+    // TODO(b/295321663): remove 2 methods below once in-flight CLs are merged
+
+    /**
+     * @deprecated - use {@link #forAtLeastS()} instead
+     */
+    @Deprecated
     public static SdkLevelSupportRule isAtLeastS() {
-        return new SdkLevelSupportRule(SdkLevel::isAtLeastS);
+        return forAtLeastS();
     }
 
-    /** Rule that ensures test is executed on Android T+. Skips test otherwise. */
+    /**
+     * @deprecated - use {@link #forAtLeastT()} instead
+     */
+    @Deprecated
     public static SdkLevelSupportRule isAtLeastT() {
-        return new SdkLevelSupportRule(SdkLevel::isAtLeastT);
+        return forAtLeastT();
     }
-
-    @Override
-    public boolean isFeatureSupported() {
-        return mSdkLevelConstraint.get();
-    }
-
-    @Override
-    protected void throwFeatureNotSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device doesn't support desired SDK level.");
-    }
-
-    @Override
-    protected void throwFeatureSupportedAssumptionViolatedException() {
-        throw new AssumptionViolatedException("Device supports SDK Level.");
-    }
-
-    @Override
-    protected void throwUnsupporteTestDidntThrowExpectedExceptionError() {
-        throw new AssertionError(
-                "test should have thrown an UnsupportedOperationException, but didn't throw any");
-    }
-
-    @Override
-    protected boolean isFeatureSupportedAnnotation(Annotation annotation) {
-        return annotation instanceof SdkLevelSupportRule.RequiresSdkLevelSupported;
-    }
-
-    @Override
-    protected boolean isFeatureNotSupportedAnnotation(Annotation annotation) {
-        return annotation instanceof SdkLevelSupportRule.RequiresSdkLevelNotSupported;
-    }
-
-    /**
-     * Annotation used to indicate that a test should only be run when the device supports a
-     * particular SDK level constraint.
-     *
-     * <p>Typically used when the rule was created with {@link Mode#NOT_SUPPORTED_BY_DEFAULT} or
-     * {@link Mode#ANNOTATION_ONLY}.
-     */
-    @Retention(RUNTIME)
-    @Target({TYPE, METHOD})
-    public static @interface RequiresSdkLevelSupported {}
-
-    /**
-     * Annotation used to indicate that a test should only be run when the device does NOT support a
-     * SDK level constraint, and that the test should throw a {@link UnsupportedOperationException}.
-     *
-     * <p>Typically used when the rule was created with {@link Mode#SUPPORTED_BY_DEFAULT} (which is
-     * also the rule's default behavior) or {@link Mode#ANNOTATION_ONLY}.
-     */
-    @Retention(RUNTIME)
-    @Target({TYPE, METHOD})
-    public static @interface RequiresSdkLevelNotSupported {}
 }

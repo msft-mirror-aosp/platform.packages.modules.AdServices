@@ -48,7 +48,7 @@ public final class EncryptedCobaltEnvelopeParamsTest {
                 new EncryptedCobaltEnvelopeParams(ENVIRONMENT_PROD, KEY_INDEX, BYTES);
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
-        assertThat(params.getCiphertext()).isEqualTo(BYTES);
+        assertThat(params.getCipherText()).isEqualTo(BYTES);
     }
 
     @Test
@@ -64,6 +64,6 @@ public final class EncryptedCobaltEnvelopeParamsTest {
                 EncryptedCobaltEnvelopeParams.CREATOR.createFromParcel(parcel);
         assertThat(outputParams.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(outputParams.getKeyIndex()).isEqualTo(KEY_INDEX);
-        assertThat(outputParams.getCiphertext()).isEqualTo(BYTES);
+        assertThat(outputParams.getCipherText()).isEqualTo(BYTES);
     }
 }

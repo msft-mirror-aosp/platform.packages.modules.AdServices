@@ -13,10 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.common;
 
-package com.android.tests.sdksandbox;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import android.app.Activity;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-// TODO(b/265644198): Use existing EmptyActivity class
-public class SdkSandboxEmptyActivity extends Activity {}
+/**
+ * Used by {@link AbstractSdkLevelSupportedRule SdkLevelSupportedRule} to skip a test if the Android
+ * SDK level of the device is not at least {@code U}.
+ */
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface RequiresSdkLevelAtLeastU {
+    /** Reason why the test should be skipped. */
+    String reason() default "";
+}

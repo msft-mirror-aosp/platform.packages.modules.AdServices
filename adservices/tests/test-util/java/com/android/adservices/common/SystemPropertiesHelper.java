@@ -60,6 +60,11 @@ public final class SystemPropertiesHelper {
         }
     }
 
+    public void dump(StringBuilder dump) {
+        String properties = ShellUtils.runShellCommand("getprop");
+        addProperties(dump, properties, mPrefix);
+    }
+
     private String get(String name) {
         return SystemProperties.get(getPropertyName(name));
     }
@@ -103,5 +108,21 @@ public final class SystemPropertiesHelper {
 
     private String getPropertyName(String name) {
         return mPrefix + name;
+    }
+
+    private static void addProperties(StringBuilder builder, String properties, String prefix) {
+        String realPrefix = "[" + prefix;
+        String[] lines = properties.split("\n");
+        boolean foundAtLeastOne = false;
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            if (line.startsWith(realPrefix)) {
+                foundAtLeastOne = true;
+                builder.append(line).append('\n');
+            }
+        }
+        if (!foundAtLeastOne) {
+            builder.append("(no properties with prefix ").append(prefix).append(')');
+        }
     }
 }

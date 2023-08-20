@@ -18,6 +18,8 @@ package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.OutcomeReceiver;
+
 import androidx.test.filters.SmallTest;
 
 import com.android.modules.utils.build.SdkLevel;
@@ -37,7 +39,7 @@ public class OutcomeReceiverConverterTest {
 
     @Test
     public void testOutcomeReceiverConverterNullInput() {
-        assertThat(OutcomeReceiverConverter.toCustomOutcomeReceiver(null)).isNull();
+        assertThat(OutcomeReceiverConverter.toAdServicesOutcomeReceiver(null)).isNull();
     }
 
     @Test
@@ -48,8 +50,8 @@ public class OutcomeReceiverConverterTest {
         Exception error = new Exception();
         CountDownLatch errorLatch = new CountDownLatch(1);
 
-        android.os.OutcomeReceiver<Object, Exception> outcomeReceiver =
-                new android.os.OutcomeReceiver<>() {
+        OutcomeReceiver<Object, Exception> outcomeReceiver =
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Object result) {
                         assertThat(result).isSameInstanceAs(obj);
@@ -63,8 +65,8 @@ public class OutcomeReceiverConverterTest {
                     }
                 };
 
-        OutcomeReceiver<Object, Exception> converted =
-                OutcomeReceiverConverter.toCustomOutcomeReceiver(outcomeReceiver);
+        AdServicesOutcomeReceiver<Object, Exception> converted =
+                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(outcomeReceiver);
         converted.onResult(obj);
         assertThat(resultLatch.getCount()).isEqualTo(0);
 

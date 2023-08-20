@@ -17,6 +17,8 @@
 package com.android.adservices.data.adselection;
 
 import android.adservices.adselection.ReportEventRequest;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -28,9 +30,18 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.data.adselection.datahandlers.DBValidator;
+import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
+import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
+import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
@@ -547,4 +558,222 @@ public abstract class AdSelectionEntryDao {
 
         persistDBRegisteredAdInteractions(registeredAdInteractionsToCommit);
     }
+
+    /** Checks if adSelectionId exists in {@link DBAdSelectionInitialization}. */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection_initialization "
+                    + "WHERE ad_selection_id = :adSelectionId)")
+    public abstract boolean doesAdSelectionIdExistInInitializationTable(long adSelectionId);
+
+    /**
+     * Method used to create an AdSelectionId record in ad selection initialization.
+     *
+     * @return true if row was created in DBAdSelectionInitialization, false otherwise
+     */
+    @Transaction
+    boolean persistAdSelectionInitialization(
+            long adSelectionId,
+            AdSelectionInitialization adSelectionInitialization,
+            Instant creationInstant) {
+        if (doesAdSelectionIdExistInInitializationTable(adSelectionId)
+                || doesAdSelectionIdExist(adSelectionId)) {
+            return false;
+        }
+        DBAdSelectionInitialization dbAdSelectionInitialization =
+                DBAdSelectionInitialization.builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setCallerPackageName(adSelectionInitialization.getCallerPackageName())
+                        .setSeller(adSelectionInitialization.getSeller())
+                        .setCreationInstant(creationInstant)
+                        .build();
+        insertDBAdSelectionInitialization(dbAdSelectionInitialization);
+        return true;
+    }
+
+    /** Inserts AdSelectionResult data to {@link DBAdSelectionResult}. */
+    public void persistAdSelectionResultForCustomAudience(
+            long adSelectionId,
+            AdSelectionResultBidAndUri adSelectionResult,
+            AdTechIdentifier winningAdBuyer,
+            WinningCustomAudience winningCustomAudience) {
+        DBWinningCustomAudience dbWinningCustomAudience =
+                DBWinningCustomAudience.builder()
+                        .setName(winningCustomAudience.getName())
+                        .setOwner(winningCustomAudience.getOwner())
+                        .setAdCounterIntKeys(winningCustomAudience.getAdCounterKeys())
+                        .build();
+
+        DBAdSelectionResult dbAdSelectionResult =
+                DBAdSelectionResult.builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setWinningAdBid(adSelectionResult.getWinningAdBid())
+                        .setWinningAdRenderUri(adSelectionResult.getWinningAdRenderUri())
+                        .setWinningBuyer(winningAdBuyer)
+                        .setWinningCustomAudience(dbWinningCustomAudience)
+                        .build();
+
+        insertDBAdSelectionResult(dbAdSelectionResult);
+    }
+
+    /**
+     * Inserts the reporting data to DBReportingData corresponding to the ad selection run with
+     * adselectionId.
+     */
+    public void persistReportingData(long adSelectionId, ReportingData reportingData) {
+        DBValidator.validateReportingData(reportingData);
+
+        DBReportingData dbReportingData =
+                DBReportingData.builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setBuyerReportingUri(reportingData.getBuyerWinReportingUri())
+                        .setSellerReportingUri(reportingData.getSellerWinReportingUri())
+                        .build();
+
+        insertDBReportingData(dbReportingData);
+    }
+
+    /** Reads ReportingData from DB associated with the given adSelectionId. */
+    public ReportingData getReportingDataForId(long adSelectionId) {
+        if (doesAdSelectionIdExistInInitializationTable(adSelectionId)) {
+            return getReportingUris(adSelectionId);
+        } else if (doesAdSelectionIdExist(adSelectionId)) {
+            DBAdSelectionEntry adSelectionEntry = getAdSelectionEntityById(adSelectionId);
+            ReportingComputationData reportingComputationData =
+                    ReportingComputationData.builder()
+                            .setBuyerDecisionLogicJs(adSelectionEntry.getBuyerDecisionLogicJs())
+                            .setBuyerDecisionLogicUri(adSelectionEntry.getBiddingLogicUri())
+                            .setSellerContextualSignals(
+                                    Objects.isNull(adSelectionEntry.getSellerContextualSignals())
+                                            ? AdSelectionSignals.EMPTY
+                                            : AdSelectionSignals.fromString(
+                                                    adSelectionEntry.getSellerContextualSignals()))
+                            .setBuyerContextualSignals(
+                                    AdSelectionSignals.fromString(
+                                            adSelectionEntry.getBuyerContextualSignals()))
+                            .setWinningCaActivationTime(
+                                    adSelectionEntry.getCustomAudienceSignals().getActivationTime())
+                            .setWinningCaExpirationTime(
+                                    adSelectionEntry.getCustomAudienceSignals().getExpirationTime())
+                            .setWinningCaUserBiddingSignals(
+                                    adSelectionEntry
+                                            .getCustomAudienceSignals()
+                                            .getUserBiddingSignals())
+                            .build();
+            return ReportingData.builder()
+                    .setReportingComputationData(reportingComputationData)
+                    .build();
+        } else {
+            // no reporting Info for this ad selection id
+            return null;
+        }
+    }
+
+    /**
+     * Inserts a list of interaction Uri and interaction keys into the database, enforcing these
+     * limitations:
+     *
+     * <p>We will not allow the total size of the {@code registered_ad_interaction} to exceed {@code
+     * maxTotalNumRegisteredInteractions}
+     *
+     * <p>We will not allow the number of registered ad interactions {@code adSelectionId} and
+     * {@code reportingDestination} to exceed {@code maxPerDestinationNumRegisteredInteractions}.
+     */
+    public void safelyInsertRegisteredAdInteractionsForDestination(
+            long adSelectionId,
+            @ReportEventRequest.ReportingDestination int reportingDestination,
+            List<RegisteredAdInteraction> adInteractions,
+            long maxTotalNumRegisteredInteractions,
+            long maxPerDestinationNumRegisteredInteractions) {
+        List<DBRegisteredAdInteraction> interactions =
+                adInteractions.stream()
+                        .map(
+                                adInteraction ->
+                                        DBRegisteredAdInteraction.builder()
+                                                .setAdSelectionId(adSelectionId)
+                                                .setDestination(reportingDestination)
+                                                .setInteractionKey(
+                                                        adInteraction.getInteractionKey())
+                                                .setInteractionReportingUri(
+                                                        adInteraction.getInteractionReportingUri())
+                                                .build())
+                        .collect(Collectors.toList());
+
+        safelyInsertRegisteredAdInteractions(
+                adSelectionId,
+                interactions,
+                maxTotalNumRegisteredInteractions,
+                maxPerDestinationNumRegisteredInteractions,
+                reportingDestination);
+    }
+
+    /** Query reporting URI records from DBReportingData if adselectionId exists. */
+    @Query(
+            "SELECT buyer_reporting_uri AS buyerWinReportingUri, "
+                    + "seller_reporting_uri AS sellerWinReportingUri "
+                    + "FROM reporting_data WHERE ad_selection_id = :adSelectionId")
+    public abstract ReportingData getReportingUris(long adSelectionId);
+
+    /** Query to fetch caller package name and seller which initialized the ad selection run. */
+    @Query(
+            "SELECT seller, "
+                    + "caller_package_name AS callerPackageName "
+                    + "FROM ad_selection_initialization WHERE ad_selection_id = :adSelectionId")
+    public abstract AdSelectionInitialization getSellerAndCallerPackageNameForId(
+            long adSelectionId);
+
+    /** Query to fetch winning buyer of ad selection run identified by adSelectionId. */
+    @Query("SELECT winning_buyer FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
+    public abstract AdTechIdentifier getWinningBuyerForId(long adSelectionId);
+
+    /** Query winning custom audience data of an ad selection run identified by adSelectionId. */
+    @Query(
+            "SELECT winning_custom_audience_name AS name ,"
+                    + "winning_custom_audience_owner AS owner, "
+                    + "winning_custom_audience_ad_counter_int_keys AS adCounterKeys "
+                    + "FROM ad_selection_result "
+                    + "WHERE ad_selection_id = :adSelectionId")
+    public abstract WinningCustomAudience getWinningCustomAudienceDataForId(long adSelectionId);
+
+    /** Query to get winning ad data of ad selection run identified by adSelectionId. */
+    @Query(
+            "SELECT winning_ad_bid AS winningAdBid, winning_ad_render_uri AS winningAdRenderUri "
+                    + "FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
+    public abstract AdSelectionResultBidAndUri getWinningBidAndUriForId(long adSelectionId);
+
+    /**
+     * Insert new ad selection initialization record. Aborts if adselectionId already exists.
+     *
+     * @param dbAdSelectionInitialization the record keyed by adSelectionId to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    abstract void insertDBAdSelectionInitialization(
+            DBAdSelectionInitialization dbAdSelectionInitialization);
+
+    /**
+     * Insert new ad selection result record. Aborts if adselectionId already exists.
+     *
+     * @param dbAdSelectionResult the record keyed by adSelectionId to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    abstract void insertDBAdSelectionResult(DBAdSelectionResult dbAdSelectionResult);
+
+    /**
+     * Insert a reporting URI record. Aborts if adselectionId already exists.
+     *
+     * @param dbReportingData the record keyed by adSelectionId to insert.
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    abstract void insertDBReportingData(DBReportingData dbReportingData);
+
+    /** Query to get DBAdSelectionInitialization for the given adSelectionId. */
+    @Query("SELECT * FROM ad_selection_initialization WHERE ad_selection_id = :adSelectionId")
+    abstract DBAdSelectionInitialization getDBAdSelectionInitializationForId(long adSelectionId);
+
+    /** Query to get DBAdSelectionResult for the given adSelectionId. */
+    @Query("SELECT * FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
+    abstract DBAdSelectionResult getDBAdSelectionResultForId(long adSelectionId);
+
+    /** Query to get DBReportingData for the given adSelectionId. */
+    @Query("SELECT * FROM reporting_data WHERE ad_selection_id = :adSelectionId")
+    abstract DBReportingData getDBReportingDataForId(long adSelectionId);
 }

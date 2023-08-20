@@ -374,7 +374,8 @@ public class InteractionReporter {
         String interactionData = inputParams.getInteractionData();
 
         for (Uri uri : reportingUris) {
-            reportingFuturesList.add(mAdServicesHttpsClient.postPlainText(uri, interactionData));
+            reportingFuturesList.add(
+                    mAdServicesHttpsClient.postPlainText(uri, interactionData, mDevContext));
         }
         return Futures.allAsList(reportingFuturesList);
     }

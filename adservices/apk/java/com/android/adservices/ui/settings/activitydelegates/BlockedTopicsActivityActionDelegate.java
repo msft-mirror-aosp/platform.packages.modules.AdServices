@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings.activitydelegates;
 import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
+import android.view.View;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
@@ -29,8 +30,11 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
+import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
 import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel.BlockedTopicsViewModelUiEvent;
+
+import java.util.function.Function;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
@@ -45,21 +49,48 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
             BlockedTopicsViewModel blockedTopicsViewModel) {
         super(blockedTopicsActivity);
         mBlockedTopicsViewModel = blockedTopicsViewModel;
+        initWithUx(blockedTopicsActivity, blockedTopicsActivity.getApplicationContext());
         listenToBlockedTopicsViewModelUiEvents();
     }
 
     @Override
     public void initBeta() {
         mActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        configureSharedElements(/* isGA */ false);
     }
 
     @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
+        configureSharedElements(/* isGA */ true);
     }
 
     @Override
     public void initU18() {}
+
+    private void configureSharedElements(Boolean isGA) {
+        // no blocked topics message
+        configureElement(
+                isGA ? R.id.no_blocked_topics_ga_message : R.id.no_blocked_topics_message,
+                mBlockedTopicsViewModel.getBlockedTopics(),
+                controls ->
+                        list ->
+                                controls.setVisibility(
+                                        (list.isEmpty() ? View.VISIBLE : View.GONE)));
+        // recycler view (topics list)
+        Function<Topic, View.OnClickListener> getOnclickListener =
+                topic ->
+                        view ->
+                                mBlockedTopicsViewModel.restoreTopicConsentButtonClickHandler(
+                                        topic);
+        TopicsListViewAdapter adapter =
+                new TopicsListViewAdapter(
+                        mActivity,
+                        mBlockedTopicsViewModel.getBlockedTopics(),
+                        getOnclickListener,
+                        true);
+        configureRecyclerView(R.id.blocked_topics_list, adapter);
+    }
 
     private void listenToBlockedTopicsViewModelUiEvents() {
         Observer<Pair<BlockedTopicsViewModelUiEvent, Topic>> observer =
