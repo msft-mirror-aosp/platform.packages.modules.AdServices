@@ -70,8 +70,6 @@ java_library_host {
         // TODO(b/284971005): move files below to pure-java and use filegroup
         "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
         "java/com/android/adservices/common/AbstractSdkLevelSupportedRule.java",
-        "java/com/android/adservices/common/RequiresDeviceSupported.java",
-        "java/com/android/adservices/common/RequiresDeviceNotSupported.java",
         "java/com/android/adservices/common/RequiresLowRamDevice.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastR.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastS.java",
