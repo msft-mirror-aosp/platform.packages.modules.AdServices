@@ -39,7 +39,7 @@ abstract class AbstractSdkSandboxDeviceSupportedRule implements TestRule {
 
     /** Default constructor. */
     AbstractSdkSandboxDeviceSupportedRule(RealLogger logger) {
-        mLog = new Logger(Objects.requireNonNull(logger));
+        mLog = new Logger(Objects.requireNonNull(logger), "SdkSandboxDeviceSupportedRule");
         mLog.d("Constructor: logger=%s", logger);
     }
 

@@ -19,8 +19,6 @@ import static android.os.Build.VERSION.SDK_INT;
 
 import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
 
-import android.provider.DeviceConfig;
-import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
@@ -59,12 +57,14 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     private static final String TAG = AdServicesFlagsSetterRule.class.getSimpleName();
 
     private final DeviceConfigHelper mDeviceConfig =
-            new DeviceConfigHelper(DeviceConfig.NAMESPACE_ADSERVICES);
+            new DeviceConfigHelper(FlagsConstants.NAMESPACE_ADSERVICES);
 
     private final SystemPropertiesHelper mSystemProperties =
             new SystemPropertiesHelper(SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
 
     private static final String ALLOWLIST_SEPARATOR = ",";
+
+    private final Logger mLog = new Logger(AndroidLogger.getInstance(), TAG);
 
     // Cache flags that were set before the test started, so the rule can be instantiated using a
     // builder-like approach - will be set to null after test starts.
@@ -127,14 +127,14 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     private void throwIfNecessary(
             String testName, StringBuilder dump, @Nullable Throwable testError) throws Throwable {
         if (testError == null) {
-            Log.v(TAG, "Good News, Everyone! " + testName + " passed.");
+            mLog.v("Good News, Everyone! %s passed.", testName);
             return;
         }
         if (testError instanceof AssumptionViolatedException) {
-            Log.i(TAG, testName + " is being ignored: " + testError);
+            mLog.i("%s is being ignored: %s", testName, testError);
             throw testError;
         }
-        Log.e(TAG, testName + " failed with " + testError + ".\n" + dump);
+        mLog.e("%s failed with %s.\n%s", testName, testError, dump);
         throw new TestFailure(testError, dump);
     }
 
@@ -197,7 +197,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                         .append(String.format(reasonFmt, reasonArgs))
                         .append(". Flags: \n");
         dumpFlagsSafely(message);
-        Log.i(TAG, message.toString());
+        mLog.i("%s", message);
     }
 
     private StringBuilder dumpFlagsSafely(StringBuilder dump) {
@@ -225,7 +225,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                         .append(String.format(reasonFmt, reasonArgs))
                         .append(". SystemProperties: \n");
         dumpSystemPropertiesSafely(message);
-        Log.i(TAG, message.toString());
+        mLog.i("%s", message);
     }
 
     private StringBuilder dumpSystemPropertiesSafely(StringBuilder dump) {
@@ -365,13 +365,12 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             return DeviceConfigHelper.callWithDeviceConfigPermissions(
                     () -> PhFlags.getInstance().getAdIdRequestPermitsPerSecond());
         } catch (Throwable t) {
-            float defaultValue = Flags.ADID_REQUEST_PERMITS_PER_SECOND;
-            Log.e(
-                    TAG,
-                    "PhFlags.getAdIdRequestPermitsPerSecond() failed, returning default value ("
-                            + defaultValue
-                            + ")",
-                    t);
+            float defaultValue = FlagsConstants.ADID_REQUEST_PERMITS_PER_SECOND;
+            mLog.e(
+                    t,
+                    "FlagsConstants.getAdIdRequestPermitsPerSecond() failed, returning default"
+                            + " value (%f)",
+                    defaultValue);
             return defaultValue;
         }
     }
@@ -382,13 +381,13 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      */
     public AdServicesFlagsSetterRule setCompatModeFlags() {
         if (SdkLevel.isAtLeastT()) {
-            Log.d(TAG, "setCompatModeFlags(): ignored on SDK " + SDK_INT);
+            mLog.d("setCompatModeFlags(): ignored on SDK %d", SDK_INT);
             // Do nothing; this method is intended to set flags for Android S- only.
             return this;
         }
 
         if (SdkLevel.isAtLeastS()) {
-            Log.d(TAG, "setCompatModeFlags(): setting flags for S+");
+            mLog.d("setCompatModeFlags(): setting flags for S+");
             setEnableBackCompat(true);
             setBlockedTopicsSourceOfTruth(Flags.APPSEARCH_ONLY);
             setConsentSourceOfTruth(Flags.APPSEARCH_ONLY);
@@ -396,7 +395,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             setMeasurementRollbackDeletionAppSearchKillSwitch(false);
             return this;
         }
-        Log.d(TAG, "setCompatModeFlags(): setting flags for R+");
+        mLog.d("setCompatModeFlags(): setting flags for R+");
         setEnableBackCompat(true);
         // TODO (b/285208753): Update flags once AppSearch is supported on R.
         setBlockedTopicsSourceOfTruth(Flags.PPAPI_ONLY);
@@ -413,11 +412,11 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      */
     public AdServicesFlagsSetterRule setCompatModeFlag() {
         if (SdkLevel.isAtLeastT()) {
-            Log.d(TAG, "setCompatModeFlag(): ignored on SDK " + SDK_INT);
+            mLog.d("setCompatModeFlag(): ignored on SDK %d", SDK_INT);
             // Do nothing; this method is intended to set flags for Android S- only.
             return this;
         }
-        Log.d(TAG, "setCompatModeFlag(): setting flags on " + SDK_INT);
+        mLog.d("setCompatModeFlag(): setting flags on %d", SDK_INT);
         setEnableBackCompat(true);
         return this;
     }
@@ -428,14 +427,14 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      */
     @Deprecated
     void resetCompatModeFlags() {
-        Log.d(TAG, "resetCompatModeFlags()");
+        mLog.d("resetCompatModeFlags()");
         assertCalledByLegacyHelper();
         if (SdkLevel.isAtLeastT()) {
-            Log.v(TAG, "resetCompatModeFlags(): ignored on " + SDK_INT);
+            mLog.d("resetCompatModeFlags(): ignored on %d", SDK_INT);
             // Do nothing; this method is intended to set flags for Android S- only.
             return;
         }
-        Log.v(TAG, "resetCompatModeFlags(): setting flags on " + SDK_INT);
+        mLog.v("resetCompatModeFlags(): setting flags on %d", SDK_INT);
         setEnableBackCompat(false);
         // TODO (b/285208753): Set to AppSearch always once it's supported on R.
         setBlockedTopicsSourceOfTruth(
@@ -490,10 +489,10 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             throw new IllegalStateException("already called");
         }
         if (mInitialFlags.isEmpty()) {
-            Log.d(TAG, "Not setting any flag before " + testName);
+            mLog.d("Not setting any flag before %s", testName);
         } else {
             int size = mInitialFlags.size();
-            Log.d(TAG, "Setting " + size + " flags before " + testName);
+            mLog.d("Setting %d flags before %s", size, testName);
             mInitialFlags.forEach(flag -> setFlag(flag));
         }
         mInitialFlags = null;
@@ -516,7 +515,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             if (isFlagManagedByRunner(name)) {
                 return this;
             }
-            Log.v(TAG, "Caching flag " + flag + " as test is not running yet");
+            mLog.v("Caching flag %s as test is not running yet", flag);
             mInitialFlags.add(flag);
             return this;
         }
@@ -528,20 +527,14 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         if (roulette == null || !roulette.flagNames.contains(flag)) {
             return false;
         }
-        Log.w(
-                TAG,
-                "Not setting flag "
-                        + flag
-                        + " as it's managed by "
-                        + roulette.runnerName
-                        + " (which manages "
-                        + roulette.flagNames
-                        + ")");
+        mLog.w(
+                "Not setting flag %s as it's managed by %s (which manages %s)",
+                flag, roulette.runnerName, roulette.flagNames);
         return true;
     }
 
     private AdServicesFlagsSetterRule setFlag(Flag flag) {
-        Log.v(TAG, "Setting flag: " + flag);
+        mLog.v("Setting flag: %s", flag);
         if (flag.separator == null) {
             mDeviceConfig.set(flag.name, flag.value);
         } else {
@@ -551,7 +544,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     }
 
     private void resetFlags(String testName) {
-        Log.d(TAG, "Resetting flags after " + testName);
+        mLog.d("Resetting flags after %s", testName);
         mDeviceConfig.reset();
     }
 
@@ -560,10 +553,10 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             throw new IllegalStateException("already called");
         }
         if (mInitialSystemProperties.isEmpty()) {
-            Log.d(TAG, "Not setting any SystemProperty before " + testName);
+            mLog.d("Not setting any SystemProperty before %s", testName);
         } else {
             int size = mInitialSystemProperties.size();
-            Log.d(TAG, "Setting " + size + " SystemProperty before " + testName);
+            mLog.d("Setting %d SystemProperties before %s", size, testName);
             mInitialSystemProperties.forEach(pair -> setSystemProperty(pair.first, pair.second));
         }
         mInitialSystemProperties = null;
@@ -579,9 +572,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
 
     private AdServicesFlagsSetterRule setOrCacheSystemProperty(String name, String value) {
         if (mInitialSystemProperties != null) {
-            Log.v(
-                    TAG,
-                    "Caching SystemProperty " + name + "=" + value + " as test is not running yet");
+            mLog.v("Caching SystemProperty %s=%s as test is not running yet", name, value);
             mInitialSystemProperties.add(new Pair<>(name, value));
             return this;
         }
@@ -594,7 +585,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     }
 
     private void resetSystemProperties(String testName) {
-        Log.d(TAG, "Resetting SystemProperties after " + testName);
+        mLog.d("Resetting SystemProperties after %s", testName);
         mSystemProperties.reset();
     }
 
@@ -602,7 +593,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         try {
             r.run();
         } catch (Throwable e) {
-            Log.e(TAG, "runSafely() failure", e);
+            mLog.e(e, "runSafely() failure");
             errors.add(e);
         }
     }

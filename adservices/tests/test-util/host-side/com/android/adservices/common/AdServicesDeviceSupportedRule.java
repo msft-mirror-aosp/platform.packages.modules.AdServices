@@ -20,9 +20,8 @@ import com.android.tradefed.device.ITestDevice;
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
-    /** Default constructor. */
     public AdServicesDeviceSupportedRule() {
-        super(new ConsoleLogger(AdServicesDeviceSupportedRule.class));
+        super(ConsoleLogger.getInstance());
     }
 
     public void setDevice(ITestDevice device) {

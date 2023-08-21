@@ -25,10 +25,8 @@ import com.android.modules.utils.build.SdkLevel;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private static final AndroidLogger sLogger = new AndroidLogger(SdkLevelSupportRule.class);
-
     private SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(sLogger, level);
+        super(AndroidLogger.getInstance(), level);
     }
 
     /**
