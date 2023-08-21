@@ -27,6 +27,7 @@ import android.os.LimitExceededException;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.DeviceSideAdServicesFlagsSetterRule;
 import com.android.adservices.common.SdkLevelSupportRule;
 
@@ -51,8 +52,12 @@ public final class AdIdCompatibleManagerTest {
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
-    // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 2)
     public final DeviceSideAdServicesFlagsSetterRule flags =
             DeviceSideAdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
 
