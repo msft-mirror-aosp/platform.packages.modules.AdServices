@@ -37,11 +37,13 @@ import java.util.Objects;
  */
 abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
+    private static final String TAG = "SdkLevelSupportedRule";
+
     private final AndroidSdkLevel mDefaultMinLevel;
     protected final Logger mLog;
 
     AbstractSdkLevelSupportedRule(RealLogger logger, AndroidSdkLevel defaultMinLevel) {
-        mLog = new Logger(Objects.requireNonNull(logger));
+        mLog = new Logger(Objects.requireNonNull(logger), TAG);
         mDefaultMinLevel = Objects.requireNonNull(defaultMinLevel);
         mLog.d("Constructor: logger=%s, defaultMinLevel=%s", logger, defaultMinLevel);
     }

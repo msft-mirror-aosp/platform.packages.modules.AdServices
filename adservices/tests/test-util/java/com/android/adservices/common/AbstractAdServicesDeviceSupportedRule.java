@@ -57,7 +57,7 @@ import java.util.Objects;
  *
  * <pre class="prettyprint">
  * &#064;Rule(order = 0)
- * public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+ * public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
  *
  * &#064;Rule(order = 1)
  * public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -70,7 +70,7 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
 
     /** Default constructor. */
     public AbstractAdServicesDeviceSupportedRule(RealLogger logger) {
-        mLog = new Logger(Objects.requireNonNull(logger));
+        mLog = new Logger(Objects.requireNonNull(logger), "AdServicesDeviceSupportedRule");
         mLog.d("Constructor: logger=%s", logger);
     }
 
