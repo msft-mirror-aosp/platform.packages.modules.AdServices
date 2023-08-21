@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RUNTIME)
 @Target(METHOD)
-public @interface RequiresSdkLevelAtLeastS_V2 {
+public @interface RequiresSdkLevelAtLeastSv2 {
     /** Reason why the test should be skipped. */
     String reason() default "";
 }
