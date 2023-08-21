@@ -17,6 +17,9 @@ package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import android.util.Log;
+
+import com.android.modules.utils.build.SdkLevel;
 import com.android.server.LocalManagerRegistry;
 
 /**
@@ -28,20 +31,27 @@ import com.android.server.LocalManagerRegistry;
  */
 public final class ExtendedMockitoExpectations {
 
+    private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
+
     /**
      * Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning the given {@code
      * manager}.
      */
     public static <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
+        Log.v(TAG, "mockGetLocalManager(" + managerClass + ", " + manager + ")");
         doReturn(manager).when(() -> LocalManagerRegistry.getManager(managerClass));
     }
 
-    /**
-     * Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning the given {@code
-     * null}.
-     */
+    /** Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning {@code null}. */
     public static void mockGetLocalManagerNotFound(Class<?> managerClass) {
+        Log.v(TAG, "mockGetLocalManagerNotFound(" + managerClass + ")");
         doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    public static void mockIsAtLeastT(boolean isIt) {
+        Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
+        doReturn(isIt).when(SdkLevel::isAtLeastT);
     }
 
     private ExtendedMockitoExpectations() {
