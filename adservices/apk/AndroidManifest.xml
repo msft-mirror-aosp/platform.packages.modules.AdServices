@@ -218,6 +218,16 @@
             </intent-filter>
         </service>
 
+        <service android:name=
+                     "com.android.adservices.signals.ProtectedSignalsService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter android:priority="1">
+                <action android:name=
+                            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.topics.TopicsService"
                  android:exported="true"
                  android:visibleToInstantApps="false">

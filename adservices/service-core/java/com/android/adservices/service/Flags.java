@@ -1859,6 +1859,20 @@ public interface Flags {
     }
 
     /**
+     * Protected signals API kill switch. The default value is false which means that protected
+     * signals are enabled by default. This flag should be should as emergency andon cord.
+     */
+    boolean PROTECTED_SIGNALS_SERVICE_KILL_SWITCH = false;
+
+    /**
+     * @return value of the protected signals API kill switch.
+     */
+    default boolean getProtectedSignalsServiceKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+    }
+
+    /**
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.
      */

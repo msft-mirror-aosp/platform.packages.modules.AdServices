@@ -1603,6 +1603,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getProtectedSignalsServiceKillSwitch() {
+        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
+                                /* defaultValue */ PROTECTED_SIGNALS_SERVICE_KILL_SWITCH));
+    }
+
+    @Override
     public boolean getFledgeAuctionServerKillSwitch() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
@@ -3759,6 +3775,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH
                         + " = "
                         + getFledgeEventLevelDebugReportingMaxItemsPerBatch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH
+                        + " = "
+                        + getProtectedSignalsServiceKillSwitch());
         writer.println("==== AdServices PH Flags Throttling Related Flags ====");
         writer.println(
                 "\t"
