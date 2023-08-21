@@ -273,6 +273,7 @@ import static com.android.adservices.service.Flags.TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -529,6 +530,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERM
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
@@ -765,6 +767,22 @@ public class PhFlagsTest {
         assertThrows(
                 IllegalArgumentException.class,
                 mPhFlags::getTopicsPrivacyBudgetForTopicIdDistribution);
+    }
+
+    @Test
+    public void testGetTopicsDisableDirectAppCalls() {
+        assertThat(mPhFlags.getTopicsDisableDirectAppCalls())
+                .isEqualTo(TOPICS_DISABLE_DIRECT_APP_CALLS);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !TOPICS_DISABLE_DIRECT_APP_CALLS;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_DISABLE_DIRECT_APP_CALLS,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getTopicsDisableDirectAppCalls()).isEqualTo(phOverridingValue);
     }
 
     @Test

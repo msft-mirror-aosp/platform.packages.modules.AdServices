@@ -289,6 +289,11 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, value);
     }
 
+    /** Overrides the flag that disables direct app calls for Topics. */
+    public AdServicesFlagsSetterRule setTopicsDisableDirectAppCalls(boolean value) {
+        return setOrCacheFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
+    }
+
     /** Overrides the flag that forces the use of bundle files for the Topics classifier. */
     public AdServicesFlagsSetterRule setTopicsClassifierForceUseBundleFiles(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
