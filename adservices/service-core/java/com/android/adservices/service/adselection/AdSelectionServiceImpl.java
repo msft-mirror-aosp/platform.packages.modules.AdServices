@@ -56,6 +56,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -95,6 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -652,20 +654,34 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         int callerUid = getCallingUid(apiName);
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        InteractionReporter interactionReporter =
-                new InteractionReporter(
-                        mAdSelectionEntryDao,
-                        mAdServicesHttpsClient,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mAdServicesLogger,
-                        mFlags,
-                        mAdSelectionServiceFilter,
-                        callerUid,
-                        mFledgeAuthorizationFilter,
-                        devContext);
+        // Get an instance of measurement service
+        // Binder identity is cleared and eventually restored to allow reading values of device
+        // config flags.
+        MeasurementImpl measurementService;
+        final long token = Binder.clearCallingIdentity();
+        try {
+            measurementService = MeasurementImpl.getInstance(mContext);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
 
-        interactionReporter.reportInteraction(inputParams, callback);
+        // Get an instance of the event reporter
+        EventReporter eventReporter =
+                new EventReporterFactory(
+                                mAdSelectionEntryDao,
+                                mAdServicesHttpsClient,
+                                mLightweightExecutor,
+                                mBackgroundExecutor,
+                                mAdServicesLogger,
+                                mFlags,
+                                mAdSelectionServiceFilter,
+                                callerUid,
+                                mFledgeAuthorizationFilter,
+                                devContext,
+                                measurementService)
+                        .getEventReporter();
+
+        eventReporter.reportInteraction(inputParams, callback);
     }
 
     @Override
