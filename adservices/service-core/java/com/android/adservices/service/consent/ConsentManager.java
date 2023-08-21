@@ -469,6 +469,24 @@ public class ConsentManager {
     }
 
     /**
+     * Retrieves the measurement API consent from R.
+     *
+     * @return {@link AdServicesApiConsent} providing information whether the consent was given or
+     *     revoked.
+     */
+    public AdServicesApiConsent getConsentFromR() {
+        // Always return REVOKED if flag is off
+        if (!mFlags.getEnableRvcUx()) {
+            return AdServicesApiConsent.REVOKED;
+        }
+        // TODO(285208753): impl when R appsearch is ready
+        if (mFlags.getConsentManagerDebugMode()) {
+            return AdServicesApiConsent.GIVEN;
+        }
+        return AdServicesApiConsent.REVOKED;
+    }
+
+    /**
      * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
      * be returned to the {@link TopicsWorker} clients.
      *

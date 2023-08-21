@@ -334,6 +334,7 @@ public class UxEngineUtilTest {
         doReturn(NO_MANUAL_INTERACTIONS_RECORDED)
                 .when(mConsentManager)
                 .getUserManualInteractionWithConsent();
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
 
         assertThat(
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
@@ -348,6 +349,7 @@ public class UxEngineUtilTest {
         doReturn(mAdServicesApiConsent).when(mConsentManager).getConsent();
         doReturn(false).when(mAdServicesApiConsent).isGiven();
         doReturn(UNKNOWN).when(mConsentManager).getUserManualInteractionWithConsent();
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
 
         assertThat(
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
@@ -358,6 +360,7 @@ public class UxEngineUtilTest {
     @Test
     public void getEligibleEnrollmentChannelTest_gaUxGraduationDisabled() {
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
 
         assertThat(
                 mUxEngineUtil.getEligibleEnrollmentChannelCollection(
