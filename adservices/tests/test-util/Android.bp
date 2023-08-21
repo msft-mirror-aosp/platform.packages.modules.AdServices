@@ -81,7 +81,6 @@ java_library_host {
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastV.java",
         "java/com/android/adservices/common/SystemPropertiesHelper.java",
         // TODO(b/284971005): files below should be provided by module-utils
-        "java/com/android/adservices/common/AbstractSupportedFeatureRule.java",
         "java/com/android/adservices/common/Logger.java",
         "java/com/android/adservices/common/Nullable.java",
     ],

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.experimental;
 
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
@@ -22,8 +22,9 @@ import android.provider.DeviceConfig.Properties;
 import android.util.ArrayMap;
 import android.util.Log;
 
-import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagState;
-import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsManager;
+import com.android.adservices.common.Nullable;
+import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagState;
+import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsManager;
 
 import java.util.Collection;
 import java.util.Map;
