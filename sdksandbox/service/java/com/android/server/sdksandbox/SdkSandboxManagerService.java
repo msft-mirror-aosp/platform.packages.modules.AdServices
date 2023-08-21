@@ -244,6 +244,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String PROPERTY_ACTIVITY_ALLOWLIST =
             "sdksandbox_activity_allowlist_per_targetSdkVersion";
+    private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
+            "sdksandbox_next_activity_allowlist";
 
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
@@ -1906,6 +1908,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private Map<Integer, AllowedActivities> mActivityAllowlistPerTargetSdkVersion =
                 getActivityDeviceConfigAllowlist();
 
+        @Nullable
+        @GuardedBy("mLock")
+        private AllowedActivities mNextActivityAllowlist = getNextActivityDeviceConfigAllowlist();
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -2009,6 +2015,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @Nullable
+        AllowedActivities getNextActivityAllowlist() {
+            synchronized (mLock) {
+                return mNextActivityAllowlist;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -2072,6 +2085,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             mActivityAllowlistPerTargetSdkVersion =
                                     getActivityDeviceConfigAllowlist();
                             break;
+                        case PROPERTY_NEXT_ACTIVITY_ALLOWLIST:
+                            mNextActivityAllowlist = getNextActivityDeviceConfigAllowlist();
                         default:
                     }
                 }
@@ -2187,6 +2202,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return activityAllowlistsProto == null
                     ? null
                     : activityAllowlistsProto.getAllowlistPerTargetSdkMap();
+        }
+
+        @Nullable
+        private static AllowedActivities getNextActivityDeviceConfigAllowlist() {
+            return getDeviceConfigProtoProperty(
+                    AllowedActivities.parser(), PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
         }
     }
 
@@ -2742,9 +2763,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    // Returns the default allowlist if a DeviceConfig allowlist was not set.
     @NonNull
     private ArraySet<String> getActivityAllowlist() {
+        synchronized (mLock) {
+            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                    && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
+                return new ArraySet<>(
+                        mSdkSandboxSettingsListener.getNextActivityAllowlist().getActionsList());
+            }
+            return getActivityAllowlistForTargetSdk();
+        }
+    }
+
+    @NonNull
+    private ArraySet<String> getActivityAllowlistForTargetSdk() {
         synchronized (mLock) {
             if (mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion() == null) {
                 return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;

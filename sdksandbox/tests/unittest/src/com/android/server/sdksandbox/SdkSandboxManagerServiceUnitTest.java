@@ -193,6 +193,10 @@ public class SdkSandboxManagerServiceUnitTest {
             "sdksandbox_activity_allowlist_per_targetSdkVersion";
     private String mInitialActivityAllowlistValue;
 
+    private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
+            "sdksandbox_next_activity_allowlist";
+    private String mInitialNextActivityAllowlistValue;
+
     private static final String INTENT_ACTION = "action.test";
     private static final String PACKAGE_NAME = "packageName.test";
     private static final String COMPONENT_CLASS_NAME = "className.test";
@@ -328,6 +332,12 @@ public class SdkSandboxManagerServiceUnitTest {
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
         DeviceConfig.deleteProperty(DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST);
+
+        mInitialNextActivityAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
+        DeviceConfig.deleteProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
     }
 
     @After
@@ -346,6 +356,8 @@ public class SdkSandboxManagerServiceUnitTest {
         resetDeviceConfigProperty(
                 PROPERTY_NEXT_SERVICE_ALLOWLIST, mInitialValueNextServiceAllowlist);
         resetDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, mInitialActivityAllowlistValue);
+        resetDeviceConfigProperty(
+                PROPERTY_NEXT_ACTIVITY_ALLOWLIST, mInitialNextActivityAllowlistValue);
     }
 
     private void resetDeviceConfigProperty(String property, String value) {
@@ -1214,12 +1226,66 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testEnforceAllowedqToStartActivity_restrictionsNotEnforced() {
+    public void testEnforceAllowedToStartActivity_restrictionsNotEnforced() {
         sSdkSandboxSettingsListener.onPropertiesChanged(
                 new DeviceConfig.Properties(
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         Map.of(PROPERTY_ENFORCE_RESTRICTIONS, "false")));
         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent());
+    }
+
+    @Test
+    public void testEnforceAllowedToStartActivity_nextRestrictionsApplied() {
+        /** Allowlist: Intent.ACTION_CALL */
+        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_CALL));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                new Intent(Intent.ACTION_VIEW)));
+
+        /** Allowlist: Intent.ACTION_WEB_SEARCH */
+        String encodedNextAllowedActivities = "CiBhbmRyb2lkLmludGVudC5hY3Rpb24uV0VCX1NFQVJDSA==";
+        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, encodedNextAllowedActivities);
+
+        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_WEB_SEARCH));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                new Intent(Intent.ACTION_CALL)));
+    }
+
+    @Test
+    public void testEnforceAllowedToStartActivity_nextRestrictionsAppliedButAllowlistNotSet() {
+        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, "");
+
+        Intent intent = new Intent(Intent.ACTION_CALL);
+
+        assertThrows(
+                SecurityException.class,
+                () -> sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent));
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
+            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
+        }
+
+        /** Allowlist: Intent.ACTION_CALL */
+        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+
+        sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
+        for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
+            assertThrows(
+                    SecurityException.class,
+                    () ->
+                            sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
+                                    new Intent(action)));
+        }
     }
 
     @Test
