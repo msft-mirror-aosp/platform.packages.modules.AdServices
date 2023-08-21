@@ -184,6 +184,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsDisableDirectAppCalls() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS,
+                /* defaultValue */ TOPICS_DISABLE_DIRECT_APP_CALLS);
+    }
+
+    @Override
     public int getClassifierType() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -2931,6 +2940,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_GLOBAL_BLOCKED_TOPIC_IDS
                         + " = "
                         + getGlobalBlockedTopicIds());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS
+                        + " = "
+                        + getTopicsDisableDirectAppCalls());
 
         writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
         writer.println(

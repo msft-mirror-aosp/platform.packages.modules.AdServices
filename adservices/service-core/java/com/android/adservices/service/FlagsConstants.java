@@ -77,6 +77,8 @@ public final class FlagsConstants {
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
+    public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
+            "topics_disable_direct_app_calls";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
