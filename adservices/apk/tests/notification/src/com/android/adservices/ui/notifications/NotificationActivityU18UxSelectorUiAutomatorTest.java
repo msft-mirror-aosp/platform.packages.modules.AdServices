@@ -136,7 +136,11 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         UiObject topicTitle = getElement(R.string.settingsUI_topics_ga_title);
         assertThat((topicTitle.exists())).isFalse();
         UiObject measurementTitle = getElement(R.string.settingsUI_u18_measurement_view_title);
-        ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        } else {
+            ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        }
         assertThat(measurementTitle.exists()).isTrue();
     }
 
