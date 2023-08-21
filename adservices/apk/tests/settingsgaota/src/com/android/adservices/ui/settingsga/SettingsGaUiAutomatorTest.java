@@ -240,16 +240,17 @@ public class SettingsGaUiAutomatorTest {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
         UiObject resetButton =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
         resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
 
         // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
         resetButton =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
+
         resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
     }
@@ -672,5 +673,16 @@ public class SettingsGaUiAutomatorTest {
         UiObject element = ApkTestUtil.getPageElement(sDevice, resId);
         scrollView.scrollIntoView(element);
         return element;
+    }
+
+    public void clickResetBtn() throws UiObjectNotFoundException {
+        // R Msmt UI is not scrollable
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(
+                    sDevice,
+                    com.android.adservices.api.R.string.settingsUI_measurement_view_reset_title);
+        } else {
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        }
     }
 }
