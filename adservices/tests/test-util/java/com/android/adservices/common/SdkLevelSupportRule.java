@@ -31,33 +31,41 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
         super(sLogger, level);
     }
 
-    /** Rule that ensures test is executed on Android R+. Skips test otherwise. */
-    public static SdkLevelSupportRule isAtLeastR() {
+    /**
+     * Gets a rule that ensures test is executed on every Android version, unless the test is
+     * explicitly annotated with a {@code RequiresSdkLevel...} annotation.
+     */
+    public static SdkLevelSupportRule forAnyLevel() {
+        return new SdkLevelSupportRule(AndroidSdkLevel.ANY);
+    }
+
+    /** Gets a rule that ensures test is executed on Android R+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastR() {
         return new SdkLevelSupportRule(AndroidSdkLevel.R);
     }
 
-    /** Rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule isAtLeastS() {
+    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastS() {
         return new SdkLevelSupportRule(AndroidSdkLevel.S);
     }
 
-    /** Rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule isAtLeastS_V2() {
+    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastS_V2() {
         return new SdkLevelSupportRule(AndroidSdkLevel.S_V2);
     }
 
-    /** Rule that ensures test is executed on Android T+. Skips test otherwise. */
-    public static SdkLevelSupportRule isAtLeastT() {
+    /** Gets a rule that ensures test is executed on Android T+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastT() {
         return new SdkLevelSupportRule(AndroidSdkLevel.T);
     }
 
-    /** Rule that ensures test is executed on Android U+. Skips test otherwise. */
-    public static SdkLevelSupportRule isAtLeastU() {
+    /** Gets a rule that ensures test is executed on Android U+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastU() {
         return new SdkLevelSupportRule(AndroidSdkLevel.U);
     }
 
-    /** Rule that ensures test is executed on Android V+. Skips test otherwise. */
-    public static SdkLevelSupportRule isAtLeastV() {
+    /** Gets a rule that ensures test is executed on Android V+. Skips test otherwise. */
+    public static SdkLevelSupportRule forAtLeastV() {
         return new SdkLevelSupportRule(AndroidSdkLevel.V);
     }
 
@@ -89,5 +97,23 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     @Override
     public boolean isDeviceAtLeastV() {
         return SdkLevel.isAtLeastV();
+    }
+
+    // TODO(b/295321663): remove 2 methods below once in-flight CLs are merged
+
+    /**
+     * @deprecated - use {@link #forAtLeastS()} instead
+     */
+    @Deprecated
+    public static SdkLevelSupportRule isAtLeastS() {
+        return forAtLeastS();
+    }
+
+    /**
+     * @deprecated - use {@link #forAtLeastT()} instead
+     */
+    @Deprecated
+    public static SdkLevelSupportRule isAtLeastT() {
+        return forAtLeastT();
     }
 }

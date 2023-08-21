@@ -18,6 +18,8 @@ package com.android.tests.sdksandbox.disablede2e;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.ConfigListener;
+import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
@@ -29,6 +31,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,25 +48,44 @@ public class SdkSandboxManagerDisabledTest {
     private ActivityScenario<TestActivity> mScenario;
 
     private SdkSandboxManager mSdkSandboxManager;
+    private ConfigListener mConfigListener;
+    private DeviceConfigUtils mDeviceConfigUtils;
+    private String mInitialDisableSdkSandboxValue;
 
     @Before
-    public void setup() {
-        final Context context = InstrumentationRegistry.getInstrumentation().getContext();
+    public void setup() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.READ_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_DEVICE_CONFIG);
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = mRule.getScenario();
+
+        mConfigListener = new ConfigListener();
+        DeviceConfig.addOnPropertiesChangedListener(
+                DeviceConfig.NAMESPACE_ADSERVICES, context.getMainExecutor(), mConfigListener);
+        mDeviceConfigUtils =
+                new DeviceConfigUtils(mConfigListener, DeviceConfig.NAMESPACE_ADSERVICES);
+
+        mInitialDisableSdkSandboxValue =
+                DeviceConfig.getProperty(DeviceConfig.NAMESPACE_ADSERVICES, "disable_sdk_sandbox");
+        mDeviceConfigUtils.deleteProperty("disable_sdk_sandbox");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mDeviceConfigUtils.resetToInitialValue(
+                "disable_sdk_sandbox", mInitialDisableSdkSandboxValue);
     }
 
     @Test
     public void testSdkSandboxDisabledErrorCode() throws Exception {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES, "disable_sdk_sandbox", "true", false);
-        // Allow time for DeviceConfig change to propagate
-        Thread.sleep(1000);
-        final String sdkName = "com.android.ctssdkprovider";
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mDeviceConfigUtils.setProperty("disable_sdk_sandbox", "true");
+
+        String sdkName = "com.android.ctssdkprovider";
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())

@@ -105,7 +105,7 @@ public class AdIdManager {
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<AdId, Exception> callback) {
-        mImpl.getAdId(executor, OutcomeReceiverConverter.toCustomOutcomeReceiver(callback));
+        mImpl.getAdId(executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
 
     /**

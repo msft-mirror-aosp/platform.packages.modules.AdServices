@@ -32,6 +32,7 @@ android_test {
         "platform-test-rules",
         "adservices-test-scenarios",
         "adservices-test-utility",
+        "adservices-ui-cts-root-test-lib",
         "ub-uiautomator",
         "handheld-app-helpers",
         "framework-adservices-lib",

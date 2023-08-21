@@ -23,6 +23,8 @@ import android.content.pm.ServiceInfo;
 
 import java.util.List;
 
+// TODO(b/295321663): need to split constants into AdServicesCommonConstants so they can be used by
+// host-side test artifacts.
 /**
  * Common constants for AdServices
  *
@@ -88,6 +90,10 @@ public class AdServicesCommon {
     /** System property used to simulate AdServices behavior in a device that doesn't support it. */
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
+
+    /** System property used to simulate AdServices behavior on devices with low memory. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "feature_android.hardware.ram.low";
 
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(

@@ -30,7 +30,7 @@ import java.util.Objects;
 
 /** Room based database for protected signals. */
 @Database(
-        entities = {DBProtectedSignal.class, DBEncoderEndpoint.class},
+        entities = {DBProtectedSignal.class, DBEncoderEndpoint.class, DBEncoderLogic.class},
         version = ProtectedSignalsDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class ProtectedSignalsDatabase extends RoomDatabase {
@@ -76,4 +76,11 @@ public abstract class ProtectedSignalsDatabase extends RoomDatabase {
      * @return Dao to access encoder end points
      */
     public abstract EncoderEndpointsDao getEncoderEndpointsDao();
+
+    /**
+     * Encoder Logics Dao
+     *
+     * @return Dao to access persisted encoder logic entries
+     */
+    public abstract EncoderLogicDao getEncoderLogicDao();
 }

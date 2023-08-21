@@ -28,4 +28,11 @@ public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDevic
         mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }
+
+    @Override
+    public boolean isLowRamDevice() throws Exception {
+        boolean isLowRamDevice = AdServicesSupportHelper.isLowRamDevice();
+        mLog.v("isLowRamDevice(): %b", isLowRamDevice);
+        return isLowRamDevice;
+    }
 }

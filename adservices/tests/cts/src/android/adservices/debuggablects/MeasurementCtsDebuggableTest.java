@@ -18,7 +18,7 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -381,7 +381,8 @@ public class MeasurementCtsDebuggableTest {
                     Uri.parse(path),
                     /* inputEvent= */ null,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -409,7 +410,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerTrigger(
                     Uri.parse(path),
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -443,7 +445,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerWebSource(
                     request,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -476,7 +479,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.registerWebTrigger(
                     request,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
 
             sleep();
@@ -556,7 +560,8 @@ public class MeasurementCtsDebuggableTest {
             mMeasurementManager.deleteRegistrations(
                     deletionRequest,
                     CALLBACK_EXECUTOR,
-                    (OutcomeReceiver<Object, Exception>) result -> countDownLatch.countDown());
+                    (AdServicesOutcomeReceiver<Object, Exception>)
+                            result -> countDownLatch.countDown());
             assertThat(countDownLatch.await(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)).isTrue();
         } catch (InterruptedException e) {
             throw new IllegalStateException("Error while deleting registrations", e);

@@ -29,7 +29,7 @@ public interface EncoderEndpointsDao {
 
     /**
      * @param endpoint an entry containing endpoint for an encoder
-     * @return the count of entries persisted, ideally 1 if succeeded
+     * @return the rowId of the entry persisted
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long registerEndpoint(DBEncoderEndpoint endpoint);

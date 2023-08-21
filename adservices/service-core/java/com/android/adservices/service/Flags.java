@@ -526,6 +526,13 @@ public interface Flags {
         return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
     }
 
+    boolean MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER = false;
+
+    /** Returns true if lookback window filter is enabled else false. */
+    default boolean getMeasurementEnableLookbackWindowFilter() {
+        return MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;

@@ -51,7 +51,7 @@ public final class AdIdManagerTest {
 
     // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
 
     // Ignore tests when device is not supported
     @Rule(order = 1)
