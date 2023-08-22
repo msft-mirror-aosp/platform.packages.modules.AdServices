@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
@@ -647,18 +648,20 @@ public class AdSelectionServiceImplTest {
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
         String sellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                "function reportResult(ad_selection_config, render_uri, bid,"
+                        + " contextual_signals) {\n"
+                        + "    let reporting_address = '"
                         + sellerReportingUri
-                        + "' } };\n"
+                        + "';\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri':\n"
+                        + "                reporting_address + '?dataVersion=' +"
+                        + " contextual_signals.dataVersion} };\n"
                         + "}";
 
         String buyerDecisionLogicJs =
-                "function reportWin(ad_selection_signals, per_buyer_signals, "
-                        + "signals_for_buyer,\n"
-                        + "    contextual_signals, custom_audience_reporting_signals) {\n"
+                "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) {\n"
                         + "    let reporting_address = '"
                         + buyerReportingUri
                         + "';\n"
@@ -683,11 +686,15 @@ public class AdSelectionServiceImplTest {
         BuyerContextualSignals buyerContextualSignals =
                 BuyerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
 
+        SellerContextualSignals sellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_2).build();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setBuyerContextualSignals(buyerContextualSignals.toString())
+                        .setSellerContextualSignals(sellerContextualSignals.toString())
                         .setBiddingLogicUri(biddingLogicUri)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -749,8 +756,14 @@ public class AdSelectionServiceImplTest {
                         + "?dataVersion="
                         + buyerContextualSignals.getDataVersion().toString();
 
+        String sellerReportingPathWithDataVersion =
+                mSellerReportingPath
+                        + "?dataVersion="
+                        + sellerContextualSignals.getDataVersion().toString();
+
         assertThat(notifications)
-                .containsExactly(mSellerReportingPath, buyerReportingPathWithDataVersion);
+                .containsExactly(
+                        sellerReportingPathWithDataVersion, buyerReportingPathWithDataVersion);
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(

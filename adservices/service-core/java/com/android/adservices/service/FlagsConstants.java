@@ -649,6 +649,8 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
             "fledge_register_ad_beacon_enabled";
     public static final String KEY_FLEDGE_CPC_BILLING_ENABLED = "fledge_cpc_billing_enabled";
+    public static final String KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED =
+            "fledge_data_version_header_enabled";
 
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
