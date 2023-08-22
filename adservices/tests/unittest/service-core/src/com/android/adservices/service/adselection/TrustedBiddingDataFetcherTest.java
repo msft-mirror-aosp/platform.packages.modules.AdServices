@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
-
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +42,7 @@ import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -59,6 +58,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -83,6 +83,9 @@ public class TrustedBiddingDataFetcherTest {
     private static final Uri PATH_1 = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/p1/");
     private static final Uri PATH_2 = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/p2/");
 
+    private static final Set<String> RESPONSE_HEADER_KEYS =
+            ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY);
+
     @Mock private AdServicesHttpsClient mAdServicesHttpsClient;
     @Mock private DevContext mDevContext;
     @Mock private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
@@ -96,8 +99,7 @@ public class TrustedBiddingDataFetcherTest {
                         mAdServicesHttpsClient,
                         mDevContext,
                         mCustomAudienceDevOverridesHelper,
-                        MoreExecutors.newDirectExecutorService(),
-                        false);
+                        MoreExecutors.newDirectExecutorService());
     }
 
     @Test
@@ -105,6 +107,7 @@ public class TrustedBiddingDataFetcherTest {
             throws ExecutionException, InterruptedException {
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, ALL_KEYS)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -115,6 +118,7 @@ public class TrustedBiddingDataFetcherTest {
                                         .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -145,10 +149,12 @@ public class TrustedBiddingDataFetcherTest {
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, ALL_KEYS)),
+                        any(),
                         any());
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any());
 
         verify(mDevContext).getDevOptionsEnabled();
@@ -161,6 +167,7 @@ public class TrustedBiddingDataFetcherTest {
             throws ExecutionException, InterruptedException {
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, ALL_KEYS)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -173,6 +180,7 @@ public class TrustedBiddingDataFetcherTest {
                                         .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -211,10 +219,12 @@ public class TrustedBiddingDataFetcherTest {
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, ALL_KEYS)),
+                        any(),
                         any());
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any());
 
         verify(mDevContext).getDevOptionsEnabled();
@@ -227,6 +237,7 @@ public class TrustedBiddingDataFetcherTest {
             throws ExecutionException, InterruptedException {
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -237,6 +248,7 @@ public class TrustedBiddingDataFetcherTest {
                                         .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any()))
                 .thenReturn(Futures.immediateFailedFuture(new Exception()));
 
@@ -258,10 +270,12 @@ public class TrustedBiddingDataFetcherTest {
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
+                        any(),
                         any());
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any());
 
         verify(mDevContext).getDevOptionsEnabled();
@@ -274,6 +288,7 @@ public class TrustedBiddingDataFetcherTest {
             throws ExecutionException, InterruptedException {
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -284,6 +299,7 @@ public class TrustedBiddingDataFetcherTest {
                                         .build()));
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -309,10 +325,12 @@ public class TrustedBiddingDataFetcherTest {
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
+                        any(),
                         any());
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any());
         verify(mDevContext).getDevOptionsEnabled();
         verifyNoMoreInteractions(
@@ -328,6 +346,7 @@ public class TrustedBiddingDataFetcherTest {
                 .thenReturn(AdSelectionSignals.EMPTY);
         when(mAdServicesHttpsClient.fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -368,107 +387,10 @@ public class TrustedBiddingDataFetcherTest {
         verify(mAdServicesHttpsClient)
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
+                        any(),
                         any());
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
-    }
-
-    @Test
-    public void testFetchTrustedBiddingDataDataVersionEnabled() throws Exception {
-        // Re init fetcher
-        mTrustedBiddingDataFetcher =
-                new TrustedBiddingDataFetcher(
-                        mAdServicesHttpsClient,
-                        mDevContext,
-                        mCustomAudienceDevOverridesHelper,
-                        MoreExecutors.newDirectExecutorService(),
-                        true);
-
-        when(mAdServicesHttpsClient.fetchPayload(
-                        argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
-                        any(),
-                        any()))
-                .thenReturn(
-                        Futures.immediateFuture(
-                                AdServicesHttpClientResponse.builder()
-                                        .setResponseBody(
-                                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1))
-                                                        .toString())
-                                        .setResponseHeaders(
-                                                ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
-                                                        List.of(Integer.toString(DATA_VERSION_1))))
-                                        .build()));
-
-        Map<Uri, TrustedBiddingResponse> result =
-                mTrustedBiddingDataFetcher
-                        .getTrustedBiddingDataForBuyer(
-                                ImmutableList.of(getCustomAudience(NAME_1, PATH_1, KEYS_1)))
-                        .get();
-
-        verify(mAdServicesHttpsClient)
-                .fetchPayload(
-                        argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
-                        any(),
-                        any());
-
-        assertEquals(1, result.size());
-        assertTrue(result.containsKey(PATH_1));
-        assertEquals(
-                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1)).toString(),
-                result.get(PATH_1).getBody().toString());
-        assertEquals(
-                Integer.toString(DATA_VERSION_1),
-                result.get(PATH_1)
-                        .getHeaders()
-                        .getJSONArray(DATA_VERSION_HEADER_BIDDING_KEY)
-                        .get(0));
-    }
-
-    @Test
-    public void testFetchTrustedBiddingDataDataVersionDisabled() throws Exception {
-        when(mAdServicesHttpsClient.fetchPayload(
-                        argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)),
-                        any(),
-                        any()))
-                .thenReturn(
-                        Futures.immediateFuture(
-                                AdServicesHttpClientResponse.builder()
-                                        .setResponseBody(
-                                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1))
-                                                        .toString())
-                                        .setResponseHeaders(
-                                                ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
-                                                        List.of(Integer.toString(DATA_VERSION_1))))
-                                        .build()));
-
-        when(mAdServicesHttpsClient.fetchPayload(
-                        argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)), any()))
-                .thenReturn(
-                        Futures.immediateFuture(
-                                AdServicesHttpClientResponse.builder()
-                                        .setResponseBody(
-                                                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1))
-                                                        .toString())
-                                        .build()));
-
-        Map<Uri, TrustedBiddingResponse> result =
-                mTrustedBiddingDataFetcher
-                        .getTrustedBiddingDataForBuyer(
-                                ImmutableList.of(getCustomAudience(NAME_1, PATH_1, KEYS_1)))
-                        .get();
-
-        verify(mAdServicesHttpsClient)
-                .fetchPayload(
-                        argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_1, KEYS_1)), any());
-
-        assertEquals(1, result.size());
-        assertTrue(result.containsKey(PATH_1));
-        assertEquals(
-                new JSONObject(ImmutableMap.of(KEY_1, VALUE_1)).toString(),
-                result.get(PATH_1).getBody().toString());
-        assertEquals("{}", result.get(PATH_1).getHeaders().toString());
     }
 
     private DBCustomAudience getCustomAudience(String name, Uri path, List<String> keys) {
