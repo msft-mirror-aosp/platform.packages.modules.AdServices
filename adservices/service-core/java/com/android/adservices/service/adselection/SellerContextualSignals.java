@@ -39,7 +39,6 @@ public abstract class SellerContextualSignals {
     @AutoValue.Builder
     public abstract static class Builder {
 
-        /** Sets the data version. */
         public abstract Builder setDataVersion(@Nullable Integer dataVersion);
 
         /** Builds a {@link SellerContextualSignals} object. */
@@ -56,9 +55,6 @@ public abstract class SellerContextualSignals {
                 + "}";
     }
 
-    /**
-     * @return in {@link AdSelectionSignals} format.
-     */
     public AdSelectionSignals toAdSelectionSignals() {
         return AdSelectionSignals.fromString(toString());
     }

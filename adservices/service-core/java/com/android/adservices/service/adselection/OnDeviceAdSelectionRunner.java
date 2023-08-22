@@ -118,8 +118,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
-        boolean dataVersionHeaderEnabled =
-                BinderFlagReader.readFlag(mFlags::getFledgeDataVersionHeaderEnabled);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
@@ -137,8 +135,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         mAdSelectionEntryDao,
                         flags,
                         adSelectionExecutionLogger,
-                        mDebugReporting,
-                        dataVersionHeaderEnabled);
+                        mDebugReporting);
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
@@ -152,14 +149,12 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mAdCounterKeyCopier,
                                 flags,
                                 mDebugReporting,
-                                cpcBillingEnabled,
-                                dataVersionHeaderEnabled),
+                                cpcBillingEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
                                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao),
-                                lightweightExecutorService,
-                                dataVersionHeaderEnabled),
+                                lightweightExecutorService),
                         mScheduledExecutor,
                         mBackgroundExecutorService,
                         flags);
