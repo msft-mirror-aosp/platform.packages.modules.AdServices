@@ -52,18 +52,18 @@ final class DeviceConfigHelper {
         mLog.v("Constructor: interface=%s, logger=%s, namespace=%s", mInterface, logger, namespace);
     }
 
-    public void set(String name, String value) throws Exception {
+    public void set(String name, String value) {
         savePreviousValue(name);
         setOnly(name, value);
     }
 
-    public void setWithSeparator(String name, String value, String separator) throws Exception {
+    public void setWithSeparator(String name, String value, String separator) {
         String oldValue = savePreviousValue(name);
         String newValue = oldValue == null ? value : oldValue + separator + value;
         setOnly(name, newValue);
     }
 
-    public void reset() throws Exception {
+    public void reset() {
         int size = mFlagsToBeReset.size();
         if (size == 0) {
             mLog.d("reset(): not needed");
@@ -85,22 +85,22 @@ final class DeviceConfigHelper {
         }
     }
 
-    public void setSyncDisabledMode(SyncDisabledModeForTest mode) throws Exception {
+    public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
         mInterface.setSyncDisabledModeForTest(mode);
     }
 
-    public void dumpFlags(StringBuilder dump) throws Exception {
+    public void dumpFlags(StringBuilder dump) {
         String flags = mInterface.dump();
         dump.append(flags.isEmpty() ? "(no flags on namespace " + mNamespace + ")" : flags);
     }
 
     // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
     // AdServicesFlagsSetterRule
-    String get(String name) throws Exception {
+    String get(String name) {
         return mInterface.get(name, /* defaultValue= */ null);
     }
 
-    private String savePreviousValue(String name) throws Exception {
+    private String savePreviousValue(String name) {
         String oldValue = get(name);
         if (mFlagsToBeReset.containsKey(name)) {
             mLog.v("Value of %s (%s) already saved for reset()", name, mFlagsToBeReset.get(name));
@@ -111,11 +111,11 @@ final class DeviceConfigHelper {
         return oldValue;
     }
 
-    private void setOnly(String name, String value) throws Exception {
+    private void setOnly(String name, String value) {
         mInterface.set(name, value);
     }
 
-    private void delete(String name) throws Exception {
+    private void delete(String name) {
         mInterface.delete(name);
     }
 
@@ -128,15 +128,15 @@ final class DeviceConfigHelper {
     /** Low-level interface for {@link android.provider.DeviceConfig}. */
     interface Interface {
 
-        void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) throws Exception;
+        void setSyncDisabledModeForTest(SyncDisabledModeForTest mode);
 
-        String get(String name, @Nullable String defaultValue) throws Exception;
+        String get(String name, @Nullable String defaultValue);
 
-        void set(String name, @Nullable String value) throws Exception;
+        void set(String name, @Nullable String value);
 
-        void delete(String name) throws Exception;
+        void delete(String name);
 
-        String dump() throws Exception;
+        String dump();
     }
 
     /** Factory for {@link Interface} objects. */

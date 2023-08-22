@@ -51,19 +51,53 @@ final class TestDeviceHelper {
     }
 
     @FormatMethod
-    public static String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs)
-            throws DeviceNotAvailableException {
+    public static String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
         return runShellCommand(getTestDevice(), cmdFmt, cmdArgs);
     }
 
     @FormatMethod
     public static String runShellCommand(
-            ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs)
-            throws DeviceNotAvailableException {
+            ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs) {
         String cmd = String.format(cmdFmt, cmdArgs);
-        String result = device.executeShellCommand(cmd);
+        String result;
+        try {
+            result = device.executeShellCommand(cmd);
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
         sLogger.d("runShellCommand(%s): %s", cmd, result);
         return result;
+    }
+
+    public static int getApiLevel() {
+        try {
+            return getTestDevice().getApiLevel();
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    public static String getProperty(String name) {
+        try {
+            return getTestDevice().getProperty(name);
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    public static void setProperty(String name, String value) {
+        try {
+            getTestDevice().setProperty(name, value);
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private static final class DeviceUnavailableException extends IllegalStateException {
+        private DeviceUnavailableException(DeviceNotAvailableException cause) {
+            super(cause);
+        }
     }
 
     private TestDeviceHelper() {
