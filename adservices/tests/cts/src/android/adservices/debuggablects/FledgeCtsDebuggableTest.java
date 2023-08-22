@@ -3674,8 +3674,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @Test
     public void testPersistAdSelectionData_adSelectionIdDoesntExist_failure() {
-        // TODO(b/293022107): This test is currently using a dummy ad selection id that cause it to
-        //  fail. Add success tests when encryption key fetch can be done in CTS
+        // TODO(b/293022107): This test is currently using a placeholder ad selection id that cause
+        //  it to fail. Add success tests when encryption key fetch can be done in CTS
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         PhFlagsFixture.overrideFledgeAdSelectionAuctionServerApisEnabled(false);
