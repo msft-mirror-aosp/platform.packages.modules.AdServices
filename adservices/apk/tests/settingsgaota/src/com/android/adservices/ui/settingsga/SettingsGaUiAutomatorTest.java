@@ -644,7 +644,8 @@ public class SettingsGaUiAutomatorTest {
         UiObject subtitle = sDevice.findObject(new UiSelector().resourceIdMatches(regexResId));
         subtitle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         scrollView.scrollIntoView(subtitle);
-        if (subtitle.getText().equals("Off")) {
+        if (subtitle.getText()
+                .equals(ApkTestUtil.getString(R.string.settingsUI_subtitle_consent_off))) {
             ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -653,7 +654,12 @@ public class SettingsGaUiAutomatorTest {
             toggle.click();
             sDevice.pressBack();
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(subtitle.getText().equals("Off")).isFalse();
+            assertThat(
+                            subtitle.getText()
+                                    .equals(
+                                            ApkTestUtil.getString(
+                                                    R.string.settingsUI_subtitle_consent_off)))
+                    .isFalse();
         } else {
             ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
@@ -663,7 +669,12 @@ public class SettingsGaUiAutomatorTest {
             toggle.click();
             sDevice.pressBack();
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(subtitle.getText().equals("Off")).isTrue();
+            assertThat(
+                            subtitle.getText()
+                                    .equals(
+                                            ApkTestUtil.getString(
+                                                    R.string.settingsUI_subtitle_consent_off)))
+                    .isTrue();
         }
     }
 
