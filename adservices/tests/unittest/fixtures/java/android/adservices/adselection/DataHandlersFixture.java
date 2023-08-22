@@ -51,6 +51,8 @@ public class DataHandlersFixture {
     public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1test.com");
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final Instant CREATION_INSTANT_1 = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant CREATION_INSTANT_2 =
+            CLOCK.instant().plusSeconds(10).truncatedTo(ChronoUnit.MILLIS);
 
     public static final double WIN_BID_1 = 0.1;
     public static final Uri WIN_RENDER_URI_1 = AdDataFixture.getValidRenderUriByBuyer(BUYER_1, 1);
@@ -87,12 +89,21 @@ public class DataHandlersFixture {
 
     public static AdSelectionInitialization AD_SELECTION_INITIALIZATION_1 =
             getAdSelectionInitialization(SELLER_1, TEST_PACKAGE_NAME_1);
-    public static DBAdSelectionInitialization DB_AD_SELECTION_INTITIALIZATION_1 =
+
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_1 =
             DBAdSelectionInitialization.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
                     .setCallerPackageName(AD_SELECTION_INITIALIZATION_1.getCallerPackageName())
                     .setCreationInstant(CREATION_INSTANT_1)
+                    .build();
+
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_2 =
+            DBAdSelectionInitialization.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
+                    .setCallerPackageName(AD_SELECTION_INITIALIZATION_1.getCallerPackageName())
+                    .setCreationInstant(CREATION_INSTANT_2)
                     .build();
 
     public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_1 =
