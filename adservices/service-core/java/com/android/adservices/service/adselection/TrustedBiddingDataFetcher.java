@@ -35,6 +35,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,16 +56,19 @@ public class TrustedBiddingDataFetcher {
     @NonNull private final DevContext mDevContext;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final ExecutorService mLightweightExecutorService;
+    private final boolean mDataVersionHeaderEnabled;
 
     public TrustedBiddingDataFetcher(
             AdServicesHttpsClient adServicesHttpsClient,
             DevContext devContext,
             CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            ExecutorService lightweightExecutorService) {
+            ExecutorService lightweightExecutorService,
+            boolean dataVersionHeaderEnabled) {
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContext = devContext;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mLightweightExecutorService = lightweightExecutorService;
+        mDataVersionHeaderEnabled = dataVersionHeaderEnabled;
     }
 
     /**
@@ -158,11 +162,7 @@ public class TrustedBiddingDataFetcher {
     private FluentFuture<TrustedBiddingResponse> getTrustedBiddingDataByBatch(
             final Uri trustedBiddingUrl, final Set<String> keys) {
         Uri trustedBiddingUriWithKeys = getTrustedBiddingUriWithKeys(trustedBiddingUrl, keys);
-        return FluentFuture.from(
-                        mAdServicesHttpsClient.fetchPayload(
-                                trustedBiddingUriWithKeys,
-                                ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY),
-                                mDevContext))
+        return FluentFuture.from(fetchTrustedBiddingData(trustedBiddingUriWithKeys))
                 .catching(
                         Exception.class,
                         e -> {
@@ -184,6 +184,15 @@ public class TrustedBiddingDataFetcher {
                             return null;
                         },
                         mLightweightExecutorService);
+    }
+
+    private ListenableFuture<AdServicesHttpClientResponse> fetchTrustedBiddingData(Uri uri) {
+        if (mDataVersionHeaderEnabled) {
+            return mAdServicesHttpsClient.fetchPayload(
+                    uri, ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY), mDevContext);
+        } else {
+            return mAdServicesHttpsClient.fetchPayload(uri, mDevContext);
+        }
     }
 
     private Uri getTrustedBiddingUriWithKeys(
