@@ -30,7 +30,7 @@ import com.android.modules.utils.build.SdkLevel;
 // TODO(b/295321663): rename to AdServicesFlagsSetterRule - it was temporary renamed to
 // DeviceSideAdServicesFlagsSetterRule to minimize git diff in the superclass
 public final class DeviceSideAdServicesFlagsSetterRule
-        extends AdServicesFlagsSetterRule<DeviceSideAdServicesFlagsSetterRule> {
+        extends AbstractAdServicesFlagsSetterRule<DeviceSideAdServicesFlagsSetterRule> {
 
     // TODO(b/294423183): remove once legacy usage is gone
     private final boolean mUsedByLegacyHelper;

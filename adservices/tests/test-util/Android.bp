@@ -69,8 +69,8 @@ java_library_host {
         ":adservices-service-core-flags-constants-sources",
         // TODO(b/284971005): move files below to pure-java and use filegroup
         "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
+        "java/com/android/adservices/common/AbstractAdServicesFlagsSetterRule.java",
         "java/com/android/adservices/common/AbstractSdkLevelSupportedRule.java",
-        "java/com/android/adservices/common/AdServicesFlagsSetterRule.java",
         "java/com/android/adservices/common/DeviceConfigHelper.java",
         "java/com/android/adservices/common/RequiresLowRamDevice.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastR.java",
