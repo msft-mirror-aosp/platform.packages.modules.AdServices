@@ -48,7 +48,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastS_V2() {
+    public static SdkLevelSupportRule forAtLeastSv2() {
         return new SdkLevelSupportRule(AndroidSdkLevel.S_V2);
     }
 
@@ -68,32 +68,32 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     @Override
-    public boolean isDeviceAtLeastR() {
+    public boolean isAtLeastR() {
         return SdkLevel.isAtLeastR();
     }
 
     @Override
-    public boolean isDeviceAtLeastS() {
+    public boolean isAtLeastS() {
         return SdkLevel.isAtLeastS();
     }
 
     @Override
-    public boolean isDeviceAtLeastS_V2() {
+    public boolean isAtLeastSv2() {
         return SdkLevel.isAtLeastSv2();
     }
 
     @Override
-    public boolean isDeviceAtLeastT() {
+    public boolean isAtLeastT() {
         return SdkLevel.isAtLeastT();
     }
 
     @Override
-    public boolean isDeviceAtLeastU() {
+    public boolean isAtLeastU() {
         return SdkLevel.isAtLeastU();
     }
 
     @Override
-    public boolean isDeviceAtLeastV() {
+    public boolean isAtLeastV() {
         return SdkLevel.isAtLeastV();
     }
 }
