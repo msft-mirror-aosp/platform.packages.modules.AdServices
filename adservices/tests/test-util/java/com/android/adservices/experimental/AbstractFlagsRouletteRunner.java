@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.experimental;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import com.android.adservices.common.Logger;
+import com.android.adservices.common.Nullable;
 
 import com.google.common.collect.ImmutableList;
 
@@ -616,7 +619,7 @@ public abstract class AbstractFlagsRouletteRunner extends BlockJUnit4ClassRunner
      * Gets the info about the runner running the current test (or {@code null} if no test is
      * running).
      */
-    static @Nullable FlagsRouletteState getFlagsRouletteState() {
+    public static @Nullable FlagsRouletteState getFlagsRouletteState() {
         return sCurrentRunner.get();
     }
 

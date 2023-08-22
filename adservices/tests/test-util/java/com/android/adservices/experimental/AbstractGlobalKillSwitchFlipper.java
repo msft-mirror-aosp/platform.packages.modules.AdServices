@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
+package com.android.adservices.experimental;
 
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
+
+import com.android.adservices.common.AndroidLogger;
+import com.android.adservices.common.Logger;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;

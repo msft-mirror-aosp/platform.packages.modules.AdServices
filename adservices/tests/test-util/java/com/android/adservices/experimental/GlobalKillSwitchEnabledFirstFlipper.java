@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
+package com.android.adservices.experimental;
 
 import org.junit.runners.model.InitializationError;
 

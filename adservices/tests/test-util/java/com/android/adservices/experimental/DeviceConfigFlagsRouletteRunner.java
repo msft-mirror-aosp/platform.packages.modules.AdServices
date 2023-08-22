@@ -14,29 +14,46 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
+package com.android.adservices.experimental;
 
 import android.os.SystemProperties;
-import android.provider.DeviceConfig;
+
+import com.android.adservices.common.AndroidLogger;
+import com.android.adservices.common.Logger;
 
 import org.junit.runners.model.InitializationError;
 
 /**
- * A {@link DeviceConfigFlagsRouletteRunner} that uses AdService's namespace.
+ * An {@link AbstractFlagsRouletteRunner} that uses {@link android.provider.DeviceConfig} to manage
+ * the flags.
  *
- * <p>NOTE: if you just want to switch the values of the global kill switch, please use {@link
- * GlobalKillSwitchFlipper} instead.
+ * <p><b>Note: </b>this abstract class is necessary because JUnit requires the {@code TestRunner}
+ * constructor to take a specific argument (the test class), hence it cannot take a String with the
+ * {@link android.provider.DeviceConfig}'s namespace.
  *
  * <p><b>NOTE: </b>to disable it (and run each test just once), set the Android System property
  * {@value #PROP_DISABLED} to {@code true} - this is mostly using during development so you can use
  * {@code atest} to run just a specific test method.
  */
-public final class AdServicesFlagsRouletteRunner extends DeviceConfigFlagsRouletteRunner {
+public abstract class DeviceConfigFlagsRouletteRunner extends AbstractFlagsRouletteRunner {
 
-    private static final String PROP_DISABLED = "debug.AdServicesFlagsRouletteRunner.disabled";
+    private static final String PROP_DISABLED = "debug.DeviceConfigFlagsRouletteRunner.disabled";
 
-    public AdServicesFlagsRouletteRunner(Class<?> testClass) throws InitializationError {
-        super(testClass, DeviceConfig.NAMESPACE_ADSERVICES);
+    private static final Logger sLogger =
+            new Logger(AndroidLogger.getInstance(), DeviceConfigFlagsRouletteRunner.class);
+
+    /**
+     * Subclass should provide a constructor that takes just {@code Class<?> testClass} and call
+     * this constructor with the proper namespace.
+     */
+    protected DeviceConfigFlagsRouletteRunner(Class<?> testClass, String namespace)
+            throws InitializationError {
+        super(testClass, new DeviceConfigFlagsManager(namespace));
+    }
+
+    @Override
+    protected Logger log() {
+        return sLogger;
     }
 
     @Override
