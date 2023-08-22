@@ -21,7 +21,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_
 
 import android.os.Build;
 
-import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
+import com.android.adservices.experimental.AbstractFlagsRouletteRunner;
+import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
 import com.android.modules.utils.build.SdkLevel;
