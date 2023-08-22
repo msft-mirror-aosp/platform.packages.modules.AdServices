@@ -184,6 +184,8 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
         configureElement(
                 R.id.reset_topics_button,
                 button -> mTopicsViewModel.resetTopicsButtonClickHandler());
+
+        configureNotifyAdapterDataChange(mTopicsViewModel.getTopics(), adapter);
     }
 
     private void listenToTopicsViewModelUiEvents() {
