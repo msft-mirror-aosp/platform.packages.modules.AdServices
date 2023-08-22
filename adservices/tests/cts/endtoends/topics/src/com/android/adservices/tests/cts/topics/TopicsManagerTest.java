@@ -135,7 +135,7 @@ public class TopicsManagerTest {
 
     @Test
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
-    public void testTopicsManager_testTopicsKillSwitch() {
+    public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
         flags.setTopicsKillSwitch(true);
 
