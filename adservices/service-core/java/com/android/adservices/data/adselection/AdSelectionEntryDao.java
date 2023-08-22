@@ -571,7 +571,7 @@ public abstract class AdSelectionEntryDao {
      * @return true if row was created in DBAdSelectionInitialization, false otherwise
      */
     @Transaction
-    boolean persistAdSelectionInitialization(
+    public boolean persistAdSelectionInitialization(
             long adSelectionId,
             AdSelectionInitialization adSelectionInitialization,
             Instant creationInstant) {
