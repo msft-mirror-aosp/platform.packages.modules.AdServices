@@ -40,9 +40,12 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
-import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -70,6 +73,7 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -80,6 +84,8 @@ public class PersistAdSelectionResultRunnerTest {
     private static final Uri AD_RENDER_URI = Uri.parse("test.com/render_uri");
     private static final AdTechIdentifier WINNER_BUYER =
             AdTechIdentifier.fromString("winner-buyer.com");
+    private static final String WINNER_CA_NAME = "test-name";
+    private static final float WINNER_BID = 1.4f;
     private static final String BUYER_REPORTING_URI = "https://foobarbuyer.reporting";
     private static final String SELLER_REPORTING_URI = "https://foobarseller.reporting";
     private static final WinReportingUrls WIN_REPORTING_URLS =
@@ -94,7 +100,8 @@ public class PersistAdSelectionResultRunnerTest {
     private static final AuctionResult AUCTION_RESULT =
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
-                    .setCustomAudienceName("test-name")
+                    .setBid(WINNER_BID)
+                    .setCustomAudienceName(WINNER_CA_NAME)
                     .setBuyer(WINNER_BUYER.toString())
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
@@ -109,7 +116,7 @@ public class PersistAdSelectionResultRunnerTest {
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
-    @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
+    @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -122,10 +129,10 @@ public class PersistAdSelectionResultRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mServerAdSelectionDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+        mAdSelectionEntryDaoSpy =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
-                        .auctionServerAdSelectionDao();
+                        .adSelectionEntryDao();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
@@ -146,7 +153,7 @@ public class PersistAdSelectionResultRunnerTest {
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
-                        mServerAdSelectionDaoSpy,
+                        mAdSelectionEntryDaoSpy,
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -169,6 +176,14 @@ public class PersistAdSelectionResultRunnerTest {
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
 
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID,
+                AdSelectionInitialization.builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build(),
+                Instant.now());
+
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
                         .setSeller(SELLER)
@@ -186,15 +201,21 @@ public class PersistAdSelectionResultRunnerTest {
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
-        verify(mServerAdSelectionDaoSpy, times(1))
-                .updateAuctionServerAdSelection(
-                        DBAuctionServerAdSelection.builder()
-                                .setAdSelectionId(AD_SELECTION_ID)
-                                .setSeller(SELLER)
-                                .setWinnerBuyer(WINNER_BUYER)
-                                .setWinnerAdRenderUri(AD_RENDER_URI)
-                                .setBuyerReportingUri(Uri.parse(BUYER_REPORTING_URI))
-                                .setSellerReportingUri(Uri.parse(SELLER_REPORTING_URI))
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionResultForCustomAudience(
+                        AD_SELECTION_ID,
+                        AdSelectionResultBidAndUri.builder()
+                                .setWinningAdBid(WINNER_BID)
+                                .setWinningAdRenderUri(AD_RENDER_URI)
+                                .build(),
+                        WINNER_BUYER,
+                        WinningCustomAudience.builder().setName(WINNER_CA_NAME).build());
+        verify(mAdSelectionEntryDaoSpy)
+                .persistReportingData(
+                        AD_SELECTION_ID,
+                        ReportingData.builder()
+                                .setBuyerWinReportingUri(Uri.parse(BUYER_REPORTING_URI))
+                                .setSellerWinReportingUri(Uri.parse(SELLER_REPORTING_URI))
                                 .build());
     }
 
@@ -222,7 +243,7 @@ public class PersistAdSelectionResultRunnerTest {
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
-        verifyZeroInteractions(mServerAdSelectionDaoSpy);
+        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
     }
 
     @Test
