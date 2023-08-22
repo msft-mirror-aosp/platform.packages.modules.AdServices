@@ -31,7 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DBEncoderLogicDaoTest {
+public class EncoderLogicDaoTest {
 
     public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
     public static AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
