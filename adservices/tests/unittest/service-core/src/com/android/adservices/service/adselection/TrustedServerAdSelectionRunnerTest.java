@@ -130,6 +130,8 @@ public class TrustedServerAdSelectionRunnerTest {
     private static final AdFilterer sAdFilterer = new AdFiltererNoOpImpl();
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
             new FrequencyCapAdDataValidatorNoOpImpl();
+    private static final AdCounterHistogramUpdater AD_COUNTER_HISTOGRAM_UPDATER_NO_OP =
+            new AdCounterHistogramUpdaterNoOpImpl();
 
     private MockitoSession mStaticMockSession = null;
     private Context mContext = ApplicationProvider.getApplicationContext();
@@ -220,6 +222,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdSelectionServiceFilter,
                         sAdFilterer,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
                         mAdSelectionExecutionLogger,
                         mDebugReportingMock);
@@ -280,6 +283,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdSelectionServiceFilter,
                         sAdFilterer,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
                         mAdSelectionExecutionLogger,
                         mDebugReportingMock);
@@ -342,6 +346,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdSelectionServiceFilter,
                         sAdFilterer,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
                         mAdSelectionExecutionLogger,
                         mDebugReportingMock);
@@ -410,6 +415,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdSelectionServiceFilter,
                         sAdFilterer,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
                         mAdSelectionExecutionLogger,
                         mDebugReportingMock);
@@ -461,6 +467,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdSelectionServiceFilter,
                         sAdFilterer,
                         FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
                         mAdSelectionExecutionLogger,
                         mDebugReportingMock);

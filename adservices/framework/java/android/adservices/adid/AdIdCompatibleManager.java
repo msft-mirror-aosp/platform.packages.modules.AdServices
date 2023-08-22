@@ -17,9 +17,9 @@ package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
-import android.adservices.common.OutcomeReceiver;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -109,7 +109,7 @@ public class AdIdCompatibleManager {
     @NonNull
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<AdId, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<AdId, Exception> callback) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
         CallerMetadata callerMetadata =

@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.GetAdSelectionDataCallback;
@@ -46,9 +47,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
-import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -82,6 +83,9 @@ import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -94,15 +98,19 @@ public class GetAdSelectionDataRunnerTest {
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private static final byte[] CIPHER_TEXT_BYTES =
             "encrypted-cipher-for-auction-result".getBytes(StandardCharsets.UTF_8);
+
+    private static final Instant AD_SELECTION_INITIALIZATION_INSTANT =
+            Instant.now().truncatedTo(ChronoUnit.MILLIS);
     private Flags mFlags;
     private Context mContext;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
-    @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
+    @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Spy private AdFilterer mAdFiltererSpy = new AdFiltererNoOpImpl();
+    @Mock private Clock mClockMock;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
     private MockitoSession mStaticMockSession = null;
 
@@ -117,10 +125,10 @@ public class GetAdSelectionDataRunnerTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
-        mServerAdSelectionDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+        mAdSelectionEntryDaoSpy =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
-                        .auctionServerAdSelectionDao();
+                        .adSelectionEntryDao();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -144,18 +152,20 @@ public class GetAdSelectionDataRunnerTest {
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
+        when(mClockMock.instant()).thenReturn(AD_SELECTION_INITIALIZATION_INSTANT);
         mGetAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
                         mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
                         mCustomAudienceDao,
-                        mServerAdSelectionDaoSpy,
                         mAdSelectionServiceFilterMock,
                         mAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mFlags,
                         CALLER_UID,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        mClockMock);
     }
 
     @After
@@ -192,18 +202,19 @@ public class GetAdSelectionDataRunnerTest {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1)).encryptBytes(any(), anyLong(), anyLong());
-        verify(mServerAdSelectionDaoSpy, times(1))
-                .insertAuctionServerAdSelection(
-                        DBAuctionServerAdSelection.builder()
-                                .setAdSelectionId(
-                                        callback.mGetAdSelectionDataResponse.getAdSelectionId())
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionInitialization(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionId(),
+                        AdSelectionInitialization.builder()
                                 .setSeller(SELLER)
-                                .build());
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .build(),
+                        AD_SELECTION_INITIALIZATION_INSTANT);
         verify(mAdFiltererSpy).filterCustomAudiences(any());
     }
 
     @Test
-    public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
+    public void testRunner_revokedUserConsent_returnsRandomResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -226,9 +237,13 @@ public class GetAdSelectionDataRunnerTest {
                 invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
 
         Assert.assertTrue(callback.mIsSuccess);
-        Assert.assertNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertEquals(
+                GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE,
+                callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
-        verifyZeroInteractions(mServerAdSelectionDaoSpy);
+        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
         verifyZeroInteractions(mAdFiltererSpy);
     }
 

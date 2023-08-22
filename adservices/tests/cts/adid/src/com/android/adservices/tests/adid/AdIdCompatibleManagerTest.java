@@ -20,14 +20,15 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Context;
 import android.os.LimitExceededException;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.DeviceSideAdServicesFlagsSetterRule;
 import com.android.adservices.common.SdkLevelSupportRule;
 
 import org.junit.Assert;
@@ -49,12 +50,16 @@ public final class AdIdCompatibleManagerTest {
 
     // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
+    @Rule(order = 2)
+    public final DeviceSideAdServicesFlagsSetterRule flags =
+            DeviceSideAdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
 
     @Before
     public void setup() throws Exception {
@@ -66,8 +71,8 @@ public final class AdIdCompatibleManagerTest {
     public void testAdIdCompatibleManager() throws Exception {
         AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
         CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<>() {
+        AdServicesOutcomeReceiver<AdId, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(AdId result) {
                         future.complete(result);
@@ -123,9 +128,9 @@ public final class AdIdCompatibleManagerTest {
         return reachedLimit.get();
     }
 
-    private OutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
+    private AdServicesOutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
             CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new OutcomeReceiver<>() {
+        return new AdServicesOutcomeReceiver<>() {
             @Override
             public void onResult(@NonNull AdId result) {
                 countDownLatch.countDown();

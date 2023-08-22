@@ -221,7 +221,7 @@ public class Source {
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
         boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
-        int numStates =
+        long numStates =
                 Combinatorics.getNumStatesArithmetic(
                         eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
                         getTriggerDataCardinality(),

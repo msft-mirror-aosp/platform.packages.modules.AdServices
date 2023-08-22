@@ -101,6 +101,8 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.proto.Activity.ActivityAllowlists;
+import com.android.server.sdksandbox.proto.Activity.AllowedActivities;
 import com.android.server.sdksandbox.proto.BroadcastReceiver.AllowedBroadcastReceivers;
 import com.android.server.sdksandbox.proto.BroadcastReceiver.BroadcastReceiverAllowlists;
 import com.android.server.sdksandbox.proto.ContentProvider.AllowedContentProviders;
@@ -240,6 +242,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final boolean DEFAULT_VALUE_ENFORCE_RESTRICTIONS = true;
 
+    private static final String PROPERTY_ACTIVITY_ALLOWLIST =
+            "sdksandbox_activity_allowlist_per_targetSdkVersion";
+    private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
+            "sdksandbox_next_activity_allowlist";
+
     private static final String PROPERTY_BROADCASTRECEIVER_ALLOWLIST =
             "sdksandbox_broadcastreceiver_allowlist_per_targetSdkVersion";
 
@@ -279,6 +286,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE =
             "Don't need to dump AdServices on UDC+ - use "
                     + "'dumpsys system_server_dumper --name AdServices instead'";
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final ArraySet<String> DEFAULT_ACTIVITY_ALLOWED_ACTIONS =
+            new ArraySet<>(
+                    Arrays.asList(
+                            Intent.ACTION_VIEW,
+                            Intent.ACTION_DIAL,
+                            Intent.ACTION_EDIT,
+                            Intent.ACTION_INSERT));
 
     static class Injector {
         private final Context mContext;
@@ -1887,6 +1903,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private ArraySet<String> mNextBroadcastReceiverAllowlist =
                 getNextBroadcastReceiverDeviceConfigAllowlist();
 
+        @Nullable
+        @GuardedBy("mLock")
+        private Map<Integer, AllowedActivities> mActivityAllowlistPerTargetSdkVersion =
+                getActivityDeviceConfigAllowlist();
+
+        @Nullable
+        @GuardedBy("mLock")
+        private AllowedActivities mNextActivityAllowlist = getNextActivityDeviceConfigAllowlist();
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1983,6 +2008,20 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        @Nullable
+        Map<Integer, AllowedActivities> getActivityAllowlistPerTargetSdkVersion() {
+            synchronized (mLock) {
+                return mActivityAllowlistPerTargetSdkVersion;
+            }
+        }
+
+        @Nullable
+        AllowedActivities getNextActivityAllowlist() {
+            synchronized (mLock) {
+                return mNextActivityAllowlist;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -2042,6 +2081,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             mNextBroadcastReceiverAllowlist =
                                     getNextBroadcastReceiverDeviceConfigAllowlist();
                             break;
+                        case PROPERTY_ACTIVITY_ALLOWLIST:
+                            mActivityAllowlistPerTargetSdkVersion =
+                                    getActivityDeviceConfigAllowlist();
+                            break;
+                        case PROPERTY_NEXT_ACTIVITY_ALLOWLIST:
+                            mNextActivityAllowlist = getNextActivityDeviceConfigAllowlist();
                         default:
                     }
                 }
@@ -2146,6 +2191,23 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return new ArraySet<>(allowedBroadcastReceivers.getIntentActionsList());
             }
             return null;
+        }
+
+        @Nullable
+        private static Map<Integer, AllowedActivities> getActivityDeviceConfigAllowlist() {
+            ActivityAllowlists activityAllowlistsProto =
+                    getDeviceConfigProtoProperty(
+                            ActivityAllowlists.parser(), PROPERTY_ACTIVITY_ALLOWLIST);
+
+            return activityAllowlistsProto == null
+                    ? null
+                    : activityAllowlistsProto.getAllowlistPerTargetSdkMap();
+        }
+
+        @Nullable
+        private static AllowedActivities getNextActivityDeviceConfigAllowlist() {
+            return getDeviceConfigProtoProperty(
+                    AllowedActivities.parser(), PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
         }
     }
 
@@ -2674,6 +2736,35 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    @NonNull
+    private ArraySet<String> getActivityAllowlist() {
+        synchronized (mLock) {
+            if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                    && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
+                return new ArraySet<>(
+                        mSdkSandboxSettingsListener.getNextActivityAllowlist().getActionsList());
+            }
+            return getActivityAllowlistForTargetSdk();
+        }
+    }
+
+    @NonNull
+    private ArraySet<String> getActivityAllowlistForTargetSdk() {
+        synchronized (mLock) {
+            if (mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion() == null) {
+                return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
+            }
+            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
+            AllowedActivities activityAllowlistPerTargetSdkVersion =
+                    mSdkSandboxSettingsListener
+                            .getActivityAllowlistPerTargetSdkVersion()
+                            .get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+            return (activityAllowlistPerTargetSdkVersion == null)
+                    ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
+                    : new ArraySet<>(activityAllowlistPerTargetSdkVersion.getActionsList());
+        }
+    }
+
     private boolean requestAllowedPerAllowlist(
             String action,
             String packageName,
@@ -2840,16 +2931,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return;
             }
 
-            // TODO(b/289991549): Configure allowlist using DeviceConfig
-            final ArrayList<String> allowedActions =
-                    new ArrayList<>(
-                            Arrays.asList(
-                                    Intent.ACTION_VIEW,
-                                    Intent.ACTION_DIAL,
-                                    Intent.ACTION_EDIT,
-                                    Intent.ACTION_INSERT));
-
-            if (allowedActions.contains(intent.getAction())) {
+            if (doesInputMatchAnyWildcardPattern(getActivityAllowlist(), intent.getAction())) {
                 return;
             }
             throw new SecurityException(

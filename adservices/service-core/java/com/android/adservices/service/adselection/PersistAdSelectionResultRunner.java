@@ -30,8 +30,10 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
-import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
@@ -44,6 +46,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -60,7 +63,7 @@ import java.util.concurrent.ExecutorService;
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
-    @NonNull private final AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
+    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -71,21 +74,21 @@ public class PersistAdSelectionResultRunner {
 
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
-            @NonNull final AuctionServerAdSelectionDao auctionServerAdSelectionDao,
+            @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final int callerUid,
             @NonNull final DevContext devContext) {
         Objects.requireNonNull(obliviousHttpEncryptor);
-        Objects.requireNonNull(auctionServerAdSelectionDao);
+        Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(devContext);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
-        mAuctionServerAdSelectionDao = auctionServerAdSelectionDao;
+        mAdSelectionEntryDao = adSelectionEntryDao;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -155,7 +158,7 @@ public class PersistAdSelectionResultRunner {
                                 // internally.
 
                                 // Fail Silently by notifying success to caller
-                                notifyEmptySuccessToCaller(callback);
+                                notifyEmptySuccessToCaller(callback, adSelectionId);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
                                     notifyFailureToCaller(t.getCause(), callback);
@@ -262,32 +265,48 @@ public class PersistAdSelectionResultRunner {
         int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
         return mBackgroundExecutorService.submit(
                 () -> {
-                    WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
-                    String buyerReportingUrl =
-                            winReportingUrls.getBuyerReportingUrls().getReportingUrl();
-                    String sellerReportingUrl =
-                            winReportingUrls.getComponentSellerReportingUrls().getReportingUrl();
-
                     // TODO(b/288622004): Validate seller against the db before persisting
 
                     if (!auctionResult.getIsChaff()) {
-                        mAuctionServerAdSelectionDao.updateAuctionServerAdSelection(
-                                DBAuctionServerAdSelection.builder()
-                                        .setAdSelectionId(adSelectionId)
-                                        .setSeller(seller)
-                                        .setWinnerBuyer(
-                                                AdTechIdentifier.fromString(
-                                                        auctionResult.getBuyer()))
-                                        .setWinnerAdRenderUri(
+                        Preconditions.checkArgument(
+                                !auctionResult.getCustomAudienceName().isEmpty(),
+                                "Custom audience name should not be empty.");
+                        Preconditions.checkArgument(
+                                !auctionResult.getAdRenderUrl().isEmpty(),
+                                "Ad render uri should not be empty");
+                        Preconditions.checkArgument(
+                                !auctionResult.getBuyer().isEmpty(), "Buyer should not be empty");
+
+                        WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
+                        String buyerReportingUrl =
+                                winReportingUrls.getBuyerReportingUrls().getReportingUrl();
+                        String sellerReportingUrl =
+                                winReportingUrls
+                                        .getComponentSellerReportingUrls()
+                                        .getReportingUrl();
+
+                        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                                adSelectionId,
+                                AdSelectionResultBidAndUri.builder()
+                                        .setWinningAdBid(auctionResult.getBid())
+                                        .setWinningAdRenderUri(
                                                 Uri.parse(auctionResult.getAdRenderUrl()))
+                                        .build(),
+                                AdTechIdentifier.fromString(auctionResult.getBuyer()),
+                                WinningCustomAudience.builder()
+                                        .setName(auctionResult.getCustomAudienceName())
+                                        .build());
+                        mAdSelectionEntryDao.persistReportingData(
+                                adSelectionId,
+                                ReportingData.builder()
                                         // TODO(b/288622004): Validate that reporting url domain is
                                         //  same as seller buyer domain. Also, remove Uri.EMPTY
                                         //  once auction server support event level reporting.
-                                        .setBuyerReportingUri(
+                                        .setBuyerWinReportingUri(
                                                 Objects.isNull(buyerReportingUrl)
                                                         ? Uri.EMPTY
                                                         : Uri.parse(buyerReportingUrl))
-                                        .setSellerReportingUri(
+                                        .setSellerWinReportingUri(
                                                 Objects.isNull(sellerReportingUrl)
                                                         ? Uri.EMPTY
                                                         : Uri.parse(sellerReportingUrl))
@@ -314,12 +333,17 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
-    private void notifyEmptySuccessToCaller(@NonNull PersistAdSelectionResultCallback callback) {
+    private void notifyEmptySuccessToCaller(
+            @NonNull PersistAdSelectionResultCallback callback, long adSelectionId) {
         try {
             // TODO(b/288368908): Determine what is an appropriate empty response for revoked
             //  consent
             // TODO(b/288370270): Collect API metrics
-            callback.onSuccess(null);
+            callback.onSuccess(
+                    new PersistAdSelectionResultResponse.Builder()
+                            .setAdSelectionId(adSelectionId)
+                            .setAdRenderUri(Uri.EMPTY)
+                            .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
         } finally {

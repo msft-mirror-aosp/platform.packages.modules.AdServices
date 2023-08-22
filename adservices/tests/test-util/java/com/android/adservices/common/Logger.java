@@ -24,21 +24,55 @@ import java.util.Objects;
 public final class Logger {
 
     private final RealLogger mRealLogger;
+    private final String mTag;
 
-    public Logger(RealLogger realLogger) {
+    public Logger(RealLogger realLogger, Class<?> clazz) {
+        this(realLogger, Objects.requireNonNull(clazz).getSimpleName());
+    }
+
+    public Logger(RealLogger realLogger, String tag) {
         mRealLogger = Objects.requireNonNull(realLogger);
+        mTag = Objects.requireNonNull(tag);
+    }
+
+    public String getTag() {
+        return mTag;
+    }
+
+    /** Convenience method to log a WTF message. */
+    @FormatMethod
+    public void wtf(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+        log(LogLevel.WTF, msgFmt, msgArgs);
+    }
+
+    /** Convenience method to log a WTF message with an exception. */
+    @FormatMethod
+    public void wtf(Throwable t, @FormatString String msgFmt, @Nullable Object... msgArgs) {
+        log(LogLevel.WTF, t, msgFmt, msgArgs);
     }
 
     /** Convenience method to log an error message. */
     @FormatMethod
     public void e(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        log(LogLevel.WARNING, msgFmt, msgArgs);
+        log(LogLevel.ERROR, msgFmt, msgArgs);
+    }
+
+    /** Convenience method to log an error message with an exception. */
+    @FormatMethod
+    public void e(Throwable t, @FormatString String msgFmt, @Nullable Object... msgArgs) {
+        log(LogLevel.ERROR, t, msgFmt, msgArgs);
     }
 
     /** Convenience method to log a warning message. */
     @FormatMethod
     public void w(@FormatString String msgFmt, @Nullable Object... msgArgs) {
         log(LogLevel.WARNING, msgFmt, msgArgs);
+    }
+
+    /** Convenience method to log a warning message with an exception. */
+    @FormatMethod
+    public void w(Throwable t, @FormatString String msgFmt, @Nullable Object... msgArgs) {
+        log(LogLevel.WARNING, t, msgFmt, msgArgs);
     }
 
     /** Convenience method to log a info message. */
@@ -62,7 +96,14 @@ public final class Logger {
     /** Logs a message in the given level. */
     @FormatMethod
     void log(LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs) {
-        mRealLogger.log(level, msgFmt, msgArgs);
+        mRealLogger.log(level, mTag, msgFmt, msgArgs);
+    }
+
+    /** Logs a message (and an exception) in the given level. */
+    @FormatMethod
+    void log(
+            LogLevel level, Throwable t, @FormatString String msgFmt, @Nullable Object... msgArgs) {
+        mRealLogger.log(level, mTag, t, msgFmt, msgArgs);
     }
 
     @Override
@@ -72,6 +113,7 @@ public final class Logger {
 
     /** Level of log messages. */
     enum LogLevel {
+        WTF,
         ERROR,
         WARNING,
         INFO,
@@ -84,6 +126,19 @@ public final class Logger {
 
         /** Logs a message in the given level. */
         @FormatMethod
-        void log(LogLevel level, @FormatString String msgFmt, @Nullable Object... msgArgs);
+        void log(
+                LogLevel level,
+                String tag,
+                @FormatString String msgFmt,
+                @Nullable Object... msgArgs);
+
+        /** Logs a message (with an exception) in the given level. */
+        @FormatMethod
+        void log(
+                LogLevel level,
+                String tag,
+                Throwable throwable,
+                @FormatString String msgFmt,
+                @Nullable Object... msgArgs);
     }
 }

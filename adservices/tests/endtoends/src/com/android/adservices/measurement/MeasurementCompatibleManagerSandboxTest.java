@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.OutcomeReceiver;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
@@ -78,14 +78,14 @@ public final class MeasurementCompatibleManagerSandboxTest {
                     /* isCustomizedSdkContext = */ false);
 
     private Executor mMockCallbackExecutor;
-    private OutcomeReceiver mMockOutcomeReceiver;
+    private AdServicesOutcomeReceiver mMockOutcomeReceiver;
     private IMeasurementService mMockMeasurementService;
 
     private MeasurementCompatibleManager mMeasurementManager;
 
     // Ignore tests when device is not at least T
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.isAtLeastT();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     // Skip the test if it runs on unsupported platforms.
     @Rule(order = 1)
@@ -95,7 +95,7 @@ public final class MeasurementCompatibleManagerSandboxTest {
     @Before
     public void setUp() {
         mMockCallbackExecutor = mock(Executor.class);
-        mMockOutcomeReceiver = mock(OutcomeReceiver.class);
+        mMockOutcomeReceiver = mock(AdServicesOutcomeReceiver.class);
         mMockMeasurementService = mock(IMeasurementService.class);
 
         // The intention of spying on MeasurementManager and returning an IMeasurementService mock
@@ -109,12 +109,12 @@ public final class MeasurementCompatibleManagerSandboxTest {
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
         doAnswer(
                         (invocation) -> {
-                            ((OutcomeReceiver) invocation.getArgument(1))
+                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(adId, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any(OutcomeReceiver.class));
+                .getAdId(any(), any(AdServicesOutcomeReceiver.class));
 
         overrideMeasurementKillSwitches(true);
     }

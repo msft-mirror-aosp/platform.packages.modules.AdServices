@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 
@@ -70,8 +71,40 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
     }
 
     @Override
-    public void updateWinHistogram(@NonNull AdScoringOutcome outcome) {
-        // TODO(b/274171719): Implement win-type event updates
+    public void updateWinHistogram(@NonNull DBAdSelection dbAdSelection) {
+        Objects.requireNonNull(dbAdSelection);
+
+        if (dbAdSelection.getCustomAudienceSignals() == null) {
+            sLogger.v("Winning ad has no associated custom audience signals");
+            return;
+        }
+
+        if (dbAdSelection.getAdCounterIntKeys() == null
+                || dbAdSelection.getAdCounterIntKeys().isEmpty()) {
+            sLogger.v("Winning ad has no associated ad counter keys to update histogram");
+            return;
+        }
+
+        HistogramEvent.Builder eventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                        .setBuyer(dbAdSelection.getCustomAudienceSignals().getBuyer())
+                        .setCustomAudienceOwner(dbAdSelection.getCustomAudienceSignals().getOwner())
+                        .setCustomAudienceName(dbAdSelection.getCustomAudienceSignals().getName())
+                        .setTimestamp(dbAdSelection.getCreationTimestamp())
+                        .setSourceApp(dbAdSelection.getCallerPackageName());
+
+        sLogger.v("Inserting %d histogram events", dbAdSelection.getAdCounterIntKeys().size());
+        for (Integer key : dbAdSelection.getAdCounterIntKeys()) {
+            // TODO(b/276528814): Insert in bulk instead of in multiple transactions
+            //  and handle eviction only once
+            mFrequencyCapDao.insertHistogramEvent(
+                    eventBuilder.setAdCounterKey(key).build(),
+                    mAbsoluteMaxTotalHistogramEventCount,
+                    mLowerMaxTotalHistogramEventCount,
+                    mAbsoluteMaxPerBuyerHistogramEventCount,
+                    mLowerMaxPerBuyerHistogramEventCount);
+        }
     }
 
     @Override

@@ -32,15 +32,16 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,10 +56,12 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private String mTestName;
 
+    @ClassRule
+    public static final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @BeforeClass
     public static void classSetup() {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
     }
 
@@ -83,8 +86,6 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
 
     @After
     public void teardown() throws Exception {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
@@ -136,7 +137,11 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         UiObject topicTitle = getElement(R.string.settingsUI_topics_ga_title);
         assertThat((topicTitle.exists())).isFalse();
         UiObject measurementTitle = getElement(R.string.settingsUI_u18_measurement_view_title);
-        ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        } else {
+            ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_u18_measurement_view_title);
+        }
         assertThat(measurementTitle.exists()).isTrue();
     }
 

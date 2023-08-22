@@ -27,9 +27,9 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.DeviceSideAdServicesFlagsSetterRule;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -74,7 +74,8 @@ public final class PreviewApiTest {
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.forTopicsE2ETests();
+    public final DeviceSideAdServicesFlagsSetterRule flags =
+            DeviceSideAdServicesFlagsSetterRule.forTopicsE2ETests();
 
     @Before
     public void setup() throws Exception {

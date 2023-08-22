@@ -26,4 +26,4 @@ import java.lang.annotation.Target;
 /** Abstraction for a non-{@code null} reference - same as {@code android.annotation.Nullable}. */
 @Retention(SOURCE)
 @Target({METHOD, PARAMETER, FIELD})
-@interface Nullable {}
+public @interface Nullable {}

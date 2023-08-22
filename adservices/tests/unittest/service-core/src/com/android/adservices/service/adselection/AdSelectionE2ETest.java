@@ -44,7 +44,8 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
 import static com.android.adservices.service.adselection.JsFetcher.MISSING_SCORING_LOGIC;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
@@ -110,7 +111,6 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -207,6 +207,8 @@ public class AdSelectionE2ETest {
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
+    private static final String SELLER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION =
+            "/kv/seller/withDataVersion/signals/";
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
     private static final String SELLER_REPORTING_URI_PATH = "ssp/reporting/";
     private static final String BUYER_REPORTING_URI_PATH = "dsp/reporting/";
@@ -434,7 +436,7 @@ public class AdSelectionE2ETest {
                         }
                         return new MockResponse()
                                 .setBody(new JSONObject(jsonMap).toString())
-                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
+                                .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_1);
                     } else if (request.getPath()
                             .startsWith(
                                     BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION
@@ -449,7 +451,7 @@ public class AdSelectionE2ETest {
                         }
                         return new MockResponse()
                                 .setBody(new JSONObject(jsonMap).toString())
-                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_2);
+                                .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_2);
                     }
 
                     // The seller params vary based on runtime, so we are returning trusted
@@ -459,6 +461,13 @@ public class AdSelectionE2ETest {
                                     SELLER_TRUSTED_SIGNAL_URI_PATH
                                             + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                         return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
+                    } else if (request.getPath()
+                            .startsWith(
+                                    SELLER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION
+                                            + SELLER_TRUSTED_SIGNAL_PARAMS)) {
+                        return new MockResponse()
+                                .setBody(TRUSTED_SCORING_SIGNALS.toString())
+                                .addHeader(DATA_VERSION_HEADER_SCORING_KEY, DATA_VERSION_1);
                     }
                     sLogger.w("Unexpected call to MockWebServer " + request.getPath());
                     return new MockResponse().setResponseCode(404);
@@ -602,7 +611,6 @@ public class AdSelectionE2ETest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
@@ -637,7 +645,6 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -677,7 +684,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -738,7 +744,7 @@ public class AdSelectionE2ETest {
                             }
                             return new MockResponse()
                                     .setBody(new JSONObject(jsonMap).toString())
-                                    .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
+                                    .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_1);
                         } else if (request.getPath()
                                 .startsWith(
                                         BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION
@@ -754,7 +760,7 @@ public class AdSelectionE2ETest {
                             }
                             return new MockResponse()
                                     .setBody(new JSONObject(jsonMap).toString())
-                                    .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_2);
+                                    .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_2);
                         } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
                             return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
                         } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
@@ -783,6 +789,13 @@ public class AdSelectionE2ETest {
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                             return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
+                        } else if (request.getPath()
+                                .startsWith(
+                                        SELLER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION
+                                                + SELLER_TRUSTED_SIGNAL_PARAMS)) {
+                            return new MockResponse()
+                                    .setBody(TRUSTED_SCORING_SIGNALS.toString())
+                                    .addHeader(DATA_VERSION_HEADER_SCORING_KEY, DATA_VERSION_1);
                         }
                         sLogger.w("Unexpected call to MockWebServer " + request.getPath());
                         return new MockResponse().setResponseCode(404);
@@ -922,7 +935,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1023,7 +1035,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionSuccess_preV3BiddingLogicWithDataVersionHeader()
+    public void testRunAdSelectionSuccess_preV3BiddingLogicWithBuyerDataVersionHeader()
             throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
@@ -1109,7 +1121,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionSuccess_preV3BiddingLogicWinnerWithoutDataVersionHeader()
+    public void testRunAdSelectionSuccess_preV3BiddingLogicWinnerWithoutBuyerDataVersionHeader()
             throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
@@ -1194,6 +1206,104 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    public void testRunAdSelectionSuccess_preV3BiddingLogicWithSellerDataVersionHeader()
+            throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        // Instantiate new adSelectionConfig with data version header in trusted seller signals
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(
+                                        SELLER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION))
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // Assert data version was propagated through
+        String expectedSellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build().toString();
+        assertEquals(
+                expectedSellerContextualSignals,
+                mAdSelectionEntryDaoSpy
+                        .getAdSelectionEntityById(resultSelectionId)
+                        .getSellerContextualSignals());
+
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingDisabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithCPCDisabled =
@@ -1214,7 +1324,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1426,7 +1535,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1520,7 +1628,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1702,7 +1809,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1801,7 +1907,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionSuccess_v3BiddingLogicWithDataVersionHeader() throws Exception {
+    public void testRunAdSelectionSuccess_v3BiddingLogicWithBuyerDataVersionHeader()
+            throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1886,7 +1993,105 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionSuccess_v3BiddingLogicWinnerWithoutDataVersionHeader()
+    public void testRunAdSelectionSuccess_v3BiddingLogicWithSellerDataVersionHeader()
+            throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        // Instantiate new adSelectionConfig with data version header in trusted seller signals
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(
+                                        SELLER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION))
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // Assert data version was propagated through
+        String expectedSellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build().toString();
+        assertEquals(
+                expectedSellerContextualSignals,
+                mAdSelectionEntryDaoSpy
+                        .getAdSelectionEntityById(resultSelectionId)
+                        .getSellerContextualSignals());
+
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccess_v3BiddingLogicWinnerWithoutBuyerDataVersionHeader()
             throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
@@ -1991,7 +2196,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2527,7 +2731,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2661,7 +2864,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3377,7 +3579,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3491,7 +3692,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3607,7 +3807,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3726,7 +3925,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3847,7 +4045,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3981,7 +4178,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5147,7 +5343,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5392,7 +5587,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5465,7 +5659,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5652,7 +5845,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5725,7 +5917,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5841,7 +6032,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6514,7 +6704,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6642,7 +6831,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6772,7 +6960,6 @@ public class AdSelectionE2ETest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,

@@ -58,10 +58,13 @@ import java.util.concurrent.TimeUnit;
 public class AdSelectionDataE2ETest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String CONTEXTUAL_SIGNALS_FILE_REMARKETING_WINNER =
-            "ContextualSignalsRemarketingWinner.json";
+    private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "ContextualSignalsOneBuyer.json";
+
+    private static final String CONTEXTUAL_SIGNALS_FIVE_BUYERS = "ContextualSignalsFiveBuyers.json";
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
             "CustomAudienceOneBuyerOneCaOneAd.json";
+    private static final String CUSTOM_AUDIENCE_FIVE_BUYERS_MULTIPLE_CA =
+            "CustomAudienceServerAuctionFiveBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "example.com";
 
@@ -114,7 +117,47 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_FILE_REMARKETING_WINNER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_ONE_BUYER, outcome.getAdSelectionData());
+
+        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setAdSelectionResult(
+                                BaseEncoding.base64()
+                                        .decode(selectAdResponse.auctionResultCiphertext))
+                        .build();
+
+        AdSelectionOutcome adSelectionOutcome =
+                AD_SELECTION_CLIENT
+                        .persistAdSelectionResult(persistAdSelectionResultRequest)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        Assert.assertEquals("test-winningCA.com/1a", adSelectionOutcome.getRenderUri().toString());
+    }
+
+    @Test
+    public void runAdSelection_fiveBuyersMultipleCa_dummyData_remarketingWinner() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_FIVE_BUYERS_MULTIPLE_CA);
+
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        SelectAdResponse selectAdResponse =
+                FakeAdExchangeServer.runServerAuction(
+                        CONTEXTUAL_SIGNALS_FIVE_BUYERS, outcome.getAdSelectionData());
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
@@ -152,7 +195,7 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_FILE_REMARKETING_WINNER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_ONE_BUYER, outcome.getAdSelectionData());
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
