@@ -20,9 +20,9 @@ import com.android.tradefed.device.ITestDevice;
 
 // TODO(b/295321663): rename to AdServicesFlagsSetterRule - it was temporary renamed to
 // HostSideAdServicesFlagsSetterRule to minimize git diff in the superclass
-/** See {@link AdServicesFlagsSetterRule}. */
+/** See {@link AbstractAdServicesFlagsSetterRule}. */
 public final class HostSideAdServicesFlagsSetterRule
-        extends AdServicesFlagsSetterRule<HostSideAdServicesFlagsSetterRule> {
+        extends AbstractAdServicesFlagsSetterRule<HostSideAdServicesFlagsSetterRule> {
 
     /** Factory method that only disables the global kill switch. */
     public static HostSideAdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
