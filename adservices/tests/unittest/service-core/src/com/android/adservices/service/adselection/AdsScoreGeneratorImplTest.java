@@ -289,7 +289,8 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         mFlags,
                         mAdSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        false);
     }
 
     @Test
@@ -397,7 +398,22 @@ public class AdsScoreGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdScoringSuccessWithDataVersionHeader() throws Exception {
+    public void testRunAdScoringSuccessWithDataVersionHeaderEnabled() throws Exception {
+        // Re init generator
+        mAdsScoreGenerator =
+                new AdsScoreGeneratorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mSchedulingExecutor,
+                        mWebClient,
+                        mDevContext,
+                        mAdSelectionEntryDao,
+                        mFlags,
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting,
+                        true);
+
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -425,6 +441,7 @@ public class AdsScoreGeneratorImplTest {
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
+        // Set trusted scoring uri to return data version header
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
@@ -507,6 +524,132 @@ public class AdsScoreGeneratorImplTest {
                 scoringOutcome.get(0).getSellerContextualSignals().toAdSelectionSignals());
         assertEquals(
                 expectedSellerContextualSignals,
+                scoringOutcome.get(1).getSellerContextualSignals().toAdSelectionSignals());
+        verifySuccessAdScoringLogging(
+                mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
+    }
+
+    @Test
+    public void testRunAdScoringSuccessWithDataVersionHeaderDisabled() throws Exception {
+        // Re init generator
+        mAdsScoreGenerator =
+                new AdsScoreGeneratorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mSchedulingExecutor,
+                        mWebClient,
+                        mDevContext,
+                        mAdSelectionEntryDao,
+                        mFlags,
+                        mAdSelectionExecutionLogger,
+                        mDebugReporting,
+                        false);
+
+        when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
+                .thenReturn(
+                        RUN_AD_SCORING_START_TIMESTAMP,
+                        GET_AD_SELECTION_LOGIC_START_TIMESTAMP,
+                        GET_AD_SELECTION_LOGIC_END_TIMESTAMP,
+                        GET_AD_SCORES_START_TIMESTAMP,
+                        GET_TRUSTED_SCORING_SIGNALS_START_TIMESTAMP,
+                        GET_TRUSTED_SCORING_SIGNALS_END_TIMESTAMP,
+                        SCORE_ADS_START_TIMESTAMP,
+                        SCORE_ADS_END_TIMESTAMP,
+                        GET_AD_SCORES_END_TIMESTAMP,
+                        RUN_AD_SCORING_END_TIMESTAMP);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdScoringProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdScoringProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+
+        List<Double> scores = ImmutableList.of(1.0, 2.0);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
+
+        Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
+
+        // Set trusted scoring uri to return data version header
+        mAdSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setDecisionLogicUri(decisionLogicUri)
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(
+                                        mTrustedScoringSignalsPathWithDataVersionHeader))
+                        .build();
+
+        Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
+                unused -> {
+                    mAdSelectionExecutionLogger.startScoreAds();
+                    mAdSelectionExecutionLogger.endScoreAds();
+                    return Futures.immediateFuture(
+                            scores.stream()
+                                    .map(score -> ScoreAdResult.builder().setAdScore(score).build())
+                                    .collect(Collectors.toList()));
+                };
+        Mockito.when(
+                        mMockAdSelectionScriptEngine.scoreAds(
+                                mSellerDecisionLogicJs,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(a -> a.getAdWithBid())
+                                        .collect(Collectors.toList()),
+                                mAdSelectionConfig,
+                                mAdSelectionConfig.getSellerSignals(),
+                                mTrustedScoringSignals,
+                                AdSelectionSignals.EMPTY,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList()),
+                                mAdSelectionExecutionLogger))
+                .thenAnswer(loggerAnswer);
+
+        FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
+                mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
+
+        List<AdScoringOutcome> scoringOutcome = waitForFuture(() -> scoringResultFuture);
+
+        Mockito.verify(mMockAdSelectionScriptEngine)
+                .scoreAds(
+                        mSellerDecisionLogicJs,
+                        mAdBiddingOutcomeList.stream()
+                                .map(a -> a.getAdWithBid())
+                                .collect(Collectors.toList()),
+                        mAdSelectionConfig,
+                        mAdSelectionConfig.getSellerSignals(),
+                        mTrustedScoringSignals,
+                        AdSelectionSignals.EMPTY,
+                        mAdBiddingOutcomeList.stream()
+                                .map(
+                                        a ->
+                                                a.getCustomAudienceBiddingInfo()
+                                                        .getCustomAudienceSignals())
+                                .collect(Collectors.toList()),
+                        mAdSelectionExecutionLogger);
+
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                2,
+                ImmutableList.of(
+                        mFetchJavaScriptPath,
+                        mTrustedScoringSignalsPathWithDataVersionHeader + mTrustedScoringParams),
+                mRequestMatcherExactMatch);
+        runAdScoringProcessLoggerLatch.await();
+        assertEquals(1L, scoringOutcome.get(0).getAdWithScore().getScore().longValue());
+        assertEquals(2L, scoringOutcome.get(1).getAdWithScore().getScore().longValue());
+
+        // Assert seller contextual signals were propagated through
+        assertEquals(
+                AdSelectionSignals.EMPTY,
+                scoringOutcome.get(0).getSellerContextualSignals().toAdSelectionSignals());
+        assertEquals(
+                AdSelectionSignals.EMPTY,
                 scoringOutcome.get(1).getSellerContextualSignals().toAdSelectionSignals());
         verifySuccessAdScoringLogging(
                 mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);
@@ -599,7 +742,8 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         mFlags,
                         mAdSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        false);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -862,7 +1006,8 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         mFlags,
                         mAdSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        false);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1032,7 +1177,8 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         mFlags,
                         mAdSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        false);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1312,7 +1458,8 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         mFlags,
                         mAdSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        false);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
@@ -1471,7 +1618,8 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         flagsWithSmallerLimits,
                         mAdSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        false);
 
         List<Double> scores = Arrays.asList(1.0, 2.0);
         mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
