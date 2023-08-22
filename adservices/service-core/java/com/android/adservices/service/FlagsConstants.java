@@ -327,8 +327,6 @@ public final class FlagsConstants {
             "fledge_ad_selection_off_device_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
-    public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
-            "fledge_auction_server_payload_bucket_sizes";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     public static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -341,6 +339,19 @@ public final class FlagsConstants {
             "fledge_event_level_debug_reporting_batch_delay_seconds";
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
             "fledge_event_level_debug_reporting_max_items_per_batch";
+
+    // Server-auction flags for Protected Audience.
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED = "fledge_auction_server_enabled";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION =
+            "fledge_auction_server_enabled_for_report_impression";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT =
+            "fledge_auction_server_enabled_for_report_event";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM =
+            "fledge_auction_server_enabled_for_update_histogram";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION =
+            "fledge_auction_server_enabled_for_select_ads_mediation";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
             "fledge_auction_server_auction_key_fetch_uri";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING =
