@@ -273,7 +273,7 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
 
-        if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+        if (trigger.getTriggerTime() >= source.getAggregatableReportWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
