@@ -44,6 +44,14 @@ public class AdServicesCommon {
     public static final String ACTION_AD_SELECTION_SERVICE =
             "android.adservices.adselection.AD_SELECTION_SERVICE";
 
+    /**
+     * Intent action to discover the protected signals service in the APK.
+     *
+     * @hide
+     */
+    public static final String ACTION_PROTECTED_SIGNALS_SERVICE =
+            "android.adservices.adselection.PROTECTED_SIGNALS_SERVICE";
+
     /** Intent action to discover the Measurement service in the APK. */
     public static final String ACTION_MEASUREMENT_SERVICE =
             "android.adservices.MEASUREMENT_SERVICE";
