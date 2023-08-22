@@ -27,7 +27,7 @@ import android.os.LimitExceededException;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.DeviceSideAdServicesFlagsSetterRule;
 import com.android.adservices.common.SdkLevelSupportRule;
 
 import org.junit.Assert;
@@ -53,8 +53,8 @@ public final class AdIdCompatibleManagerTest {
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
+    public final DeviceSideAdServicesFlagsSetterRule flags =
+            DeviceSideAdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
 
     @Before
     public void setup() throws Exception {

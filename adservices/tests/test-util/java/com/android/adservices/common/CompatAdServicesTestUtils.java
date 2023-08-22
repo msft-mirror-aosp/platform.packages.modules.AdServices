@@ -19,13 +19,13 @@ package com.android.adservices.common;
 /**
  * Class to place back-compat Adservices related helper methods.
  *
- * @deprecated tests should use {@link AdServicesFlagsSetterRule} instead.
+ * @deprecated tests should use {@link DeviceSideAdServicesFlagsSetterRule} instead.
  */
 @Deprecated
 public final class CompatAdServicesTestUtils {
 
-    private static final AdServicesFlagsSetterRule sRule =
-            AdServicesFlagsSetterRule.forLegacyHelpers(CompatAdServicesTestUtils.class);
+    private static final DeviceSideAdServicesFlagsSetterRule sRule =
+            DeviceSideAdServicesFlagsSetterRule.forLegacyHelpers(CompatAdServicesTestUtils.class);
 
     private CompatAdServicesTestUtils() {
         /* cannot be instantiated */
@@ -36,31 +36,52 @@ public final class CompatAdServicesTestUtils {
      * related code on S- before running various PPAPI related tests.
      */
     public static void setFlags() {
-        sRule.setCompatModeFlags();
+        call(() -> sRule.setCompatModeFlags());
     }
 
     /** Reset back-compat related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
-        sRule.resetCompatModeFlags();
+        call(() -> sRule.resetCompatModeFlags());
     }
 
     public static void setPpapiAppAllowList(String allowList) {
-        sRule.setPpapiAppAllowList(allowList);
+        call(() -> sRule.setPpapiAppAllowList(allowList));
     }
 
     public static String getAndOverridePpapiAppAllowList(String packageName) {
-        String previousAppAllowList = sRule.getPpapiAppAllowList();
-        setPpapiAppAllowList(packageName); // this method takes care of the separator
-        return previousAppAllowList;
+        return call(
+                () -> {
+                    String previousAppAllowList = sRule.getPpapiAppAllowList();
+                    setPpapiAppAllowList(packageName); // this method takes care of the separator
+                    return previousAppAllowList;
+                });
     }
 
     public static void setMsmtApiAppAllowList(String allowList) {
-        sRule.setMsmtApiAppAllowList(allowList);
+        call(() -> sRule.setMsmtApiAppAllowList(allowList));
     }
 
     public static String getAndOverrideMsmtApiAppAllowList(String packageName) {
-        String previousAppAllowList = sRule.getMsmtApiAppAllowList();
-        setMsmtApiAppAllowList(packageName); // this method takes care of the separator
-        return previousAppAllowList;
+        return call(
+                () -> {
+                    String previousAppAllowList = sRule.getMsmtApiAppAllowList();
+                    setMsmtApiAppAllowList(packageName); // this method takes care of the separator
+                    return previousAppAllowList;
+                });
+    }
+
+    // Helper method as all AdServicesFlagsSetterRule methods throws Exception in the signature,
+    // although not in reality (the exceptions are declared because of the host-side counterpart)
+    private static <T> T call(CallableWithScissors<T> r) {
+        try {
+            return r.call();
+        } catch (Throwable t) {
+            // Shouldn't happen
+            throw new IllegalStateException("CallableWithScissors failed", t);
+        }
+    }
+
+    private interface CallableWithScissors<T> {
+        T call() throws Throwable;
     }
 }
