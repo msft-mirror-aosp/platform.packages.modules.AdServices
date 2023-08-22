@@ -134,7 +134,7 @@ public class TopicsManagerTest {
 
     @Test
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
-    public void testTopicsManager_testTopicsKillSwitch() throws Exception {
+    public void testTopicsManager_testTopicsKillSwitch() {
         // Override Topics kill switch to disable Topics API.
         flags.setTopicsKillSwitch(true);
 
@@ -151,12 +151,10 @@ public class TopicsManagerTest {
                         .build();
 
         // As the kill switch for Topics API is enabled, we should expect failure here.
-        assertThat(
+        Exception e =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> advertisingTopicsClient.getTopics().get())
-                        .getMessage())
-                .isEqualTo("java.lang.IllegalStateException: Service is not available.");
+                        ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -171,12 +169,10 @@ public class TopicsManagerTest {
                         .setUseGetMethodToCreateManagerInstance(false)
                         .build();
 
-        assertThat(
+        Exception e =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> advertisingTopicsClient.getTopics().get())
-                        .getMessage())
-                .isEqualTo("java.lang.IllegalArgumentException");
+                        ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
