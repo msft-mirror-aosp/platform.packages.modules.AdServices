@@ -38,8 +38,6 @@ import java.util.Objects;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
-// TODO(b/295321663): rename to AbstractAdServicesFlagsSetterRule - it was temporary renamed to
-// AdServicesFlagsSetterRule to minimize git diff
 /**
  * Rule used to properly set AdService flags - it will take care of permissions, restoring values at
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
@@ -48,7 +46,7 @@ import java.util.Objects;
  * <p>Most methods set {@link android.provider.DeviceConfig} flags, although some sets {@link
  * android.os.SystemProperties} instead - those are typically suffixed with {@code forTests}
  */
-abstract class AdServicesFlagsSetterRule<T extends AdServicesFlagsSetterRule<T>>
+abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFlagsSetterRule<T>>
         implements TestRule {
 
     private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;
@@ -70,7 +68,7 @@ abstract class AdServicesFlagsSetterRule<T extends AdServicesFlagsSetterRule<T>>
     // instantiated using a builder-like approach - will be set to null after test starts.
     @Nullable private List<FlagOrSystemProperty> mInitialSystemProperties = new ArrayList<>();
 
-    protected AdServicesFlagsSetterRule(
+    protected AbstractAdServicesFlagsSetterRule(
             RealLogger logger,
             DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
             SystemPropertiesHelper.Interface systemPropertiesInterface) {
@@ -239,8 +237,7 @@ abstract class AdServicesFlagsSetterRule<T extends AdServicesFlagsSetterRule<T>>
     }
 
     /** Overrides the flag that disables direct app calls for Topics. */
-    public AdServicesFlagsSetterRule setTopicsDisableDirectAppCalls(boolean value)
-            throws Exception {
+    public T setTopicsDisableDirectAppCalls(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
     }
 
@@ -623,7 +620,7 @@ abstract class AdServicesFlagsSetterRule<T extends AdServicesFlagsSetterRule<T>>
      * Helper interface to make it easier to create to create an instance of the rule calling
      * initial flag-setting methods (as those can throw {@link Exception}).
      */
-    protected static <T extends AdServicesFlagsSetterRule<T>> T newInstance(
+    protected static <T extends AbstractAdServicesFlagsSetterRule<T>> T newInstance(
             T instance, Visitor<T> visitor) {
         try {
             visitor.visit(instance);
