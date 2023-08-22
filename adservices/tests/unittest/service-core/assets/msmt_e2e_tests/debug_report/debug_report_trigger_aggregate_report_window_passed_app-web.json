@@ -68,7 +68,7 @@
             }
           }
         }],
-        "timestamp": "1643321973000"
+        "timestamp": "1643321972000"
       },
       // Should result in an event-level report, but not aggregatable report as
       // aggregatable report window has passed.
@@ -105,7 +105,7 @@
             }
           }
         }],
-        "timestamp": "1643321973001"
+        "timestamp": "1643321973000"
       }
     ]
   },
