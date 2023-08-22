@@ -70,6 +70,8 @@ java_library_host {
         // TODO(b/284971005): move files below to pure-java and use filegroup
         "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
         "java/com/android/adservices/common/AbstractSdkLevelSupportedRule.java",
+        "java/com/android/adservices/common/AdServicesFlagsSetterRule.java",
+        "java/com/android/adservices/common/DeviceConfigHelper.java",
         "java/com/android/adservices/common/RequiresLowRamDevice.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastR.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastS.java",
@@ -77,6 +79,7 @@ java_library_host {
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastT.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastU.java",
         "java/com/android/adservices/common/RequiresSdkLevelAtLeastV.java",
+        "java/com/android/adservices/common/SystemPropertiesHelper.java",
         // TODO(b/284971005): files below should be provided by module-utils
         "java/com/android/adservices/common/AbstractSupportedFeatureRule.java",
         "java/com/android/adservices/common/Logger.java",

@@ -35,6 +35,10 @@ public final class Logger {
         mTag = Objects.requireNonNull(tag);
     }
 
+    public String getTag() {
+        return mTag;
+    }
+
     /** Convenience method to log a WTF message. */
     @FormatMethod
     public void wtf(@FormatString String msgFmt, @Nullable Object... msgArgs) {

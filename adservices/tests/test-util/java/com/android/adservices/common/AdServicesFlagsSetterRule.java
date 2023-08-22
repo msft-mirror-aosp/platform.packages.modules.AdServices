@@ -15,18 +15,12 @@
  */
 package com.android.adservices.common;
 
-import static android.os.Build.VERSION.SDK_INT;
+import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
+import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
 
-import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
-
-import android.util.Pair;
-
-import com.android.adservices.common.AbstractFlagsRouletteRunner.FlagsRouletteState;
-import com.android.adservices.common.DeviceConfigHelper.SyncDisabledMode;
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
+import com.android.adservices.common.Logger.RealLogger;
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.service.PhFlags;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -44,57 +38,57 @@ import java.util.Objects;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
+// TODO(b/295321663): rename to AbstractAdServicesFlagsSetterRule - it was temporary renamed to
+// AdServicesFlagsSetterRule to minimize git diff
 /**
  * Rule used to properly set AdService flags - it will take care of permissions, restoring values at
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
  * etc...
  *
- * <p>Most notes set {@link android.provider.DeviceConfig} flags, although some sets {@link
+ * <p>Most methods set {@link android.provider.DeviceConfig} flags, although some sets {@link
  * android.os.SystemProperties} instead - those are typically suffixed with {@code forTests}
  */
-public final class AdServicesFlagsSetterRule implements TestRule {
+abstract class AdServicesFlagsSetterRule<T extends AdServicesFlagsSetterRule<T>>
+        implements TestRule {
 
-    private static final String TAG = AdServicesFlagsSetterRule.class.getSimpleName();
+    private static final String ALLOWLIST_SEPARATOR = ARRAY_SPLITTER_COMMA;
 
-    private final DeviceConfigHelper mDeviceConfig =
-            new DeviceConfigHelper(FlagsConstants.NAMESPACE_ADSERVICES);
+    // TODO(b/295321663): static import from AdServicesCommonConstants instead
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 
-    private final SystemPropertiesHelper mSystemProperties =
-            new SystemPropertiesHelper(SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
+    // TODO(b/294423183): make private once not used by subclass for legacy methods
+    protected final DeviceConfigHelper mDeviceConfig;
+    protected final SystemPropertiesHelper mSystemProperties;
 
-    private static final String ALLOWLIST_SEPARATOR = ",";
-
-    private final Logger mLog = new Logger(AndroidLogger.getInstance(), TAG);
+    protected final Logger mLog;
 
     // Cache flags that were set before the test started, so the rule can be instantiated using a
     // builder-like approach - will be set to null after test starts.
-    @Nullable private List<Flag> mInitialFlags = new ArrayList<>();
+    @Nullable private List<FlagOrSystemProperty> mInitialFlags = new ArrayList<>();
 
     // Cache system properties that were set before the test started, so the rule can be
     // instantiated using a builder-like approach - will be set to null after test starts.
-    @Nullable private List<Pair<String, String>> mInitialSystemProperties = new ArrayList<>();
+    @Nullable private List<FlagOrSystemProperty> mInitialSystemProperties = new ArrayList<>();
 
-    // TODO(b/294423183): remove once legacy usage is gone
-    private final boolean mUsedByLegacyHelper;
-
-    private AdServicesFlagsSetterRule() {
-        this(/* usedByLegacyHelper= */ false);
-    }
-
-    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
-        mUsedByLegacyHelper = usedByLegacyHelper;
+    protected AdServicesFlagsSetterRule(
+            RealLogger logger,
+            DeviceConfigHelper.InterfaceFactory deviceConfigInterfaceFactory,
+            SystemPropertiesHelper.Interface systemPropertiesInterface) {
+        mLog = new Logger(Objects.requireNonNull(logger), "AdServicesFlagsSetterRule");
+        mDeviceConfig =
+                new DeviceConfigHelper(deviceConfigInterfaceFactory, NAMESPACE_ADSERVICES, logger);
+        mSystemProperties =
+                new SystemPropertiesHelper(
+                        systemPropertiesInterface, logger, SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
     }
 
     @Override
     public Statement apply(Statement base, Description description) {
-        setOrCacheSystemProperty("tag.adservices", "VERBOSE");
-        setOrCacheSystemProperty("tag.adservices.topics", "VERBOSE");
-
         String testName = description.getDisplayName();
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.PERSISTENT);
+                mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
                 setInitialSystemProperties(testName);
                 setInitialFlags(testName);
                 List<Throwable> cleanUpErrors = new ArrayList<>();
@@ -114,7 +108,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
                     runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
                     runSafely(
                             cleanUpErrors,
-                            () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledMode.NONE));
+                            () -> mDeviceConfig.setSyncDisabledMode(SyncDisabledModeForTest.NONE));
                 }
                 // TODO(b/294423183): ideally it should throw an exception if cleanUpErrors is not
                 // empty, but it's better to wait until this class is unit tested to do so (for now,
@@ -138,51 +132,6 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         throw new TestFailure(testError, dump);
     }
 
-    /** Factory method that only disables the global kill switch. */
-    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
-        return new AdServicesFlagsSetterRule().setGlobalKillSwitch(false);
-    }
-
-    /** Factory method for Topics end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forTopicsE2ETests() {
-        return forGlobalKillSwitchDisabledTests()
-                .setTopicsKillSwitch(false)
-                .setTopicsOnDeviceClassifierKillSwitch(false)
-                .setTopicsClassifierForceUseBundleFiles(true)
-                .setDisableTopicsEnrollmentCheckForTests(true)
-                .setEnableEnrollmentTestSeed(true)
-                .setConsentManagerDebugMode(true)
-                .setCompatModeFlags();
-    }
-
-    /** Factory method for AdId end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forAdidE2ETests(String packageName) {
-        return forGlobalKillSwitchDisabledTests()
-                .setAdIdKillSwitchForTests(false)
-                .setAdIdRequestPermitsPerSecond(25.0)
-                .setPpapiAppAllowList(packageName)
-                .setCompatModeFlag();
-    }
-
-    /**
-     * @deprecated temporary method used only by {@code CompatAdServicesTestUtils} and similar
-     *     helpers, it will be remove once such helpers are replaced by this rule.
-     */
-    @Deprecated
-    static AdServicesFlagsSetterRule forLegacyHelpers(Class<?> helperClass) {
-        AdServicesFlagsSetterRule rule =
-                new AdServicesFlagsSetterRule(/* usedByLegacyHelper= */ true);
-
-        // This object won't be used as a JUnit rule, so we need to explicitly initialize it
-        String testName = helperClass.getSimpleName();
-        rule.setInitialSystemProperties(testName);
-        rule.setInitialFlags(testName);
-
-        return rule;
-    }
-
-    // NOTE: add more factory methods as needed
-
     /**
      * Dumps all flags using the {@value #TAG} tag.
      *
@@ -192,7 +141,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     public void dumpFlags(@FormatString String reasonFmt, @Nullable Object... reasonArgs) {
         StringBuilder message =
                 new StringBuilder("Logging all flags on ")
-                        .append(TAG)
+                        .append(mLog.getTag())
                         .append(". Reason: ")
                         .append(String.format(reasonFmt, reasonArgs))
                         .append(". Flags: \n");
@@ -220,7 +169,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
         StringBuilder message =
                 new StringBuilder("Logging all SystemProperties on ")
-                        .append(TAG)
+                        .append(mLog.getTag())
                         .append(". Reason: ")
                         .append(String.format(reasonFmt, reasonArgs))
                         .append(". SystemProperties: \n");
@@ -230,7 +179,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
 
     private StringBuilder dumpSystemPropertiesSafely(StringBuilder dump) {
         try {
-            mSystemProperties.dump(dump);
+            mSystemProperties.dumpSystemProperties(dump);
         } catch (Throwable t) {
             dump.append("Failed to dump SystemProperties: ").append(t);
         }
@@ -238,22 +187,22 @@ public final class AdServicesFlagsSetterRule implements TestRule {
     }
 
     /** Overrides the flag that sets the global AdServices kill switch. */
-    public AdServicesFlagsSetterRule setGlobalKillSwitch(boolean value) {
+    public T setGlobalKillSwitch(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics kill switch. */
-    public AdServicesFlagsSetterRule setTopicsKillSwitch(boolean value) {
+    public T setTopicsKillSwitch(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics Device Classifier kill switch. */
-    public AdServicesFlagsSetterRule setTopicsOnDeviceClassifierKillSwitch(boolean value) {
+    public T setTopicsOnDeviceClassifierKillSwitch(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the enrollment seed. */
-    public AdServicesFlagsSetterRule setEnableEnrollmentTestSeed(boolean value) {
+    public T setEnableEnrollmentTestSeed(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, value);
     }
 
@@ -261,18 +210,18 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      * Overrides the system property that sets max time period between each epoch computation job
      * run.
      */
-    public AdServicesFlagsSetterRule setTopicsEpochJobPeriodMsForTests(long value) {
+    public T setTopicsEpochJobPeriodMsForTests(long value) throws Exception {
         return setOrCacheSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */
-    public AdServicesFlagsSetterRule setTopicsPercentageForRandomTopicForTests(long value) {
+    public T setTopicsPercentageForRandomTopicForTests(long value) throws Exception {
         return setOrCacheSystemProperty(
                 FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
     }
 
     /** Overrides the flag to select the topics classifier type. */
-    public AdServicesFlagsSetterRule setTopicsClassifierType(int value) {
+    public T setTopicsClassifierType(int value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, value);
     }
 
@@ -280,150 +229,139 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      * Overrides the flag to change the number of top labels returned by on-device topic classifier
      * type.
      */
-    public AdServicesFlagsSetterRule setTopicsClassifierNumberOfTopLabels(int value) {
+    public T setTopicsClassifierNumberOfTopLabels(int value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS, value);
     }
 
     /** Overrides the flag to change the threshold for the classifier. */
-    public AdServicesFlagsSetterRule setTopicsClassifierThreshold(float value) {
+    public T setTopicsClassifierThreshold(float value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, value);
     }
 
     /** Overrides the flag that disables direct app calls for Topics. */
-    public AdServicesFlagsSetterRule setTopicsDisableDirectAppCalls(boolean value) {
+    public AdServicesFlagsSetterRule setTopicsDisableDirectAppCalls(boolean value)
+            throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
     }
 
     /** Overrides the flag that forces the use of bundle files for the Topics classifier. */
-    public AdServicesFlagsSetterRule setTopicsClassifierForceUseBundleFiles(boolean value) {
+    public T setTopicsClassifierForceUseBundleFiles(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
     }
 
-    public AdServicesFlagsSetterRule setTopicsClassifierForceUseBundleFilesx(boolean value) {
+    public T setTopicsClassifierForceUseBundleFilesx(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
     }
 
     /** Overrides the system property used to disable topics enrollment check. */
-    public AdServicesFlagsSetterRule setDisableTopicsEnrollmentCheckForTests(boolean value) {
+    public T setDisableTopicsEnrollmentCheckForTests(boolean value) throws Exception {
         return setOrCacheSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
     }
 
     /** Overrides the system property used to set ConsentManager debug mode keys. */
-    public AdServicesFlagsSetterRule setConsentManagerDebugMode(boolean value) {
+    public T setConsentManagerDebugMode(boolean value) throws Exception {
         return setOrCacheSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getEnableBackCompat()}. */
-    public AdServicesFlagsSetterRule setEnableBackCompat(boolean value) {
+    public T setEnableBackCompat(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getConsentSourceOfTruth()}. */
-    public AdServicesFlagsSetterRule setConsentSourceOfTruth(int value) {
+    public T setConsentSourceOfTruth(int value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getBlockedTopicsSourceOfTruth()}. */
-    public AdServicesFlagsSetterRule setBlockedTopicsSourceOfTruth(int value) {
+    public T setBlockedTopicsSourceOfTruth(int value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getEnableAppsearchConsentData()}. */
-    public AdServicesFlagsSetterRule setEnableAppsearchConsentData(boolean value) {
+    public T setEnableAppsearchConsentData(boolean value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
     }
 
     /**
      * Overrides flag used by {@link PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
-    public AdServicesFlagsSetterRule setMeasurementRollbackDeletionAppSearchKillSwitch(
-            boolean value) {
+    public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) throws Exception {
         return setOrCacheFlag(
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getPpapiAppAllowList()}. */
-    public AdServicesFlagsSetterRule setPpapiAppAllowList(String value) {
+    public T setPpapiAppAllowList(String value) throws Exception {
         return setOrCacheFlagWithSeparator(
                 FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
     /** Overrides flag used by {@link PhFlags#getMsmtApiAppAllowList()}. */
-    public AdServicesFlagsSetterRule setMsmtApiAppAllowList(String value) {
+    public T setMsmtApiAppAllowList(String value) throws Exception {
         return setOrCacheFlagWithSeparator(
                 FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
     /** Overrides flag used by {@link PhFlags#getAdIdRequestPermitsPerSecond()}. */
-    public AdServicesFlagsSetterRule setAdIdRequestPermitsPerSecond(double value) {
+    public T setAdIdRequestPermitsPerSecond(double value) throws Exception {
         return setOrCacheFlag(FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getAdIdKillSwitchForTests()}. */
-    public AdServicesFlagsSetterRule setAdIdKillSwitchForTests(boolean value) {
+    public T setAdIdKillSwitchForTests(boolean value) throws Exception {
         return setOrCacheSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
-    /** Calls {@link PhFlags#getAdIdRequestPerSecond()} with the proper permissions. */
-    public float getAdIdRequestPerSecond() {
-        try {
-            return DeviceConfigHelper.callWithDeviceConfigPermissions(
-                    () -> PhFlags.getInstance().getAdIdRequestPermitsPerSecond());
-        } catch (Throwable t) {
-            float defaultValue = FlagsConstants.ADID_REQUEST_PERMITS_PER_SECOND;
-            mLog.e(
-                    t,
-                    "FlagsConstants.getAdIdRequestPermitsPerSecond() failed, returning default"
-                            + " value (%f)",
-                    defaultValue);
-            return defaultValue;
-        }
+    /** Overrides flag used by {@link PhFlags#getMddBackgroundTaskKillSwitch()}. */
+    public T setMddBackgroundTaskKillSwitch(boolean value) throws Exception {
+        return setOrCacheFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
     /**
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
      * device running the test.
      */
-    public AdServicesFlagsSetterRule setCompatModeFlags() {
-        if (SdkLevel.isAtLeastT()) {
-            mLog.d("setCompatModeFlags(): ignored on SDK %d", SDK_INT);
+    public T setCompatModeFlags() throws Exception {
+        if (isAtLeastT()) {
+            mLog.d("setCompatModeFlags(): ignored on SDK %d", getDeviceSdk());
             // Do nothing; this method is intended to set flags for Android S- only.
-            return this;
+            return getThis();
         }
 
-        if (SdkLevel.isAtLeastS()) {
+        if (isAtLeastS()) {
             mLog.d("setCompatModeFlags(): setting flags for S+");
             setEnableBackCompat(true);
-            setBlockedTopicsSourceOfTruth(Flags.APPSEARCH_ONLY);
-            setConsentSourceOfTruth(Flags.APPSEARCH_ONLY);
+            setBlockedTopicsSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
+            setConsentSourceOfTruth(FlagsConstants.APPSEARCH_ONLY);
             setEnableAppsearchConsentData(true);
             setMeasurementRollbackDeletionAppSearchKillSwitch(false);
-            return this;
+            return getThis();
         }
         mLog.d("setCompatModeFlags(): setting flags for R+");
         setEnableBackCompat(true);
         // TODO (b/285208753): Update flags once AppSearch is supported on R.
-        setBlockedTopicsSourceOfTruth(Flags.PPAPI_ONLY);
-        setConsentSourceOfTruth(Flags.PPAPI_ONLY);
+        setBlockedTopicsSourceOfTruth(FlagsConstants.PPAPI_ONLY);
+        setConsentSourceOfTruth(FlagsConstants.PPAPI_ONLY);
         setEnableAppsearchConsentData(false);
         setMeasurementRollbackDeletionAppSearchKillSwitch(true);
 
-        return this;
+        return getThis();
     }
 
     /**
      * Sets just the flag needed by {@link PhFlags#getEnableBackCompat()}, but only if required by
      * the Android version of the device running the test.
      */
-    public AdServicesFlagsSetterRule setCompatModeFlag() {
-        if (SdkLevel.isAtLeastT()) {
-            mLog.d("setCompatModeFlag(): ignored on SDK %d", SDK_INT);
+    public T setCompatModeFlag() throws Exception {
+        if (isAtLeastT()) {
+            mLog.d("setCompatModeFlag(): ignored on SDK %d", getDeviceSdk());
             // Do nothing; this method is intended to set flags for Android S- only.
-            return this;
+            return getThis();
         }
-        mLog.d("setCompatModeFlag(): setting flags on %d", SDK_INT);
+        mLog.d("setCompatModeFlag(): setting flags on SDK %d", getDeviceSdk());
         setEnableBackCompat(true);
-        return this;
+        return getThis();
     }
 
     /**
@@ -431,65 +369,64 @@ public final class AdServicesFlagsSetterRule implements TestRule {
      *     automatically reset when used as a JUnit Rule.
      */
     @Deprecated
-    void resetCompatModeFlags() {
+    T resetCompatModeFlags() throws Exception {
         mLog.d("resetCompatModeFlags()");
         assertCalledByLegacyHelper();
-        if (SdkLevel.isAtLeastT()) {
-            mLog.d("resetCompatModeFlags(): ignored on %d", SDK_INT);
+        if (isAtLeastT()) {
+            mLog.d("resetCompatModeFlags(): ignored on %d", getDeviceSdk());
             // Do nothing; this method is intended to set flags for Android S- only.
-            return;
+            return getThis();
         }
-        mLog.v("resetCompatModeFlags(): setting flags on %d", SDK_INT);
+        mLog.v("resetCompatModeFlags(): setting flags on %d", getDeviceSdk());
         setEnableBackCompat(false);
         // TODO (b/285208753): Set to AppSearch always once it's supported on R.
-        setBlockedTopicsSourceOfTruth(
-                SdkLevel.isAtLeastS() ? Flags.APPSEARCH_ONLY : Flags.PPAPI_ONLY);
-        setConsentSourceOfTruth(SdkLevel.isAtLeastS() ? Flags.APPSEARCH_ONLY : Flags.PPAPI_ONLY);
-        setEnableAppsearchConsentData(SdkLevel.isAtLeastS());
-        setMeasurementRollbackDeletionAppSearchKillSwitch(!SdkLevel.isAtLeastS());
+        boolean atLeastS = isAtLeastS();
+        int sourceOfTruth = atLeastS ? FlagsConstants.APPSEARCH_ONLY : FlagsConstants.PPAPI_ONLY;
+        setBlockedTopicsSourceOfTruth(sourceOfTruth);
+        setConsentSourceOfTruth(sourceOfTruth);
+        setEnableAppsearchConsentData(atLeastS);
+        setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
+        return getThis();
     }
 
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils}
-     */
-    @Deprecated
-    String getPpapiAppAllowList() {
-        assertCalledByLegacyHelper();
-        return mDeviceConfig.get(FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST);
+    // TODO(295007931): abstract SDK-related methods in a new SdkLevelHelper and reuse them on
+    // SdkLevelSupportRule
+    /** Gets the device's SDK level. */
+    protected abstract int getDeviceSdk() throws Exception;
+
+    protected boolean isAtLeastS() throws Exception {
+        return getDeviceSdk() > 31;
     }
 
-    /**
-     * @deprecated only used by {@code CompatAdServicesTestUtils}
-     */
-    @Deprecated
-    String getMsmtApiAppAllowList() {
-        assertCalledByLegacyHelper();
-        return mDeviceConfig.get(FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST);
+    protected boolean isAtLeastT() throws Exception {
+        return getDeviceSdk() > 32;
     }
 
-    private void assertCalledByLegacyHelper() {
-        if (!mUsedByLegacyHelper) {
-            throw new UnsupportedOperationException("Only available for legacy helpers");
-        }
+    // TODO(b/294423183): remove once legacy usage is gone
+    protected void assertCalledByLegacyHelper() {
+        throw new UnsupportedOperationException(
+                "Must be overridden by subclass (if it supports "
+                        + "methods used by legacy helpers");
     }
 
-    private AdServicesFlagsSetterRule setOrCacheFlag(String name, boolean value) {
+    private T setOrCacheFlag(String name, boolean value) throws Exception {
         return setOrCacheFlag(name, Boolean.toString(value));
     }
 
-    private AdServicesFlagsSetterRule setOrCacheFlag(String name, int value) {
+    private T setOrCacheFlag(String name, int value) throws Exception {
         return setOrCacheFlag(name, Integer.toString(value));
     }
 
-    private AdServicesFlagsSetterRule setOrCacheFlag(String name, double value) {
+    private T setOrCacheFlag(String name, double value) throws Exception {
         return setOrCacheFlag(name, Double.toString(value));
     }
 
-    private AdServicesFlagsSetterRule setOrCacheFlag(String name, float value) {
+    private T setOrCacheFlag(String name, float value) throws Exception {
         return setOrCacheFlag(name, Float.toString(value));
     }
 
-    private void setInitialFlags(String testName) {
+    // TODO(b/294423183): make private once not used by subclass for legacy methods
+    protected void setInitialFlags(String testName) throws Exception {
         if (mInitialFlags == null) {
             throw new IllegalStateException("already called");
         }
@@ -498,62 +435,59 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         } else {
             int size = mInitialFlags.size();
             mLog.d("Setting %d flags before %s", size, testName);
-            mInitialFlags.forEach(flag -> setFlag(flag));
+            for (FlagOrSystemProperty flag : mInitialFlags) {
+                setFlag(flag);
+            }
         }
         mInitialFlags = null;
     }
 
-    private AdServicesFlagsSetterRule setOrCacheFlagWithSeparator(
-            String name, String value, String separator) {
+    private T setOrCacheFlagWithSeparator(String name, String value, String separator)
+            throws Exception {
         return setOrCacheFlag(name, value, Objects.requireNonNull(separator));
     }
 
-    private AdServicesFlagsSetterRule setOrCacheFlag(String name, String value) {
+    private T setOrCacheFlag(String name, String value) throws Exception {
         return setOrCacheFlag(name, value, /* separator= */ null);
     }
 
     // TODO(b/294423183): need to add unit test for setters that call this
-    private AdServicesFlagsSetterRule setOrCacheFlag(
-            String name, String value, @Nullable String separator) {
-        Flag flag = new Flag(name, value, separator);
+    private T setOrCacheFlag(String name, String value, @Nullable String separator)
+            throws Exception {
+        FlagOrSystemProperty flag = new FlagOrSystemProperty(name, value, separator);
         if (mInitialFlags != null) {
             if (isFlagManagedByRunner(name)) {
-                return this;
+                return getThis();
             }
-            mLog.v("Caching flag %s as test is not running yet", flag);
+            mLog.d("Caching flag %s as test is not running yet", flag);
             mInitialFlags.add(flag);
-            return this;
+            return getThis();
         }
         return setFlag(flag);
     }
 
-    private boolean isFlagManagedByRunner(String flag) {
-        FlagsRouletteState roulette = AbstractFlagsRouletteRunner.getFlagsRouletteState();
-        if (roulette == null || !roulette.flagNames.contains(flag)) {
-            return false;
-        }
-        mLog.w(
-                "Not setting flag %s as it's managed by %s (which manages %s)",
-                flag, roulette.runnerName, roulette.flagNames);
-        return true;
+    // TODO(b/295321663): need to provide a more elegant way to integrate it with the custom runners
+    protected boolean isFlagManagedByRunner(String flag) {
+        return false;
     }
 
-    private AdServicesFlagsSetterRule setFlag(Flag flag) {
+    private T setFlag(FlagOrSystemProperty flag) throws Exception {
         mLog.v("Setting flag: %s", flag);
         if (flag.separator == null) {
             mDeviceConfig.set(flag.name, flag.value);
         } else {
             mDeviceConfig.setWithSeparator(flag.name, flag.value, flag.separator);
         }
-        return this;
+        return getThis();
     }
 
-    private void resetFlags(String testName) {
+    private void resetFlags(String testName) throws Exception {
         mLog.d("Resetting flags after %s", testName);
         mDeviceConfig.reset();
     }
 
-    private void setInitialSystemProperties(String testName) {
+    // TODO(b/294423183): make private once not used by subclass for legacy methods
+    protected void setInitialSystemProperties(String testName) throws Exception {
         if (mInitialSystemProperties == null) {
             throw new IllegalStateException("already called");
         }
@@ -562,43 +496,45 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         } else {
             int size = mInitialSystemProperties.size();
             mLog.d("Setting %d SystemProperties before %s", size, testName);
-            mInitialSystemProperties.forEach(pair -> setSystemProperty(pair.first, pair.second));
+            for (FlagOrSystemProperty flag : mInitialSystemProperties) {
+                setSystemProperty(flag.name, flag.value);
+            }
         }
         mInitialSystemProperties = null;
     }
 
-    private AdServicesFlagsSetterRule setOrCacheSystemProperty(String name, boolean value) {
+    private T setOrCacheSystemProperty(String name, boolean value) throws Exception {
         return setOrCacheSystemProperty(name, Boolean.toString(value));
     }
 
-    private AdServicesFlagsSetterRule setOrCacheSystemProperty(String name, long value) {
+    private T setOrCacheSystemProperty(String name, long value) throws Exception {
         return setOrCacheSystemProperty(name, Long.toString(value));
     }
 
-    private AdServicesFlagsSetterRule setOrCacheSystemProperty(String name, String value) {
+    private T setOrCacheSystemProperty(String name, String value) throws Exception {
         if (mInitialSystemProperties != null) {
             mLog.v("Caching SystemProperty %s=%s as test is not running yet", name, value);
-            mInitialSystemProperties.add(new Pair<>(name, value));
-            return this;
+            mInitialSystemProperties.add(new FlagOrSystemProperty(name, value));
+            return getThis();
         }
         return setSystemProperty(name, value);
     }
 
-    private AdServicesFlagsSetterRule setSystemProperty(String name, String value) {
+    private T setSystemProperty(String name, String value) throws Exception {
         mSystemProperties.set(name, value);
-        return this;
+        return getThis();
     }
 
-    private void resetSystemProperties(String testName) {
+    private void resetSystemProperties(String testName) throws Exception {
         mLog.d("Resetting SystemProperties after %s", testName);
         mSystemProperties.reset();
     }
 
-    private void runSafely(List<Throwable> errors, Runnable r) {
+    private void runSafely(List<Throwable> errors, RunnerWithScissors r) {
         try {
             r.run();
         } catch (Throwable e) {
-            mLog.e(e, "runSafely() failure");
+            mLog.e(e, "runSafely() failed");
             errors.add(e);
         }
     }
@@ -636,27 +572,26 @@ public final class AdServicesFlagsSetterRule implements TestRule {
         }
     }
 
-    private final class Flag {
+    private static final class FlagOrSystemProperty {
         public final String name;
         public final String value;
         public final @Nullable String separator;
 
-        Flag(String name, String value, @Nullable String separator) {
+        FlagOrSystemProperty(String name, String value, @Nullable String separator) {
             this.name = name;
             this.value = value;
             this.separator = separator;
         }
 
+        FlagOrSystemProperty(String name, String value) {
+            this(name, value, /* separator= */ null);
+        }
         // TODO(b/294423183): need to add unit test for equals() / hashcode() as they don't use
         // separator
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getEnclosingInstance().hashCode();
-            result = prime * result + Objects.hash(name, value);
-            return result;
+            return Objects.hash(name, value);
         }
 
         @Override
@@ -664,8 +599,7 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             if (this == obj) return true;
             if (obj == null) return false;
             if (getClass() != obj.getClass()) return false;
-            Flag other = (Flag) obj;
-            if (!getEnclosingInstance().equals(other.getEnclosingInstance())) return false;
+            FlagOrSystemProperty other = (FlagOrSystemProperty) obj;
             return Objects.equals(name, other.name) && Objects.equals(value, other.value);
         }
 
@@ -677,9 +611,38 @@ public final class AdServicesFlagsSetterRule implements TestRule {
             }
             return string.toString();
         }
+    }
 
-        private AdServicesFlagsSetterRule getEnclosingInstance() {
-            return AdServicesFlagsSetterRule.this;
+    // Helper to get a reference to this object, taking care of the generic casting.
+    @SuppressWarnings("unchecked")
+    private T getThis() {
+        return (T) this;
+    }
+
+    /**
+     * Helper interface to make it easier to create to create an instance of the rule calling
+     * initial flag-setting methods (as those can throw {@link Exception}).
+     */
+    protected static <T extends AdServicesFlagsSetterRule<T>> T newInstance(
+            T instance, Visitor<T> visitor) {
+        try {
+            visitor.visit(instance);
+            return instance;
+        } catch (Exception e) {
+            // Shouldn't happen, because commands are cached before the test is started
+            throw new IllegalStateException("Fail to set something before tests started");
         }
+    }
+
+    // TODO(b/295321663): move to its own class and/or module-utiles
+    /** Simple visitor design pattern. */
+    protected interface Visitor<T> {
+        void visit(T rule) throws Exception;
+    }
+
+    // TODO(b/295321663): move to its own class and/or module-utils
+    /** Runnable whose {@code run()} method can throw an exception . */
+    private interface RunnerWithScissors {
+        void run() throws Throwable;
     }
 }
