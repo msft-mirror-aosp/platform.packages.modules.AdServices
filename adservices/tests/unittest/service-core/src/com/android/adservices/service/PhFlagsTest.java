@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -559,7 +560,6 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -2799,7 +2799,7 @@ public class PhFlagsTest {
             boolean sdkAtleastT,
             boolean enableBackCompat,
             boolean expected) {
-        ExtendedMockito.doReturn(sdkAtleastT).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(sdkAtleastT);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_GLOBAL_KILL_SWITCH,
@@ -5717,7 +5717,7 @@ public class PhFlagsTest {
 
     private void testEnableBackCompat(
             boolean sdkAtleastT, boolean enableBackCompat, boolean expected) {
-        ExtendedMockito.doReturn(sdkAtleastT).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(sdkAtleastT);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_ENABLE_BACK_COMPAT,
@@ -5752,7 +5752,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getEnableAppsearchConsentData())
                 .isEqualTo(ENABLE_APPSEARCH_CONSENT_DATA);
@@ -5822,7 +5822,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(false);
         assertThat(mPhFlags.isBackCompatActivityFeatureEnabled())
                 .isEqualTo(IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
 
@@ -5843,7 +5843,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
