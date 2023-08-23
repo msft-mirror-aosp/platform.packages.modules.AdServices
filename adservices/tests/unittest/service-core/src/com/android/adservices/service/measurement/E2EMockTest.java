@@ -456,7 +456,7 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> eventReportObjects =
                 getActualEventReportObjects(eventReports, destinations, payloads);
         for (JSONObject obj : eventReportObjects) {
-            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, triggerTime);
+            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(triggerTime));
         }
         mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
