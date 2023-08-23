@@ -45,14 +45,19 @@ public final class AdServicesFlagsSetterRule
         mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
+    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
+        return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+    }
+
     /** Factory method that only disables the global kill switch. */
     public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
-        return new AdServicesFlagsSetterRule().setGlobalKillSwitch(false);
+        return withDefaultLogcatTags().setGlobalKillSwitch(false);
     }
 
     /** Factory method for Topics end-to-end CTS tests. */
     public static AdServicesFlagsSetterRule forTopicsE2ETests() {
         return forGlobalKillSwitchDisabledTests()
+                .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
                 .setTopicsClassifierForceUseBundleFiles(true)
