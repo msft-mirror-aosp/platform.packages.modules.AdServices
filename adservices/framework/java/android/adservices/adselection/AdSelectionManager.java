@@ -723,6 +723,7 @@ public class AdSelectionManager {
                             .setInteractionData(request.getData())
                             .setReportingDestinations(request.getReportingDestinations())
                             .setCallerPackageName(getCallerPackageName())
+                            .setCallerSdkName(getCallerSdkName())
                             .setInputEvent(request.getInputEvent());
 
             getAdId((adIdValue) -> inputBuilder.setAdId(adIdValue));
@@ -902,6 +903,12 @@ public class AdSelectionManager {
         return sandboxedSdkContext == null
                 ? mContext.getPackageName()
                 : sandboxedSdkContext.getClientPackageName();
+    }
+
+    private String getCallerSdkName() {
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null ? null : sandboxedSdkContext.getSdkPackageName();
     }
 
     private interface AdSelectionAdIdCallback {

@@ -81,13 +81,14 @@ class ReportEventImpl extends EventReporter {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
+                        sLogger.v("reportEvent() was notified as successful.");
                         notifySuccessToCaller(callback);
                         performReporting(input);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        sLogger.e(t, "Report Event failed!");
+                        sLogger.e(t, "reportEvent() failed!");
                         if (t instanceof FilterException
                                 && t.getCause() instanceof ConsentManager.RevokedConsentException) {
                             // Skip logging if a FilterException occurs.
@@ -114,14 +115,14 @@ class ReportEventImpl extends EventReporter {
                         new FutureCallback<List<Void>>() {
                             @Override
                             public void onSuccess(List<Void> result) {
-                                sLogger.d("Report Event succeeded!");
+                                sLogger.d("reportEvent() completed successfully.");
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         LOGGING_API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                sLogger.e(t, "Report Event failure encountered during reporting!");
+                                sLogger.e(t, "reportEvent() encountered failure!");
                                 if (t instanceof IOException) {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             LOGGING_API_NAME,

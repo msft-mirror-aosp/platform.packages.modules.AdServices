@@ -20,6 +20,7 @@ import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.annotation.NonNull;
 import android.annotation.RequiresApi;
+import android.content.Context;
 import android.os.Build;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -27,6 +28,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -47,7 +49,9 @@ class ReportAndRegisterEventFallbackImpl extends ReportAndRegisterEventImpl {
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull DevContext devContext,
-            @NonNull MeasurementImpl measurementService) {
+            @NonNull MeasurementImpl measurementService,
+            @NonNull ConsentManager consentManager,
+            @NonNull Context context) {
         super(
                 adSelectionEntryDao,
                 adServicesHttpsClient,
@@ -59,7 +63,9 @@ class ReportAndRegisterEventFallbackImpl extends ReportAndRegisterEventImpl {
                 callerUid,
                 fledgeAuthorizationFilter,
                 devContext,
-                measurementService);
+                measurementService,
+                consentManager,
+                context);
     }
 
     @Override

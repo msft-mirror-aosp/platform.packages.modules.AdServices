@@ -64,16 +64,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
-/** Encapsulates the Interaction Reporting logic */
+/** Encapsulates the Event Reporting logic */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class EventReporter {
     public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
             "Could not find a match in the database for this adSelectionId and callerPackageName!";
-    public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED =
-            "Interaction data max size exceeded!";
-    public static final String INTERACTION_KEY_SIZE_MAX_EXCEEDED =
-            "Interaction key max size exceeded!";
+    public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED = "Event data max size exceeded!";
+    public static final String INTERACTION_KEY_SIZE_MAX_EXCEEDED = "Event key max size exceeded!";
     static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     static final int LOGGING_API_NAME = AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
@@ -86,7 +84,7 @@ public abstract class EventReporter {
     @NonNull final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull final AdServicesLogger mAdServicesLogger;
-    @NonNull private final Flags mFlags;
+    @NonNull final Flags mFlags;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -238,13 +236,13 @@ public abstract class EventReporter {
     }
 
     ListenableFuture<List<Void>> reportUris(List<Uri> reportingUris, ReportInteractionInput input) {
-        sLogger.i(reportingUris.toString());
         List<ListenableFuture<Void>> reportingFuturesList = new ArrayList<>();
-        String interactionData = input.getInteractionData();
+        String eventData = input.getInteractionData();
 
         for (Uri uri : reportingUris) {
+            sLogger.v("Uri to report the event: %s.", uri);
             reportingFuturesList.add(
-                    mAdServicesHttpsClient.postPlainText(uri, interactionData, mDevContext));
+                    mAdServicesHttpsClient.postPlainText(uri, eventData, mDevContext));
         }
         return Futures.allAsList(reportingFuturesList);
     }
@@ -293,4 +291,6 @@ public abstract class EventReporter {
             @ReportEventRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
     }
+
+
 }

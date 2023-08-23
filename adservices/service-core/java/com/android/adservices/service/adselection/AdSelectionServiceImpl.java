@@ -694,7 +694,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 callerUid,
                                 mFledgeAuthorizationFilter,
                                 devContext,
-                                measurementService)
+                                measurementService,
+                                mConsentManager,
+                                mContext)
                         .getEventReporter();
 
         eventReporter.reportInteraction(inputParams, callback);

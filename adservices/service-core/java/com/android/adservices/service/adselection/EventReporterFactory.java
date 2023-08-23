@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
 import android.annotation.RequiresApi;
+import android.content.Context;
 import android.os.Build;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -26,6 +27,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -56,6 +58,8 @@ public final class EventReporterFactory {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final DevContext mDevContext;
     @NonNull private final MeasurementImpl mMeasurementService;
+    @NonNull private final ConsentManager mConsentManager;
+    @NonNull private final Context mContext;
 
     public EventReporterFactory(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -68,7 +72,9 @@ public final class EventReporterFactory {
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull DevContext devContext,
-            @NonNull MeasurementImpl measurementService) {
+            @NonNull MeasurementImpl measurementService,
+            @NonNull ConsentManager consentManager,
+            @NonNull Context context) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -79,6 +85,8 @@ public final class EventReporterFactory {
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(measurementService);
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(consentManager);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
@@ -91,6 +99,8 @@ public final class EventReporterFactory {
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mDevContext = devContext;
         mMeasurementService = measurementService;
+        mConsentManager = consentManager;
+        mContext = context;
 
         mFledgeRegisterAdBeaconEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
@@ -153,7 +163,9 @@ public final class EventReporterFactory {
                     mCallerUid,
                     mFledgeAuthorizationFilter,
                     mDevContext,
-                    mMeasurementService);
+                    mMeasurementService,
+                    mConsentManager,
+                    mContext);
         }
 
         // If reportEvent, reportAndRegisterEvent and reportAndRegisterEventFallback are enabled:
@@ -171,6 +183,8 @@ public final class EventReporterFactory {
                 mCallerUid,
                 mFledgeAuthorizationFilter,
                 mDevContext,
-                mMeasurementService);
+                mMeasurementService,
+                mConsentManager,
+                mContext);
     }
 }
