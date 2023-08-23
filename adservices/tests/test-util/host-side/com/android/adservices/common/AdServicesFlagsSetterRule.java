@@ -18,16 +18,14 @@ package com.android.adservices.common;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
-// TODO(b/295321663): rename to AdServicesFlagsSetterRule - it was temporary renamed to
-// HostSideAdServicesFlagsSetterRule to minimize git diff in the superclass
 /** See {@link AbstractAdServicesFlagsSetterRule}. */
-public final class HostSideAdServicesFlagsSetterRule
-        extends AbstractAdServicesFlagsSetterRule<HostSideAdServicesFlagsSetterRule> {
+public final class AdServicesFlagsSetterRule
+        extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
     /** Factory method that only disables the global kill switch. */
-    public static HostSideAdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
+    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
         return newInstance(
-                new HostSideAdServicesFlagsSetterRule(), rule -> rule.setGlobalKillSwitch(false));
+                new AdServicesFlagsSetterRule(), rule -> rule.setGlobalKillSwitch(false));
     }
 
     @Override
@@ -39,7 +37,7 @@ public final class HostSideAdServicesFlagsSetterRule
         TestDeviceHelper.setTestDevice(device);
     }
 
-    private HostSideAdServicesFlagsSetterRule() {
+    private AdServicesFlagsSetterRule() {
         super(
                 ConsoleLogger.getInstance(),
                 namespace -> new HostSideDeviceConfigHelper(namespace),
