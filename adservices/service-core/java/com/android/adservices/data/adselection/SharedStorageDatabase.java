@@ -26,6 +26,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -43,7 +44,8 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
     public static final int DATABASE_VERSION = 3;
-    public static final String DATABASE_NAME = "sharedstorage.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("sharedstorage.db");
     static final Long FOREIGN_KEY_AUTOGENERATE_SUBSTITUTE = null;
 
     private static volatile SharedStorageDatabase sSingleton = null;

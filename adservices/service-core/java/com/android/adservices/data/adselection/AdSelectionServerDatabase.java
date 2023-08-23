@@ -26,6 +26,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
@@ -46,7 +47,8 @@ import java.util.Objects;
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionServerDatabase extends RoomDatabase {
     public static final int DATABASE_VERSION = 2;
-    public static final String DATABASE_NAME = "adselectionserver.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adselectionserver.db");
 
     private static final Object SINGLETON_LOCK = new Object();
 

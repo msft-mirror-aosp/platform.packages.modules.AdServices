@@ -1692,6 +1692,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
     }
 
+    @Override
+    public String getMsmtApiAppBlockList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST,
+                /* defaultValue */ MSMT_API_APP_BLOCK_LIST);
+    }
+
     // AdServices APK SHA certs.
     @Override
     public String getAdservicesApkShaCertificate() {
@@ -2274,6 +2283,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED,
                 /* defaultValue */ FLEDGE_CPC_BILLING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeDataVersionHeaderEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED,
+                /* defaultValue */ FLEDGE_DATA_VERSION_HEADER_ENABLED);
     }
 
     @Override
@@ -2921,6 +2938,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST
                         + " = "
                         + getMsmtApiAppAllowList());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST
+                        + " = "
+                        + getMsmtApiAppBlockList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -3908,6 +3930,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED
                         + " = "
                         + getFledgeCpcBillingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
+                        + " = "
+                        + getFledgeDataVersionHeaderEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED

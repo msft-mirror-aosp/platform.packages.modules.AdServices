@@ -28,8 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.DeviceSideAdServicesFlagsSetterRule;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,18 +47,14 @@ public final class AdIdCompatibleManagerTest {
     private static final float DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 25f;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    // Ignore tests when device is not at least S
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
     // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 2)
-    public final DeviceSideAdServicesFlagsSetterRule flags =
-            DeviceSideAdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
 
     @Before
     public void setup() throws Exception {
