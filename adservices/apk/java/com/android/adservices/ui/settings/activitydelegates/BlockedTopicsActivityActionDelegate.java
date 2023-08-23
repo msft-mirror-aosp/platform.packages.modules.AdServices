@@ -90,6 +90,7 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
                         getOnclickListener,
                         true);
         configureRecyclerView(R.id.blocked_topics_list, adapter);
+        configureNotifyAdapterDataChange(mBlockedTopicsViewModel.getBlockedTopics(), adapter);
     }
 
     private void listenToBlockedTopicsViewModelUiEvents() {
