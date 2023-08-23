@@ -159,9 +159,7 @@ public final class AdServicesFlagsSetterRule
     }
 
     @Override
-    protected void assertCalledByLegacyHelper() {
-        if (!mUsedByLegacyHelper) {
-            throw new UnsupportedOperationException("Only available for legacy helpers");
-        }
+    protected boolean isCalledByLegacyHelper() {
+        return mUsedByLegacyHelper;
     }
 }

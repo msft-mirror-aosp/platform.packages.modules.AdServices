@@ -29,7 +29,7 @@ import java.util.Objects;
  * <p>This class is mostly needed because often the {@code ITestDevice} is not available when such
  * artifacts are instantiated, but it also provides other {@code ITestDevice}-related helpers.
  */
-final class TestDeviceHelper {
+public final class TestDeviceHelper {
 
     private static final Logger sLogger =
             new Logger(ConsoleLogger.getInstance(), TestDeviceHelper.class);
