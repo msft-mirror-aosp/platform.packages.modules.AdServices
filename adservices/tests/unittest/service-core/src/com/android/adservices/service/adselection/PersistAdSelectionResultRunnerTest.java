@@ -98,8 +98,8 @@ import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -264,15 +264,17 @@ public class PersistAdSelectionResultRunnerTest {
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
+    private static final Set<Integer> AD_COUNTER_KEYS = Set.of(1, 2, 3);
+    private static final DBAdData WINNING_AD =
+            new DBAdData.Builder()
+                    .setRenderUri(WINNER_AD_RENDER_URI)
+                    .setAdCounterKeys(AD_COUNTER_KEYS)
+                    .setMetadata("")
+                    .build();
     private static final DBCustomAudience WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD =
             DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
                             WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME, WINNER_CUSTOM_AUDIENCE_OWNER)
-                    .setAds(
-                            ImmutableList.of(
-                                    new DBAdData.Builder()
-                                            .setRenderUri(WINNER_AD_RENDER_URI)
-                                            .setMetadata("")
-                                            .build()))
+                    .setAds(ImmutableList.of(WINNING_AD))
                     .build();
     private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_WIN_AD_1 =
             DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -316,7 +318,7 @@ public class PersistAdSelectionResultRunnerTest {
             getAdSelectionResultBidAndUri(AD_SELECTION_ID, BID, WINNER_AD_RENDER_URI);
     private static final WinningCustomAudience WINNER_CUSTOM_AUDIENCE =
             getWinningCustomAudience(
-                    WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_CUSTOM_AUDIENCE_NAME, null);
+                    WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_CUSTOM_AUDIENCE_NAME, AD_COUNTER_KEYS);
     private static final ReportingData REPORTING_DATA =
             getReportingData(Uri.parse(BUYER_REPORTING_URI), Uri.parse(SELLER_REPORTING_URI));
     private static final ReportingData REPORTING_DATA_WITH_EMPTY_SELLER =
@@ -338,6 +340,8 @@ public class PersistAdSelectionResultRunnerTest {
     private long mOverallTimeout;
     private boolean mForceContinueOnAbsentOwner;
     private PersistAdSelectionResultRunner.ReportingRegistrationLimits mReportingLimits;
+    private final AdCounterHistogramUpdater mAdCounterHistogramUpdaterSpy =
+            spy(new AdCounterHistogramUpdaterNoOpImpl());
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -375,11 +379,13 @@ public class PersistAdSelectionResultRunnerTest {
                         .setMaxRegisteredAdBeaconsTotalCount(
                                 mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
                         .setMaxInteractionKeySize(
-                                mFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
+                                mFlags
+                                        .getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
                         .setMaxInteractionReportingUriSize(
                                 mFlags.getFledgeReportImpressionMaxInteractionReportingUriSizeB())
                         .setMaxRegisteredAdBeaconsPerAdTechCount(
-                                mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
+                                mFlags
+                                        .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
                         .build();
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
@@ -394,7 +400,8 @@ public class PersistAdSelectionResultRunnerTest {
                         DevContext.createForDevOptionsDisabled(),
                         mOverallTimeout,
                         mForceContinueOnAbsentOwner,
-                        mReportingLimits);
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy);
     }
 
     @After
@@ -417,7 +424,7 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -463,6 +470,11 @@ public class PersistAdSelectionResultRunnerTest {
                         mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
                         mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
                         ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
+        verify(mAdCounterHistogramUpdaterSpy)
+                .updateWinHistogram(
+                        WINNER_BUYER,
+                        mAdSelectionEntryDaoSpy.getAdSelectionInitializationForId(AD_SELECTION_ID),
+                        mAdSelectionEntryDaoSpy.getWinningCustomAudienceDataForId(AD_SELECTION_ID));
     }
 
     @Test
@@ -481,7 +493,7 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -541,7 +553,7 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -596,7 +608,7 @@ public class PersistAdSelectionResultRunnerTest {
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         boolean forceSearchOnAbsentOwner = false;
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
@@ -612,7 +624,8 @@ public class PersistAdSelectionResultRunnerTest {
                         DevContext.createForDevOptionsDisabled(),
                         mOverallTimeout,
                         forceSearchOnAbsentOwner,
-                        mReportingLimits);
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -627,10 +640,8 @@ public class PersistAdSelectionResultRunnerTest {
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertEquals(
                 WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
-        verify(mCustomAudienceDaoMock, times(0))
-                .getCustomAudiencesForBuyerAndName(any(), any());
-        verify(mCustomAudienceDaoMock, times(0))
-                .getCustomAudienceByPrimaryKey(any(), any(), any());
+        verify(mCustomAudienceDaoMock, times(0)).getCustomAudiencesForBuyerAndName(any(), any());
+        verify(mCustomAudienceDaoMock, times(0)).getCustomAudienceByPrimaryKey(any(), any(), any());
     }
 
     @Test
@@ -646,7 +657,7 @@ public class PersistAdSelectionResultRunnerTest {
                 .getCustomAudiencesForBuyerAndName(WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         boolean forceSearchOnAbsentOwner = true;
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
@@ -662,7 +673,8 @@ public class PersistAdSelectionResultRunnerTest {
                         DevContext.createForDevOptionsDisabled(),
                         mOverallTimeout,
                         forceSearchOnAbsentOwner,
-                        mReportingLimits);
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -679,8 +691,7 @@ public class PersistAdSelectionResultRunnerTest {
                 WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
         verify(mCustomAudienceDaoMock, times(1))
                 .getCustomAudiencesForBuyerAndName(WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
-        verify(mCustomAudienceDaoMock, times(0))
-                .getCustomAudienceByPrimaryKey(any(), any(), any());
+        verify(mCustomAudienceDaoMock, times(0)).getCustomAudienceByPrimaryKey(any(), any(), any());
     }
 
     @Test
@@ -692,7 +703,7 @@ public class PersistAdSelectionResultRunnerTest {
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -712,8 +723,7 @@ public class PersistAdSelectionResultRunnerTest {
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .persistAdSelectionResultForCustomAudience(anyLong(), any(), any(), any());
-        verify(mAdSelectionEntryDaoSpy, times(0))
-                .persistReportingData(anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0)).persistReportingData(anyLong(), any());
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .safelyInsertRegisteredAdInteractions(
                         anyLong(),
@@ -742,7 +752,7 @@ public class PersistAdSelectionResultRunnerTest {
                                 new Returns(prepareDecryptedAuctionResult(AUCTION_RESULT))));
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         PersistAdSelectionResultRunner persistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
@@ -757,7 +767,8 @@ public class PersistAdSelectionResultRunnerTest {
                         DevContext.createForDevOptionsDisabled(),
                         mOverallTimeout,
                         mForceContinueOnAbsentOwner,
-                        mReportingLimits);
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -822,7 +833,7 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA_WITH_DIFFERENT_SELLER, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA_WITH_DIFFERENT_SELLER);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -837,11 +848,10 @@ public class PersistAdSelectionResultRunnerTest {
         Assert.assertFalse(callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
         verify(mAdSelectionEntryDaoSpy, times(1))
-                .getSellerAndCallerPackageNameForId(AD_SELECTION_ID);
+                .getAdSelectionInitializationForId(AD_SELECTION_ID);
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .persistAdSelectionResultForCustomAudience(anyLong(), any(), any(), any());
-        verify(mAdSelectionEntryDaoSpy, times(0))
-                .persistReportingData(anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0)).persistReportingData(anyLong(), any());
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .safelyInsertRegisteredAdInteractions(
                         anyLong(), any(), anyLong(), anyLong(), anyInt());
@@ -860,7 +870,7 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA_WITH_DIFFERENT_CALLER_PACKAGE, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA_WITH_DIFFERENT_CALLER_PACKAGE);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -875,11 +885,10 @@ public class PersistAdSelectionResultRunnerTest {
         Assert.assertFalse(callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
         verify(mAdSelectionEntryDaoSpy, times(1))
-                .getSellerAndCallerPackageNameForId(AD_SELECTION_ID);
+                .getAdSelectionInitializationForId(AD_SELECTION_ID);
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .persistAdSelectionResultForCustomAudience(anyLong(), any(), any(), any());
-        verify(mAdSelectionEntryDaoSpy, times(0))
-                .persistReportingData(anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0)).persistReportingData(anyLong(), any());
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .safelyInsertRegisteredAdInteractions(
                         anyLong(), any(), anyLong(), anyLong(), anyInt());
@@ -901,7 +910,7 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
 
         mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+                AD_SELECTION_ID, INITIALIZATION_DATA);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -941,7 +950,8 @@ public class PersistAdSelectionResultRunnerTest {
                         DevContext.createForDevOptionsDisabled(),
                         mOverallTimeout,
                         mForceContinueOnAbsentOwner,
-                        reportingLimits);
+                        reportingLimits,
+                        mAdCounterHistogramUpdaterSpy);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
