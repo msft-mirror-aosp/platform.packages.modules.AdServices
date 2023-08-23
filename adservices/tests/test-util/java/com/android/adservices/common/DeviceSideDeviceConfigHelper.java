@@ -70,7 +70,7 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
     }
 
     @Override
-    public String dump() throws Exception {
+    public String dump() {
         return ShellUtils.runShellCommand("device_config list %s", mNamespace).trim();
     }
 
