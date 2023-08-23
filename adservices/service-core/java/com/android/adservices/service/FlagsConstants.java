@@ -497,6 +497,7 @@ public final class FlagsConstants {
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
 
     public static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+    public static final String KEY_MSMT_API_APP_BLOCK_LIST = "msmt_api_app_block_list";
 
     public static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST =
             "ppapi_app_signature_allow_list";
