@@ -2628,6 +2628,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMinimumAggregatableReportWindowInSeconds() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS);
+    }
+
+    @Override
     public int getMeasurementMaxSourcesPerPublisher() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -3234,6 +3243,12 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS
                         + " = "
                         + getMeasurementMinimumEventReportWindowInSeconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS
+                        + " = "
+                        + getMeasurementMinimumAggregatableReportWindowInSeconds());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
