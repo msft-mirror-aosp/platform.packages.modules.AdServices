@@ -691,6 +691,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS =
             "measurement_minimum_event_report_window_in_seconds";
 
+    public static final String KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS =
+            "measurement_minimum_aggregatable_report_window_in_seconds";
+
     public static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
             "measurement_max_sources_per_publisher";
 

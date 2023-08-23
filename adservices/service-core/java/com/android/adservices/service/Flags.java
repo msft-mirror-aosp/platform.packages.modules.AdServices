@@ -534,6 +534,13 @@ public interface Flags {
         return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
     }
 
+    long MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS = TimeUnit.HOURS.toSeconds(1);
+
+    /** Returns minimum aggregatable report window */
+    default long getMeasurementMinimumAggregatableReportWindowInSeconds() {
+        return MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
+    }
+
     boolean MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER = false;
 
     /** Returns true if lookback window filter is enabled else false. */
