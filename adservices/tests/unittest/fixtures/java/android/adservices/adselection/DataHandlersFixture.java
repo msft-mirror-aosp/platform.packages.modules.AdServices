@@ -119,9 +119,10 @@ public class DataHandlersFixture {
                     .setBuyerDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                     .setSellerContextualSignals(SELLER_SIGNALS)
                     .setBuyerContextualSignals(BUYER_SIGNALS)
-                    .setWinningCaActivationTime(VALID_ACTIVATION_TIME)
-                    .setWinningCaExpirationTime(VALID_EXPIRATION_TIME)
-                    .setWinningCaUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                    .setWinningCustomAudienceSignals(
+                            CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setWinningBid(WIN_BID_1)
+                    .setWinningRenderUri(WIN_RENDER_URI_1)
                     .build();
     public static ReportingData REPORTING_DATA_WITH_URIS =
             getReportingData(BUYER_REPORTING_URI_1, SELLER_REPORTING_URI_1);

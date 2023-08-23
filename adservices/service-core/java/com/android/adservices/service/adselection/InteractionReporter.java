@@ -161,7 +161,7 @@ public class InteractionReporter {
                                                 mDevContext);
                                         Preconditions.checkArgument(
                                                 mAdSelectionEntryDao
-                                                        .doesAdSelectionMatchingCallerPackageNameExist(
+                                                        .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
                                                                 adSelectionId, callerPackageName),
                                                 NO_MATCH_FOUND_IN_AD_SELECTION_DB);
                                         Preconditions.checkArgument(
