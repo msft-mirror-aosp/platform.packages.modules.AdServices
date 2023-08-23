@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -51,6 +52,7 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
     private static volatile SharedStorageDatabase sSingleton = null;
 
     /** Returns or creates the instance of SharedStorageDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static SharedStorageDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition

@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -74,6 +75,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
     // TODO: How we want handle synchronized situation (b/228101878).
 
     /** Returns an instance of the CustomAudienceDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
