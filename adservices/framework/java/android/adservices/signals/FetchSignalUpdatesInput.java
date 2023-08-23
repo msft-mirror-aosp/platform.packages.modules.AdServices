@@ -40,7 +40,6 @@ public final class FetchSignalUpdatesInput implements Parcelable {
                 @NonNull
                 @Override
                 public FetchSignalUpdatesInput createFromParcel(@NonNull Parcel in) {
-                    Objects.requireNonNull(in);
                     return new FetchSignalUpdatesInput(in);
                 }
 
@@ -62,8 +61,12 @@ public final class FetchSignalUpdatesInput implements Parcelable {
     private FetchSignalUpdatesInput(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mFetchUri = Uri.CREATOR.createFromParcel(in);
-        mCallerPackageName = in.readString();
+        Uri fetchUri = Uri.CREATOR.createFromParcel(in);
+        Objects.requireNonNull(fetchUri);
+        mFetchUri = fetchUri;
+        String callerPackageName = in.readString();
+        Objects.requireNonNull(callerPackageName);
+        mCallerPackageName = callerPackageName;
     }
 
     /**

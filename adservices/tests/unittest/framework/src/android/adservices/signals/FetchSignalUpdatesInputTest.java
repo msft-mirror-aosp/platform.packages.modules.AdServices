@@ -67,6 +67,30 @@ public class FetchSignalUpdatesInputTest {
     }
 
     @Test
+    public void testUnParcelNullUri() {
+        Parcel parcel = Parcel.obtain();
+
+        Uri.writeToParcel(parcel, null);
+        parcel.writeString(PACKAGE);
+        parcel.setDataPosition(0);
+        assertThrows(
+                NullPointerException.class,
+                () -> FetchSignalUpdatesInput.CREATOR.createFromParcel(parcel));
+    }
+
+    @Test
+    public void testUnParcelNullPackage() {
+        Parcel parcel = Parcel.obtain();
+
+        Uri.writeToParcel(parcel, URI);
+        parcel.writeString(null);
+        parcel.setDataPosition(0);
+        assertThrows(
+                NullPointerException.class,
+                () -> FetchSignalUpdatesInput.CREATOR.createFromParcel(parcel));
+    }
+
+    @Test
     public void testNewArray() {
         int arrayLength = 5;
         FetchSignalUpdatesInput[] array = FetchSignalUpdatesInput.CREATOR.newArray(arrayLength);
