@@ -19,13 +19,13 @@ package com.android.adservices.common;
 /**
  * Class to place back-compat Adservices related helper methods.
  *
- * @deprecated tests should use {@link DeviceSideAdServicesFlagsSetterRule} instead.
+ * @deprecated tests should use {@link AdServicesFlagsSetterRule} instead.
  */
 @Deprecated
 public final class CompatAdServicesTestUtils {
 
-    private static final DeviceSideAdServicesFlagsSetterRule sRule =
-            DeviceSideAdServicesFlagsSetterRule.forLegacyHelpers(CompatAdServicesTestUtils.class);
+    private static final AdServicesFlagsSetterRule sRule =
+            AdServicesFlagsSetterRule.forLegacyHelpers(CompatAdServicesTestUtils.class);
 
     private CompatAdServicesTestUtils() {
         /* cannot be instantiated */

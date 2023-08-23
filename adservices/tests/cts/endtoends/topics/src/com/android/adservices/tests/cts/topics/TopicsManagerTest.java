@@ -31,8 +31,8 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.DeviceSideAdServicesFlagsSetterRule;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
@@ -113,8 +113,7 @@ public class TopicsManagerTest {
 
     // Sets flags used in the test (and automatically reset them at the end)
     @Rule(order = 2)
-    public final DeviceSideAdServicesFlagsSetterRule flags =
-            DeviceSideAdServicesFlagsSetterRule.forTopicsE2ETests();
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.forTopicsE2ETests();
 
     @Before
     public void setup() throws Exception {

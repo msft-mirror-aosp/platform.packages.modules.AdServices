@@ -27,19 +27,17 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.PhFlags;
 import com.android.modules.utils.build.SdkLevel;
 
-// TODO(b/295321663): rename to AdServicesFlagsSetterRule - it was temporary renamed to
-// DeviceSideAdServicesFlagsSetterRule to minimize git diff in the superclass
-public final class DeviceSideAdServicesFlagsSetterRule
-        extends AbstractAdServicesFlagsSetterRule<DeviceSideAdServicesFlagsSetterRule> {
+public final class AdServicesFlagsSetterRule
+        extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
     // TODO(b/294423183): remove once legacy usage is gone
     private final boolean mUsedByLegacyHelper;
 
-    private DeviceSideAdServicesFlagsSetterRule() {
+    private AdServicesFlagsSetterRule() {
         this(/* usedByLegacyHelper= */ false);
     }
 
-    private DeviceSideAdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
+    private AdServicesFlagsSetterRule(boolean usedByLegacyHelper) {
         super(
                 AndroidLogger.getInstance(),
                 namespace -> new DeviceSideDeviceConfigHelper(namespace),
@@ -48,13 +46,13 @@ public final class DeviceSideAdServicesFlagsSetterRule
     }
 
     /** Factory method that only disables the global kill switch. */
-    public static DeviceSideAdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
+    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
         return newInstance(
-                new DeviceSideAdServicesFlagsSetterRule(), rule -> rule.setGlobalKillSwitch(false));
+                new AdServicesFlagsSetterRule(), rule -> rule.setGlobalKillSwitch(false));
     }
 
     /** Factory method for Topics end-to-end CTS tests. */
-    public static DeviceSideAdServicesFlagsSetterRule forTopicsE2ETests() {
+    public static AdServicesFlagsSetterRule forTopicsE2ETests() {
         return newInstance(
                 forGlobalKillSwitchDisabledTests(),
                 rule ->
@@ -68,7 +66,7 @@ public final class DeviceSideAdServicesFlagsSetterRule
     }
 
     /** Factory method for AdId end-to-end CTS tests. */
-    public static DeviceSideAdServicesFlagsSetterRule forAdidE2ETests(String packageName) {
+    public static AdServicesFlagsSetterRule forAdidE2ETests(String packageName) {
         return newInstance(
                 forGlobalKillSwitchDisabledTests(),
                 rule ->
@@ -83,9 +81,9 @@ public final class DeviceSideAdServicesFlagsSetterRule
      *     helpers, it will be remove once such helpers are replaced by this rule.
      */
     @Deprecated
-    static DeviceSideAdServicesFlagsSetterRule forLegacyHelpers(Class<?> helperClass) {
+    static AdServicesFlagsSetterRule forLegacyHelpers(Class<?> helperClass) {
         return newInstance(
-                new DeviceSideAdServicesFlagsSetterRule(/* usedByLegacyHelper= */ true),
+                new AdServicesFlagsSetterRule(/* usedByLegacyHelper= */ true),
                 rule -> {
                     // This object won't be used as a JUnit rule, so we need to explicitly
                     // initialize it
