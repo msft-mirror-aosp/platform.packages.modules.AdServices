@@ -86,7 +86,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
     }
 
     /** log method for measurement reporting. */
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         AdServicesStatsLog.write(
                 measurementReportsStats.getCode(),
@@ -95,7 +94,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementReportsStats.getFailureType(),
                 measurementReportsStats.getUploadMethod(),
                 measurementReportsStats.getReportingDelay(),
-                "");
+                measurementReportsStats.getSourceRegistrant());
     }
 
     /** log method for API call stats. */
@@ -128,7 +127,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
     }
 
     @Override
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
         AdServicesStatsLog.write(
@@ -141,7 +139,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getRegistrationStatus(),
                 stats.getFailureType(),
                 stats.getRegistrationDelay(),
-                "");
+                stats.getSourceRegistrant());
     }
 
     @Override
@@ -320,7 +318,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
     }
 
     @Override
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats) {
         AdServicesStatsLog.write(
                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS,
@@ -329,11 +326,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
                 stats.getDebugJoinKeyHashLimit(),
-                "");
+                stats.getSourceRegistrant());
     }
 
     @Override
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats) {
         AdServicesStatsLog.write(
                 AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS,
@@ -342,7 +338,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.isMatched(),
                 stats.getNumUniqueAdIds(),
                 stats.getNumUniqueAdIdsLimit(),
-                "");
+                stats.getSourceRegistrant());
     }
 
     @Override
@@ -369,7 +365,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
     }
 
     /** log method for measurement attribution. */
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementAttributionStats(
             MeasurementAttributionStats measurementAttributionStats) {
         AdServicesStatsLog.write(
@@ -381,25 +376,25 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.isSourceDerived(),
                 measurementAttributionStats.isInstallAttribution(),
                 measurementAttributionStats.getAttributionDelay(),
-                "");
+                measurementAttributionStats.getSourceRegistrant());
     }
 
     /** log method for measurement wipeout. */
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
         AdServicesStatsLog.write(
-                measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType(), "");
+                measurementWipeoutStats.getCode(),
+                measurementWipeoutStats.getWipeoutType(),
+                measurementWipeoutStats.getSourceRegistrant());
     }
 
     /** log method for measurement attribution. */
-    // TODO(b/297089223): Populate app package name.
     public void logMeasurementDelayedSourceRegistrationStats(
             MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats) {
         AdServicesStatsLog.write(
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
                 measurementDelayedSourceRegistrationStats.getRegistrationDelay(),
-                "");
+                measurementDelayedSourceRegistrationStats.getRegistrant());
     }
 
     /** log method for consent migrations. */

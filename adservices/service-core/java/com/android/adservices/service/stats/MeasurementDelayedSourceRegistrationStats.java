@@ -25,6 +25,7 @@ public class MeasurementDelayedSourceRegistrationStats {
     private int mCode;
     private int mRegistrationStatus;
     private long mRegistrationDelay;
+    private String mRegistrant;
 
     public MeasurementDelayedSourceRegistrationStats() {}
 
@@ -39,12 +40,14 @@ public class MeasurementDelayedSourceRegistrationStats {
                 && mRegistrationStatus
                         == measurementDelayedSourceRegistrationStats.getRegistrationStatus()
                 && mRegistrationDelay
-                        == measurementDelayedSourceRegistrationStats.getRegistrationDelay();
+                        == measurementDelayedSourceRegistrationStats.getRegistrationDelay()
+                && Objects.equals(
+                        mRegistrant, measurementDelayedSourceRegistrationStats.mRegistrant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mRegistrationStatus, mRegistrationDelay);
+        return Objects.hash(mCode, mRegistrationStatus, mRegistrationDelay, mRegistrant);
     }
 
     public int getCode() {
@@ -57,6 +60,10 @@ public class MeasurementDelayedSourceRegistrationStats {
 
     public long getRegistrationDelay() {
         return mRegistrationDelay;
+    }
+
+    public String getRegistrant() {
+        return mRegistrant;
     }
 
     /** Builder for {@link MeasurementDelayedSourceRegistrationStats}. */
@@ -86,6 +93,14 @@ public class MeasurementDelayedSourceRegistrationStats {
             mBuilding.mRegistrationDelay = registrationDelay;
             return this;
         }
+
+        /** See {@link MeasurementDelayedSourceRegistrationStats#getRegistrant()}. */
+        public @NonNull MeasurementDelayedSourceRegistrationStats.Builder setRegistrant(
+                String registrant) {
+            mBuilding.mRegistrant = registrant;
+            return this;
+        }
+
         /** Build the {@link MeasurementDelayedSourceRegistrationStats}. */
         public @NonNull MeasurementDelayedSourceRegistrationStats build() {
             return mBuilding;
