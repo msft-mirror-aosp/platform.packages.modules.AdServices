@@ -242,7 +242,8 @@ public final class AsyncTriggerFetcherTest {
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                0)
+                                0,
+                                "")
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -288,7 +289,8 @@ public final class AsyncTriggerFetcherTest {
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                0)
+                                0,
+                                "")
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -4678,7 +4680,8 @@ public final class AsyncTriggerFetcherTest {
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                                0)
+                                0,
+                                "")
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));

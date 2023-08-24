@@ -131,13 +131,22 @@ public class AggregateReportingJobHandlerTest {
                             return keys;
                         });
         mDatastoreManager = new FakeDatasoreManager();
-        mAggregateReportingJobHandler = new AggregateReportingJobHandler(
-                mEnrollmentDao, mDatastoreManager, mockKeyManager);
+        mAggregateReportingJobHandler =
+                new AggregateReportingJobHandler(
+                        mEnrollmentDao,
+                        mDatastoreManager,
+                        mockKeyManager,
+                        ReportingStatus.UploadMethod.REGULAR,
+                        mMockFlags);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
-                                        mEnrollmentDao, mDatastoreManager, mockKeyManager)
+                                        mEnrollmentDao,
+                                        mDatastoreManager,
+                                        mockKeyManager,
+                                        ReportingStatus.UploadMethod.REGULAR,
+                                        mMockFlags)
                                 .setIsDebugInstance(true));
 
         mMockitoSession =
@@ -147,6 +156,7 @@ public class AggregateReportingJobHandlerTest {
                         .startMocking();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
     }
 
     @After
@@ -603,8 +613,13 @@ public class AggregateReportingJobHandlerTest {
         AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
         when(mockKeyManager.getAggregateEncryptionKeys(any(), anyInt()))
                 .thenReturn(Collections.emptyList());
-        mAggregateReportingJobHandler = new AggregateReportingJobHandler(
-                mEnrollmentDao, new FakeDatasoreManager(), mockKeyManager);
+        mAggregateReportingJobHandler =
+                new AggregateReportingJobHandler(
+                        mEnrollmentDao,
+                        new FakeDatasoreManager(),
+                        mockKeyManager,
+                        ReportingStatus.UploadMethod.REGULAR,
+                        mMockFlags);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
 
         assertTrue(
