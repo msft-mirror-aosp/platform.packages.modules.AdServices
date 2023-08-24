@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,7 +112,9 @@ public class FilterMap {
         public Builder buildFilterData(JSONObject jsonObject)
                 throws JSONException {
             Map<String, List<String>> filterMap = new HashMap<>();
-            for (String key : jsonObject.keySet()) {
+            Iterator<String> keys = jsonObject.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
                 JSONArray jsonArray = jsonObject.getJSONArray(key);
                 List<String> filterMapList = new ArrayList<>();
                 for (int i = 0; i < jsonArray.length(); i++) {
