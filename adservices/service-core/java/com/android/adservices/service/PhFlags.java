@@ -35,6 +35,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1930,6 +1931,50 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                FLEDGE_AUCTION_SERVER_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION);
+    }
+
+    @Override
     public String getFledgeAuctionServerAuctionKeyFetchUri() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3619,6 +3664,31 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
                         + " = "
                         + getAdSelectionSelectingOutcomeTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION
+                        + " = "
+                        + getFledgeAuctionServerEnabledForReportImpression());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
+                        + " = "
+                        + getFledgeAuctionServerEnabledForReportEvent());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM
+                        + " = "
+                        + getFledgeAuctionServerEnabledForUpdateHistogram());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION
+                        + " = "
+                        + getFledgeAuctionServerEnabledForSelectAdsMediation());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
