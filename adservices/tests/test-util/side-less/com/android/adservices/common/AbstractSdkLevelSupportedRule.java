@@ -34,6 +34,9 @@ import java.util.Objects;
  *
  * <p>This rule is abstract so subclass can define what a "feature" means. It also doesn't have any
  * dependency on Android code, so it can be used both on device-side and host-side tests.
+ *
+ * <p><b>NOTE: </b>this class should NOT be used as {@code ClassRule}, as it would result in a "no
+ * tests run" scenario if it throws a {@link AssumptionViolatedException}.
  */
 abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
@@ -54,6 +57,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     @Override
     public final Statement apply(Statement base, Description description) {
+        if (!description.isTest()) {
+            throw new IllegalStateException(
+                    "This rule can only be applied to individual tests, it cannot be used as"
+                            + " @ClassRule or in a test suite");
+        }
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
