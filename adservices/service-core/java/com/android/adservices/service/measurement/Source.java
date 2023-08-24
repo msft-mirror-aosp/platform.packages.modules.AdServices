@@ -44,6 +44,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -737,7 +738,9 @@ public class Source {
             }
             JSONObject jsonObject = new JSONObject(mAggregateSource);
             TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
-            for (String key : jsonObject.keySet()) {
+            Iterator<String> keys = jsonObject.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
                 // Remove "0x" prefix.
                 String hexString = jsonObject.getString(key).substring(2);
                 BigInteger bigInteger = new BigInteger(hexString, 16);
