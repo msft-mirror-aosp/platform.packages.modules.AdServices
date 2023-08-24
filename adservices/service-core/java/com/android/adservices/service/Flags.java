@@ -1006,6 +1006,54 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_ENABLED = false;
+
+    /**
+     * @return whether to enable server auction support in post-auction APIs.
+     */
+    default boolean getFledgeAuctionServerEnabled() {
+        return FLEDGE_AUCTION_SERVER_ENABLED;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION = true;
+
+    /**
+     * @return whether to enable server auction support in report impression.
+     */
+    default boolean getFledgeAuctionServerEnabledForReportImpression() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT = true;
+
+    /**
+     * @return whether to enable server auction support in report event API.
+     */
+    default boolean getFledgeAuctionServerEnabledForReportEvent() {
+        return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM = true;
+
+    /**
+     * @return whether to enable server auction support in update histogram API.
+     */
+    default boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION = true;
+
+    /**
+     * @return whether to enable server auction support in select ads mediation API.
+     */
+    default boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
+    }
+
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 
