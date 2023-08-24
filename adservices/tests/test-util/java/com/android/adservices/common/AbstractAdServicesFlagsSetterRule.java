@@ -54,6 +54,14 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // TODO(b/295321663): static import from AdServicesCommonConstants instead
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 
+    private static final String SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX = "log.tag.";
+
+    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
+
+    protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
+    protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
+    protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
+
     // TODO(b/294423183): make private once not used by subclass for legacy methods
     protected final DeviceConfigHelper mDeviceConfig;
     protected final SystemPropertiesHelper mSystemProperties;
@@ -75,9 +83,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mLog = new Logger(Objects.requireNonNull(logger), "AdServicesFlagsSetterRule");
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, NAMESPACE_ADSERVICES, logger);
-        mSystemProperties =
-                new SystemPropertiesHelper(
-                        systemPropertiesInterface, logger, SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
+        mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
     }
 
     @Override
@@ -177,7 +183,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     private StringBuilder dumpSystemPropertiesSafely(StringBuilder dump) {
         try {
-            mSystemProperties.dumpSystemProperties(dump);
+            mSystemProperties.dumpSystemProperties(dump, SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
         } catch (Throwable t) {
             dump.append("Failed to dump SystemProperties: ").append(t);
         }
@@ -209,12 +215,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * run.
      */
     public T setTopicsEpochJobPeriodMsForTests(long value) {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
+        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */
     public T setTopicsPercentageForRandomTopicForTests(long value) {
-        return setOrCacheSystemProperty(
+        return setOrCacheDebugSystemProperty(
                 FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
     }
 
@@ -252,12 +258,13 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /** Overrides the system property used to disable topics enrollment check. */
     public T setDisableTopicsEnrollmentCheckForTests(boolean value) {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
+        return setOrCacheDebugSystemProperty(
+                FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
     }
 
     /** Overrides the system property used to set ConsentManager debug mode keys. */
     public T setConsentManagerDebugMode(boolean value) {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
+        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getEnableBackCompat()}. */
@@ -307,7 +314,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /** Overrides flag used by {@link PhFlags#getAdIdKillSwitchForTests()}. */
     public T setAdIdKillSwitchForTests(boolean value) {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
+        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getMddBackgroundTaskKillSwitch()}. */
@@ -383,6 +390,24 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         setConsentSourceOfTruth(sourceOfTruth);
         setEnableAppsearchConsentData(atLeastS);
         setMeasurementRollbackDeletionAppSearchKillSwitch(!atLeastS);
+        return getThis();
+    }
+
+    /** Sets a {@code logcat} tag. */
+    public T setLogcatTag(String tag, String level) {
+        setOrCacheLogtagSystemProperty(tag, level);
+        return getThis();
+    }
+
+    /**
+     * Sets a {@code logcat} tags commons to all test.
+     *
+     * <p>This method is usually set automatically by the factory methods, but should be set again
+     * (on host-side tests) after reboot.
+     */
+    public T setDefaultLogcatTags() {
+        setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }
 
@@ -498,12 +523,20 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mInitialSystemProperties = null;
     }
 
-    private T setOrCacheSystemProperty(String name, boolean value) {
-        return setOrCacheSystemProperty(name, Boolean.toString(value));
+    private T setOrCacheDebugSystemProperty(String name, boolean value) {
+        return setOrCacheDebugSystemProperty(name, Boolean.toString(value));
     }
 
-    private T setOrCacheSystemProperty(String name, long value) {
-        return setOrCacheSystemProperty(name, Long.toString(value));
+    private T setOrCacheDebugSystemProperty(String name, long value) {
+        return setOrCacheDebugSystemProperty(name, Long.toString(value));
+    }
+
+    private T setOrCacheDebugSystemProperty(String name, String value) {
+        return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + name, value);
+    }
+
+    private T setOrCacheLogtagSystemProperty(String name, String value) {
+        return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
     }
 
     private T setOrCacheSystemProperty(String name, String value) {

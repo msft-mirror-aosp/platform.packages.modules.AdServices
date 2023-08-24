@@ -36,15 +36,13 @@ public final class SystemPropertiesHelper {
 
     private final Map<String, String> mPropsToBeReset = new HashMap<>();
 
-    final Logger mLog;
+    private final Logger mLog;
     private final Interface mInterface;
-    private final String mPrefix;
 
-    public SystemPropertiesHelper(Interface helperInterface, RealLogger logger, String prefix) {
+    public SystemPropertiesHelper(Interface helperInterface, RealLogger logger) {
         mInterface = Objects.requireNonNull(helperInterface);
         mLog = new Logger(Objects.requireNonNull(logger), SystemPropertiesHelper.class);
-        mPrefix = Objects.requireNonNull(prefix);
-        mLog.v("Constructor: interface=%s, logger=%s, prefix=%s", helperInterface, logger, prefix);
+        mLog.v("Constructor: interface=%s, logger=%s", helperInterface, logger);
     }
 
     public void set(String name, String value) {
@@ -68,13 +66,13 @@ public final class SystemPropertiesHelper {
         }
     }
 
-    public void dumpSystemProperties(StringBuilder dump) {
+    public void dumpSystemProperties(StringBuilder dump, String prefix) {
         String properties = mInterface.dumpSystemProperties();
-        addProperties(dump, properties, mPrefix);
+        addProperties(dump, properties, prefix);
     }
 
     private String get(String name) {
-        return mInterface.get(getPropertyName(name));
+        return mInterface.get(name);
     }
 
     private void savePreviousValue(String name) {
@@ -88,13 +86,8 @@ public final class SystemPropertiesHelper {
     }
 
     private void setOnly(String name, String value) {
-        mInterface.set(getPropertyName(name), value);
+        mInterface.set(name, value);
     }
-
-    private String getPropertyName(String name) {
-        return mPrefix + name;
-    }
-
 
     private static void addProperties(StringBuilder builder, String properties, String prefix) {
         String realPrefix = "[" + prefix;
