@@ -350,17 +350,38 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
+        final boolean forceSearchOnAbsentOwner =
+                BinderFlagReader.readFlag(
+                        mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
+        PersistAdSelectionResultRunner.ReportingRegistrationLimits limits =
+                PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
+                        .setMaxRegisteredAdBeaconsTotalCount(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount))
+                        .setMaxInteractionKeySize(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB))
+                        .setMaxInteractionReportingUriSize(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionMaxInteractionReportingUriSizeB))
+                        .setMaxRegisteredAdBeaconsPerAdTechCount(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
+                        .build();
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
                             new PersistAdSelectionResultRunner(
                                     mObliviousHttpEncryptor,
                                     mAdSelectionEntryDao,
+                                    mCustomAudienceDao,
                                     mAdSelectionServiceFilter,
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
                                     callingUid,
-                                    devContext);
+                                    devContext,
+                                    forceSearchOnAbsentOwner,
+                                    limits);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
