@@ -3329,7 +3329,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build();
 
         adSelectionRunner.runAdSelection(
-                input, adSelectionTestCallback, DevContext.createForDevOptionsDisabled());
+                input, adSelectionTestCallback, DevContext.createForDevOptionsDisabled(), null);
         try {
             adSelectionTestCallback.mCountDownLatch.await();
         } catch (InterruptedException e) {
