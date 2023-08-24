@@ -120,6 +120,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPT
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
@@ -385,6 +386,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
@@ -5381,12 +5383,27 @@ public class PhFlagsTest {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
-                phOverridingValue.stream()
-                        .map(integer -> integer.toString())
-                        .collect(Collectors.joining(",")),
+                phOverridingValue.stream().map(Object::toString).collect(Collectors.joining(",")),
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getFledgeAuctionServerPayloadBucketSizes())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerForceContinueWhenOwnerIsNullEnabled() {
+        assertThat(mPhFlags.getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED);
+
+        boolean phOverridingValue =
+                !FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled())
                 .isEqualTo(phOverridingValue);
     }
 
