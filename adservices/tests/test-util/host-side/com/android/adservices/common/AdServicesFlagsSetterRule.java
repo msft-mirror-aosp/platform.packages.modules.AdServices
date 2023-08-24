@@ -21,9 +21,13 @@ import com.android.tradefed.device.ITestDevice;
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
+    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
+        return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+    }
+
     /** Factory method that only disables the global kill switch. */
     public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
-        return new AdServicesFlagsSetterRule().setGlobalKillSwitch(false);
+        return withDefaultLogcatTags().setGlobalKillSwitch(false);
     }
 
     @Override
