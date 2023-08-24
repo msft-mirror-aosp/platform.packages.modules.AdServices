@@ -22,6 +22,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -81,6 +82,7 @@ public class GaUxNotificationTriggerTest {
      * displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
@@ -99,6 +101,7 @@ public class GaUxNotificationTriggerTest {
      * Verify that for GA, ROW devices with zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
@@ -117,6 +120,7 @@ public class GaUxNotificationTriggerTest {
      * Verify that for GA, EU devices with non zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
@@ -133,6 +137,7 @@ public class GaUxNotificationTriggerTest {
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
