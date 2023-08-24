@@ -109,7 +109,8 @@ public class PersistAdSelectionResultRunnerTest {
             AdTechIdentifier.fromString("winner-buyer.com");
     private static final AdTechIdentifier DIFFERENT_BUYER =
             AdTechIdentifier.fromString("different-buyer.com");
-    private static final Uri WINNER_AD_RENDER_URI = CommonFixture.getUri(WINNER_BUYER, "/render_uri");
+    private static final Uri WINNER_AD_RENDER_URI =
+            CommonFixture.getUri(WINNER_BUYER, "/render_uri");
     private static final String BUYER_REPORTING_URI =
             CommonFixture.getUri(WINNER_BUYER, "/reporting").toString();
     private static final String BUYER_REPORTING_URI_DIFFERENT_BUYER =
@@ -305,7 +306,7 @@ public class PersistAdSelectionResultRunnerTest {
             INITIALIZATION_DATA_WITH_DIFFERENT_CALLER_PACKAGE =
                     getAdSelectionInitialization(SELLER, DIFFERENT_CALLER_PACKAGE_NAME);
     private static final AdSelectionResultBidAndUri BID_AND_URI =
-            getAdSelectionResultBidAndUri(BID, WINNER_AD_RENDER_URI);
+            getAdSelectionResultBidAndUri(AD_SELECTION_ID, BID, WINNER_AD_RENDER_URI);
     private static final WinningCustomAudience WINNER_CUSTOM_AUDIENCE =
             getWinningCustomAudience(
                     WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_CUSTOM_AUDIENCE_NAME, null);
