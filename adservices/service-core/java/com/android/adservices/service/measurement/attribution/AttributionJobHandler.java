@@ -207,6 +207,7 @@ class AttributionJobHandler {
 
                     attributionStatus.setSourceType(source.getSourceType());
                     attributionStatus.setSurfaceTypeFromSourceAndTrigger(source, trigger);
+                    attributionStatus.setSourceRegistrant(source.getRegistrant().toString());
 
                     if (source.isInstallAttributed()) {
                         attributionStatus.setInstallAttribution(true);
@@ -1201,6 +1202,7 @@ class AttributionJobHandler {
                         .setSourceDerived(attributionStatus.isSourceDerived())
                         .setInstallAttribution(attributionStatus.isInstallAttribution())
                         .setAttributionDelay(attributionStatus.getAttributionDelay().get())
+                        .setSourceRegistrant(attributionStatus.getSourceRegistrant())
                         .build());
     }
 
@@ -1216,6 +1218,7 @@ class AttributionJobHandler {
                         .setRegistrationStatus(delayedSourceRegistrationStatus.UNKNOWN)
                         .setRegistrationDelay(
                                 delayedSourceRegistrationStatus.getRegistrationDelay())
+                        .setRegistrant(source.getRegistrant().toString())
                         .build());
     }
 
