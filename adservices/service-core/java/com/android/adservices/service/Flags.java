@@ -1083,6 +1083,15 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
     }
 
+    boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY = false;
+
+    /**
+     * @return whether to call remote URLs for debug reporting.
+     */
+    default boolean getFledgeEventLevelDebugReportSendImmediately() {
+        return FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
+    }
+
     int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS = 60 * 15;
 
     /**
@@ -1099,6 +1108,56 @@ public interface Flags {
      */
     default int getFledgeEventLevelDebugReportingMaxItemsPerBatch() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to open its initial
+     *     connection during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
+
+    /**
+     * @return the maximum time in milliseconds allowed for a network call to read a response from a
+     *     target server during the FLEDGE debug report sender job.
+     */
+    default int getFledgeDebugReportSenderJobNetworkReadTimeoutMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
+
+    /**
+     * @return the maximum amount of time (in milliseconds) each FLEDGE debug report sender job is
+     *     allowed to run.
+     */
+    default long getFledgeDebugReportSenderJobMaxRuntimeMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS = TimeUnit.MINUTES.toMillis(10);
+
+    /**
+     * @return the best effort max time (in milliseconds) between each FLEDGE debug report sender
+     *     job run.
+     */
+    default long getFledgeDebugReportSenderJobPeriodMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
+    }
+
+    long FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * @return the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     *     debug report sender job.
+     */
+    default long getFledgeDebugReportSenderJobFlexMs() {
+        return FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;

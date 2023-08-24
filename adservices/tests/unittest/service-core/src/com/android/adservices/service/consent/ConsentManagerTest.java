@@ -34,6 +34,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
@@ -658,6 +659,7 @@ public class ConsentManagerTest {
                 .cancel(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(CONSENT_NOTIFICATION_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
