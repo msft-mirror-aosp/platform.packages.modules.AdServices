@@ -25,7 +25,12 @@ import java.util.stream.Collectors;
 public class UpdateProcessorSelector {
 
     private static final List<UpdateProcessor> PROCESSORS =
-            Arrays.asList(new Append(), new Put(), new PutIfNotPresent(), new Remove());
+            Arrays.asList(
+                    new Append(),
+                    new Put(),
+                    new PutIfNotPresent(),
+                    new Remove(),
+                    new UpdateEncoder());
     private final Map<String, UpdateProcessor> mProcessorMap;
 
     public UpdateProcessorSelector() {
