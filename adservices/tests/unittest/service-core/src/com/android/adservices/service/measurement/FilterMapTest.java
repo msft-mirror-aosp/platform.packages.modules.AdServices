@@ -94,6 +94,19 @@ public final class FilterMapTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void serializeAsJsonV2_success() throws JSONException {
+        // Setup
+        FilterMap expected = createExampleV2();
+
+        // Execution
+        JSONObject jsonObject = expected.serializeAsJsonV2();
+        FilterMap actual = new FilterMap.Builder().buildFilterDataV2(jsonObject).build();
+
+        // Assertion
+        assertEquals(expected, actual);
+    }
+
     private FilterMap createExample() {
         Map<String, List<String>> attributionFilterMap = new HashMap<>();
         attributionFilterMap.put("type", Arrays.asList("1", "2", "3", "4"));
@@ -101,6 +114,17 @@ public final class FilterMapTest {
 
         return new FilterMap.Builder()
                 .setAttributionFilterMap(attributionFilterMap)
+                .build();
+    }
+
+    private FilterMap createExampleV2() {
+        Map<String, FilterValue> attributionFilterMap = new HashMap<>();
+        attributionFilterMap.put(
+                "type", FilterValue.ofStringList(Arrays.asList("1", "2", "3", "4")));
+        attributionFilterMap.put("ctid", FilterValue.ofStringList(Collections.singletonList("id")));
+
+        return new FilterMap.Builder()
+                .setAttributionFilterMapWithLongValue(attributionFilterMap)
                 .build();
     }
 }
