@@ -97,6 +97,7 @@ class AttributionJobHandler {
     private final AdServicesLogger mLogger;
     private final XnaSourceCreator mXnaSourceCreator;
     private final Flags mFlags;
+    private final Filter mFilter;
 
     private enum TriggeringStatus {
         DROPPED,
@@ -129,6 +130,7 @@ class AttributionJobHandler {
         mSourceNoiseHandler = sourceNoiseHandler;
         mLogger = logger;
         mXnaSourceCreator = xnaSourceCreator;
+        mFilter = new Filter(mFlags);
     }
 
     /**
@@ -349,10 +351,11 @@ class AttributionJobHandler {
                 return TriggeringStatus.DROPPED;
             }
             Optional<List<AggregateHistogramContribution>> contributions =
-                    AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                    new AggregatePayloadGenerator(mFlags)
+                            .generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
-                if (source.getAggregatableAttributionSource().isPresent()
-                        && trigger.getAggregatableAttributionTrigger().isPresent()) {
+                if (source.getAggregatableAttributionSource(trigger, mFlags).isPresent()
+                        && trigger.getAggregatableAttributionTrigger(mFlags).isPresent()) {
                     mDebugReportApi.scheduleTriggerDebugReport(
                             source,
                             trigger,
@@ -504,14 +507,14 @@ class AttributionJobHandler {
         return enrollmentIds;
     }
 
-    private static Optional<AggregateDeduplicationKey> maybeGetAggregateDeduplicationKey(
+    private Optional<AggregateDeduplicationKey> maybeGetAggregateDeduplicationKey(
             Source source, Trigger trigger) {
         try {
             Optional<AggregateDeduplicationKey> dedupKey;
             Optional<AggregatableAttributionSource> optionalAggregateAttributionSource =
-                    source.getAggregatableAttributionSource();
+                    source.getAggregatableAttributionSource(trigger, mFlags);
             Optional<AggregatableAttributionTrigger> optionalAggregateAttributionTrigger =
-                    trigger.getAggregatableAttributionTrigger();
+                    trigger.getAggregatableAttributionTrigger(mFlags);
             if (!optionalAggregateAttributionSource.isPresent()
                     || !optionalAggregateAttributionTrigger.isPresent()) {
                 return Optional.empty();
@@ -522,7 +525,7 @@ class AttributionJobHandler {
                     optionalAggregateAttributionTrigger.get();
             dedupKey =
                     aggregateAttributionTrigger.maybeExtractDedupKey(
-                            aggregateAttributionSource.getFilterMap());
+                            aggregateAttributionSource.getFilterMap(), mFlags);
             return dedupKey;
         } catch (JSONException e) {
             LogUtil.e(
@@ -959,14 +962,14 @@ class AttributionJobHandler {
             @NonNull Source source, @NonNull Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         try {
-            FilterMap sourceFilters = source.getFilterData();
+            FilterMap sourceFilters = source.getFilterData(trigger, mFlags);
             List<FilterMap> triggerFilterSet = extractFilterSet(trigger.getFilters());
             List<FilterMap> triggerNotFilterSet = extractFilterSet(trigger.getNotFilters());
             boolean isFilterMatch =
-                    Filter.isFilterMatch(sourceFilters, triggerFilterSet, true)
-                            && Filter.isFilterMatch(sourceFilters, triggerNotFilterSet, false);
+                    mFilter.isFilterMatch(sourceFilters, triggerFilterSet, true)
+                            && mFilter.isFilterMatch(sourceFilters, triggerNotFilterSet, false);
             if (!isFilterMatch
-                    && !sourceFilters.getAttributionFilterMap().isEmpty()
+                    && !sourceFilters.isEmpty(mFlags)
                     && (!triggerFilterSet.isEmpty() || !triggerNotFilterSet.isEmpty())) {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
@@ -987,10 +990,8 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         try {
-            FilterMap sourceFiltersData = source.getFilterData();
-            List<EventTrigger> eventTriggers =
-                    trigger.parseEventTriggers(
-                            mFlags.getMeasurementFlexibleEventReportingApiEnabled());
+            FilterMap sourceFiltersData = source.getFilterData(trigger, mFlags);
+            List<EventTrigger> eventTriggers = trigger.parseEventTriggers(mFlags);
             Optional<EventTrigger> matchingEventTrigger =
                     eventTriggers.stream()
                             .filter(
@@ -1019,16 +1020,16 @@ class AttributionJobHandler {
         }
     }
 
-    private static boolean doEventLevelFiltersMatch(
+    private boolean doEventLevelFiltersMatch(
             FilterMap sourceFiltersData, EventTrigger eventTrigger) {
         if (eventTrigger.getFilterSet().isPresent()
-                && !Filter.isFilterMatch(
+                && !mFilter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getFilterSet().get(), true)) {
             return false;
         }
 
         if (eventTrigger.getNotFilterSet().isPresent()
-                && !Filter.isFilterMatch(
+                && !mFilter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getNotFilterSet().get(), false)) {
             return false;
         }
@@ -1036,7 +1037,13 @@ class AttributionJobHandler {
         return true;
     }
 
-    private static List<FilterMap> extractFilterSet(String str) throws JSONException {
+    private List<FilterMap> extractFilterSet(String str) throws JSONException {
+        return mFlags.getMeasurementEnableLookbackWindowFilter()
+                ? extractFilterSetV2(str)
+                : extractFilterSetV1(str);
+    }
+
+    private List<FilterMap> extractFilterSetV1(String str) throws JSONException {
         String json = (str == null || str.isEmpty()) ? "[]" : str;
         List<FilterMap> filterSet = new ArrayList<>();
         JSONArray filters = new JSONArray(json);
@@ -1048,6 +1055,12 @@ class AttributionJobHandler {
             filterSet.add(filterMap);
         }
         return filterSet;
+    }
+
+    private List<FilterMap> extractFilterSetV2(String str) throws JSONException {
+        String json = (str == null || str.isEmpty()) ? "[]" : str;
+        JSONArray filters = new JSONArray(json);
+        return mFilter.deserializeFilterSet(filters);
     }
 
     private OptionalInt validateAndGetUpdatedAggregateContributions(
