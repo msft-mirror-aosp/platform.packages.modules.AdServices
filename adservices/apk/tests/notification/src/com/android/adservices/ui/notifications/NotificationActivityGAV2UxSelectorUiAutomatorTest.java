@@ -41,7 +41,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -56,8 +56,8 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private String mTestName;
 
-    @ClassRule
-    public static final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
     @BeforeClass
