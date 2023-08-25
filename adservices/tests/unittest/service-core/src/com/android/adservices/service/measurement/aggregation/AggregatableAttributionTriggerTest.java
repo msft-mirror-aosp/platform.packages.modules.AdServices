@@ -22,10 +22,14 @@ import static org.junit.Assert.assertTrue;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -39,7 +43,9 @@ import java.util.Set;
 
 /** Unit tests for {@link AggregatableAttributionTrigger} */
 @SmallTest
+@RunWith(MockitoJUnitRunner.class)
 public final class AggregatableAttributionTriggerTest {
+    @Mock Flags mFlags;
 
     private AggregatableAttributionTrigger createExample(
             List<AggregateDeduplicationKey> aggregateDeduplicationKeys) {
@@ -170,7 +176,7 @@ public final class AggregatableAttributionTriggerTest {
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
-                        .maybeExtractDedupKey(sourceFilter);
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey1, aggregateDeduplicationKey.get());
     }
@@ -233,7 +239,7 @@ public final class AggregatableAttributionTriggerTest {
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
-                        .maybeExtractDedupKey(sourceFilter);
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey2, aggregateDeduplicationKey.get());
     }
@@ -292,7 +298,7 @@ public final class AggregatableAttributionTriggerTest {
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
-                        .maybeExtractDedupKey(sourceFilter);
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey2, aggregateDeduplicationKey.get());
     }
@@ -326,7 +332,7 @@ public final class AggregatableAttributionTriggerTest {
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
-                        .maybeExtractDedupKey(sourceFilter);
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey1, aggregateDeduplicationKey.get());
     }
@@ -369,7 +375,7 @@ public final class AggregatableAttributionTriggerTest {
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
-                        .maybeExtractDedupKey(sourceFilter);
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
     }
 
@@ -426,7 +432,7 @@ public final class AggregatableAttributionTriggerTest {
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
                 createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
-                        .maybeExtractDedupKey(sourceFilter);
+                        .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
     }
 }

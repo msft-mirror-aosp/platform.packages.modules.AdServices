@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -34,6 +35,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -43,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@RunWith(MockitoJUnitRunner.class)
 public class TriggerTest {
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
             "[{\n"
@@ -81,6 +86,8 @@ public class TriggerTest {
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT =
             WebUtil.validUri("https://subdomain.example.test/with/path?query=0#fragment");
     private static final Uri WEB_DESTINATION_INVALID = Uri.parse("https://example.notatld");
+
+    @Mock Flags mFlags;
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -123,7 +130,7 @@ public class TriggerTest {
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
-                                        .getAggregatableAttributionTrigger()
+                                        .getAggregatableAttributionTrigger(mFlags)
                                         .orElse(null))
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
@@ -152,7 +159,7 @@ public class TriggerTest {
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
-                                        .getAggregatableAttributionTrigger()
+                                        .getAggregatableAttributionTrigger(mFlags)
                                         .orElse(null))
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
@@ -446,7 +453,7 @@ public class TriggerTest {
                         .build();
 
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
-                trigger.getAggregatableAttributionTrigger();
+                trigger.getAggregatableAttributionTrigger(mFlags);
         assertTrue(aggregatableAttributionTrigger.isPresent());
         assertNotNull(aggregatableAttributionTrigger.get().getTriggerData());
         assertEquals(values, aggregatableAttributionTrigger.get().getValues());
@@ -496,7 +503,7 @@ public class TriggerTest {
                         .setAggregateDeduplicationKeys(aggregateDedupKeys.toString())
                         .build();
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
-                trigger.getAggregatableAttributionTrigger();
+                trigger.getAggregatableAttributionTrigger(mFlags);
 
         assertTrue(aggregatableAttributionTrigger.isPresent());
         AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
@@ -822,9 +829,7 @@ public class TriggerTest {
 
         // Action
         List<EventTrigger> actualEventTriggers =
-                trigger.parseEventTriggers(
-                        FlagsFactory.getFlagsForTest()
-                                .getMeasurementFlexibleEventReportingApiEnabled());
+                trigger.parseEventTriggers(FlagsFactory.getFlagsForTest());
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
