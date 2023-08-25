@@ -1903,12 +1903,14 @@ public interface Flags {
     // FLEDGE Kill switches
 
     /**
-     * Fledge Ad Selection API kill switch. The default value is false which means that Select Ads
-     * API is enabled by default. This flag should be should as emergency andon cord.
+     * Fledge AdSelectionService kill switch. The default value is false which means that
+     * AdSelectionService is enabled by default. This flag should be should as emergency andon cord.
      */
     boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
 
-    /** @return value of Fledge Ad Selection API kill switch */
+    /**
+     * @return value of Fledge Ad Selection Service API kill switch .
+     */
     default boolean getFledgeSelectAdsKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -1924,7 +1926,24 @@ public interface Flags {
      * @return value of Fledge Auction server API kill switch.
      */
     default boolean getFledgeAuctionServerKillSwitch() {
-        return getGlobalKillSwitch() || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+    }
+
+    /**
+     * Fledge On Device Auction API Kill switch. The default value is false which means that On
+     * Device Auction APIs is enabled by default.
+     */
+    boolean FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH = false;
+
+    /**
+     * @return value of On Device Auction API kill switch.
+     */
+    default boolean getFledgeOnDeviceAuctionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
     }
 
     /**

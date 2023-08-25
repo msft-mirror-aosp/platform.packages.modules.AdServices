@@ -5552,7 +5552,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         Flags flagsWithSmallerLimits =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerCaMs() {
                         return 1500;
@@ -5728,7 +5728,7 @@ public class AdSelectionE2ETest {
         int largeCACountForBuyer = 300;
 
         Flags flagsWithLenientBuyerBiddingLimits =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
                         return lenientPerBuyerTimeOutLimit;
@@ -5858,7 +5858,7 @@ public class AdSelectionE2ETest {
 
         // Now we run the same Ad selection with tight per buyer timeout limits
         Flags flagsWithTightBuyerBiddingLimits =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
                         return tightPerBuyerTimeOutLimit;
@@ -6241,7 +6241,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         Flags flagsWithSmallerLimits =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public long getAdSelectionScoringTimeoutMs() {
                         return 1500;
@@ -6916,7 +6916,7 @@ public class AdSelectionE2ETest {
     @Test
     public void testRunAdSelectionFailsWhenAdTechFailsEnrollmentCheck() throws Exception {
         Flags flagsWithEnrollmentCheckEnabled =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return false;
@@ -7030,7 +7030,7 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionThrottledSubsequentCallFailure() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        class FlagsWithThrottling implements Flags {
+        class FlagsWithThrottling extends AdSelectionE2ETestFlags implements Flags {
             @Override
             public boolean getEnforceIsolateMaxHeapSize() {
                 return false;
@@ -7609,7 +7609,7 @@ public class AdSelectionE2ETest {
     }
 
     private static class AdSelectionE2ETestFlags implements Flags {
-        final long mBiddingLogicVersion;
+        private final long mBiddingLogicVersion;
 
         AdSelectionE2ETestFlags() {
             this(JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3);
@@ -7642,6 +7642,11 @@ public class AdSelectionE2ETest {
         @Override
         public boolean getDisableFledgeEnrollmentCheck() {
             return true;
+        }
+
+        @Override
+        public boolean getFledgeOnDeviceAuctionKillSwitch() {
+            return false;
         }
 
         @Override
