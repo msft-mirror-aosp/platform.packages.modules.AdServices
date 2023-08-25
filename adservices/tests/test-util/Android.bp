@@ -95,6 +95,9 @@ java_defaults {
     defaults: [
         "modules-utils-testable-device-config-defaults",
     ],
+    static_libs: [
+         "adservices-service-core",
+    ],
     libs: [
         "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations
     ],
