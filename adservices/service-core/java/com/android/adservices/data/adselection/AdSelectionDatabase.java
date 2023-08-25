@@ -26,6 +26,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -53,7 +54,8 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
 
     public static final int DATABASE_VERSION = 6;
     // TODO(b/230653780): Should we separate the DB.
-    public static final String DATABASE_NAME = "adselection.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adselection.db");
 
     private static volatile AdSelectionDatabase sSingleton = null;
 
