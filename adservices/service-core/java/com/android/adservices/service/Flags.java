@@ -1062,6 +1062,18 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
     }
 
+    // TODO(b/291680065): Remove when owner field is returned from B&A
+    boolean FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED = false;
+
+    /**
+     * @return true if forcing {@link
+     *     android.adservices.adselection.AdSelectionManager#persistAdSelectionResult} to continue
+     *     when owner is null, otherwise false.
+     */
+    default boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
+        return FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
+    }
+
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
 
     /**

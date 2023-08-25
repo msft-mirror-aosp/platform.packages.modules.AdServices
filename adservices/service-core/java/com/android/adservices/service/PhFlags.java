@@ -1923,6 +1923,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED,
+                FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3901,10 +3909,15 @@ public final class PhFlags implements Flags {
                         + getFledgeAuctionServerPayloadBucketSizes());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
                         + " = "
-                        + getAdSelectionOffDeviceRequestCompressionEnabled());
+                        + getFledgeAuctionServerPayloadBucketSizes());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE

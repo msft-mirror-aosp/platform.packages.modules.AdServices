@@ -224,9 +224,18 @@ public abstract class CustomAudienceDao {
      */
     @Query("SELECT * FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")
     @Nullable
-    @VisibleForTesting
     public abstract DBCustomAudience getCustomAudienceByPrimaryKey(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * Get custom audiences by buyer and name.
+     *
+     * @return custom audiences result if exists.
+     */
+    @Query("SELECT * FROM custom_audience WHERE buyer = :buyer AND name = :name")
+    @NonNull
+    public abstract List<DBCustomAudience> getCustomAudiencesForBuyerAndName(
+            @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get custom audience background fetch data by its unique key.

@@ -3684,7 +3684,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
         long adSelectionId = 1234567L;
-
         PersistAdSelectionResultRequest failingRequest =
                 new PersistAdSelectionResultRequest.Builder()
                         .setAdSelectionId(adSelectionId)
@@ -3696,7 +3695,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                 .persistAdSelectionResult(failingRequest)
                                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Throwable thrown = Assert.assertThrows(ExecutionException.class, runnable);
-        Assert.assertTrue(thrown.getCause() instanceof IllegalStateException);
+        Assert.assertTrue(thrown.getCause() instanceof IllegalArgumentException);
         // TODO(b/293022107): Assert results when overrides are implemented
     }
 

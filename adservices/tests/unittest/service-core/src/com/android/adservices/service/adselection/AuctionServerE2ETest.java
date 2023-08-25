@@ -27,6 +27,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
+import static org.mockito.Mockito.spy;
+
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.GetAdSelectionDataCallback;
@@ -49,6 +51,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -61,6 +64,7 @@ import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -105,6 +109,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -119,9 +124,13 @@ public class AuctionServerE2ETest {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
-    private static final Uri AD_RENDER_URI = Uri.parse("test.com/render_uri");
-    private static final String BUYER_REPORTING_URI = "https://foobarbuyer.reporting";
-    private static final String SELLER_REPORTING_URI = "https://foobarseller.reporting";
+    private static final List<DBAdData> ADS_BUYER_1 =
+            DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(BUYER_1);
+    private static final Uri AD_RENDER_URI = ADS_BUYER_1.get(0).getRenderUri();
+    private static final String BUYER_REPORTING_URI =
+            CommonFixture.getUri(BUYER_1, "/reporting").toString();
+    private static final String SELLER_REPORTING_URI =
+            CommonFixture.getUri(SELLER, "/reporting").toString();
     private static final WinReportingUrls WIN_REPORTING_URLS =
             WinReportingUrls.newBuilder()
                     .setBuyerReportingUrls(
@@ -131,11 +140,18 @@ public class AuctionServerE2ETest {
                                     .setReportingUrl(SELLER_REPORTING_URI)
                                     .build())
                     .build();
+    private static final String CUSTOM_AUDIENCE_NAME = "test-name";
+    private static final String CUSTOM_AUDIENCE_OWNER = "test-owner";
+    private static final float BID = 5;
+    private static final float SCORE = 5;
     private static final AuctionResult AUCTION_RESULT =
             AuctionResult.newBuilder()
                     .setAdRenderUrl(AD_RENDER_URI.toString())
-                    .setCustomAudienceName("test-name")
-                    .setBuyer("test-buyer.com")
+                    .setCustomAudienceName(CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(BUYER_1.toString())
+                    .setBid(BID)
+                    .setScore(SCORE)
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
@@ -158,7 +174,7 @@ public class AuctionServerE2ETest {
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
-    private CustomAudienceDao mCustomAudienceDao;
+    private CustomAudienceDao mCustomAudienceDaoSpy;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
@@ -170,8 +186,6 @@ public class AuctionServerE2ETest {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerPayloadExtractor mPayloadExtractor;
     private AuctionServerDataCompressor mDataCompressor;
-
-    @Mock AdSelectionEncryptionKeyManager mAdSelectionEncryptionKeyManagerMock;
 
     @Before
     public void setUp() {
@@ -187,11 +201,13 @@ public class AuctionServerE2ETest {
                         .mockStatic(FlagsFactory.class)
                         .startMocking();
 
-        mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
-                        .build()
-                        .customAudienceDao();
+        mCustomAudienceDaoSpy =
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
+                                .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                                .build()
+                                .customAudienceDao());
+
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -334,9 +350,7 @@ public class AuctionServerE2ETest {
                         "Shoes CA of Buyer 1", BUYER_1,
                         "Shirts CA of Buyer 1", BUYER_1,
                         "Shoes CA Of Buyer 2", BUYER_2);
-        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
-        Map<String, DBCustomAudience> namesAndCustomAudiences =
-                createAndPersistDBCustomAudiences(nameAndBuyersMap);
+        createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         DBEncryptionKey dbEncryptionKey =
                 DBEncryptionKey.builder()
@@ -353,7 +367,7 @@ public class AuctionServerE2ETest {
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mAppInstallDao,
-                        mCustomAudienceDao,
+                        mCustomAudienceDaoSpy,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -391,12 +405,9 @@ public class AuctionServerE2ETest {
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
         Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
-
         long adSelectionId = callback.mGetAdSelectionDataResponse.getAdSelectionId();
         byte[] encryptedBytes = callback.mGetAdSelectionDataResponse.getAdSelectionData();
-
         Assert.assertNotNull(encryptedBytes);
-
         Assert.assertNotNull(
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
@@ -413,6 +424,13 @@ public class AuctionServerE2ETest {
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
         when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                BUYER_1, CUSTOM_AUDIENCE_NAME, CUSTOM_AUDIENCE_OWNER)
+                        .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(BUYER_1))
+                        .build(),
+                Uri.EMPTY);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -472,7 +490,7 @@ public class AuctionServerE2ETest {
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mAppInstallDao,
-                        mCustomAudienceDao,
+                        mCustomAudienceDaoSpy,
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
@@ -573,7 +591,7 @@ public class AuctionServerE2ETest {
         return new AdSelectionServiceImpl(
                 mAdSelectionEntryDao,
                 mAppInstallDao,
-                mCustomAudienceDao,
+                mCustomAudienceDaoSpy,
                 mFrequencyCapDao,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
@@ -637,7 +655,7 @@ public class AuctionServerE2ETest {
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
             customAudiences.put(name, thisCustomAudience);
-            mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
+            mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
         }
         return customAudiences;
     }

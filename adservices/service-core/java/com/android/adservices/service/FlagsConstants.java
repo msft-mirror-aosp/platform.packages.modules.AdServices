@@ -327,6 +327,8 @@ public final class FlagsConstants {
             "fledge_ad_selection_off_device_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED =
+            "fledge_auction_server_force_search_when_owner_is_absent_enabled";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     public static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
