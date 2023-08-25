@@ -23,6 +23,7 @@ import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABL
 import android.adservices.common.AdServicesCommonManager;
 import android.content.Context;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -80,6 +81,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify no notification is displayed when the entry point is disabled for EU devices. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testBetaEuEntryPointDisabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
@@ -96,6 +98,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify no notification is displayed when the entry point is disabled for ROW devices. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testBetaRowEntryPointDisabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -112,6 +115,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify that for EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testBetaEuAdIdDisabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
