@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
@@ -26,18 +25,6 @@ import com.google.auto.value.AutoValue;
 @AutoValue
 abstract class ScoreAdResult {
     abstract Double getAdScore();
-
-    @Nullable
-    abstract String getCustomAudienceName();
-
-    @Nullable
-    abstract String getOwnerAppPackage();
-
-    @Nullable
-    abstract AdTechIdentifier getSeller();
-
-    @Nullable
-    abstract AdTechIdentifier getCustomAudienceBuyer();
 
     @Nullable
     abstract Uri getWinDebugReportUri();
@@ -55,14 +42,6 @@ abstract class ScoreAdResult {
     @AutoValue.Builder
     abstract static class Builder {
         abstract Builder setAdScore(Double adScore);
-
-        abstract Builder setCustomAudienceName(String customAudienceName);
-
-        abstract Builder setOwnerAppPackage(String ownerAppPackage);
-
-        abstract Builder setSeller(AdTechIdentifier value);
-
-        abstract Builder setCustomAudienceBuyer(AdTechIdentifier customAudienceOwner);
 
         abstract Builder setWinDebugReportUri(Uri winDebugReportUri);
 

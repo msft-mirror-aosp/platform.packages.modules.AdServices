@@ -184,6 +184,7 @@ public final class TopicsTables {
         String TAXONOMY_VERSION = "taxonomy_version";
         String MODEL_VERSION = "model_version";
         String TOPIC = "topic";
+        String LOGGED_TOPIC = "logged_topic";
     }
 
     /** Create Statement for the returned Topics table */
@@ -205,7 +206,9 @@ public final class TopicsTables {
                     + ReturnedTopicContract.MODEL_VERSION
                     + " INTEGER NOT NULL, "
                     + ReturnedTopicContract.TOPIC
-                    + " INTEGER NOT NULL"
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.LOGGED_TOPIC
+                    + " INTEGER"
                     + ")";
 
     /**

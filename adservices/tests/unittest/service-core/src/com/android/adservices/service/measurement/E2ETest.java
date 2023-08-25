@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.reporting.DebugReportSe
 import static com.android.adservices.service.measurement.reporting.EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH;
 
-import android.content.AttributionSource;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.database.Cursor;
@@ -122,7 +121,8 @@ public abstract class E2ETest {
                         "trigger_data",
                         "source_type",
                         "source_debug_key",
-                        "trigger_debug_key");
+                        "trigger_debug_key",
+                        "trigger_summary_bucket");
         String DOUBLE = "randomized_trigger_rate";
         String STRING_OR_ARRAY = "attribution_destination";
     }
@@ -198,6 +198,7 @@ public abstract class E2ETest {
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
         String ENROLL = "enroll";
+        String PLATFORM_AD_ID = "platform_ad_id";
     }
 
     private interface ApiConfigKeys {
@@ -207,8 +208,8 @@ public abstract class E2ETest {
                 "navigation_source_trigger_data_cardinality";
         String RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS =
                 "rate_limit_max_attribution_reporting_origins";
-        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN =
-                "max_destinations_per_source_site_reporting_origin";
+        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE =
+                "max_destinations_per_source_site_reporting_site";
         String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
                 "rate_limit_max_source_registration_reporting_origins";
         // System health params
@@ -256,9 +257,9 @@ public abstract class E2ETest {
                         Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
             }
             if (!json.isNull(ApiConfigKeys
-                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN)) {
+                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE)) {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource = json.getInt(
-                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN);
+                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE);
             } else {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource =
                         Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
@@ -333,11 +334,30 @@ public abstract class E2ETest {
             throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
-        String[] testDirectoryList = assetManager.list(testDirName);
-        for (String testFile : testDirectoryList) {
-            inputStreams.add(assetManager.open(testDirName + "/" + testFile));
+        List<String> dirPathList = new ArrayList<>(Collections.singletonList(testDirName));
+        List<String> testFileList = new ArrayList<>();
+        while (dirPathList.size() > 0) {
+            testDirName = dirPathList.remove(0);
+            String[] testAssets = assetManager.list(testDirName);
+            for (String testAsset : testAssets) {
+                if (isDirectory(testDirName + "/" + testAsset)) {
+                    dirPathList.add(testDirName + "/" + testAsset);
+                } else {
+                    inputStreams.add(assetManager.open(testDirName + "/" + testAsset));
+                    testFileList.add(testAsset);
+                }
+            }
         }
-        return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
+        return getTestCasesFrom(
+                inputStreams, testFileList.stream().toArray(String[]::new), preprocessor);
+    }
+
+    private static boolean isDirectory(String testAssetName) throws IOException {
+        String[] assetList = sContext.getAssets().list(testAssetName);
+        if (assetList.length > 0) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
@@ -428,12 +448,6 @@ public abstract class E2ETest {
         }
 
         return uriConfigMap;
-    }
-
-    // 'uid', the parameter passed to Builder(), is unimportant for this test; we only need the
-    // package name.
-    public static AttributionSource getAttributionSource(String source) {
-        return new AttributionSource.Builder(1).setPackageName(source).build();
     }
 
     public static InputEvent getInputEvent() {

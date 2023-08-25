@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Nagbibigay-daan sa isang application na i-access ang AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Access sa Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Nagbibigay-daan sa isang application na i-access ang Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Access sa AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Pinapayagan ang application na i-access ang AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Access sa App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Nagbibigay-daan sa isang application na i-access ang App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Access sa Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Nagbibigay-daan sa isang application na i-access ang enablement state API ng AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Access sa mga API ng AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Nagbibigay-daan sa isang application na i-access ang mga API ng AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android System"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privacy sa Ad"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Sumali sa beta ng privacy sa mga ad ng Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Nag-e-explore ang Android ng mga mas pribadong paraan para makapagpakita sa iyo ng mga ad ang mga app"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Matuto pa"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Mga app na na-block mo"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"I-reset ang data na iminumungkahi ng app"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Karaniwang tinatandaan ng mga ginagamit mong app ang mga bagay kung saan ka interesado para ma-personalize ang iyong karanasan. Puwede ring mag-store ang mga app ng impormasyon tungkol sa iyong mga paksa sa Android.\n\nHalimbawa, kung gumagamit ka ng app tungkol sa pagsasanay para sa marathon, posibleng tukuyin ng app na interesado ka sa running shoes. Sa ibang pagkakataon, kung gagamit ka ng ibang app, puwedeng magpakita ang app na iyon sa iyo ng ad para sa running shoes batay sa mungkahi ng naunang app.\n\nRegular na awtomatikong dine-delete ng Android ang data na iminumungkahi ng app. Posibleng lumabas ulit sa listahan ang isang app na ginamit mo ulit. O kaya, puwede kang mag-block ng app sa pagmumungkahi ng mga ad para sa iyo.\n\nSa iyong mga app, posibleng naka-personalize ang ad na nakikita mo, depende sa setting na ito, sa setting ng mga paksa ng ad, sa mga setting mo para sa advertising ID, at kung nagpe-personalize ng mga ad ang ginagamit mong app."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Available ang bagong feature ng privacy sa mga ad"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Available na ang bagong feature sa privacy sa mga ad"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Napakalimitadong impormasyon lang ang ibinabahagi sa pagitan ng mga app para tumulong sa pagsukat ng performance ng ad"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Maglulunsad kami ng bagong feature ng privacy sa ad na tinatawag na pagsukat sa ad. Ibinabahagi lang ng Android ang napakalimitadong impormasyon sa pagitan ng mga app, gaya ng kung kailan ipinakita ang isang ad sa iyo, para tulungan ang mga app na sukatin ang performance ng mga ad."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Puwede kang gumawa ng mga pagbabago sa mga setting ng privacy sa ad."</string>

@@ -22,6 +22,7 @@ import android.app.sdksandbox.IRequestSurfacePackageCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.ISharedPreferencesSyncCallback;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.os.Bundle;
@@ -54,6 +55,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName,
             IBinder clientApplicationThreadBinder,
             String sdkName,
+            SandboxLatencyInfo sandboxLatencyInfo,
             long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {}
@@ -107,6 +109,9 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName,
             long timeAppCalledSystemServer,
             ISdkSandboxProcessDeathCallback callback) {}
+
+    @Override
+    public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void logLatencyFromSystemServerToApp(String method, int latency) {}

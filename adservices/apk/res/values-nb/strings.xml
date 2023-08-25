@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Gir en app tilgang til AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"bruke Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Gir en app tilgang til Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Tilgang til AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Gir en app tilgang til AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"bruke App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Gir en app tilgang til App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"få tilgang til Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Gi en app tilgang til API-en for aktiveringstilstand for AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Tilgang til API-er for AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Gir en app tilgang til API-er for AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android-system"</string>
+    <string name="app_label" msgid="5844694701336604490">"Annonsepersonvern"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bli med i Android-betaversjonen for annonsepersonvern"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android utforsker flere private måter apper kan vise deg annonser på"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Finn ut mer"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tilbakestill dataene som er foreslått av apper"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er vanlig at apper du bruker, husker ting du er interessert i, for å gi deg en tilpasset opplevelse. Apper kan også lagre informasjon i Android om emnene dine.\n\nHvis du for eksempel bruker en app om maratontrening, kan appen fastslå at du er interessert i løpesko. Hvis du bruker en annen app senere, kan den appen vise deg en annonse for løpesko som ble foreslått av den første appen.\n\nAndroid sletter automatisk data fra appforslag regelmessig. Apper du bruker igjen, kan vises på listen igjen. Du kan også blokkere enkeltapper fra å foreslå annonser for deg.\n\nI apper kan annonser du ser, være personlig tilpasset avhengig av denne innstillingen, innstillingen for annonseemner, innstillingene for annonserings-ID og hvorvidt appen du bruker, har personlig tilpassede annonser."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"En ny funksjon for annonsepersonvern er tilgjengelig"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"En ny funksjon for annonsepersonvern er tilgjengelig nå"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Bare veldig begrenset informasjon deles mellom apper for å bidra til å måle annonseresultater."</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Nå lanserer vi en funksjon for annonsepersonvern som kalles annonsemåling. Android deler bare veldig begrenset informasjon mellom apper, for eksempel når du så en annonse, for å hjelpe apper med å måle annonseresultater."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Du kan endre personverninnstillingene for annonser."</string>

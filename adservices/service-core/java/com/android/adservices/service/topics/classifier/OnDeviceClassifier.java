@@ -234,6 +234,15 @@ public class OnDeviceClassifier implements Classifier {
         }
     }
 
+    List<Integer> getLabels() {
+        // Load assets if not loaded already.
+        if (!isLoaded()) {
+            load();
+        }
+
+        return mLabels;
+    }
+
     long getModelVersion() {
         // Load assets if not loaded already.
         if (!isLoaded()) {

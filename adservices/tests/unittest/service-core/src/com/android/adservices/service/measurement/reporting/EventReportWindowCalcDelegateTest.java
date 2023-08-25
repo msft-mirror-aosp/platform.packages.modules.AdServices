@@ -47,7 +47,19 @@ public class EventReportWindowCalcDelegateTest {
     private static final String VALID_2H_2D_WINDOW_CONFIG = "7200,172800";
     /** It's invalid because only 2 early reporting windows are permitted. */
     private static final String INVALID_1H_1D_2D_WINDOW_CONFIG = "3600,86400,172800";
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
+
+    private static final String EVENT_REPORT_WINDOWS_1_WINDOW_NO_START =
+            "{'end_times': [172800000]}";
+
+    private static final String EVENT_REPORT_WINDOWS_1_WINDOW_WITH_START =
+            "{ 'start_time': 86400000, 'end_times': [172800000]}";
+
+    private static final String EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START =
+            "{'end_times': [172800000, 432000000]}";
+
+    private static final String EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START =
+            "{'start_time': 86400000, 'end_times': [172800000, 432000000, 604800000, 864000000,"
+                    + " 1728000000]}";
 
     @Mock private Flags mFlags;
 
@@ -480,7 +492,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
-                eventTime + ONE_HOUR_IN_MILLIS + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                eventTime + TimeUnit.HOURS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
         assertEquals(
@@ -516,7 +528,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallCooldownWindow(expiry)
                         .build();
         assertEquals(
-                eventTime + ONE_HOUR_IN_MILLIS + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                eventTime + TimeUnit.HOURS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
                         eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
         assertEquals(
@@ -974,8 +986,9 @@ public class EventReportWindowCalcDelegateTest {
                         .setInstallAttributed(true)
                         .build();
         assertEquals(
-                sourceEventTime + TimeUnit.DAYS.toMillis(2)
-                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                sourceEventTime
+                        + TimeUnit.DAYS.toMillis(2)
+                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         source, triggerTime, EventSurfaceType.APP));
     }
@@ -1514,31 +1527,31 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
-        ReportSpec testObject1 =
-                new ReportSpec(SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3");
+        ReportSpec testObject1 = new ReportSpec(
+                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null);
         // Assertion
         assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataValue(0));
         assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataValue(2));
         assertEquals(new UnsignedLong(5L), testObject1.getTriggerDataValue(4));
         assertEquals(new UnsignedLong(7L), testObject1.getTriggerDataValue(6));
         assertEquals(
-                TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
                         0, 0, testObject1));
         assertEquals(
-                TimeUnit.DAYS.toMillis(2) + ONE_HOUR_IN_MILLIS,
+                TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
                         0, 1, testObject1));
         assertEquals(
-                TimeUnit.DAYS.toMillis(3) + ONE_HOUR_IN_MILLIS,
+                TimeUnit.DAYS.toMillis(3) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
                         0, 4, testObject1));
         assertEquals(
-                TimeUnit.DAYS.toMillis(30) + ONE_HOUR_IN_MILLIS,
+                TimeUnit.DAYS.toMillis(30) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
                         2, 0, testObject1));
         assertEquals(
-                TimeUnit.DAYS.toMillis(7) + ONE_HOUR_IN_MILLIS,
+                TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
                         1, 0, testObject1));
         assertThrows(
@@ -1546,5 +1559,329 @@ public class EventReportWindowCalcDelegateTest {
                 () ->
                         mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
                                 1, 5, testObject1));
+    }
+
+    @Test
+    public void getReportingTimeForNoising_flexLiteApi() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        long sourceTime = System.currentTimeMillis();
+        Source oneWindowNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source oneWindowWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source twoWindowsNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source fiveWindowsWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        oneWindowNoStart, 0, false));
+        // InstallCase doesn't affect the report time
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        oneWindowNoStart, 0, true));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        oneWindowWithStart, 0, false));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        twoWindowsNoStart, 0, false));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        twoWindowsNoStart, 1, false));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        fiveWindowsWithStart, 0, false));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        fiveWindowsWithStart, 1, false));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        fiveWindowsWithStart, 2, false));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        fiveWindowsWithStart, 3, false));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTimeForNoising(
+                        fiveWindowsWithStart, 4, false));
+    }
+
+    @Test
+    public void getReportingTime_flexLiteApi() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        long sourceTime = System.currentTimeMillis();
+        Source oneWindowNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source oneWindowWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source twoWindowsNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source fiveWindowsWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        oneWindowNoStart, sourceTime + 1, EventSurfaceType.APP));
+        // InstallCase doesn't affect the report time
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        oneWindowNoStart, sourceTime + 1, EventSurfaceType.APP));
+
+        // Trigger before start time
+        assertEquals(
+                -1,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        oneWindowWithStart, sourceTime + 1, EventSurfaceType.APP));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        oneWindowWithStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6),
+                        EventSurfaceType.APP));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        twoWindowsNoStart, sourceTime + 1, EventSurfaceType.APP));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        twoWindowsNoStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(3),
+                        EventSurfaceType.APP));
+
+        // Trigger before start time
+        assertEquals(
+                -1,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        fiveWindowsWithStart, sourceTime + 1, EventSurfaceType.APP));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        fiveWindowsWithStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6),
+                        EventSurfaceType.APP));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        fiveWindowsWithStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(5),
+                        EventSurfaceType.APP));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        fiveWindowsWithStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(6),
+                        EventSurfaceType.APP));
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        fiveWindowsWithStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(9),
+                        EventSurfaceType.APP));
+
+        assertEquals(
+                sourceTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        fiveWindowsWithStart,
+                        sourceTime + TimeUnit.DAYS.toMillis(15),
+                        EventSurfaceType.APP));
+    }
+
+    @Test
+    public void getMaxReportCount_flexLiteApi() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
+        long sourceTime = System.currentTimeMillis();
+        Source source10Reports =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setMaxEventLevelReports(10)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        assertEquals(10, mEventReportWindowCalcDelegate.getMaxReportCount(source10Reports, true));
+        assertEquals(10, mEventReportWindowCalcDelegate.getMaxReportCount(source10Reports, false));
+
+        Source sourceDefaultEvent =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+
+        assertEquals(
+                PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS,
+                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultEvent, true));
+        assertEquals(
+                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
+                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultEvent, false));
+
+        Source sourceDefaultNavigation =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+
+        assertEquals(
+                PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS,
+                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultNavigation, true));
+        assertEquals(
+                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
+                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultNavigation, false));
+    }
+
+    @Test
+    public void getReportingWindowCountForNoising_flexLiteApi() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
+        long sourceTime = System.currentTimeMillis();
+        Source defaultSourceEvent =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+
+        Source defaultSourceNavigation =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+
+        Source oneWindowNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source oneWindowWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_1_WINDOW_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source twoWindowsNoStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+        Source fiveWindowsWithStart =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .build();
+
+        assertEquals(
+                2,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        defaultSourceEvent, true));
+        assertEquals(
+                1,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        defaultSourceEvent, false));
+
+        assertEquals(
+                3,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        defaultSourceNavigation, true));
+        assertEquals(
+                3,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        defaultSourceNavigation, false));
+
+        // InstallCase doesn't affect the report count
+        assertEquals(
+                1,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        oneWindowNoStart, true));
+        assertEquals(
+                1,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        oneWindowNoStart, false));
+
+        assertEquals(
+                1,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        oneWindowWithStart, true));
+        assertEquals(
+                1,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        oneWindowWithStart, false));
+
+        assertEquals(
+                2,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        twoWindowsNoStart, true));
+        assertEquals(
+                2,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        twoWindowsNoStart, false));
+
+        assertEquals(
+                5,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        fiveWindowsWithStart, true));
+        assertEquals(
+                5,
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        fiveWindowsWithStart, false));
     }
 }

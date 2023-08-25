@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"অ্যাপ্লিকেশনকে AdServices Consent API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"অ্যাপ্লিকেশনকে Ad ID API অ্যাক্সেস করার অনুমতি দেয়।"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API-এ অ্যাক্সেস"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"এটি অ্যাপ্লিকেশনকে AdServices Cobalt Upload API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"অ্যাপ্লিকেশনকে App Set ID API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-এ অ্যাক্সেস দেয়"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"অ্যাপ্লিকেশনকে AdService এনাবেলমেন্ট স্টেট API অ্যাক্সেস করার অনুমতি দেয়।"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager’s API-এ অ্যাক্সেস করা"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager’s API অ্যাক্সেস করার জন্য কোনও একটি অ্যাপ্লিকেশনকে অনুমতি দেয়।"</string>
-    <string name="app_label" msgid="5985320129629013968">"Android সিস্টেম"</string>
+    <string name="app_label" msgid="5844694701336604490">"বিজ্ঞাপন সংক্রান্ত গোপনীয়তা"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-এর বিজ্ঞাপন সম্পর্কিত গোপনীয়তা বিটাতে যোগ দিন"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"আপনাকে বিজ্ঞাপন দেখাতে Android অ্যাপের জন্য আরও ব্যক্তিগত উপায় এক্সপ্লোর করছে"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"আরও জানুন"</string>
@@ -222,9 +224,9 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"আপনার ব্লক করা অ্যাপ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"অ্যাপের সাজেস্ট করা ডেটা রিসেট করুন"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"সাধারণত, আপনি যে অ্যাপ ব্যবহার করেন তা পছন্দমতো অভিজ্ঞতা দিতে আপনার আগ্রহের বিষয়গুলি মনে রাখে। এছাড়াও আপনার আগ্রহের বিষয়গুলি সম্পর্কে Android-এর মাধ্যমে অ্যাপ তথ্য সেভ করতে পারে।\n\nযেমন, আপনি ম্যারাথন প্রশিক্ষণ সম্পর্কে কোনও অ্যাপ ব্যবহার করলে, অ্যাপ সিদ্ধান্ত নিতে পারে যে আপনি দৌড়ানোর জুতোর বিষয়ে আগ্রহী। পরে, আপনি আলাদা কোনও অ্যাপ ব্যবহার করলে, সেই অ্যাপটি প্রথম অ্যাপের মাধ্যমে সাজেস্ট করা দৌড়ানোর জুতো সম্পর্কিত বিজ্ঞাপন দেখাতে পারে।\n\nAndroid নিয়মিত অ্যাপের মাধ্যমে সাজেস্ট করা ডেটা অটোমেটিক মুছে দেয়। আপনি অ্যাপ ব্যবহার করা চালিয়ে গেলে তবে এর ডেটা আবার তালিকায় অন্তর্ভুক্ত করা যেতে পারে। বা আপনার জন্য বিজ্ঞাপনের সাজেশন দেওয়া থেকে কোনও অ্যাপকে আটকাতে পারবেন।\n\nএই সেটিং, বিজ্ঞাপনের বিষয়ের সেটিং, আপনার বিজ্ঞাপন আইডি সেটিংস ও আপনার ব্যবহার করা অ্যাপের ক্ষেত্রে পছন্দ অনুযায়ী বিজ্ঞাপন ব্যবহার করা হচ্ছে কিনা, এই বিভিন্ন বিষয়ের উপর ভিত্তি করে আপনাকে আপনার পছন্দ অনুযায়ী বিজ্ঞাপন দেখানো হতে পারে।"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"নতুন বিজ্ঞাপন সম্পর্কিত গোপনীয়তা ফিচার উপলভ্য আছে"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"নতুন বিজ্ঞাপন সম্পর্কিত গোপনীয়তা ফিচার এখন উপলভ্য"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"অ্যাপগুলিকে বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপে সহায়তা করতে, Android, অ্যাপের মধ্যে খুব সীমিত তথ্য শুধু শেয়ার করে"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"আমরা \'বিজ্ঞাপন পরিমাপ\' নামের নতুন বিজ্ঞাপন সম্পর্কিত গোপনীয়তা ফিচার চালু করছি। অ্যাপগুলিকে বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপে সাহায্য করার জন্য Android, অ্যাপের মধ্যে খুব সীমিত তথ্য শুধু শেয়ার করে, যেমন আপনাকে যখন কোনও বিজ্ঞাপন দেখানো হয়।"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"আমরা বিজ্ঞাপন পরিমাপ নামের নতুন বিজ্ঞাপন সম্পর্কিত গোপনীয়তা ফিচার চালু করছি। বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করার জন্য সাহায্য করতে Android বিভিন্ন অ্যাপের মধ্যে শুধুমাত্র খুব সীমিত তথ্য শেয়ার করে, যেমন কোনও বিজ্ঞাপন আপনাকে কখন দেখানো হয়েছিল।"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"আপনি বিজ্ঞাপন গোপনীয়তা সেটিংসে পরিবর্তন করতে পারবেন।"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"আপনার ব্যবহৃত অ্যাপ তার বিজ্ঞাপনের পারফর্ম্যান্স পরিমাপ করার জন্য Android-এর কাছে তথ্য চাইতে পারে। Android, অ্যাপকে শুধু সীমিত ধরনের ডেটাই সংগ্রহ করার অনুমতি দেয়।"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"মিউজিক, খবর এবং খেলাধুলার মতো আকর্ষণীয় বিষয়গুলি তুলে ধরে এমন চিহ্নগুলির রঙিন ছবি"</string>

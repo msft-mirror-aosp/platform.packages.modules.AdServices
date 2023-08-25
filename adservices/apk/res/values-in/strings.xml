@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Mengizinkan aplikasi mengakses AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Akses ke Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Mengizinkan aplikasi mengakses Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Akses ke AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Mengizinkan aplikasi mengakses AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Akses ke App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Mengizinkan aplikasi mengakses App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Akses ke Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Mengizinkan aplikasi mengakses enablement state API AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Akses ke API AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Mengizinkan aplikasi mengakses API AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistem Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privasi Iklan"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bergabung ke privasi iklan Android beta"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android sedang mengembangkan cara yang lebih pribadi bagi aplikasi untuk menampilkan iklan kepada Anda"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Pelajari lebih lanjut"</string>
@@ -222,11 +224,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikasi yang Anda blokir"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reset data yang disarankan aplikasi"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikasi yang Anda gunakan biasanya mengingat hal-hal yang Anda minati untuk mempersonalisasi pengalaman Anda. Aplikasi juga dapat menyimpan informasi dengan Android tentang topik yang Anda suka.\n\nMisalnya, jika Anda menggunakan aplikasi untuk latihan maraton, aplikasi mungkin akan menyimpulkan bahwa Anda tertarik dengan sepatu lari. Nantinya, jika Anda menggunakan aplikasi lain, aplikasi tersebut dapat menampilkan iklan sepatu lari yang disarankan oleh aplikasi pertama.\n\nAndroid akan rutin menghapus otomatis data yang disarankan aplikasi. Aplikasi yang Anda gunakan lagi mungkin akan muncul kembali di daftar. Atau, Anda dapat memblokir aplikasi agar tidak menyarankan iklan untuk Anda.\n\nDi aplikasi, iklan yang Anda lihat mungkin telah dipersonalisasi, bergantung pada setelan ini, setelan topik iklan, setelan ID iklan Anda, dan apakah aplikasi Anda menggunakan iklan yang dipersonalisasi."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Fitur privasi iklan baru tersedia"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Fitur privasi iklan baru kini tersedia"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Hanya info yang sangat terbatas yang dibagikan antar-aplikasi untuk membantu mengukur performa iklan"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Kami meluncurkan fitur privasi iklan baru yang disebut pengukuran iklan. Android hanya membagikan informasi yang sangat terbatas antar-aplikasi, seperti saat iklan ditampilkan kepada Anda, untuk membantu aplikasi mengukur performa iklan."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Anda dapat mengubahnya di setelan privasi iklan."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android memungkinkan aplikasi mengumpulkan hanya jenis data terbatas."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android mengizinkan aplikasi mengumpulkan beberapa jenis data tertentu saja."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrasi simbol penuh warna yang menampilkan topik minat seperti musik, berita, dan olahraga"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrasi kunci dalam lingkaran yang penuh warna"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrasi hitam putih kecil yang menggambarkan sembilan titik membentuk persegi"</string>
@@ -304,7 +306,7 @@
     <string name="topic10071" msgid="1288722040962471254">"Mobil &amp; Kendaraan"</string>
     <string name="topic10072" msgid="9155509766616567261">"Truk &amp; Trailer Kargo"</string>
     <string name="topic10073" msgid="3748676231341513738">"Kendaraan Klasik"</string>
-    <string name="topic10074" msgid="2040911547161463227">"Kendaraan Modifikasi &amp; Sport"</string>
+    <string name="topic10074" msgid="2040911547161463227">"Kendaraan Modifikasi &amp; Performa Tinggi"</string>
     <string name="topic10075" msgid="1242538698445713796">"Harga Bahan Bakar &amp; Pengisian Bahan Bakar Kendaraan"</string>
     <string name="topic10076" msgid="8674225812339579627">"Kendaraan Bermotor (Menurut Jenis)"</string>
     <string name="topic10077" msgid="3577709810751953433">"Kendaraan Otonom"</string>

@@ -30,6 +30,8 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.DBAdSelectionFixture;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.FledgeRoomConverters;
@@ -40,6 +42,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+
+import java.util.HashSet;
 
 public class AdCounterHistogramUpdaterImplTest {
     private static final long AD_SELECTION_ID = 10;
@@ -218,6 +222,72 @@ public class AdCounterHistogramUpdaterImplTest {
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_PER_BUYER_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT));
+    }
+
+    @Test
+    public void testUpdateWinHistogram_nullDbAdSelectionDataThrows() {
+        assertThrows(
+                NullPointerException.class,
+                () -> mAdCounterHistogramUpdater.updateWinHistogram(/* dbAdSelection= */ null));
+    }
+
+    @Test
+    public void testUpdateWinHistogram_emptyCustomAudienceSignalsDoesNothing() {
+        mAdCounterHistogramUpdater.updateWinHistogram(
+                DBAdSelectionFixture.getValidDbAdSelectionBuilder()
+                        .setCustomAudienceSignals(null)
+                        .build());
+
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void testUpdateWinHistogram_nullAdCounterKeysDoesNothing() {
+        mAdCounterHistogramUpdater.updateWinHistogram(
+                DBAdSelectionFixture.getValidDbAdSelectionBuilder()
+                        .setAdCounterIntKeys(null)
+                        .build());
+
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void testUpdateWinHistogram_emptyAdCounterKeysDoesNothing() {
+        mAdCounterHistogramUpdater.updateWinHistogram(
+                DBAdSelectionFixture.getValidDbAdSelectionBuilder()
+                        .setAdCounterIntKeys(new HashSet<>())
+                        .build());
+
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void testUpdateWinHistogram_withAdCounterKeysPersists() {
+        final DBAdSelection validDbAdSelection =
+                DBAdSelectionFixture.getValidDbAdSelectionBuilder().build();
+
+        mAdCounterHistogramUpdater.updateWinHistogram(validDbAdSelection);
+
+        HistogramEvent.Builder expectedEventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                        .setBuyer(validDbAdSelection.getCustomAudienceSignals().getBuyer())
+                        .setCustomAudienceOwner(
+                                validDbAdSelection.getCustomAudienceSignals().getOwner())
+                        .setCustomAudienceName(
+                                validDbAdSelection.getCustomAudienceSignals().getName())
+                        .setTimestamp(validDbAdSelection.getCreationTimestamp())
+                        .setSourceApp(validDbAdSelection.getCallerPackageName());
+
+        for (Integer key : AdDataFixture.getAdCounterKeys()) {
+            verify(mFrequencyCapDaoMock)
+                    .insertHistogramEvent(
+                            eq(expectedEventBuilder.setAdCounterKey(key).build()),
+                            anyInt(),
+                            anyInt(),
+                            anyInt(),
+                            anyInt());
+        }
     }
 
     @Test

@@ -17,13 +17,15 @@
 package com.android.adservices.cobalt;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.HpkeJni;
 import com.android.cobalt.crypto.HpkeEncrypt;
 
 /** Wrapper around the HPKE JNI bindings to pass to Cobalt. */
-final class HpkeEncryptImpl implements HpkeEncrypt {
-    HpkeEncryptImpl() {}
+@VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+public final class HpkeEncryptImpl implements HpkeEncrypt {
+    public HpkeEncryptImpl() {}
 
     /**
      * Encrypt a byte string using the HPKE JNI wrapper.

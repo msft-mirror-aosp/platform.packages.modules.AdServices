@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API වෙත ප්‍රවේශය"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"AdServices Cobalt Upload API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API වෙත ප්‍රවේශ වන්න"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService හි සක්‍රිය කිරීමේ තත්ත්ව API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager හි API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"යෙදුමට AdServicesManager හි API වෙත ප්‍රවේශ වීමට ඉඩ දෙයි."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android පද්ධතිය"</string>
+    <string name="app_label" msgid="5844694701336604490">"දැන්වීම් පෞද්ගලිකත්වය"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android හි දැන්වීම් පෞද්ගලිකත්ව බීටා හා එක් වන්න"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android යෙදුම්වලට ඔබට දැන්වීම් පෙන්වීමට වඩා පෞද්ගලික ක්‍රම ගවේෂණ කරයි"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"තව දැන ගන්න"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ඔබ අවහිර කළ යෙදුම්"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"යෙදුම්-යෝජිත දත්ත යළි සකසන්න"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ඔබ භාවිතා කරන යෙදුම් ඔබේ අත්දැකීම පෞද්ගලීකරණය කිරීමට ඔබ කැමති දේවල් මතක තබා ගැනීම සාමාන්‍ය දෙයකි. යෙදුම්වලට ඔබේ මාතෘකා පිළිබඳ තොරතුරු Android සමග ගබඩා කිරීම ද කළ හැක.\n\nඋදාහරණයක් ලෙස, ඔබ මැරතන් පුහුණුව පිළිබඳ යෙදුමක් භාවිතා කරන්නේ නම්, ඔබ ධාවන සපත්තුවලට කැමති බව යෙදුම තීරණය කරයි. පසුව, ඔබ වෙනත් යෙදුමක් භාවිතා කරන්නේ නම්, එම යෙදුමට පළමු යෙදුම මගින් යෝජනා කරන ලද ධාවන සපත්තු සඳහා දැන්වීමක් පෙන්විය හැක.\n\nAndroid ස්වයංව යෙදුම්-යෝජිත දත්ත නිතිපතා මකා දමයි. ඔබ නැවත භාවිතා කරන යෙදුමක් ලැයිස්තුවෙහි නැවත දිස් විය හැක. නැතහොත් ඔබට ඔබ වෙනුවෙන් දැන්වීම් යෝජනා කිරීමෙන් යෙදුමක් අවහිර කළ හැක.\n\nඔබේ යෙදුම් තුළ, ඔබ දකින දැන්වීමක් මෙම සැකසීම, දැන්වීම් මාතෘකා සැකසීම, ඔබේ වෙළඳ ප්‍රචාරණ ID සැකසීම්, සහ යෙදුම ඔබ පෞද්ගලීකරණය කළ දැන්වීම් භාවිතා කරන ආකාරය මත පදනම්ව පෞද්ගලීකරණ කළ හැක."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"නව දැන්වීම් රහස්‍යතා විශේෂාංගය තිබේ"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංගය දැන් තිබේ"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"දැන්වීම් කාර්ය සාධනය මැනීමට උදවු කිරීමට යෙදුම් අතර බෙදා ගනු ලබන්නේ ඉතා සීමිත තතු පමණි"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"අපි දැන්වීම් මැනීම නමින් නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංගයක් දියත් කරන්නෙමු. Android යෙදුම්වලට දැන්වීම්වල ක්‍රියාකාරිත්වය මැනීමට උදවු කරමින්, ඔබට දැන්වීමක් පෙන්වූ විට වැනි ඉතා සීමිත තොරතුරු පමණක් යෙදුම් අතර බෙදා ගනී."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"ඔබට දැන්වීම් පෞද්ගලිකත්ව සැකසීම් තුළ වෙනස්කම් සිදු කළ හැක."</string>

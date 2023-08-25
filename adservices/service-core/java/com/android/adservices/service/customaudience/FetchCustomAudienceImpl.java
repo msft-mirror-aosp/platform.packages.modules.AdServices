@@ -53,6 +53,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -233,7 +234,8 @@ public class FetchCustomAudienceImpl {
     /** Adds a user to a fetched custom audience. */
     public void doFetchCustomAudience(
             @NonNull FetchAndJoinCustomAudienceInput request,
-            @NonNull FetchAndJoinCustomAudienceCallback callback) {
+            @NonNull FetchAndJoinCustomAudienceCallback callback,
+            @NonNull DevContext devContext) {
         try {
             // Failing fast and silently if fetchCustomAudience is disabled.
             if (!mFledgeFetchCustomAudienceEnabled) {
@@ -242,8 +244,8 @@ public class FetchCustomAudienceImpl {
             } else {
                 sLogger.v("fetchCustomAudience is enabled.");
                 // TODO(b/282017342): Evaluate correctness of futures chain.
-                filterAndValidateRequest(request)
-                        .transformAsync(this::performFetch, mExecutorService)
+                filterAndValidateRequest(request, devContext)
+                        .transformAsync(ignoredVoid -> performFetch(devContext), mExecutorService)
                         .transformAsync(this::validateResponse, mExecutorService)
                         .transformAsync(this::persistResponse, mExecutorService)
                         .addCallback(
@@ -284,7 +286,7 @@ public class FetchCustomAudienceImpl {
     }
 
     private FluentFuture<Void> filterAndValidateRequest(
-            @NonNull FetchAndJoinCustomAudienceInput input) {
+            @NonNull FetchAndJoinCustomAudienceInput input, @NonNull DevContext devContext) {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
@@ -301,7 +303,8 @@ public class FetchCustomAudienceImpl {
                                                         true,
                                                         mCallingAppUid,
                                                         API_NAME,
-                                                        FLEDGE_API_FETCH_CUSTOM_AUDIENCE);
+                                                        FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                                                        devContext);
                             } catch (Throwable t) {
                                 throw new FilterException(t);
                             }
@@ -322,7 +325,8 @@ public class FetchCustomAudienceImpl {
                         }));
     }
 
-    private ListenableFuture<AdServicesHttpClientResponse> performFetch(Void ignoredVoid) {
+    private ListenableFuture<AdServicesHttpClientResponse> performFetch(
+            @NonNull DevContext devContext) {
         sLogger.v("In fetchCustomAudience performFetch");
 
         // Optional fields as a json string.
@@ -343,6 +347,7 @@ public class FetchCustomAudienceImpl {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(mFetchUri)
+                        .setDevContext(devContext)
                         .build());
     }
 

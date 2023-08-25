@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Consent API។"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"ចូលប្រើប្រាស់ Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ Ad ID API។"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"សិទ្ធិ​ចូលប្រើ AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"អនុញ្ញាតឱ្យ​កម្មវិធី​ចូលប្រើ AdServices Cobalt Upload API។"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"ចូលប្រើប្រាស់ App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ App Set ID API។"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"សិទ្ធិចូលប្រើប្រាស់ Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើ API ស្ថានភាពនៃការបើករបស់ AdService។"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"ចូលប្រើ API របស់ AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើ API របស់ AdServicesManager។"</string>
-    <string name="app_label" msgid="5985320129629013968">"ប្រព័ន្ធ Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"ឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្ម"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"ចូលរួមកំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មរបស់ Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android កំពុងស្វែងរកវិធីដែលកាន់តែមានលក្ខណៈឯកជនសម្រាប់កម្មវិធី ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ស្វែងយល់បន្ថែម"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"កម្មវិធីដែលអ្នកបានទប់ស្កាត់"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"កំណត់ទិន្នន័យដែលបានណែនាំដោយកម្មវិធីឡើងវិញ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"វាជារឿងធម្មតាទេ ដែលកម្មវិធីដែលអ្នកប្រើចងចាំនូវអ្វីៗដែលអ្នកចាប់អារម្មណ៍ ដើម្បីកំណត់បទពិសោធន៍របស់អ្នកឱ្យមានលក្ខណៈផ្ទាល់ខ្លួន។ កម្មវិធីក៏អាចរក្សាទុកព័ត៌មានអំពីប្រធានបទរបស់អ្នកជាមួយ Android ផងដែរ។\n\nឧទាហរណ៍ ប្រសិនបើអ្នកប្រើកម្មវិធីអំពីការហ្វឹកហាត់រត់ម៉ារ៉ាតុង កម្មវិធីអាចនឹងសម្រេចថាអ្នកចាប់អារម្មណ៍លើស្បែកជើងសម្រាប់រត់។ ពេលក្រោយ ប្រសិនបើអ្នកប្រើកម្មវិធីផ្សេងមួយទៀត កម្មវិធីនោះអាចបង្ហាញអ្នកអំពីការផ្សាយពាណិជ្ជកម្មសម្រាប់ស្បែកជើងសម្រាប់រត់ដែលបានណែនាំដោយកម្មវិធីដំបូង។\n\nAndroid លុបទិន្នន័យដែលបានណែនាំដោយកម្មវិធីដោយស្វ័យប្រវត្តិជាប្រចាំ។ កម្មវិធីដែលអ្នកប្រើប្រាស់ម្ដងទៀតអាចនឹងបង្ហាញឡើងវិញនៅលើបញ្ជីនេះ។ ឬអ្នកអាច​ទប់ស្កាត់កម្មវិធីមិនឱ្យណែនាំការផ្សាយពាណិជ្ជកម្មដល់អ្នកបាន។\n\nនៅក្នុងកម្មវិធីរបស់អ្នក ការផ្សាយពាណិជ្ជកម្មដែលអ្នកមើលឃើញអាចត្រូវបានកំណត់ឱ្យមានលក្ខណៈផ្ទាល់ខ្លួន ដោយផ្អែកលើការ​កំណត់នេះ ការ​កំណត់ប្រធានបទនៃការផ្សាយពាណិជ្ជកម្ម ការ​កំណត់លេខកូដសម្គាល់​ការផ្សាយ​ពាណិជ្ជកម្មរបស់អ្នក និងថាតើកម្មវិធីដែលអ្នកកំពុងប្រើកំណត់ការផ្សាយពាណិជ្ជកម្មឱ្យមានលក្ខណៈផ្ទាល់ខ្លួនឬអត់។"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"មុខងារ​ឯកជនភាពនៃការ​ផ្សាយពាណិជ្ជកម្មថ្មីមានផ្ដល់ជូនហើយ"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"ឥឡូវនេះ មុខងារ​ឯកជនភាពនៃការ​ផ្សាយពាណិជ្ជកម្មថ្មីមានផ្ដល់ជូនហើយ"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"មានតែព័ត៌មានមួយចំនួនតូចប៉ុណ្ណោះត្រូវបានចែករំលែករវាងកម្មវិធីនានា ដើម្បីជួយវាស់ស្ទង់លទ្ធផលនៃការផ្សាយពាណិជ្ជកម្ម"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"យើងកំពុង​ដាក់ចេញ​មុខងារ​ឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មថ្មី ហៅថា​ការវាស់ស្ទង់​ការផ្សាយ​ពាណិជ្ជកម្ម។ Android ចែករំលែកតែព័ត៌មានមួយចំនួនតូចប៉ុណ្ណោះរវាងកម្មវិធីនានា ដូចជាពេលវេលាបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក ដើម្បីជួយកម្មវិធីវាស់ស្ទង់លទ្ធផលនៃការផ្សាយពាណិជ្ជកម្ម។"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"អ្នកអាចធ្វើការផ្លាស់ប្ដូរនៅក្នុងការកំណត់ឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្ម។"</string>

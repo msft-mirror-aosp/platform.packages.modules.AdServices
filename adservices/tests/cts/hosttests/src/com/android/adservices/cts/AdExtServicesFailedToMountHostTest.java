@@ -31,12 +31,12 @@ import org.junit.runner.RunWith;
 
 import java.util.regex.Pattern;
 
-/** Test to check if com.google.android.ext.adservices.api failed to mount */
+/** Test to check if com.google.android.ext.services failed to mount */
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class AdExtServicesFailedToMountHostTest implements IDeviceTest {
 
     private static String sWildcardString = ".*";
-    private static String sExtservicesString = "com\\.google\\.android\\.ext\\.adservices\\.api";
+    private static String sExtservicesString = "com\\.google\\.android\\.ext\\.services";
     private static String sFailedToMountString = "Failed to mount";
     private static String sNoSuchString = "No such file or directory";
 

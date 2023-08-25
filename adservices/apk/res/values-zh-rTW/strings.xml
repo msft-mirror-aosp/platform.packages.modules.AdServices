@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"允許應用程式存取 AdServices Topics API。"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API 存取權"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"允許應用程式存取 Ad ID API。"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"存取 AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"允許應用程式存取 AdServices Cobalt Upload API。"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API 存取權"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"允許應用程式存取 App Set ID API。"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API 存取權"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"允許應用程式存取 AdService 的啟用狀態 API。"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"存取 AdServicesManager 的 API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"允許應用程式存取 AdServicesManager 的 API。"</string>
-    <string name="app_label" msgid="5985320129629013968">"Android 系統"</string>
+    <string name="app_label" msgid="5844694701336604490">"廣告隱私權"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"加入 Android 廣告隱私權 Beta 版測試計畫"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android 正在探索如何透過更能保護隱私權的方式，讓應用程式向你顯示廣告"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"瞭解詳情"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"你封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式往往會記住你感興趣的主題，以便提供個人化的使用體驗。此外，應用程式也可將主題相關資訊儲存在 Android。\n\n舉例來說，如果你使用有關馬拉松訓練的應用程式，該應用程式可能會判斷你對跑鞋感興趣。假如你之後使用其他應用程式，當中可能會顯示馬拉松訓練應用程式建議的跑鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。你日後再度使用的應用程式可能會重新顯示在清單中。你也可以透過封鎖的方式禁止應用程式建議廣告。\n\n你可能會在應用程式中看到個人化廣告，這類廣告的顯示依據如下：這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"全新廣告隱私權功能已上線"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"全新廣告隱私權功能正式上線"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"評估廣告成效時，應用程式間只能分享有限的資料"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我們將推出「廣告評估」這項全新的廣告隱私權功能。Android 現在只會在應用程式間分享有限的資訊 (例如向使用者放送廣告的時段)，協助應用程式評估廣告成效。"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"你可以前往廣告隱私權設定進行變更。"</string>

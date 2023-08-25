@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -22,7 +24,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activitydelegates.TopicsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.TopicsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
@@ -33,6 +34,7 @@ import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsActivity extends AdServicesBaseActivity {
     private TopicsActionDelegate mActionDelegate;
+    private TopicsActivityActionDelegate mActivityActionDelegate;
 
     /** @return the action delegate for the activity. */
     public TopicsActionDelegate getActionDelegate() {
@@ -42,9 +44,16 @@ public class TopicsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!isUxStatesReady(this)) {
             initFragment();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        TopicsViewModel viewModel = new ViewModelProvider(this).get(TopicsViewModel.class);
+        viewModel.refresh();
     }
 
     @Override
@@ -75,7 +84,8 @@ public class TopicsActivity extends AdServicesBaseActivity {
     private void initActivity() {
         setContentView(R.layout.topics_activity);
         // no need to store since not using
-        new TopicsActivityActionDelegate(
-                this, new ViewModelProvider(this).get(TopicsViewModel.class));
+        mActivityActionDelegate =
+                new TopicsActivityActionDelegate(
+                        this, new ViewModelProvider(this).get(TopicsViewModel.class));
     }
 }

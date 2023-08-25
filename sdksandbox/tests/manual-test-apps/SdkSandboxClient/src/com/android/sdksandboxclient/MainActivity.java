@@ -152,7 +152,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        enableStrictMode();
+        // TODO(b/294188354): This is temporarily disabled to unblock testing. Re-enable later.
+        // enableStrictMode();
         super.onCreate(savedInstanceState);
 
         setAppTitle();
@@ -658,12 +659,16 @@ public class MainActivity extends AppCompatActivity {
                     builder.setPositiveButton(
                             "Create",
                             (dialog, which) -> {
-                                final int sizeInMb = Integer.parseInt(input.getText().toString());
-                                if (sizeInMb <= 0 || sizeInMb > 100) {
+                                final String inputString = input.getText().toString();
+                                if (inputString.isEmpty()
+                                        || inputString.length() > 3
+                                        || Integer.parseInt(inputString) <= 0
+                                        || Integer.parseInt(inputString) > 100) {
                                     logAndDisplayMessage(
                                             WARN, "Please provide a value between 1 and 100");
                                     return;
                                 }
+                                final Integer sizeInMb = Integer.parseInt(inputString);
                                 IBinder binder = mSandboxedSdk.getInterface();
                                 ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
 

@@ -49,6 +49,7 @@ android_test {
         "truth-prebuilt",
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "adservices-test-fixtures",
@@ -179,12 +180,13 @@ android_test {
     // configures. Add below line to address the issue.
     // See b/233124651 for details.
     compile_multilib: "both",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-test-fixtures",
+        "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -209,7 +211,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",
@@ -234,7 +236,7 @@ android_test {
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -257,6 +259,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 
@@ -271,7 +274,7 @@ android_test {
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -295,7 +298,7 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
+    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 

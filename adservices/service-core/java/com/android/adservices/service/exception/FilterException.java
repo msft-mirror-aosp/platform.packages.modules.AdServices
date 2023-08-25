@@ -56,6 +56,6 @@ public class FilterException extends RuntimeException {
             return AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
         }
 
-        return AdServicesStatusUtils.STATUS_UNSET;
+        return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
     }
 }

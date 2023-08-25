@@ -16,6 +16,9 @@
 
 package com.android.cobalt.data;
 
+import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
+import static com.android.cobalt.collect.ImmutableHelpers.toImmutableListMultimap;
+
 import static java.util.stream.Collectors.toMap;
 
 import android.annotation.NonNull;
@@ -23,11 +26,15 @@ import android.util.Log;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
+import com.google.cobalt.UnencryptedObservationBatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -48,11 +55,9 @@ public final class DataService {
     private final DaoBuildingBlocks mDaoBuildingBlocks;
 
     public DataService(@NonNull ExecutorService executor, @NonNull CobaltDatabase cobaltDatabase) {
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(cobaltDatabase);
+        this.mExecutorService = Objects.requireNonNull(executor);
+        this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
 
-        this.mExecutorService = executor;
-        this.mCobaltDatabase = cobaltDatabase;
         this.mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
     }
 
@@ -84,6 +89,43 @@ public final class DataService {
     public ListenableFuture<Instant> loggerEnabled(Instant currentTime) {
         return Futures.submit(
                 () -> mCobaltDatabase.runInTransaction(() -> loggerEnabledSync(currentTime)),
+                mExecutorService);
+    }
+
+    /**
+     * Generate the observations for Count aggregated events that have occurred for a report.
+     *
+     * <p>Observations are generated in a transaction to be sure that multiple observations aren't
+     * generated for the same event/data. The process is in one transaction:
+     *
+     * <ol>
+     *   <li>Read the last_sent_day_index for the report.
+     *   <li>Load the aggregated data for each day that needs observations to be generated.
+     *   <li>Call the ObservationGenerator to generate observations for each day.
+     *   <li>Store the observations in the database.
+     *   <li>Update the last_sent_day_index for the report.
+     * </ol>
+     *
+     * @param reportKey the report to get the Count aggregated data for
+     * @param mostRecentDayIndex the most recent day to check for aggregated events to send data for
+     * @param dayIndexLoggerEnabled the day index that the logger was enabled
+     * @param generator an ObservationGenerator to convert the CountEvent for a day into
+     *     observations
+     */
+    public ListenableFuture<Void> generateCountObservations(
+            ReportKey reportKey,
+            int mostRecentDayIndex,
+            int dayIndexLoggerEnabled,
+            ObservationGenerator generator) {
+        return Futures.submit(
+                () ->
+                        mCobaltDatabase.runInTransaction(
+                                () ->
+                                        generateCountObservationsSync(
+                                                reportKey,
+                                                mostRecentDayIndex,
+                                                dayIndexLoggerEnabled,
+                                                generator)),
                 mExecutorService);
     }
 
@@ -126,8 +168,8 @@ public final class DataService {
      * Update the aggregated data for a COUNT report in response to an event that occurred.
      *
      * <p>For the given report, dayIndex, systemProfile, and eventVector at the time of the event,
-     * check whether the DB already contains an entry. If so, add count to its aggregateValue and
-     * update the entry. If not, create a new entry with count as the aggregateValue. This only
+     * check whether the database already contains an entry. If so, add count to its aggregateValue
+     * and update the entry. If not, create a new entry with count as the aggregateValue. This only
      * supports the REPORT_ALL system profile selection policy.
      *
      * @param reportKey the report being aggregated
@@ -159,6 +201,49 @@ public final class DataService {
                 mExecutorService);
     }
 
+    /**
+     * Delete data from the database that is no longer needed.
+     *
+     * @param relevantReports reports which are in the registry and collected
+     * @param oldestDayIndex the oldest day index to keep aggregate data for
+     * @return a ListenableFuture to track the completion of this change
+     */
+    public ListenableFuture<Void> cleanup(
+            ImmutableList<ReportKey> relevantReports, int oldestDayIndex) {
+        return Futures.submit(
+                () ->
+                        mCobaltDatabase.runInTransaction(
+                                () -> {
+                                    mDaoBuildingBlocks.deleteOldAggregates(oldestDayIndex);
+                                    mDaoBuildingBlocks.deleteReports(
+                                            irrelevantReports(relevantReports));
+                                    mDaoBuildingBlocks.deleteUnusedSystemProfileHashes();
+                                }),
+                mExecutorService);
+    }
+
+    /**
+     * Get the observations that are waiting to be sent, sorted by the order they were added.
+     *
+     * @return the ordered obeservations
+     */
+    public ImmutableList<ObservationStoreEntity> getOldestObservationsToSend() {
+        return ImmutableList.copyOf(mDaoBuildingBlocks.queryOldestObservations());
+    }
+
+    /**
+     * Delete some sent observations from the database.
+     *
+     * @param observationIds the IDs of the observations that were successfully sent
+     */
+    public void removeSentObservations(List<Integer> observationIds) {
+        if (observationIds.isEmpty()) {
+            return;
+        }
+
+        mDaoBuildingBlocks.deleteByObservationId(observationIds);
+    }
+
     private void aggregateCountSync(
             ReportKey reportKey,
             int dayIndex,
@@ -169,7 +254,7 @@ public final class DataService {
         long systemProfileHash = SystemProfileEntity.getSystemProfileHash(systemProfile);
         mDaoBuildingBlocks.insertSystemProfile(
                 SystemProfileEntity.create(systemProfileHash, systemProfile));
-        mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(reportKey, dayIndex - 1));
+        mDaoBuildingBlocks.insertLastSentDayIndex(reportKey, dayIndex - 1);
 
         Optional<SystemProfileAndAggregateValue> existingSystemProfileAndAggregateValue =
                 mDaoBuildingBlocks.queryOneSystemProfileAndAggregateValue(
@@ -246,18 +331,96 @@ public final class DataService {
         long numEventVectors =
                 mDaoBuildingBlocks.queryCountEventVectors(reportKey, dayIndex, systemProfileHash);
         if (numEventVectors >= eventVectorBufferMax) {
-            if (Log.isLoggable(LOG_TAG, Log.WARN)) {
-                Log.w(
-                        LOG_TAG,
-                        String.format(
-                                Locale.US,
-                                "Dropping eventVector for report %s, due to exceeding "
-                                        + "event_vector_buffer_max %s",
-                                reportKey,
-                                eventVectorBufferMax));
-            }
+            logWarn(
+                    "Dropping eventVector for report %s, due to exceeding event_vector_buffer_max"
+                            + " %s",
+                    reportKey, eventVectorBufferMax);
             return false;
         }
         return true;
+    }
+
+    private void generateCountObservationsSync(
+            ReportKey reportKey,
+            int mostRecentDayIndex,
+            int dayIndexLoggerEnabled,
+            ObservationGenerator generator) {
+        // Read the aggregate store data that has already been sent.
+        int nextDayIndex =
+                nextDayIndexToAggregate(reportKey, mostRecentDayIndex, dayIndexLoggerEnabled);
+
+        ImmutableList.Builder<UnencryptedObservationBatch> generatedObservations =
+                ImmutableList.builder();
+
+        // Iterate over all outstanding days to generate data for, will be 1 under normal
+        // circumstances.
+        for (int dayIndex = nextDayIndex; dayIndex <= mostRecentDayIndex; dayIndex++) {
+            logInfo("Generating observations for day index %s for report %s", dayIndex, reportKey);
+            ImmutableListMultimap<SystemProfile, CountEvent> eventData =
+                    mDaoBuildingBlocks.queryCountEventsForDay(reportKey, dayIndex).stream()
+                            .collect(toImmutableListMultimap(CountEvent::systemProfile, e -> e));
+            ImmutableList<UnencryptedObservationBatch> batches =
+                    generator.generateObservations(dayIndex, eventData);
+            int numObservations =
+                    batches.stream()
+                            .mapToInt(UnencryptedObservationBatch::getUnencryptedObservationsCount)
+                            .sum();
+            logInfo(
+                    "Generated %s observations in %s observation batches for day index %s for"
+                            + " report %s",
+                    numObservations, batches.size(), dayIndex, reportKey);
+            generatedObservations.addAll(batches);
+        }
+
+        // Insert the observations and update the report with the day index data has been generated
+        // for.
+        mDaoBuildingBlocks.insertObservationBatches(generatedObservations.build());
+        mDaoBuildingBlocks.updateLastSentDayIndex(reportKey, mostRecentDayIndex);
+    }
+
+    private int nextDayIndexToAggregate(
+            ReportKey reportKey, int mostRecentDayIndex, int dayIndexLoggerEnabled) {
+        Optional<Integer> lastSentDayIndex = mDaoBuildingBlocks.queryLastSentDayIndex(reportKey);
+
+        if (lastSentDayIndex.isEmpty()) {
+            // Report is missing. Store it with most recent day index as last_sent_day_index, so it
+            // can be updated at the end of the observation generation.
+            mDaoBuildingBlocks.insertLastSentDayIndex(reportKey, mostRecentDayIndex);
+        }
+
+        // A new report requires the day index be greater than the most recently completed day index
+        // to prevent aggregation from happening in this run.
+        Integer nextDayIndex = lastSentDayIndex.orElse(mostRecentDayIndex);
+        nextDayIndex += 1;
+
+        // Only go back at most 4 days; older data is dropped by the server.
+        if (nextDayIndex < mostRecentDayIndex - 3) {
+            nextDayIndex = mostRecentDayIndex - 3;
+        }
+
+        // Don't generate data for days before the logger was enabled.
+        if (nextDayIndex < dayIndexLoggerEnabled) {
+            nextDayIndex = dayIndexLoggerEnabled;
+        }
+
+        return nextDayIndex;
+    }
+
+    private ImmutableList<ReportKey> irrelevantReports(ImmutableList<ReportKey> registryReports) {
+        return mDaoBuildingBlocks.queryReportKeys().stream()
+                .filter(r -> !registryReports.contains(r))
+                .collect(toImmutableList());
+    }
+
+    private static void logInfo(String format, Object... params) {
+        if (Log.isLoggable(LOG_TAG, Log.INFO)) {
+            Log.i(LOG_TAG, String.format(Locale.US, format, params));
+        }
+    }
+
+    private static void logWarn(String format, Object... params) {
+        if (Log.isLoggable(LOG_TAG, Log.WARN)) {
+            Log.w(LOG_TAG, String.format(Locale.US, format, params));
+        }
     }
 }

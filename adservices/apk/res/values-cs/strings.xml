@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Umožňuje aplikaci přístup k rozhraní AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Přístup k Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Umožňuje aplikaci přístup k Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Přístup k rozhraní AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Umožňuje aplikaci přístup k rozhraní AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Přístup k App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Umožňuje aplikaci přístup k App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Přístup k rozhraní Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Umožňuje aplikaci přístup k rozhraní API pro stav aktivování služby AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Přístup k rozhraním AdServicesManager API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Umožňuje aplikaci přístup k rozhraním AdServicesManager API."</string>
-    <string name="app_label" msgid="5985320129629013968">"Systém Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Ochrana soukromí v reklamách"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Zapojte se do testování beta verze od Androidu"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android zkoumá způsoby zobrazování reklam v aplikacích zajišťující vyšší ochranu soukromí"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Další informace"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Zablokované aplikace"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetovat data navrhovaná aplikacemi"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Je běžné, že si aplikace, které používáte, pamatují věci, které vás zajímají, aby vám mohly přizpůsobit prostředí. Aplikace mohou také ukládat informace o vašich tématech v systému Android. \n\nPokud například používáte aplikaci k tréninku na maraton, aplikace může určit, že se zajímáte o běžecké boty. Když později použijete jinou aplikaci, může se vám v ní zobrazit reklama na běžecké boty navržená první aplikací.\n\nData navrhovaná aplikacemi systém Android pravidelně automaticky maže. Aplikace, kterou použijete znovu, se může v seznamu opět objevit. Můžete také zakázat, aby vám konkrétní aplikace navrhovala reklamy.\n\nReklamy zobrazované v aplikacích mohou být personalizovány v závislosti na tomto nastavení, nastavení témat reklam, nastavení vašeho inzertního ID a na tom, zda aplikace personalizuje reklamy."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Je k dispozici nová funkce ochrany soukromí u reklam"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Je k dispozici nová funkce ochrany soukromí v reklamách"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Mezi aplikacemi jsou sdíleny jen velmi omezené informace, které umožňují měřit výkon reklam"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Spouštíme novou funkci ochrany soukromí v reklamách nazvanou „měření reklam“. Systém Android sdílí mezi aplikacemi pouze velmi omezené informace (například že vám byla zobrazena reklama), aby aplikace mohly měřit výkon reklam."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"V nastavení ochrany soukromí u reklam můžete provést změny."</string>
@@ -358,7 +360,7 @@
     <string name="topic10125" msgid="9170394261421539760">"Potravinářská výroba"</string>
     <string name="topic10126" msgid="2210146434071038904">"Automobilový průmysl"</string>
     <string name="topic10127" msgid="5503077037318678029">"Letecký průmysl"</string>
-    <string name="topic10128" msgid="285525650692719959">"Obchodní operace"</string>
+    <string name="topic10128" msgid="285525650692719959">"Obchodní činnost"</string>
     <string name="topic10129" msgid="3094691551566702427">"Pružné uspořádání práce"</string>
     <string name="topic10130" msgid="1922351409757117764">"Lidské zdroje"</string>
     <string name="topic10131" msgid="8598763405951029782">"Komerční pronájem"</string>

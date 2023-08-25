@@ -16,14 +16,18 @@
 
 package com.android.adservices.customaudience;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
+import android.adservices.customaudience.CustomAudienceManager;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.customaudience.LeaveCustomAudienceRequest;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -31,22 +35,27 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-public class CustomAudienceManagerTest {
+public final class CustomAudienceManagerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
@@ -62,10 +71,20 @@ public class CustomAudienceManagerTest {
 
     private String mPreviousAppAllowList;
 
+    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+    // Ignore tests when device is not at least S
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Skip the test if it runs on unsupported platforms.
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // TODO(b/294423183): refactor to use AdServicesFlagsSetterRule instead of PhFlagsFixture
+
     @Before
     public void setUp() throws TimeoutException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
@@ -76,23 +95,26 @@ public class CustomAudienceManagerTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
         // Disable API throttling
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
-        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
     }
 
     @After
     public void tearDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        // TODO(b/294423183): remove adoptShellPermission call once using AdServicesFlagsSetterRule
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 
@@ -184,10 +206,48 @@ public class CustomAudienceManagerTest {
                 count++;
             }
         }
-        assertTrue(succeed);
+        assertWithMessage("success()").that(succeed).isTrue();
 
         measureJoinCustomAudience("with-kill, 2nd call");
         measureLeaveCustomAudience("with-kill, 1st call");
         measureLeaveCustomAudience("with-kill, 2nd call");
+    }
+
+    @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
+    @Test
+    @RequiresLowRamDevice
+    public void testGetchAndJoinCustomAudience_lowRamDevice() {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
+
+        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.fetchAndJoinCustomAudience(
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                Uri.parse("https://buyer.example.com/fetch/ca"))
+                        .build(),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        receiver.assertFailure(IllegalStateException.class);
+    }
+
+    @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
+    @Test
+    @RequiresLowRamDevice
+    public void testLeaveCustomAudienceRequest_lowRamDevice() {
+        OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
+        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
+        assertWithMessage("manager").that(manager).isNotNull();
+
+        manager.leaveCustomAudience(
+                new LeaveCustomAudienceRequest.Builder()
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setName("D.H.A.R.M.A.")
+                        .build(),
+                CALLBACK_EXECUTOR,
+                receiver);
+
+        receiver.assertFailure(IllegalStateException.class);
     }
 }

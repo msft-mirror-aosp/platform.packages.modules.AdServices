@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /** Generates noised reports for the provided source. */
@@ -75,7 +76,7 @@ public class SourceNoiseHandler {
      */
     public List<Source.FakeReport> assignAttributionModeAndGenerateFakeReports(
             @NonNull Source source) {
-        Random rand = new Random();
+        ThreadLocalRandom rand = ThreadLocalRandom.current();
         double value = rand.nextDouble();
         if (value > getRandomAttributionProbability(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
@@ -144,10 +145,15 @@ public class SourceNoiseHandler {
 
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability(@NonNull Source source) {
+
         if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()
-                || mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()) {
+                || mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()
+                || (mFlags.getMeasurementFlexLiteAPIEnabled()
+                        && (source.getMaxEventLevelReports() != null
+                                || source.hasManualEventReportWindows()))) {
             return calculateNoiseDynamically(source);
         }
+        // TODO(b/290117352): Remove Hardcoded noise values
 
         // Both destinations are set and install attribution is supported
         if (!shouldReportCoarseDestinations(source)
@@ -189,7 +195,7 @@ public class SourceNoiseHandler {
                 mEventReportWindowCalcDelegate.getMaxReportCount(
                         source, isInstallDetectionEnabled(source));
         int destinationMultiplier = getDestinationTypeMultiplier(source);
-        int numberOfStates =
+        long numberOfStates =
                 Combinatorics.getNumberOfStarsAndBarsSequences(
                         /*numStars=*/ maxReportCount,
                         /*numBars=*/ triggerDataCardinality
@@ -203,6 +209,8 @@ public class SourceNoiseHandler {
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled(Source source) {
         return !shouldReportCoarseDestinations(source)
+                && !source.hasManualEventReportWindows()
+                && source.getMaxEventLevelReports() == null
                 && source.getSourceType() == Source.SourceType.EVENT
                 && source.hasWebDestinations()
                 && isInstallDetectionEnabled(source);
@@ -249,7 +257,8 @@ public class SourceNoiseHandler {
                 : source.getWebDestinations();
     }
 
-    private boolean isInstallDetectionEnabled(@NonNull Source source) {
+    /** Check if install detection is enabled for the source. */
+    public static boolean isInstallDetectionEnabled(@NonNull Source source) {
         return source.getInstallCooldownWindow() > 0 && source.hasAppDestinations();
     }
 

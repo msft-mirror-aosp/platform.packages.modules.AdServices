@@ -21,13 +21,13 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
-import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +39,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,6 +73,7 @@ public class Trigger {
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
+    @Nullable private Uri mAggregationCoordinatorOrigin;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -327,9 +329,8 @@ public class Trigger {
     }
 
     /**
-     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
-     * ID, to be matched with a web source's {@link Source#getDebugAdId()} value at the time of
-     * generating reports.
+     * Returns actual platform AdID from getAdId() on app trigger registration, to be matched with a
+     * web source's {@link Trigger#getDebugAdId()} value at the time of generating reports.
      */
     @Nullable
     public String getPlatformAdId() {
@@ -349,6 +350,12 @@ public class Trigger {
     /** Returns registration origin used to register the source */
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
+    }
+
+    /** Returns coordinator origin for aggregatable reports */
+    @Nullable
+    public Uri getAggregationCoordinatorOrigin() {
+        return mAggregationCoordinatorOrigin;
     }
 
     /**
@@ -504,7 +511,9 @@ public class Trigger {
         }
         Map<String, BigInteger> adtechBitMapping = new HashMap<>();
         JSONObject jsonObject = new JSONObject(mAdtechKeyMapping);
-        for (String key : jsonObject.keySet()) {
+        Iterator<String> keys = jsonObject.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
             // Remove "0x" prefix.
             String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
@@ -523,7 +532,7 @@ public class Trigger {
         if (mDestinationType == EventSurfaceType.APP) {
             return mAttributionDestination;
         } else {
-            Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
+            Optional<Uri> uri = WebAddresses.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
         }
     }
@@ -625,19 +634,19 @@ public class Trigger {
         }
 
         /** See {@link Trigger#isDebugReporting()} */
-        public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
+        public Builder setIsDebugReporting(boolean isDebugReporting) {
             mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
         /** See {@link Trigger#hasAdIdPermission()} */
-        public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
+        public Builder setAdIdPermission(boolean adIdPermission) {
             mBuilding.mAdIdPermission = adIdPermission;
             return this;
         }
 
         /** See {@link Trigger#hasArDebugPermission()} */
-        public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
+        public Builder setArDebugPermission(boolean arDebugPermission) {
             mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
@@ -697,10 +706,16 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Source#getRegistrationOrigin()} ()} */
+        /** See {@link Trigger#getRegistrationOrigin()} ()} */
         @NonNull
-        public Trigger.Builder setRegistrationOrigin(Uri registrationOrigin) {
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregationCoordinatorOrigin()} ()} */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
         }
 

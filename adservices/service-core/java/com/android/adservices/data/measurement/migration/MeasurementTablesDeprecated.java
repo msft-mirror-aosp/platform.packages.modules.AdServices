@@ -38,6 +38,7 @@ public final class MeasurementTablesDeprecated {
         String DEDUP_KEYS = "dedup_keys";
         String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
+        String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
     }
 
     // Private constructor to prevent instantiation.

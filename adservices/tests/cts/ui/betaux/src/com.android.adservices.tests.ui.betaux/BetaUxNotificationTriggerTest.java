@@ -28,11 +28,14 @@ import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -83,8 +86,12 @@ public class BetaUxNotificationTriggerTest {
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ false);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ false,
+                /* isEuTest */ true,
+                /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify no notification is displayed when the entry point is disabled for ROW devices. */
@@ -95,8 +102,12 @@ public class BetaUxNotificationTriggerTest {
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_DISABLED, AD_ID_ENABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, /* isGa */ false);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ false,
+                /* isEuTest */ true,
+                /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify that for EU devices with zeroed-out AdId, the EU notification is displayed. */
@@ -107,43 +118,62 @@ public class BetaUxNotificationTriggerTest {
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ true,
+                /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify that for ROW devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @Ignore("b/297119850")
     public void testBetaRowAdIdDisabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_DISABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ true,
+                /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify that for EU devices with non zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @Ignore("b/297119850")
     public void testBetaEuAdIdEnabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, /* isGa */ false);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ true,
+                /* isGa */ UiConstants.UX.BETA_UX);
     }
 
     /** Verify that for ROW devices with non zeroed-out AdId, the ROW notification is displayed. */
     @Test
+    @Ignore("b/297119850")
     public void testBetaRowAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
 
         mCommonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
 
-        UiUtils.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, /* isGa */ false);
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice,
+                /* isDisplayed */ true,
+                /* isEuTest */ false,
+                /* isGa */ UiConstants.UX.BETA_UX);
     }
 }

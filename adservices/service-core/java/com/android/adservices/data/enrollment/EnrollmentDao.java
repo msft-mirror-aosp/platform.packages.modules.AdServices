@@ -16,6 +16,10 @@
 
 package com.android.adservices.data.enrollment;
 
+import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.ContentValues;
 import android.content.Context;
@@ -24,6 +28,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -32,10 +37,15 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashSet;
@@ -52,22 +62,38 @@ public class EnrollmentDao implements IEnrollmentDao {
     private final SharedDbHelper mDbHelper;
     private final Context mContext;
     private final Flags mFlags;
-    @VisibleForTesting static final String ENROLLMENT_SHARED_PREF = "adservices_enrollment";
+    private final AdServicesLogger mLogger;
+    private final EnrollmentUtil mEnrollmentUtil;
     @VisibleForTesting static final String IS_SEEDED = "is_seeded";
+    static final int READ_QUERY = EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue();
+    static final int WRITE_QUERY =
+            EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue();
 
     @VisibleForTesting
     public EnrollmentDao(Context context, SharedDbHelper dbHelper, Flags flags) {
-        this(context, dbHelper, flags, flags.isEnableEnrollmentTestSeed());
+        this(
+                context,
+                dbHelper,
+                flags,
+                flags.isEnableEnrollmentTestSeed(),
+                AdServicesLoggerImpl.getInstance(),
+                EnrollmentUtil.getInstance(context));
     }
 
     @VisibleForTesting
     public EnrollmentDao(
-            Context context, SharedDbHelper dbHelper, Flags flags, boolean enableTestSeed) {
-        // performSeed is needed to force seeding in tests that do not have DEVICE_CONFIG
-        // permissions
+            Context context,
+            SharedDbHelper dbHelper,
+            Flags flags,
+            boolean enableTestSeed,
+            AdServicesLogger logger,
+            EnrollmentUtil enrollmentUtil) {
+        // enableTestSeed is needed
         mContext = context;
         mDbHelper = dbHelper;
         mFlags = flags;
+        mLogger = logger;
+        mEnrollmentUtil = enrollmentUtil;
         if (enableTestSeed) {
             seed();
         }
@@ -78,11 +104,15 @@ public class EnrollmentDao implements IEnrollmentDao {
     public static EnrollmentDao getInstance(@NonNull Context context) {
         synchronized (EnrollmentDao.class) {
             if (sSingleton == null) {
+                Flags flags = FlagsFactory.getFlags();
                 sSingleton =
                         new EnrollmentDao(
                                 context,
                                 SharedDbHelper.getInstance(context),
-                                FlagsFactory.getFlags());
+                                flags,
+                                flags.isEnableEnrollmentTestSeed(),
+                                AdServicesLoggerImpl.getInstance(),
+                                EnrollmentUtil.getInstance(context));
             }
             return sSingleton;
         }
@@ -92,16 +122,22 @@ public class EnrollmentDao implements IEnrollmentDao {
     boolean isSeeded() {
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-        return prefs.getBoolean(IS_SEEDED, false);
+        boolean isSeeded = prefs.getBoolean(IS_SEEDED, false);
+        LogUtil.v("Persisted enrollment database seed status: %s", isSeeded);
+        return isSeeded;
     }
 
     @VisibleForTesting
     void seed() {
+        LogUtil.v("Seeding enrollment database");
+
         if (!isSeeded()) {
             boolean success = true;
             for (EnrollmentData enrollment : PreEnrolledAdTechForTest.getList()) {
                 success = success && insert(enrollment);
             }
+
+            LogUtil.v("Enrollment database seed insertion status: %s", success);
 
             if (success) {
                 SharedPreferences prefs =
@@ -116,9 +152,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                 }
             }
         }
+
+        LogUtil.v("Enrollment database seeding complete");
     }
 
     private void unSeed() {
+        LogUtil.v("Clearing enrollment database seed status");
+
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
@@ -138,6 +178,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         if (db == null) {
             return null;
         }
+
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -160,13 +201,20 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+        int buildId = mEnrollmentUtil.getBuildId();
         boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
         Optional<Uri> registrationBaseUri =
-                originMatch ? Web.originAndScheme(url) : Web.topPrivateDomainAndScheme(url);
+                originMatch ? WebAddresses.originAndScheme(url)
+                        : WebAddresses.topPrivateDomainAndScheme(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (!registrationBaseUri.isPresent() || db == null) {
+        if (!registrationBaseUri.isPresent()) {
             return null;
         }
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
+            return null;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
 
         String selectionQuery =
                 getAttributionUrlSelection(
@@ -180,7 +228,6 @@ public class EnrollmentDao implements IEnrollmentDao {
                                         .ATTRIBUTION_TRIGGER_REGISTRATION_URL,
                                 registrationBaseUri.get(),
                                 /* isSiteMatch = */ !originMatch);
-
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -193,6 +240,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 LogUtil.d("Failed to match enrollment for url \"%s\"", url);
+                mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
 
@@ -206,9 +254,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 data.getAttributionTriggerRegistrationUrl(),
                                 registrationBaseUri,
                                 originMatch)) {
+                    mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
                     return data;
                 }
             }
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
             return null;
         }
     }
@@ -227,8 +277,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         for (String uri : enrolledUris) {
             Optional<Uri> enrolledBaseUri =
                     originMatch
-                            ? Web.originAndScheme(Uri.parse(uri))
-                            : Web.topPrivateDomainAndScheme(Uri.parse(uri));
+                            ? WebAddresses.originAndScheme(Uri.parse(uri))
+                            : WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }
@@ -265,11 +315,15 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        int buildId = mEnrollmentUtil.getBuildId();
         String adTechIdentifierString = adTechIdentifier.toString();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
+
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -288,6 +342,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 LogUtil.d(
                         "Failed to match enrollment for ad tech identifier \"%s\"",
                         adTechIdentifierString);
+                mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
 
@@ -308,6 +363,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                                     "Found positive match RBR URL \"%s\" for ad tech identifier"
                                             + " \"%s\"",
                                     rbrUriString, adTechIdentifierString);
+                            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                             return potentialMatch;
                         }
@@ -319,7 +375,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     }
                 }
             }
-
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
             return null;
         }
     }
@@ -327,12 +383,14 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @NonNull
     public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
+        int buildId = mEnrollmentUtil.getBuildId();
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
-
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return enrolledAdTechIdentifiers;
         }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
 
         try (Cursor cursor =
                 db.query(
@@ -392,10 +450,14 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         String topLevelDomain = subdomains[subdomains.length - 1];
 
+        int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
+
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -414,6 +476,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 LogUtil.d(
                         "Failed to match enrollment for URI \"%s\" with top level domain \"%s\"",
                         originalUri, topLevelDomain);
+                mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
 
@@ -436,6 +499,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                             LogUtil.v(
                                     "Found positive match RBR URL \"%s\" for given URI \"%s\"",
                                     rbrUriString, originalUri);
+                            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                             // AdTechIdentifiers are currently expected to only contain eTLD+1
                             return new Pair<>(
@@ -450,6 +514,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 }
             }
 
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
             return null;
         }
     }
@@ -460,10 +525,14 @@ public class EnrollmentDao implements IEnrollmentDao {
         if (sdkName.contains(" ") || sdkName.contains(",")) {
             return null;
         }
+        int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, true, buildId);
+
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -479,20 +548,58 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 LogUtil.d("Failed to match enrollment for sdk \"%s\"", sdkName);
+                mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
             cursor.moveToNext();
             return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
         }
     }
 
     @Override
+    public Long getEnrollmentRecordsCount() {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return null;
+        }
+        Long count =
+                DatabaseUtils.queryNumEntries(db, EnrollmentTables.EnrollmentDataContract.TABLE);
+        return count;
+    }
+
+    @Override
+    public int getEnrollmentRecordCountForLogging() {
+        int limitedLoggingEnabled = -2;
+        int dbError = -1;
+        if (mFlags.getEnrollmentEnableLimitedLogging()) {
+            return limitedLoggingEnabled;
+        }
+        Long count = getEnrollmentRecordsCount();
+        if (count == null) {
+            return dbError;
+        }
+        return count.intValue();
+    }
+
+    @Override
     public boolean insert(EnrollmentData enrollmentData) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
+            int buildId = mEnrollmentUtil.getBuildId();
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
+        try {
+            insertToDb(enrollmentData, db);
+        } catch (SQLException e) {
+            LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
 
+    private void insertToDb(EnrollmentData enrollmentData, SQLiteDatabase db) throws SQLException {
         ContentValues values = new ContentValues();
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
@@ -517,6 +624,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 String.join(" ", enrollmentData.getEncryptionKeyUrl()));
+        LogUtil.d("Inserting Enrollment record. ID : \"%s\"", enrollmentData.getEnrollmentId());
         try {
             db.insertWithOnConflict(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -524,19 +632,24 @@ public class EnrollmentDao implements IEnrollmentDao {
                     values,
                     SQLiteDatabase.CONFLICT_REPLACE);
         } catch (SQLException e) {
-            LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
-            return false;
+            int buildId = mEnrollmentUtil.getBuildId();
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
+            throw e;
         }
-        return true;
+        int buildId = mEnrollmentUtil.getBuildId();
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, true, buildId);
     }
 
     @Override
     public boolean delete(String enrollmentId) {
         Objects.requireNonNull(enrollmentId);
+        int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
+
         try {
             db.delete(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -544,20 +657,28 @@ public class EnrollmentDao implements IEnrollmentDao {
                     new String[] {enrollmentId});
         } catch (SQLException e) {
             LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, true, buildId);
         return true;
     }
 
     /** Deletes the whole EnrollmentData table. */
     @Override
     public boolean deleteAll() {
+        boolean success = false;
+        int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            return false;
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
+            return success;
         }
 
-        boolean success = false;
         // Handle this in a transaction.
         db.beginTransaction();
         try {
@@ -566,8 +687,55 @@ public class EnrollmentDao implements IEnrollmentDao {
             unSeed();
             // Mark the transaction successful.
             db.setTransactionSuccessful();
+        } catch (SQLiteException e) {
+            LogUtil.e("Failed to perform delete all on EnrollmentData" + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
         } finally {
             db.endTransaction();
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
+        return success;
+    }
+
+    @Override
+    public boolean overwriteData(List<EnrollmentData> newEnrollments) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return false;
+        }
+
+        boolean success = false;
+        db.beginTransaction();
+        try {
+            String[] ids =
+                    newEnrollments.stream()
+                            .map(EnrollmentData::getEnrollmentId)
+                            .toArray(String[]::new);
+
+            db.delete(
+                    EnrollmentTables.EnrollmentDataContract.TABLE,
+                    EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " NOT IN (?)",
+                    new String[] {String.join(",", ids)});
+
+            for (EnrollmentData enrollmentData : newEnrollments) {
+                insertToDb(enrollmentData, db);
+            }
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+            unSeed();
+            success = true;
+        } catch (SQLException e) {
+            LogUtil.e("Failed to overwrite EnrollmentData." + e.getMessage());
+        } finally {
+            db.endTransaction();
+        }
+        // TODO (b/289506805) Look at extracting Seeding logic out of EnrollmentDao
+        if (mFlags.isEnableEnrollmentTestSeed()) {
+            seed();
         }
         return success;
     }

@@ -25,6 +25,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -113,7 +114,11 @@ public class TriggerSpec {
         return json;
     }
 
-    private static <T extends Comparable<T>> boolean isStrictIncreasing(List<T> list) {
+    /** Util function to check if the provided list values are in strictly increasing order. */
+    public static <T extends Comparable<T>> boolean isStrictIncreasing(List<T> list) {
+        if (list.size() < 2) {
+            return true;
+        }
         for (int i = 1; i < list.size(); i++) {
             if (list.get(i).compareTo(list.get(i - 1)) <= 0) {
                 return false;
@@ -128,9 +133,16 @@ public class TriggerSpec {
         VALUE_SUM
     }
 
-    private static ArrayList<Long> getLongArrayFromJSON(JSONObject json, String key)
+    /**
+     * Parses long JSONArray into List<Long>
+     *
+     * @param json parent jsonObject
+     * @param key key for the JSON Array
+     * @return the parsed List<Long>
+     */
+    public static List<Long> getLongArrayFromJSON(JSONObject json, String key)
             throws JSONException {
-        ArrayList<Long> result = new ArrayList<>();
+        List<Long> result = new ArrayList<>();
         JSONArray valueArray = json.getJSONArray(key);
         for (int i = 0; i < valueArray.length(); i++) {
             result.add(valueArray.getLong(i));
@@ -138,29 +150,21 @@ public class TriggerSpec {
         return result;
     }
 
-    private static ArrayList<UnsignedLong> getTriggerDataArrayFromJSON(JSONObject json, String key)
+    /**
+     * Parses long JSONArray into List<UnsignedLong>
+     *
+     * @param json parent jsonObject
+     * @param key key for the JSON Array
+     * @return a list of UnsignedLong
+     */
+    public static List<UnsignedLong> getTriggerDataArrayFromJSON(JSONObject json, String key)
             throws JSONException {
-        ArrayList<UnsignedLong> result = new ArrayList<>();
+        List<UnsignedLong> result = new ArrayList<>();
         JSONArray valueArray = json.getJSONArray(key);
         for (int i = 0; i < valueArray.length(); i++) {
             result.add(new UnsignedLong(valueArray.getString(i)));
         }
         return result;
-    }
-
-    private void validateParameters() {
-        if (!isStrictIncreasing(mEventReportWindowsEnd)) {
-            throw new IllegalArgumentException(
-                    ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS
-                            + " not increasing");
-        }
-        if (!isStrictIncreasing(mSummaryBucket)) {
-            throw new IllegalArgumentException(
-                    ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS + " not increasing");
-        }
-        if (mEventReportWindowsStart < 0) {
-            mEventReportWindowsStart = 0L;
-        }
     }
 
     /** */
@@ -177,51 +181,86 @@ public class TriggerSpec {
             this.setTriggerData(
                     getTriggerDataArrayFromJSON(
                             jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
-            if (mBuilding.mTriggerData.size()
-                    > PrivacyParams.getMaxFlexibleEventTriggerDataCardinality()) {
-                throw new IllegalArgumentException(
-                        "Trigger Data Cardinality Exceeds "
-                                + PrivacyParams.getMaxFlexibleEventTriggerDataCardinality());
-            }
-            JSONObject jsonReportWindows =
-                    jsonObject.getJSONObject(
-                            ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
-            if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
-                this.setEventReportWindowsStart(
-                        jsonReportWindows.getLong(
-                                ReportSpecUtil.FlexEventReportJsonKeys.START_TIME));
-            }
-            this.setEventReportWindowsEnd(
-                    getLongArrayFromJSON(
-                            jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIME));
-            if (mBuilding.mEventReportWindowsEnd.size()
-                    > PrivacyParams.getMaxFlexibleEventReportingWindows()) {
-                throw new IllegalArgumentException("Number of Reporting Windows Exceeds Limit");
+            if (!jsonObject.isNull(ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
+                JSONObject jsonReportWindows =
+                        jsonObject.getJSONObject(
+                                ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
+                if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
+                    this.setEventReportWindowsStart(
+                            jsonReportWindows.getLong(
+                                    ReportSpecUtil.FlexEventReportJsonKeys.START_TIME));
+                }
+                this.setEventReportWindowsEnd(
+                        getLongArrayFromJSON(
+                                jsonReportWindows,
+                                ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES));
             }
 
             if (!jsonObject.isNull(
                     ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
-                try {
-                    SummaryOperatorType op =
-                            SummaryOperatorType.valueOf(
-                                    jsonObject
-                                            .getString(
-                                                    ReportSpecUtil.FlexEventReportJsonKeys
-                                                            .SUMMARY_WINDOW_OPERATOR)
-                                            .toUpperCase());
-                    this.setSummaryWindowOperator(op);
-                } catch (IllegalArgumentException e) {
-                    // if a summary window operator is defined, but not in the pre-defined list, it
-                    // will throw to exception.
-                    throw new IllegalArgumentException(
-                            ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR
-                                    + " invalid");
-                }
+                this.setSummaryWindowOperator(
+                        SummaryOperatorType.valueOf(
+                                jsonObject
+                                        .getString(
+                                                ReportSpecUtil.FlexEventReportJsonKeys
+                                                        .SUMMARY_WINDOW_OPERATOR)
+                                        .toUpperCase()));
             }
-            this.setSummaryBucket(
-                    getLongArrayFromJSON(
-                            jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
-            mBuilding.validateParameters();
+            if (!jsonObject.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+                this.setSummaryBucket(
+                        getLongArrayFromJSON(
+                                jsonObject,
+                                ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
+            }
+        }
+
+        public Builder(JSONObject jsonObject, long defaultStart, List<Long> defaultWindowEnds)
+                throws JSONException, IllegalArgumentException {
+            mBuilding = new TriggerSpec();
+            mBuilding.mSummaryWindowOperator = SummaryOperatorType.COUNT;
+            mBuilding.mEventReportWindowsStart = defaultStart;
+            mBuilding.mSummaryBucket = new ArrayList<>();
+            mBuilding.mEventReportWindowsEnd = defaultWindowEnds;
+
+            this.setTriggerData(
+                    getTriggerDataArrayFromJSON(
+                            jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
+            if (!jsonObject.isNull(ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
+                JSONObject jsonReportWindows =
+                        jsonObject.getJSONObject(
+                                ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
+                if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
+                    this.setEventReportWindowsStart(
+                            TimeUnit.SECONDS.toMillis(
+                                    jsonReportWindows.getLong(
+                                            ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)));
+                }
+
+                this.setEventReportWindowsEnd(
+                        getLongArrayFromJSON(
+                                        jsonReportWindows,
+                                        ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES)
+                                .stream()
+                                .map(TimeUnit.SECONDS::toMillis)
+                                .collect(Collectors.toList()));
+            }
+
+            if (!jsonObject.isNull(
+                    ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+                this.setSummaryWindowOperator(
+                        SummaryOperatorType.valueOf(
+                                jsonObject
+                                        .getString(
+                                                ReportSpecUtil.FlexEventReportJsonKeys
+                                                        .SUMMARY_WINDOW_OPERATOR)
+                                        .toUpperCase()));
+            }
+            if (!jsonObject.isNull(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+                this.setSummaryBucket(
+                        getLongArrayFromJSON(
+                                jsonObject,
+                                ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
+            }
         }
 
         /** See {@link TriggerSpec#getTriggerData()} ()}. */

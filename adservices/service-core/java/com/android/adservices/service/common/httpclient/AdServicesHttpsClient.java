@@ -17,15 +17,19 @@
 package com.android.adservices.service.common.httpclient;
 
 import android.adservices.exceptions.AdServicesNetworkException;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -52,6 +56,8 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +67,10 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * This is an HTTPS client to be used by the PP API services. The primary uses of this client
@@ -152,28 +162,61 @@ public class AdServicesHttpsClient {
     }
 
     @NonNull
-    private HttpsURLConnection setupConnection(@NonNull URL url) throws IOException {
+    private HttpsURLConnection setupConnection(@NonNull URL url, @NonNull DevContext devContext)
+            throws IOException {
         Objects.requireNonNull(url);
-
+        Objects.requireNonNull(devContext);
         // We validated that the URL is https in toUrl
         HttpsURLConnection urlConnection = (HttpsURLConnection) openUrl(url);
         urlConnection.setConnectTimeout(mConnectTimeoutMs);
         urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
+        if (WebAddresses.isLocalhost(Uri.parse(url.toString()))
+                && devContext.getDevOptionsEnabled()) {
+            LogUtil.v("Using unsafe HTTPS");
+            urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
+        }
         urlConnection.setInstanceFollowRedirects(true);
         return urlConnection;
     }
 
     @NonNull
-    private HttpsURLConnection setupPostConnectionWithPlainText(URL url) throws IOException {
+    private HttpsURLConnection setupPostConnectionWithPlainText(
+            @NonNull URL url, @NonNull DevContext devContext) throws IOException {
         Objects.requireNonNull(url);
-        HttpsURLConnection urlConnection = setupConnection(url);
+        Objects.requireNonNull(devContext);
+        HttpsURLConnection urlConnection = setupConnection(url, devContext);
         urlConnection.setRequestMethod("POST");
         urlConnection.setRequestProperty("Content-Type", "text/plain");
         urlConnection.setDoOutput(true);
         return urlConnection;
     }
 
+    @SuppressLint({"TrustAllX509TrustManager", "CustomX509TrustManager"})
+    private static SSLSocketFactory getUnsafeSslSocketFactory() {
+        try {
+            TrustManager[] bypassTrustManagers =
+                    new TrustManager[] {
+                        new X509TrustManager() {
+                            public X509Certificate[] getAcceptedIssuers() {
+                                return new X509Certificate[0];
+                            }
+
+                            public void checkClientTrusted(
+                                    X509Certificate[] chain, String authType) {}
+
+                            public void checkServerTrusted(
+                                    X509Certificate[] chain, String authType) {}
+                        }
+                    };
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, bypassTrustManagers, new SecureRandom());
+            return sslContext.getSocketFactory();
+        } catch (Exception e) {
+            LogUtil.e(e, "getUnsafeSslSocketFactory caught exception");
+            return null;
+        }
+    }
     /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
@@ -181,9 +224,35 @@ public class AdServicesHttpsClient {
      * @return a string containing the fetched payload
      */
     @NonNull
-    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(@NonNull Uri uri) {
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
+            @NonNull Uri uri, @NonNull DevContext devContext) {
         LogUtil.v("Fetching payload from uri: " + uri);
-        return fetchPayload(AdServicesHttpClientRequest.builder().setUri(uri).build());
+        return fetchPayload(
+                AdServicesHttpClientRequest.builder()
+                        .setUri(uri)
+                        .setDevContext(devContext)
+                        .build());
+    }
+
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload.
+     *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @param headers keys of the headers we want in the response
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
+            @NonNull Uri uri,
+            @NonNull ImmutableSet<String> headers,
+            @NonNull DevContext devContext) {
+        LogUtil.v("Fetching payload from uri: " + uri + " with headers: " + headers.toString());
+        return fetchPayload(
+                AdServicesHttpClientRequest.builder()
+                        .setUri(uri)
+                        .setResponseHeaderKeys(headers)
+                        .setDevContext(devContext)
+                        .build());
     }
 
     /**
@@ -201,7 +270,9 @@ public class AdServicesHttpsClient {
                 "Fetching payload for request: uri: "
                         + request.getUri()
                         + " use cache: "
-                        + request.getUseCache());
+                        + request.getUseCache()
+                        + " dev context: "
+                        + request.getDevContext().getDevOptionsEnabled());
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(
@@ -217,7 +288,7 @@ public class AdServicesHttpsClient {
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
             AdServicesHttpClientRequest request)
-            throws IOException {
+            throws IOException, AdServicesNetworkException {
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (request.getUseCache()) {
@@ -230,7 +301,7 @@ public class AdServicesHttpsClient {
         int httpTraceCookie = Tracing.beginAsyncSection(Tracing.HTTP_REQUEST);
         HttpsURLConnection urlConnection;
         try {
-            urlConnection = setupConnection(url);
+            urlConnection = setupConnection(url, request.getDevContext());
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
@@ -243,11 +314,12 @@ public class AdServicesHttpsClient {
             for (Map.Entry<String, String> entry : request.getRequestProperties().entrySet()) {
                 urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
             }
-            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
-            inputStream = new BufferedInputStream(urlConnection.getInputStream());
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
+            Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
             int responseCode = urlConnection.getResponseCode();
+            LogUtil.v("Received %s response status code.", responseCode);
             if (isSuccessfulResponse(responseCode)) {
+                inputStream = new BufferedInputStream(urlConnection.getInputStream());
                 String responseBody =
                         fromInputStream(inputStream, urlConnection.getContentLengthLong());
                 Map<String, List<String>> responseHeadersMap =
@@ -310,7 +382,8 @@ public class AdServicesHttpsClient {
      *
      * @param uri The URI to perform the GET request on.
      */
-    public ListenableFuture<Void> getAndReadNothing(@NonNull Uri uri) {
+    public ListenableFuture<Void> getAndReadNothing(
+            @NonNull Uri uri, @NonNull DevContext devContext) {
         Objects.requireNonNull(uri);
 
         return ClosingFuture.from(mExecutorService.submit(() -> mUriConverter.toUrl(uri)))
@@ -318,18 +391,23 @@ public class AdServicesHttpsClient {
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doGetAndReadNothing(url, closer))),
+                                                () ->
+                                                        doGetAndReadNothing(
+                                                                url, closer, devContext))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private Void doGetAndReadNothing(@NonNull URL url, @NonNull ClosingFuture.DeferredCloser closer)
-            throws IOException {
+    private Void doGetAndReadNothing(
+            @NonNull URL url,
+            @NonNull ClosingFuture.DeferredCloser closer,
+            @NonNull DevContext devContext)
+            throws IOException, AdServicesNetworkException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
         try {
-            urlConnection = setupConnection(url);
+            urlConnection = setupConnection(url, devContext);
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
@@ -360,7 +438,8 @@ public class AdServicesHttpsClient {
      * @param uri to do the POST request on
      * @param requestBody Attached to the POST request.
      */
-    public ListenableFuture<Void> postPlainText(@NonNull Uri uri, @NonNull String requestBody) {
+    public ListenableFuture<Void> postPlainText(
+            @NonNull Uri uri, @NonNull String requestBody, @NonNull DevContext devContext) {
         Objects.requireNonNull(uri);
         Objects.requireNonNull(requestBody);
 
@@ -369,18 +448,24 @@ public class AdServicesHttpsClient {
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doPostPlainText(url, requestBody, closer))),
+                                                () ->
+                                                        doPostPlainText(
+                                                                url,
+                                                                requestBody,
+                                                                closer,
+                                                                devContext))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private Void doPostPlainText(URL url, String data, ClosingFuture.DeferredCloser closer)
-            throws IOException {
+    private Void doPostPlainText(
+            URL url, String data, ClosingFuture.DeferredCloser closer, DevContext devContext)
+            throws IOException, AdServicesNetworkException {
         LogUtil.v("Reporting to: \"%s\"", url.toString());
         HttpsURLConnection urlConnection;
 
         try {
-            urlConnection = setupPostConnectionWithPlainText(url);
+            urlConnection = setupPostConnectionWithPlainText(url, devContext);
 
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
@@ -414,12 +499,13 @@ public class AdServicesHttpsClient {
     }
 
     private void throwError(final HttpsURLConnection urlConnection, int responseCode)
-            throws IOException {
+            throws AdServicesNetworkException {
+        LogUtil.v("Error occurred while executing HTTP request.");
+
         // Default values for AdServiceNetworkException fields.
         @AdServicesNetworkException.ErrorCode
         int errorCode = AdServicesNetworkException.ERROR_OTHER;
-        Duration retryAfterDuration = AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
-        String serverResponse = null;
+        Duration retryAfterDuration = RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE;
 
         // Assign a relevant error code to the HTTP response code.
         switch (responseCode / 100) {
@@ -427,10 +513,9 @@ public class AdServicesHttpsClient {
                 errorCode = AdServicesNetworkException.ERROR_REDIRECTION;
                 break;
             case 4:
+                // If an HTTP 429 response code was received, extract the retry-after duration
                 if (responseCode == 429) {
-                    // TODO(b/287137921): Investigate HTTP 429 failure and add tests for the
-                    // retryAfter field.
-                    // If an HTTP 429 response code was received, extract the retry-after duration.
+                    errorCode = AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS;
                     String headerValue = urlConnection.getHeaderField(RETRY_AFTER_HEADER_FIELD);
                     if (headerValue != null) {
                         // TODO(b/282017541): Add a maximum allowed retry-after duration.
@@ -443,23 +528,19 @@ public class AdServicesHttpsClient {
             case 5:
                 errorCode = AdServicesNetworkException.ERROR_SERVER;
         }
+        LogUtil.v("Received %s error status code.", responseCode);
 
-        // TODO(b/287146167): Investigate why getErrorStream is null when using the MockWebServer
-        //  and corresponding tests.
-        // Extract message from the server, if any.
-        InputStream errorStream = urlConnection.getErrorStream();
-        if (!Objects.isNull(errorStream)) {
-            serverResponse =
-                    fromInputStream(
-                            urlConnection.getErrorStream(), urlConnection.getContentLengthLong());
-        }
-
-        // Throw the appropriate AdServicesNetworkException exception.
-        if (retryAfterDuration.compareTo(AdServicesNetworkException.UNSET_RETRY_AFTER_VALUE) <= 0) {
-            throw new AdServicesNetworkException(errorCode, serverResponse);
+        // Throw the appropriate exception.
+        AdServicesNetworkException exception;
+        if (retryAfterDuration.compareTo(
+                        RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE)
+                <= 0) {
+            exception = new AdServicesNetworkException(errorCode);
         } else {
-            throw new AdServicesNetworkException(errorCode, retryAfterDuration, serverResponse);
+            exception = new RetryableAdServicesNetworkException(errorCode, retryAfterDuration);
         }
+        LogUtil.e("Throwing %s.", exception.toString());
+        throw exception;
     }
 
     private static void maybeDisconnect(@Nullable URLConnection urlConnection) {

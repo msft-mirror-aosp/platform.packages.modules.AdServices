@@ -54,7 +54,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -87,6 +86,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             "Bidding failed for unexpected error";
 
     @NonNull private final Context mContext;
+    @NonNull private final DevContext mDevContext;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -96,6 +96,10 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final Flags mFlags;
     @NonNull private final JsFetcher mJsFetcher;
     @NonNull private final boolean mDebugReportingEnabled;
+
+    @NonNull
+    private final BuyerContextualSignalsDataVersionFetcher
+            mBuyerContextualSignalsDataVersionFetcher;
 
     public AdBidGeneratorImpl(
             @NonNull Context context,
@@ -108,7 +112,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdCounterKeyCopier adCounterKeyCopier,
             @NonNull Flags flags,
             @NonNull DebugReporting debugReporting,
-            boolean cpcBillingEnabled) {
+            boolean cpcBillingEnabled,
+            boolean dataVersionHeaderEnabled) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -120,6 +125,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(flags);
 
         mContext = context;
+        mDevContext = devContext;
         mLightweightExecutorService = lightweightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
         mScheduledExecutor = scheduledExecutor;
@@ -140,8 +146,16 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         backgroundExecutorService,
                         lightweightExecutorService,
                         adServicesHttpsClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
         mDebugReportingEnabled = debugReporting.isEnabled();
+
+        if (dataVersionHeaderEnabled) {
+            mBuyerContextualSignalsDataVersionFetcher = new BuyerContextualSignalsDataVersionImpl();
+        } else {
+            mBuyerContextualSignalsDataVersionFetcher =
+                    new BuyerContextualSignalsDataVersionFetcherNoOpImpl();
+        }
     }
 
     @VisibleForTesting
@@ -156,7 +170,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Flags flags,
             @NonNull IsolateSettings isolateSettings,
             @NonNull JsFetcher jsFetcher,
-            @NonNull DebugReporting debugReporting) {
+            @NonNull DebugReporting debugReporting,
+            @NonNull DevContext devContext,
+            boolean dataVersionHeaderEnabled) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightWeightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
@@ -167,6 +183,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(isolateSettings);
         Objects.requireNonNull(jsFetcher);
+        Objects.requireNonNull(devContext);
 
         mContext = context;
         mLightweightExecutorService = lightWeightExecutorService;
@@ -178,22 +195,27 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mFlags = flags;
         mJsFetcher = jsFetcher;
         mDebugReportingEnabled = debugReporting.isEnabled();
+        mDevContext = devContext;
+        if (dataVersionHeaderEnabled) {
+            mBuyerContextualSignalsDataVersionFetcher = new BuyerContextualSignalsDataVersionImpl();
+        } else {
+            mBuyerContextualSignalsDataVersionFetcher =
+                    new BuyerContextualSignalsDataVersionFetcherNoOpImpl();
+        }
     }
 
     @Override
     @NonNull
     public FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
-            @NonNull Map<Uri, JSONObject> trustedBiddingDataPerBaseUri,
+            @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataPerBaseUri,
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals buyerSignals,
-            @NonNull AdSelectionSignals contextualSignals,
             @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(trustedBiddingDataPerBaseUri);
         Objects.requireNonNull(adSelectionSignals);
         Objects.requireNonNull(buyerSignals);
-        Objects.requireNonNull(contextualSignals);
 
         // Start the runAdBiddingPerCA logger.
         runAdBiddingPerCAExecutionLogger.startRunAdBiddingPerCA(customAudience.getAds().size());
@@ -208,6 +230,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(customAudience);
 
+        DBTrustedBiddingData trustedBiddingData = customAudience.getTrustedBiddingData();
+
+        AdSelectionSignals contextualSignals =
+                mBuyerContextualSignalsDataVersionFetcher.getContextualSignalsForGenerateBid(
+                        trustedBiddingData, trustedBiddingDataPerBaseUri);
+
         long versionRequested = mFlags.getFledgeAdSelectionBiddingLogicJsVersion();
         Map<Integer, Long> jsVersionMap =
                 versionRequested >= JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
@@ -219,7 +247,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 JsVersionHelper.getRequestWithVersionHeader(
                         customAudience.getBiddingLogicUri(),
                         jsVersionMap,
-                        mFlags.getFledgeHttpJsCachingEnabled());
+                        mFlags.getFledgeHttpJsCachingEnabled(),
+                        mDevContext);
 
         FluentFuture<DecisionLogic> buyerDecisionLogic =
                 mJsFetcher.getBuyerDecisionLogicWithLogger(
@@ -263,7 +292,11 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                             CustomAudienceBiddingInfo.create(
                                                     customAudience,
                                                     candidate.second,
-                                                    candidate.first.getBuyerContextualSignals());
+                                                    mBuyerContextualSignalsDataVersionFetcher
+                                                            .getContextualSignalsForReportWin(
+                                                                    trustedBiddingData,
+                                                                    trustedBiddingDataPerBaseUri,
+                                                                    candidate.first.getAdCost()));
                                     sLogger.v(
                                             "Creating Ad Bidding Outcome for CA: %s",
                                             customAudience.getName());
@@ -325,8 +358,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return DebugReport.builder()
                 .setWinDebugReportUri(bidResult.getWinDebugReportUri())
                 .setLossDebugReportUri(bidResult.getLossDebugReportUri())
-                .setCustomAudienceName(customAudienceSignals.getName())
-                .setCustomAudienceBuyer(customAudienceSignals.getBuyer())
+                .setCustomAudienceSignals(customAudienceSignals)
                 .build();
     }
 
@@ -347,7 +379,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
     private FluentFuture<AdSelectionSignals> getTrustedBiddingSignals(
             @NonNull DBTrustedBiddingData trustedBiddingData,
-            @NonNull Map<Uri, JSONObject> trustedBiddingDataByBaseUri,
+            @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri,
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
@@ -372,7 +404,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 sLogger.v("Fetching trusted bidding Signals from server");
                                 return Futures.immediateFuture(
                                         TrustedBiddingDataFetcher.extractKeys(
-                                                trustedBiddingDataByBaseUri.get(trustedBiddingUri),
+                                                trustedBiddingDataByBaseUri
+                                                        .get(trustedBiddingUri)
+                                                        .getBody(),
                                                 trustedBiddingKeys));
                             } else {
                                 sLogger.d(
@@ -417,7 +451,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
             @NonNull AdSelectionSignals adSelectionSignals,
-            @NonNull Map<Uri, JSONObject> trustedBiddingDataByBaseUri,
+            @NonNull Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri,
             @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
         runAdBiddingPerCAExecutionLogger.startRunBidding();
         FluentFuture<AdSelectionSignals> trustedBiddingSignals =
@@ -429,7 +463,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         customAudience.getName(),
                         runAdBiddingPerCAExecutionLogger);
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_BIDDING);
-
         FluentFuture<List<GenerateBidResult>> generateBidsResult;
         long buyerDecisionLogicJsVersion =
                 buyerDecisionLogicJs.getVersion(

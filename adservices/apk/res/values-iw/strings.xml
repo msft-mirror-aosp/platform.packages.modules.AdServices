@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"‏מאפשרת לאפליקציה לגשת לממשק ה‑API של \'הסכמה\' (Consent) ב‑AdServices."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"‏גישה לממשק ה‑API של מזהה המודעה"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"‏מאפשרת לאפליקציה לגשת ל-API של מזהה ההודעה."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"‏גישה לממשק ה-API של AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"‏ההגדרה הזו מאפשרת לאפליקציה לגשת לממשק ה-API של AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"‏גישה לממשק ה‑API של מזהה קבוצת האפליקציות"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"‏מאפשרת לאפליקציה לגשת ל-API של מזהה קבוצת האפליקציות."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"‏גישה לממשק ה-API של \'שירות הסכמה\'"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"‏מאפשרת לאפליקציה לגשת למצב ההפעלה של ממשק ה-API ב-AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"‏גישה לממשק ה-API של AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"‏ההגדרה הזו מאפשרת לאפליקציה לגשת לממשק ה-API של AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"‏מערכת Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"פרטיות בפרסום"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"‏רוצה להצטרף לתוכנית הבטא של פרטיות בפרסום ב-Android?"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"‏מערכת Android בודקת איך האפליקציות יכולות להציג לך מודעות בדרכים פרטיות יותר"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"מידע נוסף"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"אפליקציות שחסמת"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"איפוס הנתונים שקשורים להצעות מאפליקציות"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏האפליקציות שלך עורכות רישום של הדברים שמעניינים אותך כדי להתאים לך אישית את חוויית השימוש. האפליקציות גם יכולות לאחסן מידע ב-Android לגבי הנושאים האלה.\n\nלדוגמה, אפליקציה שבה השתמשת כדי להתאמן לריצת מרתון עשויה להעריך שיש לך עניין בנעלי ריצה. לאחר מכן, בזמן השימוש באפליקציה אחרת, אותה אפליקציה עשויה להציג לך מודעה לנעלי ריצה שהוצעה על ידי האפליקציה הראשונה.\n\nהנתונים שקשורים למודעות שאפליקציות מציעות נמחקים אוטומטית מ-Android באופן קבוע. אפליקציה שבה נעשה שימוש שוב עשויה להופיע ברשימה מחדש. ניתן גם לחסום את האפשרות של האפליקציות להציע לך מודעות.\n\nיכול להיות שיוצגו מודעות מותאמות אישית באפליקציות שלך בהתאם להגדרה הזו, להגדרה של נושאי מודעות, להגדרות של מזהי פרסום ולשאלה אם האפליקציה שבה השתמשת מציגה מודעות בהתאמה אישית."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"יש תכונות חדשות לשמירה על פרטיות בפרסום"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"תכונה חדשה לשמירה על פרטיות בפרסום זמינה עכשיו"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"רק מידע מוגבל מאוד משותף בין אפליקציות כדי לעזור למדוד את ביצועי המודעות"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"‏אנחנו משיקים תכונה חדשה לשמירה על פרטיות בפרסום שנקראת \'מדידת ביצועים של מודעות\'. מערכת Android משתפת מידע מוגבל מאוד בין אפליקציות, למשל מתי הוצגה לך מודעה, כדי לעזור לאפליקציות למדוד את ביצועי המודעות."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"אפשר לערוך שינויים בהגדרות הפרטיות של המודעות."</string>

@@ -50,6 +50,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.profiling.Tracing;
@@ -136,6 +137,7 @@ public abstract class AdSelectionRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
+    @NonNull private final AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
@@ -163,6 +165,7 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final DebugReporting debugReporting,
             final int callerUid) {
         Objects.requireNonNull(context);
@@ -175,6 +178,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
@@ -195,6 +199,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
@@ -216,6 +221,7 @@ public abstract class AdSelectionRunner {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final DebugReporting debugReporting) {
         Objects.requireNonNull(context);
@@ -231,6 +237,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
+        Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
         Preconditions.checkArgument(
@@ -250,6 +257,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
+        mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
@@ -262,7 +270,9 @@ public abstract class AdSelectionRunner {
      * @param callback used to notify the result back to the calling seller
      */
     public void runAdSelection(
-            @NonNull AdSelectionInput inputParams, @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionInput inputParams,
+            @NonNull AdSelectionCallback callback,
+            @NonNull DevContext devContext) {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
@@ -284,7 +294,8 @@ public abstract class AdSelectionRunner {
                                             mCallerUid,
                                             AdServicesStatsLog
                                                     .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                                            devContext);
                                     validateAdSelectionConfig(adSelectionConfig);
                                 } finally {
                                     sLogger.v("Completed filtering and validation.");
@@ -605,7 +616,19 @@ public abstract class AdSelectionRunner {
                             .setCreationTimestamp(mClock.instant())
                             .setCallerPackageName(callerPackageName);
                     dbAdSelection = adSelectionOrchestrationResult.mDbAdSelectionBuilder.build();
+
                     mAdSelectionExecutionLogger.startPersistAdSelection(dbAdSelection);
+
+                    try {
+                        mAdCounterHistogramUpdater.updateWinHistogram(dbAdSelection);
+                    } catch (Exception exception) {
+                        // Frequency capping is not crucial enough to crash the entire process
+                        sLogger.w(
+                                exception,
+                                "Error encountered updating ad counter histogram with win event; "
+                                        + "continuing ad selection persistence");
+                    }
+
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()

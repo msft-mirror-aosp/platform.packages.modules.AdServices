@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.ui.ux.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -47,8 +47,4 @@ public class UnsupportedUx implements PrivacySandboxUx {
             PrivacySandboxEnrollmentChannel enrollmentChannel,
             Context context,
             ConsentManager consentManager) {}
-
-    /** No mode should be available for Unsupported UX. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {}
 }

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Cho phép ứng dụng truy cập vào AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Truy cập vào Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Cho phép ứng dụng truy cập vào Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Truy cập vào AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Cho phép ứng dụng truy cập vào AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Truy cập vào App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Cho phép ứng dụng truy cập vào App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Truy cập vào Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Cho phép ứng dụng truy cập API trạng thái bật của AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Truy cập vào các AdServicesManager API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Cho phép ứng dụng truy cập vào các AdServicesManager API."</string>
-    <string name="app_label" msgid="5985320129629013968">"Hệ thống Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Quyền riêng tư trong quảng cáo"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Tham gia phiên bản beta về quyền riêng tư trong quảng cáo của Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android đang khám phá nhiều cách bảo mật hơn để các ứng dụng có thể hiển thị quảng cáo cho bạn"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Tìm hiểu thêm"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Ứng dụng bạn chặn"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Đặt lại dữ liệu do ứng dụng đề xuất"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Các ứng dụng mà bạn dùng thường ghi nhớ những điều bạn quan tâm để cá nhân hoá trải nghiệm cho bạn. Các ứng dụng cũng có thể lưu trữ thông tin về các chủ đề của bạn với Android.\n\nVí dụ: nếu bạn dùng một ứng dụng tập chạy ma-ra-tông, thì có thể ứng dụng đó cho rằng bạn quan tâm đến giày chạy. Sau này, nếu bạn dùng một ứng dụng khác, thì có thể ứng dụng khác đó sẽ cho bạn xem một quảng cáo về giày chạy do ứng dụng ban đầu đề xuất.\n\nAndroid thường xuyên tự động xoá dữ liệu do ứng dụng đề xuất. Ứng dụng bạn sử dụng lại có thể xuất hiện lại trên danh sách này. Hoặc bạn có thể chặn không cho một ứng dụng đề xuất quảng cáo cho mình.\n\nTrong các ứng dụng bạn dùng, có thể quảng cáo mà bạn thấy đã được cá nhân hoá, tuỳ thuộc vào chế độ cài đặt này, chế độ cài đặt chủ đề quảng cáo, chế độ cài đặt mã nhận dạng cho quảng cáo và việc liệu ứng dụng bạn đang dùng có cá nhân hoá quảng cáo cho bạn hay không."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Có tính năng mới về quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Hiện đã có tính năng mới về quyền riêng tư trong quảng cáo"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Chỉ rất ít thông tin được chia sẻ giữa các ứng dụng để đo lường hiệu suất của quảng cáo."</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Chúng tôi sắp ra mắt một tính năng về quyền riêng tư trong quảng cáo mới có tên là đo lường quảng cáo. Android chỉ chia sẻ rất ít thông tin giữa các ứng dụng (chẳng hạn như thông tin về thời điểm hiển thị quảng cáo cho bạn) để đo lường hiệu suất quảng cáo."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Bạn có thể thay đổi trong chế độ cài đặt quyền riêng tư trong quảng cáo."</string>

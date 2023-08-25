@@ -16,7 +16,10 @@
 
 package com.android.cobalt.data;
 
+import static java.util.stream.Collectors.toList;
+
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.MapInfo;
 import androidx.room.OnConflictStrategy;
@@ -24,6 +27,7 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import com.google.cobalt.AggregateValue;
+import com.google.cobalt.UnencryptedObservationBatch;
 
 import java.util.List;
 import java.util.Map;
@@ -70,10 +74,33 @@ abstract class DaoBuildingBlocks {
     /**
      * Insert the day a report was last sent.
      *
+     * @param reportKey the report
+     * @param dayIndex the day
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    Void insertLastSentDayIndex(ReportKey reportKey, int dayIndex) {
+        return insertLastSentDayIndex(ReportEntity.create(reportKey, dayIndex));
+    }
+
+    /**
+     * Insert the day a report was last sent.
+     *
      * @param reportEntity the report and day index to insert
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract Void insertLastSentDayIndex(ReportEntity reportEntity);
+
+    /**
+     * Insert observation batches into the observation store.
+     *
+     * @param observationBatches the observation batches to insert
+     */
+    Void insertObservationBatches(List<UnencryptedObservationBatch> observationBatches) {
+        return insertObservations(
+                observationBatches.stream()
+                        .map(ObservationStoreEntity::createForInsertion)
+                        .collect(toList()));
+    }
 
     /**
      * Insert observations into the observation store.
@@ -82,6 +109,16 @@ abstract class DaoBuildingBlocks {
      */
     @Insert(onConflict = OnConflictStrategy.ROLLBACK)
     abstract Void insertObservations(List<ObservationStoreEntity> observationStoreEntities);
+
+    /**
+     * Update the day a report was last sent.
+     *
+     * @param reportKey the report
+     * @param dayIndex the new day index day index to update
+     */
+    Void updateLastSentDayIndex(ReportKey reportKey, int dayIndex) {
+        return updateLastSentDayIndex(ReportEntity.create(reportKey, dayIndex));
+    }
 
     /**
      * Update the day a report was last sent.
@@ -340,6 +377,22 @@ abstract class DaoBuildingBlocks {
     /**
      * Get the aggregated values for a given report on a given day.
      *
+     * @param reportKey the report to search under
+     * @param dayIndex the day to search under
+     * @return a list of events to be used for observation generation
+     */
+    List<CountEvent> queryCountEventsForDay(ReportKey reportKey, int dayIndex) {
+        return queryCountEventsForDay(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex);
+    }
+
+    /**
+     * Get the aggregated values for a given report on a given day.
+     *
      * @param customerId the customer id to search under
      * @param projectId the project id to search under
      * @param metricId the metric id to search under
@@ -372,8 +425,26 @@ abstract class DaoBuildingBlocks {
      *
      * @return an list of observations, ordered by creation time
      */
-    @Query("SELECT * FROM ObservationStore ORDER BY observation_store_id")
+    @Query("SELECT * FROM ObservationStore ORDER BY observation_store_id ASC")
     abstract List<ObservationStoreEntity> queryOldestObservations();
+
+    /**
+     * Return the day a report was last sent, if in the reports table.
+     *
+     * @param reportKey the report
+     * @return the last sent day index, if found
+     */
+    Optional<Integer> queryLastSentDayIndex(ReportKey reportKey) {
+        return queryLastSentDayIndex(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId());
+    }
+
+    /** Return the keys of all reports in the report store. */
+    @Query("SELECT customer_id, project_id, metric_id, report_id FROM Reports")
+    abstract List<ReportKey> queryReportKeys();
 
     /**
      * Return the day a report was last sent, if in the reports table.
@@ -421,4 +492,12 @@ abstract class DaoBuildingBlocks {
      */
     @Query("DELETE FROM ObservationStore WHERE observation_store_id IN (:observationStoreIds)")
     abstract Void deleteByObservationId(List<Integer> observationStoreIds);
+
+    /**
+     * Delete the specified reports from the report store.
+     *
+     * @param reportKeys the reports to delete
+     */
+    @Delete(entity = ReportEntity.class)
+    abstract Void deleteReports(List<ReportKey> reportKeys);
 }

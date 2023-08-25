@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Bir uygulamanın AdServices Consent API\'ye erişmesine izin verir."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API\'sine erişme"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Uygulamanın, Ad ID API\'sine erişmesine izin verir."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API\'ye erişim"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Bir uygulamanın AdServices Cobalt Upload API\'ye erişmesine izin verir."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API\'sine erişme"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Uygulamanın, App Set ID API\'sine erişmesine izin verir."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API\'ye erişme"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Uygulamanın, AdService etkinleştirme durumu API\'sine erişmesine izin verir."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API\'lerine erişim"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Uygulamanın, AdServicesManager API\'lerine erişmesine izin verir."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android Sistemi"</string>
+    <string name="app_label" msgid="5844694701336604490">"Reklam Gizliliği"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android reklam gizliliği beta programına katılın"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android, uygulamaların daha gizlilik odaklı yöntemler kullanarak size reklam göstermesini sağlamanın yollarını araştırıyor"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Daha fazla bilgi"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Engellediğiniz uygulamalar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Uygulamalar tarafından önerilen verileri sıfırla"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Kullandığınız uygulamaların, deneyiminizi kişiselleştirmek amacıyla, ilgilendiğiniz şeyleri hatırlaması yaygın bir durumdur. Uygulamalar ayrıca konularınızla ilgili bilgileri Android\'de depolayabilirler.\n\nÖrneğin, maraton antrenmanı ile ilgili bir uygulama kullanırsanız uygulama koşu ayakkabılarıyla ilgilendiğinize karar verebilir. Daha sonra kullandığınız farklı bir uygulama da, ilk uygulama tarafından önerilen koşu ayakkabılarına dair reklam gösterebilir.\n\nAndroid, uygulama tarafından önerilen verileri düzenli bir şekilde otomatik olarak siler. Tekrar kullandığınız bir uygulama listede yeniden görünebilir. İsterseniz bir uygulamanın sizin için reklamlar önermesini engelleyebilirsiniz.\n\nUygulamalarınızda gördüğünüz reklamlar bu ayara, reklam konuları ayarına, reklamveren kimliği ayarlarınıza ve uygulamanın kişiselleştirilmiş reklamlar kullanıp kullanmadığına bağlı olarak kişiselleştirilmiş olabilir."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Yeni reklam gizliliği özelliği mevcut"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Yeni reklam gizliliği özelliği kullanıma sunuldu"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Gösterdikleri reklamların performansını ölçmesine yardımcı olmak için uygulamalar arasında çok sınırlı bilgi paylaşılır"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Reklam ölçümü adı verilen yeni bir reklam gizliliği özelliğini kullanıma sunuyoruz. Android, uygulamaların gösterdikleri reklamların performansını ölçmesine yardımcı olmak için uygulamalar arasında çok sınırlı bilgi (ör. bir reklamın size gösterildiği saat) paylaşır."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Reklam gizlilik ayarlarında değişiklik yapabilirsiniz."</string>

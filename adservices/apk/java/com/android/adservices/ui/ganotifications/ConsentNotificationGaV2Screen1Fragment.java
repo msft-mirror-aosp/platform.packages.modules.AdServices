@@ -40,7 +40,7 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.ui.NotificationUtil;
+import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -61,7 +61,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice = NotificationUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
         if (mIsEUDevice) {
             inflatedView = inflater.inflate(
                     R.layout.consent_notification_screen_1_ga_v2_eu, container, false);

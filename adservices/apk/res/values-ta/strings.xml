@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID APIயை அணுகுதல்"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload APIக்கான அணுகல்"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"AdServices Cobalt Upload APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID APIயை அணுகுதல்"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIயை அணுகுதல்"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdServiceஸின் இயக்க நிலை APIயை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManagerரின் APIகளுக்கான அணுகல்"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManagerரின் APIகளை அணுக ஆப்ஸை அனுமதிக்கும்."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android System"</string>
+    <string name="app_label" msgid="5844694701336604490">"விளம்பரங்கள் தொடர்பான தனியுரிமை"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidன் விளம்பரத் தனியுரிமை பீட்டா பதிப்பில் இணைதல்"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"ஆப்ஸ் உங்களுக்கு விளம்பரங்களைக் காட்டுவதற்கான கூடுதல் வழிகளை Android ஆராய்ந்து வருகிறது"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"மேலும் அறிக"</string>
@@ -222,9 +224,9 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"தடுக்கப்பட்ட ஆப்ஸ்"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ஆப்ஸ் பரிந்துரைக்கும் தரவை ரீசெட் செய்"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"பொதுவாக, உங்கள் அனுபவத்தைப் பிரத்தியேகப்படுத்த நீங்கள் விரும்பும் விஷயங்களை ஆப்ஸ் நினைவில் வைத்துக்கொள்ளும். நீங்கள் விரும்பும் தலைப்புகள் தொடர்பான தகவல்களை ஆப்ஸால் Androidல் சேமிக்க முடியும்.\n\nஉதாரணமாக, மாரத்தான் பயிற்சி தொடர்பான ஆப்ஸை நீங்கள் பயன்படுத்தினால், உங்களுக்கு ஓட்டப் பயிற்சிக்கான ஷூக்களை வாங்க விருப்பம் இருப்பதாக ஆப்ஸ் கருதக்கூடும். பின்னர் நீங்கள் வேறொரு ஆப்ஸைப் பயன்படுத்தும்போது முதலில் பயன்படுத்திய ஆப்ஸின் பரிந்துரைப்படி ஓட்டப் பயிற்சி ஷூக்களுக்கான விளம்பரத்தை இந்த ஆப்ஸ் காட்டலாம்.\n\nஆப்ஸ் பரிந்துரைக்கும் தரவை அவ்வப்போது Android தானாகவே நீக்கிவிடும். நீங்கள் மீண்டும் ஓர் ஆப்ஸைப் பயன்படுத்தினால் அது திரும்பவும் பட்டியலில் காட்டப்படலாம். ஓர் ஆப்ஸ் உங்களுக்கு விளம்பரங்கள் காட்டுவதை நீங்கள் தடுக்கலாம்.\n\nஇந்த அமைப்பு, விளம்பரத் தலைப்புகளுக்கான அமைப்பு, உங்கள் விளம்பரப்படுத்தல் ஐடிக்கான அமைப்புகள் ஆகியவற்றைப் பொறுத்தும் நீங்கள் பயன்படுத்தும் ஆப்ஸ் விளம்பரங்களைப் பிரத்தியேகப்படுத்துகிறதா இல்லையா என்பதைப் பொறுத்தும் உங்கள் ஆப்ஸில் காட்டப்படும் விளம்பரங்கள் பிரத்தியேகப்படுத்தப்படலாம்."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"புதிய விளம்பரங்கள் தொடர்பான தனியுரிமை அம்சம் கிடைக்கிறது"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"புதிய விளம்பரத் தனியுரிமை அம்சங்கள் இப்போது கிடைக்கின்றன"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"விளம்பரச் செயல்திறனை அளவிட உதவ, ஆப்ஸுக்கிடையே குறைந்தளவிலான தகவல்கள் மட்டுமே பகிரப்பட்டுள்ளன"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"விளம்பரங்கள் தொடர்பான அளவீடு எனும் புதிய விளம்பரங்கள் தொடர்பான தனியுரிமை அம்சத்தை வெளியிடுகிறோம். விளம்பரங்களின் செயல்திறனை அளவிட ஆப்ஸுக்கு உதவ, விளம்பரம் உங்களுக்குக் காட்டப்படும் நேரம் போன்ற குறைந்தளவிலான தகவல்களையே ஆப்ஸுக்கிடையே Android பகிர்கிறது."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"விளம்பர அளவீடு எனும் புதிய விளம்பரத் தனியுரிமை அம்சத்தை வெளியிடுகிறோம். விளம்பரங்களின் செயல்திறனை அளவிட ஆப்ஸுக்கு உதவ, விளம்பரம் உங்களுக்குக் காட்டப்படும் நேரம் போன்ற குறைந்தளவிலான தகவல்களையே ஆப்ஸுக்கிடையே Android பகிர்கிறது."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"விளம்பரங்கள் தொடர்பான தனியுரிமை அமைப்புகளில் நீங்கள் மாற்றங்களைச் செய்யலாம்."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"நீங்கள் பயன்படுத்தும் ஆப்ஸ் அவற்றின் விளம்பரச் செயல்திறனை அளவிட உதவும் தகவல்களை வழங்கும்படி Androidஐக் கோரலாம். குறிப்பிட்ட வகையான தரவை மட்டுமே சேகரிக்க ஆப்ஸை Android அனுமதிக்கும்."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"இசை, செய்தி, விளையாட்டு போன்ற ஆர்வமுள்ள தலைப்புகளைக் குறிக்கும் சின்னங்களின் வண்ணமயமான விளக்கப்படம்"</string>

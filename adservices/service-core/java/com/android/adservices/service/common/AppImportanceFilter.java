@@ -40,12 +40,24 @@ import java.util.function.Supplier;
 /**
  * Utility class to be used by PPAPI services to impose that the caller is running in foreground.
  */
-public class AppImportanceFilter {
+public final class AppImportanceFilter {
     /** Represents failures when checking the foreground status of the calling application. */
-    public static class WrongCallingApplicationStateException extends IllegalStateException {
-        /** Creates an instance of {@link WrongCallingApplicationStateException}. */
+    public static final class WrongCallingApplicationStateException extends IllegalStateException {
+
+        /**
+         * Creates an instance of {@link WrongCallingApplicationStateException} with the default
+         * error message.
+         */
         public WrongCallingApplicationStateException() {
-            super(AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+            this(AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+        }
+
+        /**
+         * Creates an instance of {@link WrongCallingApplicationStateException} with the given error
+         * message
+         */
+        public WrongCallingApplicationStateException(String msg) {
+            super(msg);
         }
     }
 
@@ -147,7 +159,11 @@ public class AppImportanceFilter {
                     "Application importance failed for app %s with importance %d greater"
                             + " than threshold %d",
                     appPackageName, importance, mImportanceThresholdSupplier.get());
-            logForegroundViolation(appPackageName, apiNameIdForLogging, sdkName);
+            logForegroundViolation(
+                    appPackageName,
+                    apiNameIdForLogging,
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
+                    sdkName);
 
             throw new WrongCallingApplicationStateException();
         }
@@ -178,7 +194,20 @@ public class AppImportanceFilter {
             // may decide to add an alternative foreground check implementation later (b/263823628).
             return;
         }
-        int importance = mActivityManager.getUidImportance(appUid);
+        int importance;
+        try {
+            importance = mActivityManager.getUidImportance(appUid);
+        } catch (SecurityException e) {
+            LogUtil.e(e, "Failed to call pm.getUidImportance(%d)", appUid);
+            logForegroundViolation(
+                    UNKNOWN_APP_PACKAGE_NAME,
+                    apiNameLoggingId,
+                    AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES,
+                    sdkName);
+            throw new WrongCallingApplicationStateException(
+                    AdServicesStatusUtils
+                            .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES);
+        }
         LogUtil.v(
                 "Process %d has importance %d comparing with threshold of %d.",
                 appUid, importance, mImportanceThresholdSupplier.get());
@@ -194,6 +223,7 @@ public class AppImportanceFilter {
                             ? packages[0]
                             : UNKNOWN_APP_PACKAGE_NAME,
                     apiNameLoggingId,
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
                     sdkName);
             throw new WrongCallingApplicationStateException();
         }
@@ -201,13 +231,16 @@ public class AppImportanceFilter {
     }
 
     private void logForegroundViolation(
-            @NonNull String appPackageName, int apiNameLoggingId, @Nullable String sdkName) {
+            @NonNull String appPackageName,
+            int apiNameLoggingId,
+            int resultCode,
+            @Nullable String sdkName) {
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
                         .setApiClass(mApiClass)
                         .setApiName(apiNameLoggingId)
-                        .setResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
+                        .setResultCode(resultCode)
                         .setSdkPackageName(sdkName != null ? sdkName : "")
                         .setAppPackageName(appPackageName)
                         .build());

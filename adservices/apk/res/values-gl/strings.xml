@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite que unha aplicación acceda a AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"acceder a Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite que unha aplicación acceda a Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Acceso a AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Permite que unha aplicación acceda a AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"acceder a App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite que unha aplicación acceda a App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acceso a Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite que unha aplicación acceda á API do estado de activación de AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Acceder ás API de AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permite que unha aplicación acceda ás API de AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
+    <string name="app_label" msgid="5844694701336604490">"Privacidade nos anuncios"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Únete á versión beta de privacidade nos anuncios en Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android está explorando formas máis privadas de que as aplicacións che mostren anuncios"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Máis información"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicacións bloqueadas"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restablecer datos suxeridos polas aplicacións"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"É habitual que as aplicacións que usas garden os teus intereses para ofrecerche unha experiencia personalizada. As aplicacións tamén poden almacenar con Android información sobre os teus temas.\n\nPor exemplo, se usas unha aplicación sobre adestramento para correr maratóns, a aplicación podería determinar que che interesan as zapatillas de correr. Máis tarde, se usas unha aplicación diferente, esta pode mostrarche un anuncio de zapatillas de correr suxerido pola primeira aplicación.\n\nAndroid elimina de forma automática e periódica os datos suxeridos polas aplicacións. Se volves usar unha aplicación, podería aparecer de novo na lista. Tamén podes impedir que unha aplicación suxira anuncios.\n\nOs anuncios que se che mostran nas aplicacións poden estar personalizados en función desta opción de configuración, da relativa aos temas dos anuncios, da configuración do teu identificador de publicidade ou de se as aplicacións en cuestión personalizan os anuncios."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Hai unha nova función de privacidade nos anuncios dispoñible"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Xa está dispoñible unha nova función de privacidade nos anuncios"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Só se comparte información moi limitada entre aplicacións para axudar a medir o rendemento publicitario"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Imos lanzar unha nova función de privacidade nos anuncios chamada Medición de anuncios. Android só comparte información moi limitada entre aplicacións, como o momento no que se che mostrou un anuncio, para axudar as aplicacións a medir o rendemento publicitario."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Podes facer cambios na configuración de privacidade nos anuncios."</string>
@@ -483,7 +485,7 @@
     <string name="topic10250" msgid="6083030595195401083">"Actividades e xogos para a familia"</string>
     <string name="topic10251" msgid="99237306730665104">"Debuxo e coloreado"</string>
     <string name="topic10252" msgid="6543039575961394064">"Xogos de moda e disfraces"</string>
-    <string name="topic10253" msgid="566596668186874227">"Crebacabezas e xogos de enxeño"</string>
+    <string name="topic10253" msgid="566596668186874227">"Quebracabezas e xogos de enxeño"</string>
     <string name="topic10254" msgid="5732147617072023634">"Xogos de rol"</string>
     <string name="topic10255" msgid="2890655077164103057">"Tenis de mesa"</string>
     <string name="topic10256" msgid="3302096971402751679">"Xogos de fichas"</string>

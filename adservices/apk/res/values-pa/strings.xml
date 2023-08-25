@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Consent API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ Ad ID API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API ਤੱਕ ਪਹੁੰਚ ਕਰੋ"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Cobalt Upload API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦੀ ਹੈ।"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ App Set ID API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ਤੱਕ ਪਹੁੰਚ"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"ਇਸ ਨਾਲ ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdService API ਨੂੰ ਚਾਲੂ ਜਾਂ ਬੰਦ ਕਰਨ ਦੀ ਸਥਿਤੀ ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ਦੇ API ਤੱਕ ਪਹੁੰਚ"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServicesManager ਦੇ API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦੀ ਹੈ।"</string>
-    <string name="app_label" msgid="5985320129629013968">"Android ਸਿਸਟਮ"</string>
+    <string name="app_label" msgid="5844694701336604490">"ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android ਦੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਵਾਸਤੇ ਐਪਾਂ ਲਈ ਹੋਰ ਜ਼ਿਆਦਾ ਨਿੱਜੀ ਤਰੀਕਿਆਂ ਦੀ ਪੜਚੋਲ ਕਰ ਰਿਹਾ ਹੈ"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ਹੋਰ ਜਾਣੋ"</string>
@@ -80,8 +82,8 @@
     <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  ਤੁਸੀਂ ਜਿਨ੍ਹਾਂ ਐਪਾਂ ਨੂੰ ਵਰਤਦੇ ਹੋ, ਉਹ ਉਨ੍ਹਾਂ ਨੂੰ ਵਰਤੇ ਜਾਣ ਦੇ ਤਰੀਕੇ ਦੇ ਆਧਾਰ \'ਤੇ ਤੁਹਾਡੀ ਪਸੰਦ ਨੂੰ ਵੀ ਨਿਰਧਾਰਿਤ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਉਦਾਹਰਨ ਲਈ, ਜੇ ਤੁਸੀਂ ਕਿਸੇ ਅਜਿਹੀ ਐਪ ਨੂੰ ਵਰਤਦੇ ਹੋ ਜੋ ਲੰਮੀ ਦੂਰੀ ਦੀ ਦੌੜ ਵਾਲੇ ਜੁੱਤੇ ਵੇਚਦੀ ਹੈ, ਤਾਂ ਉਹ ਐਪ ਇਹ ਨਤੀਜਾ ਕੱਢ ਸਕਦੀ ਹੈ ਕਿ ਤੁਸੀਂ ਮੈਰਾਥਨ ਦੌੜਨ ਵਿੱਚ ਦਿਲਚਸਪੀ ਰੱਖਦੇ ਹੋ।"</string>
     <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"ਬਾਅਦ ਵਿੱਚ, ਤੁਸੀਂ ਜਿਹੜੀ ਐਪ ਵਰਤਦੇ ਹੋ ਉਹ ਇਹ ਜਾਣਕਾਰੀ ਮੰਗ ਸਕਦੀ ਹੈ — ਜਾਂ ਤਾਂ ਤੁਹਾਡੇ ਵਿਗਿਆਪਨ ਵਿਸ਼ੇ ਜਾਂ ਉਨ੍ਹਾਂ ਐਪਾਂ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਵਿਗਿਆਪਨ ਜਿਨ੍ਹਾਂ ਨੂੰ ਤੁਸੀਂ ਵਰਤਿਆ ਹੈ।"</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android ਨਿਯਮਿਤ ਤੌਰ \'ਤੇ ਵਿਸ਼ਿਆਂ ਅਤੇ ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਡਾਟੇ ਨੂੰ ਸਵੈਚਲਿਤ ਤੌਰ \'ਤੇ ਮਿਟਾਉਂਦਾ ਰਹਿੰਦਾ ਹੈ। ਤੁਸੀਂ ਕੁਝ ਖਾਸ ਵਿਸ਼ਿਆਂ ਨੂੰ ਬਲਾਕ ਕਰ ਸਕਦੇ ਹੋ ਅਤੇ ਉਨ੍ਹਾਂ ਐਪਾਂ ਨੂੰ ਵੀ ਬਲਾਕ ਕਰ ਸਕਦੇ ਹੋ ਜਿਨ੍ਹਾਂ ਤੋਂ ਤੁਸੀਂ ਸਿਫ਼ਾਰਸ਼ਾਂ ਨਹੀਂ ਚਾਹੁੰਦੇ।"</string>
-    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"ਵਿਗਿਆਪਨ ਕਿੰਨੀ ਵਧੀਆ ਕਾਰਗੁਜ਼ਾਰੀ ਕਰਦਾ ਹੈ, ਉਸਦਾ ਮੁਲਾਂਕਣ ਕਰਨਾ"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"ਤੁਸੀਂ ਜੋ ਐਪਾਂ ਵਰਤਦੇ ਹੋ, ਉਹ ਆਪਣੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਦਾ ਮੁਲਾਂਕਣ ਕਰਨ ਵਿੱਚ ਉਨ੍ਹਾਂ ਦੀ ਮਦਦ ਵਾਸਤੇ Android ਤੋਂ ਜਾਣਕਾਰੀ ਮੰਗ ਸਕਦੀਆਂ ਹਨ। Android ਐਪਾਂ ਨੂੰ ਸੀਮਤ ਕਿਸਮ ਦਾ ਡਾਟਾ ਇਕੱਤਰ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦਾ ਹੈ ਜਿਵੇਂ ਕਿ ਦਿਨ ਦਾ ਉਹ ਸਮਾਂ ਜਦੋਂ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਇਆ ਗਿਆ ਸੀ।"</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"ਵਿਗਿਆਪਨ ਕਿੰਨੀ ਵਧੀਆ ਕਾਰਗੁਜ਼ਾਰੀ ਕਰਦਾ ਹੈ, ਉਸਨੂੰ ਮਾਪਣਾ"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"ਤੁਸੀਂ ਜੋ ਐਪਾਂ ਵਰਤਦੇ ਹੋ, ਉਹ ਆਪਣੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਨੂੰ ਮਾਪਨ ਵਿੱਚ ਉਨ੍ਹਾਂ ਦੀ ਮਦਦ ਵਾਸਤੇ Android ਤੋਂ ਜਾਣਕਾਰੀ ਮੰਗ ਸਕਦੀਆਂ ਹਨ। Android ਐਪਾਂ ਨੂੰ ਸੀਮਤ ਕਿਸਮ ਦਾ ਡਾਟਾ ਇਕੱਤਰ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦਾ ਹੈ ਜਿਵੇਂ ਕਿ ਦਿਨ ਦਾ ਉਹ ਸਮਾਂ ਜਦੋਂ ਤੁਹਾਨੂੰ ਵਿਗਿਆਪਨ ਦਿਖਾਇਆ ਗਿਆ ਸੀ।"</string>
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"ਨਵੀਆਂ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਅਜ਼ਮਾਓ"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"ਵਿਗਿਆਪਨ ਵਿਸ਼ੇ ਤੁਹਾਨੂੰ ਉਨ੍ਹਾਂ ਵਿਗਿਆਪਨਾਂ ਲਈ ਵੱਧ ਵਿਕਲਪ ਦਿੰਦੇ ਹਨ ਜਿਨ੍ਹਾਂ ਨੂੰ ਤੁਸੀਂ ਦੇਖਦੇ ਹੋ"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"ਵੇਰਵੇ ਦੇਖੋ"</string>
@@ -136,7 +138,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android ਦੀਆਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"ਦਿਲਚਸਪੀਆਂ ਦਾ ਅੰਦਾਜ਼ਾ ਲਗਾਉਣ ਵਾਲੀਆਂ ਐਪਾਂ"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"ਵਿਗਿਆਪਨ ਮੁਲਾਂਕਣ"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"ਵਿਗਿਆਪਨ ਮਾਪ"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"ਐਪਾਂ ਆਪਣੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਪ੍ਰਭਾਵਕਤਾ ਨੂੰ ਮਾਪਣ ਲਈ ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਦੀ ਵਰਤੋਂ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਇਹ ਕਰਨ ਲਈ, ਵਿਗਿਆਪਨਦਾਤਾ ਆਪਣੇ ਵਿਗਿਆਪਨਾਂ ਅਤੇ ਐਪਾਂ ਵਿਚਕਾਰ ਤੁਹਾਡੀਆਂ ਅੰਤਰਕਿਰਿਆਵਾਂ ਬਾਰੇ Android ਨਾਲ ਕੁਝ ਸਮੇਂ ਲਈ ਡਾਟਾ ਰੱਖਿਅਤ ਕਰ ਸਕਦੇ ਹਨ। ਉਨ੍ਹਾਂ ਵੱਲੋਂ ਡਾਟਾ ਰੱਖਿਅਤ ਕਰ ਸਕਣ ਦੀ ਮਾਤਰਾ ਪ੍ਰਤਿਬੰਧਿਤ ਹੈ ਅਤੇ ਉਸਨੂੰ ਨਿਯਮਿਤ ਤੌਰ \'ਤੇ ਮਿਟਾਇਆ ਜਾਵੇਗਾ।\n\nਤੁਸੀਂ ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਨੂੰ ਬੰਦ ਕਰ ਕੇ ਕਿਸੇ ਵੇਲੇ ਵੀ ਇਸ ਡਾਟੇ ਨੂੰ ਮਿਟਾ ਸਕਦੇ ਹੋ।"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android ਤੁਹਾਡੇ ਵੱਲੋਂ ਵਰਤੀਆਂ ਜਾਣ ਵਾਲੀਆਂ ਐਪਾਂ ਦੇ ਆਧਾਰ \'ਤੇ ਸਮੇਂ-ਸਮੇਂ \'ਤੇ ਤੁਹਾਡੀਆਂ ਪ੍ਰਮੁੱਖ ਦਿਲਚਸਪੀਆਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾਉਂਦਾ ਹੈ। ਐਪਾਂ ਤੁਹਾਨੂੰ ਹੋਰ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ Android ਨੂੰ ਉਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਦੀ ਵਰਤੋਂ ਕਰਨ ਲਈ ਕਹਿ ਸਕਦੀਆਂ ਹਨ।\n\nਜੇ ਤੁਸੀਂ ਕਿਸੇ ਦਿਲਚਸਪੀ ਨੂੰ ਬਲਾਕ ਕਰਦੇ ਹੋ, ਤਾਂ ਉਸਨੂੰ ਉਦੋਂ ਤੱਕ ਸੂਚੀ ਵਿੱਚ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਉਸਨੂੰ ਅਣਬਲਾਕ ਨਹੀਂ ਕਰ ਦਿੰਦੇ। ਤੁਸੀਂ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦੇਖ ਸਕਦੇ ਹੋ।"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ਬਲਾਕ ਕਰੋ"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ਤੁਹਾਡੇ ਵੱਲੋਂ ਬਲਾਕ ਕੀਤੀਆਂ ਐਪਾਂ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਡਾਟੇ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ਤੁਹਾਡੀ ਦਿਲਚਸਪੀ ਵਾਲੀਆਂ ਚੀਜ਼ਾਂ ਯਾਦ ਰੱਖਣਾ, ਉਨ੍ਹਾਂ ਐਪਾਂ ਲਈ ਆਮ ਗੱਲ ਹੈ ਜਿਨ੍ਹਾਂ ਦੀ ਵਰਤੋਂ ਤੁਸੀਂ ਆਪਣੇ ਅਨੁਭਵ ਨੂੰ ਵਿਅਕਤੀਗਤ ਬਣਾਉਣ ਲਈ ਕਰਦੇ ਹੋ। ਐਪਾਂ Android ਦੀ ਮਦਦ ਨਾਲ ਤੁਹਾਡੇ ਵਿਸ਼ਿਆਂ ਬਾਰੇ ਜਾਣਕਾਰੀ ਵੀ ਸਟੋਰ ਕਰ ਸਕਦੀਆਂ ਹਨ।\n\nਉਦਾਹਰਨ ਲਈ, ਜੇ ਤੁਸੀਂ ਮੈਰਾਥਨ ਦੀ ਸਿਖਲਾਈ ਬਾਰੇ ਕਿਸੇ ਐਪ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹੋ, ਤਾਂ ਉਹ ਐਪ ਇਹ ਫ਼ੈਸਲਾ ਕਰ ਸਕਦੀ ਹੈ ਕਿ ਤੁਸੀਂ ਦੌੜਨ ਵਾਲੇ ਜੁੱਤਿਆਂ ਵਿੱਚ ਦਿਲਚਸਪੀ ਰੱਖਦੇ ਹੋ। ਬਾਅਦ ਵਿੱਚ, ਜੇ ਤੁਸੀਂ ਕੋਈ ਵੱਖਰੀ ਐਪ ਵਰਤਦੇ ਹੋ, ਤਾਂ ਉਹ ਐਪ ਪਹਿਲੀ ਵਾਲੀ ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਦੌੜਨ ਵਾਲੇ ਜੁੱਤਿਆਂ ਦਾ ਵਿਗਿਆਪਨ ਦਿਖਾ ਸਕਦੀ ਹੈ।\n\nAndroid, ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਡਾਟੇ ਨੂੰ ਨਿਯਮਿਤ ਤੌਰ \'ਤੇ ਸਵੈਚਲਿਤ-ਮਿਟਾਉਂਦਾ ਹੈ। ਉਹ ਐਪ ਸੂਚੀ ਵਿੱਚ ਮੁੜ ਦਿਖਾਈ ਦੇ ਸਕਦੀ ਹੈ, ਜਿਸਨੂੰ ਤੁਸੀਂ ਦੁਬਾਰਾ ਵਰਤਦੇ ਹੋ। ਜਾਂ ਤੁਸੀਂ ਕਿਸੇ ਐਪ ਨੂੰ ਤੁਹਾਡੇ ਲਈ ਵਿਗਿਆਪਨਾਂ ਸੰਬੰਧੀ ਸੁਝਾਅ ਦੇਣ ਤੋਂ ਬਲਾਕ ਕਰ ਸਕਦੇ ਹੋ।\n\nਤੁਹਾਡੀਆਂ ਐਪਾਂ ਵਿੱਚ, ਤੁਹਾਨੂੰ ਦਿਖਾਈ ਦੇਣ ਵਾਲਾ ਵਿਗਿਆਪਨ ਇਸ ਸੈਟਿੰਗ, ਵਿਗਿਆਪਨ ਵਿਸ਼ਿਆਂ ਸੰਬੰਧੀ ਸੈਟਿੰਗ, ਤੁਹਾਡੀ ਵਿਗਿਆਪਨ ਆਈਡੀ ਸੰਬੰਧੀ ਸੈਟਿੰਗਾਂ ਅਤੇ ਤੁਹਾਡੇ ਵੱਲੋਂ ਵਰਤੀ ਜਾਣ ਵਾਲੀ ਐਪ ਰਾਹੀਂ ਵਿਗਿਆਪਨਾਂ ਨੂੰ ਵਿਅਕਤੀਗਤ ਬਣਾਉਣ ਦੀ ਵਿਸ਼ੇਸ਼ਤਾ ਦੇ ਆਧਾਰ \'ਤੇ ਵਿਅਕਤੀਗਤ ਬਣਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ।"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਨਵੀਂ ਵਿਸ਼ੇਸ਼ਤਾ ਉਪਲਬਧ ਹੈ"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"ਨਵੀਂ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਵਿਸ਼ੇਸ਼ਤਾ ਹੁਣ ਉਪਲਬਧ ਹੈ"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"ਵਿਗਿਆਪਨ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਦਾ ਮੁਲਾਂਕਣ ਕਰਨ ਵਿੱਚ ਮਦਦ ਲਈ ਐਪਾਂ ਵਿਚਾਲੇ ਸਿਰਫ਼ ਬਹੁਤ ਹੀ ਸੀਮਤ ਜਾਣਕਾਰੀ ਨੂੰ ਸਾਂਝਾ ਕੀਤਾ ਜਾਂਦਾ ਹੈ"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"ਅਸੀਂ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਨਵੀਂ ਵਿਸ਼ੇਸ਼ਤਾ ਲਾਂਚ ਕਰ ਰਹੇ ਹਾਂ ਜਿਸਨੂੰ ਵਿਗਿਆਪਨ ਮਾਪ ਕਹਿੰਦੇ ਹਨ। Android ਐਪਾਂ ਵਿਚਾਲੇ ਬਹੁਤ ਹੀ ਸੀਮਤ ਜਾਣਕਾਰੀ ਨੂੰ ਸਾਂਝਾ ਕਰਦਾ ਹੈ, ਜਿਵੇਂ ਕਿ ਜਦੋਂ ਤੁਹਾਨੂੰ ਕੋਈ ਵਿਗਿਆਪਨ ਦਿਖਾਇਆ ਗਿਆ ਸੀ, ਤਾਂ ਜੋ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਦਾ ਮੁਲਾਂਕਣ ਕਰਨ ਵਿੱਚ ਐਪਾਂ ਦੀ ਮਦਦ ਕੀਤੀ ਜਾ ਸਕੇ।"</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"ਤੁਸੀਂ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਤਬਦੀਲੀਆਂ ਕਰ ਸਕਦੇ ਹੋ।"</string>

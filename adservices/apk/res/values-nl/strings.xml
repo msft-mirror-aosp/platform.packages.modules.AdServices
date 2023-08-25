@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Geeft een app toegang tot de AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Toegang tot de Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Geeft een app toegang tot de Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Toegang tot de AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Geeft een app toegang tot de AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Toegang tot de App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Geeft een app toegang tot de App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Toegang tot de Consent Service API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Geeft een app toegang tot de AdService-API voor activeringsstatus."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Toegang tot AdServicesManager API\'s"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Geeft een app toegang tot de AdServicesManager API\'s."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android-systeem"</string>
+    <string name="app_label" msgid="5844694701336604490">"Advertentieprivacy"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Doe mee aan de bèta voor advertentieprivacy van Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android onderzoekt meer privacyvriendelijke manieren waarop apps jou advertenties kunnen laten zien"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Meer informatie"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps die je hebt geblokkeerd"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Door apps voorgestelde gegevens resetten"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Het is heel gewoon dat apps die je gebruikt, onthouden waarin je bent geïnteresseerd om zo de functionaliteit te personaliseren. Apps kunnen ook informatie in Android opslaan over je onderwerpen.\n\nAls je bijvoorbeeld een trainingsapp voor marathons gebruikt, kan de app bepalen dat je geïnteresseerd bent in hardloopschoenen. Gebruik je later een andere app, dan kan die app je een advertentie voor hardloopschoenen laten zien die wordt voorgesteld door de eerste app.\n\nAndroid verwijdert door apps voorgestelde gegevens regelmatig automatisch. Een app die je gebruikt, kan opnieuw in de lijst verschijnen. Je kunt ook altijd voorkomen dat een app advertenties voor je voorstelt.\n\nIn je apps kunnen getoonde advertenties worden gepersonaliseerd, afhankelijk van deze instelling, de instelling voor advertentieonderwerpen, je advertentie-ID-instellingen en of de app die je gebruikt advertenties personaliseert."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Nieuwe functie voor advertentieprivacy beschikbaar"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Nieuwe functie voor advertentieprivacy nu beschikbaar"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Er wordt alleen zeer beperkte informatie gedeeld tussen apps zodat de prestaties van advertenties kunnen worden gemeten"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"We lanceren een nieuwe functie voor advertentieprivacy: advertentiemeting. Android deelt alleen zeer beperkte informatie tussen apps, zoals wanneer een advertentie aan jou is getoond, zodat apps de prestaties van advertenties kunnen meten."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Je kunt wijzigingen aanbrengen in de instellingen voor advertentieprivacy."</string>

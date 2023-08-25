@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Дозвољава апликацији да приступа AdServices Consent API-ју."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Приступ API-ју за ИД огласа"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Дозвољава апликацији да приступа API-ју за ИД огласа."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Приступ API-ју за отпремање услуга оглашавања Cobalt"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Дозвољава апликацији да приступа API-ју за отпремање услуга оглашавања Cobalt."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Приступ API-ју за ИД скупа апликација"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Дозвољава апликацији да приступа API-ју за ИД скупа апликација."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Приступ Consent Service API-ју"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Дозвољава апликацији да приступа API-ју за омогућавање Adservice-a."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Приступ API-јима за AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Дозвољава апликацији да приступа API-јима за AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android систем"</string>
+    <string name="app_label" msgid="5844694701336604490">"Приватност са огласима"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Придружите се бета верзији Android приватности са огласима"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android истражује приватније начине да вам апликације приказују огласе"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Сазнајте више"</string>
@@ -130,7 +132,7 @@
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Сада имате више избора у вези са огласима који вам се приказују, а идентитет вам је заштићен"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Нове функције приватности са огласима су сада доступне"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android сада нуди нове функције приватности које вам пружају више избора у вези са огласима који вам се приказују."</string>
-    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Следеће"</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Даље"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Заштићено окружење приватности"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Учествујте у бета верзији Android приватности са огласима"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Заштићено окружење приватности"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Апликације које сте блокирали"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Ресетуј податке које предлажу апликације"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Уобичајено је за апликације које користите да памте ствари које вас интересују ради персонализовања доживљаја. Апликације такође могу да чувају информације о вашим темама помоћу Android-а.\n\nНа пример, ако користите апликацију за трчање маратона, апликација може да заљкучи да вас занимају патике за трчање. Ако касније будете користили неку другу апликацију, она може да вам прикаже оглас за патике за трчање на основу предлога прве апликације.\n\nAndroid стандардно аутоматски брише податке које предлажу апликације. Ако поново будете користили апликацију, она може опет да се појави на листи. Можете и да спречите апликацију да вам предлаже огласе.\n\nОглас који видите у апликацији може да буде персонализован у зависности од овог подешавања, подешавања тема огласа, подешавања ИД-а оглашавања и тога да ли апликација коју користите персонализује огласе."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Доступна је нова функција за приватност са огласима"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Нова функција за приватност са огласима је сада доступна"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Само веома ограничене информације се деле између апликација да би се лакше мерио учинак огласа"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Покрећемо нову функцију за приватност са огласима, која се зове мерење огласа. Android дели само веома ограничене информације између апликација, на пример, када вам је оглас приказан, да би помогао апликацијама да мере учинак огласа."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Можете да промените подешавања приватности са огласима."</string>

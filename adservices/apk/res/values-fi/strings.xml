@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Sovellus saa pääsyn AdServices Consent APIin."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Pääsy Ad ID APIin"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Sovellus saa pääsyn Ad ID APIin."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Pääsy AdServices Cobalt Upload APIin"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Sovellus saa pääsyn AdServices Cobalt Upload APIin."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Pääsy App Set ID APIin"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Sovellus saa pääsyn App Set ID APIin."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Pääsyn Consent Service APIin."</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Sovellus saa pääsyn AdServicen enablement state APIin."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Pääsy AdServicesManagerin rajapintoihin"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Sovellus saa pääsyn AdServicesManagerin rajapintoihin."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android-järjestelmä"</string>
+    <string name="app_label" msgid="5844694701336604490">"Mainosyksityisyys"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Liity Androidin mainosyksityisyyden betaohjelmaan"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android tutkii aiempaa yksityisempiä tapoja näyttää sinulle mainoksia"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Lue lisää"</string>
@@ -222,8 +224,8 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Estämäsi sovellukset"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nollaa sovellusten ehdottama data"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Käyttämäsi sovellukset muistavat usein sinua kiinnostavia aiheita ja käyttävät niitä personoidessaan kokemustasi. Sovellukset voivat myös tallentaa tietoja aiheista Androidiin.\n\nJos esimerkiksi käytät sovellusta maratonille treenaamiseen, sovellus voi päätellä, että olet kiinnostunut juoksukengistä. Jos käytät myöhemmin toista sovellusta, se voi näyttää sinulle ensimmäisen sovelluksen ehdottamia mainoksia juoksukengistä.\n\nAndroid poistaa sovellusten ehdotusdataa automaattisesti ja säännöllisesti. Jos käytät sovellusta uudelleen, se voi näkyä taas listalla. Voit milloin tahansa estää sovellusta ehdottamasta sinulle mainoksia.\n\nSovelluksessa näkemäsi mainokset voivat olla personoituja riippuen tästä asetuksesta, mainosten aiheasetuksesta, mainostunnusasetuksista ja siitä, personoiko käyttämäsi sovellus mainoksia."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Uusi mainosyksityisyysominaisuus saatavilla"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Sovellusten välillä vain hyvin rajallisia tietoja, jotta sovellukset voivat mitata mainosten tuloksia"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Uusi mainosyksityisyysominaisuus nyt saatavilla"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Sovellusten välillä jaetaan vain hyvin rajallisia tietoja, jotta sovellukset voivat mitata mainosten tuloksia"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Julkaisemme uuden yksityisyyteen liittyvän mainosominaisuuden, jota kutsutaan mainosmittaukseksi. Android jakaa sovellusten välillä vain hyvin rajallisia tietoja, esimerkiksi sen, milloin mainos on näytetty sinulle. Näiden tietojen avulla sovellukset voivat mitata mainosten tuloksia."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Voit tehdä muutoksia mainosyksityisyysasetuksista."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android sallii sovellusten kerätä vain tiettyjä datatyyppejä."</string>

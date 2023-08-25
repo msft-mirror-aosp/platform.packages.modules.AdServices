@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Leidžiama programai pasiekti „AdServices Consent“ API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Prieiga prie „Ad ID“ API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Leidžiama programai pasiekti „Ad ID“ API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Galimybė pasiekti „AdServices Cobalt“ įkėlimo API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Leidžiama programai pasiekti „AdServices Cobalt“ įkėlimo API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Prieiga prie „App Set ID“ API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Leidžiama programai pasiekti „App Set ID“ API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Pasiekti „Consent Service“ API"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Leidžiama programai pasiekti skelbimų paslaugos įgalinimo būsenos API."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Prieiga prie „AdServicesManager“ API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Leidžiama programai pasiekti „AdServicesManager“ API."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistema „Android“"</string>
+    <string name="app_label" msgid="5844694701336604490">"Su skelbimais susijęs privatumas"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Prisijunkite prie „Android“ su skelbimais susijusio privatumo beta versijos programos"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"„Android“ bando rasti privatesnių būdų, kaip programos gali jums rodyti skelbimus"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Sužinokite daugiau"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Jūsų užblokuotos programos"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Iš naujo nustatyti programų siūlomus duomenis"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Naudojamose programose dažnai įsimenami jus dominantys dalykai, kad būtų galima suasmeninti jums teikiamas funkcijas. Be to, programos gali saugoti informaciją sistemoje „Android“ apie jūsų temas.\n\nPvz., jei naudojate maratono mokymo programą, programa gali nuspręsti, kad jus domina bėgimo bateliai. Vėliau, naudojant kitą programą, ši programa gali rodyti bėgimo batelių skelbimą, pasiūlytą pirmosios programos.\n\n„Android“ reguliariai automatiškai ištrina programų siūlomus duomenis. Vėl naudojama programa gali būti iš naujo rodoma sąraše. Arba galite neleisti programai siūlyti jums skelbimų.\n\nProgramose rodomas skelbimas gali būti suasmenintas, atsižvelgiant į šį nustatymą, skelbimų temų, reklamavimo ID ir naudojamos programos skelbimų suasmeninimo nustatymus."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Pasiekiama nauja su skelbimais susijusio privatumo funkcija"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Dabar pasiekiama nauja skelbimų privatumo funkcija"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Su programomis bendrinama tik labai ribota informacija, siekiant padėti įvertinti programų našumą"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Pristatome naują skelbimų privatumo funkciją, vadinamą skelbimų vertinimu. „Android“ su programomis bendrina tik labai ribotą informaciją, pvz., kada skelbimas jums buvo parodytas, kad padėtų programoms įvertinti skelbimų našumą."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Pakeitimus galite atlikti su skelbimais susijusio privatumo nustatymuose."</string>

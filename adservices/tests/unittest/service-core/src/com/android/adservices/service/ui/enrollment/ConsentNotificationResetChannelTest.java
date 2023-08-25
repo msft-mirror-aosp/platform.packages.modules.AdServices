@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.android.adservices.service.Flags;
@@ -33,7 +32,6 @@ import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationResetChannel;
-import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;

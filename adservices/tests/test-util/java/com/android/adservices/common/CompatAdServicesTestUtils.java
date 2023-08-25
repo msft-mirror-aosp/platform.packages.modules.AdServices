@@ -16,12 +16,16 @@
 
 package com.android.adservices.common;
 
-import com.android.compatibility.common.util.ShellUtils;
+/**
+ * Class to place back-compat Adservices related helper methods.
+ *
+ * @deprecated tests should use {@link AdServicesFlagsSetterRule} instead.
+ */
+@Deprecated
+public final class CompatAdServicesTestUtils {
 
-/** Class to place back-compat Adservices related helper methods */
-public class CompatAdServicesTestUtils {
-    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
-    private static final int APPSEARCH_ONLY = 3;
+    private static final AdServicesFlagsSetterRule sRule =
+            AdServicesFlagsSetterRule.forLegacyHelpers(CompatAdServicesTestUtils.class);
 
     private CompatAdServicesTestUtils() {
         /* cannot be instantiated */
@@ -32,56 +36,52 @@ public class CompatAdServicesTestUtils {
      * related code on S- before running various PPAPI related tests.
      */
     public static void setFlags() {
-        setEnableBackCompatFlag(true);
-        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
-        setConsentSourceOfTruth(APPSEARCH_ONLY);
-        setEnableAppSearchConsentData(true);
-        setEnableMeasurementRollbackAppSearchKillSwitch(false);
+        call(() -> sRule.setCompatModeFlags());
     }
 
     /** Reset back-compat related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
-        setEnableBackCompatFlag(false);
-        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setEnableAppSearchConsentData(false);
-        setEnableMeasurementRollbackAppSearchKillSwitch(true);
+        call(() -> sRule.resetCompatModeFlags());
     }
 
     public static void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
+        call(() -> sRule.setPpapiAppAllowList(allowList));
     }
 
     public static String getAndOverridePpapiAppAllowList(String packageName) {
-        String mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + packageName);
-        return mPreviousAppAllowList;
+        return call(
+                () -> {
+                    String previousAppAllowList = sRule.getPpapiAppAllowList();
+                    setPpapiAppAllowList(packageName); // this method takes care of the separator
+                    return previousAppAllowList;
+                });
     }
 
-    private static void setEnableBackCompatFlag(boolean isEnabled) {
-        ShellUtils.runShellCommand("device_config put adservices enable_back_compat " + isEnabled);
+    public static void setMsmtApiAppAllowList(String allowList) {
+        call(() -> sRule.setMsmtApiAppAllowList(allowList));
     }
 
-    private static void setConsentSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_source_of_truth " + source);
+    public static String getAndOverrideMsmtApiAppAllowList(String packageName) {
+        return call(
+                () -> {
+                    String previousAppAllowList = sRule.getMsmtApiAppAllowList();
+                    setMsmtApiAppAllowList(packageName); // this method takes care of the separator
+                    return previousAppAllowList;
+                });
     }
 
-    private static void setBlockedTopicsSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices blocked_topics_source_of_truth " + source);
+    // Helper method as all AdServicesFlagsSetterRule methods throws Exception in the signature,
+    // although not in reality (the exceptions are declared because of the host-side counterpart)
+    private static <T> T call(CallableWithScissors<T> r) {
+        try {
+            return r.call();
+        } catch (Throwable t) {
+            // Shouldn't happen
+            throw new IllegalStateException("CallableWithScissors failed", t);
+        }
     }
 
-    private static void setEnableAppSearchConsentData(boolean isEnabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data " + isEnabled);
-    }
-
-    private static void setEnableMeasurementRollbackAppSearchKillSwitch(boolean isEnabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_rollback_deletion_app_search_kill_switch "
-                        + isEnabled);
+    private interface CallableWithScissors<T> {
+        T call() throws Throwable;
     }
 }

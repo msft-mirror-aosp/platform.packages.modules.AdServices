@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Аппликэйшнд AdServices Consent API-д хандах зөвшөөрөл олгодог."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API-д хандах"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Аппликэйшнд Ad ID API-д хандах зөвшөөрөл олгодог."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API-д хандах"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Аппликэйшнд AdServices Cobalt Upload API-д хандахыг зөвшөөрнө."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Аппын багцын ID API-д хандах"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Аппликэйшнд Аппын багцын ID API-д хандах зөвшөөрөл олгодог."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-д хандах"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Аппликэйшнд AdService-н идэвхжүүлэлтийн төлөвийн API-д хандахыг зөвшөөрнө."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager-н API-д хандах"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Аппликэйшнд AdServicesManager-н API-д хандахыг зөвшөөрнө."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android систем"</string>
+    <string name="app_label" msgid="5844694701336604490">"Зарын нууцлал"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android-н зарын нууцлалын бетад нэгдэнэ үү"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android нь аппууд танд зар харуулах илүү хувийн аргыг судалж байна"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Нэмэлт мэдээлэл авах"</string>
@@ -222,7 +224,7 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Таны блоклосон аппууд"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Аппын санал болгосон өгөгдлийг шинэчлэх"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Таны хэрэглээг хувийн болгохын тулд таны ашигладаг аппууд таны сонирхдог зүйлсийг санадаг байх нь хэвийн зүйл юм. Мөн аппууд таны сэдвүүдийн тухай мэдээллийг Android дээр хадгалдаг.\n\nЖишээ нь, хэрэв та марафон гүйлтийн сургалтын талаарх апп ашигладаг бол уг апп таныг гүйлтийн гутал сонирхож байна гэж үзэж болох юм. Дараа нь таныг өөр апп ашиглах үед тус апп танд эхний аппаас санал болгосны дагуу гүйлтийн гутлын зар үзүүлэх боломжтой.\n\nAndroid нь аппын санал болгосон өгөгдлийг тогтмол автоматаар устгадаг. Таны дахин ашигласан апп жагсаалтад дахин гарч ирж магадгүй. Эсвэл та апп танд зар санал болгохыг блоклож болно.\n\nТаны аппуудад таны харж буй зарыг хувийн болгох эсэх нь энэ тохиргоо, зарын сэдвийн тохиргоо, таны зар сурталчилгааны ID тохиргоо болон таны ашиглаж буй апп нь зарыг хувийн болгодог зэргээс хамаарна."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Зарын нууцлалын шинэ онцлог боломжтой"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Зарын нууцлалын шинэ онцлог одоо боломжтой боллоо"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Зөвхөн маш хязгаарлагдмал мэдээллийг зарын гүйцэтгэлийг хэмжихийн тулд аппуудын хооронд хуваалцдаг"</string>
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Бид зарын хэмжилт нэртэй зарын нууцлалын шинэ онцлогийг эхлүүлж байна. Android нь аппуудад зарын гүйцэтгэлийг хэмжихэд туслахын тулд зарыг танд хэзээ харуулсан зэрэг зөвхөн маш хязгаарлагдмал мэдээллийг аппууд хооронд хуваалцдаг."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Та зарын нууцлалын тохиргоонд өөрчлөлт хийх боломжтой."</string>

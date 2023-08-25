@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"AdServices Cobalt Upload API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ನ API ಗಳಿಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager ನ API ಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್ ಒಂದನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android ಸಿಸ್ಟಂ"</string>
+    <string name="app_label" msgid="5844694701336604490">"ಆ್ಯಡ್ ಗೌಪ್ಯತೆ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾವನ್ನು ಸೇರಿಕೊಳ್ಳಿ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"ನಿಮಗೆ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಆ್ಯಪ್‌ಗಳು ಬಳಸಬಹುದಾದ ಇನ್ನಷ್ಟು ಖಾಸಗಿ ವಿಧಾನಗಳನ್ನು Android ಎಕ್ಸ್‌ಪ್ಲೋರ್ ಮಾಡುತ್ತಿದೆ"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"</string>
@@ -222,9 +224,9 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ನೀವು ನಿರ್ಬಂಧಿಸಿದ ಆ್ಯಪ್‌ಗಳು"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ಆ್ಯಪ್ ಸೂಚಿಸಿದ ಡೇಟಾವನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ನಿಮ್ಮ ಅನುಭವವನ್ನು ವೈಯಕ್ತೀಕರಿಸಲು ನಿಮಗೆ ಆಸಕ್ತಿ ಇರುವ ವಿಷಯಗಳನ್ನು ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು ಸಾಮಾನ್ಯವಾಗಿ ನೆನಪಿಟ್ಟುಕೊಳ್ಳುತ್ತವೆ. ಆ್ಯಪ್‌ಗಳು ನಿಮ್ಮ ವಿಷಯಗಳ ಕುರಿತು Android ನೊಂದಿಗೆ ಮಾಹಿತಿಯನ್ನು ಸಹ ಸಂಗ್ರಹಿಸಬಹುದು.\n\nಉದಾಹರಣೆಗೆ, ನೀವು ಮ್ಯಾರಥಾನ್ ತರಬೇತಿಯ ಕುರಿತು ಆ್ಯಪ್ ಒಂದನ್ನು ಬಳಸಿದರೆ, ನೀವು ರನ್ನಿಂಗ್ ಶೂಗಳ ಕುರಿತು ಆಸಕ್ತಿ ಹೊಂದಿದ್ದೀರಿ ಎಂದು ಆ್ಯಪ್‌ ನಿರ್ಧರಿಸಬಹುದು. ನಂತರ, ನೀವು ಬೇರೆ ಆ್ಯಪ್ ಒಂದನ್ನು ಬಳಸಿದರೆ, ಮೊದಲ ಆ್ಯಪ್ ಸೂಚಿಸಿದ ರನ್ನಿಂಗ್ ಶೂಗಳ ಜಾಹೀರಾತನ್ನು ಆ ಆ್ಯಪ್ ನಿಮಗೆ ತೋರಿಸುತ್ತದೆ.\n\nನಿಯಮಿತವಾಗಿ ಆ್ಯಪ್ ಸೂಚಿಸಿದ ಡೇಟಾವನ್ನು Android ಸ್ವಯಂ ಅಳಿಸುತ್ತದೆ. ನೀವು ಮತ್ತೆ ಬಳಸುವ ಆ್ಯಪ್, ಪಟ್ಟಿಯಲ್ಲಿ ಪುನಃ ಕಾಣಿಸಿಕೊಳ್ಳಬಹುದು. ಅಥವಾ ನಿಮಗಾಗಿ ಜಾಹೀರಾತುಗಳನ್ನು ಸೂಚಿಸದಂತೆ ನೀವು ಆ್ಯಪ್ ಒಂದನ್ನು ನಿರ್ಬಂಧಿಸಬಹುದು.\n\nನಿಮ್ಮ ಆ್ಯಪ್‌ಗಳಲ್ಲಿ, ಈ ಸೆಟ್ಟಿಂಗ್, ಜಾಹೀರಾತು ವಿಷಯಗಳ ಸೆಟ್ಟಿಂಗ್, ನಿಮ್ಮ ಜಾಹೀರಾತು ಐಡಿ ಸೆಟ್ಟಿಂಗ್‌ಗಳು ಮತ್ತು ನೀವು ಬಳಸುತ್ತಿರುವ ಆ್ಯಪ್ ಜಾಹೀರಾತುಗಳನ್ನು ವೈಯಕ್ತೀಕರಿಸುತ್ತದೆಯೇ ಎಂಬುದನ್ನು ಅವಲಂಬಿಸಿ ನೀವು ನೋಡುವ ಜಾಹೀರಾತನ್ನು ವೈಯಕ್ತೀಕರಿಸಬಹುದು."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"ಹೊಸ ಆ್ಯಡ್‌ಗಳ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳು ಲಭ್ಯವಿವೆ"</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"ಹೊಸ ಆ್ಯಡ್‌ಗಳ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ ಈಗ ಲಭ್ಯವಿದೆ"</string>
     <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"ಆ್ಯಡ್ ಪರ್ಫಾರ್ಮೆನ್ಸ್ ಅನ್ನು ಅಳೆಯುವುದಕ್ಕಾಗಿ ಸಹಾಯ ಮಾಡಲು ಬಹಳ ಸೀಮಿತ ಮಾಹಿತಿಯನ್ನು ಮಾತ್ರ ಆ್ಯಪ್‌ಗಳ ನಡುವೆ ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತದೆ"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"ನಾವು ಆ್ಯಡ್ ಮಾಪನ ಎಂಬ ಹೊಸ ಆ್ಯಡ್ ಗೌಪ್ಯತೆ ಫೀಚರ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸುತ್ತಿದ್ದೇವೆ. ಆ್ಯಪ್‌ಗಳ ಕಾರ್ಯಕ್ಷಮತೆಯನ್ನು ಅಳೆಯಲು ಆ್ಯಪ್‌ಗಳಿಗೆ ಸಹಾಯ ಮಾಡುವುದಕ್ಕಾಗಿ ನಿಮಗೆ ಜಾಹೀರಾತೊಂದನ್ನು ತೋರಿಸಿದಾಗ Android ಬಹಳ ಸೀಮಿತ ಮಾಹಿತಿಯನ್ನು ಮಾತ್ರ ಆ್ಯಪ್‌ಗಳ ನಡುವೆ ಹಂಚಿಕೊಳ್ಳುತ್ತದೆ."</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"ನಾವು ಜಾಹೀರಾತು ಮಾಪನ ಎಂಬ ಹೊಸ ಜಾಹೀರಾತು ಗೌಪ್ಯತೆ ಫೀಚರ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸುತ್ತಿದ್ದೇವೆ. ಆ್ಯಪ್‌ಗಳ ಕಾರ್ಯಕ್ಷಮತೆಯನ್ನು ಅಳೆಯಲು ಆ್ಯಪ್‌ಗಳಿಗೆ ಸಹಾಯ ಮಾಡುವುದಕ್ಕಾಗಿ ನಿಮಗೆ ಜಾಹೀರಾತೊಂದನ್ನು ತೋರಿಸಿದಾಗ Android ಬಹಳ ಸೀಮಿತ ಮಾಹಿತಿಯನ್ನು ಮಾತ್ರ ಆ್ಯಪ್‌ಗಳ ನಡುವೆ ಹಂಚಿಕೊಳ್ಳುತ್ತದೆ."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"ಆ್ಯಡ್‌ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಬದಲಾವಣೆಗಳನ್ನು ಮಾಡಬಹುದು."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು, ತಮ್ಮ ಜಾಹೀರಾತುಗಳ ಕಾರ್ಯಕ್ಷಮತೆಯನ್ನು ಅಳೆಯುವುದಕ್ಕಾಗಿ ಅವುಗಳಿಗೆ ಸಹಾಯ ಮಾಡಲು Android ಬಳಿ ಮಾಹಿತಿಯನ್ನು ಕೇಳಬಹುದು. Android, ಡೇಟಾದ ಸೀಮಿತ ಪ್ರಕಾರಗಳನ್ನು ಮಾತ್ರ ಸಂಗ್ರಹಿಸಲು ಆ್ಯಪ್‌ಗಳಿಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"ಸಂಗೀತ, ಸುದ್ದಿ ಮತ್ತು ಕ್ರೀಡೆಗಳಂತಹ ಆಸಕ್ತಿಯ ವಿಷಯಗಳನ್ನು ಪ್ರತಿನಿಧಿಸುವ ಸಂಕೇತಗಳ ವರ್ಣರಂಜಿತ ಚಿತ್ರಣ"</string>

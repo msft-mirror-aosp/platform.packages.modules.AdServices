@@ -23,6 +23,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import android.net.Uri;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
@@ -92,7 +94,7 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void fakeReports_flexEventReport_generatesFromStaticReportStates() {
-        Source source = SourceFixture.getValidSourceWithFlexEventReport();
+        Source source = SourceFixture.getValidSourceWithFlexEventReportWithFewerState();
         // Force increase the probability of random attribution.
         doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
         int falseCount = 0;
@@ -202,6 +204,92 @@ public class SourceNoiseHandlerTest {
                         /* reportingWindowCount= */ 1,
                         /* destinationMultiplier */ 1),
                 mSourceNoiseHandler.getImpressionNoiseParams(navigationSource2dExpiry));
+    }
+
+    @Test
+    public void impressionNoiseParamGeneration_flexLiteAPI() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        long eventTime = System.currentTimeMillis();
+        Source eventSource2Windows =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setMaxEventLevelReports(2)
+                        .setEventReportWindows("{ 'end_times': [3600, 7200]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 2,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(eventSource2Windows));
+
+        Source eventSource2Windows2Destinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setWebDestinations(List.of(Uri.parse("https://example.test")))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setMaxEventLevelReports(2)
+                        .setEventReportWindows("{ 'end_times': [3600, 7200]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 2,
+                        /* destinationMultiplier */ 2),
+                mSourceNoiseHandler.getImpressionNoiseParams(eventSource2Windows2Destinations));
+
+        Source eventSource1Window =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(eventTime)
+                        .setMaxEventLevelReports(2)
+                        .setEventReportWindows("{'end_times': [3600]}")
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 1,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(eventSource1Window));
+
+        Source navigationSource3Windows =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
+                        .setMaxEventLevelReports(3)
+                        .setEventReportWindows("{'end_times': [3600, 7200, 86400]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 3,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(navigationSource3Windows));
+
+        Source navigationSource2Window =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventTime(eventTime)
+                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
+                        .setMaxEventLevelReports(3)
+                        .setEventReportWindows("{'end_times': [3600, 7200]}")
+                        .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 2,
+                        /* destinationMultiplier */ 1),
+                mSourceNoiseHandler.getImpressionNoiseParams(navigationSource2Window));
     }
 
     @Test

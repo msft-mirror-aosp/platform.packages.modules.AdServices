@@ -19,24 +19,36 @@ package com.android.adservices.data.adselection;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
 
 /** Room based database for ad selection on servers. */
+@SuppressWarnings("deprecation")
 @Database(
-        entities = {DBEncryptionKey.class, DBEncryptionContext.class, DBReportingUris.class},
-        version = AdSelectionServerDatabase.DATABASE_VERSION)
+        entities = {
+            DBReportingUris.class,
+            DBEncryptionKey.class,
+            DBEncryptionContext.class,
+            DBAuctionServerAdSelection.class
+        },
+        version = AdSelectionServerDatabase.DATABASE_VERSION,
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2),
+        })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionServerDatabase extends RoomDatabase {
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "adselectionserver.db";
+    public static final int DATABASE_VERSION = 2;
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adselectionserver.db");
 
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -69,7 +81,7 @@ public abstract class AdSelectionServerDatabase extends RoomDatabase {
     public abstract EncryptionContextDao encryptionContextDao();
 
     /**
-     * @return a Dao to access entities in {@link DBReportingUris} database.
+     * @return a Dao to access entities in {@link DBAuctionServerAdSelection} database.
      */
-    public abstract ReportingUrisDao reportingUrisDao();
+    public abstract AuctionServerAdSelectionDao auctionServerAdSelectionDao();
 }

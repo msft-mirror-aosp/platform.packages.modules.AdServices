@@ -17,7 +17,9 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -29,6 +31,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.service.ui.constants.DebugMessages.BACK_COMPAT_FEATURE_ENABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_CALLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_DISABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.ENABLE_AD_SERVICES_API_ENABLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.IS_AD_SERVICES_ENABLED_API_CALLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_SERVICES_ENABLED_API_CALLED_MESSAGE;
+import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.EnableAdServicesResponse;
@@ -53,6 +62,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.UxEngine;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 import java.util.concurrent.Executor;
 
@@ -69,17 +79,22 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     public final String ADSERVICES_STATUS_SHARED_PREFERENCE = "AdserviceStatusSharedPreference";
     private final Context mContext;
     private final UxEngine mUxEngine;
+    private final UxStatesManager mUxStatesManager;
     private final Flags mFlags;
 
-    public AdServicesCommonServiceImpl(Context context, Flags flags, UxEngine uxEngine) {
+    public AdServicesCommonServiceImpl(
+            Context context, Flags flags, UxEngine uxEngine, UxStatesManager uxStatesManager) {
         mContext = context;
         mFlags = flags;
         mUxEngine = uxEngine;
+        mUxStatesManager = uxStatesManager;
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_STATE)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(@NonNull IAdServicesCommonCallback callback) {
+        LogUtil.d(IS_AD_SERVICES_ENABLED_API_CALLED_MESSAGE);
+
         boolean hasAccessAdServicesStatePermission =
                 PermissionHelper.hasAccessAdServicesStatePermission(mContext);
 
@@ -87,15 +102,31 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 () -> {
                     try {
                         if (!hasAccessAdServicesStatePermission) {
+                            LogUtil.e(UNAUTHORIZED_CALLER_MESSAGE);
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             return;
                         }
-                        reconsentIfNeededForEU();
+
                         boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
                         if (mFlags.isBackCompatActivityFeatureEnabled()) {
+                            LogUtil.d(BACK_COMPAT_FEATURE_ENABLED_MESSAGE);
                             isAdServicesEnabled &=
                                     PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
                         }
+
+                        // TO-DO (b/286664178): remove the block after API is fully ramped up.
+                        if (mFlags.getEnableAdServicesSystemApi()
+                                && ConsentManager.getInstance(mContext).getUx() != null) {
+                            LogUtil.d(ENABLE_AD_SERVICES_API_ENABLED_MESSAGE);
+                            // PS entry point should be hidden from unenrolled users.
+                            isAdServicesEnabled &= mUxStatesManager.isEnrolledUser(mContext);
+                        } else {
+                            LogUtil.d(ENABLE_AD_SERVICES_API_DISABLED_MESSAGE);
+                            // Reconsent is already handled by the enableAdServices API.
+                            reconsentIfNeededForEU();
+                        }
+
+                        LogUtil.d("isAdServiceseEnabled: " + isAdServicesEnabled);
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
                                         .setAdServicesEnabled(isAdServicesEnabled)
@@ -120,16 +151,19 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
      * Adservice Is enabled
      */
     @Override
-    @RequiresPermission(MODIFY_ADSERVICES_STATE)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesEnabled(boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
+        LogUtil.d(SET_AD_SERVICES_ENABLED_API_CALLED_MESSAGE);
+
         boolean hasModifyAdServicesStatePermission =
                 PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
         sBackgroundExecutor.execute(
                 () -> {
                     try {
                         if (!hasModifyAdServicesStatePermission) {
                             // TODO(b/242578032): handle the security exception in a better way
-                            LogUtil.d("Caller is not authorized to control AdServices state");
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
 
@@ -233,10 +267,12 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     }
 
     @Override
-    @RequiresPermission(ACCESS_ADSERVICES_STATE)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
             @NonNull IEnableAdServicesCallback callback) {
+        LogUtil.d(ENABLE_AD_SERVICES_API_CALLED_MESSAGE);
+
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
 
         sBackgroundExecutor.execute(
@@ -244,7 +280,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                     try {
                         if (!authorizedCaller) {
                             callback.onFailure(STATUS_UNAUTHORIZED);
-                            LogUtil.d("enableAdServices(): Caller is not authorized.");
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
 

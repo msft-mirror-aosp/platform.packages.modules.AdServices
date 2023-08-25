@@ -44,6 +44,7 @@ android_test {
 
 android_test {
     name: "AdExtServicesEndToEndTests",
+    defaults: ["mts-target-sdk-version-current"],
     srcs: [
         "src/**/*.java",
     ],
@@ -67,7 +68,7 @@ android_test {
     test_suites: [
         "general-tests",
     ],
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",

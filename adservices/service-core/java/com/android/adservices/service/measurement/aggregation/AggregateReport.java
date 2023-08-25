@@ -61,6 +61,7 @@ public class AggregateReport {
     private String mTriggerId;
     private UnsignedLong mDedupKey;
     private Uri mRegistrationOrigin;
+    private Uri mAggregationCoordinatorOrigin;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -92,12 +93,13 @@ public class AggregateReport {
         mEnrollmentId = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
-        mStatus = AggregateReport.Status.PENDING;
-        mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
+        mStatus = Status.PENDING;
+        mDebugReportStatus = DebugReportStatus.NONE;
         mSourceDebugKey = null;
         mTriggerDebugKey = null;
         mDedupKey = null;
         mRegistrationOrigin = null;
+        mAggregationCoordinatorOrigin = null;
     }
 
     @Override
@@ -122,7 +124,10 @@ public class AggregateReport {
                 && Objects.equals(mSourceId, aggregateReport.mSourceId)
                 && Objects.equals(mTriggerId, aggregateReport.mTriggerId)
                 && Objects.equals(mDedupKey, aggregateReport.mDedupKey)
-                && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin)
+                && Objects.equals(
+                        mAggregationCoordinatorOrigin,
+                        aggregateReport.mAggregationCoordinatorOrigin);
     }
 
     @Override
@@ -143,7 +148,8 @@ public class AggregateReport {
                 mSourceId,
                 mTriggerId,
                 mDedupKey,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mAggregationCoordinatorOrigin);
     }
 
     /**
@@ -245,6 +251,11 @@ public class AggregateReport {
     /** Returns registration origin used to register the source */
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
+    }
+
+    /** Returns coordinator origin for aggregatable reports */
+    public Uri getAggregationCoordinatorOrigin() {
+        return mAggregationCoordinatorOrigin;
     }
 
     /**
@@ -384,6 +395,7 @@ public class AggregateReport {
             mAttributionReport.mStatus = status;
             return this;
         }
+
         /** See {@link AggregateReport#getDebugReportStatus()} */
         public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
             mAttributionReport.mDebugReportStatus = debugReportStatus;
@@ -411,28 +423,34 @@ public class AggregateReport {
         }
 
         /** See {@link AggregateReport#getSourceId()} */
-        public AggregateReport.Builder setSourceId(String sourceId) {
+        public Builder setSourceId(String sourceId) {
             mAttributionReport.mSourceId = sourceId;
             return this;
         }
 
         /** See {@link AggregateReport#getTriggerId()} */
-        public AggregateReport.Builder setTriggerId(String triggerId) {
+        public Builder setTriggerId(String triggerId) {
             mAttributionReport.mTriggerId = triggerId;
             return this;
         }
 
         /** See {@link AggregateReport#getDedupKey()} */
         @NonNull
-        public AggregateReport.Builder setDedupKey(@Nullable UnsignedLong dedupKey) {
+        public Builder setDedupKey(@Nullable UnsignedLong dedupKey) {
             mAttributionReport.mDedupKey = dedupKey;
             return this;
         }
 
         /** See {@link AggregateReport#getRegistrationOrigin()} ()} */
         @NonNull
-        public AggregateReport.Builder setRegistrationOrigin(Uri registrationOrigin) {
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mAttributionReport.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getAggregationCoordinatorOrigin()} ()} */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mAttributionReport.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
         }
 

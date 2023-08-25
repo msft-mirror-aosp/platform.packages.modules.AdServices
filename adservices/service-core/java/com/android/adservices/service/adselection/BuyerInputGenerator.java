@@ -23,6 +23,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 
 import com.google.common.base.Strings;
@@ -46,6 +47,7 @@ public class BuyerInputGenerator {
     private static final String EMPTY_USER_BIDDING_SIGNALS = "{}";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final AdFilterer mAdFilterer;
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -53,15 +55,18 @@ public class BuyerInputGenerator {
 
     public BuyerInputGenerator(
             @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final Flags flags,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService) {
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
 
         mCustomAudienceDao = customAudienceDao;
+        mAdFilterer = adFilterer;
         mClock = Clock.systemUTC();
         mFlags = flags;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -75,23 +80,26 @@ public class BuyerInputGenerator {
      * @return a map of buyer name and {@link BuyerInput}
      */
     public FluentFuture<Map<AdTechIdentifier, BuyerInput>> createBuyerInputs() {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_BUYER_INPUTS);
         sLogger.v("Starting create buyer input");
         return FluentFuture.from(getBuyersCustomAudience())
+                .transform(this::getFilteredCustomAudiences, mLightweightExecutorService)
                 .transform(
-                        this::generateBuyerInputFromDBCustomAudience, mLightweightExecutorService);
+                        dbCustomAudiences -> {
+                            Map<AdTechIdentifier, BuyerInput> buyerInputFromCustomAudience =
+                                    generateBuyerInputFromDBCustomAudience(dbCustomAudiences);
+                            Tracing.endAsyncSection(Tracing.CREATE_BUYER_INPUTS, traceCookie);
+                            return buyerInputFromCustomAudience;
+                        },
+                        mLightweightExecutorService);
     }
 
     private Map<AdTechIdentifier, BuyerInput> generateBuyerInputFromDBCustomAudience(
             @NonNull final List<DBCustomAudience> dbCustomAudiences) {
-        Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
-        AdTechIdentifier buyerName;
+        final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
         for (DBCustomAudience customAudience : dbCustomAudiences) {
-            if (!AuctionServerCustomAudienceFilterer.isValidCustomAudienceForServerSideAuction(
-                    customAudience)) {
-                continue;
-            }
-
-            if (!buyerInputs.containsKey(buyerName = customAudience.getBuyer())) {
+            final AdTechIdentifier buyerName = customAudience.getBuyer();
+            if (!buyerInputs.containsKey(buyerName)) {
                 buyerInputs.put(buyerName, BuyerInput.newBuilder());
             }
 
@@ -103,10 +111,10 @@ public class BuyerInputGenerator {
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
         return buyerInputs.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().build()));
-
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CA);
         return mBackgroundExecutorService.submit(
                 () -> {
                     List<DBCustomAudience> allActiveCAs =
@@ -118,8 +126,22 @@ public class BuyerInputGenerator {
                     sLogger.v(
                             String.format(
                                     "Collected %s active CAs from device", numberOfCAsCollected));
+                    Tracing.endAsyncSection(Tracing.GET_BUYERS_CA, traceCookie);
                     return allActiveCAs;
                 });
+    }
+
+    private List<DBCustomAudience> getFilteredCustomAudiences(
+            @NonNull final List<DBCustomAudience> dbCustomAudiences) {
+        int tracingCookie = Tracing.beginAsyncSection(Tracing.GET_FILTERED_BUYERS_CA);
+        List<DBCustomAudience> filteredCustomAudiences =
+                mAdFilterer.filterCustomAudiences(dbCustomAudiences).stream()
+                        .filter(
+                                AuctionServerCustomAudienceFilterer
+                                        ::isValidCustomAudienceForServerSideAuction)
+                        .collect(Collectors.toList());
+        Tracing.endAsyncSection(Tracing.GET_FILTERED_BUYERS_CA, tracingCookie);
+        return filteredCustomAudiences;
     }
 
     private BuyerInput.CustomAudience buildCustomAudienceProtoFrom(
@@ -129,6 +151,7 @@ public class BuyerInputGenerator {
 
         return customAudienceBuilder
                 .setName(customAudience.getName())
+                .setOwner(customAudience.getOwner())
                 .setUserBiddingSignals(getUserBiddingSignals(customAudience))
                 .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience))
                 .addAllAdRenderIds(getAdRenderIds(customAudience))

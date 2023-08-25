@@ -73,7 +73,7 @@ public class CombinatoricsTest {
     @Test
     public void testGetKCombinationAtIndex() {
         // Test Case { {combinationIndex, k}, expectedOutput}
-        int[][][] testCases = {
+        long[][][] testCases = {
                 {{0, 0}, {}},
 
                 {{0, 1}, {0}}, {{1, 1}, {1}}, {{2, 1}, {2}},
@@ -105,15 +105,16 @@ public class CombinatoricsTest {
         Arrays.stream(testCases).forEach((testCase) ->
                 assertArrayEquals(testCase[1],
                         Combinatorics.getKCombinationAtIndex(
-                                /*combinationIndex=*/testCase[0][0], /*k=*/testCase[0][1])));
+                                /*combinationIndex=*/ testCase[0][0],
+                                /*k=*/ (int) testCase[0][1])));
     }
 
     @Test
     public void testGetKCombinationNoRepeat() {
         for (int k = 1; k < 5; k++) {
-            Set<List<Integer>> seenCombinations = new HashSet<>();
+            Set<List<Long>> seenCombinations = new HashSet<>();
             for (int combinationIndex = 0; combinationIndex < 3000; combinationIndex++) {
-                List<Integer> combination =
+                List<Long> combination =
                         Arrays.stream(Combinatorics.getKCombinationAtIndex(combinationIndex,
                                 k)).boxed().collect(
                                 Collectors.toList());
@@ -126,22 +127,22 @@ public class CombinatoricsTest {
     public void testGetKCombinationMatchesDefinition() {
         for (int k = 1; k < 5; k++) {
             for (int index = 0; index < 3000; index++) {
-                int[] combination = Combinatorics.getKCombinationAtIndex(index, k);
-                int sum = 0;
+                long[] combination = Combinatorics.getKCombinationAtIndex(index, k);
+                long sum = 0;
                 for (int i = 0; i < k; i++) {
-                    sum += Combinatorics.getBinomialCoefficient(combination[i], k - i);
+                    sum += Combinatorics.getBinomialCoefficient((int) combination[i], k - i);
                 }
-                assertEquals(sum, index);
+                assertEquals(sum, (long) index);
             }
         }
     }
 
     @Test
     public void testGetNumberOfStarsAndBarsSequences() {
-        assertEquals(3, Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(3L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/1, /*numBars=*/2
         ));
-        assertEquals(2925, Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(2925L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/3, /*numBars=*/24
         ));
     }
@@ -149,14 +150,14 @@ public class CombinatoricsTest {
     @Test
     public void testGetStarIndices() {
         // Test Case: { {numStars, sequenceIndex}, expectedOutput }
-        int[][][] testCases = {
-                {{1, 2, 2}, {2}},
-                {{3, 24, 23}, {6, 3, 0}},
+        long[][][] testCases = {
+                {{1L, 2L, 2L}, {2L}},
+                {{3L, 24L, 23L}, {6L, 3L, 0L}},
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
                 assertArrayEquals(testCase[1],
-                        Combinatorics.getStarIndices(/*numStars=*/testCase[0][0],
+                        Combinatorics.getStarIndices(/*numStars=*/ (int) testCase[0][0],
                                 /*sequenceIndex=*/testCase[0][2])));
 
     }
@@ -164,9 +165,9 @@ public class CombinatoricsTest {
     @Test
     public void testGetBarsPrecedingEachStar() {
         // Test Case: {starIndices, expectedOutput}
-        int[][][] testCases = {
-                {{2}, {2}},
-                {{6, 3, 0}, {4, 2, 0}}
+        long[][][] testCases = {
+                {{2L}, {2L}},
+                {{6L, 3L, 0L}, {4L, 2L, 0L}}
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
@@ -199,7 +200,7 @@ public class CombinatoricsTest {
         int[][] testCasesOverflow = {
             {3, Integer.MAX_VALUE - 1, 3},
             {3, 8, Integer.MAX_VALUE - 1},
-            {8, 10, 6},
+            {8, 40, 26},
         };
 
         Arrays.stream(testCasesOverflow)
@@ -213,7 +214,7 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void testNumStatesFlexAPI() {
+    public void testNumStatesFlexApi() {
         // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
         // states}
         int[][][][] testCases = {
@@ -235,7 +236,7 @@ public class CombinatoricsTest {
                         (testCase) ->
                                 assertEquals(
                                         testCase[1][0][0],
-                                        Combinatorics.getNumStatesFlexAPI(
+                                        Combinatorics.getNumStatesFlexApi(
                                                 testCase[0][0][0],
                                                 testCase[0][1],
                                                 testCase[0][2])));
@@ -296,13 +297,13 @@ public class CombinatoricsTest {
         Arrays.stream(testCases)
                 .forEach(
                         (testCase) -> {
-                            Map<List<Integer>, Integer> dp = new HashMap<>();
+                            Map<List<Integer>, Long> dp = new HashMap<>();
                             ArrayList<List<Combinatorics.AtomReportState>> allReportSets =
                                     new ArrayList<>();
-                            int numberStates =
-                                    Combinatorics.getNumStatesFlexAPI(
+                            long numberStates =
+                                    Combinatorics.getNumStatesFlexApi(
                                             testCase[0][0], testCase[1], testCase[2]);
-                            for (int i = 0; i < numberStates; i++) {
+                            for (long i = 0; i < numberStates; i++) {
                                 List<Combinatorics.AtomReportState> ithSet =
                                         Combinatorics.getReportSetBasedOnRank(
                                                 testCase[0][0], testCase[1], testCase[2], i, dp);
@@ -322,11 +323,11 @@ public class CombinatoricsTest {
         Arrays.stream(testCases)
                 .forEach(
                         (testCase) -> {
-                            Map<List<Integer>, Integer> dp = new HashMap<>();
-                            int numberStates =
-                                    Combinatorics.getNumStatesFlexAPI(
+                            Map<List<Integer>, Long> dp = new HashMap<>();
+                            long numberStates =
+                                    Combinatorics.getNumStatesFlexApi(
                                             testCase[0][0], testCase[1], testCase[2]);
-                            for (int i = 0; i < numberStates; i++) {
+                            for (long i = 0; i < numberStates; i++) {
                                 List<Combinatorics.AtomReportState> ithSet =
                                         Combinatorics.getReportSetBasedOnRank(
                                                 testCase[0][0], testCase[1], testCase[2], i, dp);

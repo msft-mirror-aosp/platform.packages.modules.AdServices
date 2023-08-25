@@ -71,7 +71,7 @@ public class KeyedFrequencyCapFixture {
         Parcel sourceParcel = Parcel.obtain();
         sourceParcel.writeInt(adCounterKey);
         sourceParcel.writeInt(maxCount);
-        sourceParcel.writeLong(interval.toSeconds());
+        sourceParcel.writeLong(interval.getSeconds());
         sourceParcel.setDataPosition(0);
 
         return KeyedFrequencyCap.CREATOR.createFromParcel(sourceParcel);
