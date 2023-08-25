@@ -270,6 +270,10 @@ public final class FlagsConstants {
             "fledge_fetch_custom_audience_max_custom_header_size_b";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B =
             "fledge_fetch_custom_audience_max_custom_audience_size_b";
+    public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS =
+            "fledge_fetch_custom_audience_min_retry_after_value_ms";
+    public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
+            "fledge_fetch_custom_audience_max_retry_after_value_ms";
 
     // FLEDGE Background Fetch keys
     public static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED =

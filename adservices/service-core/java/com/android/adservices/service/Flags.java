@@ -577,6 +577,23 @@ public interface Flags {
     // Keeping TTL as long as expiry, could be reduced later as we get more fresh CAs with adoption
     long FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS = 60 * 24 * 60L * 60L * 1000; // 60 days
     long FLEDGE_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS = 30 * 1000; // 30 seconds
+    long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
+            24 * 60 * 60 * 1000; // 24 hours in ms
+
+    /**
+     * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMinRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MIN_RETRY_AFTER_VALUE_MS;
+    }
+
+    /**
+     * Returns the maximum number of milliseconds before the same fetch CA request can be retried.
+     */
+    default long getFledgeFetchCustomAudienceMaxRetryAfterValueMs() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS;
+    }
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
