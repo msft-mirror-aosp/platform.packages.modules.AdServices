@@ -101,7 +101,7 @@ public class AdServicesCommon {
 
     /** System property used to simulate AdServices behavior on devices with low memory. */
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
-            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "feature_android.hardware.ram.low";
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(
