@@ -21,6 +21,7 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
+
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -500,7 +501,18 @@ public class SqliteObjectMapper {
         return Arrays.stream(concatArray.split(","))
                 .map(String::trim)
                 .filter(not(String::isEmpty))
-                .map(UnsignedLong::new)
+                // TODO (b/295059367): Negative numbers handling to be reverted
+                .map(parseCleanUnsignedLong())
                 .collect(Collectors.toList());
+    }
+
+    private static Function<String, UnsignedLong> parseCleanUnsignedLong() {
+        return string -> {
+            if (string.startsWith("-")) {
+                // It's in the long range
+                return new UnsignedLong(Long.parseLong(string));
+            }
+            return new UnsignedLong(string);
+        };
     }
 }
