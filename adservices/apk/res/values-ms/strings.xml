@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Membenarkan aplikasi mengakses API Persetujuan AdServices."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Akses kepada API ID Iklan"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Membenarkan aplikasi mengakses API ID Iklan."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Akses kepada AdServices Cobalt Upload API"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Benarkan aplikasi mengakses AdServices Cobalt Upload API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Akses kepada API ID Set Apl"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Membenarkan aplikasi mengakses API ID Set Apl."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Akses kepada API Perkhidmatan Persetujuan"</string>

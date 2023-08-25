@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Inaruhusu programu kufikia API ya Idhini za AdServices."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Kufikia API ya Kitambulisho cha Tangazo"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Huruhusu programu kufikia API ya Kitambulisho cha Tangazo."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Ufikiaji wa API ya Upakiaji ya AdServices Cobalt"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Huruhusu programu kufikia API ya Upakiaji ya AdServices Cobalt."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Kufikia API ya Kitambulisho cha Kundi la Programu"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Hurusu programu kufikia API ya Kitambulisho cha Kundi la Programu."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Uwezo wa kufikia API ya Idhini ya Huduma"</string>
