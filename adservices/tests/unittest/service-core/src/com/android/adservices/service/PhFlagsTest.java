@@ -164,6 +164,7 @@ import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE_JS_C
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.Flags.FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
@@ -425,6 +426,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACH
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
@@ -4713,6 +4715,48 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void test_getFledgeOnDeviceAuctionKillSwitch_setsCorrectValue() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+        disableSelectAdsKillSwitch();
+
+        // without any overrides the Auction Server kill switch should be off
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch())
+                .isEqualTo(FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH);
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void test_fledgeSelectAdsServiceKillSwitch_shouldOverrideOtherKillSwitches() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+        disableSelectAdsKillSwitch();
+
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch())
+                .isEqualTo(FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH);
+        assertThat(mPhFlags.getFledgeAuctionServerKillSwitch())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_KILL_SWITCH);
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !FLEDGE_SELECT_ADS_KILL_SWITCH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getFledgeAuctionServerKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetFledgeGlobalKillSwitchOverridesOtherFledgeKillSwitches() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -4724,6 +4768,8 @@ public class PhFlagsTest {
                 .isEqualTo(FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH);
         assertThat(mPhFlags.getFledgeAuctionServerKillSwitch())
                 .isEqualTo(FLEDGE_AUCTION_SERVER_KILL_SWITCH);
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch())
+                .isEqualTo(FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH);
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
@@ -4737,6 +4783,7 @@ public class PhFlagsTest {
         assertThat(mPhFlags.getFledgeCustomAudienceServiceKillSwitch())
                 .isEqualTo(phOverridingValue);
         assertThat(mPhFlags.getFledgeAuctionServerKillSwitch()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -5740,6 +5787,15 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
+                /* makeDefault */ false);
+    }
+
+    private void disableSelectAdsKillSwitch() {
+        // Override the select adds kill switch to test other flag values.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
+                Boolean.toString(false),
                 /* makeDefault */ false);
     }
 

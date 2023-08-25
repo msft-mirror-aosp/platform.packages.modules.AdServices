@@ -1663,16 +1663,38 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getFledgeAuctionServerKillSwitch() {
-        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
+        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
+        // On device and Server Auction Kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
                                 /* defaultValue */ FLEDGE_AUCTION_SERVER_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getFledgeOnDeviceAuctionKillSwitch() {
+        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
+        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
+        // On device and Server Auction Kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                                /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
     }
 
     @Override
@@ -3472,6 +3494,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH
                         + " = "
                         + getFledgeAuctionServerKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH
+                        + " = "
+                        + getFledgeOnDeviceAuctionKillSwitch());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
