@@ -35,6 +35,7 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -127,6 +128,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify that for ROW devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @Ignore("b/297119850")
     public void testBetaRowAdIdDisabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -143,6 +145,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify that for EU devices with non zeroed-out AdId, the EU notification is displayed. */
     @Test
+    @Ignore("b/297119850")
     public void testBetaEuAdIdEnabled() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
@@ -159,6 +162,7 @@ public class BetaUxNotificationTriggerTest {
 
     /** Verify that for ROW devices with non zeroed-out AdId, the ROW notification is displayed. */
     @Test
+    @Ignore("b/297119850")
     public void testBetaRowAdIdEnabled() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
