@@ -64,7 +64,6 @@ public final class EncryptedCobaltEnvelopeParams implements Parcelable {
      *     for key list
      * @param cipherText an encrypted Cobalt {@link Envelope}, created using a supported encryption
      *     algorithm and an associated key.
-     * @hide
      */
     public EncryptedCobaltEnvelopeParams(
             @Environment int environment, @NonNull int keyIndex, @NonNull byte[] cipherText) {
