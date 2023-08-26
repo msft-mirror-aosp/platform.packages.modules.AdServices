@@ -577,6 +577,39 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesAdSelectionIdExistInInitializationTable(long adSelectionId);
 
     /**
+     * Checks if there is a row in the ad selection with the unique key ad_selection_id and caller
+     * package name.
+     *
+     * @param adSelectionIds which is the key to query the corresponding ad selection data.
+     * @param callerPackageName package name which initiated the auction run
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT ad_selection_id FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)"
+                    + " AND caller_package_name = :callerPackageName")
+    public abstract List<Long> getAdSelectionIdsWithCallerPackageNameInOnDeviceTable(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
+     * Checks if there is a row in the ad selection and ad_selection_initialization with the unique
+     * key ad_selection_id and caller package name.
+     *
+     * @param adSelectionIds which is the key to query the corresponding ad selection data.
+     * @param callerPackageName package name which initiated the auction run
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT ad_selection_id FROM ad_selection WHERE"
+                    + " ad_selection_id IN (:adSelectionIds)"
+                    + " AND caller_package_name = :callerPackageName "
+                    + " UNION"
+                    + " SELECT ad_selection_id FROM ad_selection_initialization "
+                    + " WHERE ad_selection_id IN (:adSelectionIds) "
+                    + " AND caller_package_name = :callerPackageName ")
+    public abstract List<Long> getAdSelectionIdsWithCallerPackageName(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
      * Method used to create an AdSelectionId record in ad selection initialization.
      *
      * @return true if row was created in DBAdSelectionInitialization, false otherwise
@@ -747,9 +780,26 @@ public abstract class AdSelectionEntryDao {
 
     /** Query to get winning ad data of ad selection run identified by adSelectionId. */
     @Query(
-            "SELECT winning_ad_bid AS winningAdBid, winning_ad_render_uri AS winningAdRenderUri "
-                    + "FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
+            "SELECT ad_selection_id AS adSelectionId, winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri FROM ad_selection_result "
+                    + "WHERE ad_selection_id = :adSelectionId")
     public abstract AdSelectionResultBidAndUri getWinningBidAndUriForId(long adSelectionId);
+
+    /** Query to get winning ad data of ad selection run identified by adSelectionId. */
+    @Query(
+            "SELECT ad_selection_id AS adSelectionId, "
+                    + "winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "FROM ad_selection_result WHERE ad_selection_id IN (:adSelectionIds) "
+                    + "UNION "
+                    + "SELECT ad_selection_id AS adSelectionId, "
+                    + "winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
+    // TODO(b/291956961): Remove querying ad_selection table when migration to new
+    //  ad_selection_result table is done.
+    public abstract List<AdSelectionResultBidAndUri> getWinningBidAndUriForIds(
+            List<Long> adSelectionIds);
 
     /**
      * Insert new ad selection initialization record. Aborts if adselectionId already exists.
@@ -787,4 +837,6 @@ public abstract class AdSelectionEntryDao {
     /** Query to get DBReportingData for the given adSelectionId. */
     @Query("SELECT * FROM reporting_data WHERE ad_selection_id = :adSelectionId")
     abstract DBReportingData getDBReportingDataForId(long adSelectionId);
+
+
 }

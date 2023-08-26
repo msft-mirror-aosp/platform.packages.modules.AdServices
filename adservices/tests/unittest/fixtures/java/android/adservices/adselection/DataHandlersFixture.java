@@ -107,7 +107,7 @@ public class DataHandlersFixture {
                     .build();
 
     public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_1 =
-            getAdSelectionResultBidAndUri(WIN_BID_1, WIN_RENDER_URI_1);
+            getAdSelectionResultBidAndUri(AD_SELECTION_ID_1, WIN_BID_1, WIN_RENDER_URI_1);
 
     public static WinningCustomAudience WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET =
             getWinningCustomAudience(TEST_WIN_CA_OWNER, "caAllFields", TEST_WIN_CA_COUNTER_KEYS);
@@ -196,8 +196,9 @@ public class DataHandlersFixture {
     }
 
     public static AdSelectionResultBidAndUri getAdSelectionResultBidAndUri(
-            double bid, Uri adRenderUri) {
+            long adSelectionId, double bid, Uri adRenderUri) {
         return AdSelectionResultBidAndUri.builder()
+                .setAdSelectionId(adSelectionId)
                 .setWinningAdBid(bid)
                 .setWinningAdRenderUri(adRenderUri)
                 .build();

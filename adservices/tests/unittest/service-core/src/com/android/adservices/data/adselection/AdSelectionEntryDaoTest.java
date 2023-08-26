@@ -30,6 +30,7 @@ import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DataHandlersFixture;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.database.sqlite.SQLiteConstraintException;
@@ -1864,6 +1865,48 @@ public class AdSelectionEntryDaoTest {
                         mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
                                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
                 .isEmpty();
+    }
+
+    @Test
+    public void test_getAdSelectionIdsWithCallerPackageName_success() {
+        DBAdSelectionInitialization dbAdSelectionInitialization =
+                DBAdSelectionInitialization.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setSeller(AdTechIdentifier.fromString("seller"))
+                        .setCallerPackageName(DB_AD_SELECTION_2.getCallerPackageName())
+                        .setCreationInstant(CLOCK.instant())
+                        .build();
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(dbAdSelectionInitialization);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        List<Long> expectedIds =
+                mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageName(
+                        ImmutableList.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        DB_AD_SELECTION_2.getCallerPackageName());
+
+        assertThat(expectedIds).hasSize(2);
+        assertThat(expectedIds).containsExactly(AD_SELECTION_ID_1, AD_SELECTION_ID_2);
+    }
+
+    @Test
+    public void test_getAdSelectionIdsWithCallerPackageNameInOnDeviceTable_success() {
+        DBAdSelectionInitialization dbAdSelectionInitialization =
+                DBAdSelectionInitialization.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setSeller(AdTechIdentifier.fromString("seller"))
+                        .setCallerPackageName(DB_AD_SELECTION_2.getCallerPackageName())
+                        .setCreationInstant(CLOCK.instant())
+                        .build();
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(dbAdSelectionInitialization);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        List<Long> expectedIds =
+                mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageNameInOnDeviceTable(
+                        ImmutableList.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        DB_AD_SELECTION_2.getCallerPackageName());
+
+        assertThat(expectedIds).hasSize(1);
+        assertThat(expectedIds).containsExactly(AD_SELECTION_ID_2);
     }
 
     /**
