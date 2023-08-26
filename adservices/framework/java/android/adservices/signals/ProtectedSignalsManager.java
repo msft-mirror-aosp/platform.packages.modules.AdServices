@@ -118,7 +118,7 @@ public class ProtectedSignalsManager {
 
     /**
      * The fetchSignalUpdates API will retrieve a JSON from the URI that describes which signals to
-     * add. The top level keys for the JSON must correspond to one of 4 commands:
+     * add or remove. The top level keys for the JSON must correspond to one of 4 commands:
      *
      * <p>"put" - Adds a new signal, overwriting any existing signals with the same key. The value
      * for this is a JSON object where the keys are base 64 strings corresponding to the key to put
