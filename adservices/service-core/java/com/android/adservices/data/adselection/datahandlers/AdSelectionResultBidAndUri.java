@@ -24,6 +24,8 @@ import com.google.auto.value.AutoValue;
 /** Data class representing the result of an ad selection run . */
 @AutoValue
 public abstract class AdSelectionResultBidAndUri {
+    /** Ad selection id */
+    public abstract long getAdSelectionId();
 
     /** Winning ad bid in this ad selection run. */
     public abstract double getWinningAdBid();
@@ -47,8 +49,9 @@ public abstract class AdSelectionResultBidAndUri {
      */
     @NonNull
     public static AdSelectionResultBidAndUri create(
-            double winningAdBid, @NonNull Uri winningAdRenderUri) {
+            long adSelectionId, double winningAdBid, @NonNull Uri winningAdRenderUri) {
         return builder()
+                .setAdSelectionId(adSelectionId)
                 .setWinningAdBid(winningAdBid)
                 .setWinningAdRenderUri(winningAdRenderUri)
                 .build();
@@ -57,6 +60,8 @@ public abstract class AdSelectionResultBidAndUri {
     /** Builder for AdSelectionResult. */
     @AutoValue.Builder
     public abstract static class Builder {
+        /** Sets ad selection id */
+        public abstract Builder setAdSelectionId(long adSelectionId);
 
         /** Sets the winning ad bid in this ad selection run. */
         public abstract Builder setWinningAdBid(double winningAdBid);

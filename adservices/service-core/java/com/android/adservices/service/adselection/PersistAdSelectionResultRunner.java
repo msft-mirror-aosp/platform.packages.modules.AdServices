@@ -395,6 +395,7 @@ public class PersistAdSelectionResultRunner {
         mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
                 adSelectionId,
                 AdSelectionResultBidAndUri.builder()
+                        .setAdSelectionId(adSelectionId)
                         .setWinningAdBid(auctionResult.getBid())
                         .setWinningAdRenderUri(Uri.parse(auctionResult.getAdRenderUrl()))
                         .build(),

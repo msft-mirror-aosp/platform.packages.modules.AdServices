@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * POJO for Source.
@@ -728,7 +729,10 @@ public class Source {
     /**
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
+     *
+     * @deprecated use {@link #getAggregatableAttributionSourceV2(Trigger)} instead.
      */
+    @Deprecated
     public Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
             throws JSONException {
         if (mAggregatableAttributionSource == null) {
@@ -755,6 +759,30 @@ public class Source {
         }
 
         return mAggregatableAttributionSource;
+    }
+
+    /**
+     * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
+     * source string and aggregate filter data string in Source.
+     */
+    public Optional<AggregatableAttributionSource> getAggregatableAttributionSourceV2(
+            @NonNull Trigger trigger) throws JSONException {
+        if (mAggregateSource == null) {
+            return Optional.empty();
+        }
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
+        TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+        for (String key : jsonObject.keySet()) {
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString(key).substring(2);
+            BigInteger bigInteger = new BigInteger(hexString, 16);
+            aggregateSourceMap.put(key, bigInteger);
+        }
+        return Optional.of(
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregateSourceMap)
+                        .setFilterMap(getFilterData(trigger))
+                        .build());
     }
 
     /** Returns the registration id. */
@@ -902,7 +930,10 @@ public class Source {
     /**
      * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
      * for source type.
+     *
+     * @deprecated use {@link #getFilterData(Trigger)} instead.
      */
+    @Deprecated
     public FilterMap getFilterData() throws JSONException {
         if (mFilterData != null) {
             return mFilterData;
@@ -920,6 +951,21 @@ public class Source {
                 .getAttributionFilterMap()
                 .put("source_type", Collections.singletonList(mSourceType.getValue()));
         return mFilterData;
+    }
+
+    /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including entries
+     * for source type and duration from source to trigger.
+     */
+    public FilterMap getFilterData(@NonNull Trigger trigger) throws JSONException {
+        return new FilterMap.Builder()
+                .buildFilterDataV2(new JSONObject(mFilterDataString))
+                .addStringListValue(
+                        "source_type", Collections.singletonList(mSourceType.getValue()))
+                .addLongValue(
+                        FilterMap.LOOKBACK_WINDOW,
+                        TimeUnit.MILLISECONDS.toSeconds(trigger.getTriggerTime() - mEventTime))
+                .build();
     }
 
     @Nullable

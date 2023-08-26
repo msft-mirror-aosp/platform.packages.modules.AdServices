@@ -77,6 +77,22 @@ public class FilterMap {
     }
 
     /**
+     * Returns the long value given the key. {@code key} must be present and the value kind must be
+     * {@link FilterValue.Kind#LONG_VALUE}.
+     */
+    public long getLongValue(String key) {
+        return mAttributionFilterMapWithLongValue.get(key).longValue();
+    }
+
+    /**
+     * Returns the string list value given the key. {@code key} must be present and the value kind
+     * must be {@link FilterValue.Kind#STRING_LIST_VALUE}.
+     */
+    public List<String> getStringListValue(String key) {
+        return mAttributionFilterMapWithLongValue.get(key).stringListValue();
+    }
+
+    /**
      * Serializes the object into a {@link JSONObject}.
      *
      * @return serialized {@link JSONObject}.
@@ -145,6 +161,18 @@ public class FilterMap {
         public Builder setAttributionFilterMapWithLongValue(
                 Map<String, FilterValue> attributionFilterMap) {
             mBuilding.mAttributionFilterMapWithLongValue = attributionFilterMap;
+            return this;
+        }
+
+        /** Adds filter with long value. */
+        public Builder addLongValue(String key, long value) {
+            mBuilding.mAttributionFilterMapWithLongValue.put(key, FilterValue.ofLong(value));
+            return this;
+        }
+
+        /** Adds filter with string list value. */
+        public Builder addStringListValue(String key, List<String> value) {
+            mBuilding.mAttributionFilterMapWithLongValue.put(key, FilterValue.ofStringList(value));
             return this;
         }
 

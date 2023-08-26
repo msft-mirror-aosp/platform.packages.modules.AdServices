@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -105,6 +107,23 @@ public final class FilterMapTest {
 
         // Assertion
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testAddLongValue() {
+        assertThat(new FilterMap.Builder().addLongValue("a", 1L).build().getLongValue("a"))
+                .isEqualTo(1L);
+    }
+
+    @Test
+    public void testAddStringListValue() {
+        List<String> stringList = Arrays.asList("123", "456");
+        assertThat(
+                        new FilterMap.Builder()
+                                .addStringListValue("a", stringList)
+                                .build()
+                                .getStringListValue("a"))
+                .isEqualTo(stringList);
     }
 
     private FilterMap createExample() {
