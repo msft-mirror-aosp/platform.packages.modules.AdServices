@@ -329,6 +329,17 @@ public abstract class AdSelectionEntryDao {
     public abstract void removeExpiredAdSelection(Instant expirationTime);
 
     /**
+     * Clean up expired ad selection initialization entries if it is older than the given timestamp.
+     * If creation_instant < expirationTime, the ad selection initialization will be removed from
+     * the ad_selection_initialization table. It will also remove the entries from the other table
+     * with ad_selection_id as the foreign key because onDelete cascade is set.
+     *
+     * @param expirationTime is the cutoff time to expire the AdSelectionEntry.
+     */
+    @Query("DELETE FROM ad_selection_initialization WHERE creation_instant < :expirationTime")
+    public abstract void removeExpiredAdSelectionInitializations(Instant expirationTime);
+
+    /**
      * Clean up selected ad selection data entry data in batch by their ad_selection_ids.
      *
      * @param adSelectionIds is the list of adSelectionIds to identify the data entries to be

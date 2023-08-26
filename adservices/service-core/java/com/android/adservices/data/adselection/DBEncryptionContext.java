@@ -16,19 +16,26 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.NonNull;
+import android.annotation.Nullable;
+
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 
 import com.google.auto.value.AutoValue;
 
+import java.time.Instant;
+
 /** Table representing Encryption Context. */
 @AutoValue
 @AutoValue.CopyAnnotations
 @Entity(
         tableName = "encryption_context",
+        indices = {@Index(value = {"creation_instant"})},
         primaryKeys = {"context_id", "encryption_key_type"})
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class DBEncryptionContext {
@@ -59,6 +66,12 @@ public abstract class DBEncryptionContext {
     @ColumnInfo(name = "seed", typeAffinity = ColumnInfo.BLOB)
     public abstract byte[] getSeed();
 
+    /** The creation time for this ad selection run. */
+    @AutoValue.CopyAnnotations
+    @Nullable
+    @ColumnInfo(name = "creation_instant", defaultValue = "CURRENT_TIMESTAMP")
+    public abstract Instant getCreationInstant();
+
     /**
      * Returns an AutoValue builder for a {@link
      * com.android.adservices.data.adselection.DBEncryptionContext} entity.
@@ -71,12 +84,14 @@ public abstract class DBEncryptionContext {
     public static DBEncryptionContext create(
             long contextId,
             @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType,
+            @NonNull Instant creationInstant,
             byte[] keyConfig,
             byte[] sharedSecret,
             byte[] seed) {
         return builder()
                 .setContextId(contextId)
                 .setEncryptionKeyType(encryptionKeyType)
+                .setCreationInstant(creationInstant)
                 .setKeyConfig(keyConfig)
                 .setSharedSecret(sharedSecret)
                 .setSeed(seed)
@@ -102,6 +117,9 @@ public abstract class DBEncryptionContext {
 
         /** The seed required to regenerate HPKE context. */
         public abstract Builder setSeed(byte[] seed);
+
+        /** Sets the creation instant. */
+        public abstract Builder setCreationInstant(@NonNull Instant value);
 
         /** Builds the DBEncryptionContext. */
         public abstract DBEncryptionContext build();
