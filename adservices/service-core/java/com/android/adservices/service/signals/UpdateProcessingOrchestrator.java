@@ -22,6 +22,8 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
+import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 
@@ -30,7 +32,6 @@ import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,14 +48,18 @@ public class UpdateProcessingOrchestrator {
 
     @NonNull private final ProtectedSignalsDao mProtectedSignalsDao;
     @NonNull private final UpdateProcessorSelector mUpdateProcessorSelector;
+    @NonNull private final UpdateEncoderEventHandler mUpdateEncoderEventHandler;
 
     public UpdateProcessingOrchestrator(
             @NonNull ProtectedSignalsDao protectedSignalsDao,
-            @NonNull UpdateProcessorSelector updateProcessorSelector) {
+            @NonNull UpdateProcessorSelector updateProcessorSelector,
+            @NonNull UpdateEncoderEventHandler updateEncoderEventHandler) {
         Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(updateProcessorSelector);
+        Objects.requireNonNull(updateEncoderEventHandler);
         mProtectedSignalsDao = protectedSignalsDao;
         mUpdateProcessorSelector = updateProcessorSelector;
+        mUpdateEncoderEventHandler = updateEncoderEventHandler;
     }
 
     /**
@@ -68,24 +73,27 @@ public class UpdateProcessingOrchestrator {
         try {
             // Load the current signals, organizing them into a map for quick access
             Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap = getCurrentSignals(adtech);
-            /* List of signals to add. Each update processor can append to this and the signals will
-             * be added after all the processors are run.
-             */
-            List<DBProtectedSignal.Builder> signalsToAdd = new ArrayList<>();
-            /* List of signals to remove. Each update processor can append to this and the signals
-             * will be removed after all the update processors are run.
-             */
-            List<DBProtectedSignal> signalsToDelete = new ArrayList<>();
-            // Running set of keys interacted with, kept to ensure no key is modified twice.
-            Set<ByteBuffer> keysTouched = new HashSet<>();
 
-            runProcessors(json, currentSignalsMap, signalsToAdd, signalsToDelete, keysTouched);
+            /*
+             * Contains the following:
+             * List of signals to add. Each update processor can append to this and the signals will
+             * be added after all the processors are run.
+             *
+             * List of signals to remove. Each update processor can append to this and the signals
+             * will be removed after all the update processors are run.
+             *
+             * Running set of keys interacted with, kept to ensure no key is modified twice.
+             *
+             * An update encoder event, in case the update processors reported an update in encoder
+             * endpoint.
+             */
+            UpdateOutput combinedUpdates = runProcessors(json, currentSignalsMap);
 
             sLogger.v(
                     "Finished parsing JSON %d signals to add, and %d signals to remove",
-                    signalsToAdd.size(), signalsToDelete.size());
+                    combinedUpdates.getToAdd().size(), combinedUpdates.getToRemove().size());
 
-            writeChanges(adtech, packageName, creationTime, signalsToAdd, signalsToDelete);
+            writeChanges(adtech, packageName, creationTime, combinedUpdates);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
@@ -109,13 +117,11 @@ public class UpdateProcessingOrchestrator {
         return toReturn;
     }
 
-    private void runProcessors(
-            JSONObject json,
-            Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap,
-            List<DBProtectedSignal.Builder> signalsToAdd,
-            List<DBProtectedSignal> signalsToDelete,
-            Set<ByteBuffer> keysTouched)
+    private UpdateOutput runProcessors(
+            JSONObject json, Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap)
             throws JSONException {
+
+        UpdateOutput combinedUpdates = new UpdateOutput();
         sLogger.v("Running update processors");
         // Run each of the update processors
         for (Iterator<String> iter = json.keys(); iter.hasNext(); ) {
@@ -126,27 +132,32 @@ public class UpdateProcessingOrchestrator {
                     mUpdateProcessorSelector
                             .getUpdateProcessor(key)
                             .processUpdates(value, currentSignalsMap);
-            signalsToAdd.addAll(output.getToAdd());
-            signalsToDelete.addAll(output.getToRemove());
-            if (!Collections.disjoint(keysTouched, output.getKeysTouched())) {
+            combinedUpdates.getToAdd().addAll(output.getToAdd());
+            combinedUpdates.getToRemove().addAll(output.getToRemove());
+            if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
                 throw new IllegalArgumentException(
                         "Updates JSON attempts to perform multiple operations on a single key");
             }
-            keysTouched.addAll(output.getKeysTouched());
+            combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());
+
+            UpdateEncoderEvent outPutEvent = output.getUpdateEncoderEvent();
+            if (outPutEvent != null) {
+                combinedUpdates.setUpdateEncoderEvent(outPutEvent);
+            }
         }
+        return combinedUpdates;
     }
 
     private void writeChanges(
             AdTechIdentifier adtech,
             String packageName,
             Instant creationTime,
-            List<DBProtectedSignal.Builder> signalsToAdd,
-            List<DBProtectedSignal> signalsToDelete) {
+            UpdateOutput combinedUpdates) {
         /* Modify the DB based on the output of the update processors. Might be worth skipping
          * this is both signalsToAdd and signalsToDelete are empty.
          */
         mProtectedSignalsDao.insertAndDelete(
-                signalsToAdd.stream()
+                combinedUpdates.getToAdd().stream()
                         .map(
                                 builder ->
                                         builder.setBuyer(adtech)
@@ -154,6 +165,11 @@ public class UpdateProcessingOrchestrator {
                                                 .setCreationTime(creationTime)
                                                 .build())
                         .collect(Collectors.toList()),
-                signalsToDelete);
+                combinedUpdates.getToRemove());
+
+        // There is a valid possibility where there is no update for encoder
+        if (combinedUpdates.getUpdateEncoderEvent() != null) {
+            mUpdateEncoderEventHandler.handle(adtech, combinedUpdates.getUpdateEncoderEvent());
+        }
     }
 }

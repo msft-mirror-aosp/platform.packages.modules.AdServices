@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"‏الوصول إلى واجهة Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة Ad ID API."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"‏الوصول إلى واجهة برمجة التطبيقات AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"‏يسمح هذا الإذن للتطبيق بالوصول إلى واجهة برمجة التطبيقات AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"‏الوصول إلى واجهة App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"‏يتيح هذا الإذن للتطبيق الوصول إلى واجهة App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"‏الوصول إلى واجهة Consent Service API"</string>

@@ -534,7 +534,7 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
+        assertThat(loadSdkCallback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
@@ -648,7 +648,7 @@ public class SdkSandboxTest {
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
-        assertThat(callback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
+        assertThat(callback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER

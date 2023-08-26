@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -314,10 +315,10 @@ public class SettingsActivityUiAutomatorTest {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
 
         // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
 
         verify(mConsentManager, times(2)).resetMeasurement();
     }
@@ -547,6 +548,8 @@ public class SettingsActivityUiAutomatorTest {
      */
     @Test
     public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
+        // Topics UI is not available on R
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         // Return an empty topics list
@@ -562,5 +565,16 @@ public class SettingsActivityUiAutomatorTest {
         UiObject blockedTopicsWhenEmptyStateButton =
                 ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_blocked_topics_title);
         assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
+    }
+
+    public void clickResetBtn() throws UiObjectNotFoundException {
+        // R Msmt UI is not scrollable
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(
+                    sDevice,
+                    com.android.adservices.api.R.string.settingsUI_measurement_view_reset_title);
+        } else {
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        }
     }
 }

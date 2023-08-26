@@ -24,6 +24,8 @@ import android.content.pm.PackageManager;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -41,6 +43,7 @@ public class FledgeMaintenanceTasksWorker {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
     @NonNull private final EnrollmentDao mEnrollmentDao;
+    @NonNull private final EncryptionContextDao mEncryptionContextDao;
     @NonNull private final Flags mFlags;
     @NonNull private final Clock mClock;
 
@@ -50,17 +53,20 @@ public class FledgeMaintenanceTasksWorker {
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull EnrollmentDao enrollmentDao,
+            @NonNull EncryptionContextDao encryptionContextDao,
             @NonNull Clock clock) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(clock);
+        Objects.requireNonNull(encryptionContextDao);
 
         mFlags = flags;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mFrequencyCapDao = frequencyCapDao;
         mEnrollmentDao = enrollmentDao;
+        mEncryptionContextDao = encryptionContextDao;
         mClock = clock;
     }
 
@@ -70,6 +76,8 @@ public class FledgeMaintenanceTasksWorker {
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
         mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
         mEnrollmentDao = EnrollmentDao.getInstance(context);
+        mEncryptionContextDao =
+                AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
         mClock = Clock.systemUTC();
     }
 
@@ -98,6 +106,14 @@ public class FledgeMaintenanceTasksWorker {
 
         sLogger.v("Clearing expired Registered Ad Interaction data ");
         mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
+
+        if (mFlags.getFledgeAuctionServerEnabled()) {
+            sLogger.v("Clearing expired Ad Selection Initialization data");
+            mAdSelectionEntryDao.removeExpiredAdSelectionInitializations(expirationTime);
+
+            sLogger.v("Clearing expired Encryption Context");
+            mEncryptionContextDao.removeExpiredEncryptionContext(expirationTime);
+        }
     }
 
     /**

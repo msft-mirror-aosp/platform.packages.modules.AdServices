@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Ilovaga AdServices Consent API ishlatish ruxsatini beradi."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API taʼminotiga ruxsat"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ilovaga Ad ID API ruxsatini beradi."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API ruxsati"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Ilovaga AdServices Cobalt Upload API ruxsatini beradi."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API taʼminotiga ruxsat"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Ilovaga App Set ID API uchun ruxsat beradi."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ishlatish"</string>

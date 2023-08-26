@@ -39,6 +39,7 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -97,6 +98,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @NonNull private final JsFetcher mJsFetcher;
     @NonNull private final boolean mDebugReportingEnabled;
     @NonNull private final DevContext mDevContext;
+    private final boolean mDataVersionHeaderEnabled;
 
     public AdsScoreGeneratorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
@@ -108,7 +110,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull Flags flags,
             @NonNull AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull DebugReporting debugReporting) {
+            @NonNull DebugReporting debugReporting,
+            boolean dataVersionHeaderEnabled) {
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
@@ -138,6 +141,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         mFlags,
                         mDevContext);
         mDebugReportingEnabled = debugReporting.isEnabled();
+        mDataVersionHeaderEnabled = dataVersionHeaderEnabled;
     }
 
     /**
@@ -383,10 +387,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             if (jsOverride == null) {
                                 sLogger.v("Fetching trusted scoring signals from server");
                                 return Futures.transform(
-                                        mAdServicesHttpsClient.fetchPayload(
-                                                trustedScoringSignalsUri,
-                                                ImmutableSet.of(DATA_VERSION_HEADER_SCORING_KEY),
-                                                mDevContext),
+                                        fetchTrustedScoringData(trustedScoringSignalsUri),
                                         s -> {
                                             if (s == null) {
                                                 return null;
@@ -432,6 +433,15 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },
                         mLightweightExecutorService);
+    }
+
+    private ListenableFuture<AdServicesHttpClientResponse> fetchTrustedScoringData(Uri uri) {
+        if (mDataVersionHeaderEnabled) {
+            return mAdServicesHttpsClient.fetchPayload(
+                    uri, ImmutableSet.of(DATA_VERSION_HEADER_SCORING_KEY), mDevContext);
+        } else {
+            return mAdServicesHttpsClient.fetchPayload(uri, mDevContext);
+        }
     }
 
     @NonNull

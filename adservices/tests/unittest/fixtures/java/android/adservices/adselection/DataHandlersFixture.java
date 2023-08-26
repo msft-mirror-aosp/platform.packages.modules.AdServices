@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 public class DataHandlersFixture {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
@@ -50,6 +51,8 @@ public class DataHandlersFixture {
     public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1test.com");
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final Instant CREATION_INSTANT_1 = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant CREATION_INSTANT_2 =
+            CLOCK.instant().plusSeconds(10).truncatedTo(ChronoUnit.MILLIS);
 
     public static final double WIN_BID_1 = 0.1;
     public static final Uri WIN_RENDER_URI_1 = AdDataFixture.getValidRenderUriByBuyer(BUYER_1, 1);
@@ -84,35 +87,32 @@ public class DataHandlersFixture {
     private static final Uri SELLER_1_CLICK_URI = Uri.parse(SELLER_1_BASE_URI + CLICK_EVENT);
     private static final Uri SELLER_1_HOVER_URI = Uri.parse(SELLER_1_BASE_URI + HOVER_EVENT);
 
-    public static AdSelectionInitialization AD_SELECTION_INTITIALIZATION_1 =
-            AdSelectionInitialization.builder()
-                    .setSeller(SELLER_1)
-                    .setCallerPackageName(TEST_PACKAGE_NAME_1)
-                    .build();
+    public static AdSelectionInitialization AD_SELECTION_INITIALIZATION_1 =
+            getAdSelectionInitialization(SELLER_1, TEST_PACKAGE_NAME_1);
 
-    public static DBAdSelectionInitialization DB_AD_SELECTION_INTITIALIZATION_1 =
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_1 =
             DBAdSelectionInitialization.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setSeller(AD_SELECTION_INTITIALIZATION_1.getSeller())
-                    .setCallerPackageName(AD_SELECTION_INTITIALIZATION_1.getCallerPackageName())
+                    .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
+                    .setCallerPackageName(AD_SELECTION_INITIALIZATION_1.getCallerPackageName())
                     .setCreationInstant(CREATION_INSTANT_1)
                     .build();
 
-    public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_1 =
-            AdSelectionResultBidAndUri.builder()
-                    .setWinningAdBid(WIN_BID_1)
-                    .setWinningAdRenderUri(WIN_RENDER_URI_1)
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_2 =
+            DBAdSelectionInitialization.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
+                    .setCallerPackageName(AD_SELECTION_INITIALIZATION_1.getCallerPackageName())
+                    .setCreationInstant(CREATION_INSTANT_2)
                     .build();
+
+    public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_1 =
+            getAdSelectionResultBidAndUri(AD_SELECTION_ID_1, WIN_BID_1, WIN_RENDER_URI_1);
 
     public static WinningCustomAudience WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET =
-            WinningCustomAudience.builder()
-                    .setOwner(TEST_WIN_CA_OWNER)
-                    .setName("caAllFields")
-                    .setAdCounterKeys(TEST_WIN_CA_COUNTER_KEYS)
-                    .build();
+            getWinningCustomAudience(TEST_WIN_CA_OWNER, "caAllFields", TEST_WIN_CA_COUNTER_KEYS);
     public static WinningCustomAudience WINNING_CUSTOM_AUDIENCE_ONLY_NAME =
-            WinningCustomAudience.builder().setName("caOnlyName").build();
-
+            getWinningCustomAudience(null, "caOnlyName", null);
     public static ReportingComputationData REPORTING_COMPUTATION_DATA_1 =
             ReportingComputationData.builder()
                     .setBuyerDecisionLogicJs(DUMMY_DECISION_LOGIC_JS)
@@ -124,10 +124,7 @@ public class DataHandlersFixture {
                     .setWinningCaUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                     .build();
     public static ReportingData REPORTING_DATA_WITH_URIS =
-            ReportingData.builder()
-                    .setBuyerWinReportingUri(BUYER_REPORTING_URI_1)
-                    .setSellerWinReportingUri(SELLER_REPORTING_URI_1)
-                    .build();
+            getReportingData(BUYER_REPORTING_URI_1, SELLER_REPORTING_URI_1);
 
     public static RegisteredAdInteraction REGISTERED_AD_INTERACTIONS_SELLER_1_CLICK =
             RegisteredAdInteraction.builder()
@@ -191,5 +188,35 @@ public class DataHandlersFixture {
 
     public static DBReportingData getDBReportingDataWithId(long adSelectionId) {
         return DB_REPORTING_DATA.setAdSelectionId(adSelectionId).build();
+    }
+
+    public static AdSelectionInitialization getAdSelectionInitialization(
+            AdTechIdentifier seller, String callerPackageName) {
+        return AdSelectionInitialization.create(seller, callerPackageName);
+    }
+
+    public static AdSelectionResultBidAndUri getAdSelectionResultBidAndUri(
+            long adSelectionId, double bid, Uri adRenderUri) {
+        return AdSelectionResultBidAndUri.builder()
+                .setAdSelectionId(adSelectionId)
+                .setWinningAdBid(bid)
+                .setWinningAdRenderUri(adRenderUri)
+                .build();
+    }
+
+    public static WinningCustomAudience getWinningCustomAudience(
+            String owner, String name, Set<Integer> adCounterKeys) {
+        return WinningCustomAudience.builder()
+                .setOwner(owner)
+                .setName(name)
+                .setAdCounterKeys(adCounterKeys)
+                .build();
+    }
+
+    public static ReportingData getReportingData(Uri buyerReportingUri, Uri sellerReportingUri) {
+        return ReportingData.builder()
+                .setBuyerWinReportingUri(buyerReportingUri)
+                .setSellerWinReportingUri(sellerReportingUri)
+                .build();
     }
 }

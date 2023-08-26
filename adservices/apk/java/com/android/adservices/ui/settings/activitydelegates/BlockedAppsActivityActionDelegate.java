@@ -87,6 +87,8 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
                         getOnclickListener,
                         true);
         configureRecyclerView(R.id.blocked_apps_list, adapter);
+
+        configureNotifyAdapterDataChange(mBlockedAppsViewModel.getBlockedApps(), adapter);
     }
 
     private void listenToBlockedAppsViewModelUiEvents() {

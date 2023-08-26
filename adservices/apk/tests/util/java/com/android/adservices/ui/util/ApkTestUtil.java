@@ -102,6 +102,12 @@ public class ApkTestUtil {
         obj.clickTopLeft();
     }
 
+    public static void click(UiDevice device, int resId) throws UiObjectNotFoundException {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
     public static void gentleSwipe(UiDevice device) throws UiObjectNotFoundException {
         UiScrollable scrollView =
                 new UiScrollable(
