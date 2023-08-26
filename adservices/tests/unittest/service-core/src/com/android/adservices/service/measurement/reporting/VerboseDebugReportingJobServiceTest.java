@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -54,22 +54,21 @@ import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
-/** Unit test for {@link DebugReportingJobService} */
-public class DebugReportingJobServiceTest {
-    private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
-            MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+/** Unit test for {@link VerboseDebugReportingJobService} */
+public class VerboseDebugReportingJobServiceTest {
+    private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
+            MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1000L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
     private JobParameters mJobParameters;
-    private DebugReportingJobService mSpyService;
-
+    private VerboseDebugReportingJobService mSpyService;
 
     @Before
     public void setUp() {
-        mSpyService = spy(new DebugReportingJobService());
+        mSpyService = spy(new VerboseDebugReportingJobService());
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
         mJobParameters = mock(JobParameters.class);
@@ -91,7 +90,8 @@ public class DebugReportingJobServiceTest {
                     Thread.sleep(WAIT_IN_MILLIS);
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -104,7 +104,7 @@ public class DebugReportingJobServiceTest {
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
-                                            DebugReportingJobService.scheduleIfNeeded(
+                                            VerboseDebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
                     // Execute
@@ -114,12 +114,12 @@ public class DebugReportingJobServiceTest {
                     assertTrue(result);
                     // Allow background thread to execute
                     Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
+                    verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
-                    verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                    verify(mMockJobScheduler, never())
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
-
 
     @Test
     public void onStartJob_shouldDisableJobTrue() throws Exception {
@@ -141,7 +141,8 @@ public class DebugReportingJobServiceTest {
                     Thread.sleep(WAIT_IN_MILLIS);
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                     ExtendedMockito.verifyZeroInteractions(
                             ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
@@ -160,17 +161,17 @@ public class DebugReportingJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any()), never());
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -188,17 +189,17 @@ public class DebugReportingJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any()), never());
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -216,17 +217,17 @@ public class DebugReportingJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any()), times(1));
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -243,17 +244,17 @@ public class DebugReportingJobServiceTest {
                             .getSystemService(JobScheduler.class);
                     doReturn(/* noJobInfo = */ null)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
-                    DebugReportingJobService.scheduleIfNeeded(
+                    VerboseDebugReportingJobService.scheduleIfNeeded(
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DebugReportingJobService.schedule(any(), any()), times(1));
+                            () -> VerboseDebugReportingJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
                 });
     }
 
@@ -263,7 +264,7 @@ public class DebugReportingJobServiceTest {
                         .spyStatic(AdServicesConfig.class)
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(EnrollmentDao.class)
-                        .spyStatic(DebugReportingJobService.class)
+                        .spyStatic(VerboseDebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
@@ -281,7 +282,8 @@ public class DebugReportingJobServiceTest {
                     .when(() -> EnrollmentDao.getInstance(any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doNothing().when(() -> DebugReportingJobService.schedule(any(), any()));
+            ExtendedMockito.doNothing()
+                    .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
 
             // Execute
             execute.run();
@@ -301,6 +303,8 @@ public class DebugReportingJobServiceTest {
     private void toggleKillSwitch(boolean value) {
         Flags mockFlags = Mockito.mock(Flags.class);
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mockFlags).getMeasurementJobDebugReportingKillSwitch();
+        ExtendedMockito.doReturn(value)
+                .when(mockFlags)
+                .getMeasurementJobVerboseDebugReportingKillSwitch();
     }
 }
