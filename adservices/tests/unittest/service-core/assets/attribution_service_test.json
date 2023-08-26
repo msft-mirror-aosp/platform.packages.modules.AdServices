@@ -5146,7 +5146,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5211,7 +5211,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5306,7 +5306,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5371,7 +5371,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5381,7 +5381,7 @@
           "attributionDestination": "https://example2.test",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
-          "triggerTime": 8726400002,
+          "triggerTime": 8726400001,
           "status": 0,
           "reportTime": 8730000002,
           "triggerPriority": 101,

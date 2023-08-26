@@ -102,7 +102,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
         stopPackageAPI();
 
         // Set flags for test to run on devices with api level lower than 33 (S-)
-        if (!sdkLevel.isDeviceAtLeastT()) {
+        if (!sdkLevel.isAtLeastT()) {
             mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
             mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
             setFlags();
@@ -115,7 +115,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     @After
     public void tearDown() throws Exception {
         disableMddBackgroundTasks(false);
-        if (!sdkLevel.isDeviceAtLeastT()) {
+        if (!sdkLevel.isAtLeastT()) {
             resetFlagsToDefault();
         }
         stopPackageAPI();
@@ -158,7 +158,7 @@ public final class UiApiLoggingHostTest implements IDeviceTest {
     }
 
     private void rebootIfSMinus() throws DeviceNotAvailableException, InterruptedException {
-        if (!sdkLevel.isDeviceAtLeastT()) {
+        if (!sdkLevel.isAtLeastT()) {
             ITestDevice device = getDevice();
             device.reboot();
             device.waitForDeviceAvailable();

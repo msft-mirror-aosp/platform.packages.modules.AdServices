@@ -117,6 +117,10 @@ public abstract class AdSelectionRunner {
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
     @VisibleForTesting
+    static final String ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED =
+            "On device auction kill switch enabled";
+
+    @VisibleForTesting
     static final String JS_SANDBOX_IS_NOT_AVAILABLE =
             String.format(
                     AD_SELECTION_ERROR_PATTERN,
@@ -284,19 +288,7 @@ public abstract class AdSelectionRunner {
                             () -> {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
-                                    sLogger.v("Starting filtering and validation.");
-                                    mAdSelectionServiceFilter.filterRequest(
-                                            adSelectionConfig.getSeller(),
-                                            inputParams.getCallerPackageName(),
-                                            mFlags
-                                                    .getEnforceForegroundStatusForFledgeRunAdSelection(),
-                                            true,
-                                            mCallerUid,
-                                            AdServicesStatsLog
-                                                    .AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                                            Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
-                                            devContext);
-                                    validateAdSelectionConfig(adSelectionConfig);
+                                    validateRequest(inputParams, devContext);
                                 } finally {
                                     sLogger.v("Completed filtering and validation.");
                                     Trace.endSection();
@@ -359,6 +351,27 @@ public abstract class AdSelectionRunner {
             sLogger.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
+    }
+
+    private void validateRequest(
+            @NonNull AdSelectionInput inputParams, @NonNull DevContext devContext) {
+        if (mFlags.getFledgeOnDeviceAuctionKillSwitch()) {
+            sLogger.v("On Device auction kill switch enabled.");
+            throw new IllegalStateException(ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED);
+        }
+
+        sLogger.v("Starting filtering and validation.");
+        AdSelectionConfig adSelectionConfig = inputParams.getAdSelectionConfig();
+        mAdSelectionServiceFilter.filterRequest(
+                adSelectionConfig.getSeller(),
+                inputParams.getCallerPackageName(),
+                mFlags.getEnforceForegroundStatusForFledgeRunAdSelection(),
+                true,
+                mCallerUid,
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                devContext);
+        validateAdSelectionConfig(adSelectionConfig);
     }
 
     @Nullable

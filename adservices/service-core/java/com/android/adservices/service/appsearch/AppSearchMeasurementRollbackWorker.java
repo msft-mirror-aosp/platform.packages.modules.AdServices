@@ -27,6 +27,7 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -49,7 +50,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 class AppSearchMeasurementRollbackWorker {
-    private static final String DATABASE_NAME = "measurement_rollback";
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("measurement_rollback");
 
     // At the worker level, we ensure that writes do not conflict with any other writes/reads.
     private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();

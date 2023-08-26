@@ -25,8 +25,6 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.service.common.Validator;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -35,8 +33,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /** Runs validations on {@link AdSelectionFromOutcomesInput} object */
 public class AdSelectionFromOutcomesConfigValidator
@@ -75,20 +71,15 @@ public class AdSelectionFromOutcomesConfigValidator
 
     @VisibleForTesting static final String HTTPS_PREFIX = "https://";
     private static final String HTTPS_SCHEME = "https";
-
-    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final String mCallerPackageName;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     public AdSelectionFromOutcomesConfigValidator(
-            @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull String callerPackageName,
             @NonNull PrebuiltLogicGenerator prebuiltLogicGenerator) {
-        Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(prebuiltLogicGenerator);
 
-        mAdSelectionEntryDao = adSelectionEntryDao;
         mCallerPackageName = callerPackageName;
         mPrebuiltLogicGenerator = prebuiltLogicGenerator;
     }
@@ -99,7 +90,7 @@ public class AdSelectionFromOutcomesConfigValidator
             @NonNull AdSelectionFromOutcomesConfig config,
             @NonNull ImmutableCollection.Builder<String> violations) {
         // TODO(b/275211917): Refactor to address the duplicate code between this class and
-        // AdSelectionConfigValidator
+        //  AdSelectionConfigValidator
         Objects.requireNonNull(config, INPUT_PARAM_CANNOT_BE_NULL);
 
         violations.addAll(validateAdSelectionIds(config.getAdSelectionIds()));
@@ -117,15 +108,6 @@ public class AdSelectionFromOutcomesConfigValidator
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
         if (Objects.isNull(adSelectionIds) || adSelectionIds.isEmpty()) {
             violations.add(AD_OUTCOMES_CANNOT_BE_NULL_OR_EMPTY);
-        }
-
-        // TODO(b/258912806): Current behavior is to fail if any ad selection ids are absent in the
-        // db or
-        //  owned by another caller package. Investigate if this behavior needs changing due to
-        // security reasons.
-        List<Long> notExistIds;
-        if ((notExistIds = validateExistenceOfAdSelectionIds(adSelectionIds)).size() > 0) {
-            violations.add(String.format(AD_SELECTION_IDS_DONT_EXIST, notExistIds));
         }
         return violations.build();
     }
@@ -156,21 +138,6 @@ public class AdSelectionFromOutcomesConfigValidator
                     String.format(SELLER_AND_URI_HOST_ARE_INCONSISTENT, sellerHost, uriHost));
         }
         return violations.build();
-    }
-
-    private ImmutableList<Long> validateExistenceOfAdSelectionIds(
-            @NonNull List<Long> adOutcomeIds) {
-        Objects.requireNonNull(adOutcomeIds);
-
-        ImmutableList.Builder<Long> notExistingIds = new ImmutableList.Builder<>();
-        Set<Long> existingIds =
-                mAdSelectionEntryDao
-                        .getAdSelectionEntities(adOutcomeIds, mCallerPackageName)
-                        .stream()
-                        .map(DBAdSelectionEntry::getAdSelectionId)
-                        .collect(Collectors.toSet());
-        adOutcomeIds.stream().filter(e -> !existingIds.contains(e)).forEach(notExistingIds::add);
-        return notExistingIds.build();
     }
 
     private boolean isStringNullOrEmpty(@Nullable String str) {

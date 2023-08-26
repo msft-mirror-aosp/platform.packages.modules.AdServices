@@ -96,6 +96,14 @@ public interface Flags {
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
+    /** Flag to disable direct app calls for Topics API. go/app-calls-for-topics-api */
+    boolean TOPICS_DISABLE_DIRECT_APP_CALLS = false;
+
+    /** Returns the flag to disable direct app calls for Topics API. */
+    default boolean getTopicsDisableDirectAppCalls() {
+        return TOPICS_DISABLE_DIRECT_APP_CALLS;
+    }
+
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
@@ -524,6 +532,13 @@ public interface Flags {
     /** Returns minimum event report window */
     default long getMeasurementMinimumEventReportWindowInSeconds() {
         return MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS;
+    }
+
+    long MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS = TimeUnit.HOURS.toSeconds(1);
+
+    /** Returns minimum aggregatable report window */
+    default long getMeasurementMinimumAggregatableReportWindowInSeconds() {
+        return MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS;
     }
 
     boolean MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER = false;
@@ -991,12 +1006,72 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_ENABLED = false;
+
+    /**
+     * @return whether to enable server auction support in post-auction APIs.
+     */
+    default boolean getFledgeAuctionServerEnabled() {
+        return FLEDGE_AUCTION_SERVER_ENABLED;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION = true;
+
+    /**
+     * @return whether to enable server auction support in report impression.
+     */
+    default boolean getFledgeAuctionServerEnabledForReportImpression() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT = true;
+
+    /**
+     * @return whether to enable server auction support in report event API.
+     */
+    default boolean getFledgeAuctionServerEnabledForReportEvent() {
+        return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM = true;
+
+    /**
+     * @return whether to enable server auction support in update histogram API.
+     */
+    default boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION = true;
+
+    /**
+     * @return whether to enable server auction support in select ads mediation API.
+     */
+    default boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+        return getFledgeAuctionServerEnabled()
+                && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
+    }
+
     ImmutableList<Integer> FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             ImmutableList.of(0, 1024, 2048, 4096, 8192, 16384, 32768, 65536);
 
     /** Returns available bucket sizes for auction server payloads. */
     default ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
         return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
+    }
+
+    // TODO(b/291680065): Remove when owner field is returned from B&A
+    boolean FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED = false;
+
+    /**
+     * @return true if forcing {@link
+     *     android.adservices.adselection.AdSelectionManager#persistAdSelectionResult} to continue
+     *     when owner is null, otherwise false.
+     */
+    default boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
+        return FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
     }
 
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
@@ -1828,12 +1903,14 @@ public interface Flags {
     // FLEDGE Kill switches
 
     /**
-     * Fledge Ad Selection API kill switch. The default value is false which means that Select Ads
-     * API is enabled by default. This flag should be should as emergency andon cord.
+     * Fledge AdSelectionService kill switch. The default value is false which means that
+     * AdSelectionService is enabled by default. This flag should be should as emergency andon cord.
      */
     boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
 
-    /** @return value of Fledge Ad Selection API kill switch */
+    /**
+     * @return value of Fledge Ad Selection Service API kill switch .
+     */
     default boolean getFledgeSelectAdsKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -1849,7 +1926,24 @@ public interface Flags {
      * @return value of Fledge Auction server API kill switch.
      */
     default boolean getFledgeAuctionServerKillSwitch() {
-        return getGlobalKillSwitch() || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+    }
+
+    /**
+     * Fledge On Device Auction API Kill switch. The default value is false which means that On
+     * Device Auction APIs is enabled by default.
+     */
+    boolean FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH = false;
+
+    /**
+     * @return value of On Device Auction API kill switch.
+     */
+    default boolean getFledgeOnDeviceAuctionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
     }
 
     /**
@@ -1863,6 +1957,20 @@ public interface Flags {
     default boolean getFledgeCustomAudienceServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
+    /**
+     * Protected signals API kill switch. The default value is false which means that protected
+     * signals are enabled by default. This flag should be should as emergency andon cord.
+     */
+    boolean PROTECTED_SIGNALS_SERVICE_KILL_SWITCH = false;
+
+    /**
+     * @return value of the protected signals API kill switch.
+     */
+    default boolean getProtectedSignalsServiceKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
     }
 
     /**
@@ -1932,7 +2040,7 @@ public interface Flags {
 
     /*
      * The allow-list for Measurement APIs. This list has the list of app package names that we
-     * allow using Measurement APIs.
+     * allow using Measurement APIs. Overridden by Block List
      */
     String MSMT_API_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
@@ -1965,10 +2073,28 @@ public interface Flags {
      * App Package Name that does not belong to this allow-list will not be able to use Measurement
      * APIs.
      * If this list has special value "*", then all package names are allowed.
+     * Block List takes precedence over Allow List.
      * There must be not any empty space between comma.
      */
     default String getMsmtApiAppAllowList() {
         return MSMT_API_APP_ALLOW_LIST;
+    }
+
+    /*
+     * The blocklist for Measurement APIs. This list has the list of app package names that we
+     * do not allow to use Measurement APIs.
+     */
+    String MSMT_API_APP_BLOCK_LIST = "";
+
+    /*
+     * App Package Name that belong to this blocklist will not be able to use Measurement
+     * APIs.
+     * If this list has special value "*", then all package names are blocked.
+     * Block List takes precedence over Allow List.
+     * There must be not any empty space between comma.
+     */
+    default String getMsmtApiAppBlockList() {
+        return MSMT_API_APP_BLOCK_LIST;
     }
 
     /*
@@ -2594,6 +2720,7 @@ public interface Flags {
     // New Feature Flags
     boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
     boolean FLEDGE_CPC_BILLING_ENABLED = false;
+    boolean FLEDGE_DATA_VERSION_HEADER_ENABLED = false;
 
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
@@ -2603,6 +2730,11 @@ public interface Flags {
     /** Returns whether the CPC billing feature is enabled. */
     default boolean getFledgeCpcBillingEnabled() {
         return FLEDGE_CPC_BILLING_ENABLED;
+    }
+
+    /** Returns whether the data version header feature is enabled. */
+    default boolean getFledgeDataVersionHeaderEnabled() {
+        return FLEDGE_DATA_VERSION_HEADER_ENABLED;
     }
 
     /**
@@ -2893,9 +3025,14 @@ public interface Flags {
     /** Default value of whether topics cobalt logging feature is enabled. */
     boolean TOPICS_COBALT_LOGGING_ENABLED = false;
 
-    /** Returns whether the topics cobalt logging feature is enabled. */
+    /**
+     * Returns whether the topics cobalt logging feature is enabled.
+     *
+     * <p>The topics cobalt logging will be disabled either the getCobaltLoggingEnabled or {@code
+     * TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
+     */
     default boolean getTopicsCobaltLoggingEnabled() {
-        return TOPICS_COBALT_LOGGING_ENABLED;
+        return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
     }
 
     /** Default value of Cobalt Adservices Api key. */
@@ -2994,5 +3131,24 @@ public interface Flags {
     default boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
         return getFledgeMeasurementReportAndRegisterEventApiEnabled()
                 && FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+    }
+
+    /** Cobalt logging job period in milliseconds. */
+    long COBALT_LOGGING_JOB_PERIOD_MS = 6 * 60 * 60 * 1000; // 6 hours.
+
+    /** Returns the max time period (in milliseconds) between each cobalt logging job run. */
+    default long getCobaltLoggingJobPeriodMs() {
+        return COBALT_LOGGING_JOB_PERIOD_MS;
+    }
+
+    /** Cobalt logging feature flag. */
+    boolean COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns the feature flag value for cobalt logging job. The cobalt logging feature will be
+     * disabled if either the Global Kill Switch or the Cobalt Logging enabled flag is true.
+     */
+    default boolean getCobaltLoggingEnabled() {
+        return !getGlobalKillSwitch() && COBALT_LOGGING_ENABLED;
     }
 }

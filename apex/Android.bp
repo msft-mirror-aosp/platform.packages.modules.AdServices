@@ -114,6 +114,7 @@ bootclasspath_fragment {
             "android.adservices.customaudience",
             "android.adservices.exceptions",
             "android.adservices.measurement",
+            "android.adservices.signals",
             "android.adservices.topics",
             "android.app.adservices",
             "android.app.sdksandbox",

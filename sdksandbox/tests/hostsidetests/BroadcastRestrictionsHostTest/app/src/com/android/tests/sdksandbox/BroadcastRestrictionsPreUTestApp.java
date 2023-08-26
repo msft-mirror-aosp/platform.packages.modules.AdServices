@@ -92,14 +92,6 @@ public class BroadcastRestrictionsPreUTestApp {
         mDeviceConfigUtils.deleteProperty(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS);
 
         mRule.getScenario();
-
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        callback.assertLoadSdkIsSuccessful();
-        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
-
-        IBinder binder = sandboxedSdk.getInterface();
-        mBroadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
     }
 
     @After
@@ -119,12 +111,14 @@ public class BroadcastRestrictionsPreUTestApp {
 
     @Test
     public void testRegisterBroadcastReceiver_defaultValueRestrictionsApplied() throws Exception {
+        loadSdk();
         mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
     }
 
     @Test
     public void testRegisterBroadcastReceiver_restrictionsApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true");
+        loadSdk();
 
         final SecurityException thrown =
                 assertThrows(
@@ -143,6 +137,7 @@ public class BroadcastRestrictionsPreUTestApp {
     @Test(expected = Test.None.class /* no exception expected */)
     public void testRegisterBroadcastReceiver_restrictionsNotApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false");
+        loadSdk();
         mBroadcastSdkApi.registerBroadcastReceiver(INTENT_ACTIONS);
     }
 
@@ -152,6 +147,17 @@ public class BroadcastRestrictionsPreUTestApp {
      */
     @Test
     public void testRegisterBroadcastReceiver_intentFilterWithoutAction() throws Exception {
+        loadSdk();
         mBroadcastSdkApi.registerBroadcastReceiver(new ArrayList<>());
+    }
+
+    private void loadSdk() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        mBroadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
     }
 }

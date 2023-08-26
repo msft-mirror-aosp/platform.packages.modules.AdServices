@@ -22,25 +22,24 @@ import com.android.tradefed.log.LogUtil.CLog;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-import java.util.Objects;
-
 public final class ConsoleLogger implements RealLogger {
 
-    private final String mTag;
+    private static final ConsoleLogger sInstance = new ConsoleLogger();
 
-    public ConsoleLogger(Class<?> clazz) {
-        this(clazz.getSimpleName());
+    public static ConsoleLogger getInstance() {
+        return sInstance;
     }
 
-    public ConsoleLogger(String tag) {
-        mTag = Objects.requireNonNull(tag);
-    }
+    private ConsoleLogger() {}
 
     @Override
     @FormatMethod
-    public void log(LogLevel level, @FormatString String msgFmt, Object... msgArgs) {
-        String message = "[" + mTag + "]" + String.format(msgFmt, msgArgs);
+    public void log(LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
+        String message = "[" + tag + "]" + String.format(msgFmt, msgArgs);
         switch (level) {
+            case WTF:
+                CLog.wtf(message);
+                return;
             case ERROR:
                 CLog.e(message);
                 return;
@@ -62,7 +61,46 @@ public final class ConsoleLogger implements RealLogger {
     }
 
     @Override
+    @FormatMethod
+    public void log(
+            LogLevel level,
+            String tag,
+            Throwable t,
+            @FormatString String msgFmt,
+            Object... msgArgs) {
+        String message = "[" + tag + "]" + String.format(msgFmt, msgArgs);
+        switch (level) {
+            case WTF:
+                CLog.wtf(message);
+                CLog.wtf(t);
+                return;
+            case ERROR:
+                CLog.e(message);
+                CLog.e(t);
+                return;
+            case WARNING:
+                CLog.w(message);
+                CLog.w(t);
+                return;
+            case INFO:
+                CLog.i(message);
+                CLog.i("Exception: %s", t);
+                return;
+            case DEBUG:
+                CLog.d(message);
+                CLog.d("Exception: %s", t);
+                return;
+            case VERBOSE:
+                CLog.v(message);
+                CLog.v("Exception: %s", t);
+                return;
+            default:
+                CLog.wtf("invalid level (" + level + "): " + message);
+        }
+    }
+
+    @Override
     public String toString() {
-        return getClass().getSimpleName() + "[tag=" + mTag + "]";
+        return getClass().getSimpleName();
     }
 }

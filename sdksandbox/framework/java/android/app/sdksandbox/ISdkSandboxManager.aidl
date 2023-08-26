@@ -41,7 +41,7 @@ interface ISdkSandboxManager {
     void removeSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
     void registerAppOwnedSdkSandboxInterface(in String callingPackageName, in AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface, long timeAppCalledSystemServer);
     void unregisterAppOwnedSdkSandboxInterface(in String callingPackageName, in String name, long timeAppCalledSystemServer);
-    oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
+    oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, in SandboxLatencyInfo sandboxLatencyInfo, long timeAppCalledSystemServer, in Bundle params, in ILoadSdkCallback callback);
     void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
     // TODO(b/242031240): wrap the many input params in one parcelable object
     oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"အပလီကေးရှင်းတစ်ခုကို AdServices Consent API သုံးခွင့်ပြုနိုင်သည်။"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API သုံးခွင့်"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"အပလီကေးရှင်းကို ကြော်ငြာ ID API သုံးခွင့်ပြုနိုင်သည်။"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API သုံးရန်"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"AdServices Cobalt Upload API သုံးရန် အပလီကေးရှင်းကို ခွင့်ပြုသည်။"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API သုံးခွင့်"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"အပလီကေးရှင်းကို အက်ပ်အတွဲ ID API သုံးခွင့်ပြုနိုင်သည်။"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API သုံးခွင့်"</string>
