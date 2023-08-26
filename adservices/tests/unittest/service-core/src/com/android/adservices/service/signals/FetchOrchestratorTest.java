@@ -29,6 +29,7 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.AdTechUriValidator;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -51,6 +52,7 @@ public class FetchOrchestratorTest {
     private static final String JSON = "{\"a\":\"b\"}";
     @Mock private UpdatesDownloader mUpdatesDownloader;
     @Mock private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
+    @Mock private AdTechUriValidator mAdTechUriValidator;
 
     private FetchOrchestrator mFetchOrchestrator;
 
@@ -60,7 +62,8 @@ public class FetchOrchestratorTest {
                 new FetchOrchestrator(
                         AdServicesExecutors.getBackgroundExecutor(),
                         mUpdatesDownloader,
-                        mUpdateProcessingOrchestrator);
+                        mUpdateProcessingOrchestrator,
+                        mAdTechUriValidator);
     }
 
     @Test
@@ -81,5 +84,6 @@ public class FetchOrchestratorTest {
                         anyString(),
                         any(Instant.class),
                         any(JSONObject.class));
+        verify(mAdTechUriValidator).addValidation(eq(URI), any());
     }
 }

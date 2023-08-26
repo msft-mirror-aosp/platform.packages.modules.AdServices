@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"एपलाई AdServices Consent API प्रयोग गर्ने अनुमति दिन्छ।"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API प्रयोग गर्ने अनुमति"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"एपलाई Ad ID API प्रयोग गर्ने अनुमति दिन्छ।"</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API को एक्सेस"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"यसले एपलाई AdServices Cobalt Upload API एक्सेस गर्ने अनुमति दिन्छ।"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API प्रयोग गर्ने अनुमति"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"एपलाई App Set ID API प्रयोग गर्ने अनुमति दिन्छ।"</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API प्रयोग गर्ने अनुमति"</string>

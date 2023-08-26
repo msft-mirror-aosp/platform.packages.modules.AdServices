@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"‏מאפשרת לאפליקציה לגשת לממשק ה‑API של \'הסכמה\' (Consent) ב‑AdServices."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"‏גישה לממשק ה‑API של מזהה המודעה"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"‏מאפשרת לאפליקציה לגשת ל-API של מזהה ההודעה."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"‏גישה לממשק ה-API של AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"‏ההגדרה הזו מאפשרת לאפליקציה לגשת לממשק ה-API של AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"‏גישה לממשק ה‑API של מזהה קבוצת האפליקציות"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"‏מאפשרת לאפליקציה לגשת ל-API של מזהה קבוצת האפליקציות."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"‏גישה לממשק ה-API של \'שירות הסכמה\'"</string>

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.signals.updateprocessors;
 
+import androidx.annotation.NonNull;
+
 import com.android.adservices.data.signals.DBProtectedSignal;
 
 import java.nio.ByteBuffer;
@@ -29,6 +31,7 @@ public class UpdateOutput {
     private final List<DBProtectedSignal.Builder> mToAdd = new ArrayList<>();
     private final List<DBProtectedSignal> mToRemove = new ArrayList<>();
     private final Set<ByteBuffer> mKeysTouched = new HashSet<>();
+    private UpdateEncoderEvent mUpdateEncoderEvent;
 
     /** The list of signals from the JSON to add. */
     public List<DBProtectedSignal.Builder> getToAdd() {
@@ -47,5 +50,17 @@ public class UpdateOutput {
      */
     public Set<ByteBuffer> getKeysTouched() {
         return mKeysTouched;
+    }
+
+    /** Sets the {@link UpdateEncoderEvent} for the UpdateOutput, there can be only one */
+    public void setUpdateEncoderEvent(@NonNull UpdateEncoderEvent event) {
+        mUpdateEncoderEvent = event;
+    }
+
+    /**
+     * @return an {@link UpdateEncoderEvent} for the UpdateOutput, there can be only one
+     */
+    public UpdateEncoderEvent getUpdateEncoderEvent() {
+        return mUpdateEncoderEvent;
     }
 }

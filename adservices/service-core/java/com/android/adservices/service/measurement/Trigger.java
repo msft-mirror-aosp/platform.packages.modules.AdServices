@@ -39,6 +39,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -510,7 +511,9 @@ public class Trigger {
         }
         Map<String, BigInteger> adtechBitMapping = new HashMap<>();
         JSONObject jsonObject = new JSONObject(mAdtechKeyMapping);
-        for (String key : jsonObject.keySet()) {
+        Iterator<String> keys = jsonObject.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
             // Remove "0x" prefix.
             String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);

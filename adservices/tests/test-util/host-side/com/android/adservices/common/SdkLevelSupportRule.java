@@ -21,10 +21,8 @@ import com.android.tradefed.device.ITestDevice;
 /** See {@link AbstractSdkLevelSupportedRule}. */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private static final ConsoleLogger sLogger = new ConsoleLogger(SdkLevelSupportRule.class);
-
     private SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(sLogger, level);
+        super(ConsoleLogger.getInstance(), level);
     }
 
     public void setDevice(ITestDevice device) {
@@ -50,7 +48,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastS_V2() {
+    public static SdkLevelSupportRule forAtLeastSv2() {
         return new SdkLevelSupportRule(AndroidSdkLevel.S_V2);
     }
 
@@ -70,32 +68,32 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     @Override
-    public boolean isDeviceAtLeastR() throws DeviceNotAvailableException {
+    public boolean isAtLeastR() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.R);
     }
 
     @Override
-    public boolean isDeviceAtLeastS() throws DeviceNotAvailableException {
+    public boolean isAtLeastS() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.S);
     }
 
     @Override
-    public boolean isDeviceAtLeastS_V2() throws DeviceNotAvailableException {
+    public boolean isAtLeastSv2() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.S_V2);
     }
 
     @Override
-    public boolean isDeviceAtLeastT() throws DeviceNotAvailableException {
+    public boolean isAtLeastT() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.T);
     }
 
     @Override
-    public boolean isDeviceAtLeastU() throws DeviceNotAvailableException {
+    public boolean isAtLeastU() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.U);
     }
 
     @Override
-    public boolean isDeviceAtLeastV() throws DeviceNotAvailableException {
+    public boolean isAtLeastV() throws DeviceNotAvailableException {
         return isDeviceApiLevelAtLeast(AndroidSdkLevel.V);
     }
 

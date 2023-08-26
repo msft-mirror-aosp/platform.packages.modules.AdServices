@@ -16,10 +16,20 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.DataHandlersFixture.getAdSelectionInitialization;
+import static android.adservices.adselection.DataHandlersFixture.getAdSelectionResultBidAndUri;
+import static android.adservices.adselection.DataHandlersFixture.getReportingData;
+import static android.adservices.adselection.DataHandlersFixture.getWinningCustomAudience;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -28,6 +38,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -40,9 +51,17 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
-import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -59,6 +78,8 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,66 +87,260 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
-import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
+import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 public class PersistAdSelectionResultRunnerTest {
     private static final int CALLER_UID = Process.myUid();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
-    private static final Uri AD_RENDER_URI = Uri.parse("test.com/render_uri");
+    private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
+    private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
+    private static final AdTechIdentifier DIFFERENT_SELLER = AdSelectionConfigFixture.SELLER_1;
+    private static final Uri INVALID_AD_RENDER_URI = Uri.parse("invalid-adtech.com/render_uri");
+    private static final Uri AD_RENDER_URI_1 = Uri.parse("test2.com/render_uri");
+    private static final Uri AD_RENDER_URI_2 = Uri.parse("test3.com/render_uri");
     private static final AdTechIdentifier WINNER_BUYER =
             AdTechIdentifier.fromString("winner-buyer.com");
-    private static final String BUYER_REPORTING_URI = "https://foobarbuyer.reporting";
-    private static final String SELLER_REPORTING_URI = "https://foobarseller.reporting";
+    private static final AdTechIdentifier DIFFERENT_BUYER =
+            AdTechIdentifier.fromString("different-buyer.com");
+    private static final Uri WINNER_AD_RENDER_URI = CommonFixture.getUri(WINNER_BUYER, "/render_uri");
+    private static final String BUYER_REPORTING_URI =
+            CommonFixture.getUri(WINNER_BUYER, "/reporting").toString();
+    private static final String BUYER_REPORTING_URI_DIFFERENT_BUYER =
+            CommonFixture.getUri(DIFFERENT_BUYER, "/reporting").toString();
+    private static final String SELLER_REPORTING_URI =
+            CommonFixture.getUri(SELLER, "/reporting").toString();
+    private static final String SELLER_REPORTING_URI_DIFFERENT_SELLER =
+            CommonFixture.getUri(DIFFERENT_SELLER, "/reporting").toString();
+    private static final String BUYER_INTERACTION_KEY = "buyer-interaction-key";
+    private static final String BUYER_INTERACTION_URI =
+            CommonFixture.getUri(WINNER_BUYER, "/interaction").toString();
+    private static final String BUYER_INTERACTION_URI_DIFFERENT_BUYER =
+            CommonFixture.getUri(DIFFERENT_BUYER, "/interaction").toString();
+    private static final String SELLER_INTERACTION_KEY = "seller-interaction-key";
+    private static final String SELLER_INTERACTION_URI =
+            CommonFixture.getUri(SELLER, "/interaction").toString();
+    private static final String SELLER_INTERACTION_URI_DIFFERENT_SELLER =
+            CommonFixture.getUri(DIFFERENT_SELLER, "/interaction").toString();
+    private static final String BUYER_INTERACTION_URI_EXCEEDS_MAX =
+            CommonFixture.getUri(WINNER_BUYER, "/interaction_uri_exceeds_max").toString();
+    private static final String SELLER_INTERACTION_KEY_EXCEEDS_MAX =
+            "seller-interaction-key-exceeds-max";
     private static final WinReportingUrls WIN_REPORTING_URLS =
             WinReportingUrls.newBuilder()
                     .setBuyerReportingUrls(
-                            ReportingUrls.newBuilder().setReportingUrl(BUYER_REPORTING_URI).build())
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(BUYER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            BUYER_INTERACTION_KEY, BUYER_INTERACTION_URI)
+                                    .build())
                     .setComponentSellerReportingUrls(
                             ReportingUrls.newBuilder()
                                     .setReportingUrl(SELLER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            SELLER_INTERACTION_KEY, SELLER_INTERACTION_URI)
                                     .build())
                     .build();
+    private static final WinReportingUrls WIN_REPORTING_URLS_WITH_DIFFERENT_SELLER_REPORTING_URIS =
+            WinReportingUrls.newBuilder()
+                    .setBuyerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(BUYER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            BUYER_INTERACTION_KEY, BUYER_INTERACTION_URI)
+                                    .build())
+                    .setComponentSellerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(SELLER_REPORTING_URI_DIFFERENT_SELLER)
+                                    .putInteractionReportingUrls(
+                                            SELLER_INTERACTION_KEY,
+                                            SELLER_INTERACTION_URI_DIFFERENT_SELLER)
+                                    .build())
+                    .build();
+    private static final WinReportingUrls WIN_REPORTING_URLS_WITH_DIFFERENT_BUYER_REPORTING_URIS =
+            WinReportingUrls.newBuilder()
+                    .setBuyerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(BUYER_REPORTING_URI_DIFFERENT_BUYER)
+                                    .putInteractionReportingUrls(
+                                            BUYER_INTERACTION_KEY,
+                                            BUYER_INTERACTION_URI_DIFFERENT_BUYER)
+                                    .build())
+                    .setComponentSellerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(SELLER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            SELLER_INTERACTION_KEY, SELLER_INTERACTION_URI)
+                                    .build())
+                    .build();
+    private static final WinReportingUrls WIN_REPORTING_URLS_WITH_INTERACTION_DATA_EXCEEDS_MAX =
+            WinReportingUrls.newBuilder()
+                    .setBuyerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(BUYER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            BUYER_INTERACTION_KEY,
+                                            BUYER_INTERACTION_URI_EXCEEDS_MAX)
+                                    .build())
+                    .setComponentSellerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(SELLER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            SELLER_INTERACTION_KEY_EXCEEDS_MAX,
+                                            SELLER_INTERACTION_URI_DIFFERENT_SELLER)
+                                    .build())
+                    .build();
+    private static final String WINNER_CUSTOM_AUDIENCE_NAME = "test-name-1";
+    private static final String WINNER_CUSTOM_AUDIENCE_OWNER = "winner-owner";
+    private static final String CUSTOM_AUDIENCE_OWNER_1 = "owner-1";
+    private static final String CUSTOM_AUDIENCE_OWNER_2 = "owner-2";
+    private static final double BID = 5;
+    private static final double SCORE = 5;
     private static final AuctionResult AUCTION_RESULT =
             AuctionResult.newBuilder()
-                    .setAdRenderUrl(AD_RENDER_URI.toString())
-                    .setCustomAudienceName("test-name")
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(WINNER_CUSTOM_AUDIENCE_OWNER)
                     .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
+    private static final AuctionResult AUCTION_RESULT_WITH_DIFFERENT_SELLER_IN_REPORTING_URIS =
+            AuctionResult.newBuilder()
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(WINNER_CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(WIN_REPORTING_URLS_WITH_DIFFERENT_SELLER_REPORTING_URIS)
+                    .build();
+    private static final AuctionResult AUCTION_RESULT_WITH_DIFFERENT_BUYER_IN_REPORTING_URIS =
+            AuctionResult.newBuilder()
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(WINNER_CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(WIN_REPORTING_URLS_WITH_DIFFERENT_BUYER_REPORTING_URIS)
+                    .build();
+    private static final AuctionResult AUCTION_RESULT_WITH_INTERACTION_REPORTING_DATA_EXCEEDS_MAX =
+            AuctionResult.newBuilder()
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(WINNER_CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(WIN_REPORTING_URLS_WITH_INTERACTION_DATA_EXCEEDS_MAX)
+                    .build();
+    private static final AuctionResult AUCTION_RESULT_WITHOUT_OWNER =
+            AuctionResult.newBuilder()
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(WIN_REPORTING_URLS)
+                    .build();
+    private static final DBCustomAudience WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                            WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME, WINNER_CUSTOM_AUDIENCE_OWNER)
+                    .setAds(
+                            ImmutableList.of(
+                                    new DBAdData.Builder()
+                                            .setRenderUri(WINNER_AD_RENDER_URI)
+                                            .setMetadata("")
+                                            .build()))
+                    .build();
+    private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_WIN_AD_1 =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                            WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME, CUSTOM_AUDIENCE_OWNER_1)
+                    .setAds(
+                            ImmutableList.of(
+                                    new DBAdData.Builder()
+                                            .setRenderUri(AD_RENDER_URI_1)
+                                            .setMetadata("")
+                                            .build()))
+                    .build();
+    private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_WIN_AD_2 =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                            WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME, CUSTOM_AUDIENCE_OWNER_2)
+                    .setAds(
+                            ImmutableList.of(
+                                    new DBAdData.Builder()
+                                            .setRenderUri(AD_RENDER_URI_2)
+                                            .setMetadata("")
+                                            .build()))
+                    .build();
+    private static final List<DBCustomAudience> CUSTOM_AUDIENCE_LIST_INCLUDING_WINNER =
+            List.of(
+                    WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD,
+                    CUSTOM_AUDIENCE_WITH_WIN_AD_1,
+                    CUSTOM_AUDIENCE_WITH_WIN_AD_2);
+
     private static final AuctionResult CHAFF_AUCTION_RESULT =
             AuctionResult.newBuilder().setIsChaff(true).build();
     private static final byte[] CIPHER_TEXT_BYTES =
             "encrypted-cipher-for-auction-result".getBytes();
     private static final long AD_SELECTION_ID = 12345L;
+    private static final AdSelectionInitialization INITIALIZATION_DATA =
+            getAdSelectionInitialization(SELLER, CALLER_PACKAGE_NAME);
+    private static final AdSelectionInitialization INITIALIZATION_DATA_WITH_DIFFERENT_SELLER =
+            getAdSelectionInitialization(DIFFERENT_SELLER, CALLER_PACKAGE_NAME);
+    private static final AdSelectionInitialization
+            INITIALIZATION_DATA_WITH_DIFFERENT_CALLER_PACKAGE =
+                    getAdSelectionInitialization(SELLER, DIFFERENT_CALLER_PACKAGE_NAME);
+    private static final AdSelectionResultBidAndUri BID_AND_URI =
+            getAdSelectionResultBidAndUri(BID, WINNER_AD_RENDER_URI);
+    private static final WinningCustomAudience WINNER_CUSTOM_AUDIENCE =
+            getWinningCustomAudience(
+                    WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_CUSTOM_AUDIENCE_NAME, null);
+    private static final ReportingData REPORTING_DATA =
+            getReportingData(Uri.parse(BUYER_REPORTING_URI), Uri.parse(SELLER_REPORTING_URI));
+    private static final ReportingData REPORTING_DATA_WITH_EMPTY_SELLER =
+            getReportingData(Uri.parse(BUYER_REPORTING_URI), Uri.EMPTY);
+    private static final ReportingData REPORTING_DATA_WITH_EMPTY_BUYER =
+            getReportingData(Uri.EMPTY, Uri.parse(SELLER_REPORTING_URI));
     private Context mContext;
     private Flags mFlags;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
-    @Spy private AuctionServerAdSelectionDao mServerAdSelectionDaoSpy;
+    private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
+    private boolean mForceContinueOnAbsentOwner;
+    private PersistAdSelectionResultRunner.ReportingRegistrationLimits mReportingLimits;
     private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
-        mFlags = new ProcessAdSelectionResultRunnerTestFlags();
+        mFlags = new PersistAdSelectionResultRunnerTestFlags();
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mServerAdSelectionDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
-                        .build()
-                        .auctionServerAdSelectionDao();
+        mAdSelectionEntryDaoSpy =
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                                .build()
+                                .adSelectionEntryDao());
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
@@ -142,16 +357,30 @@ public class PersistAdSelectionResultRunnerTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         MockitoAnnotations.initMocks(this); // init @Mock mocks
-
+        mForceContinueOnAbsentOwner = false;
+        mReportingLimits =
+                PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
+                        .setMaxRegisteredAdBeaconsTotalCount(
+                                mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                        .setMaxInteractionKeySize(
+                                mFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
+                        .setMaxInteractionReportingUriSize(
+                                mFlags.getFledgeReportImpressionMaxInteractionReportingUriSizeB())
+                        .setMaxRegisteredAdBeaconsPerAdTechCount(
+                                mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
+                        .build();
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
-                        mServerAdSelectionDaoSpy,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
                         mAdSelectionServiceFilterMock,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         CALLER_UID,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits);
     }
 
     @After
@@ -165,9 +394,16 @@ public class PersistAdSelectionResultRunnerTest {
     public void testRunner_persistAdSelectionResult_returnsSuccess() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
-        doReturn(prepareDecryptedAuctionResult())
+        doReturn(prepareDecryptedAuctionResult(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -181,21 +417,252 @@ public class PersistAdSelectionResultRunnerTest {
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertEquals(
-                AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
         Assert.assertEquals(
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
-        verify(mServerAdSelectionDaoSpy, times(1))
-                .updateAuctionServerAdSelection(
-                        DBAuctionServerAdSelection.builder()
-                                .setAdSelectionId(AD_SELECTION_ID)
-                                .setSeller(SELLER)
-                                .setWinnerBuyer(WINNER_BUYER)
-                                .setWinnerAdRenderUri(AD_RENDER_URI)
-                                .setBuyerReportingUri(Uri.parse(BUYER_REPORTING_URI))
-                                .setSellerReportingUri(Uri.parse(SELLER_REPORTING_URI))
-                                .build());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionResultForCustomAudience(
+                        AD_SELECTION_ID, BID_AND_URI, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistReportingData(AD_SELECTION_ID, REPORTING_DATA);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .safelyInsertRegisteredAdInteractions(
+                        AD_SELECTION_ID,
+                        List.of(
+                                getDBRegisteredAdInteraction(
+                                        SELLER_INTERACTION_KEY,
+                                        SELLER_INTERACTION_URI,
+                                        ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)),
+                        mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
+                        mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
+                        ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .safelyInsertRegisteredAdInteractions(
+                        AD_SELECTION_ID,
+                        List.of(
+                                getDBRegisteredAdInteraction(
+                                        BUYER_INTERACTION_KEY,
+                                        BUYER_INTERACTION_URI,
+                                        ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER)),
+                        mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
+                        mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
+                        ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
+    }
+
+    @Test
+    public void testRunner_persistAdSelectionResult_invalidSellerReportingUriSuccess()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(
+                        prepareDecryptedAuctionResult(
+                                AUCTION_RESULT_WITH_DIFFERENT_SELLER_IN_REPORTING_URIS))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionResultForCustomAudience(
+                        AD_SELECTION_ID, BID_AND_URI, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistReportingData(AD_SELECTION_ID, REPORTING_DATA_WITH_EMPTY_SELLER);
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(),
+                        any(),
+                        anyLong(),
+                        anyLong(),
+                        eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER));
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .safelyInsertRegisteredAdInteractions(
+                        AD_SELECTION_ID,
+                        List.of(
+                                getDBRegisteredAdInteraction(
+                                        BUYER_INTERACTION_KEY,
+                                        BUYER_INTERACTION_URI,
+                                        ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER)),
+                        mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
+                        mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
+                        ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
+    }
+
+    @Test
+    public void testRunner_persistAdSelectionResult_invalidBuyerReportingUriSuccess()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(
+                        prepareDecryptedAuctionResult(
+                                AUCTION_RESULT_WITH_DIFFERENT_BUYER_IN_REPORTING_URIS))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionResultForCustomAudience(
+                        AD_SELECTION_ID, BID_AND_URI, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistReportingData(AD_SELECTION_ID, REPORTING_DATA_WITH_EMPTY_BUYER);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .safelyInsertRegisteredAdInteractions(
+                        AD_SELECTION_ID,
+                        List.of(
+                                getDBRegisteredAdInteraction(
+                                        SELLER_INTERACTION_KEY,
+                                        SELLER_INTERACTION_URI,
+                                        ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)),
+                        mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
+                        mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
+                        ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(),
+                        any(),
+                        anyLong(),
+                        anyLong(),
+                        eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
+    }
+
+    @Test
+    public void testRunner_forceOnAbsentOwnerFalse_skipsValidation_doesntFetchesCa()
+            throws Exception {
+        // TODO(b/291680065): Remove when owner field is returned from B&A
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(prepareDecryptedAuctionResult(AUCTION_RESULT_WITHOUT_OWNER))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+
+        boolean forceSearchOnAbsentOwner = false;
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        forceSearchOnAbsentOwner,
+                        mReportingLimits);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        verify(mCustomAudienceDaoMock, times(0))
+                .getCustomAudiencesForBuyerAndName(any(), any());
+        verify(mCustomAudienceDaoMock, times(0))
+                .getCustomAudienceByPrimaryKey(any(), any(), any());
+    }
+
+    @Test
+    public void testRunner_forceOnAbsentOwnerTrue_acrossCaSearchAndValidation_fetchesListOfCa()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(prepareDecryptedAuctionResult(AUCTION_RESULT_WITHOUT_OWNER))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(CUSTOM_AUDIENCE_LIST_INCLUDING_WINNER)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudiencesForBuyerAndName(WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+
+        boolean forceSearchOnAbsentOwner = true;
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        forceSearchOnAbsentOwner,
+                        mReportingLimits);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        verify(mCustomAudienceDaoMock, times(1))
+                .getCustomAudiencesForBuyerAndName(WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+        verify(mCustomAudienceDaoMock, times(0))
+                .getCustomAudienceByPrimaryKey(any(), any(), any());
     }
 
     @Test
@@ -205,6 +672,9 @@ public class PersistAdSelectionResultRunnerTest {
         doReturn(prepareDecryptedChaffAuctionResult())
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -222,7 +692,24 @@ public class PersistAdSelectionResultRunnerTest {
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
-        verifyZeroInteractions(mServerAdSelectionDaoSpy);
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .persistAdSelectionResultForCustomAudience(anyLong(), any(), any(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .persistReportingData(anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(),
+                        any(),
+                        anyLong(),
+                        anyLong(),
+                        eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER));
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(),
+                        any(),
+                        anyLong(),
+                        anyLong(),
+                        eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
     }
 
     @Test
@@ -251,12 +738,168 @@ public class PersistAdSelectionResultRunnerTest {
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
 
         Assert.assertTrue(callback.mIsSuccess);
-        Assert.assertNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        verifyZeroInteractions(mCustomAudienceDaoMock);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
+        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
     }
 
-    private byte[] prepareDecryptedAuctionResult() {
-        byte[] auctionResultBytes = AUCTION_RESULT.toByteArray();
+    @Test
+    public void testRunner_persistAdSelectionResult_wrongSellerFailure() throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(prepareDecryptedAuctionResult(AUCTION_RESULT))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA_WITH_DIFFERENT_SELLER, Instant.now());
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertFalse(callback.mIsSuccess);
+        Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .getSellerAndCallerPackageNameForId(AD_SELECTION_ID);
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .persistAdSelectionResultForCustomAudience(anyLong(), any(), any(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .persistReportingData(anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(), any(), anyLong(), anyLong(), anyInt());
+    }
+
+    @Test
+    public void testRunner_persistAdSelectionResult_wrongCallerPackageFailure() throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(prepareDecryptedAuctionResult(AUCTION_RESULT))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA_WITH_DIFFERENT_CALLER_PACKAGE, Instant.now());
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertFalse(callback.mIsSuccess);
+        Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .getSellerAndCallerPackageNameForId(AD_SELECTION_ID);
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .persistAdSelectionResultForCustomAudience(anyLong(), any(), any(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .persistReportingData(anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(), any(), anyLong(), anyLong(), anyInt());
+    }
+
+    @Test
+    public void testRunner_persistAdSelectionResult_interactionKeyAndUriExceedsMax()
+            throws Exception {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(
+                        prepareDecryptedAuctionResult(
+                                AUCTION_RESULT_WITH_INTERACTION_REPORTING_DATA_EXCEEDS_MAX))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA, Instant.now());
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultRunner.ReportingRegistrationLimits reportingLimits =
+                PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
+                        .setMaxRegisteredAdBeaconsTotalCount(
+                                mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                        .setMaxInteractionKeySize(
+                                SELLER_INTERACTION_KEY_EXCEEDS_MAX.getBytes(StandardCharsets.UTF_8)
+                                                .length
+                                        - 1)
+                        .setMaxInteractionReportingUriSize(
+                                BUYER_INTERACTION_URI_EXCEEDS_MAX.getBytes(StandardCharsets.UTF_8)
+                                                .length
+                                        - 1)
+                        .setMaxRegisteredAdBeaconsPerAdTechCount(
+                                mFlags
+                                        .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
+                        .build();
+
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mForceContinueOnAbsentOwner,
+                        reportingLimits);
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionResultForCustomAudience(
+                        AD_SELECTION_ID, BID_AND_URI, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE);
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistReportingData(AD_SELECTION_ID, REPORTING_DATA);
+        verify(mAdSelectionEntryDaoSpy, times(0))
+                .safelyInsertRegisteredAdInteractions(
+                        anyLong(), any(), anyLong(), anyLong(), anyInt());
+    }
+
+    private byte[] prepareDecryptedAuctionResult(AuctionResult auctionResult) {
+        byte[] auctionResultBytes = auctionResult.toByteArray();
         AuctionServerDataCompressor.CompressedData compressedData =
                 mDataCompressor.compress(
                         AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
@@ -292,7 +935,17 @@ public class PersistAdSelectionResultRunnerTest {
         return callback;
     }
 
-    public static class ProcessAdSelectionResultRunnerTestFlags implements Flags {
+    private DBRegisteredAdInteraction getDBRegisteredAdInteraction(
+            String interactionKey, String interactionUri, int reportingDestination) {
+        return DBRegisteredAdInteraction.builder()
+                .setAdSelectionId(AD_SELECTION_ID)
+                .setInteractionKey(interactionKey)
+                .setInteractionReportingUri(Uri.parse(interactionUri))
+                .setDestination(reportingDestination)
+                .build();
+    }
+
+    public static class PersistAdSelectionResultRunnerTestFlags implements Flags {
         @Override
         public long getFledgeCustomAudienceActiveTimeWindowInMs() {
             return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;

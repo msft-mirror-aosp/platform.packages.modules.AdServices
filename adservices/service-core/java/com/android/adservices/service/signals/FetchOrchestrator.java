@@ -20,6 +20,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
 
+import com.android.adservices.service.common.AdTechUriValidator;
+
 import com.google.common.util.concurrent.FluentFuture;
 
 import org.json.JSONObject;
@@ -34,30 +36,34 @@ public class FetchOrchestrator {
     @NonNull private final Executor mBackgroundExecutor;
     @NonNull private final UpdatesDownloader mUpdatesDownloader;
     @NonNull private final UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
+    @NonNull private final AdTechUriValidator mAdTechUriValidator;
 
     public FetchOrchestrator(
-            Executor backgroundExecutor,
-            UpdatesDownloader updatesDownloader,
-            UpdateProcessingOrchestrator updateProcessingOrchestrator) {
+            @NonNull Executor backgroundExecutor,
+            @NonNull UpdatesDownloader updatesDownloader,
+            @NonNull UpdateProcessingOrchestrator updateProcessingOrchestrator,
+            @NonNull AdTechUriValidator adTechUriValidator) {
         Objects.requireNonNull(backgroundExecutor);
-        mBackgroundExecutor = backgroundExecutor;
-        Objects.requireNonNull(updateProcessingOrchestrator);
-        mUpdateProcessingOrchestrator = updateProcessingOrchestrator;
         Objects.requireNonNull(updatesDownloader);
+        Objects.requireNonNull(updateProcessingOrchestrator);
+        Objects.requireNonNull(adTechUriValidator);
+        mBackgroundExecutor = backgroundExecutor;
+        mUpdateProcessingOrchestrator = updateProcessingOrchestrator;
         mUpdatesDownloader = updatesDownloader;
+        mAdTechUriValidator = adTechUriValidator;
     }
 
     /**
      * Orchestrate the fetchSignalsUpdate API.
      *
-     * @param validatedUri Validated Uri to fetch JSON from.
+     * @param uri Validated Uri to fetch JSON from.
      * @param packageName The package name of the calling app.
      * @return A future for running the orchestration, with no return value
      */
     public FluentFuture<Object> orchestrateFetch(
-            Uri validatedUri, AdTechIdentifier adtech, String packageName) {
-        FluentFuture<JSONObject> jsonFuture =
-                mUpdatesDownloader.getUpdateJson(validatedUri, packageName);
+            Uri uri, AdTechIdentifier adtech, String packageName) {
+        mAdTechUriValidator.validate(uri);
+        FluentFuture<JSONObject> jsonFuture = mUpdatesDownloader.getUpdateJson(uri, packageName);
         return jsonFuture.transform(
                 x -> {
                     mUpdateProcessingOrchestrator.processUpdates(

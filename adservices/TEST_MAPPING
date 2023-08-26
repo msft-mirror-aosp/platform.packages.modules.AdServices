@@ -215,13 +215,31 @@
       ]
     },
     {
-      "name": "AdServicesBetaUxCtsRootTest[com.google.android.adservices.apex]"
+      "name": "AdServicesBetaUxCtsRootTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "LegacyAdServicesGaUxCtsRootTest[com.google.android.adservices.apex]"
+      "name": "LegacyAdServicesGaUxCtsRootTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest[com.google.android.adservices.apex]"
+      "name": "AdServicesGaUxDebugChannelCtsRootTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     }
   ],
   "presubmit": [
@@ -340,13 +358,31 @@
       "name": "CtsAdServicesCobaltTest"
     },
     {
-      "name": "AdServicesBetaUxCtsRootTest"
+      "name": "AdServicesBetaUxCtsRootTest",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "LegacyAdServicesGaUxCtsRootTest"
+      "name": "LegacyAdServicesGaUxCtsRootTest",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest"
+      "name": "AdServicesGaUxDebugChannelCtsRootTest",
+      "options": [
+          {
+            // Exclude tests that are marked flaky
+            "exclude-annotation": "androidx.test.filters.FlakyTest"
+          }
+      ]
     }
   ],
   "postsubmit": [

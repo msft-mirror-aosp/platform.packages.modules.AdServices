@@ -1415,7 +1415,7 @@ public class AdSelectionEntryDaoTest {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
 
         assertTrue(initializationStatus);
@@ -1435,7 +1435,7 @@ public class AdSelectionEntryDaoTest {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
 
         assertFalse(initializationStatus);
@@ -1448,14 +1448,14 @@ public class AdSelectionEntryDaoTest {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
         assertTrue(initializationStatus);
 
         initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
 
         assertFalse(initializationStatus);
@@ -1739,7 +1739,7 @@ public class AdSelectionEntryDaoTest {
         AdSelectionInitialization actualInitResult =
                 mAdSelectionEntryDao.getSellerAndCallerPackageNameForId(AD_SELECTION_ID_1);
 
-        assertEquals(DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1, actualInitResult);
+        assertEquals(DataHandlersFixture.AD_SELECTION_INITIALIZATION_1, actualInitResult);
     }
 
     @Test
