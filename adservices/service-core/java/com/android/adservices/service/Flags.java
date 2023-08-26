@@ -1748,7 +1748,7 @@ public interface Flags {
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Measurement Job Debug Reporting. The API will be disabled
+     * Returns the kill switch value for Measurement Job Debug Reporting. The Job will be disabled
      * if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job Debug
      * Reporting Kill Switch value is true.
      */
@@ -1815,6 +1815,25 @@ public interface Flags {
     /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
     default long getMeasurementDebugReportingFallbackJobPeriodMs() {
         return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /*
+     * Measurement Job Verbose Debug Reporting Kill Switch. The default value is false which means
+     * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
+     * Verbose Debug Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Verbose Debug Reporting. The Job will be
+     * disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement Job
+     * Verbose Debug Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
     }
 
     /**

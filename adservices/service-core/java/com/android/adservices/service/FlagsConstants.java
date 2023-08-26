@@ -521,6 +521,11 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
             "measurement_verbose_debug_reporting_fallback_job_kill_switch";
     public static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_debug_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_verbose_debug_reporting_kill_switch";
+
     public static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
     public static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
     public static final String KEY_FLEDGE_SELECT_ADS_KILL_SWITCH = "fledge_select_ads_kill_switch";

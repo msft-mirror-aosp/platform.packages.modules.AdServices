@@ -405,10 +405,7 @@ public class AttributionJobServiceTest {
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
             ExtendedMockito.doNothing()
-                    .when(
-                            () ->
-                                    DebugReportingJobService.scheduleIfNeeded(
-                                            any(), anyBoolean(), anyBoolean()));
+                    .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
             // Mock AdservicesJobServiceLogger to not actually log the stats to server
             Mockito.doNothing()
