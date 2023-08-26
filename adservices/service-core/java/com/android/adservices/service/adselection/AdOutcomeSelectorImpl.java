@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -111,7 +112,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionFromOutcomesConfig config) {
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(config);
