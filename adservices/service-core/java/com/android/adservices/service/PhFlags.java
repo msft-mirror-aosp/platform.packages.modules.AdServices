@@ -443,6 +443,10 @@ public final class PhFlags implements Flags {
             "measurement_job_registration_fallback_job_kill_switch";
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_debug_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH =
+            "measurement_job_verbose_debug_reporting_kill_switch";
 
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
@@ -530,6 +534,9 @@ public final class PhFlags implements Flags {
     // Consent Notification debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
             "consent_notification_debug_mode";
+
+    public static final String KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED =
+            "is_u18_ux_detention_channel_enabled";
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
@@ -3815,6 +3822,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION
                         + " = "
                         + getMeasurementEnableDatastoreManagerThrowDatastoreException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobDebugReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobVerboseDebugReportingKillSwitch());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -4553,7 +4570,7 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(KEY_NOTIFICATION_DISMISSED_ON_CLICK, getNotificationDismissedOnClick());
         uxMap.put(
-                FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
+                KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
                 isU18UxDetentionChannelEnabled());
         return uxMap;
     }
@@ -4655,8 +4672,8 @@ public final class PhFlags implements Flags {
     @Override
     public boolean isU18UxDetentionChannelEnabled() {
         return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED,
                 /* defaultValue */ IS_U18_UX_DETENTION_CHANNEL_ENABLED_DEFAULT);
     }
 
@@ -4699,5 +4716,37 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public boolean getMeasurementJobDebugReportingKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
+        // We check the Global kill-switch first then Measurement kill-switch.
+        // As a result, it overrides all other kill-switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                /* flagName */
+                                        KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                                /* defaultValue */
+                                MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
     }
 }

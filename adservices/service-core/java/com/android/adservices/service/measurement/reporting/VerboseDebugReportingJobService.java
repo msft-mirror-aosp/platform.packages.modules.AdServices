@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -37,12 +37,13 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.concurrent.Executor;
 
 /**
- * Main service for scheduling debug reporting jobs. The actual job execution logic is part of
- * {@link EventReportingJobHandler } and {@link AggregateReportingJobHandler}
+ * Main service for scheduling verbose debug reporting jobs. The actual job execution logic is part
+ * of {@link DebugReportingJobHandler }.
  */
-public final class DebugReportingJobService extends JobService {
+public final class VerboseDebugReportingJobService extends JobService {
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
-    private static final int DEBUG_REPORT_JOB_ID = MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    private static final int VERBOSE_DEBUG_REPORT_JOB_ID =
+            MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -50,17 +51,17 @@ public final class DebugReportingJobService extends JobService {
         // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
-                    "Disabling DebugReportingJobService job because it's running in ExtServices on"
-                            + " T+");
+                    "Disabling VerboseDebugReportingJobService job because it's running in "
+                            + "ExtServices on T+");
             return skipAndCancelBackgroundJob(params);
         }
 
-        if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
-            LogUtil.e("DebugReportingJobService is disabled");
+        if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
+            LogUtil.e("VerboseDebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
-        LogUtil.d("DebugReportingJobService.onStartJob");
+        LogUtil.d("VerboseDebugReportingJobService.onStartJob");
         sBlockingExecutor.execute(
                 () -> {
                     sendReports();
@@ -71,31 +72,31 @@ public final class DebugReportingJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("DebugReportingJobService.onStopJob");
+        LogUtil.d("VerboseDebugReportingJobService.onStopJob");
         return true;
     }
 
-    /** Schedules {@link DebugReportingJobService} */
+    /** Schedules {@link VerboseDebugReportingJobService} */
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                DEBUG_REPORT_JOB_ID,
-                                new ComponentName(context, DebugReportingJobService.class))
+                                VERBOSE_DEBUG_REPORT_JOB_ID,
+                                new ComponentName(context, VerboseDebugReportingJobService.class))
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .build();
         jobScheduler.schedule(job);
     }
 
     /**
-     * Schedule Debug Reporting Job if it is not already scheduled
+     * Schedule Verbose Debug Reporting Job if it is not already scheduled
      *
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
-            LogUtil.d("DebugReportingJobService is disabled, skip scheduling");
+        if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
+            LogUtil.d("VerboseDebugReportingJobService is disabled, skip scheduling");
             return;
         }
 
@@ -105,20 +106,20 @@ public final class DebugReportingJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(DEBUG_REPORT_JOB_ID);
+        final JobInfo job = jobScheduler.getPendingJob(VERBOSE_DEBUG_REPORT_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler);
-            LogUtil.d("Scheduled DebugReportingJobService");
+            LogUtil.d("Scheduled VerboseDebugReportingJobService");
         } else {
-            LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
+            LogUtil.d("VerboseDebugReportingJobService already scheduled, skipping reschedule");
         }
     }
 
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
-            jobScheduler.cancel(DEBUG_REPORT_JOB_ID);
+            jobScheduler.cancel(VERBOSE_DEBUG_REPORT_JOB_ID);
         }
 
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
@@ -132,13 +133,7 @@ public final class DebugReportingJobService extends JobService {
         EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
         DatastoreManager datastoreManager =
                 DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        new EventReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
-        new AggregateReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
+        new DebugReportingJobHandler(enrollmentDao, datastoreManager, FlagsFactory.getFlags())
+                .performScheduledPendingReports();
     }
 }

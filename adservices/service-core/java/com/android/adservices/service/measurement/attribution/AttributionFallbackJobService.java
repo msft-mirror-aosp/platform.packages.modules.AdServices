@@ -88,9 +88,7 @@ public class AttributionFallbackJobService extends JobService {
                                                     FlagsFactory.getFlags()))
                                     .performPendingAttributions();
                     DebugReportingJobService.scheduleIfNeeded(
-                            getApplicationContext(),
-                            /* forceSchedule */ true,
-                            /* isDebugReportApi */ false);
+                            getApplicationContext(), /* forceSchedule */ false);
 
                     AdservicesJobServiceLogger.getInstance(AttributionFallbackJobService.this)
                             .recordJobFinished(
