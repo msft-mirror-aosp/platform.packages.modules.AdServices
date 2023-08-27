@@ -18,7 +18,6 @@ package com.android.adservices.common;
 import static com.android.adservices.common.TestDeviceHelper.runShellCommand;
 
 import com.android.adservices.common.DeviceConfigHelper.SyncDisabledModeForTest;
-import com.android.tradefed.device.DeviceNotAvailableException;
 
 import java.util.Objects;
 
@@ -35,15 +34,14 @@ final class HostSideDeviceConfigHelper implements DeviceConfigHelper.Interface {
     }
 
     @Override
-    public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode)
-            throws DeviceNotAvailableException {
+    public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
         String value = mode.name().toLowerCase();
         sLogger.v("SyncDisabledModeForTest(%s)", value);
         runShellCommand("device_config set_sync_disabled_for_test %s", value);
     }
 
     @Override
-    public String get(String name, String defaultValue) throws DeviceNotAvailableException {
+    public String get(String name, String defaultValue) {
         String value = runShellCommand("device_config get %s %s", mNamespace, name).trim();
         sLogger.v(
                 "get(%s, %s): raw value is '%s' (is null: %b)",
@@ -64,17 +62,17 @@ final class HostSideDeviceConfigHelper implements DeviceConfigHelper.Interface {
     }
 
     @Override
-    public void set(String name, String value) throws DeviceNotAvailableException {
+    public void set(String name, String value) {
         runShellCommand("device_config put %s %s %s", mNamespace, name, value);
     }
 
     @Override
-    public void delete(String name) throws DeviceNotAvailableException {
+    public void delete(String name) {
         runShellCommand("device_config delete %s %s", mNamespace, name);
     }
 
     @Override
-    public String dump() throws Exception {
+    public String dump() {
         return runShellCommand("device_config list%s", mNamespace).trim();
     }
 

@@ -21,11 +21,14 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
+import static org.mockito.Mockito.never;
+
 import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -45,6 +48,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EncryptionContextDao mEncryptionContextDaoMock;
     @Mock private PackageManager mPackageManagerMock;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
     private MockitoSession mMockitoSession;
@@ -59,6 +63,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
                         mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
     }
 
@@ -80,6 +85,44 @@ public class FledgeMaintenanceTasksWorkerTests {
         verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
         verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
         verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verify(mAdSelectionEntryDaoMock)
+                .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mEncryptionContextDaoMock)
+                .removeExpiredEncryptionContext(eq(expectedExpirationTime));
+        verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
+    }
+
+    @Test
+    public void
+            testClearExpiredAdSelectionData_serverAuctionDisabled_doesntClearDataFromUnifiedFlow() {
+        Flags flagsWithAuctionServerDisabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return false;
+                    }
+                };
+        FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerWithAuctionDisabled =
+                new FledgeMaintenanceTasksWorker(
+                        flagsWithAuctionServerDisabled,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        flagsWithAuctionServerDisabled.getAdSelectionExpirationWindowS());
+        verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verify(mAdSelectionEntryDaoMock, never())
+                .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mEncryptionContextDaoMock, never())
+                .removeExpiredEncryptionContext(eq(expectedExpirationTime));
         verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
     }
 
@@ -103,6 +146,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
                         mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
         worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
@@ -141,6 +185,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
                         mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
         worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
@@ -176,6 +221,7 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mAdSelectionEntryDaoMock,
                         mFrequencyCapDaoMock,
                         mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
         worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);

@@ -54,6 +54,14 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     // TODO(b/295321663): static import from AdServicesCommonConstants instead
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 
+    private static final String SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX = "log.tag.";
+
+    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
+
+    protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
+    protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
+    protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
+
     // TODO(b/294423183): make private once not used by subclass for legacy methods
     protected final DeviceConfigHelper mDeviceConfig;
     protected final SystemPropertiesHelper mSystemProperties;
@@ -75,9 +83,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mLog = new Logger(Objects.requireNonNull(logger), "AdServicesFlagsSetterRule");
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, NAMESPACE_ADSERVICES, logger);
-        mSystemProperties =
-                new SystemPropertiesHelper(
-                        systemPropertiesInterface, logger, SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
+        mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
     }
 
     @Override
@@ -177,7 +183,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     private StringBuilder dumpSystemPropertiesSafely(StringBuilder dump) {
         try {
-            mSystemProperties.dumpSystemProperties(dump);
+            mSystemProperties.dumpSystemProperties(dump, SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX);
         } catch (Throwable t) {
             dump.append("Failed to dump SystemProperties: ").append(t);
         }
@@ -185,22 +191,22 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     /** Overrides the flag that sets the global AdServices kill switch. */
-    public T setGlobalKillSwitch(boolean value) throws Exception {
+    public T setGlobalKillSwitch(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics kill switch. */
-    public T setTopicsKillSwitch(boolean value) throws Exception {
+    public T setTopicsKillSwitch(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics Device Classifier kill switch. */
-    public T setTopicsOnDeviceClassifierKillSwitch(boolean value) throws Exception {
+    public T setTopicsOnDeviceClassifierKillSwitch(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the enrollment seed. */
-    public T setEnableEnrollmentTestSeed(boolean value) throws Exception {
+    public T setEnableEnrollmentTestSeed(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, value);
     }
 
@@ -208,18 +214,18 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * Overrides the system property that sets max time period between each epoch computation job
      * run.
      */
-    public T setTopicsEpochJobPeriodMsForTests(long value) throws Exception {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
+    public T setTopicsEpochJobPeriodMsForTests(long value) {
+        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */
-    public T setTopicsPercentageForRandomTopicForTests(long value) throws Exception {
-        return setOrCacheSystemProperty(
+    public T setTopicsPercentageForRandomTopicForTests(long value) {
+        return setOrCacheDebugSystemProperty(
                 FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
     }
 
     /** Overrides the flag to select the topics classifier type. */
-    public T setTopicsClassifierType(int value) throws Exception {
+    public T setTopicsClassifierType(int value) {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, value);
     }
 
@@ -227,91 +233,92 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * Overrides the flag to change the number of top labels returned by on-device topic classifier
      * type.
      */
-    public T setTopicsClassifierNumberOfTopLabels(int value) throws Exception {
+    public T setTopicsClassifierNumberOfTopLabels(int value) {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS, value);
     }
 
     /** Overrides the flag to change the threshold for the classifier. */
-    public T setTopicsClassifierThreshold(float value) throws Exception {
+    public T setTopicsClassifierThreshold(float value) {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_THRESHOLD, value);
     }
 
     /** Overrides the flag that disables direct app calls for Topics. */
-    public T setTopicsDisableDirectAppCalls(boolean value) throws Exception {
+    public T setTopicsDisableDirectAppCalls(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
     }
 
     /** Overrides the flag that forces the use of bundle files for the Topics classifier. */
-    public T setTopicsClassifierForceUseBundleFiles(boolean value) throws Exception {
+    public T setTopicsClassifierForceUseBundleFiles(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
     }
 
-    public T setTopicsClassifierForceUseBundleFilesx(boolean value) throws Exception {
+    public T setTopicsClassifierForceUseBundleFilesx(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, value);
     }
 
     /** Overrides the system property used to disable topics enrollment check. */
-    public T setDisableTopicsEnrollmentCheckForTests(boolean value) throws Exception {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
+    public T setDisableTopicsEnrollmentCheckForTests(boolean value) {
+        return setOrCacheDebugSystemProperty(
+                FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
     }
 
     /** Overrides the system property used to set ConsentManager debug mode keys. */
-    public T setConsentManagerDebugMode(boolean value) throws Exception {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
+    public T setConsentManagerDebugMode(boolean value) {
+        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getEnableBackCompat()}. */
-    public T setEnableBackCompat(boolean value) throws Exception {
+    public T setEnableBackCompat(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getConsentSourceOfTruth()}. */
-    public T setConsentSourceOfTruth(int value) throws Exception {
+    public T setConsentSourceOfTruth(int value) {
         return setOrCacheFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getBlockedTopicsSourceOfTruth()}. */
-    public T setBlockedTopicsSourceOfTruth(int value) throws Exception {
+    public T setBlockedTopicsSourceOfTruth(int value) {
         return setOrCacheFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getEnableAppsearchConsentData()}. */
-    public T setEnableAppsearchConsentData(boolean value) throws Exception {
+    public T setEnableAppsearchConsentData(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, value);
     }
 
     /**
      * Overrides flag used by {@link PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
-    public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) throws Exception {
+    public T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
         return setOrCacheFlag(
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getPpapiAppAllowList()}. */
-    public T setPpapiAppAllowList(String value) throws Exception {
+    public T setPpapiAppAllowList(String value) {
         return setOrCacheFlagWithSeparator(
                 FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
     /** Overrides flag used by {@link PhFlags#getMsmtApiAppAllowList()}. */
-    public T setMsmtApiAppAllowList(String value) throws Exception {
+    public T setMsmtApiAppAllowList(String value) {
         return setOrCacheFlagWithSeparator(
                 FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST, value, ALLOWLIST_SEPARATOR);
     }
 
     /** Overrides flag used by {@link PhFlags#getAdIdRequestPermitsPerSecond()}. */
-    public T setAdIdRequestPermitsPerSecond(double value) throws Exception {
+    public T setAdIdRequestPermitsPerSecond(double value) {
         return setOrCacheFlag(FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getAdIdKillSwitchForTests()}. */
-    public T setAdIdKillSwitchForTests(boolean value) throws Exception {
-        return setOrCacheSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
+    public T setAdIdKillSwitchForTests(boolean value) {
+        return setOrCacheDebugSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
     /** Overrides flag used by {@link PhFlags#getMddBackgroundTaskKillSwitch()}. */
-    public T setMddBackgroundTaskKillSwitch(boolean value) throws Exception {
+    public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setOrCacheFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
@@ -319,7 +326,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
      * device running the test.
      */
-    public T setCompatModeFlags() throws Exception {
+    public T setCompatModeFlags() {
         if (isAtLeastT()) {
             mLog.d("setCompatModeFlags(): ignored on SDK %d", getDeviceSdk());
             // Do nothing; this method is intended to set flags for Android S- only.
@@ -350,7 +357,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      * Sets just the flag needed by {@link PhFlags#getEnableBackCompat()}, but only if required by
      * the Android version of the device running the test.
      */
-    public T setCompatModeFlag() throws Exception {
+    public T setCompatModeFlag() {
         if (isAtLeastT()) {
             mLog.d("setCompatModeFlag(): ignored on SDK %d", getDeviceSdk());
             // Do nothing; this method is intended to set flags for Android S- only.
@@ -366,7 +373,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      *     automatically reset when used as a JUnit Rule.
      */
     @Deprecated
-    T resetCompatModeFlags() throws Exception {
+    T resetCompatModeFlags() {
         mLog.d("resetCompatModeFlags()");
         assertCalledByLegacyHelper();
         if (isAtLeastT()) {
@@ -386,16 +393,34 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return getThis();
     }
 
+    /** Sets a {@code logcat} tag. */
+    public T setLogcatTag(String tag, String level) {
+        setOrCacheLogtagSystemProperty(tag, level);
+        return getThis();
+    }
+
+    /**
+     * Sets a {@code logcat} tags commons to all test.
+     *
+     * <p>This method is usually set automatically by the factory methods, but should be set again
+     * (on host-side tests) after reboot.
+     */
+    public T setDefaultLogcatTags() {
+        setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
+        return getThis();
+    }
+
     // TODO(295007931): abstract SDK-related methods in a new SdkLevelHelper and reuse them on
     // SdkLevelSupportRule
     /** Gets the device's SDK level. */
-    protected abstract int getDeviceSdk() throws Exception;
+    protected abstract int getDeviceSdk();
 
-    protected boolean isAtLeastS() throws Exception {
+    protected boolean isAtLeastS() {
         return getDeviceSdk() > 31;
     }
 
-    protected boolean isAtLeastT() throws Exception {
+    protected boolean isAtLeastT() {
         return getDeviceSdk() > 32;
     }
 
@@ -406,24 +431,24 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                         + "methods used by legacy helpers");
     }
 
-    private T setOrCacheFlag(String name, boolean value) throws Exception {
+    private T setOrCacheFlag(String name, boolean value) {
         return setOrCacheFlag(name, Boolean.toString(value));
     }
 
-    private T setOrCacheFlag(String name, int value) throws Exception {
+    private T setOrCacheFlag(String name, int value) {
         return setOrCacheFlag(name, Integer.toString(value));
     }
 
-    private T setOrCacheFlag(String name, double value) throws Exception {
+    private T setOrCacheFlag(String name, double value) {
         return setOrCacheFlag(name, Double.toString(value));
     }
 
-    private T setOrCacheFlag(String name, float value) throws Exception {
+    private T setOrCacheFlag(String name, float value) {
         return setOrCacheFlag(name, Float.toString(value));
     }
 
     // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected void setInitialFlags(String testName) throws Exception {
+    protected void setInitialFlags(String testName) {
         if (mInitialFlags == null) {
             throw new IllegalStateException("already called");
         }
@@ -439,18 +464,16 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mInitialFlags = null;
     }
 
-    private T setOrCacheFlagWithSeparator(String name, String value, String separator)
-            throws Exception {
+    private T setOrCacheFlagWithSeparator(String name, String value, String separator) {
         return setOrCacheFlag(name, value, Objects.requireNonNull(separator));
     }
 
-    private T setOrCacheFlag(String name, String value) throws Exception {
+    private T setOrCacheFlag(String name, String value) {
         return setOrCacheFlag(name, value, /* separator= */ null);
     }
 
     // TODO(b/294423183): need to add unit test for setters that call this
-    private T setOrCacheFlag(String name, String value, @Nullable String separator)
-            throws Exception {
+    private T setOrCacheFlag(String name, String value, @Nullable String separator) {
         FlagOrSystemProperty flag = new FlagOrSystemProperty(name, value, separator);
         if (mInitialFlags != null) {
             if (isFlagManagedByRunner(name)) {
@@ -468,7 +491,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return false;
     }
 
-    private T setFlag(FlagOrSystemProperty flag) throws Exception {
+    private T setFlag(FlagOrSystemProperty flag) {
         mLog.v("Setting flag: %s", flag);
         if (flag.separator == null) {
             mDeviceConfig.set(flag.name, flag.value);
@@ -478,13 +501,13 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return getThis();
     }
 
-    private void resetFlags(String testName) throws Exception {
+    private void resetFlags(String testName) {
         mLog.d("Resetting flags after %s", testName);
         mDeviceConfig.reset();
     }
 
     // TODO(b/294423183): make private once not used by subclass for legacy methods
-    protected void setInitialSystemProperties(String testName) throws Exception {
+    protected void setInitialSystemProperties(String testName) {
         if (mInitialSystemProperties == null) {
             throw new IllegalStateException("already called");
         }
@@ -500,15 +523,23 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         mInitialSystemProperties = null;
     }
 
-    private T setOrCacheSystemProperty(String name, boolean value) throws Exception {
-        return setOrCacheSystemProperty(name, Boolean.toString(value));
+    private T setOrCacheDebugSystemProperty(String name, boolean value) {
+        return setOrCacheDebugSystemProperty(name, Boolean.toString(value));
     }
 
-    private T setOrCacheSystemProperty(String name, long value) throws Exception {
-        return setOrCacheSystemProperty(name, Long.toString(value));
+    private T setOrCacheDebugSystemProperty(String name, long value) {
+        return setOrCacheDebugSystemProperty(name, Long.toString(value));
     }
 
-    private T setOrCacheSystemProperty(String name, String value) throws Exception {
+    private T setOrCacheDebugSystemProperty(String name, String value) {
+        return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + name, value);
+    }
+
+    private T setOrCacheLogtagSystemProperty(String name, String value) {
+        return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
+    }
+
+    private T setOrCacheSystemProperty(String name, String value) {
         if (mInitialSystemProperties != null) {
             mLog.v("Caching SystemProperty %s=%s as test is not running yet", name, value);
             mInitialSystemProperties.add(new FlagOrSystemProperty(name, value));
@@ -517,17 +548,17 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setSystemProperty(name, value);
     }
 
-    private T setSystemProperty(String name, String value) throws Exception {
+    private T setSystemProperty(String name, String value) {
         mSystemProperties.set(name, value);
         return getThis();
     }
 
-    private void resetSystemProperties(String testName) throws Exception {
+    private void resetSystemProperties(String testName) {
         mLog.d("Resetting SystemProperties after %s", testName);
         mSystemProperties.reset();
     }
 
-    private void runSafely(List<Throwable> errors, RunnerWithScissors r) {
+    private void runSafely(List<Throwable> errors, Runnable r) {
         try {
             r.run();
         } catch (Throwable e) {
@@ -614,32 +645,5 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     @SuppressWarnings("unchecked")
     private T getThis() {
         return (T) this;
-    }
-
-    /**
-     * Helper interface to make it easier to create to create an instance of the rule calling
-     * initial flag-setting methods (as those can throw {@link Exception}).
-     */
-    protected static <T extends AbstractAdServicesFlagsSetterRule<T>> T newInstance(
-            T instance, Visitor<T> visitor) {
-        try {
-            visitor.visit(instance);
-            return instance;
-        } catch (Exception e) {
-            // Shouldn't happen, because commands are cached before the test is started
-            throw new IllegalStateException("Fail to set something before tests started");
-        }
-    }
-
-    // TODO(b/295321663): move to its own class and/or module-utiles
-    /** Simple visitor design pattern. */
-    protected interface Visitor<T> {
-        void visit(T rule) throws Exception;
-    }
-
-    // TODO(b/295321663): move to its own class and/or module-utils
-    /** Runnable whose {@code run()} method can throw an exception . */
-    private interface RunnerWithScissors {
-        void run() throws Throwable;
     }
 }

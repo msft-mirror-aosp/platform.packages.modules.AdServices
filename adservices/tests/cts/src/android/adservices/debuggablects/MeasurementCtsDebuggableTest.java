@@ -45,7 +45,7 @@ import com.google.mockwebserver.RecordedRequest;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -104,8 +104,8 @@ public class MeasurementCtsDebuggableTest {
 
     private MeasurementManager mMeasurementManager;
 
-    @ClassRule
-    public static final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
     @BeforeClass

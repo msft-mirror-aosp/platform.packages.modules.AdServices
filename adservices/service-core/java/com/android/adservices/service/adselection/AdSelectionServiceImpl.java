@@ -350,17 +350,38 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
+        final boolean forceSearchOnAbsentOwner =
+                BinderFlagReader.readFlag(
+                        mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
+        PersistAdSelectionResultRunner.ReportingRegistrationLimits limits =
+                PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
+                        .setMaxRegisteredAdBeaconsTotalCount(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount))
+                        .setMaxInteractionKeySize(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB))
+                        .setMaxInteractionReportingUriSize(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionMaxInteractionReportingUriSizeB))
+                        .setMaxRegisteredAdBeaconsPerAdTechCount(
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount))
+                        .build();
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =
                             new PersistAdSelectionResultRunner(
                                     mObliviousHttpEncryptor,
                                     mAdSelectionEntryDao,
+                                    mCustomAudienceDao,
                                     mAdSelectionServiceFilter,
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
                                     callingUid,
-                                    devContext);
+                                    devContext,
+                                    forceSearchOnAbsentOwner,
+                                    limits);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
@@ -563,23 +584,46 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
 
-        ImpressionReporter reporter =
-                new ImpressionReporter(
-                        mContext,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mScheduledExecutor,
-                        mAdSelectionEntryDao,
-                        mCustomAudienceDao,
-                        mAdServicesHttpsClient,
-                        devContext,
-                        mAdServicesLogger,
-                        mFlags,
-                        mAdSelectionServiceFilter,
-                        mFledgeAuthorizationFilter,
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        callingUid);
-        reporter.reportImpression(requestParams, callback);
+        // ImpressionReporter enables Auction Server flow reporting and sets the stage for Phase 2
+        // in go/rb-rm-unified-flow-reporting whereas ImpressionReporterLegacy is the logic before
+        // Phase 1. FLEDGE_AUCTION_SERVER_REPORTING_ENABLED flag controls which logic is called.
+        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForReportImpression)) {
+            ImpressionReporter reporter =
+                    new ImpressionReporter(
+                            mContext,
+                            mLightweightExecutor,
+                            mBackgroundExecutor,
+                            mScheduledExecutor,
+                            mAdSelectionEntryDao,
+                            mCustomAudienceDao,
+                            mAdServicesHttpsClient,
+                            devContext,
+                            mAdServicesLogger,
+                            mFlags,
+                            mAdSelectionServiceFilter,
+                            mFledgeAuthorizationFilter,
+                            mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                            callingUid);
+            reporter.reportImpression(requestParams, callback);
+        } else {
+            ImpressionReporterLegacy reporter =
+                    new ImpressionReporterLegacy(
+                            mContext,
+                            mLightweightExecutor,
+                            mBackgroundExecutor,
+                            mScheduledExecutor,
+                            mAdSelectionEntryDao,
+                            mCustomAudienceDao,
+                            mAdServicesHttpsClient,
+                            devContext,
+                            mAdServicesLogger,
+                            mFlags,
+                            mAdSelectionServiceFilter,
+                            mFledgeAuthorizationFilter,
+                            mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                            callingUid);
+            reporter.reportImpression(requestParams, callback);
+        }
     }
 
     @Override

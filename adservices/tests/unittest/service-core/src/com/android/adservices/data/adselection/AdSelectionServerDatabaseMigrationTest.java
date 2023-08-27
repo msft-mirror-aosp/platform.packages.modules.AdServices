@@ -17,6 +17,7 @@
 package com.android.adservices.data.adselection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import android.app.Instrumentation;
 import android.database.Cursor;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @RunWith(AndroidJUnit4.class)
 public class AdSelectionServerDatabaseMigrationTest {
@@ -59,5 +61,38 @@ public class AdSelectionServerDatabaseMigrationTest {
         assertEquals(1, c.getCount());
         c.moveToFirst();
         assertEquals(reportingUrisTable, c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+    }
+
+    @Test
+    public void testMigrate2to3() throws IOException {
+        String auctionServerAdSelection = "auction_server_ad_selection";
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2);
+        Cursor cursor =
+                db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
+        // The table should already exist
+        assertEquals(1, cursor.getCount());
+
+        // Re-open the database with version 3 and provide MIGRATION_2_3 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 3, true);
+        cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+
+        assertEquals(
+                auctionServerAdSelection,
+                cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+
+        cursor = db.query("PRAGMA table_info(encryption_context)");
+        boolean creationInstantColumnExists = false;
+        if (cursor.moveToFirst()) {
+            do {
+                if (Objects.equals(cursor.getString(1), "creation_instant")) {
+                    creationInstantColumnExists = true;
+                    break;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        assertTrue(creationInstantColumnExists);
     }
 }

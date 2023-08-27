@@ -105,7 +105,8 @@ public abstract class AdSelectionEntryDao {
             List<DBRegisteredAdInteraction> registeredAdInteractions);
 
     /**
-     * Checks if there is a row in the ad selection data with the unique key ad_selection_id
+     * Checks if there is a row in the ad selection data with the unique key ad_selection_id in on
+     * device auction tables
      *
      * @param adSelectionId which is the key to query the corresponding ad selection data.
      * @return true if row exists, false otherwise
@@ -329,6 +330,17 @@ public abstract class AdSelectionEntryDao {
     public abstract void removeExpiredAdSelection(Instant expirationTime);
 
     /**
+     * Clean up expired ad selection initialization entries if it is older than the given timestamp.
+     * If creation_instant < expirationTime, the ad selection initialization will be removed from
+     * the ad_selection_initialization table. It will also remove the entries from the other table
+     * with ad_selection_id as the foreign key because onDelete cascade is set.
+     *
+     * @param expirationTime is the cutoff time to expire the AdSelectionEntry.
+     */
+    @Query("DELETE FROM ad_selection_initialization WHERE creation_instant < :expirationTime")
+    public abstract void removeExpiredAdSelectionInitializations(Instant expirationTime);
+
+    /**
      * Clean up selected ad selection data entry data in batch by their ad_selection_ids.
      *
      * @param adSelectionIds is the list of adSelectionIds to identify the data entries to be
@@ -395,8 +407,36 @@ public abstract class AdSelectionEntryDao {
             "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId"
                     + " AND caller_package_name = :callerPackageName LIMIT"
                     + " 1)")
-    public abstract boolean doesAdSelectionMatchingCallerPackageNameExist(
+    public abstract boolean doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
             long adSelectionId, String callerPackageName);
+
+    /**
+     * Checks if there is a row in the ad selection initizalization table with the unique
+     * combination of ad_selection_id and caller_package_name
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection data.
+     * @param callerPackageName the caller's package name, to be verified against the
+     *     calling_package_name that exists in the ad_selection_entry
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection_initialization WHERE ad_selection_id ="
+                    + " :adSelectionId AND caller_package_name = :callerPackageName LIMIT 1)")
+    public abstract boolean doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
+            long adSelectionId, String callerPackageName);
+
+    /**
+     * Checks if there is a row in either of the ad selection tables with the unique combination of
+     * ad_selection_id and caller_package_name
+     */
+    @Transaction
+    public boolean doesAdSelectionIdAndCallerPackageNameExists(
+            long adSelectionId, String callerPackageName) {
+        return doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        adSelectionId, callerPackageName)
+                || doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
+                        adSelectionId, callerPackageName);
+    }
 
     /**
      * Add an ad selection from outcomes override into the table
@@ -566,6 +606,39 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesAdSelectionIdExistInInitializationTable(long adSelectionId);
 
     /**
+     * Checks if there is a row in the ad selection with the unique key ad_selection_id and caller
+     * package name.
+     *
+     * @param adSelectionIds which is the key to query the corresponding ad selection data.
+     * @param callerPackageName package name which initiated the auction run
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT ad_selection_id FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)"
+                    + " AND caller_package_name = :callerPackageName")
+    public abstract List<Long> getAdSelectionIdsWithCallerPackageNameInOnDeviceTable(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
+     * Checks if there is a row in the ad selection and ad_selection_initialization with the unique
+     * key ad_selection_id and caller package name.
+     *
+     * @param adSelectionIds which is the key to query the corresponding ad selection data.
+     * @param callerPackageName package name which initiated the auction run
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT ad_selection_id FROM ad_selection WHERE"
+                    + " ad_selection_id IN (:adSelectionIds)"
+                    + " AND caller_package_name = :callerPackageName "
+                    + " UNION"
+                    + " SELECT ad_selection_id FROM ad_selection_initialization "
+                    + " WHERE ad_selection_id IN (:adSelectionIds) "
+                    + " AND caller_package_name = :callerPackageName ")
+    public abstract List<Long> getAdSelectionIdsWithCallerPackageName(
+            List<Long> adSelectionIds, String callerPackageName);
+
+    /**
      * Method used to create an AdSelectionId record in ad selection initialization.
      *
      * @return true if row was created in DBAdSelectionInitialization, false otherwise
@@ -643,21 +716,15 @@ public abstract class AdSelectionEntryDao {
                             .setBuyerDecisionLogicJs(adSelectionEntry.getBuyerDecisionLogicJs())
                             .setBuyerDecisionLogicUri(adSelectionEntry.getBiddingLogicUri())
                             .setSellerContextualSignals(
-                                    Objects.isNull(adSelectionEntry.getSellerContextualSignals())
-                                            ? AdSelectionSignals.EMPTY
-                                            : AdSelectionSignals.fromString(
-                                                    adSelectionEntry.getSellerContextualSignals()))
+                                    parseAdSelectionSignalsOrEmpty(
+                                            adSelectionEntry.getSellerContextualSignals()))
                             .setBuyerContextualSignals(
-                                    AdSelectionSignals.fromString(
+                                    parseAdSelectionSignalsOrEmpty(
                                             adSelectionEntry.getBuyerContextualSignals()))
-                            .setWinningCaActivationTime(
-                                    adSelectionEntry.getCustomAudienceSignals().getActivationTime())
-                            .setWinningCaExpirationTime(
-                                    adSelectionEntry.getCustomAudienceSignals().getExpirationTime())
-                            .setWinningCaUserBiddingSignals(
-                                    adSelectionEntry
-                                            .getCustomAudienceSignals()
-                                            .getUserBiddingSignals())
+                            .setWinningCustomAudienceSignals(
+                                    adSelectionEntry.getCustomAudienceSignals())
+                            .setWinningRenderUri(adSelectionEntry.getWinningAdRenderUri())
+                            .setWinningBid(adSelectionEntry.getWinningAdBid())
                             .build();
             return ReportingData.builder()
                     .setReportingComputationData(reportingComputationData)
@@ -706,7 +773,7 @@ public abstract class AdSelectionEntryDao {
                 reportingDestination);
     }
 
-    /** Query reporting URI records from DBReportingData if adselectionId exists. */
+    /** Query reporting URI records from DBReportingData if adSelectionId exists. */
     @Query(
             "SELECT buyer_reporting_uri AS buyerWinReportingUri, "
                     + "seller_reporting_uri AS sellerWinReportingUri "
@@ -736,9 +803,26 @@ public abstract class AdSelectionEntryDao {
 
     /** Query to get winning ad data of ad selection run identified by adSelectionId. */
     @Query(
-            "SELECT winning_ad_bid AS winningAdBid, winning_ad_render_uri AS winningAdRenderUri "
-                    + "FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
+            "SELECT ad_selection_id AS adSelectionId, winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri FROM ad_selection_result "
+                    + "WHERE ad_selection_id = :adSelectionId")
     public abstract AdSelectionResultBidAndUri getWinningBidAndUriForId(long adSelectionId);
+
+    /** Query to get winning ad data of ad selection run identified by adSelectionId. */
+    @Query(
+            "SELECT ad_selection_id AS adSelectionId, "
+                    + "winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "FROM ad_selection_result WHERE ad_selection_id IN (:adSelectionIds) "
+                    + "UNION "
+                    + "SELECT ad_selection_id AS adSelectionId, "
+                    + "winning_ad_bid AS winningAdBid, "
+                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
+    // TODO(b/291956961): Remove querying ad_selection table when migration to new
+    //  ad_selection_result table is done.
+    public abstract List<AdSelectionResultBidAndUri> getWinningBidAndUriForIds(
+            List<Long> adSelectionIds);
 
     /**
      * Insert new ad selection initialization record. Aborts if adselectionId already exists.
@@ -776,4 +860,10 @@ public abstract class AdSelectionEntryDao {
     /** Query to get DBReportingData for the given adSelectionId. */
     @Query("SELECT * FROM reporting_data WHERE ad_selection_id = :adSelectionId")
     abstract DBReportingData getDBReportingDataForId(long adSelectionId);
+
+    private AdSelectionSignals parseAdSelectionSignalsOrEmpty(String signals) {
+        return Objects.isNull(signals)
+                ? AdSelectionSignals.EMPTY
+                : AdSelectionSignals.fromString(signals);
+    }
 }

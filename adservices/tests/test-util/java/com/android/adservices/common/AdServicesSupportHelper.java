@@ -19,6 +19,7 @@ import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGG
 import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.SystemProperties;
@@ -37,8 +38,9 @@ public final class AdServicesSupportHelper {
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-    private static boolean isDeviceSupportedByDefault(PackageManager pm) {
-        return !isLowRamDevice(pm) // Android Go Devices
+    private static boolean isDeviceSupportedByDefault(Context context) {
+        PackageManager pm = context.getPackageManager();
+        return !isLowRamDevice(context) // Android Go Devices
                 && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
@@ -64,17 +66,17 @@ public final class AdServicesSupportHelper {
             }
         }
 
-        boolean supported = isDeviceSupportedByDefault(sContext.getPackageManager());
+        boolean supported = isDeviceSupportedByDefault(sContext);
         Log.v(TAG, "isDeviceSupported(): returning non-simulated value (" + supported + ")");
         return supported;
     }
 
     /** Checks whether the device has low ram. */
     public static boolean isLowRamDevice() {
-        return isLowRamDevice(sContext.getPackageManager());
+        return isLowRamDevice(sContext);
     }
 
-    private static boolean isLowRamDevice(PackageManager pm) {
+    private static boolean isLowRamDevice(Context context) {
         if (AdservicesTestHelper.isDebuggable()) {
             String overriddenValue =
                     SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
@@ -93,7 +95,7 @@ public final class AdServicesSupportHelper {
             }
         }
 
-        boolean isLowRamDevice = pm.hasSystemFeature(PackageManager.FEATURE_RAM_LOW);
+        boolean isLowRamDevice = context.getSystemService(ActivityManager.class).isLowRamDevice();
         Log.v(TAG, "isLowRamDevice(): returning non-simulated value (" + isLowRamDevice + ")");
         return isLowRamDevice;
     }

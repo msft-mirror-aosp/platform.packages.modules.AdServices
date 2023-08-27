@@ -36,7 +36,7 @@ public class UpdateProcessorSelectorTest {
     @Test
     public void testValidCommands() {
         UpdateProcessor[] processors = {
-            new Append(), new Put(), new PutIfNotPresent(), new Remove()
+            new Append(), new Put(), new PutIfNotPresent(), new Remove(), new UpdateEncoder()
         };
         for (int i = 0; i < processors.length; i++) {
             UpdateProcessor fetchedProcessor =

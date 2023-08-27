@@ -15,10 +15,9 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.TestDeviceHelper.getTestDevice;
+import static com.android.adservices.common.TestDeviceHelper.getProperty;
 import static com.android.adservices.common.TestDeviceHelper.runShellCommand;
-
-import com.android.tradefed.device.DeviceNotAvailableException;
+import static com.android.adservices.common.TestDeviceHelper.setProperty;
 
 /** Host-side implementation of {@link SystemPropertiesHelper.Interface}. */
 final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Interface {
@@ -27,18 +26,18 @@ final class HostSideSystemPropertiesHelper implements SystemPropertiesHelper.Int
             new Logger(ConsoleLogger.getInstance(), HostSideSystemPropertiesHelper.class);
 
     @Override
-    public String get(String name) throws DeviceNotAvailableException {
-        return getTestDevice().getProperty(name);
+    public String get(String name) {
+        return getProperty(name);
     }
 
     @Override
-    public void set(String name, String value) throws DeviceNotAvailableException {
+    public void set(String name, String value) {
         sLogger.v("set(%s, %s)", name, value);
-        getTestDevice().setProperty(name, value);
+        setProperty(name, value);
     }
 
     @Override
-    public String dumpSystemProperties() throws DeviceNotAvailableException {
+    public String dumpSystemProperties() {
         return runShellCommand("getprop").trim();
     }
 

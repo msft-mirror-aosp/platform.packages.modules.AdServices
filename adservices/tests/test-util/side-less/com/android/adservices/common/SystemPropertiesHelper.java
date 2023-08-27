@@ -36,23 +36,21 @@ public final class SystemPropertiesHelper {
 
     private final Map<String, String> mPropsToBeReset = new HashMap<>();
 
-    final Logger mLog;
+    private final Logger mLog;
     private final Interface mInterface;
-    private final String mPrefix;
 
-    public SystemPropertiesHelper(Interface helperInterface, RealLogger logger, String prefix) {
+    public SystemPropertiesHelper(Interface helperInterface, RealLogger logger) {
         mInterface = Objects.requireNonNull(helperInterface);
         mLog = new Logger(Objects.requireNonNull(logger), SystemPropertiesHelper.class);
-        mPrefix = Objects.requireNonNull(prefix);
-        mLog.v("Constructor: interface=%s, logger=%s, prefix=%s", helperInterface, logger, prefix);
+        mLog.v("Constructor: interface=%s, logger=%s", helperInterface, logger);
     }
 
-    public void set(String name, String value) throws Exception {
+    public void set(String name, String value) {
         savePreviousValue(name);
         setOnly(name, value);
     }
 
-    public void reset() throws Exception {
+    public void reset() {
         int size = mPropsToBeReset.size();
         if (size == 0) {
             mLog.d("reset(): not needed");
@@ -68,16 +66,16 @@ public final class SystemPropertiesHelper {
         }
     }
 
-    public void dumpSystemProperties(StringBuilder dump) throws Exception {
+    public void dumpSystemProperties(StringBuilder dump, String prefix) {
         String properties = mInterface.dumpSystemProperties();
-        addProperties(dump, properties, mPrefix);
+        addProperties(dump, properties, prefix);
     }
 
-    private String get(String name) throws Exception {
-        return mInterface.get(getPropertyName(name));
+    private String get(String name) {
+        return mInterface.get(name);
     }
 
-    private void savePreviousValue(String name) throws Exception {
+    private void savePreviousValue(String name) {
         if (mPropsToBeReset.containsKey(name)) {
             mLog.v("Value of %s (%s) already saved for reset()", name, mPropsToBeReset.get(name));
             return;
@@ -87,14 +85,9 @@ public final class SystemPropertiesHelper {
         mPropsToBeReset.put(name, oldValue);
     }
 
-    private void setOnly(String name, String value) throws Exception {
-        mInterface.set(getPropertyName(name), value);
+    private void setOnly(String name, String value) {
+        mInterface.set(name, value);
     }
-
-    private String getPropertyName(String name) {
-        return mPrefix + name;
-    }
-
 
     private static void addProperties(StringBuilder builder, String properties, String prefix) {
         String realPrefix = "[" + prefix;
@@ -116,12 +109,12 @@ public final class SystemPropertiesHelper {
     interface Interface {
 
         /** Gets the value of a property. */
-        String get(String name) throws Exception;
+        String get(String name);
 
         /** Sets the value of a property. */
-        void set(String name, String value) throws Exception;
+        void set(String name, String value);
 
         /** Lists all properties (names and values). */
-        String dumpSystemProperties() throws Exception;
+        String dumpSystemProperties();
     }
 }

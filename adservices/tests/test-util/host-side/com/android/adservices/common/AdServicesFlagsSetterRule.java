@@ -15,22 +15,24 @@
  */
 package com.android.adservices.common;
 
-import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractAdServicesFlagsSetterRule}. */
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
+    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
+        return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
+    }
+
     /** Factory method that only disables the global kill switch. */
     public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledTests() {
-        return newInstance(
-                new AdServicesFlagsSetterRule(), rule -> rule.setGlobalKillSwitch(false));
+        return withDefaultLogcatTags().setGlobalKillSwitch(false);
     }
 
     @Override
-    protected int getDeviceSdk() throws DeviceNotAvailableException {
-        return TestDeviceHelper.getTestDevice().getApiLevel();
+    protected int getDeviceSdk() {
+        return TestDeviceHelper.getApiLevel();
     }
 
     public void setDevice(ITestDevice device) {

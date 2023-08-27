@@ -35,6 +35,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1662,16 +1663,38 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getFledgeAuctionServerKillSwitch() {
-        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
+        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
+        // On device and Server Auction Kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
                                 /* defaultValue */ FLEDGE_AUCTION_SERVER_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getFledgeOnDeviceAuctionKillSwitch() {
+        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
+        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
+        // On device and Server Auction Kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                                /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
     }
 
     @Override
@@ -1922,11 +1945,63 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED,
+                FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                FLEDGE_AUCTION_SERVER_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION);
     }
 
     @Override
@@ -2637,6 +2712,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMinimumAggregatableReportWindowInSeconds() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS);
+    }
+
+    @Override
     public int getMeasurementMaxSourcesPerPublisher() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -3250,6 +3334,12 @@ public final class PhFlags implements Flags {
                         + getMeasurementMinimumEventReportWindowInSeconds());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS
+                        + " = "
+                        + getMeasurementMinimumAggregatableReportWindowInSeconds());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
                         + " = "
                         + getWebContextClientAppAllowList());
@@ -3404,6 +3494,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH
                         + " = "
                         + getFledgeAuctionServerKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH
+                        + " = "
+                        + getFledgeOnDeviceAuctionKillSwitch());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
@@ -3604,6 +3699,31 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
                         + " = "
                         + getAdSelectionSelectingOutcomeTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION
+                        + " = "
+                        + getFledgeAuctionServerEnabledForReportImpression());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
+                        + " = "
+                        + getFledgeAuctionServerEnabledForReportEvent());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM
+                        + " = "
+                        + getFledgeAuctionServerEnabledForUpdateHistogram());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION
+                        + " = "
+                        + getFledgeAuctionServerEnabledForSelectAdsMediation());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
@@ -3816,10 +3936,15 @@ public final class PhFlags implements Flags {
                         + getFledgeAuctionServerPayloadBucketSizes());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
                         + " = "
-                        + getAdSelectionOffDeviceRequestCompressionEnabled());
+                        + getFledgeAuctionServerPayloadBucketSizes());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE
