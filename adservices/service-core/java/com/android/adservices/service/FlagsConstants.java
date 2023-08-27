@@ -77,6 +77,8 @@ public final class FlagsConstants {
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
+    public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
+            "topics_disable_direct_app_calls";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -95,6 +97,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
     public static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
             "adservices_release_stage_for_cobalt";
+    public static final String KEY_COBALT_LOGGING_JOB_PERIOD_MS = "cobalt_logging_job_period_ms";
+    public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -323,8 +327,8 @@ public final class FlagsConstants {
             "fledge_ad_selection_off_device_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
-    public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
-            "fledge_auction_server_payload_bucket_sizes";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED =
+            "fledge_auction_server_force_search_when_owner_is_absent_enabled";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     public static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -337,6 +341,19 @@ public final class FlagsConstants {
             "fledge_event_level_debug_reporting_batch_delay_seconds";
     public static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
             "fledge_event_level_debug_reporting_max_items_per_batch";
+
+    // Server-auction flags for Protected Audience.
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED = "fledge_auction_server_enabled";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION =
+            "fledge_auction_server_enabled_for_report_impression";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT =
+            "fledge_auction_server_enabled_for_report_event";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM =
+            "fledge_auction_server_enabled_for_update_histogram";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION =
+            "fledge_auction_server_enabled_for_select_ads_mediation";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
+            "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
             "fledge_auction_server_auction_key_fetch_uri";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING =
@@ -353,6 +370,8 @@ public final class FlagsConstants {
             "fledge_auction_server_encryption_algorithm_aead_id";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS =
             "fledge_auction_server_auction_key_fetch_timeout_ms";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS =
+            "fledge_auction_server_overall_timeout_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED =
             "fledge_auction_server_background_key_fetch_job_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED =
@@ -485,11 +504,17 @@ public final class FlagsConstants {
             "fledge_auction_server_kill_switch";
     public static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
             "background_jobs_logging_kill_switch";
+    public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH =
+            "fledge_on_device_auction_kill_switch";
+
+    public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
+            "protected_signals_service_kill_switch";
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
 
     public static final String KEY_MSMT_API_APP_ALLOW_LIST = "msmt_api_app_allow_list";
+    public static final String KEY_MSMT_API_APP_BLOCK_LIST = "msmt_api_app_block_list";
 
     public static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST =
             "ppapi_app_signature_allow_list";
@@ -645,6 +670,8 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
             "fledge_register_ad_beacon_enabled";
     public static final String KEY_FLEDGE_CPC_BILLING_ENABLED = "fledge_cpc_billing_enabled";
+    public static final String KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED =
+            "fledge_data_version_header_enabled";
 
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
@@ -680,6 +707,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MINIMUM_EVENT_REPORT_WINDOW_IN_SECONDS =
             "measurement_minimum_event_report_window_in_seconds";
+
+    public static final String KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS =
+            "measurement_minimum_aggregatable_report_window_in_seconds";
 
     public static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
             "measurement_max_sources_per_publisher";

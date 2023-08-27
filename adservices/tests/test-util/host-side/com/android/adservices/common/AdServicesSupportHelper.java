@@ -23,20 +23,20 @@ public final class AdServicesSupportHelper {
 
     private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
     private static final String FEATURE_LEANBACK = "android.software.leanback";
-    private static final String FEATURE_RAM_LOW = "android.hardware.ram.low";
     private static final String FEATURE_WATCH = "android.hardware.type.watch";
+
+    // Copied from RoSystemProperties
+    private static final String SYSTEM_PROPERTY_CONFIG_LOW_RAM = "ro.config.low_ram";
 
     // TODO(b/295321663): 3 constants below should be static imported from AdServicesCommonConstants
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
-            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "feature_android.hardware.ram.low";
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
-    private static final ConsoleLogger sConsoleLogger =
-            new ConsoleLogger(AdServicesDeviceSupportedRule.class);
-
-    private static final Logger sLogger = new Logger(sConsoleLogger);
+    private static final Logger sLogger =
+            new Logger(ConsoleLogger.getInstance(), AdServicesDeviceSupportedRule.class);
 
     public static boolean isDebuggable(ITestDevice device) throws DeviceNotAvailableException {
         return "1".equals(device.getProperty("ro.debuggable"));
@@ -88,7 +88,7 @@ public final class AdServicesSupportHelper {
             }
         }
 
-        boolean isLowRamDevice = device.hasFeature(FEATURE_RAM_LOW);
+        boolean isLowRamDevice = "true".equals(device.getProperty(SYSTEM_PROPERTY_CONFIG_LOW_RAM));
         sLogger.v("isLowRamDevice(): returning non-simulated value (%b)", isLowRamDevice);
         return isLowRamDevice;
     }

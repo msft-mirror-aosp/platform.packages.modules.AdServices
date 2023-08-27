@@ -24,6 +24,7 @@ import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -88,6 +89,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
         reconsentNotificationTriggerHelper(true, false, true, AD_ID_DISABLED, true);
     }
@@ -98,6 +100,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
         reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
     }
@@ -108,6 +111,7 @@ public class ReconsentNotificationTriggerTest {
      * should not displayed
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
         reconsentNotificationTriggerHelper(true, false, false, AD_ID_ENABLED, true);
 
@@ -129,6 +133,7 @@ public class ReconsentNotificationTriggerTest {
      * consent, and GA UX feature enabled, the GA UX notification is not displayed.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
         reconsentNotificationTriggerHelper(false, false, false, AD_ID_ENABLED, false);
     }
@@ -139,6 +144,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
@@ -169,6 +175,7 @@ public class ReconsentNotificationTriggerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 297347345)
     public void testDeleteStatus() {
         UiUtils.clearSavedStatus();
         AdservicesTestHelper.killAdservicesProcess(sContext);

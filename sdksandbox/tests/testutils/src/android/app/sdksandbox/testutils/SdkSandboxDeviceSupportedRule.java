@@ -21,12 +21,8 @@ import com.android.adservices.common.AndroidLogger;
 /** See {@link AbstractSdkSandboxDeviceSupportedRule}. */
 public final class SdkSandboxDeviceSupportedRule extends AbstractSdkSandboxDeviceSupportedRule {
 
-    private static final AndroidLogger sLogger =
-            new AndroidLogger(SdkSandboxDeviceSupportedRule.class);
-
-    /** Default constructor */
     public SdkSandboxDeviceSupportedRule() {
-        super(sLogger);
+        super(AndroidLogger.getInstance());
     }
 
     @Override

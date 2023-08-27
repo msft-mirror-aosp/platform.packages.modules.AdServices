@@ -21,9 +21,10 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.data.adselection.CustomAudienceSignals;
+
 import com.google.auto.value.AutoValue;
 
-import java.time.Instant;
 
 /** Data class representing the data required to computing reporting URIs. */
 @AutoValue
@@ -45,17 +46,16 @@ public abstract class ReportingComputationData {
     @NonNull
     public abstract AdSelectionSignals getSellerContextualSignals();
 
-    /** The activation time of the Custom Audience which won the adselection run. */
+    /** The Custom Audience signals of the ad which won the ad selection run. */
     @NonNull
-    public abstract Instant getWinningCaActivationTime();
+    public abstract CustomAudienceSignals getWinningCustomAudienceSignals();
 
-    /** The expiration time of the Custom Audience which won the adselection run. */
+    /** The render uri of the ad which won the ad selection run */
     @NonNull
-    public abstract Instant getWinningCaExpirationTime();
+    public abstract Uri getWinningRenderUri();
 
-    /** The user bidding signals of the Custom Audience which won the adselection run. */
-    @NonNull
-    public abstract AdSelectionSignals getWinningCaUserBiddingSignals();
+    /** The bid of the ad which won the ad selection run */
+    public abstract double getWinningBid();
 
     /** Returns a builder for {@link ReportingComputationData}. */
     @NonNull
@@ -81,17 +81,15 @@ public abstract class ReportingComputationData {
         public abstract Builder setSellerContextualSignals(
                 @NonNull AdSelectionSignals sellerContextualSignals);
 
-        /** Sets the activation time of the Custom Audience which won the adselection run. */
-        public abstract Builder setWinningCaActivationTime(
-                @NonNull Instant winningCaActivationTime);
+        /** Sets the Custom Audience signals of the ad which won the ad selection run */
+        public abstract Builder setWinningCustomAudienceSignals(
+                @NonNull CustomAudienceSignals customAudienceSignals);
 
-        /** Sets the expiration time of the Custom Audience which won the adselection run. */
-        public abstract Builder setWinningCaExpirationTime(
-                @NonNull Instant winningCaExpirationTime);
+        /** Sets the render uri of the ad which won the ad selection run. */
+        public abstract Builder setWinningRenderUri(@NonNull Uri winningRenderUri);
 
-        /** Sets the user bidding signals of the Custom Audience which won the adselection run. */
-        public abstract Builder setWinningCaUserBiddingSignals(
-                @NonNull AdSelectionSignals winningCaUserBiddingSignals);
+        /** Sets the bid of the ad which won the ad selection run */
+        public abstract Builder setWinningBid(double winningBid);
 
         /** Builds a {@link ReportingComputationData} object. */
         @NonNull

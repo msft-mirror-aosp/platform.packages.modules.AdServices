@@ -18,6 +18,7 @@ package com.android.adservices.service.topics;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -142,6 +143,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     int resultCode = STATUS_SUCCESS;
 
                     try {
+                        if (mFlags.getTopicsDisableDirectAppCalls()) {
+                            // Check if the request is valid.
+                            if (!validateRequest(topicsParam, callback)) {
+                                // Return early if the request is invalid.
+                                sLogger.d("Invalid request %s", topicsParam);
+                                return;
+                            }
+                        }
+
                         resultCode =
                                 canCallerInvokeTopicsService(
                                         hasTopicsPermission, topicsParam, callingUid, callback);
@@ -185,6 +195,21 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    // Checks if GetTopicsParam is a valid request.
+    private static boolean validateRequest(
+            GetTopicsParam topicsParam, IGetTopicsCallback callback) {
+        // Return false if sdkName is empty or null.
+        if (TextUtils.isEmpty(topicsParam.getSdkName())) {
+            invokeCallbackWithStatus(
+                    callback,
+                    STATUS_INVALID_ARGUMENT,
+                    "Direct app calls are not supported for Topics API. Sdk name should not "
+                            + "be null or empty");
+            return false;
+        }
+        return true;
     }
 
     // Throttle the Topics API.
@@ -340,7 +365,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         return STATUS_SUCCESS;
     }
 
-    private void invokeCallbackWithStatus(
+    private static void invokeCallbackWithStatus(
             IGetTopicsCallback callback,
             @AdServicesStatusUtils.StatusCode int statusCode,
             String message) {

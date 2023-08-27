@@ -45,6 +45,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -167,23 +168,23 @@ public class AdSelectionScriptEngineTest {
     private static final long AD_SELECTION_ID_3 = 1234567L;
     private static final double AD_BID_3 = 12.0;
     private static final Uri AD_RENDER_URI = Uri.parse("test.com/");
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_1 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_ID_WITH_BID_1 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setBid(AD_BID_1)
-                    .setRenderUri(AD_RENDER_URI)
+                    .setWinningAdBid(AD_BID_1)
+                    .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_2 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_ID_WITH_BID_2 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setBid(AD_BID_2)
-                    .setRenderUri(AD_RENDER_URI)
+                    .setWinningAdBid(AD_BID_2)
+                    .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_ID_WITH_BID_3 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_ID_WITH_BID_3 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
-                    .setBid(AD_BID_3)
-                    .setRenderUri(AD_RENDER_URI)
+                    .setWinningAdBid(AD_BID_3)
+                    .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
@@ -1738,7 +1739,7 @@ public class AdSelectionScriptEngineTest {
 
     private Long selectOutcome(
             String jsScript,
-            List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
             AdSelectionSignals selectionSignals)
             throws Exception {
         return waitForFuture(

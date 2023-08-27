@@ -32,15 +32,16 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Spy;
@@ -57,9 +58,12 @@ public class NotificationActivityGAV2UiAutomatorTest {
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private String mTestName;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @BeforeClass
     public static void classSetup() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
     }
 
@@ -73,7 +77,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
                 "device_config put adservices eu_notif_flow_change_enabled true");
 
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -82,8 +85,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @After
     public void teardown() throws Exception {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());

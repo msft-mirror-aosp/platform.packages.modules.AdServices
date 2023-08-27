@@ -1713,7 +1713,7 @@ public class EventReportWindowCalcDelegateTest {
                         sourceTime + TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6),
                         EventSurfaceType.APP));
         assertEquals(
-                sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                sourceTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTime(
                         fiveWindowsWithStart,
                         sourceTime + TimeUnit.DAYS.toMillis(5),

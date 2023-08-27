@@ -151,12 +151,29 @@ public class TopicsManagerTest {
                         .build();
 
         // As the kill switch for Topics API is enabled, we should expect failure here.
-        assertThat(
+        Exception e =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> advertisingTopicsClient.getTopics().get())
-                        .getMessage())
-                .isEqualTo("java.lang.IllegalStateException: Service is not available.");
+                        ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
+            throws Exception {
+        flags.setTopicsDisableDirectAppCalls(true);
+
+        AdvertisingTopicsClient advertisingTopicsClient =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        Exception e =
+                assertThrows(
+                        ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

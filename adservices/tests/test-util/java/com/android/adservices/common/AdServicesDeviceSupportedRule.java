@@ -19,7 +19,7 @@ package com.android.adservices.common;
 public final class AdServicesDeviceSupportedRule extends AbstractAdServicesDeviceSupportedRule {
 
     public AdServicesDeviceSupportedRule() {
-        super(new AndroidLogger(AdServicesDeviceSupportedRule.class));
+        super(AndroidLogger.getInstance());
     }
 
     @Override
