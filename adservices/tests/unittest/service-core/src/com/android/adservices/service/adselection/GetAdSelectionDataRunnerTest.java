@@ -16,12 +16,16 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -79,6 +83,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
@@ -89,6 +95,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class GetAdSelectionDataRunnerTest {
     private static final int CALLER_UID = Process.myUid();
@@ -105,6 +112,7 @@ public class GetAdSelectionDataRunnerTest {
     private Context mContext;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
+    private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
@@ -120,6 +128,8 @@ public class GetAdSelectionDataRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mScheduledExecutor = AdServicesExecutors.getScheduler();
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
@@ -162,6 +172,7 @@ public class GetAdSelectionDataRunnerTest {
                         mAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
+                        mScheduledExecutor,
                         mFlags,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
@@ -175,7 +186,6 @@ public class GetAdSelectionDataRunnerTest {
         }
     }
 
-    //    @Ignore("b/288874707 : Enable test after identifying and fixing flakiness cause.")
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -278,6 +288,54 @@ public class GetAdSelectionDataRunnerTest {
         Assert.assertEquals(result.getGenerationId(), String.valueOf(adSelectionId));
     }
 
+    @Test
+    public void testRunner_getAdSelectionData_timeoutFailure() throws InterruptedException {
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        Flags shortTimeoutFlags =
+                new GetAdSelectionDataRunnerTestFlags() {
+                    @Override
+                    public long getFledgeAuctionServerOverallTimeoutMs() {
+                        return 200L;
+                    }
+                };
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(any(), anyLong(), anyLong()))
+                .thenAnswer(
+                        new AnswersWithDelay(
+                                2 * shortTimeoutFlags.getFledgeAuctionServerOverallTimeoutMs(),
+                                new Returns(
+                                        FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))));
+
+        GetAdSelectionDataRunner getAdSelectionDataRunner =
+                new GetAdSelectionDataRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDao,
+                        mAdSelectionServiceFilterMock,
+                        mAdFiltererSpy,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        shortTimeoutFlags,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(getAdSelectionDataRunner, inputParams);
+
+        Assert.assertFalse(callback.mIsSuccess);
+        assertNotNull(callback.mFledgeErrorResponse);
+        assertEquals(STATUS_TIMEOUT, callback.mFledgeErrorResponse.getStatusCode());
+    }
+
     private void createAndPersistDBCustomAudiencesWithAdRenderId() {
         Map<String, AdTechIdentifier> nameAndBuyers =
                 Map.of(
@@ -309,6 +367,11 @@ public class GetAdSelectionDataRunnerTest {
     }
 
     public static class GetAdSelectionDataRunnerTestFlags implements Flags {
+        @Override
+        public long getFledgeAuctionServerOverallTimeoutMs() {
+            return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+        }
+
         @Override
         public long getFledgeCustomAudienceActiveTimeWindowInMs() {
             return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;

@@ -311,6 +311,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdFilteringFeatureFactory.getAdFilterer(),
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
+                                    mScheduledExecutor,
                                     mFlags,
                                     callingUid,
                                     devContext);
@@ -350,6 +351,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
+        final long overallTimeout = mFlags.getFledgeAuctionServerOverallTimeoutMs();
         final boolean forceSearchOnAbsentOwner =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
@@ -378,8 +380,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdSelectionServiceFilter,
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
+                                    mScheduledExecutor,
                                     callingUid,
                                     devContext,
+                                    overallTimeout,
                                     forceSearchOnAbsentOwner,
                                     limits);
                     runner.run(inputParams, callback);
@@ -584,23 +588,46 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
 
-        ImpressionReporter reporter =
-                new ImpressionReporter(
-                        mContext,
-                        mLightweightExecutor,
-                        mBackgroundExecutor,
-                        mScheduledExecutor,
-                        mAdSelectionEntryDao,
-                        mCustomAudienceDao,
-                        mAdServicesHttpsClient,
-                        devContext,
-                        mAdServicesLogger,
-                        mFlags,
-                        mAdSelectionServiceFilter,
-                        mFledgeAuthorizationFilter,
-                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                        callingUid);
-        reporter.reportImpression(requestParams, callback);
+        // ImpressionReporter enables Auction Server flow reporting and sets the stage for Phase 2
+        // in go/rb-rm-unified-flow-reporting whereas ImpressionReporterLegacy is the logic before
+        // Phase 1. FLEDGE_AUCTION_SERVER_REPORTING_ENABLED flag controls which logic is called.
+        if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForReportImpression)) {
+            ImpressionReporter reporter =
+                    new ImpressionReporter(
+                            mContext,
+                            mLightweightExecutor,
+                            mBackgroundExecutor,
+                            mScheduledExecutor,
+                            mAdSelectionEntryDao,
+                            mCustomAudienceDao,
+                            mAdServicesHttpsClient,
+                            devContext,
+                            mAdServicesLogger,
+                            mFlags,
+                            mAdSelectionServiceFilter,
+                            mFledgeAuthorizationFilter,
+                            mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                            callingUid);
+            reporter.reportImpression(requestParams, callback);
+        } else {
+            ImpressionReporterLegacy reporter =
+                    new ImpressionReporterLegacy(
+                            mContext,
+                            mLightweightExecutor,
+                            mBackgroundExecutor,
+                            mScheduledExecutor,
+                            mAdSelectionEntryDao,
+                            mCustomAudienceDao,
+                            mAdServicesHttpsClient,
+                            devContext,
+                            mAdServicesLogger,
+                            mFlags,
+                            mAdSelectionServiceFilter,
+                            mFledgeAuthorizationFilter,
+                            mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                            callingUid);
+            reporter.reportImpression(requestParams, callback);
+        }
     }
 
     @Override

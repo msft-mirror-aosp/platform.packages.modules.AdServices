@@ -2068,6 +2068,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeAuctionServerOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS,
+                FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerBackgroundKeyFetchJobEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3784,6 +3792,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS
                         + " = "
                         + getFledgeAuctionServerAuctionKeyFetchTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getFledgeAuctionServerOverallTimeoutMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED
