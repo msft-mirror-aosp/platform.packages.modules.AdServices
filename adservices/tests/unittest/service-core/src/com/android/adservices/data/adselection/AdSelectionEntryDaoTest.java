@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static android.adservices.adselection.DataHandlersFixture.TEST_PACKAGE_NAME_1;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -633,7 +635,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID_3);
         DBAdSelectionEntry expected = toAdSelectionEntry(DB_AD_CONTEXTUAL_AD_SELECTION);
 
-        assertEquals(adSelectionEntry, expected);
+        assertEquals(expected, adSelectionEntry);
     }
 
     @Test
@@ -645,7 +647,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID_3);
         DBAdSelectionEntry expected = toAdSelectionEntry(DB_AD_CONTEXTUAL_AD_SELECTION);
 
-        assertEquals(adSelectionEntry, expected);
+        assertEquals(expected, adSelectionEntry);
     }
 
     @Test
@@ -812,7 +814,7 @@ public class AdSelectionEntryDaoTest {
                 toAdSelectionEntry(DB_AD_SELECTION_1, DB_BUYER_DECISION_LOGIC_1);
 
         assertEquals(1, adSelectionEntries.size());
-        assertEquals(adSelectionEntries.get(0), expected);
+        assertEquals(expected, adSelectionEntries.get(0));
     }
 
     @Test
@@ -1605,20 +1607,8 @@ public class AdSelectionEntryDaoTest {
                 DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS.getSellerContextualSignals(),
                 actualComputationData.getSellerContextualSignals().toString());
         assertEquals(
-                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS
-                        .getCustomAudienceSignals()
-                        .getActivationTime(),
-                actualComputationData.getWinningCaActivationTime());
-        assertEquals(
-                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS
-                        .getCustomAudienceSignals()
-                        .getExpirationTime(),
-                actualComputationData.getWinningCaExpirationTime());
-        assertEquals(
-                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS
-                        .getCustomAudienceSignals()
-                        .getUserBiddingSignals(),
-                actualComputationData.getWinningCaUserBiddingSignals());
+                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS.getCustomAudienceSignals(),
+                actualComputationData.getWinningCustomAudienceSignals());
     }
 
     @Test
@@ -1865,6 +1855,30 @@ public class AdSelectionEntryDaoTest {
                         mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
                                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
                 .isEmpty();
+    }
+
+    @Test
+    public void testDoesAdSelectionMatchingCallerPackageNameExist() {
+        assertFalse(
+                mAdSelectionEntryDao
+                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
+                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_1,
+                DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
+                DataHandlersFixture.CREATION_INSTANT_1);
+        assertTrue(
+                mAdSelectionEntryDao
+                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
+                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
     }
 
     @Test
