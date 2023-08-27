@@ -55,6 +55,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName,
             IBinder clientApplicationThreadBinder,
             String sdkName,
+            SandboxLatencyInfo sandboxLatencyInfo,
             long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {}

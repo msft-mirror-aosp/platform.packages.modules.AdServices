@@ -25,6 +25,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 /** Room based database for Ad Selection Debug Reporting. */
@@ -37,7 +38,8 @@ public abstract class AdSelectionDebugReportingDatabase extends RoomDatabase {
 
     public static final int DATABASE_VERSION = 1;
 
-    public static final String DATABASE_NAME = "adselection_debug_reporting.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("adselection_debug_reporting.db");
 
     private static volatile AdSelectionDebugReportingDatabase sSingleton = null;
 

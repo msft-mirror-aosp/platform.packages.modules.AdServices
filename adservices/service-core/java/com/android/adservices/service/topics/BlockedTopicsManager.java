@@ -409,6 +409,8 @@ public class BlockedTopicsManager {
 
     // Perform a one-time migration to migrate existing PPAPI blocked topics.
     @VisibleForTesting
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     static void mayMigratePpApiBlockedTopicsToSystemService(
             @NonNull Context context,
             @NonNull TopicsDao topicsDao,

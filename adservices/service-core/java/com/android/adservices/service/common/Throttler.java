@@ -88,6 +88,8 @@ public class Throttler {
 
         // Key to throttle Measurement Register Sources API
         MEASUREMENT_API_REGISTER_SOURCES,
+        // Key to throttle fetch signal updates API
+        PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES,
 
         // Key to throttle Topics API based on the App Package Name.
         TOPICS_API_APP_PACKAGE_NAME,
@@ -194,6 +196,9 @@ public class Throttler {
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(
                 ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM, defaultPermitsPerSecond);
+
+        mRateLimitPerApiMap.put(
+                ApiKey.PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES, defaultPermitsPerSecond);
 
         mRateLimitPerApiMap.put(
                 ApiKey.MEASUREMENT_API_DELETION_REGISTRATION, defaultPermitsPerSecond);

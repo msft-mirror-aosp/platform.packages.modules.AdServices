@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
@@ -62,6 +63,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -107,7 +110,6 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
@@ -182,6 +184,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 
 public class AdSelectionServiceImplTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -285,7 +288,6 @@ public class AdSelectionServiceImplTest {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EncryptionContextDao mEncryptionContextDao;
-    private AuctionServerAdSelectionDao mAuctionServerAdSelectionDao;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
     private Uri mBiddingLogicUri;
@@ -338,7 +340,6 @@ public class AdSelectionServiceImplTest {
                         .build();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mEncryptionKeyDao = serverDb.encryptionKeyDao();
-        mAuctionServerAdSelectionDao = serverDb.auctionServerAdSelectionDao();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -477,7 +478,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -595,7 +595,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -652,18 +651,20 @@ public class AdSelectionServiceImplTest {
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
         String sellerDecisionLogicJs =
-                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
-                        + " \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                "function reportResult(ad_selection_config, render_uri, bid,"
+                        + " contextual_signals) {\n"
+                        + "    let reporting_address = '"
                         + sellerReportingUri
-                        + "' } };\n"
+                        + "';\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri':\n"
+                        + "                reporting_address + '?dataVersion=' +"
+                        + " contextual_signals.dataVersion} };\n"
                         + "}";
 
         String buyerDecisionLogicJs =
-                "function reportWin(ad_selection_signals, per_buyer_signals, "
-                        + "signals_for_buyer,\n"
-                        + "    contextual_signals, custom_audience_reporting_signals) {\n"
+                "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) {\n"
                         + "    let reporting_address = '"
                         + buyerReportingUri
                         + "';\n"
@@ -688,11 +689,15 @@ public class AdSelectionServiceImplTest {
         BuyerContextualSignals buyerContextualSignals =
                 BuyerContextualSignals.builder().setDataVersion(DATA_VERSION_1).build();
 
+        SellerContextualSignals sellerContextualSignals =
+                SellerContextualSignals.builder().setDataVersion(DATA_VERSION_2).build();
+
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(mCustomAudienceSignals)
                         .setBuyerContextualSignals(buyerContextualSignals.toString())
+                        .setSellerContextualSignals(sellerContextualSignals.toString())
                         .setBiddingLogicUri(biddingLogicUri)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -716,7 +721,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -755,8 +759,14 @@ public class AdSelectionServiceImplTest {
                         + "?dataVersion="
                         + buyerContextualSignals.getDataVersion().toString();
 
+        String sellerReportingPathWithDataVersion =
+                mSellerReportingPath
+                        + "?dataVersion="
+                        + sellerContextualSignals.getDataVersion().toString();
+
         assertThat(notifications)
-                .containsExactly(mSellerReportingPath, buyerReportingPathWithDataVersion);
+                .containsExactly(
+                        sellerReportingPathWithDataVersion, buyerReportingPathWithDataVersion);
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -838,7 +848,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -954,7 +963,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1068,7 +1076,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1188,7 +1195,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1224,7 +1230,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(STATUS_INTERNAL_ERROR),
+                        eq(STATUS_SUCCESS),
                         anyInt());
     }
 
@@ -1305,7 +1311,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1341,7 +1346,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(STATUS_INTERNAL_ERROR),
+                        eq(STATUS_SUCCESS),
                         anyInt());
     }
 
@@ -1428,7 +1433,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1599,7 +1603,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1740,7 +1743,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1899,7 +1901,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2064,7 +2065,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2220,7 +2220,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2365,7 +2364,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2514,7 +2512,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2678,7 +2675,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2850,7 +2846,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2991,7 +2986,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3095,7 +3089,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3198,7 +3191,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3307,7 +3299,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3411,7 +3402,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3510,7 +3500,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3608,7 +3597,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3707,7 +3695,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3826,7 +3813,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3968,7 +3954,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4060,7 +4045,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4117,7 +4101,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4169,7 +4152,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4226,7 +4208,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4294,7 +4275,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4358,7 +4338,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4426,7 +4405,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4495,7 +4473,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4605,7 +4582,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4717,7 +4693,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4825,7 +4800,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4930,7 +4904,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4964,7 +4937,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5012,7 +4984,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5074,7 +5045,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5137,7 +5107,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5191,7 +5160,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5247,7 +5215,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5297,7 +5264,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5351,7 +5317,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5448,7 +5413,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5559,7 +5523,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5674,7 +5637,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5794,7 +5756,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5896,7 +5857,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5998,7 +5958,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6128,7 +6087,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6239,7 +6197,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6352,7 +6309,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6486,7 +6442,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6614,7 +6569,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6727,7 +6681,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6788,7 +6741,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6848,7 +6800,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6902,7 +6853,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6962,7 +6912,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7034,7 +6983,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7100,7 +7048,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7170,7 +7117,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7239,7 +7185,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7357,7 +7302,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7469,7 +7413,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7586,7 +7529,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7721,7 +7663,6 @@ public class AdSelectionServiceImplTest {
                         mFrequencyCapDao,
                         mEncryptionContextDao,
                         mEncryptionKeyDao,
-                        mAuctionServerAdSelectionDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -8325,6 +8266,122 @@ public class AdSelectionServiceImplTest {
                         eq(0));
     }
 
+    @Test
+    public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOff()
+            throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        boolean enrollmentCheck = false;
+        Flags unifiedFlowReportingDisabled =
+                new AdSelectionServicesTestsFlags(enrollmentCheck) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return false;
+                    }
+                };
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+        AdSelectionEntryDao adSelectionEntryDaoSpy = spy(mAdSelectionEntryDao);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        unifiedFlowReportingDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        callReportImpression(adSelectionService, input, true);
+
+        verify(adSelectionEntryDaoSpy, times(1)).doesAdSelectionIdExist(AD_SELECTION_ID);
+        verify(adSelectionEntryDaoSpy, times(0))
+                .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID, TEST_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOn()
+            throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        boolean enrollmentCheck = false;
+        Flags unifiedFlowReportingEnabled =
+                new AdSelectionServicesTestsFlags(enrollmentCheck) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+                };
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+        AdSelectionEntryDao adSelectionEntryDaoSpy = spy(mAdSelectionEntryDao);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mEncryptionContextDao,
+                        mEncryptionKeyDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        unifiedFlowReportingEnabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptor);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        callReportImpression(adSelectionService, input, true);
+
+        verify(adSelectionEntryDaoSpy, times(1))
+                .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID, TEST_PACKAGE_NAME);
+        verify(adSelectionEntryDaoSpy, times(0)).doesAdSelectionIdExist(AD_SELECTION_ID);
+    }
+
     private AdSelectionServiceImpl generateAdSelectionServiceImpl() {
         return new AdSelectionServiceImpl(
                 mAdSelectionEntryDao,
@@ -8333,7 +8390,6 @@ public class AdSelectionServiceImplTest {
                 mFrequencyCapDao,
                 mEncryptionContextDao,
                 mEncryptionKeyDao,
-                mAuctionServerAdSelectionDao,
                 mClientSpy,
                 mDevContextFilterMock,
                 mLightweightExecutorService,

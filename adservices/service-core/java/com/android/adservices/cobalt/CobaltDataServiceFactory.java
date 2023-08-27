@@ -21,6 +21,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.Room;
 
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
 
@@ -35,7 +36,7 @@ import java.util.concurrent.ExecutorService;
  * explicit.
  */
 final class CobaltDataServiceFactory {
-    private static final String DB_NAME = "cobalt_db";
+    private static final String DB_NAME = FileCompatUtils.getAdservicesFilename("cobalt_db");
 
     static DataService createDataService(
             @NonNull Context context, @NonNull ExecutorService executorService) {

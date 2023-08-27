@@ -35,6 +35,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,6 +185,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsDisableDirectAppCalls() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS,
+                /* defaultValue */ TOPICS_DISABLE_DIRECT_APP_CALLS);
+    }
+
+    @Override
     public int getClassifierType() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -245,11 +255,13 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getTopicsCobaltLoggingEnabled() {
+        // We check the getCobaltLoggingEnabled first.
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
-                /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+        return getCobaltLoggingEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                        /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
     }
 
     @Override
@@ -268,6 +280,37 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT,
                 /* defaultValue */ ADSERVICES_RELEASE_STAGE_FOR_COBALT);
+    }
+
+    @Override
+    public long getCobaltLoggingJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        long cobaltLoggingJobPeriodMs =
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS,
+                        /* defaultValue */ COBALT_LOGGING_JOB_PERIOD_MS);
+        if (cobaltLoggingJobPeriodMs < 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "cobaltLoggingJobPeriodMs=%d. cobaltLoggingJobPeriodMs should >= 0",
+                            cobaltLoggingJobPeriodMs));
+        }
+        return cobaltLoggingJobPeriodMs;
+    }
+
+    @Override
+    public boolean getCobaltLoggingEnabled() {
+        // We check the Global Kill switch first. As a result, it overrides all other kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return !getGlobalKillSwitch()
+                && SystemProperties.getBoolean(
+                        getSystemPropertyName(FlagsConstants.KEY_COBALT_LOGGING_ENABLED),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants.KEY_COBALT_LOGGING_ENABLED,
+                                /* defaultValue */ COBALT_LOGGING_ENABLED));
     }
 
     @Override
@@ -1603,17 +1646,55 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeAuctionServerKillSwitch() {
+    public boolean getProtectedSignalsServiceKillSwitch() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
+                                /* defaultValue */ PROTECTED_SIGNALS_SERVICE_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerKillSwitch() {
+        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
+        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
+        // On device and Server Auction Kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
                                 /* defaultValue */ FLEDGE_AUCTION_SERVER_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getFledgeOnDeviceAuctionKillSwitch() {
+        // We check the Global Kill switch and the Fledge Select Ads Kill switch.
+        // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
+        // On device and Server Auction Kill switches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || getFledgeSelectAdsKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(
+                                FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants
+                                        .KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                                /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
     }
 
     @Override
@@ -1632,6 +1713,15 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST,
                 /* defaultValue */ MSMT_API_APP_ALLOW_LIST);
+    }
+
+    @Override
+    public String getMsmtApiAppBlockList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST,
+                /* defaultValue */ MSMT_API_APP_BLOCK_LIST);
     }
 
     // AdServices APK SHA certs.
@@ -1855,11 +1945,63 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED,
+                FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED);
+    }
+
+    @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                FLEDGE_AUCTION_SERVER_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForReportEvent() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION);
     }
 
     @Override
@@ -2219,6 +2361,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeDataVersionHeaderEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED,
+                /* defaultValue */ FLEDGE_DATA_VERSION_HEADER_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -2562,6 +2712,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getMeasurementMinimumAggregatableReportWindowInSeconds() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS,
+                /* defaultValue */ MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS);
+    }
+
+    @Override
     public int getMeasurementMaxSourcesPerPublisher() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -2863,6 +3022,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST
                         + " = "
                         + getMsmtApiAppAllowList());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST
+                        + " = "
+                        + getMsmtApiAppBlockList());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -2931,6 +3095,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_GLOBAL_BLOCKED_TOPIC_IDS
                         + " = "
                         + getGlobalBlockedTopicIds());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS
+                        + " = "
+                        + getTopicsDisableDirectAppCalls());
 
         writer.println("==== AdServices PH Flags Dump Topics Classifier related flags ====");
         writer.println(
@@ -3165,6 +3334,12 @@ public final class PhFlags implements Flags {
                         + getMeasurementMinimumEventReportWindowInSeconds());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_MINIMUM_AGGREGATABLE_REPORT_WINDOW_IN_SECONDS
+                        + " = "
+                        + getMeasurementMinimumAggregatableReportWindowInSeconds());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
                         + " = "
                         + getWebContextClientAppAllowList());
@@ -3319,6 +3494,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH
                         + " = "
                         + getFledgeAuctionServerKillSwitch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH
+                        + " = "
+                        + getFledgeOnDeviceAuctionKillSwitch());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
@@ -3519,6 +3699,31 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS
                         + " = "
                         + getAdSelectionSelectingOutcomeTimeoutMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION
+                        + " = "
+                        + getFledgeAuctionServerEnabledForReportImpression());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
+                        + " = "
+                        + getFledgeAuctionServerEnabledForReportEvent());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM
+                        + " = "
+                        + getFledgeAuctionServerEnabledForUpdateHistogram());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION
+                        + " = "
+                        + getFledgeAuctionServerEnabledForSelectAdsMediation());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
@@ -3731,10 +3936,15 @@ public final class PhFlags implements Flags {
                         + getFledgeAuctionServerPayloadBucketSizes());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES
                         + " = "
-                        + getAdSelectionOffDeviceRequestCompressionEnabled());
+                        + getFledgeAuctionServerPayloadBucketSizes());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE
@@ -3768,6 +3978,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH
                         + " = "
                         + getFledgeEventLevelDebugReportingMaxItemsPerBatch());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH
+                        + " = "
+                        + getProtectedSignalsServiceKillSwitch());
         writer.println("==== AdServices PH Flags Throttling Related Flags ====");
         writer.println(
                 "\t"
@@ -3840,6 +4055,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED
                         + " = "
                         + getFledgeCpcBillingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED
+                        + " = "
+                        + getFledgeDataVersionHeaderEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED

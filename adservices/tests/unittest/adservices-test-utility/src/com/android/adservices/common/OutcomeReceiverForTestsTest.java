@@ -18,6 +18,9 @@ package com.android.adservices.common;
 
 import static org.junit.Assert.assertThrows;
 
+import android.os.SystemClock;
+import android.util.Log;
+
 import com.google.common.truth.Expect;
 
 import org.junit.Rule;
@@ -25,20 +28,41 @@ import org.junit.Test;
 
 public final class OutcomeReceiverForTestsTest {
 
+    private static final String TAG = OutcomeReceiverForTestsTest.class.getSimpleName();
+
     private static final String RESULT = "Saul Goodman!";
     private static final Exception ERROR = new UnsupportedOperationException("D'OH!");
+
+    private static final int TIMEOUT_MS = 200;
+
+    private static int sThreadId;
 
     @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule public final Expect expect = Expect.create();
 
     @Test
-    public void testOnResult() {
+    public void testOnResult() throws Exception {
+        onResultTest(/* await= */ false);
+    }
+
+    @Test
+    public void testOnResult_await() throws Exception {
+        onResultTest(/* await= */ true);
+    }
+
+    private void onResultTest(boolean await) throws InterruptedException {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
 
-        receiver.onResult(RESULT);
+        String result;
+        if (await) {
+            runAsync(TIMEOUT_MS, () -> receiver.onResult(RESULT));
+            result = receiver.assertSuccess(TIMEOUT_MS * 3);
+        } else {
+            receiver.onResult(RESULT);
+            result = receiver.assertSuccess();
+        }
 
-        String result = receiver.assertSuccess();
         expect.withMessage("assertSuccess()").that(result).isEqualTo(RESULT);
         expect.withMessage("getResult()").that(receiver.getResult()).isEqualTo(RESULT);
         expect.withMessage("getError()").that(receiver.getError()).isNull();
@@ -81,12 +105,27 @@ public final class OutcomeReceiverForTestsTest {
     }
 
     @Test
-    public void testOnError() {
+    public void testOnError() throws Exception {
+        onErrorTest(/* await= */ false);
+    }
+
+    @Test
+    public void testOnError_await() throws Exception {
+        onErrorTest(/* await= */ true);
+    }
+
+    private void onErrorTest(boolean await) throws InterruptedException {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
 
-        receiver.onError(ERROR);
+        Exception error;
+        if (await) {
+            runAsync(TIMEOUT_MS, () -> receiver.onError(ERROR));
+            error = receiver.assertFailure(ERROR.getClass(), TIMEOUT_MS * 3);
+        } else {
+            receiver.onError(ERROR);
+            error = receiver.assertFailure(ERROR.getClass());
+        }
 
-        Exception error = receiver.assertFailure(ERROR.getClass());
         expect.withMessage("assertFailure()").that(error).isSameInstanceAs(ERROR);
         expect.withMessage("getError()").that(receiver.getError()).isSameInstanceAs(ERROR);
         expect.withMessage("getResult()").that(receiver.getResult()).isNull();
@@ -119,5 +158,20 @@ public final class OutcomeReceiverForTestsTest {
                 .that(exception)
                 .hasMessageThat()
                 .contains("onError(" + ERROR + ") called after onResult(" + RESULT + ")");
+    }
+
+    private static void runAsync(long timeoutMs, Runnable r) {
+        Thread t =
+                new Thread(
+                        () -> {
+                            Log.v(TAG, "Sleeping " + timeoutMs + "ms on " + Thread.currentThread());
+                            SystemClock.sleep(timeoutMs);
+                            Log.v(TAG, "Woke up");
+                            r.run();
+                            Log.v(TAG, "Done");
+                        },
+                        TAG + ".runAsync()_thread#" + ++sThreadId);
+        Log.v(TAG, "Starting thread " + t);
+        t.start();
     }
 }

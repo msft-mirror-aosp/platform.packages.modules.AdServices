@@ -31,5 +31,6 @@ public class UpdateOutputTest {
         assertEquals(new HashSet<>(), updateOutput.getKeysTouched());
         assertEquals(new ArrayList<>(), updateOutput.getToRemove());
         assertEquals(new ArrayList<>(), updateOutput.getToAdd());
+        assertEquals(null, updateOutput.getUpdateEncoderEvent());
     }
 }

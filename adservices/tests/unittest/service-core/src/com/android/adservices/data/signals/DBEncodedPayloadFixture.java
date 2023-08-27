@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.signals;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
 public class DBEncodedPayloadFixture {
@@ -27,8 +28,12 @@ public class DBEncodedPayloadFixture {
     }
 
     public static DBEncodedPayload.Builder anEncodedPayloadBuilder() {
+        return anEncodedPayloadBuilder(CommonFixture.VALID_BUYER_1);
+    }
+
+    public static DBEncodedPayload.Builder anEncodedPayloadBuilder(AdTechIdentifier buyer) {
         return DBEncodedPayload.builder()
-                .setBuyer(CommonFixture.VALID_BUYER_1)
+                .setBuyer(buyer)
                 .setVersion(1)
                 .setCreationTime(CommonFixture.FIXED_NOW)
                 .setEncodedPayload(SAMPLE_PAYLOAD);

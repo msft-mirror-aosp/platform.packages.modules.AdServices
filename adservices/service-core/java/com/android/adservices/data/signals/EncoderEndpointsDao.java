@@ -40,4 +40,10 @@ public interface EncoderEndpointsDao {
      */
     @Query("SELECT * FROM encoder_endpoints WHERE buyer = :buyer")
     DBEncoderEndpoint getEndpoint(AdTechIdentifier buyer);
+
+    /**
+     * @param buyer Ad-tech identifier whose encoder endpoint we want to delete
+     */
+    @Query("DELETE FROM encoder_endpoints WHERE buyer = :buyer")
+    void deleteEncoderEndpoint(AdTechIdentifier buyer);
 }

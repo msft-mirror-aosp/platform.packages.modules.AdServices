@@ -32,15 +32,16 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,10 +56,12 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private String mTestName;
 
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
     @BeforeClass
     public static void classSetup() {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
     }
 
@@ -82,8 +85,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
     @After
     public void teardown() throws Exception {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());

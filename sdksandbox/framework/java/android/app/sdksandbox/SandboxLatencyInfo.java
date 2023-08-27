@@ -61,17 +61,23 @@ public final class SandboxLatencyInfo implements Parcelable {
             prefix = "SANDBOX_STATUS_",
             value = {
                 SANDBOX_STATUS_SUCCESS,
+                SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_SANDBOX,
                 SANDBOX_STATUS_FAILED_AT_SANDBOX,
                 SANDBOX_STATUS_FAILED_AT_SDK,
+                SANDBOX_STATUS_FAILED_AT_SANDBOX_TO_SYSTEM_SERVER,
+                SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_SANDBOX_TO_APP,
                 SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_APP,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface SandboxStatus {}
 
     public static final int SANDBOX_STATUS_SUCCESS = 1;
-    public static final int SANDBOX_STATUS_FAILED_AT_SANDBOX = 2;
-    public static final int SANDBOX_STATUS_FAILED_AT_SDK = 3;
-    public static final int SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_APP = 4;
+    public static final int SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_SANDBOX = 2;
+    public static final int SANDBOX_STATUS_FAILED_AT_SANDBOX = 3;
+    public static final int SANDBOX_STATUS_FAILED_AT_SDK = 4;
+    public static final int SANDBOX_STATUS_FAILED_AT_SANDBOX_TO_SYSTEM_SERVER = 5;
+    public static final int SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_SANDBOX_TO_APP = 6;
+    public static final int SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_APP = 7;
 
     private final @Method int mMethod;
     private long mTimeSystemServerCalledSandbox = -1;
@@ -79,6 +85,7 @@ public final class SandboxLatencyInfo implements Parcelable {
     private long mTimeSandboxCalledSdk = -1;
     private long mTimeSdkCallCompleted = -1;
     private long mTimeSandboxCalledSystemServer = -1;
+    private long mTimeSystemServerReceivedCallFromSandbox = -1;
     private long mTimeSystemServerCalledApp = -1;
     private long mTimeAppReceivedCallFromSystemServer = -1;
     private @SandboxStatus int mSandboxStatus = SANDBOX_STATUS_SUCCESS;
@@ -109,6 +116,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         mTimeSandboxCalledSdk = in.readLong();
         mTimeSdkCallCompleted = in.readLong();
         mTimeSandboxCalledSystemServer = in.readLong();
+        mTimeSystemServerReceivedCallFromSandbox = in.readLong();
         mTimeSystemServerCalledApp = in.readLong();
         mTimeAppReceivedCallFromSystemServer = in.readLong();
         mSandboxStatus = in.readInt();
@@ -126,6 +134,8 @@ public final class SandboxLatencyInfo implements Parcelable {
                 && mTimeSandboxCalledSdk == that.mTimeSandboxCalledSdk
                 && mTimeSdkCallCompleted == that.mTimeSdkCallCompleted
                 && mTimeSandboxCalledSystemServer == that.mTimeSandboxCalledSystemServer
+                && mTimeSystemServerReceivedCallFromSandbox
+                        == that.mTimeSystemServerReceivedCallFromSandbox
                 && mTimeSystemServerCalledApp == that.mTimeSystemServerCalledApp
                 && mTimeAppReceivedCallFromSystemServer == that.mTimeAppReceivedCallFromSystemServer
                 && mSandboxStatus == that.mSandboxStatus;
@@ -140,6 +150,7 @@ public final class SandboxLatencyInfo implements Parcelable {
                 mTimeSandboxCalledSdk,
                 mTimeSdkCallCompleted,
                 mTimeSandboxCalledSystemServer,
+                mTimeSystemServerReceivedCallFromSandbox,
                 mTimeSystemServerCalledApp,
                 mTimeAppReceivedCallFromSystemServer,
                 mSandboxStatus);
@@ -153,6 +164,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         out.writeLong(mTimeSandboxCalledSdk);
         out.writeLong(mTimeSdkCallCompleted);
         out.writeLong(mTimeSandboxCalledSystemServer);
+        out.writeLong(mTimeSystemServerReceivedCallFromSandbox);
         out.writeLong(mTimeSystemServerCalledApp);
         out.writeLong(mTimeAppReceivedCallFromSystemServer);
         out.writeInt(mSandboxStatus);
@@ -200,6 +212,11 @@ public final class SandboxLatencyInfo implements Parcelable {
         mTimeSandboxCalledSystemServer = timeSandboxCalledSystemServer;
     }
 
+    public void setTimeSystemServerReceivedCallFromSandbox(
+            long timeSystemServerReceivedCallFromSandbox) {
+        mTimeSystemServerReceivedCallFromSandbox = timeSystemServerReceivedCallFromSandbox;
+    }
+
     public void setTimeSystemServerCalledApp(long timeSystemServerCalledApp) {
         mTimeSystemServerCalledApp = timeSystemServerCalledApp;
     }
@@ -212,36 +229,45 @@ public final class SandboxLatencyInfo implements Parcelable {
         mSandboxStatus = sandboxStatus;
     }
 
+    /** Returns latency of the IPC call from System Server to Sandbox. */
+    public int getSystemServerToSandboxLatency() {
+        return getLatency(mTimeSystemServerCalledSandbox, mTimeSandboxReceivedCallFromSystemServer);
+    }
+
     /** Returns latency of the Sandbox stage of the call. */
     public int getSandboxLatency() {
-        int latencySandbox =
-                (int) (mTimeSandboxCalledSystemServer - mTimeSandboxReceivedCallFromSystemServer);
-        final int latencySdk = getSdkLatency();
-        if (latencySdk != -1) {
-            latencySandbox -= latencySdk;
+        int sandboxLatency =
+                getLatency(
+                        mTimeSandboxReceivedCallFromSystemServer, mTimeSandboxCalledSystemServer);
+        int sdkLatency = getSdkLatency();
+        if (sdkLatency != -1) {
+            sandboxLatency -= sdkLatency;
         }
-        return latencySandbox;
+        return sandboxLatency;
     }
 
     /** Returns latency of the SDK stage of the call. */
     public int getSdkLatency() {
-        if (mTimeSandboxCalledSdk != -1 && mTimeSdkCallCompleted != -1) {
-            return ((int) (mTimeSdkCallCompleted - mTimeSandboxCalledSdk));
-        }
-        return -1;
+        return getLatency(mTimeSandboxCalledSdk, mTimeSdkCallCompleted);
     }
 
-    /** Returns latency of the IPC call from System Server to Sandbox. */
-    public int getLatencySystemServerToSandbox() {
-        return ((int) (mTimeSandboxReceivedCallFromSystemServer - mTimeSystemServerCalledSandbox));
+    /** Returns latency of the Sandbox call to System Server. */
+    public int getSandboxToSystemServerLatency() {
+        return getLatency(mTimeSandboxCalledSystemServer, mTimeSystemServerReceivedCallFromSandbox);
+    }
+
+    /** Returns latency of the System Server stage of the call that was received from Sandbox. */
+    public int getSystemServerSandboxToAppLatency() {
+        return getLatency(mTimeSystemServerReceivedCallFromSandbox, mTimeSystemServerCalledApp);
     }
 
     /** Returns latency of the IPC call from System Server to App. */
     public int getSystemServerToAppLatency() {
-        if (mTimeSystemServerCalledApp != -1 && mTimeAppReceivedCallFromSystemServer != -1) {
-            return ((int) (mTimeAppReceivedCallFromSystemServer - mTimeSystemServerCalledApp));
-        }
-        return -1;
+        return getLatency(mTimeSystemServerCalledApp, mTimeAppReceivedCallFromSystemServer);
+    }
+
+    public boolean isSuccessfulAtSystemServerToSandbox() {
+        return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_SANDBOX;
     }
 
     public boolean isSuccessfulAtSdk() {
@@ -252,7 +278,22 @@ public final class SandboxLatencyInfo implements Parcelable {
         return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_SANDBOX;
     }
 
+    public boolean isSuccessfulAtSandboxToSystemServer() {
+        return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_SANDBOX_TO_SYSTEM_SERVER;
+    }
+
+    public boolean isSuccessfulAtSystemServerSandboxToApp() {
+        return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_SANDBOX_TO_APP;
+    }
+
     public boolean isSuccessfulAtSystemServerToApp() {
         return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_APP;
+    }
+
+    private int getLatency(long timeEventStarted, long timeEventFinished) {
+        if (timeEventStarted != -1 && timeEventFinished != -1) {
+            return ((int) (timeEventFinished - timeEventStarted));
+        }
+        return -1;
     }
 }
