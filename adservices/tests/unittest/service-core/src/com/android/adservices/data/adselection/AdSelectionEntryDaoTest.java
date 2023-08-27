@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static android.adservices.adselection.DataHandlersFixture.TEST_PACKAGE_NAME_1;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +32,7 @@ import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DataHandlersFixture;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.database.sqlite.SQLiteConstraintException;
@@ -632,7 +635,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID_3);
         DBAdSelectionEntry expected = toAdSelectionEntry(DB_AD_CONTEXTUAL_AD_SELECTION);
 
-        assertEquals(adSelectionEntry, expected);
+        assertEquals(expected, adSelectionEntry);
     }
 
     @Test
@@ -644,7 +647,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID_3);
         DBAdSelectionEntry expected = toAdSelectionEntry(DB_AD_CONTEXTUAL_AD_SELECTION);
 
-        assertEquals(adSelectionEntry, expected);
+        assertEquals(expected, adSelectionEntry);
     }
 
     @Test
@@ -811,7 +814,7 @@ public class AdSelectionEntryDaoTest {
                 toAdSelectionEntry(DB_AD_SELECTION_1, DB_BUYER_DECISION_LOGIC_1);
 
         assertEquals(1, adSelectionEntries.size());
-        assertEquals(adSelectionEntries.get(0), expected);
+        assertEquals(expected, adSelectionEntries.get(0));
     }
 
     @Test
@@ -1385,10 +1388,10 @@ public class AdSelectionEntryDaoTest {
     @Test
     public void test_containsAdSelectionId_idPresent_returnsTrue() {
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
-                        DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1.getAdSelectionId()));
+                        DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1.getAdSelectionId()));
     }
 
     @Test
@@ -1404,7 +1407,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
                         AD_SELECTION_ID_1));
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
                         AD_SELECTION_ID_1));
@@ -1415,7 +1418,7 @@ public class AdSelectionEntryDaoTest {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
 
         assertTrue(initializationStatus);
@@ -1424,7 +1427,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.getDBAdSelectionInitializationForId(AD_SELECTION_ID_1);
 
         assertEquals(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1,
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1,
                 actualAdSelectionInitialization);
     }
 
@@ -1435,7 +1438,7 @@ public class AdSelectionEntryDaoTest {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
 
         assertFalse(initializationStatus);
@@ -1448,14 +1451,14 @@ public class AdSelectionEntryDaoTest {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
         assertTrue(initializationStatus);
 
         initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
                         AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1,
+                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
                         DataHandlersFixture.CREATION_INSTANT_1);
 
         assertFalse(initializationStatus);
@@ -1465,7 +1468,7 @@ public class AdSelectionEntryDaoTest {
     public void test_insertDBAdSelectionResult_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_1));
         mAdSelectionEntryDao.insertDBAdSelectionResult(
@@ -1488,7 +1491,7 @@ public class AdSelectionEntryDaoTest {
     public void test_persistAdSelectionResultForCustomAudienceAllFields_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_1));
 
@@ -1510,7 +1513,7 @@ public class AdSelectionEntryDaoTest {
     public void test_persistAdSelectionResultForCAOnlyName_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_1));
 
@@ -1532,7 +1535,7 @@ public class AdSelectionEntryDaoTest {
     public void test_insertDBReportingData_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         assertNull(mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1));
         mAdSelectionEntryDao.insertDBReportingData(
@@ -1553,7 +1556,7 @@ public class AdSelectionEntryDaoTest {
     public void test_persistReportingData_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         assertNull(mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1));
 
@@ -1569,7 +1572,7 @@ public class AdSelectionEntryDaoTest {
     public void test_getReportingDataForId_idSupportsUris_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         mAdSelectionEntryDao.persistReportingData(
                 AD_SELECTION_ID_1, DataHandlersFixture.REPORTING_DATA_WITH_URIS);
@@ -1604,20 +1607,8 @@ public class AdSelectionEntryDaoTest {
                 DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS.getSellerContextualSignals(),
                 actualComputationData.getSellerContextualSignals().toString());
         assertEquals(
-                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS
-                        .getCustomAudienceSignals()
-                        .getActivationTime(),
-                actualComputationData.getWinningCaActivationTime());
-        assertEquals(
-                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS
-                        .getCustomAudienceSignals()
-                        .getExpirationTime(),
-                actualComputationData.getWinningCaExpirationTime());
-        assertEquals(
-                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS
-                        .getCustomAudienceSignals()
-                        .getUserBiddingSignals(),
-                actualComputationData.getWinningCaUserBiddingSignals());
+                DB_AD_SELECTION_1_WITH_SELLER_CONTEXTUAL_SIGNALS.getCustomAudienceSignals(),
+                actualComputationData.getWinningCustomAudienceSignals());
     }
 
     @Test
@@ -1734,12 +1725,12 @@ public class AdSelectionEntryDaoTest {
     @Test
     public void test_getSellerAndCallerPackageNameForId_idPresent_success() {
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         AdSelectionInitialization actualInitResult =
                 mAdSelectionEntryDao.getSellerAndCallerPackageNameForId(AD_SELECTION_ID_1);
 
-        assertEquals(DataHandlersFixture.AD_SELECTION_INTITIALIZATION_1, actualInitResult);
+        assertEquals(DataHandlersFixture.AD_SELECTION_INITIALIZATION_1, actualInitResult);
     }
 
     @Test
@@ -1751,7 +1742,7 @@ public class AdSelectionEntryDaoTest {
     public void test_getWinningBuyerForId_idPresent_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         mAdSelectionEntryDao.insertDBAdSelectionResult(
                 DataHandlersFixture.getDBAdSelectionResultForCaOnlyNameWithId(AD_SELECTION_ID_1));
@@ -1770,7 +1761,7 @@ public class AdSelectionEntryDaoTest {
     public void test_getWinningCustomAudienceDataForId_idPresent_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         mAdSelectionEntryDao.insertDBAdSelectionResult(
                 DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithId(
@@ -1791,7 +1782,7 @@ public class AdSelectionEntryDaoTest {
     public void test_getWinningBidAndUriForId_idPresent_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
-                DataHandlersFixture.DB_AD_SELECTION_INTITIALIZATION_1);
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         DBAdSelectionResult result =
                 DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithId(
@@ -1810,6 +1801,45 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
+    public void test_removeExpiredAdSelectionInitializations_removesExpiredEntries() {
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_2);
+
+        mAdSelectionEntryDao.removeExpiredAdSelectionInitializations(
+                DataHandlersFixture.CREATION_INSTANT_1.plusSeconds(5));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
+                        AD_SELECTION_ID_1));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(
+                        AD_SELECTION_ID_2));
+    }
+
+    @Test
+    public void test_removeExpiredAdSelectionInitializations_removesEntriesFromOtherTables() {
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+        long adSelectionId =
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1.getAdSelectionId();
+        DBAdSelectionResult result =
+                DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithId(adSelectionId);
+        mAdSelectionEntryDao.insertDBAdSelectionResult(result);
+        mAdSelectionEntryDao.insertDBReportingData(
+                DataHandlersFixture.getDBReportingDataWithId(adSelectionId));
+
+        mAdSelectionEntryDao.removeExpiredAdSelectionInitializations(
+                DataHandlersFixture.CREATION_INSTANT_1.plusSeconds(10));
+
+        assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(adSelectionId));
+        assertNull(mAdSelectionEntryDao.getReportingDataForId(adSelectionId));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(adSelectionId));
+    }
+
+    @Test
     public void testRemoveAllBuyerDecisionLogicOverrides() {
         mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
 
@@ -1825,6 +1855,72 @@ public class AdSelectionEntryDaoTest {
                         mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
                                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
                 .isEmpty();
+    }
+
+    @Test
+    public void testDoesAdSelectionMatchingCallerPackageNameExist() {
+        assertFalse(
+                mAdSelectionEntryDao
+                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
+                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+        mAdSelectionEntryDao.persistAdSelectionInitialization(
+                AD_SELECTION_ID_1,
+                DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
+                DataHandlersFixture.CREATION_INSTANT_1);
+        assertTrue(
+                mAdSelectionEntryDao
+                        .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
+                                AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID_2, CALLER_PACKAGE_NAME_2));
+    }
+
+    @Test
+    public void test_getAdSelectionIdsWithCallerPackageName_success() {
+        DBAdSelectionInitialization dbAdSelectionInitialization =
+                DBAdSelectionInitialization.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setSeller(AdTechIdentifier.fromString("seller"))
+                        .setCallerPackageName(DB_AD_SELECTION_2.getCallerPackageName())
+                        .setCreationInstant(CLOCK.instant())
+                        .build();
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(dbAdSelectionInitialization);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        List<Long> expectedIds =
+                mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageName(
+                        ImmutableList.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        DB_AD_SELECTION_2.getCallerPackageName());
+
+        assertThat(expectedIds).hasSize(2);
+        assertThat(expectedIds).containsExactly(AD_SELECTION_ID_1, AD_SELECTION_ID_2);
+    }
+
+    @Test
+    public void test_getAdSelectionIdsWithCallerPackageNameInOnDeviceTable_success() {
+        DBAdSelectionInitialization dbAdSelectionInitialization =
+                DBAdSelectionInitialization.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setSeller(AdTechIdentifier.fromString("seller"))
+                        .setCallerPackageName(DB_AD_SELECTION_2.getCallerPackageName())
+                        .setCreationInstant(CLOCK.instant())
+                        .build();
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(dbAdSelectionInitialization);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        List<Long> expectedIds =
+                mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageNameInOnDeviceTable(
+                        ImmutableList.of(AD_SELECTION_ID_1, AD_SELECTION_ID_2, AD_SELECTION_ID_3),
+                        DB_AD_SELECTION_2.getCallerPackageName());
+
+        assertThat(expectedIds).hasSize(1);
+        assertThat(expectedIds).containsExactly(AD_SELECTION_ID_2);
     }
 
     /**

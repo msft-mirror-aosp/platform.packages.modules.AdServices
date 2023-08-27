@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Lehetővé teszi egy alkalmazás számára, hogy hozzáférjen az AdServices Consent API-hoz."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"hozzáférés az Ad ID API-hoz"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Lehetővé teszi egy alkalmazás számára, hogy hozzáférjen az Ad ID API-hoz."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Hozzáférés az AdServices Cobalt Upload API-hoz"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Engedélyezi az alkalmazásnak az AdServices Cobalt Upload API-hoz való hozzáférést."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"hozzáférés az App Set ID API-hoz"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Lehetővé teszi egy alkalmazás számára, hogy hozzáférjen az App Set ID API-hoz."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Hozzáférés a Consent Service API-hoz"</string>

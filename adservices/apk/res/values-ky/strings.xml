@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Колдонмого AdServices Consent API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Колдонмого Ad ID API\'сине кирүүгө мүмкүнчүлүк берет."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload API\'син пайдалануу мүмкүнчүлүгү"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Колдонмого AdServices Cobalt Upload API\'син пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API\'син колдонуу мүмкүнчүлүгү"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Колдонмого App Set ID API\'cин пайдаланууга мүмкүнчүлүк берет."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API\'син колдонуу мүмкүнчүлүгү"</string>

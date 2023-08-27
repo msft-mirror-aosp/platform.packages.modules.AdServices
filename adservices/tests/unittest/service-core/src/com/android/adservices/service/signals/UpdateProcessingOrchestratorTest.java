@@ -30,6 +30,8 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
+import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
@@ -64,6 +66,7 @@ public class UpdateProcessingOrchestratorTest {
     private static final String TEST_PROCESSOR = "test_processor";
     @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private UpdateProcessorSelector mUpdateProcessorSelectorMock;
+    @Mock private UpdateEncoderEventHandler mUpdateEncoderEventHandlerMock;
     @Captor ArgumentCaptor<List<DBProtectedSignal>> mInsertCaptor;
     @Captor ArgumentCaptor<List<DBProtectedSignal>> mRemoveCaptor;
 
@@ -73,7 +76,9 @@ public class UpdateProcessingOrchestratorTest {
     public void setup() {
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
-                        mProtectedSignalsDaoMock, mUpdateProcessorSelectorMock);
+                        mProtectedSignalsDaoMock,
+                        mUpdateProcessorSelectorMock,
+                        mUpdateEncoderEventHandlerMock);
     }
 
     @Test
@@ -219,6 +224,37 @@ public class UpdateProcessingOrchestratorTest {
                 .insertAndDelete(
                         eq(Collections.emptyList()), eq(Arrays.asList(toRemove1, toRemove2)));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
+    }
+
+    @Test
+    public void testUpdatesProcessorNoEncoderUpdates() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put(TEST_PROCESSOR, new JSONObject());
+
+        UpdateOutput toReturn = new UpdateOutput();
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
+                .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
+        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json);
+        verifyZeroInteractions(mUpdateEncoderEventHandlerMock);
+    }
+
+    @Test
+    public void testUpdatesProcessorSingleEncoderUpdate() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put(TEST_PROCESSOR, new JSONObject());
+
+        UpdateOutput toReturn = new UpdateOutput();
+        UpdateEncoderEvent event =
+                UpdateEncoderEvent.builder()
+                        .setUpdateType(UpdateEncoderEvent.UpdateType.REGISTER)
+                        .setEncoderEndpointUri(
+                                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/"))
+                        .build();
+        toReturn.setUpdateEncoderEvent(event);
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
+                .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
+        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json);
+        verify(mUpdateEncoderEventHandlerMock).handle(CommonFixture.VALID_BUYER_1, event);
     }
 
     private DBProtectedSignal createSignal(byte[] key, byte[] value) {

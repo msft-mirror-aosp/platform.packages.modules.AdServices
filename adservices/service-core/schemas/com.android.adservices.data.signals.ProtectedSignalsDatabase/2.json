@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "b54933c1ca742f760d687daca864e65c",
+    "identityHash": "c48c7b8c1fd7027e491ac524f5b7f39f",
     "entities": [
       {
         "tableName": "protected_signals",
@@ -147,12 +147,60 @@
           }
         ],
         "foreignKeys": []
+      },
+      {
+        "tableName": "encoded_payload",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`buyer` TEXT NOT NULL, `version` INTEGER NOT NULL, `creation_time` INTEGER NOT NULL, `encoded_payload` BLOB NOT NULL, PRIMARY KEY(`buyer`))",
+        "fields": [
+          {
+            "fieldPath": "buyer",
+            "columnName": "buyer",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationTime",
+            "columnName": "creation_time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encodedPayload",
+            "columnName": "encoded_payload",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "buyer"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_encoded_payload_creation_time",
+            "unique": false,
+            "columnNames": [
+              "creation_time"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_encoded_payload_creation_time` ON `${TABLE_NAME}` (`creation_time`)"
+          }
+        ],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b54933c1ca742f760d687daca864e65c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c48c7b8c1fd7027e491ac524f5b7f39f')"
     ]
   }
 }

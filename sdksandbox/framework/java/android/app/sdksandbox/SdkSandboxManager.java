@@ -464,6 +464,7 @@ public final class SdkSandboxManager {
                     mContext.getPackageName(),
                     appProcessToken,
                     sdkName,
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK),
                     /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     params,
                     callbackProxy);

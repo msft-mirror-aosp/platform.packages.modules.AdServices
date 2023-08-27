@@ -132,14 +132,6 @@ public class BroadcastRestrictionsTestApp {
         mDeviceConfigUtils.deleteProperty(PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST);
 
         mRule.getScenario();
-
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        callback.assertLoadSdkIsSuccessful();
-        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
-
-        IBinder binder = sandboxedSdk.getInterface();
-        mBroadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
     }
 
     @After
@@ -169,6 +161,7 @@ public class BroadcastRestrictionsTestApp {
      */
     @Test
     public void testRegisterBroadcastReceiver_defaultValueRestrictionsApplied() throws Exception {
+        loadSdk();
         assertThrows(
                 SecurityException.class,
                 () -> mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS));
@@ -181,6 +174,7 @@ public class BroadcastRestrictionsTestApp {
     @Test
     public void testRegisterBroadcastReceiver_restrictionsApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        loadSdk();
 
         SecurityException thrown =
                 assertThrows(
@@ -208,6 +202,7 @@ public class BroadcastRestrictionsTestApp {
     @Test(expected = Test.None.class /* no exception expected */)
     public void testRegisterBroadcastReceiver_restrictionsNotApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        loadSdk();
 
         mBroadcastSdkApi.registerBroadcastReceiver(UNPROTECTED_INTENT_ACTIONS);
     }
@@ -219,6 +214,7 @@ public class BroadcastRestrictionsTestApp {
         // Set an empty allowlist for effectiveTargetSdkVersion U. This should block all
         // BroadcastReceivers.
         mDeviceConfigUtils.setProperty(PROPERTY_BROADCASTRECEIVER_ALLOWLIST, "CgQIIhIA");
+        loadSdk();
 
         assertThrows(
                 SecurityException.class,
@@ -243,6 +239,7 @@ public class BroadcastRestrictionsTestApp {
                         + "VFTl9PRkY=";
 
         mDeviceConfigUtils.setProperty(PROPERTY_BROADCASTRECEIVER_ALLOWLIST, encodedAllowlist);
+        loadSdk();
 
         mBroadcastSdkApi.registerBroadcastReceiver(
                 new ArrayList<>(Arrays.asList(Intent.ACTION_VIEW)));
@@ -278,6 +275,7 @@ public class BroadcastRestrictionsTestApp {
         // Set the canary set.
         mDeviceConfigUtils.setProperty(
                 PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST, encodedNextAllowlist);
+        loadSdk();
 
         // No exception should be thrown when registering a BroadcastReceiver with
         // Intent.ACTION_VIEW and Intent.ACTION_SEND.
@@ -305,6 +303,7 @@ public class BroadcastRestrictionsTestApp {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
         // Apply next restrictions, but don't set any value for the allowlist.
         mDeviceConfigUtils.setProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        loadSdk();
 
         // No exception should be thrown when it is a protected broadcast.
         mBroadcastSdkApi.registerBroadcastReceiver(
@@ -321,6 +320,7 @@ public class BroadcastRestrictionsTestApp {
      */
     @Test
     public void testRegisterBroadcastReceiver_intentFilterWithoutAction() throws Exception {
+        loadSdk();
         SecurityException thrown =
                 assertThrows(
                         SecurityException.class,
@@ -335,7 +335,7 @@ public class BroadcastRestrictionsTestApp {
     @Test
     public void testRegisterBroadcastReceiver_protectedBroadcast() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
-
+        loadSdk();
         mBroadcastSdkApi.registerBroadcastReceiver(
                 new ArrayList<>(
                         Arrays.asList(
@@ -343,5 +343,15 @@ public class BroadcastRestrictionsTestApp {
                                 Intent.ACTION_BOOT_COMPLETED,
                                 Intent.ACTION_SCREEN_ON,
                                 Intent.ACTION_SCREEN_OFF)));
+    }
+
+    private void loadSdk() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        mBroadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
     }
 }

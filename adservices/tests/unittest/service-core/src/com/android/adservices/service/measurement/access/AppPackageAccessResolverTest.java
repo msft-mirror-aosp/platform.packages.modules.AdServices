@@ -33,6 +33,9 @@ public class AppPackageAccessResolverTest {
     private static final String ALLOW_LIST_ALL = "*";
     private static final String ALLOW_LIST_NONE = "";
     private static final String ALLOW_LIST_TWO_PACKAGES = "com.package.one,com.package.two";
+    private static final String BLOCK_LIST_ALL = "*";
+    private static final String BLOCK_LIST_NONE = "";
+    private static final String BLOCK_LIST_TWO_PACKAGES = "com.package.one,com.package.two";
     private static final String PACKAGE_1_ALLOW_LISTED = "com.package.one";
     private static final String PACKAGE_2_ALLOW_LISTED = "com.package.one";
     private static final String PACKAGE_OTHER = "com.package.other";
@@ -43,13 +46,59 @@ public class AppPackageAccessResolverTest {
     public void isAllowed_allowListedPackages_success() {
         // Execution
         assertTrue(
-                new AppPackageAccessResolver(ALLOW_LIST_TWO_PACKAGES, PACKAGE_1_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_TWO_PACKAGES, /*blocklist*/ null, PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertTrue(
-                new AppPackageAccessResolver(ALLOW_LIST_TWO_PACKAGES, PACKAGE_2_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_TWO_PACKAGES, BLOCK_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertTrue(
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_TWO_PACKAGES, BLOCK_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertFalse(
-                new AppPackageAccessResolver(ALLOW_LIST_TWO_PACKAGES, PACKAGE_OTHER)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_TWO_PACKAGES, BLOCK_LIST_NONE, PACKAGE_OTHER)
+                        .isAllowed(mContext));
+    }
+
+    @Test
+    public void isNotAllowed_blockListedPackages_success() {
+        // Execution
+        assertFalse(
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_ALL, BLOCK_LIST_TWO_PACKAGES, PACKAGE_1_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertFalse(
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_ALL, BLOCK_LIST_TWO_PACKAGES, PACKAGE_2_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertFalse(
+                new AppPackageAccessResolver(
+                                /*allowlist*/ null, BLOCK_LIST_TWO_PACKAGES, PACKAGE_2_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertTrue(
+                new AppPackageAccessResolver(ALLOW_LIST_ALL, BLOCK_LIST_TWO_PACKAGES, PACKAGE_OTHER)
+                        .isAllowed(mContext));
+    }
+
+    @Test
+    public void isNotAllowed_bothListsNull_success() {
+        assertFalse(
+                new AppPackageAccessResolver(
+                                /*allowlist*/ null, /*blocklist*/ null, PACKAGE_1_ALLOW_LISTED)
+                        .isAllowed(mContext));
+    }
+
+    @Test
+    public void blockListDoesOverrideAllowList() {
+        // Execution
+        assertFalse(
+                new AppPackageAccessResolver(
+                                PACKAGE_1_ALLOW_LISTED,
+                                PACKAGE_1_ALLOW_LISTED,
+                                PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
     }
 
@@ -57,25 +106,62 @@ public class AppPackageAccessResolverTest {
     public void isAllowed_allAllowListedPackages_success() {
         // Execution
         assertTrue(
-                new AppPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_1_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_ALL, BLOCK_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertTrue(
-                new AppPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_2_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_ALL, BLOCK_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
                         .isAllowed(mContext));
-        assertTrue(new AppPackageAccessResolver(ALLOW_LIST_ALL, PACKAGE_OTHER).isAllowed(mContext));
+        assertTrue(
+                new AppPackageAccessResolver(ALLOW_LIST_ALL, BLOCK_LIST_NONE, PACKAGE_OTHER)
+                        .isAllowed(mContext));
+    }
+
+    @Test
+    public void isNotAllowed_allBlockListedPackages_success() {
+        // Execution
+        assertFalse(
+                new AppPackageAccessResolver(ALLOW_LIST_ALL, BLOCK_LIST_ALL, PACKAGE_1_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertFalse(
+                new AppPackageAccessResolver(ALLOW_LIST_ALL, BLOCK_LIST_ALL, PACKAGE_2_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertFalse(
+                new AppPackageAccessResolver(ALLOW_LIST_ALL, BLOCK_LIST_ALL, PACKAGE_OTHER)
+                        .isAllowed(mContext));
     }
 
     @Test
     public void isAllowed_noneAllowListedPackages_success() {
         // Execution
         assertFalse(
-                new AppPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_NONE, BLOCK_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertFalse(
-                new AppPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_NONE, BLOCK_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
                         .isAllowed(mContext));
         assertFalse(
-                new AppPackageAccessResolver(ALLOW_LIST_NONE, PACKAGE_OTHER).isAllowed(mContext));
+                new AppPackageAccessResolver(ALLOW_LIST_NONE, BLOCK_LIST_NONE, PACKAGE_OTHER)
+                        .isAllowed(mContext));
+    }
+
+    @Test
+    public void isAllowed_noneBlockListedPackages_success() {
+        // Execution
+        assertTrue(
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_ALL, BLOCK_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertTrue(
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_ALL, BLOCK_LIST_NONE, PACKAGE_2_ALLOW_LISTED)
+                        .isAllowed(mContext));
+        assertTrue(
+                new AppPackageAccessResolver(ALLOW_LIST_ALL, BLOCK_LIST_NONE, PACKAGE_OTHER)
+                        .isAllowed(mContext));
     }
 
     @Test
@@ -83,7 +169,8 @@ public class AppPackageAccessResolverTest {
         // Execution
         assertEquals(
                 String.format(ERROR_MESSAGE_FORMAT, PACKAGE_1_ALLOW_LISTED),
-                new AppPackageAccessResolver(ALLOW_LIST_TWO_PACKAGES, PACKAGE_1_ALLOW_LISTED)
+                new AppPackageAccessResolver(
+                                ALLOW_LIST_TWO_PACKAGES, BLOCK_LIST_NONE, PACKAGE_1_ALLOW_LISTED)
                         .getErrorMessage());
     }
 }

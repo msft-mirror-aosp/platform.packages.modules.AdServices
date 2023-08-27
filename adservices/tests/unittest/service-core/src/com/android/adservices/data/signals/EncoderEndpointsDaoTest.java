@@ -59,6 +59,22 @@ public class EncoderEndpointsDaoTest {
     }
 
     @Test
+    public void testDeleteEncoderEndPoint() {
+        assertNull(
+                "Initial state of the table should be empty",
+                mEncoderEndpointsDao.getEndpoint(BUYER_1));
+
+        DBEncoderEndpoint encoderEndpoint = DBEncoderEndpointFixture.anEndpoint();
+        assertEquals(
+                "One entry should have been inserted",
+                1,
+                mEncoderEndpointsDao.registerEndpoint(encoderEndpoint));
+
+        mEncoderEndpointsDao.deleteEncoderEndpoint(BUYER_1);
+        assertNull("Endpoint should have been deleted", mEncoderEndpointsDao.getEndpoint(BUYER_1));
+    }
+
+    @Test
     public void testQueryEncoderEndPoint() {
         assertNull(
                 "Initial state of the table should be empty",
