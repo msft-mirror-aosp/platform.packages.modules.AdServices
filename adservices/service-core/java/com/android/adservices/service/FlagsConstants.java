@@ -210,6 +210,21 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
             "measurement_enable_app_package_name_logging";
 
+    public static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_accounted_exception";
+
+    public static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_json_exception";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION =
+            "measurement_enable_delete_reports_on_unrecoverable_exception";
+
+    public static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_crypto_exception";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
+            "measurement_enable_datastore_manager_throw_datastore_exception";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
