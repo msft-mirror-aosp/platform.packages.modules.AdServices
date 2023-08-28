@@ -28,6 +28,7 @@ import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -35,8 +36,10 @@ import android.content.res.Resources;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
@@ -53,8 +56,12 @@ import androidx.room.RoomDatabase;
 import com.android.sdksandbox.SdkSandboxServiceImpl;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
@@ -259,6 +266,53 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         if (!userDao.getAll().contains(testData)) {
             throw new IllegalStateException(
                     "Room database access has failed - does not contain inserted data");
+        }
+    }
+
+    @Override
+    public void checkCanUseSharedPreferences() {
+        SharedPreferences sharedPref = mContext.getSharedPreferences("test", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("test_value", 54321);
+        if (!editor.commit() && sharedPref.getInt("test_value", 0) != 54321) {
+            throw new IllegalStateException("Sandboxed SDK could not access shared preferences");
+        }
+    }
+
+    /**
+     * Checks that the passed file descriptor contains the expected String. If not, an
+     * IllegalStateException is thrown.
+     */
+    @Override
+    public void checkReadFileDescriptor(ParcelFileDescriptor pFd, String expectedValue) {
+        String readValue;
+        try {
+            FileInputStream fis = new FileInputStream(pFd.getFileDescriptor());
+            readValue = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
+            fis.close();
+            pFd.close();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        if (!TextUtils.equals(readValue, expectedValue)) {
+            throw new IllegalStateException(
+                    "Read value " + readValue + " does not match expected value " + expectedValue);
+        }
+    }
+
+    @Override
+    public ParcelFileDescriptor createFileDescriptor(String valueToWrite) {
+        try {
+            String fileName = "createFileDescriptor";
+            FileOutputStream fout = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
+            fout.write(valueToWrite.getBytes(StandardCharsets.UTF_8));
+            fout.close();
+            File file = new File(mContext.getFilesDir(), fileName);
+            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 

@@ -23,11 +23,6 @@ import java.util.Objects;
 
 /** Static data and functions related to Cobalt release stages. */
 public final class CobaltReleaseStages {
-    /**
-     * The default release stage is GA to ensure the low privacy reports aren't collected if a
-     * release stage isn't set.
-     */
-    public static final String DEFAULT_RELEASE_STAGE = "GA";
 
     /** Parses a release stage string into a {@link ReleaseStage}. */
     static ReleaseStage getReleaseStage(@NonNull String releaseStage)
@@ -46,5 +41,9 @@ public final class CobaltReleaseStages {
         }
 
         throw new CobaltInitializationException("Unknown release stage: " + releaseStage);
+    }
+
+    private CobaltReleaseStages() {
+        throw new UnsupportedOperationException("Contains only static members");
     }
 }

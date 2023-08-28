@@ -27,6 +27,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -103,7 +104,7 @@ public class U18UxDebugChannelTest {
 
         mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */
@@ -129,7 +130,7 @@ public class U18UxDebugChannelTest {
 
         mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -155,7 +156,7 @@ public class U18UxDebugChannelTest {
 
         mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -181,7 +182,7 @@ public class U18UxDebugChannelTest {
 
         mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -207,7 +208,7 @@ public class U18UxDebugChannelTest {
 
         mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 true, /* isEuTest */
@@ -233,7 +234,7 @@ public class U18UxDebugChannelTest {
 
         mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
-        UiUtils.verifyNotification(
+        AdservicesWorkflows.verifyNotification(
                 sContext,
                 mDevice, /* isDisplayed */
                 false, /* isEuTest */

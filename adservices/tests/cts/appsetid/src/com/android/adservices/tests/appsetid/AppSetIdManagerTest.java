@@ -25,12 +25,14 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
@@ -42,6 +44,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -54,11 +57,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(AndroidJUnit4.class)
 public class AppSetIdManagerTest {
+    private static final String TAG = AppSetIdManagerTest.class.getSimpleName();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
 
     private static String sPreviousAppAllowList;
+
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     @BeforeClass
     public static void setupClass() {
@@ -114,6 +122,7 @@ public class AppSetIdManagerTest {
 
                     @Override
                     public void onError(Exception error) {
+                        Log.e(TAG, "Failed to get AppSet Id!", error);
                         Assert.fail();
                     }
                 };

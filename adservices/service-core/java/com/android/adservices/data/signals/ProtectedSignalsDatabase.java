@@ -25,19 +25,26 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
 /** Room based database for protected signals. */
 @Database(
-        entities = {DBProtectedSignal.class},
+        entities = {
+            DBProtectedSignal.class,
+            DBEncoderEndpoint.class,
+            DBEncoderLogic.class,
+            DBEncodedPayload.class
+        },
         version = ProtectedSignalsDatabase.DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class ProtectedSignalsDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "protectedsignals.db";
+    public static final int DATABASE_VERSION = 2;
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("protectedsignals.db");
 
     private static volatile ProtectedSignalsDatabase sSingleton;
 
@@ -69,4 +76,25 @@ public abstract class ProtectedSignalsDatabase extends RoomDatabase {
      * @return Dao to access protected signals storage.
      */
     public abstract ProtectedSignalsDao protectedSignalsDao();
+
+    /**
+     * Encoder endpoints Dao
+     *
+     * @return Dao to access encoder end points
+     */
+    public abstract EncoderEndpointsDao getEncoderEndpointsDao();
+
+    /**
+     * Encoder Logics Dao
+     *
+     * @return Dao to access persisted encoder logic entries
+     */
+    public abstract EncoderLogicDao getEncoderLogicDao();
+
+    /**
+     * Encoded Payloads Dao
+     *
+     * @return Dao to access persisted encoded signals payloads
+     */
+    public abstract EncodedPayloadDao getEncodedPayloadDao();
 }

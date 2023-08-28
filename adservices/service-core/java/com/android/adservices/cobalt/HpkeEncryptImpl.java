@@ -23,7 +23,7 @@ import com.android.adservices.HpkeJni;
 import com.android.cobalt.crypto.HpkeEncrypt;
 
 /** Wrapper around the HPKE JNI bindings to pass to Cobalt. */
-@VisibleForTesting
+@VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
 public final class HpkeEncryptImpl implements HpkeEncrypt {
     public HpkeEncryptImpl() {}
 

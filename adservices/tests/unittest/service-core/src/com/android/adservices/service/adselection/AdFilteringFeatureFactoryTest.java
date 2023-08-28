@@ -25,6 +25,8 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
@@ -47,6 +49,10 @@ public class AdFilteringFeatureFactoryTest {
             Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class)
                     .build()
                     .frequencyCapDao();
+    AdSelectionEntryDao mAdSelectionEntryDao =
+            Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                    .build()
+                    .adSelectionEntryDao();
 
     @Test
     public void testGetAdFiltererFilteringEnabled() {
@@ -106,6 +112,26 @@ public class AdFilteringFeatureFactoryTest {
                         null, null, new FlagsWithAdSelectionFilteringDisabled());
         assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
                 .isInstanceOf(FrequencyCapAdDataValidatorNoOpImpl.class);
+    }
+
+    @Test
+    public void testGetAdCounterHistogramUpdaterFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithAdSelectionFilteringEnabled());
+        assertThat(adFilteringFeatureFactory.getAdCounterHistogramUpdater(mAdSelectionEntryDao))
+                .isInstanceOf(AdCounterHistogramUpdaterImpl.class);
+    }
+
+    @Test
+    public void testGetAdCounterHistogramUpdaterFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+        assertThat(adFilteringFeatureFactory.getAdCounterHistogramUpdater(mAdSelectionEntryDao))
+                .isInstanceOf(AdCounterHistogramUpdaterNoOpImpl.class);
     }
 
     private static class FlagsWithAdSelectionFilteringDisabled implements Flags {

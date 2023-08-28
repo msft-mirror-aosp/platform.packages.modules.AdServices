@@ -208,8 +208,8 @@ public abstract class E2ETest {
                 "navigation_source_trigger_data_cardinality";
         String RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS =
                 "rate_limit_max_attribution_reporting_origins";
-        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN =
-                "max_destinations_per_source_site_reporting_origin";
+        String MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE =
+                "max_destinations_per_source_site_reporting_site";
         String RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS =
                 "rate_limit_max_source_registration_reporting_origins";
         // System health params
@@ -257,9 +257,9 @@ public abstract class E2ETest {
                         Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
             }
             if (!json.isNull(ApiConfigKeys
-                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN)) {
+                    .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE)) {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource = json.getInt(
-                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN);
+                        ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_SITE);
             } else {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource =
                         Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;

@@ -32,6 +32,8 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.net.Uri;
@@ -39,6 +41,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.common.DecisionLogic;
@@ -557,6 +560,34 @@ public class CustomAudienceDaoTest {
 
         assertFalse(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_2, BUYER_2, NAME_2));
+    }
+
+    @Test
+    public void testGetCustomAudiencesByBuyerAndName() {
+        String anotherOwner = "anotherowner.com";
+        DBCustomAudience caWithOwner1AndBuyer1 =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        mCustomAudienceDao.persistCustomAudience(caWithOwner1AndBuyer1);
+        DBCustomAudience caWithOwner2AndBuyer1 =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setOwner(anotherOwner)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(caWithOwner2AndBuyer1);
+        DBCustomAudience caWithOwner1AndBuyer2 =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_2).build();
+        mCustomAudienceDao.persistCustomAudience(caWithOwner1AndBuyer2);
+
+        List<DBCustomAudience> caWithBuyer1AndName =
+                mCustomAudienceDao.getCustomAudiencesForBuyerAndName(
+                        CommonFixture.VALID_BUYER_1, CustomAudienceFixture.VALID_NAME);
+        assertEquals(2, caWithBuyer1AndName.size());
+        assertTrue(caWithBuyer1AndName.contains(caWithOwner1AndBuyer1));
+        assertTrue(caWithBuyer1AndName.contains(caWithOwner2AndBuyer1));
+        List<DBCustomAudience> caWithBuyer2AndName =
+                mCustomAudienceDao.getCustomAudiencesForBuyerAndName(
+                        CommonFixture.VALID_BUYER_2, CustomAudienceFixture.VALID_NAME);
+        assertEquals(1, caWithBuyer2AndName.size());
+        assertTrue(caWithBuyer2AndName.contains(caWithOwner1AndBuyer2));
     }
 
     @Test

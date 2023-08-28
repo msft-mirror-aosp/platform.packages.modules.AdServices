@@ -44,6 +44,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -90,6 +91,7 @@ public class InteractionReporter {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+    @NonNull private final DevContext mDevContext;
 
     public InteractionReporter(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -100,7 +102,8 @@ public class InteractionReporter {
             @NonNull Flags flags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
-            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
+            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -109,6 +112,7 @@ public class InteractionReporter {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
+        Objects.requireNonNull(devContext);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
@@ -119,6 +123,7 @@ public class InteractionReporter {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
+        mDevContext = devContext;
     }
 
     /**
@@ -152,10 +157,11 @@ public class InteractionReporter {
                                                 true,
                                                 mCallerUid,
                                                 LOGGING_API_NAME,
-                                                Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
+                                                Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                                                mDevContext);
                                         Preconditions.checkArgument(
                                                 mAdSelectionEntryDao
-                                                        .doesAdSelectionMatchingCallerPackageNameExist(
+                                                        .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
                                                                 adSelectionId, callerPackageName),
                                                 NO_MATCH_FOUND_IN_AD_SELECTION_DB);
                                         Preconditions.checkArgument(
@@ -368,7 +374,8 @@ public class InteractionReporter {
         String interactionData = inputParams.getInteractionData();
 
         for (Uri uri : reportingUris) {
-            reportingFuturesList.add(mAdServicesHttpsClient.postPlainText(uri, interactionData));
+            reportingFuturesList.add(
+                    mAdServicesHttpsClient.postPlainText(uri, interactionData, mDevContext));
         }
         return Futures.allAsList(reportingFuturesList);
     }

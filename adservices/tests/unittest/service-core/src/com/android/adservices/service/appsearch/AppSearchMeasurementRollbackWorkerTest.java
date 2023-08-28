@@ -39,6 +39,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -61,6 +62,8 @@ import java.util.concurrent.TimeUnit;
 
 @SmallTest
 public class AppSearchMeasurementRollbackWorkerTest {
+    private static final String EXPECTED_DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("measurement_rollback");
     private static final String USERID = "user1";
     private static final long APEX_VERSION = 100L;
     private static final int FUTURE_TIMEOUT_MILLISECONDS = 3000;
@@ -88,7 +91,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
                 .when(() -> PlatformStorage.createSearchSessionAsync(cap.capture()));
 
         mWorker = AppSearchMeasurementRollbackWorker.getInstance(mContext, USERID);
-        assertThat(cap.getValue().getDatabaseName()).isEqualTo("measurement_rollback");
+        assertThat(cap.getValue().getDatabaseName()).isEqualTo(EXPECTED_DATABASE_NAME);
     }
 
     @After

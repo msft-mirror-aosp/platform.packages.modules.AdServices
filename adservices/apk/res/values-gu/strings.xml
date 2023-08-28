@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"કોઈ ઍપ્લિકેશનને AdServices Consent API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"ઍપ્લિકેશનને Ad ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"AdServices Cobalt Upload APIને ઍક્સેસ કરો"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"ઍપ્લિકેશનને AdServices Cobalt Upload APIને ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"ઍપ સેટ ID APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ઍપ્લિકેશનને ઍપ સેટ ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIનો ઍક્સેસ"</string>
@@ -40,7 +42,7 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"કોઈ ઍપ્લિકેશનને, AdServiceની સુવિધા ચાલુ કરવાના સ્ટેટસ સંબંધિત APIને ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManagerના APIsનો ઍક્સેસ"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"ઍપ્લિકેશનને AdServicesManagerના APIs ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
-    <string name="app_label" msgid="5985320129629013968">"Android સિસ્ટમ"</string>
+    <string name="app_label" msgid="5844694701336604490">"જાહેરાત સંબંધિત પ્રાઇવસી"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Androidની જાહેરાતો સંબંધિત પ્રાઇવસીના બીટા વર્ઝનમાં જોડાઓ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android તમને જાહેરાતો બતાવવા માટે, ઍપ માટે વધુ ખાનગી રીતોની શોધખોળ કરી રહ્યું છે"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"વધુ જાણો"</string>

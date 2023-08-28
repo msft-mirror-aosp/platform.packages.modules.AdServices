@@ -19,6 +19,8 @@ package com.android.adservices.service.adselection;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 
+import com.android.adservices.data.adselection.DBAdSelection;
+
 import java.time.Instant;
 
 /**
@@ -27,7 +29,7 @@ import java.time.Instant;
  */
 public interface AdCounterHistogramUpdater {
     /** Updates the ad counter histogram for the buyer and custom audience with a win event. */
-    void updateWinHistogram(@NonNull AdScoringOutcome outcome);
+    void updateWinHistogram(@NonNull DBAdSelection dbAdSelection);
 
     /**
      * Updates the ad counter histogram for the ad associated with the given ad selection ID with a
@@ -37,5 +39,5 @@ public interface AdCounterHistogramUpdater {
             long adSelectionId,
             @NonNull String callerPackageName,
             @FrequencyCapFilters.AdEventType int adEventType,
-            Instant eventTimestamp);
+            @NonNull Instant eventTimestamp);
 }

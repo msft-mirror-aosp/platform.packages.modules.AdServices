@@ -38,12 +38,12 @@ public class Combinatorics {
      * @return binomial coefficient for (n choose k)
      * @throws ArithmeticException if the result overflows an int
      */
-    static int getBinomialCoefficient(int n, int k) {
+    static long getBinomialCoefficient(int n, int k) {
         if (k > n) {
-            return 0;
+            return 0L;
         }
         if (k == n || n == 0) {
-            return 1;
+            return 1L;
         }
         // getBinomialCoefficient(n, k) == getBinomialCoefficient(n, n - k).
         if (k > n - k) {
@@ -57,9 +57,11 @@ public class Combinatorics {
         // true for a very simple reason. Imagine a value of `i` causes division with
         // remainder in the below algorithm. This immediately implies that
         // (n choose i) is fractional, which we know is not the case.
-        int result = 1;
-        for (int i = 1; i <= k; i++) {
-            result = Math.multiplyExact(result, n + 1 - i);
+        long result = 1L;
+        long nLong = (long) n;
+        long kLong = (long) k;
+        for (long i = 1L; i <= kLong; i++) {
+            result = Math.multiplyExact(result, nLong + 1 - i);
             result = result / i;
         }
         return result;
@@ -74,7 +76,7 @@ public class Combinatorics {
      * @return combinationIndex-th lexicographically smallest k-combination.
      * @throws ArithmeticException in case of int overflow
      */
-    static int[] getKCombinationAtIndex(int combinationIndex, int k) {
+    static long[] getKCombinationAtIndex(long combinationIndex, int k) {
         // Computes the combinationIndex-th lexicographically smallest k-combination.
         // https://en.wikipedia.org/wiki/Combinatorial_number_system
         //
@@ -92,7 +94,7 @@ public class Combinatorics {
         //
         // We find this set via a simple greedy algorithm.
         // http://math0.wvstateu.edu/~baker/cs405/code/Combinadics.html
-        int[] result = new int[k];
+        long[] result = new long[k];
         if (k == 0) {
             return result;
         }
@@ -100,10 +102,10 @@ public class Combinatorics {
         // maximum a such that (a choose k) <= combinationIndex. Let a_k = a. Use
         // the previous binomial coefficient to compute the next one. Note: possible
         // to speed this up via something other than incremental search.
-        int target = combinationIndex;
-        int candidate = k - 1;
-        int binomialCoefficient = 0;
-        int nextBinomialCoefficient = 1;
+        long target = combinationIndex;
+        long candidate = (long) k - 1L;
+        long binomialCoefficient = 0L;
+        long nextBinomialCoefficient = 1L;
         while (nextBinomialCoefficient <= target) {
             candidate++;
             binomialCoefficient = nextBinomialCoefficient;
@@ -114,7 +116,7 @@ public class Combinatorics {
         // We know from the k-combination definition, all subsequent values will be
         // strictly decreasing. Find them all by decrementing candidate.
         // Use the previous binomial coefficient to compute the next one.
-        int currentK = k;
+        long currentK = (long) k;
         int currentIndex = 0;
         while (true) {
             if (binomialCoefficient <= target) {
@@ -144,7 +146,7 @@ public class Combinatorics {
      * @param numBars  number of bars
      * @return number of possible sequences
      */
-    public static int getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
+    public static long getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
         return getBinomialCoefficient(numStars + numBars, numStars);
     }
 
@@ -156,7 +158,7 @@ public class Combinatorics {
      * @param sequenceIndex index of the sequence
      * @return list of indices of every star in stars & bars sequence
      */
-    public static int[] getStarIndices(int numStars, int sequenceIndex) {
+    public static long[] getStarIndices(int numStars, long sequenceIndex) {
         return getKCombinationAtIndex(sequenceIndex, numStars);
     }
 
@@ -167,12 +169,12 @@ public class Combinatorics {
      * @param starIndices indices of the stars in descending order
      * @return count of bars preceding every star
      */
-    public static int[] getBarsPrecedingEachStar(int[] starIndices) {
+    public static long[] getBarsPrecedingEachStar(long[] starIndices) {
         for (int i = 0; i < starIndices.length; i++) {
-            int starIndex = starIndices[i];
+            long starIndex = starIndices[i];
             // There are {@code starIndex} prior positions in the sequence, and `i` prior
             // stars, so there are {@code starIndex - i} prior bars.
-            starIndices[i] = starIndex - (starIndices.length - 1 - i);
+            starIndices[i] = starIndex - ((long) starIndices.length - 1L - (long) i);
         }
         return starIndices;
     }
@@ -185,7 +187,7 @@ public class Combinatorics {
      * @param numWindows number of reporting windows
      * @return number of states
      */
-    public static int getNumStatesArithmetic(
+    public static long getNumStatesArithmetic(
             int numBucketIncrements, int numTriggerData, int numWindows) {
         int numStars = numBucketIncrements;
         int numBars = Math.multiplyExact(numTriggerData, numWindows);
@@ -201,7 +203,7 @@ public class Combinatorics {
      * @param perTypeCapList cap per trigger data
      * @return number of states
      */
-    private static int getNumStatesRecursive(
+    private static long getNumStatesRecursive(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
         int index = perTypeNumWindowList.length - 1;
         return getNumStatesRecursive(
@@ -214,18 +216,18 @@ public class Combinatorics {
                 new HashMap<>());
     }
 
-    private static int getNumStatesRecursive(
+    private static long getNumStatesRecursive(
             int totalCap,
             int index,
             int winVal,
             int capVal,
             int[] perTypeNumWindowList,
             int[] perTypeCapList,
-            Map<List<Integer>, Integer> dp) {
+            Map<List<Integer>, Long> dp) {
         List<Integer> key = List.of(totalCap, index, winVal, capVal);
         if (!dp.containsKey(key)) {
             if (winVal == 0 && index == 0) {
-                dp.put(key, 1);
+                dp.put(key, 1L);
             } else if (winVal == 0) {
                 dp.put(key, getNumStatesRecursive(
                         totalCap,
@@ -236,7 +238,7 @@ public class Combinatorics {
                         perTypeCapList,
                         dp));
             } else {
-                int result = 0;
+                long result = 0L;
                 for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
                     result = Math.addExact(result, getNumStatesRecursive(
                             totalCap - i,
@@ -261,7 +263,7 @@ public class Combinatorics {
      * @param perTypeCapList limit of the increment of each trigger data
      * @return number of states
      */
-    public static int getNumStatesFlexApi(
+    public static long getNumStatesFlexApi(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
         boolean canComputeArithmetic = true;
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
@@ -287,9 +289,9 @@ public class Combinatorics {
      * @param numOfStates Number of States
      * @return the probability to use fake reports
      */
-    public static double getFlipProbability(int numOfStates) {
-        int epsilon = PrivacyParams.getPrivacyEpsilon();
-        return numOfStates / (numOfStates + Math.exp(epsilon) - 1);
+    public static double getFlipProbability(long numOfStates) {
+        double epsilon = (double) PrivacyParams.getPrivacyEpsilon();
+        return numOfStates / (numOfStates + Math.exp(epsilon) - 1D);
     }
 
     private static double getBinaryEntropy(double x) {
@@ -305,9 +307,9 @@ public class Combinatorics {
      * @param flipProbability Flip Probability
      * @return the information gain
      */
-    public static double getInformationGain(int numOfStates, double flipProbability) {
+    public static double getInformationGain(long numOfStates, double flipProbability) {
         double log2Q = DoubleMath.log2(numOfStates);
-        double fakeProbability = flipProbability * (numOfStates - 1) / numOfStates;
+        double fakeProbability = flipProbability * (numOfStates - 1L) / numOfStates;
         return log2Q
                 - getBinaryEntropy(fakeProbability)
                 - fakeProbability * DoubleMath.log2(numOfStates - 1);
@@ -325,8 +327,8 @@ public class Combinatorics {
             int totalCap,
             int[] perTypeNumWindowList,
             int[] perTypeCapList,
-            int rank,
-            Map<List<Integer>, Integer> dp) {
+            long rank,
+            Map<List<Integer>, Long> dp) {
         int triggerTypeIndex = perTypeNumWindowList.length - 1;
 
         return getReportSetBasedOnRankRecursive(
@@ -345,10 +347,10 @@ public class Combinatorics {
             int triggerTypeIndex,
             int winVal,
             int capVal,
-            int rank,
+            long rank,
             int[] perTypeNumWindowList,
             int[] perTypeCapList,
-            Map<List<Integer>, Integer> numStatesLookupTable) {
+            Map<List<Integer>, Long> numStatesLookupTable) {
 
         if (winVal == 0 && triggerTypeIndex == 0) {
             return new ArrayList<>();
@@ -364,7 +366,7 @@ public class Combinatorics {
                     numStatesLookupTable);
         }
         for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
-            int currentNumStates =
+            long currentNumStates =
                     getNumStatesRecursive(
                             totalCap - i,
                             triggerTypeIndex,

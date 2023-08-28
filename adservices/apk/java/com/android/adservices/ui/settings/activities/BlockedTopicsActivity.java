@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -22,8 +24,6 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.activitydelegates.BlockedTopicsActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.BlockedTopicsActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
@@ -45,8 +45,7 @@ public class BlockedTopicsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getEnableAdServicesSystemApi()
-                && ConsentManager.getInstance(getApplicationContext()).getUx() != null) {
+        if (!isUxStatesReady(this)) {
             initFragment();
         }
     }

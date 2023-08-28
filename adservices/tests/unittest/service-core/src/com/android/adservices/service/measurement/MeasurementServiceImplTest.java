@@ -66,6 +66,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
@@ -100,7 +101,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SmallTest
 public final class MeasurementServiceImplTest {
 
-    private static final String ALLOW_ALL_PACKAGES = "*";
     private static final Uri APP_DESTINATION = Uri.parse("android-app://test.app-destination");
     private static final String APP_PACKAGE_NAME = "app.package.name";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://registration-uri.test");
@@ -198,10 +198,10 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testRegisterSource_failureByAppPackagePpApiAccessResolver() throws Exception {
+    public void testRegisterSource_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runRunMocks(
                 Api.REGISTER_SOURCE,
-                new AccessDenier().deniedByAppPackagePpApiApp(),
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
@@ -317,10 +317,10 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testRegisterTrigger_failureByAppPackagePpApiAccessResolver() throws Exception {
+    public void testRegisterTrigger_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runRunMocks(
                 Api.REGISTER_TRIGGER,
-                new AccessDenier().deniedByAppPackagePpApiApp(),
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () -> registerTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
@@ -457,10 +457,11 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testDeleteRegistrations_failureByAppPackagePpApiAccessResolver() throws Exception {
+    public void testDeleteRegistrations_failureByAppPackageMsmtApiAccessResolver()
+            throws Exception {
         runRunMocks(
                 Api.DELETE_REGISTRATIONS,
-                new AccessDenier().deniedByAppPackagePpApiApp(),
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () -> deleteRegistrationsAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
@@ -583,11 +584,11 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testGetMeasurementApiStatus_failureByAppPackagePpApiAccessResolver()
+    public void testGetMeasurementApiStatus_failureByAppPackageMsmtApiAccessResolver()
             throws Exception {
         runRunMocks(
                 Api.STATUS,
-                new AccessDenier().deniedByAppPackagePpApiApp(),
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 this::getMeasurementApiStatusAndAssertFailure);
     }
 
@@ -723,10 +724,10 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testRegisterWebSource_failureByAppPackagePpApiAccessResolver() throws Exception {
+    public void testRegisterWebSource_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runRunMocks(
                 Api.REGISTER_WEB_SOURCE,
-                new AccessDenier().deniedByAppPackagePpApiApp(),
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () -> registerWebSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
@@ -887,10 +888,10 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
-    public void testRegisterWebTrigger_failureByAppPackagePpApiAccessResolver() throws Exception {
+    public void testRegisterWebTrigger_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runRunMocks(
                 Api.REGISTER_WEB_TRIGGER,
-                new AccessDenier().deniedByAppPackagePpApiApp(),
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () -> registerWebTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
@@ -1169,8 +1170,8 @@ public final class MeasurementServiceImplTest {
                     .thenReturn(false);
         }
 
-        // App Package Resolver Pp Api
-        updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+        // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // App Package Resolver Web Context Client App
         updateAppPackageResolverWebAppDenied(accessDenier.mByAppPackageWebContextClientApp);
@@ -1209,8 +1210,8 @@ public final class MeasurementServiceImplTest {
         // DevContext
         updateDevContextDenied(accessDenier.mByDevContext);
 
-        // App Package Resolver Pp Api
-        updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+        // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1252,8 +1253,8 @@ public final class MeasurementServiceImplTest {
         // DevContext
         updateDevContextDenied(accessDenier.mByDevContext);
 
-        // App Package Resolver Pp Api
-        updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+        // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1296,8 +1297,8 @@ public final class MeasurementServiceImplTest {
         // DevContext
         updateDevContextDenied(accessDenier.mByDevContext);
 
-        // App Package Resolver Pp Api
-        updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+        // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // App Package Resolver Web Context Client App
         updateAppPackageResolverWebAppDenied(accessDenier.mByAppPackageWebContextClientApp);
@@ -1344,8 +1345,8 @@ public final class MeasurementServiceImplTest {
         // DevContext
         updateDevContextDenied(accessDenier.mByDevContext);
 
-        // App Package Resolver Pp Api
-        updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+        // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1380,8 +1381,8 @@ public final class MeasurementServiceImplTest {
             when(mMockFlags.getEnforceForegroundStatusForMeasurementStatus()).thenReturn(false);
         }
 
-        // App Package Resolver Pp Api
-        updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+        // App Package Resolver Measurement Api
+        updateAppPackageAccessResolverDenied(accessDenier.mByAppPackageMsmtApiApp);
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
@@ -1400,13 +1401,15 @@ public final class MeasurementServiceImplTest {
         }
     }
 
-    private void updateAppPackagePpApiResolverDenied(boolean denied) {
-        String allowList = denied ? "" : ALLOW_ALL_PACKAGES;
-        when(mMockFlags.getPpapiAppAllowList()).thenReturn(allowList);
+    private void updateAppPackageAccessResolverDenied(boolean denied) {
+        String allowList = denied ? AllowLists.ALLOW_NONE : AllowLists.ALLOW_ALL;
+        String blockList = AllowLists.ALLOW_NONE;
+        when(mMockFlags.getMsmtApiAppAllowList()).thenReturn(allowList);
+        when(mMockFlags.getMsmtApiAppBlockList()).thenReturn(blockList);
     }
 
     private void updateAppPackageResolverWebAppDenied(boolean denied) {
-        String allowList = denied ? "" : ALLOW_ALL_PACKAGES;
+        String allowList = denied ? AllowLists.ALLOW_NONE : AllowLists.ALLOW_ALL;
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn(allowList);
     }
 
@@ -1431,7 +1434,7 @@ public final class MeasurementServiceImplTest {
     }
 
     private static class AccessDenier {
-        private boolean mByAppPackagePpApiApp;
+        private boolean mByAppPackageMsmtApiApp;
         private boolean mByAppPackageWebContextClientApp;
         private boolean mByAttributionPermission;
         private boolean mByConsent;
@@ -1445,8 +1448,8 @@ public final class MeasurementServiceImplTest {
             return this;
         }
 
-        private AccessDenier deniedByAppPackagePpApiApp() {
-            mByAppPackagePpApiApp = true;
+        private AccessDenier deniedByAppPackageMsmtApiApp() {
+            mByAppPackageMsmtApiApp = true;
             return this;
         }
 

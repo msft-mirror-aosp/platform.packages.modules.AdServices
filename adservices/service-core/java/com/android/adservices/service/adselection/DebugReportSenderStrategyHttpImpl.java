@@ -16,16 +16,19 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Collectors;
@@ -34,12 +37,18 @@ class DebugReportSenderStrategyHttpImpl implements DebugReportSenderStrategy {
 
     private static final int MAX_QUEUE_DEPTH = 1000;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Queue<Uri> mDebugReportQueue;
-    private final AdServicesHttpsClient mHttpsClient;
+    @NonNull private final Queue<Uri> mDebugReportQueue;
+    @NonNull private final AdServicesHttpsClient mHttpsClient;
+    @NonNull private final DevContext mDevContext;
 
-    public DebugReportSenderStrategyHttpImpl(AdServicesHttpsClient adServicesHttpsClient) {
+    DebugReportSenderStrategyHttpImpl(
+            @NonNull AdServicesHttpsClient adServicesHttpsClient, @NonNull DevContext devContext) {
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(devContext);
+
         mHttpsClient = adServicesHttpsClient;
         mDebugReportQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
+        mDevContext = devContext;
     }
 
     @Override
@@ -63,10 +72,8 @@ class DebugReportSenderStrategyHttpImpl implements DebugReportSenderStrategy {
                 uris.stream()
                         .map(
                                 uri -> {
-                                    sLogger.v(
-                                            "[DebugReporting] Pinging %s",
-                                            uri.toString());
-                                    return mHttpsClient.getAndReadNothing(uri);
+                                    sLogger.v("[DebugReporting] Pinging %s", uri.toString());
+                                    return mHttpsClient.getAndReadNothing(uri, mDevContext);
                                 })
                         .collect(Collectors.toList());
         return Futures.whenAllComplete(futures).call(() -> null,

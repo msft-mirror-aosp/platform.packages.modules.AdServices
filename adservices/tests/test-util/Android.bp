@@ -30,6 +30,18 @@ filegroup {
     ],
 }
 
+// Java classes that are used by both device-side and host-side tests
+filegroup {
+    name: "adservices-test-utility-sideless-sources",
+    srcs: [
+        "side-less/**/*.java",
+    ],
+    path: "side-less",
+    visibility: [
+        ":__pkg__",
+    ],
+}
+
 filegroup {
     name: "adservices-mockito-sources",
     srcs: [
@@ -46,7 +58,9 @@ android_library {
     sdk_version: "module_current",
     min_sdk_version: "30",
     srcs: [
+        ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
+        ":adservices-service-core-phflags-sources",
     ],
     libs: [
         "error_prone_annotations",
@@ -65,15 +79,8 @@ java_library_host {
     name: "adservices-host-side-test-utility",
     srcs: [
         "host-side/**/*.java",
-        // TODO(b/284971005): move files below to pure-java and use filegroup
-        "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
-        "java/com/android/adservices/common/RequiresDeviceSupported.java",
-        "java/com/android/adservices/common/RequiresDeviceNotSupported.java",
-        "java/com/android/adservices/common/RequiresDeviceSupportedOrNot.java",
-        // TODO(b/284971005): files below should be provided by module-utils
-        "java/com/android/adservices/common/AbstractSupportedFeatureRule.java",
-        "java/com/android/adservices/common/Logger.java",
-        "java/com/android/adservices/common/Nullable.java",
+        ":adservices-service-core-flags-constants-sources",
+        ":adservices-test-utility-sideless-sources",
     ],
     libs: [
         "tradefed",

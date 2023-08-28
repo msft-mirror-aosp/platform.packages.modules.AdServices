@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,11 +31,10 @@ import org.mockito.MockitoAnnotations;
 
 public class DebugReportingTest {
 
-    @Mock
-    Flags mFlagsMock;
+    private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
+    @Mock private Flags mFlagsMock;
 
-    @Mock
-    AdServicesHttpsClient mHttpClientMock;
+    @Mock private AdServicesHttpsClient mHttpClientMock;
 
     @Before
     public void setUp() {
@@ -47,7 +47,7 @@ public class DebugReportingTest {
         when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
 
-        DebugReporting debugReporting = new DebugReporting(mFlagsMock, null);
+        DebugReporting debugReporting = new DebugReporting(mFlagsMock, null, DEV_CONTEXT_DISABLED);
 
         assertThat(debugReporting.isEnabled()).isTrue();
     }
@@ -57,7 +57,7 @@ public class DebugReportingTest {
         when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        DebugReporting debugReporting = new DebugReporting(mFlagsMock, null);
+        DebugReporting debugReporting = new DebugReporting(mFlagsMock, null, DEV_CONTEXT_DISABLED);
 
         assertThat(debugReporting.isEnabled()).isFalse();
     }
@@ -66,7 +66,8 @@ public class DebugReportingTest {
     public void getScriptStrategy_isEnabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
 
-        DebugReporting debugReporting = new DebugReporting(mFlagsMock, mHttpClientMock);
+        DebugReporting debugReporting =
+                new DebugReporting(mFlagsMock, mHttpClientMock, DEV_CONTEXT_DISABLED);
 
         assertThat(debugReporting.getScriptStrategy()).isInstanceOf(
                 DebugReportingEnabledScriptStrategy.class);
@@ -76,7 +77,8 @@ public class DebugReportingTest {
     public void getScriptStrategy_isDisabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        DebugReporting debugReporting = new DebugReporting(mFlagsMock, mHttpClientMock);
+        DebugReporting debugReporting =
+                new DebugReporting(mFlagsMock, mHttpClientMock, DEV_CONTEXT_DISABLED);
 
         assertThat(debugReporting.getScriptStrategy()).isInstanceOf(
                 DebugReportingScriptDisabledStrategy.class);
@@ -86,7 +88,8 @@ public class DebugReportingTest {
     public void getSenderStrategy_isEnabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
 
-        DebugReporting debugReporting = new DebugReporting(mFlagsMock, mHttpClientMock);
+        DebugReporting debugReporting =
+                new DebugReporting(mFlagsMock, mHttpClientMock, DEV_CONTEXT_DISABLED);
 
         assertThat(debugReporting.getSenderStrategy()).isInstanceOf(
                 DebugReportSenderStrategyHttpImpl.class);
@@ -96,7 +99,8 @@ public class DebugReportingTest {
     public void getSenderStrategy_isDisabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        DebugReporting debugReporting = new DebugReporting(mFlagsMock, mHttpClientMock);
+        DebugReporting debugReporting =
+                new DebugReporting(mFlagsMock, mHttpClientMock, DEV_CONTEXT_DISABLED);
 
         assertThat(debugReporting.getSenderStrategy()).isInstanceOf(
                 DebugReportSenderStrategyNoOp.class);
