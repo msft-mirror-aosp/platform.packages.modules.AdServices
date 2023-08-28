@@ -343,7 +343,7 @@ public final class MeasurementImplTest {
     public void testRegisterEvent_noOptionalParameters_success() {
         final int result =
                 mMeasurementImpl.registerEvent(
-                        DEFAULT_URI,
+                        REGISTRATION_URI_1,
                         DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         false,
@@ -358,7 +358,7 @@ public final class MeasurementImplTest {
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
         final int result =
                 mMeasurementImpl.registerEvent(
-                        DEFAULT_URI,
+                        REGISTRATION_URI_1,
                         DEFAULT_CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME,
                         false,
