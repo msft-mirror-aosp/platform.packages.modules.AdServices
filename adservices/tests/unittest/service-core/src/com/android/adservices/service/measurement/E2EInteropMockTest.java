@@ -51,7 +51,8 @@ import java.util.function.Supplier;
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop April 21, 2023. Files destination_limit.json,
  * max_aggregatable_reports_per_source.json, parse_failures.json, rate_limit_max_attributions.json,
- * event_level_report_time.json, and aggregatable_report_window.json were updated with GitHub commit
+ * event_level_report_time.json, aggregatable_report_window.json, and
+ * event_source_event_report_windows.json were updated with GitHub commit
  * 8eaed64bc0ce875f31005f1c649afc823105596e
  */
 @RunWith(Parameterized.class)
@@ -61,6 +62,8 @@ public class E2EInteropMockTest extends E2EMockTest {
     private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+    private static final Map<String, String> sApiConfigPhFlags =
+            Map.of("max_event_info_gain", "measurement_flex_api_max_information_gain_event");
 
     private static String preprocessor(String json) {
         return json.replaceAll("\\.test(?=[\"\\/])", ".com")
@@ -75,7 +78,7 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
-        return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor);
+        return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor, sApiConfigPhFlags);
     }
 
     public E2EInteropMockTest(
