@@ -25,6 +25,8 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -52,33 +54,33 @@ public class AggregateReportingJobHandler {
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
-
+    private final Flags mFlags;
     private ReportingStatus.UploadMethod mUploadMethod;
-
-    AggregateReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
-        mEnrollmentDao = enrollmentDao;
-        mDatastoreManager = datastoreManager;
-        mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
-    }
 
     AggregateReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             ReportingStatus.UploadMethod uploadMethod) {
-        mEnrollmentDao = enrollmentDao;
-        mDatastoreManager = datastoreManager;
-        mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
-        mUploadMethod = uploadMethod;
+        this(
+                enrollmentDao,
+                datastoreManager,
+                new AggregateEncryptionKeyManager(datastoreManager),
+                uploadMethod,
+                FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
     AggregateReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
-            AggregateEncryptionKeyManager aggregateEncryptionKeyManager) {
+            AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
+            ReportingStatus.UploadMethod uploadMethod,
+            Flags flags) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
+        mUploadMethod = uploadMethod;
+        mFlags = flags;
     }
 
     /**
@@ -155,6 +157,24 @@ public class AggregateReportingJobHandler {
         return true;
     }
 
+    private String getAppPackageName(AggregateReport report) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
+            return "";
+        }
+        if (report.getSourceId() == null) {
+            LogUtil.d("SourceId is null on event report.");
+            return "";
+        }
+        Optional<String> sourceRegistrant =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getSourceRegistrant(report.getSourceId()));
+        if (sourceRegistrant.isEmpty()) {
+            LogUtil.d("Source registrant not found");
+            return "";
+        }
+        return sourceRegistrant.get();
+    }
+
     /**
      * Perform aggregate reporting by finding the relevant {@link AggregateReport} and making an
      * HTTP POST request to the specified report to URL with the report data as a JSON in the body.
@@ -174,7 +194,7 @@ public class AggregateReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
-
+        reportingStatus.setSourceRegistrant(getAppPackageName(aggregateReport));
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
@@ -273,6 +293,7 @@ public class AggregateReportingJobHandler {
                                 .setFailureType(reportingStatus.getFailureStatus().ordinal())
                                 .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
                                 .setReportingDelay(reportingStatus.getReportingDelay().get())
+                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                                 .build());
     }
 }

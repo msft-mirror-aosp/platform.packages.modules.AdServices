@@ -2962,6 +2962,14 @@ public interface Flags {
         return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
     }
 
+    /** Default Measurement app package name logging flag. */
+    boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
+
+    /** Returns whether Measurement app package name logging is enabled. */
+    default boolean getMeasurementEnableAppPackageNameLogging() {
+        return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
