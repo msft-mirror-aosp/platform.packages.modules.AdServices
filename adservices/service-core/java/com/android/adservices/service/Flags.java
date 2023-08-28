@@ -309,6 +309,8 @@ public interface Flags {
     long MEASUREMENT_DB_SIZE_LIMIT = (1024 * 1024) * 10; // 10 MBs
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
+    int MEASUREMENT_REPORT_RETRY_LIMIT = 3;
+    boolean MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED = true;
 
     /**
      * Returns the window that an InputEvent has to be within for the system to register it as a
@@ -337,6 +339,16 @@ public interface Flags {
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
+    }
+
+    /** Returns Whether to limit number of Retries for Measurement Reports */
+    default boolean getMeasurementReportingRetryLimitEnabled() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED;
+    }
+
+    /** Returns Maximum number of Retries for Measurement Reportss */
+    default int getMeasurementReportingRetryLimit() {
+        return MEASUREMENT_REPORT_RETRY_LIMIT;
     }
 
     /** Measurement manifest file url, used for MDD download. */
