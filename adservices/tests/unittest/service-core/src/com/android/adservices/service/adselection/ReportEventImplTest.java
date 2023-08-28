@@ -252,7 +252,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplSuccessfullyReportsRegisteredInteractions() throws Exception {
+    public void testImplSuccessfullyReportsRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -302,8 +302,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplDoesNotCrashAfterSellerReportingThrowsAnException()
-            throws Exception {
+    public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -375,8 +374,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplDoesNotCrashAfterBuyerReportingThrowsAnException()
-            throws Exception {
+    public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -448,7 +446,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplOnlyReportsBuyersRegisteredInteractions() throws Exception {
+    public void testImplOnlyReportsBuyersRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -506,7 +504,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplOnlyReportsSellerRegisteredInteractions() throws Exception {
+    public void testImplOnlyReportsSellerRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -564,8 +562,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplReturnsOnlyReportsUriThatPassesEnrollmentCheck()
-            throws Exception {
+    public void testImplReturnsOnlyReportsUriThatPassesEnrollmentCheck() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -647,7 +644,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
+    public void testImplReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
             throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -716,7 +713,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWithInvalidPackageName() throws Exception {
+    public void testImplFailsWithInvalidPackageName() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -781,7 +778,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWhenForegroundCheckFails() throws Exception {
+    public void testImplFailsWhenForegroundCheckFails() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -847,7 +844,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWhenThrottled() throws Exception {
+    public void testImplFailsWhenThrottled() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -941,7 +938,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWhenAppNotInAllowList() throws Exception {
+    public void testImplFailsWhenAppNotInAllowList() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1002,7 +999,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsSilentlyWithoutConsent() throws Exception {
+    public void testImplFailsSilentlyWithoutConsent() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1062,7 +1059,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWithUnknownAdSelectionId() throws Exception {
+    public void testImplFailsWithUnknownAdSelectionId() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1109,8 +1106,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplSucceedsWhenNotFindingRegisteredAdInteractions()
-            throws Exception {
+    public void testImplSucceedsWhenNotFindingRegisteredAdInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mMockWebServerRule.startMockWebServer(
@@ -1145,7 +1141,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWhenInteractionDataExceedsMaxSize() throws Exception {
+    public void testImplFailsWhenInteractionDataExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -1191,7 +1187,7 @@ public class ReportEventImplTest {
     }
 
     @Test
-    public void testReportEventImplFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
+    public void testImplFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,

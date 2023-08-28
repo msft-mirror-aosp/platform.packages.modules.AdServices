@@ -291,6 +291,4 @@ public abstract class EventReporter {
             @ReportEventRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
     }
-
-
 }
