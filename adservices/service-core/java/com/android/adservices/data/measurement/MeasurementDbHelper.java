@@ -18,6 +18,7 @@ package com.android.adservices.data.measurement;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -69,6 +70,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
     private final int mDbVersion;
     private final DbHelper mDbHelper;
 
+    @SuppressLint("NewAdServicesFile")
     @VisibleForTesting
     public MeasurementDbHelper(
             @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
