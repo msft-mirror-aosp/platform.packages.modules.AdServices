@@ -28,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -152,6 +153,12 @@ public class AggregateReportingJobHandler {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                        mDatastoreManager.runInTransaction(
+                                (dao) ->
+                                        dao.incrementReportingRetryCount(
+                                                aggregateReportId,
+                                                KeyValueData.DataType
+                                                        .AGGREGATE_REPORT_RETRY_COUNT));
                     }
 
                     if (mUploadMethod != null) {

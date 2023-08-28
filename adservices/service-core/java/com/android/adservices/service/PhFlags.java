@@ -728,6 +728,11 @@ public final class PhFlags implements Flags {
 
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
+    // TODO b/298278031 Migrate Keys/Namespace to FlagConstants.
+    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
+    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
+            "measurement_report_retry_limit_enabled";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     // TODO(b/298090610): Move this flag to FlagsConstants after M10 is fully rolled out.
@@ -1096,6 +1101,24 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DB_SIZE_LIMIT,
                 /* defaultValue */ MEASUREMENT_DB_SIZE_LIMIT);
+    }
+
+    @Override
+    public boolean getMeasurementReportingRetryLimitEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED,
+                /* defaultValue */ MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED);
+    }
+
+    @Override
+    public int getMeasurementReportingRetryLimit() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REPORT_RETRY_LIMIT,
+                /* defaultValue */ MEASUREMENT_REPORT_RETRY_LIMIT);
     }
 
     @Override
@@ -3477,7 +3500,21 @@ public final class PhFlags implements Flags {
                         + getEnforceForegroundStatusForTopics());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
-        writer.println("\t" + KEY_MEASUREMENT_DB_SIZE_LIMIT + " = " + getMeasurementDbSizeLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DB_SIZE_LIMIT
+                        + " = "
+                        + getMeasurementDbSizeLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REPORT_RETRY_LIMIT
+                        + " = "
+                        + getMeasurementReportingRetryLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED
+                        + " = "
+                        + getMeasurementReportingRetryLimitEnabled());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
