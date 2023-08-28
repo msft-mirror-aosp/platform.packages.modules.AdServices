@@ -30,6 +30,7 @@ public class MeasurementAttributionStats {
     private boolean mIsSourceDerived;
     private boolean mIsInstallAttribution;
     private long mAttributionDelay;
+    private String mSourceRegistrant;
 
     public MeasurementAttributionStats() {}
 
@@ -46,7 +47,9 @@ public class MeasurementAttributionStats {
                 && mFailureType == measurementAttributionStats.getFailureType()
                 && mIsSourceDerived == measurementAttributionStats.isSourceDerived()
                 && mIsInstallAttribution == measurementAttributionStats.isInstallAttribution()
-                && mAttributionDelay == measurementAttributionStats.getAttributionDelay();
+                && mAttributionDelay == measurementAttributionStats.getAttributionDelay()
+                && Objects.equals(
+                        mSourceRegistrant, measurementAttributionStats.getSourceRegistrant());
     }
 
     @Override
@@ -59,7 +62,8 @@ public class MeasurementAttributionStats {
                 mFailureType,
                 mIsSourceDerived,
                 mIsInstallAttribution,
-                mAttributionDelay);
+                mAttributionDelay,
+                mSourceRegistrant);
     }
 
     public int getCode() {
@@ -92,6 +96,10 @@ public class MeasurementAttributionStats {
 
     public long getAttributionDelay() {
         return mAttributionDelay;
+    }
+
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
     }
 
     /** Builder for {@link MeasurementAttributionStats}. */
@@ -152,6 +160,14 @@ public class MeasurementAttributionStats {
             mBuilding.mAttributionDelay = attributionDelay;
             return this;
         }
+
+        /** See {@link MeasurementAttributionStats#getSourceRegistrant()} . */
+        public @NonNull MeasurementAttributionStats.Builder setSourceRegistrant(
+                String sourceRegistrant) {
+            mBuilding.mSourceRegistrant = sourceRegistrant;
+            return this;
+        }
+
         /** Build the {@link MeasurementAttributionStats}. */
         public @NonNull MeasurementAttributionStats build() {
             return mBuilding;

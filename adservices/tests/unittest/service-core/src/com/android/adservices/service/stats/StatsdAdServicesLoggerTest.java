@@ -74,6 +74,7 @@ public class StatsdAdServicesLoggerTest {
     private static final int FILTERED_BLOCKED_TOPIC_COUNT = 0;
     private static final int DUPLICATE_TOPIC_COUNT = 0;
     private static final int TOPIC_IDS_COUNT = 1;
+    private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
 
     private static final GetTopicsReportedStats TOPICS_REPORTED_STATS_DATA =
             GetTopicsReportedStats.builder()
@@ -397,6 +398,7 @@ public class StatsdAdServicesLoggerTest {
                         .setAttributionType(attributionType)
                         .setDebugJoinKeyHashedValue(hashedValue)
                         .setDebugJoinKeyHashLimit(hashLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -407,7 +409,8 @@ public class StatsdAdServicesLoggerTest {
                                         anyInt(),
                                         anyBoolean(),
                                         anyLong(),
-                                        anyLong()));
+                                        anyLong(),
+                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementDebugKeysMatch(stats);
@@ -422,7 +425,8 @@ public class StatsdAdServicesLoggerTest {
                                 eq(attributionType),
                                 eq(true),
                                 eq(hashedValue),
-                                eq(hashLimit));
+                                eq(hashLimit),
+                                eq(SOURCE_REGISTRANT));
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -440,6 +444,7 @@ public class StatsdAdServicesLoggerTest {
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -452,7 +457,8 @@ public class StatsdAdServicesLoggerTest {
                                         anyInt(),
                                         anyBoolean(),
                                         anyBoolean(),
-                                        anyLong()));
+                                        anyLong(),
+                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementAttributionStats(stats);
@@ -468,7 +474,8 @@ public class StatsdAdServicesLoggerTest {
                                 eq(AttributionStatus.FailureType.UNKNOWN.ordinal()),
                                 eq(false),
                                 eq(true),
-                                eq(100L));
+                                eq(100L),
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -481,8 +488,10 @@ public class StatsdAdServicesLoggerTest {
                 new MeasurementWipeoutStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
                         .setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal())
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
-        ExtendedMockito.doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt()));
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementWipeoutStats(stats);
@@ -492,7 +501,8 @@ public class StatsdAdServicesLoggerTest {
                 () ->
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_WIPEOUT),
-                                eq(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal()));
+                                eq(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal()),
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -508,9 +518,10 @@ public class StatsdAdServicesLoggerTest {
                         .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
                         .setRegistrationStatus(UnknownEnumValue)
                         .setRegistrationDelay(registrationDelay)
+                        .setRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
-                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong()));
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong(), anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementDelayedSourceRegistrationStats(stats);
@@ -521,7 +532,8 @@ public class StatsdAdServicesLoggerTest {
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION),
                                 eq(UnknownEnumValue),
-                                eq(registrationDelay));
+                                eq(registrationDelay),
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -662,6 +674,7 @@ public class StatsdAdServicesLoggerTest {
                         .setAttributionType(attributionType)
                         .setNumUniqueAdIds(uniqueAdIdValue)
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -672,7 +685,8 @@ public class StatsdAdServicesLoggerTest {
                                         anyInt(),
                                         anyBoolean(),
                                         anyLong(),
-                                        anyLong()));
+                                        anyLong(),
+                                        anyString()));
 
         // Invoke logging call
         mLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
@@ -686,7 +700,8 @@ public class StatsdAdServicesLoggerTest {
                                 eq(attributionType),
                                 eq(true),
                                 eq(uniqueAdIdValue),
-                                eq(uniqueAdIdLimit));
+                                eq(uniqueAdIdLimit),
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 

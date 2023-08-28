@@ -24,6 +24,7 @@ import java.util.Objects;
 public class MeasurementWipeoutStats {
     private int mCode;
     private int mWipeoutType;
+    private String mSourceRegistrant;
 
     public MeasurementWipeoutStats() {}
 
@@ -34,12 +35,13 @@ public class MeasurementWipeoutStats {
         }
         MeasurementWipeoutStats measurementWipeoutStats = (MeasurementWipeoutStats) obj;
         return mCode == measurementWipeoutStats.getCode()
-                && mWipeoutType == measurementWipeoutStats.getWipeoutType();
+                && mWipeoutType == measurementWipeoutStats.getWipeoutType()
+                && Objects.equals(mSourceRegistrant, measurementWipeoutStats.mSourceRegistrant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mWipeoutType);
+        return Objects.hash(mCode, mWipeoutType, mSourceRegistrant);
     }
 
     public int getCode() {
@@ -48,6 +50,10 @@ public class MeasurementWipeoutStats {
 
     public int getWipeoutType() {
         return mWipeoutType;
+    }
+
+    public String getSourceRegistrant() {
+        return mSourceRegistrant;
     }
 
     /** Builder for {@link MeasurementWipeoutStats}. */
@@ -69,6 +75,14 @@ public class MeasurementWipeoutStats {
             mBuilding.mWipeoutType = wipeoutType;
             return this;
         }
+
+        /** See {@link MeasurementWipeoutStats#getSourceRegistrant()} . */
+        public @NonNull MeasurementWipeoutStats.Builder setSourceRegistrant(
+                String sourceRegistrant) {
+            mBuilding.mSourceRegistrant = sourceRegistrant;
+            return this;
+        }
+
         /** Build the {@link MeasurementWipeoutStats}. */
         public @NonNull MeasurementWipeoutStats build() {
             return mBuilding;
