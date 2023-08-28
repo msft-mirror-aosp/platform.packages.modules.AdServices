@@ -194,9 +194,15 @@ public class DebugKeyAccessor {
                 trigger.getEnrollmentId(),
                 attributionType,
                 doesPlatformAndDebugAdIdMatch,
-                mAdServicesLogger);
+                mAdServicesLogger,
+                source.getRegistrant().toString());
         logDebugKeysMatch(
-                joinKeyHash, trigger, attributionType, doDebugJoinKeysMatch, mAdServicesLogger);
+                joinKeyHash,
+                source,
+                trigger,
+                attributionType,
+                doDebugJoinKeysMatch,
+                mAdServicesLogger);
         return new Pair<>(sourceDebugKey, triggerDebugKey);
     }
 
@@ -339,9 +345,15 @@ public class DebugKeyAccessor {
                 trigger.getEnrollmentId(),
                 attributionType,
                 doesPlatformAndDebugAdIdMatch,
-                mAdServicesLogger);
+                mAdServicesLogger,
+                source.getRegistrant().toString());
         logDebugKeysMatch(
-                joinKeyHash, trigger, attributionType, doDebugJoinKeysMatch, mAdServicesLogger);
+                joinKeyHash,
+                source,
+                trigger,
+                attributionType,
+                doDebugJoinKeysMatch,
+                mAdServicesLogger);
         return new Pair<>(sourceDebugKey, triggerDebugKey);
     }
 
@@ -370,6 +382,7 @@ public class DebugKeyAccessor {
 
     private void logDebugKeysMatch(
             Long joinKeyHash,
+            Source source,
             Trigger trigger,
             int attributionType,
             boolean doDebugJoinKeysMatch,
@@ -385,6 +398,7 @@ public class DebugKeyAccessor {
                             .setMatched(doDebugJoinKeysMatch)
                             .setDebugJoinKeyHashedValue(hashedValue)
                             .setDebugJoinKeyHashLimit(debugKeyHashLimit)
+                            .setSourceRegistrant(source.getRegistrant().toString())
                             .build();
             mAdServicesLogger.logMeasurementDebugKeysMatch(stats);
         }
@@ -394,7 +408,8 @@ public class DebugKeyAccessor {
             String enrollmentId,
             int attributionType,
             Boolean doesPlatformAdIdMatchDebugAdId,
-            AdServicesLogger adServicesLogger)
+            AdServicesLogger adServicesLogger,
+            String sourceRegistrant)
             throws DatastoreException {
         // The debug AdID was attempted to match to the platform AdID.
         if (doesPlatformAdIdMatchDebugAdId != null) {
@@ -407,6 +422,7 @@ public class DebugKeyAccessor {
                             .setMatched(doesPlatformAdIdMatchDebugAdId)
                             .setNumUniqueAdIds(getNumUniqueAdIdsUsed(enrollmentId))
                             .setNumUniqueAdIdsLimit(platformDebugAdIdMatchingLimit)
+                            .setSourceRegistrant(sourceRegistrant)
                             .build();
             adServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
         }

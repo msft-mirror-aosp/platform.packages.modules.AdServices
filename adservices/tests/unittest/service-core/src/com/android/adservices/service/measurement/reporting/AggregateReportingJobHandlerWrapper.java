@@ -25,6 +25,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -54,6 +55,7 @@ public class AggregateReportingJobHandlerWrapper {
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         AggregateEncryptionKeyManager mockEncryptionManager =
                 Mockito.mock(AggregateEncryptionKeyManager.class);
+        Flags mockFlags = Mockito.mock(Flags.class);
         when(mockEncryptionManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
                         invocation -> {
@@ -68,7 +70,11 @@ public class AggregateReportingJobHandlerWrapper {
         AggregateReportingJobHandler aggregateReportingJobHandler =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
-                                        enrollmentDao, datastoreManager, mockEncryptionManager)
+                                        enrollmentDao,
+                                        datastoreManager,
+                                        mockEncryptionManager,
+                                        ReportingStatus.UploadMethod.REGULAR,
+                                        mockFlags)
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());
