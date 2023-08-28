@@ -3486,6 +3486,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1
                         + " = "
                         + getMeasurementEnableAraDeduplicationAlignmentV1());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
+                        + " = "
+                        + getMeasurementEnableAppPackageNameLogging());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t"
@@ -4414,5 +4419,14 @@ public final class PhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED,
                 /* defaultValue */ DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED);
+    }
+
+    /** Returns whether Measurement app package name logging is enabled. */
+    @Override
+    public boolean getMeasurementEnableAppPackageNameLogging() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
+                /* defaultValue */ MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING);
     }
 }

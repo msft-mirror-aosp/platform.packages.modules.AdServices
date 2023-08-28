@@ -177,7 +177,9 @@ public class MeasurementDataDeleter {
                     // package on device for parity
                     WipeoutStatus wipeoutStatus = new WipeoutStatus();
                     wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNKNOWN);
-                    logWipeoutStats(wipeoutStatus);
+                    logWipeoutStats(
+                            wipeoutStatus,
+                            getRegistrant(deletionParam.getAppPackageName()).toString());
                 });
     }
 
@@ -272,12 +274,13 @@ public class MeasurementDataDeleter {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
-    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus, String sourceRegistrant) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
                                 .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setSourceRegistrant(sourceRegistrant)
                                 .build());
     }
 
