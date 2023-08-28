@@ -3518,6 +3518,7 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
+                        + PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementEventMainReportingJobPeriodMs());
         writer.println(
