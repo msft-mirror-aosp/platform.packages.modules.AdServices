@@ -18,6 +18,7 @@ package com.android.adservices.data.measurement;
 
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Optional;
@@ -92,6 +93,11 @@ public abstract class DatastoreManager {
             safePrintDataStoreVersion();
             LogUtil.e(ex, "DatastoreException thrown during transaction");
             transaction.rollback();
+
+            if (FlagsFactory.getFlags()
+                    .getMeasurementEnableDatastoreManagerThrowDatastoreException()) {
+                throw new IllegalStateException(ex);
+            }
         } catch (Exception ex) {
             // Catch all exceptions for rollback
             safePrintDataStoreVersion();

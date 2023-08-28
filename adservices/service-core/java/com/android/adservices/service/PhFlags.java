@@ -687,6 +687,20 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
+    static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_accounted_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_json_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION =
+            "measurement_enable_delete_reports_on_unrecoverable_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION =
+            "measurement_enable_reporting_jobs_throw_crypto_exception";
+
+    static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
+            "measurement_enable_datastore_manager_throw_datastore_exception";
 
     static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
 
@@ -3767,6 +3781,31 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportingJobsThrowUnaccountedException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportingJobsThrowJsonException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportDeletionOnUnrecoverableException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableReportingJobsThrowCryptoException());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION
+                        + " = "
+                        + getMeasurementEnableDatastoreManagerThrowDatastoreException());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -4546,6 +4585,51 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1,
                 /* defaultValue */ MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportingJobsThrowJsonException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
+        return DeviceConfig.getBoolean(
+                .NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableReportingJobsThrowCryptoException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */
+                        KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION,
+                /* defaultValue */ MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION);
     }
 
     @Override
