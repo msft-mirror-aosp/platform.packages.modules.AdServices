@@ -143,7 +143,7 @@ public final class DebugReportingJobService extends JobService {
         DatastoreManager datastoreManager =
                 DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
         if (isDebugReportApi) {
-            new DebugReportingJobHandler(enrollmentDao, datastoreManager)
+            new DebugReportingJobHandler(enrollmentDao, datastoreManager, FlagsFactory.getFlags())
                     .performScheduledPendingReports();
         } else {
             new EventReportingJobHandler(
