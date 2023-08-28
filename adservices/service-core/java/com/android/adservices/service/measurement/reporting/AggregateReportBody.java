@@ -44,6 +44,7 @@ public class AggregateReportBody {
     private String mDebugCleartextPayload;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mDebugMode;
 
     private Uri mAggregationCoordinatorOrigin;
 
@@ -71,6 +72,7 @@ public class AggregateReportBody {
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String API_VERSION = "version";
+        String DEBUG_MODE = "debug_mode";
     }
 
     private AggregateReportBody() {}
@@ -85,6 +87,7 @@ public class AggregateReportBody {
         mDebugCleartextPayload = other.mDebugCleartextPayload;
         mSourceDebugKey = other.mSourceDebugKey;
         mTriggerDebugKey = other.mTriggerDebugKey;
+        mDebugMode = other.mDebugMode;
         mAggregationCoordinatorOrigin = other.mAggregationCoordinatorOrigin;
     }
 
@@ -127,6 +130,10 @@ public class AggregateReportBody {
         sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
         sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, mSourceRegistrationTime);
         sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
+
+        if (mDebugMode != null) {
+            sharedInfoJson.put(SharedInfoKeys.DEBUG_MODE, mDebugMode);
+        }
 
         return sharedInfoJson;
     }
@@ -230,6 +237,12 @@ public class AggregateReportBody {
         /** Trigger debug key */
         public @NonNull Builder setTriggerDebugKey(@Nullable UnsignedLong triggerDebugKey) {
             mBuilding.mTriggerDebugKey = triggerDebugKey;
+            return this;
+        }
+
+        /** Debug mode */
+        public Builder setDebugMode(String debugMode) {
+            mBuilding.mDebugMode = debugMode;
             return this;
         }
 
