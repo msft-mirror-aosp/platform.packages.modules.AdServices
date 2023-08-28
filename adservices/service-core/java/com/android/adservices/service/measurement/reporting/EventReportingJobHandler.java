@@ -28,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -136,6 +137,11 @@ public class EventReportingJobHandler {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                mDatastoreManager.runInTransaction(
+                        (dao) ->
+                                dao.incrementReportingRetryCount(
+                                        eventReportId,
+                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT));
             }
 
             if (mUploadMethod != null) {
