@@ -6400,7 +6400,6 @@ public class PhFlagsTest {
                 .isEqualTo(phOverridingValue);
     }
 
-
     @Test
     public void testGetMeasurementMinimumAggregatableReportWindowInSeconds() {
         // Without any overriding, the value is the hard coded constant.

@@ -63,8 +63,7 @@ public class AuctionResultValidator implements Validator<AuctionResult> {
                         auctionResult.getBuyer().toString(),
                         "AuctionResult",
                         "Ad render URL");
-        adRenderUriValidator.addValidation(
-                Uri.parse(auctionResult.getAdRenderUrl()), violations);
+        adRenderUriValidator.addValidation(Uri.parse(auctionResult.getAdRenderUrl()), violations);
 
         if (auctionResult.getBid() < 0) {
             violations.add(String.format(Locale.ENGLISH, NEGATIVE_BID, auctionResult.getBid()));

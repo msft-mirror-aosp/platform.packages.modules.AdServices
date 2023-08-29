@@ -684,6 +684,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     AdSelectionInitialization.builder()
                             .setSeller(SAMPLE_SELLER)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setCreationInstant(Instant.now())
                             .build();
             final AdSelectionResultBidAndUri idWithBidAndRenderUri =
                     AdSelectionResultBidAndUri.builder()
@@ -692,9 +693,7 @@ public class AdSelectionFromOutcomesE2ETest {
                             .setWinningAdRenderUri(renderUri)
                             .build();
             mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
-                    idWithBidAndRenderUri.getAdSelectionId(),
-                    adSelectionInitialization,
-                    Instant.now());
+                    idWithBidAndRenderUri.getAdSelectionId(), adSelectionInitialization);
         }
     }
 
