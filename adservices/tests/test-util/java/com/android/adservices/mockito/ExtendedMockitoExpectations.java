@@ -48,6 +48,18 @@ public final class ExtendedMockitoExpectations {
         doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
     }
 
+    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    public static void mockIsAtLeastS(boolean isIt) {
+        Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
+        doReturn(isIt).when(SdkLevel::isAtLeastS);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastSv2()}, returning {@code isIt}. */
+    public static void mockIsAtLeastSv2(boolean isIt) {
+        Log.v(TAG, "mockIsAtLeastSv2(" + isIt + ")");
+        doReturn(isIt).when(SdkLevel::isAtLeastSv2);
+    }
+
     /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
     public static void mockIsAtLeastT(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");

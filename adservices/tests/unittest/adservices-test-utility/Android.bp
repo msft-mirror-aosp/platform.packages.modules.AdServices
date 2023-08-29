@@ -21,13 +21,15 @@ package {
 android_test {
     name: "AdServicesTestUtilityTests",
     srcs: [
-          "src/**/*.java"
+          "src/**/*.java",
+          "side-less/**/*.java",
     ],
     static_libs: [
         "adservices-test-utility",
         "androidx.test.core",
         "truth-prebuilt",
     ],
+    defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     test_config: "AndroidTest.xml",
     // TODO(b/293894199): should be 30 (see explanation on AndroidTest.xml)

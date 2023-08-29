@@ -25,9 +25,10 @@ import org.junit.runners.model.Statement;
 
 import java.util.Objects;
 
-// TODO(b/295269584): move to module-utils
+// TODO(b/295269584): move to module-utils?
 // TODO(b/295269584): add examples
 // TODO(b/295269584): add unit tests
+// TODO(b/295269584): rename to AbstractSdkLevelSupportRule
 
 /**
  * Rule used to skip a test when it's not supported by the device's SDK version.
@@ -40,7 +41,7 @@ import java.util.Objects;
  */
 abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
-    private static final String TAG = "SdkLevelSupportedRule";
+    private static final String TAG = "SdkLevelSupportRule";
 
     private final AndroidSdkLevel mDefaultMinLevel;
     protected final Logger mLog;
