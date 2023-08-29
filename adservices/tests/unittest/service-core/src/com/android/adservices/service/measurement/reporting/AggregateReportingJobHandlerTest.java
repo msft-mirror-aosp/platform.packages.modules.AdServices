@@ -559,6 +559,56 @@ public class AggregateReportingJobHandlerTest {
     }
 
     @Test
+    public void testPerformScheduledPendingReports_ThreadInterrupted()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
+        AggregateReport aggregateReport2 =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId2")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setScheduledReportTime(1100L)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .build();
+        JSONObject aggregateReportBody2 = createASampleAggregateReportBody(aggregateReport2);
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(
+                                COORDINATOR_ORIGIN.toString(),
+                                List.of(aggregateReport1.getId(), aggregateReport2.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId()))
+                .thenReturn(aggregateReport1);
+        when(mMeasurementDao.getAggregateReport(aggregateReport2.getId()))
+                .thenReturn(aggregateReport2);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody1)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport1, REPORTING_URI, AggregateCryptoFixture.getKey());
+        doReturn(aggregateReportBody2)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport2, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        Thread.currentThread().interrupt();
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+
+        // 0 reports processed, since the thread exits early.
+        verify(mMeasurementDao, times(0)).markAggregateReportStatus(any(), anyInt());
+
+        // 1 transaction for initial retrieval of pending report ids.
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
     public void performReport_throwsIOException_logsReportingStatus()
             throws DatastoreException, IOException, JSONException {
         AggregateReport aggregateReport = createASampleAggregateReport();
