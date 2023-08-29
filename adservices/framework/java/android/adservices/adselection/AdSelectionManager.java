@@ -910,39 +910,45 @@ public class AdSelectionManager {
 
     @SuppressLint("MissingPermission")
     private void getAdId(AdSelectionAdIdCallback adSelectionAdIdCallback) {
-        CountDownLatch timer = new CountDownLatch(1);
-        AtomicReference<String> adIdValue = new AtomicReference<>();
-        mAdIdManager.getAdId(
-                mAdIdExecutor,
-                new android.adservices.common.AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(AdId adId) {
-                        String id = adId.getAdId();
-                        adIdValue.set(!AdId.ZERO_OUT.equals(id) ? id : null);
-                        sLogger.v("AdId permission enabled: %b.", !AdId.ZERO_OUT.equals(id));
-                        timer.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        if (e instanceof IllegalStateException || e instanceof SecurityException) {
-                            sLogger.w(DEBUG_API_WARNING_MESSAGE);
-                        } else {
-                            sLogger.w(e, DEBUG_API_WARNING_MESSAGE);
-                        }
-                        timer.countDown();
-                    }
-                });
-
-        boolean timedOut = false;
         try {
-            timedOut = !timer.await(AD_ID_TIMEOUT_MS, MILLISECONDS);
-        } catch (InterruptedException e) {
-            sLogger.w(e, "Interrupted while getting the AdId.");
+            CountDownLatch timer = new CountDownLatch(1);
+            AtomicReference<String> adIdValue = new AtomicReference<>();
+            mAdIdManager.getAdId(
+                    mAdIdExecutor,
+                    new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                        @Override
+                        public void onResult(AdId adId) {
+                            String id = adId.getAdId();
+                            adIdValue.set(!AdId.ZERO_OUT.equals(id) ? id : null);
+                            sLogger.v("AdId permission enabled: %b.", !AdId.ZERO_OUT.equals(id));
+                            timer.countDown();
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            if (e instanceof IllegalStateException
+                                    || e instanceof SecurityException) {
+                                sLogger.w(DEBUG_API_WARNING_MESSAGE);
+                            } else {
+                                sLogger.w(e, DEBUG_API_WARNING_MESSAGE);
+                            }
+                            timer.countDown();
+                        }
+                    });
+
+            boolean timedOut = false;
+            try {
+                timedOut = !timer.await(AD_ID_TIMEOUT_MS, MILLISECONDS);
+            } catch (InterruptedException e) {
+                sLogger.w(e, "Interrupted while getting the AdId.");
+            }
+            if (timedOut) {
+                sLogger.w("AdId call timed out.");
+            }
+            adSelectionAdIdCallback.onResult(adIdValue.get());
+        } catch (Exception e) {
+            sLogger.d(e, "Could not get AdId.");
+            adSelectionAdIdCallback.onResult(null);
         }
-        if (timedOut) {
-            sLogger.w("AdId call timed out.");
-        }
-        adSelectionAdIdCallback.onResult(adIdValue.get());
     }
 }
