@@ -183,6 +183,41 @@ public class DebugReportingJobHandlerTest {
     }
 
     @Test
+    public void testPerformScheduledReports_ThreadInterrupted()
+            throws DatastoreException, IOException, JSONException {
+        DebugReport debugReport1 = createDebugReport1();
+        JSONArray debugReportPayload1 = new JSONArray();
+        debugReportPayload1.put(debugReport1.toPayloadJson());
+        DebugReport debugReport2 = createDebugReport2();
+        JSONArray debugReportPayload2 = new JSONArray();
+        debugReportPayload2.put(debugReport2.toPayloadJson());
+
+        when(mMeasurementDao.getDebugReportIds())
+                .thenReturn(List.of(debugReport1.getId(), debugReport2.getId()));
+        when(mMeasurementDao.getDebugReport(debugReport1.getId())).thenReturn(debugReport1);
+        when(mMeasurementDao.getDebugReport(debugReport2.getId())).thenReturn(debugReport2);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyDebugReportingJobHandler)
+                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+        doReturn(debugReportPayload1)
+                .when(mSpyDebugReportingJobHandler)
+                .createReportJsonPayload(debugReport1);
+        doReturn(debugReportPayload2)
+                .when(mSpyDebugReportingJobHandler)
+                .createReportJsonPayload(debugReport2);
+
+        Thread.currentThread().interrupt();
+        mSpyDebugReportingJobHandler.performScheduledPendingReports();
+
+        // 0 reports processed, since the thread exits early.
+        verify(mMeasurementDao, times(0)).deleteDebugReport(any());
+
+        // 1 transaction for initial retrieval of pending report ids.
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
     public void performReport_throwsIOException_logsReportingStatus()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport = createDebugReport1();

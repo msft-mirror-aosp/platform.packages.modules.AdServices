@@ -38,9 +38,11 @@ import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 
 /**
  * Fallback service for scheduling debug reporting jobs. This runs periodically to handle any
@@ -52,7 +54,10 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
 
-    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ListeningExecutorService sBlockingExecutor =
+            AdServicesExecutors.getBlockingExecutor();
+
+    private Future mExecutorFuture;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -80,19 +85,20 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         LogUtil.d(
                 "VerboseDebugReportingFallbackJobService.onStartJob " + "at %s",
                 jobStartTime.toString());
-        sBlockingExecutor.execute(
-                () -> {
-                    sendReports();
-                    boolean shouldRetry = false;
-                    AdservicesJobServiceLogger.getInstance(
-                                    VerboseDebugReportingFallbackJobService.this)
-                            .recordJobFinished(
-                                    MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
-                                    /* isSuccessful */ true,
-                                    shouldRetry);
+        mExecutorFuture =
+                sBlockingExecutor.submit(
+                        () -> {
+                            sendReports();
+                            boolean shouldRetry = false;
+                            AdservicesJobServiceLogger.getInstance(
+                                            VerboseDebugReportingFallbackJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            shouldRetry);
 
-                    jobFinished(params, false);
-                });
+                            jobFinished(params, false);
+                        });
         return true;
     }
 
@@ -100,6 +106,9 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("VerboseDebugReportingJobService.onStopJob");
         boolean shouldRetry = true;
+        if (mExecutorFuture != null) {
+            shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
+        }
         AdservicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(
                         params, MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID, shouldRetry);
@@ -173,7 +182,8 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         return false;
     }
 
-    private void sendReports() {
+    @VisibleForTesting
+    void sendReports() {
         final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
@@ -189,5 +199,10 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
             }
         }
         LogUtil.d("VerboseDebugReportingFallbackJobService did not acquire the lock");
+    }
+
+    @VisibleForTesting
+    Future getFutureForTesting() {
+        return mExecutorFuture;
     }
 }
