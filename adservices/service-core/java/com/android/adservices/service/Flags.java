@@ -2691,6 +2691,14 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
+    /** Get mainline train version */
+    String DEFAULT_MAINLINE_TRAIN_VERSION = "000000";
+
+    /** Get mainline train version */
+    default String getMainlineTrainVersion() {
+        return DEFAULT_MAINLINE_TRAIN_VERSION;
+    }
+
     /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 

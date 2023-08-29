@@ -727,6 +727,9 @@ public final class PhFlags implements Flags {
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
 
+    // TODO(b/298090610): Move this flag to FlagsConstants after M10 is fully rolled out.
+    public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
+
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
     public static PhFlags getInstance() {
@@ -2091,6 +2094,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST,
                 /* defaultValue */ DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST);
+    }
+
+    @Override
+    public String getMainlineTrainVersion() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAINLINE_TRAIN_VERSION,
+                /* defaultValue */ DEFAULT_MAINLINE_TRAIN_VERSION);
     }
 
     // ADID Killswitches
@@ -3612,6 +3623,7 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST
                         + " = "
                         + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
+        writer.println("\t" + KEY_MAINLINE_TRAIN_VERSION + " = " + getMainlineTrainVersion());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
