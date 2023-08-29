@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
@@ -35,6 +36,7 @@ import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -80,25 +82,45 @@ public class AttributionJobService extends JobService {
         LogUtil.d("AttributionJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
-                    boolean success =
-                            new AttributionJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
-                                            new DebugReportApi(
-                                                    getApplicationContext(),
-                                                    FlagsFactory.getFlags()))
-                                    .performPendingAttributions();
+                    boolean needsRescheduling = processPendingAttributions();
 
                     AdservicesJobServiceLogger.getInstance(AttributionJobService.this)
-                            .recordJobFinished(MEASUREMENT_ATTRIBUTION_JOB_ID, success, !success);
+                            .recordJobFinished(
+                                    MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                    /* isSuccessful= */ true,
+                                    needsRescheduling);
 
-                    jobFinished(params, !success);
+                    jobFinished(params, needsRescheduling);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
                     scheduleIfNeeded(this, /* forceSchedule */ true);
                     DebugReportingJobService.scheduleIfNeeded(
                             getApplicationContext(), /* forceSchedule */ false);
                 });
         return true;
+    }
+
+    /**
+     * Returns false if the job doesn't need to be rescheduled. If there are pending records to be
+     * processed it will return true.
+     */
+    private boolean processPendingAttributions() {
+        final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
+        if (lock.tryLock()) {
+            try {
+                return new AttributionJobHandler(
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()),
+                                new DebugReportApi(
+                                        getApplicationContext(), FlagsFactory.getFlags()))
+                        .performPendingAttributions();
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AttributionJobService did not acquire the lock");
+        // Returning false to not reschedule. A call to be rescheduled will be made once the job
+        // finishes. Another thread is already processing attribution.
+        return false;
     }
 
     @Override
