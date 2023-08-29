@@ -22,8 +22,10 @@ import com.android.cobalt.CobaltLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
+import java.util.List;
+
 /** Wrapper around {@link CobaltLogger} that logs {@link Topic} occurrences to Cobalt. */
-final class TopicsCobaltLogger {
+public final class TopicsCobaltLogger {
     // The topics occurrence count metric has an id of 1.
     //
     // See //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
@@ -50,8 +52,15 @@ final class TopicsCobaltLogger {
 
     private final CobaltLogger mCobaltLogger;
 
-    TopicsCobaltLogger(CobaltLogger cobaltLogger) {
+    public TopicsCobaltLogger(CobaltLogger cobaltLogger) {
         this.mCobaltLogger = cobaltLogger;
+    }
+
+    /** Log a list of {@link Topic}s to Cobalt. */
+    public void logTopicOccurrences(List<Topic> topics) {
+        for (Topic topic : topics) {
+            logTopicOccurrences(topic, /* count= */ 1);
+        }
     }
 
     /**
@@ -59,8 +68,8 @@ final class TopicsCobaltLogger {
      *
      * @param topic the {@link Topic} which occurred
      */
-    void logTopicOccurrence(Topic topic) {
-        logTopicOccurrences(topic, 1);
+    public void logTopicOccurrence(Topic topic) {
+        logTopicOccurrences(topic, /* count= */ 1);
     }
 
     /**
