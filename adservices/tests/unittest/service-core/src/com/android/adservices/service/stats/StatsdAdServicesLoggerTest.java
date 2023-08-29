@@ -74,6 +74,7 @@ public class StatsdAdServicesLoggerTest {
     private static final int FILTERED_BLOCKED_TOPIC_COUNT = 0;
     private static final int DUPLICATE_TOPIC_COUNT = 0;
     private static final int TOPIC_IDS_COUNT = 1;
+    private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
 
     private static final GetTopicsReportedStats TOPICS_REPORTED_STATS_DATA =
             GetTopicsReportedStats.builder()
@@ -397,6 +398,7 @@ public class StatsdAdServicesLoggerTest {
                         .setAttributionType(attributionType)
                         .setDebugJoinKeyHashedValue(hashedValue)
                         .setDebugJoinKeyHashLimit(hashLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -424,7 +426,7 @@ public class StatsdAdServicesLoggerTest {
                                 eq(true),
                                 eq(hashedValue),
                                 eq(hashLimit),
-                                eq(""));
+                                eq(SOURCE_REGISTRANT));
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -442,6 +444,7 @@ public class StatsdAdServicesLoggerTest {
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
                         .setAttributionDelay(100L)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -472,7 +475,7 @@ public class StatsdAdServicesLoggerTest {
                                 eq(false),
                                 eq(true),
                                 eq(100L),
-                                eq(""));
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -485,6 +488,7 @@ public class StatsdAdServicesLoggerTest {
                 new MeasurementWipeoutStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
                         .setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal())
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyString()));
@@ -498,7 +502,7 @@ public class StatsdAdServicesLoggerTest {
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_WIPEOUT),
                                 eq(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal()),
-                                anyString());
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -514,6 +518,7 @@ public class StatsdAdServicesLoggerTest {
                         .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
                         .setRegistrationStatus(UnknownEnumValue)
                         .setRegistrationDelay(registrationDelay)
+                        .setRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong(), anyString()));
@@ -528,7 +533,7 @@ public class StatsdAdServicesLoggerTest {
                                 eq(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION),
                                 eq(UnknownEnumValue),
                                 eq(registrationDelay),
-                                eq(""));
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 
@@ -669,6 +674,7 @@ public class StatsdAdServicesLoggerTest {
                         .setAttributionType(attributionType)
                         .setNumUniqueAdIds(uniqueAdIdValue)
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
                         .build();
         ExtendedMockito.doNothing()
                 .when(
@@ -695,7 +701,7 @@ public class StatsdAdServicesLoggerTest {
                                 eq(true),
                                 eq(uniqueAdIdValue),
                                 eq(uniqueAdIdLimit),
-                                eq(""));
+                                eq(SOURCE_REGISTRANT));
 
         ExtendedMockito.verify(writeInvocation);
 

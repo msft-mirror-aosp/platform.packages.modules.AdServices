@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,14 +37,19 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +57,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -70,6 +77,8 @@ public class EventReportingJobHandlerTest {
             .setAttributionReportingUrl(List.of("https://ad-tech.test"))
             .build();
 
+    private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
 
@@ -78,10 +87,13 @@ public class EventReportingJobHandlerTest {
     @Mock ITransaction mTransaction;
 
     @Mock EnrollmentDao mEnrollmentDao;
+    @Mock private Flags mMockFlags;
+    private StaticMockitoSession mMockitoSession;
 
     EventReportingJobHandler mEventReportingJobHandler;
     EventReportingJobHandler mSpyEventReportingJobHandler;
     EventReportingJobHandler mSpyDebugEventReportingJobHandler;
+
 
     class FakeDatasoreManager extends DatastoreManager {
         @Override
@@ -101,9 +113,18 @@ public class EventReportingJobHandlerTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws DatastoreException {
+        mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        mMockFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         mDatastoreManager = new FakeDatasoreManager();
         when(mEnrollmentDao.getEnrollmentData(any())).thenReturn(ENROLLMENT);
+        when(mMeasurementDao.getSourceRegistrant(any())).thenReturn(SOURCE_REGISTRANT);
         mEventReportingJobHandler = new EventReportingJobHandler(mEnrollmentDao, mDatastoreManager);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
         mSpyDebugEventReportingJobHandler =
@@ -452,5 +473,10 @@ public class EventReportingJobHandlerTest {
                 .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
+    }
+
+    @After
+    public void tearDown() {
+        mMockitoSession.finishMocking();
     }
 }

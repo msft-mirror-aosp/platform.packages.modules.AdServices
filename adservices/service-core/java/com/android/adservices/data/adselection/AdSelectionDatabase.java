@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -64,6 +65,7 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
     private static volatile AdSelectionDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static AdSelectionDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition

@@ -25,6 +25,8 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
@@ -49,19 +51,28 @@ public class EventReportingJobHandler {
     private boolean mIsDebugInstance;
 
     private ReportingStatus.UploadMethod mUploadMethod;
+    private final Flags mFlags;
 
     EventReportingJobHandler(EnrollmentDao enrollmentDao, DatastoreManager datastoreManager) {
-        mEnrollmentDao = enrollmentDao;
-        mDatastoreManager = datastoreManager;
+        this(enrollmentDao, datastoreManager, null, FlagsFactory.getFlags());
     }
 
     EventReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             ReportingStatus.UploadMethod uploadMethod) {
+        this(enrollmentDao, datastoreManager, uploadMethod, FlagsFactory.getFlags());
+    }
+
+    EventReportingJobHandler(
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            ReportingStatus.UploadMethod uploadMethod,
+            Flags flags) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mUploadMethod = uploadMethod;
+        mFlags = flags;
     }
 
     /**
@@ -124,6 +135,24 @@ public class EventReportingJobHandler {
         return true;
     }
 
+    private String getAppPackageName(EventReport eventReport) {
+        if (!mFlags.getMeasurementEnableAppPackageNameLogging()) {
+            return "";
+        }
+        if (eventReport.getSourceId() == null) {
+            LogUtil.d("SourceId is null on event report.");
+            return "";
+        }
+        Optional<String> sourceRegistrant =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getSourceRegistrant(eventReport.getSourceId()));
+        if (!sourceRegistrant.isPresent()) {
+            LogUtil.d("Source registrant not found");
+            return "";
+        }
+        return sourceRegistrant.get();
+    }
+
     /**
      * Perform reporting by finding the relevant {@link EventReport} and making an HTTP POST request
      * to the specified report to URL with the report data as a JSON in the body.
@@ -140,7 +169,7 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
-
+        reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
             LogUtil.d("debugging status is not pending");
@@ -235,6 +264,7 @@ public class EventReportingJobHandler {
                                 .setFailureType(reportingStatus.getFailureStatus().ordinal())
                                 .setUploadMethod(reportingStatus.getUploadMethod().ordinal())
                                 .setReportingDelay(reportingStatus.getReportingDelay().get())
+                                .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                                 .build());
     }
 }

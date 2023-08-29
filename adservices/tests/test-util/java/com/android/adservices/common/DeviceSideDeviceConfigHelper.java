@@ -33,9 +33,12 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
             new Logger(AndroidLogger.getInstance(), DeviceSideDeviceConfigHelper.class);
 
     private final String mNamespace;
+    // TODO(b/294423183): remove once legacy usage is gone
+    private final boolean mUsedByLegacyHelper;
 
-    DeviceSideDeviceConfigHelper(String namespace) {
+    DeviceSideDeviceConfigHelper(String namespace, boolean usedByLegacyHelper) {
         mNamespace = Objects.requireNonNull(namespace);
+        mUsedByLegacyHelper = usedByLegacyHelper;
     }
 
     @Override
@@ -47,15 +50,13 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
 
     @Override
     public String get(String name, String defaultValue) {
-        return callWithDeviceConfigPermissions(
-                () -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
+        return call(() -> DeviceConfig.getString(mNamespace, name, /* defaultValue= */ null));
     }
 
     @Override
     public void set(String name, String value) {
         sLogger.v("set(%s=%s)", name, value);
-        callWithDeviceConfigPermissions(
-                () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
+        call(() -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
     }
 
     @Override
@@ -63,7 +64,7 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
         sLogger.v("delete(%s)", name);
 
         if (SdkLevel.isAtLeastT()) {
-            callWithDeviceConfigPermissions(() -> DeviceConfig.deleteProperty(mNamespace, name));
+            call(() -> DeviceConfig.deleteProperty(mNamespace, name));
             return;
         }
         ShellUtils.runShellCommand("device_config delete %s %s", mNamespace, name);
@@ -77,6 +78,20 @@ final class DeviceSideDeviceConfigHelper implements DeviceConfigHelper.Interface
     @Override
     public String toString() {
         return DeviceSideDeviceConfigHelper.class.getSimpleName();
+    }
+
+    // TODO(b/294423183): remove (and change calls above to callWithDeviceConfigPermissions()) once
+    // legacy usage is gone
+    private <T> T call(Callable<T> c) {
+        T result = callWithDeviceConfigPermissions(c);
+        if (mUsedByLegacyHelper) {
+            String permission = android.Manifest.permission.WRITE_DEVICE_CONFIG;
+            sLogger.d("re-adopting Shell permission %s for legacy purposes", permission);
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                    .getUiAutomation()
+                    .adoptShellPermissionIdentity(permission);
+        }
+        return result;
     }
 
     static <T> T callWithDeviceConfigPermissions(Callable<T> c) {

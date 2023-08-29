@@ -17,6 +17,7 @@
 package com.android.adservices.data.signals;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AtomicFile;
 
@@ -58,6 +59,7 @@ public class EncoderPersistenceManager {
 
     @VisibleForTesting final Map<String, ReentrantReadWriteLock> mFileLocks;
 
+    @SuppressLint("NewAdServicesFile")
     private EncoderPersistenceManager(Context context) {
         this.mFilesDir = context.getFilesDir();
         this.mFileLocks = new HashMap<>();
@@ -88,7 +90,7 @@ public class EncoderPersistenceManager {
      *
      * @param buyer Ad tech for which encoding logic needs to be persisted
      * @param encodingLogic for encoding raw signals
-     * @return file path, if successfully created and written
+     * @return true, if successfully created and written
      */
     public boolean persistEncoder(@NonNull AdTechIdentifier buyer, @NonNull String encodingLogic) {
         File encoderDir = createEncodersDirectoryIfDoesNotExist();
