@@ -21,12 +21,16 @@ import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FET
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import android.annotation.NonNull;
@@ -42,12 +46,16 @@ import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.topics.EpochJobService;
 
 import java.util.Objects;
@@ -179,14 +187,21 @@ public class BackgroundJobsManager {
      */
     public static void scheduleMeasurementBackgroundJobs(@NonNull Context context) {
         if (!FlagsFactory.getFlags().getMeasurementKillSwitch()) {
-            AggregateReportingJobService.scheduleIfNeeded(context, false);
-            AggregateFallbackReportingJobService.scheduleIfNeeded(context, false);
-            AttributionJobService.scheduleIfNeeded(context, false);
-            EventReportingJobService.scheduleIfNeeded(context, false);
-            EventFallbackReportingJobService.scheduleIfNeeded(context, false);
-            DeleteExpiredJobService.scheduleIfNeeded(context, false);
-            DeleteUninstalledJobService.scheduleIfNeeded(context, false);
-            AsyncRegistrationQueueJobService.scheduleIfNeeded(context, false);
+            AggregateReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            AggregateFallbackReportingJobService.scheduleIfNeeded(
+                    context, /* forceSchedule= */ false);
+            AttributionJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            AttributionFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            EventReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            EventFallbackReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            DeleteExpiredJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            DeleteUninstalledJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            AsyncRegistrationQueueJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                    context, /* forceSchedule= */ false);
+            VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                    context, /* forceSchedule= */ false);
+            DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs(context);
         }
     }
@@ -224,10 +239,14 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(MEASUREMENT_DELETE_EXPIRED_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_ATTRIBUTION_JOB.getJobId());
+        jobScheduler.cancel(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId());
         jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId());
+        jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());
+        jobScheduler.cancel(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
+        jobScheduler.cancel(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
     }
 
     /**
