@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.AGGREGATE_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 
@@ -34,6 +35,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -74,33 +76,43 @@ public final class AggregateFallbackReportingJobService extends JobService {
         LogUtil.d("AggregateFallbackReportingJobService.onStartJob");
         sBlockingExecutor.execute(
                 () -> {
-                    final long windowStartTime =
-                            System.currentTimeMillis()
-                                    - SystemHealthParams
-                                            .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
-                    final long windowEndTime =
-                            System.currentTimeMillis()
-                                    - AdServicesConfig
-                                            .getMeasurementAggregateMainReportingJobPeriodMs();
-                    final boolean success =
-                            new AggregateReportingJobHandler(
-                                            EnrollmentDao.getInstance(getApplicationContext()),
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
-                                            ReportingStatus.UploadMethod.FALLBACK)
-                                    .performScheduledPendingReportsInWindow(
-                                            windowStartTime, windowEndTime);
+                    processPendingReports();
 
                     AdservicesJobServiceLogger.getInstance(
                                     AggregateFallbackReportingJobService.this)
                             .recordJobFinished(
                                     MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
-                                    success,
-                                    !success);
+                                    /* isSuccessful= */ true,
+                                    /* shouldRetry= */ false);
 
-                    jobFinished(params, !success);
+                    jobFinished(params, /* wantsReschedule= */ false);
                 });
         return true;
+    }
+
+    private void processPendingReports() {
+        final JobLockHolder lock = JobLockHolder.getInstance(AGGREGATE_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                final long windowStartTime =
+                        System.currentTimeMillis()
+                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                final long windowEndTime =
+                        System.currentTimeMillis()
+                                - AdServicesConfig
+                                        .getMeasurementAggregateMainReportingJobPeriodMs();
+                new AggregateReportingJobHandler(
+                                EnrollmentDao.getInstance(getApplicationContext()),
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()),
+                                ReportingStatus.UploadMethod.FALLBACK)
+                        .performScheduledPendingReportsInWindow(windowStartTime, windowEndTime);
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AggregateFallbackReportingJobService did not acquire the lock");
     }
 
     @Override

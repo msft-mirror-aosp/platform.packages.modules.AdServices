@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.DEBUG_REPORTING;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
@@ -32,6 +33,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -129,16 +131,29 @@ public final class DebugReportingJobService extends JobService {
     }
 
     private void sendReports() {
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        new EventReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
-        new AggregateReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
+        final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+                DatastoreManager datastoreManager =
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+                new EventReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                ReportingStatus.UploadMethod.UNKNOWN)
+                        .setIsDebugInstance(true)
+                        .performScheduledPendingReportsInWindow(0, 0);
+                new AggregateReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                ReportingStatus.UploadMethod.UNKNOWN)
+                        .setIsDebugInstance(true)
+                        .performScheduledPendingReportsInWindow(0, 0);
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("DebugReportingJobService did not acquire the lock");
     }
 }

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 
@@ -33,6 +34,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -172,10 +174,20 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
     }
 
     private void sendReports() {
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        new DebugReportingJobHandler(enrollmentDao, datastoreManager, FlagsFactory.getFlags())
-                .performScheduledPendingReports();
+        final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+                DatastoreManager datastoreManager =
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+                new DebugReportingJobHandler(
+                                enrollmentDao, datastoreManager, FlagsFactory.getFlags())
+                        .performScheduledPendingReports();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("VerboseDebugReportingFallbackJobService did not acquire the lock");
     }
 }
