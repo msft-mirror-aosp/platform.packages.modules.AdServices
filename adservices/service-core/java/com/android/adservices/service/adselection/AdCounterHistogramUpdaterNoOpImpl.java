@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -37,6 +40,17 @@ public class AdCounterHistogramUpdaterNoOpImpl implements AdCounterHistogramUpda
     @Override
     public void updateWinHistogram(@NonNull DBAdSelection dbAdSelection) {
         Objects.requireNonNull(dbAdSelection);
+        sLogger.v("Ad filtering is disabled; skipping win histogram update");
+    }
+
+    @Override
+    public void updateWinHistogram(
+            @NonNull AdTechIdentifier buyer,
+            @NonNull AdSelectionInitialization adSelectionInitialization,
+            @NonNull WinningCustomAudience winningCustomAudience) {
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(adSelectionInitialization);
+        Objects.requireNonNull(winningCustomAudience);
         sLogger.v("Ad filtering is disabled; skipping win histogram update");
     }
 

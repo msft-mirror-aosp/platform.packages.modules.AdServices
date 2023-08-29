@@ -345,9 +345,10 @@ public class GetAdSelectionDataRunner {
                             AdSelectionInitialization.builder()
                                     .setSeller(seller)
                                     .setCallerPackageName(packageName)
+                                    .setCreationInstant(mClock.instant())
                                     .build();
                     mAdSelectionEntryDao.persistAdSelectionInitialization(
-                            adSelectionId, adSelectionInitialization, mClock.instant());
+                            adSelectionId, adSelectionInitialization);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_ID_REQUEST, traceCookie);
                     return encryptedBytes;
                 });

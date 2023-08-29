@@ -1289,7 +1289,7 @@ public class AdSelectionEntryDaoTest {
     @Test
     public void testGetMissingAdSelectionHistogramInfo() {
         assertThat(
-                        mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                                 DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
                                 DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName()))
                 .isNull();
@@ -1304,7 +1304,7 @@ public class AdSelectionEntryDaoTest {
                 .isTrue();
 
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         DB_AD_SELECTION_1.getAdSelectionId(),
                         DB_AD_SELECTION_1.getCallerPackageName());
         assertThat(histogramInfo).isNotNull();
@@ -1322,7 +1322,7 @@ public class AdSelectionEntryDaoTest {
                 .isTrue();
 
         DBAdSelectionHistogramInfo histogramInfo =
-                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                mAdSelectionEntryDao.getAdSelectionHistogramInfoInOnDeviceTable(
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName());
         assertThat(histogramInfo).isNotNull();
@@ -1417,9 +1417,7 @@ public class AdSelectionEntryDaoTest {
     public void test_persistAdSelectionInitialization_success() {
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
-                        AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
-                        DataHandlersFixture.CREATION_INSTANT_1);
+                        AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
 
         assertTrue(initializationStatus);
 
@@ -1437,9 +1435,7 @@ public class AdSelectionEntryDaoTest {
 
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
-                        AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
-                        DataHandlersFixture.CREATION_INSTANT_1);
+                        AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
 
         assertFalse(initializationStatus);
         assertNull(mAdSelectionEntryDao.getDBAdSelectionInitializationForId(AD_SELECTION_ID_1));
@@ -1450,16 +1446,12 @@ public class AdSelectionEntryDaoTest {
 
         boolean initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
-                        AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
-                        DataHandlersFixture.CREATION_INSTANT_1);
+                        AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
         assertTrue(initializationStatus);
 
         initializationStatus =
                 mAdSelectionEntryDao.persistAdSelectionInitialization(
-                        AD_SELECTION_ID_1,
-                        DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
-                        DataHandlersFixture.CREATION_INSTANT_1);
+                        AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
 
         assertFalse(initializationStatus);
     }
@@ -1728,14 +1720,14 @@ public class AdSelectionEntryDaoTest {
                 DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
 
         AdSelectionInitialization actualInitResult =
-                mAdSelectionEntryDao.getSellerAndCallerPackageNameForId(AD_SELECTION_ID_1);
+                mAdSelectionEntryDao.getAdSelectionInitializationForId(AD_SELECTION_ID_1);
 
         assertEquals(DataHandlersFixture.AD_SELECTION_INITIALIZATION_1, actualInitResult);
     }
 
     @Test
     public void test_getSellerAndPackageNameForId_idAbsent_returnsNull() {
-        assertNull(mAdSelectionEntryDao.getSellerAndCallerPackageNameForId(AD_SELECTION_ID_1));
+        assertNull(mAdSelectionEntryDao.getAdSelectionInitializationForId(AD_SELECTION_ID_1));
     }
 
     @Test
@@ -1864,9 +1856,7 @@ public class AdSelectionEntryDaoTest {
                         .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
                                 AD_SELECTION_ID_1, TEST_PACKAGE_NAME_1));
         mAdSelectionEntryDao.persistAdSelectionInitialization(
-                AD_SELECTION_ID_1,
-                DataHandlersFixture.AD_SELECTION_INITIALIZATION_1,
-                DataHandlersFixture.CREATION_INSTANT_1);
+                AD_SELECTION_ID_1, DataHandlersFixture.AD_SELECTION_INITIALIZATION_1);
         assertTrue(
                 mAdSelectionEntryDao
                         .doesAdSelectionMatchingCallerPackageNameExistInServerAuctionTable(
