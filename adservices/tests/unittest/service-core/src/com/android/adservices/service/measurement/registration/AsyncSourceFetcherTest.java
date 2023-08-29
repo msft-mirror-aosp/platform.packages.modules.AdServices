@@ -659,6 +659,21 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
+    public void registerSource_nonHttpsUrl_rejectsSource() {
+        RegistrationRequest request = buildRequest(WebUtil.validUrl("http://foo.test"));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.ResponseStatus.INVALID_URL, asyncFetchStatus.getResponseStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
     public void testBadSourceUrl() {
         RegistrationRequest request = buildRequest(WebUtil.validUrl("bad-schema://foo.test"));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
