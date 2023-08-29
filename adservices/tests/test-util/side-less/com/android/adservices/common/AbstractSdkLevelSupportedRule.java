@@ -25,19 +25,23 @@ import org.junit.runners.model.Statement;
 
 import java.util.Objects;
 
-// TODO(b/295269584): move to module-utils
+// TODO(b/295269584): move to module-utils?
 // TODO(b/295269584): add examples
 // TODO(b/295269584): add unit tests
+// TODO(b/295269584): rename to AbstractSdkLevelSupportRule
 
 /**
  * Rule used to skip a test when it's not supported by the device's SDK version.
  *
  * <p>This rule is abstract so subclass can define what a "feature" means. It also doesn't have any
  * dependency on Android code, so it can be used both on device-side and host-side tests.
+ *
+ * <p><b>NOTE: </b>this class should NOT be used as {@code ClassRule}, as it would result in a "no
+ * tests run" scenario if it throws a {@link AssumptionViolatedException}.
  */
 abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
-    private static final String TAG = "SdkLevelSupportedRule";
+    private static final String TAG = "SdkLevelSupportRule";
 
     private final AndroidSdkLevel mDefaultMinLevel;
     protected final Logger mLog;
@@ -54,6 +58,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     @Override
     public final Statement apply(Statement base, Description description) {
+        if (!description.isTest()) {
+            throw new IllegalStateException(
+                    "This rule can only be applied to individual tests, it cannot be used as"
+                            + " @ClassRule or in a test suite");
+        }
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {

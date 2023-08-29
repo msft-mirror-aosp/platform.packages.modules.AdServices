@@ -31,7 +31,6 @@ public final class OutcomeReceiverForTestsTest {
     private static final String TAG = OutcomeReceiverForTestsTest.class.getSimpleName();
 
     private static final String RESULT = "Saul Goodman!";
-    private static final Exception ERROR = new UnsupportedOperationException("D'OH!");
 
     private static final int TIMEOUT_MS = 200;
 
@@ -40,6 +39,8 @@ public final class OutcomeReceiverForTestsTest {
     @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule public final Expect expect = Expect.create();
+
+    private final Exception mError = new UnsupportedOperationException("D'OH!");
 
     @Test
     public void testOnResult() throws Exception {
@@ -86,7 +87,7 @@ public final class OutcomeReceiverForTestsTest {
     @Test
     public void testOnResult_afterOnError() {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
-        receiver.onError(ERROR);
+        receiver.onError(mError);
 
         IllegalStateException exception =
                 assertThrows(IllegalStateException.class, () -> receiver.onResult(RESULT));
@@ -94,7 +95,7 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onResult(" + RESULT + ") called after onError(" + ERROR + ")");
+                .contains("onResult(" + RESULT + ") called after onError(" + mError + ")");
     }
 
     @Test
@@ -119,22 +120,22 @@ public final class OutcomeReceiverForTestsTest {
 
         Exception error;
         if (await) {
-            runAsync(TIMEOUT_MS, () -> receiver.onError(ERROR));
-            error = receiver.assertFailure(ERROR.getClass(), TIMEOUT_MS * 3);
+            runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
+            error = receiver.assertFailure(mError.getClass(), TIMEOUT_MS * 3);
         } else {
-            receiver.onError(ERROR);
-            error = receiver.assertFailure(ERROR.getClass());
+            receiver.onError(mError);
+            error = receiver.assertFailure(mError.getClass());
         }
 
-        expect.withMessage("assertFailure()").that(error).isSameInstanceAs(ERROR);
-        expect.withMessage("getError()").that(receiver.getError()).isSameInstanceAs(ERROR);
+        expect.withMessage("assertFailure()").that(error).isSameInstanceAs(mError);
+        expect.withMessage("getError()").that(receiver.getError()).isSameInstanceAs(mError);
         expect.withMessage("getResult()").that(receiver.getResult()).isNull();
     }
 
     @Test
     public void testOnError_calledTwice() {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>();
-        receiver.onError(ERROR);
+        receiver.onError(mError);
         Exception anotherError = new UnsupportedOperationException("Again?");
 
         IllegalStateException exception =
@@ -143,7 +144,7 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onError(" + anotherError + ") called after onError(" + ERROR + ")");
+                .contains("onError(" + anotherError + ") called after onError(" + mError + ")");
     }
 
     @Test
@@ -152,12 +153,12 @@ public final class OutcomeReceiverForTestsTest {
         receiver.onResult(RESULT);
 
         IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> receiver.onError(ERROR));
+                assertThrows(IllegalStateException.class, () -> receiver.onError(mError));
 
         expect.withMessage("exception")
                 .that(exception)
                 .hasMessageThat()
-                .contains("onError(" + ERROR + ") called after onResult(" + RESULT + ")");
+                .contains("onError(" + mError + ") called after onResult(" + RESULT + ")");
     }
 
     private static void runAsync(long timeoutMs, Runnable r) {

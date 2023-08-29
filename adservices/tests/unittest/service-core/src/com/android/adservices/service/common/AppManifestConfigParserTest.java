@@ -104,6 +104,32 @@ public class AppManifestConfigParserTest {
     }
 
     @Test
+    public void testValidXml_missingTags() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_missing_tags);
+
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
+        assertThat(appManifestConfig).isNotNull();
+
+        assertThat(appManifestConfig.getIncludesSdkLibraryConfig()).isNotNull();
+        assertThat(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+                .isEmpty();
+        assertThat(appManifestConfig.getAttributionConfig()).isNull();
+        assertThat(appManifestConfig.isAllowedAttributionAccess("not actually there")).isFalse();
+        assertThat(appManifestConfig.getCustomAudiencesConfig()).isNull();
+        assertThat(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
+                .isFalse();
+        assertThat(appManifestConfig.getTopicsConfig()).isNull();
+        assertThat(appManifestConfig.isAllowedTopicsAccess("not actually there")).isFalse();
+        assertThat(appManifestConfig.getAdIdConfig()).isNull();
+        assertThat(appManifestConfig.isAllowedAdIdAccess("not actually there")).isFalse();
+        assertThat(appManifestConfig.getAppSetIdConfig()).isNull();
+        assertThat(appManifestConfig.isAllowedAppSetIdAccess("not actually there")).isFalse();
+    }
+
+    @Test
     public void testValidXml_missingValues() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()

@@ -16,6 +16,7 @@
 
 package com.android.adservices.common;
 
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
 /**
@@ -25,7 +26,8 @@ import com.android.modules.utils.build.SdkLevel;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private SdkLevelSupportRule(AndroidSdkLevel level) {
+    @VisibleForTesting
+    SdkLevelSupportRule(AndroidSdkLevel level) {
         super(AndroidLogger.getInstance(), level);
     }
 

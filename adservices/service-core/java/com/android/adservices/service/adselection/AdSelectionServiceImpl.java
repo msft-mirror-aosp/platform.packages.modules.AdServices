@@ -311,6 +311,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdFilteringFeatureFactory.getAdFilterer(),
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
+                                    mScheduledExecutor,
                                     mFlags,
                                     callingUid,
                                     devContext);
@@ -350,6 +351,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
+        final long overallTimeout = mFlags.getFledgeAuctionServerOverallTimeoutMs();
         final boolean forceSearchOnAbsentOwner =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
@@ -378,8 +380,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdSelectionServiceFilter,
                                     mBackgroundExecutor,
                                     mLightweightExecutor,
+                                    mScheduledExecutor,
                                     callingUid,
                                     devContext,
+                                    overallTimeout,
                                     forceSearchOnAbsentOwner,
                                     limits);
                     runner.run(inputParams, callback);

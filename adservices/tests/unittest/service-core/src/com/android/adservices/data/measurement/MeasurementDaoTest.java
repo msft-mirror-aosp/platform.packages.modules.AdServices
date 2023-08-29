@@ -6291,6 +6291,41 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getSourceRegistrant_fetchesMatchingSourceFromDb() {
+        // Setup - insert 2 sources with different IDs
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        String sourceId1 = "source1";
+        String registrant1 = "android-app://registrant.app1";
+        Source source1WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId1)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .setRegistrant(Uri.parse(registrant1))
+                        .build();
+        insertInDb(db, source1WithDestinations);
+
+        String sourceId2 = "source2";
+        String registrant2 = "android-app://registrant.app1";
+        Source source2WithDestinations =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(sourceId2)
+                        .setAppDestinations(null)
+                        .setWebDestinations(null)
+                        .setRegistrant(Uri.parse(registrant2))
+                        .build();
+        insertInDb(db, source2WithDestinations);
+
+        // Execution
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            assertEquals(registrant1, dao.getSourceRegistrant(sourceId1));
+                            assertEquals(registrant2, dao.getSourceRegistrant(sourceId2));
+                        });
+    }
+
+    @Test
     public void fetchMatchingAggregateReports_returnsMatchingReports() {
         // setup - create reports for 3*3 combinations of source and trigger
         List<Source> sources =

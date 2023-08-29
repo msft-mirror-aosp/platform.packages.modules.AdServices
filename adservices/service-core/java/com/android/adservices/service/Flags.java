@@ -1182,6 +1182,12 @@ public interface Flags {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
     }
 
+    long FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS = 5000;
+
+    default long getFledgeAuctionServerOverallTimeoutMs() {
+        return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED = false;
 
     /** Returns whether to run periodic job to fetch encryption keys. */
@@ -2954,6 +2960,14 @@ public interface Flags {
     /** Returns whether Measurement ARA deduplication alignment v1 feature is enabled. */
     default boolean getMeasurementEnableAraDeduplicationAlignmentV1() {
         return MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
+    }
+
+    /** Default Measurement app package name logging flag. */
+    boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
+
+    /** Returns whether Measurement app package name logging is enabled. */
+    default boolean getMeasurementEnableAppPackageNameLogging() {
+        return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
     }
 
     /** Default U18 UX feature flag.. */

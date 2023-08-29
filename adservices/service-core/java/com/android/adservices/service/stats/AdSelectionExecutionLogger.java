@@ -27,6 +27,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
@@ -531,6 +532,7 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
     }
 
     /** records the end state of a finished persist-ad-selection process. */
+    @SuppressLint("NewAdServicesFile")
     public void endPersistAdSelection() throws IllegalStateException {
         if (mPersistAdSelectionStartTimestamp == 0L) {
             throw new IllegalStateException(MISSING_START_PERSIST_AD_SELECTION);

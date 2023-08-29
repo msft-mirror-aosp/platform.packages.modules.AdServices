@@ -18,6 +18,7 @@ package com.android.adservices.service.common.cache;
 
 import static com.android.adservices.service.common.cache.CacheDatabase.DATABASE_VERSION;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -49,6 +50,7 @@ public abstract class CacheDatabase extends RoomDatabase {
     private static CacheDatabase sSingleton = null;
 
     /** Returns an instance of the CacheDatabase given a context. */
+    @SuppressLint("NewAdServicesFile")
     public static CacheDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context);
         synchronized (SINGLETON_LOCK) {

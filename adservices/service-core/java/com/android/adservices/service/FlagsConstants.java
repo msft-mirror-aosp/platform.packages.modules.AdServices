@@ -207,6 +207,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
 
+    public static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
+            "measurement_enable_app_package_name_logging";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -370,6 +373,8 @@ public final class FlagsConstants {
             "fledge_auction_server_encryption_algorithm_aead_id";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS =
             "fledge_auction_server_auction_key_fetch_timeout_ms";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS =
+            "fledge_auction_server_overall_timeout_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_ENABLED =
             "fledge_auction_server_background_key_fetch_job_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_AUCTION_KEY_FETCH_ENABLED =
