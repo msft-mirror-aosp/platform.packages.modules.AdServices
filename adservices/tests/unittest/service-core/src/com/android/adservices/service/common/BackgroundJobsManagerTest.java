@@ -26,12 +26,16 @@ import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIO
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -51,12 +55,16 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -404,6 +412,8 @@ public class BackgroundJobsManagerTest {
                 .cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId()));
@@ -419,6 +429,12 @@ public class BackgroundJobsManagerTest {
                 .cancel(eq(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(COBALT_LOGGING_JOB.getJobId()));
     }
 
@@ -428,6 +444,7 @@ public class BackgroundJobsManagerTest {
                         .spyStatic(AggregateReportingJobService.class)
                         .spyStatic(AggregateFallbackReportingJobService.class)
                         .spyStatic(AttributionJobService.class)
+                        .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(EpochJobService.class)
                         .spyStatic(EventReportingJobService.class)
@@ -438,6 +455,9 @@ public class BackgroundJobsManagerTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
+                        .spyStatic(AsyncRegistrationFallbackJobService.class)
+                        .spyStatic(DebugReportingFallbackJobService.class)
+                        .spyStatic(VerboseDebugReportingFallbackJobService.class)
                         .spyStatic(CobaltJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -453,6 +473,11 @@ public class BackgroundJobsManagerTest {
                                             any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AttributionFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
@@ -475,6 +500,21 @@ public class BackgroundJobsManagerTest {
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                             any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    DebugReportingFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> CobaltJobService.scheduleIfNeeded(any(), anyBoolean()));
 
@@ -496,6 +536,9 @@ public class BackgroundJobsManagerTest {
                 () -> AttributionJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
         ExtendedMockito.verify(
+                () -> AttributionFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
                 () -> EventReportingJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
         ExtendedMockito.verify(
@@ -509,6 +552,15 @@ public class BackgroundJobsManagerTest {
                 times(numberOfTimes));
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
     }
 
