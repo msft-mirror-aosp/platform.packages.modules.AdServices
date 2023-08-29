@@ -16,7 +16,6 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastSv2;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 
 import android.util.Log;
@@ -49,12 +48,10 @@ public final class SdkLevelSupportRuleTest
                 // TODO(b/295321663): this is hacky, need to refactor the rule to use SDK ints
                 // directly
                 mockIsAtLeastS(true);
-                mockIsAtLeastSv2(false);
                 mockIsAtLeastT(false);
                 return;
             case T:
                 mockIsAtLeastS(true);
-                mockIsAtLeastSv2(true);
                 mockIsAtLeastT(true);
                 return;
             default:
