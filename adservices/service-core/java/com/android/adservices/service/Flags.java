@@ -2970,6 +2970,58 @@ public interface Flags {
         return MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
     }
 
+    /** Disable measurement reporting jobs to throw unaccounted exceptions by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement reporting jobs will throw unaccounted e.g. unexpected unchecked
+     * exceptions.
+     */
+    default boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement reporting jobs to throw {@link org.json.JSONException} exception by
+     * default.
+     */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION = false;
+
+    /** If enabled, measurement reporting jobs will throw {@link org.json.JSONException}. */
+    default boolean getMeasurementEnableReportingJobsThrowJsonException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
+    }
+
+    /** Disable measurement report to be deleted if any unrecoverable exception occurs. */
+    boolean MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION = false;
+
+    /** If enabled, measurement reports will get deleted if any unrecoverable exception occurs. */
+    default boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
+        return MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
+    }
+
+    /** Disable measurement aggregate reporting jobs to throw {@code CryptoException} by default. */
+    boolean MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION = false;
+
+    /** If enabled, measurement aggregate reporting job will throw {@code CryptoException}. */
+    default boolean getMeasurementEnableReportingJobsThrowCryptoException() {
+        return MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
+    }
+
+    /**
+     * Disable measurement datastore to throw {@link
+     * com.android.adservices.data.measurement.DatastoreException} when it occurs by default.
+     */
+    boolean MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION = false;
+
+    /**
+     * If enabled, measurement DatastoreManager can throw DatastoreException wrapped in an unchecked
+     * exception.
+     */
+    default boolean getMeasurementEnableDatastoreManagerThrowDatastoreException() {
+        return MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
+    }
+
     /** Default U18 UX feature flag.. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 

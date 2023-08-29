@@ -49,7 +49,8 @@ public class AggregateReportingJobHandlerWrapper {
             DatastoreManager datastoreManager,
             long windowStartTime,
             long windowEndTime,
-            boolean isDebugInstance)
+            boolean isDebugInstance,
+            Flags flags)
             throws IOException, JSONException {
         // Setup encryption manager to return valid public keys
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
