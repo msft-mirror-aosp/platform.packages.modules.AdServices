@@ -702,6 +702,15 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION =
             "measurement_enable_datastore_manager_throw_datastore_exception";
 
+    static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_debug_reporting_fallback_job_period_ms";
+    static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
+            "measurement_verbose_debug_reporting_fallback_job_period_ms";
+    static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_debug_reporting_fallback_job_kill_switch";
+    static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_verbose_debug_reporting_fallback_job_kill_switch";
+
     static final String KEY_ENABLE_LOGGED_TOPIC = "enable_logged_topic";
 
     // Database Schema Version Flags
@@ -4608,7 +4617,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getMeasurementEnableReportDeletionOnUnrecoverableException() {
         return DeviceConfig.getBoolean(
-                .NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */
                         KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION,
                 /* defaultValue */ MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION);
@@ -4647,5 +4656,37 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
                 /* defaultValue */ MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING);
+    }
+
+    @Override
+    public boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH);
+    }
+
+    @Override
+    public long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS);
     }
 }

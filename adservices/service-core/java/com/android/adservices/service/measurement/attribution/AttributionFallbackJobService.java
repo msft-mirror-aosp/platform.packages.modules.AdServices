@@ -120,7 +120,7 @@ public class AttributionFallbackJobService extends JobService {
         final JobInfo job =
                 new JobInfo.Builder(
                                 MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
-                                new ComponentName(context, AttributionJobService.class))
+                                new ComponentName(context, AttributionFallbackJobService.class))
                         .setPeriodic(
                                 FlagsFactory.getFlags()
                                         .getMeasurementAttributionFallbackJobPeriodMs())

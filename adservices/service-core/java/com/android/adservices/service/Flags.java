@@ -1672,6 +1672,64 @@ public interface Flags {
     }
 
     /**
+     * Measurement Debug Reporting Fallback Job kill Switch. The default value is false which means
+     * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
+     * Job.
+     */
+    boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Verbose Debug Reporting Fallback Job kill Switch. The default value is false
+     * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
+     * Reporting Fallback Job.
+     */
+    boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for the Measurement Debug Reporting Fallback Job. The API will
+     * be disabled if either the Global Kill Switch, Measurement Kill Switch, or the Measurement
+     * Debug Reporting Fallback Job kill switch value is true.
+     */
+    default boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        // We check the Global Kill Switch first. As a result, it overrides all other kill Switches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    long MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /**
+     * Returns the job period in millis for the Measurement Verbose Debug Reporting Fallback Job.
+     */
+    default long getMeasurementVerboseDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    long MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for the Measurement Debug Reporting Fallback Job. */
+    default long getMeasurementDebugReportingFallbackJobPeriodMs() {
+        return MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    /**
      * Measurement Broadcast Receiver Install Attribution Kill Switch. The default value is false
      * which means Install Attribution is enabled. This flag is used for emergency turning off
      * Install Attribution Broadcast Receiver.
