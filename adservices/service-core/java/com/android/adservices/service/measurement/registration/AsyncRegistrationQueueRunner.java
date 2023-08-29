@@ -114,6 +114,16 @@ public class AsyncRegistrationQueueRunner {
 
         Set<Uri> failedOrigins = new HashSet<>();
         for (int i = 0; i < recordServiceLimit; i++) {
+            // If the job service's requirements specified at runtime are no longer met, the job
+            // service will interrupt this thread.  If the thread has been interrupted, it will exit
+            // early.
+            if (Thread.currentThread().isInterrupted()) {
+                LogUtil.d(
+                        "AsyncRegistrationQueueRunner runAsyncRegistrationQueueWorker "
+                                + "thread interrupted, exiting early.");
+                return;
+            }
+
             Optional<AsyncRegistration> optAsyncRegistration =
                     mDatastoreManager.runInTransactionWithResult(
                             (dao) ->

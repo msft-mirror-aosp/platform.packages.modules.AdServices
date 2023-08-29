@@ -725,6 +725,70 @@ public class EventReportingJobHandlerTest {
         verify(mTransaction, times(5)).end();
     }
 
+    @Test
+    public void testPerformScheduledPendingReports_ThreadInterrupted()
+            throws JSONException, DatastoreException, IOException {
+        EventReport eventReport1 =
+                new EventReport.Builder()
+                        .setId("eventReport1")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setReportTime(1000L)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+        JSONObject eventReportPayload1 =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport1.getId())
+                        .setSourceEventId(eventReport1.getSourceEventId())
+                        .setAttributionDestination(eventReport1.getAttributionDestinations())
+                        .build()
+                        .toJson();
+        EventReport eventReport2 =
+                new EventReport.Builder()
+                        .setId("eventReport2")
+                        .setSourceEventId(new UnsignedLong(12345L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setReportTime(1100L)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+        JSONObject eventReportPayload2 =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport2.getId())
+                        .setSourceEventId(eventReport2.getSourceEventId())
+                        .setAttributionDestination(eventReport2.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getPendingEventReportIdsInWindow(1000, 1100))
+                .thenReturn(List.of(eventReport1.getId(), eventReport2.getId()));
+        when(mMeasurementDao.getEventReport(eventReport1.getId())).thenReturn(eventReport1);
+        when(mMeasurementDao.getEventReport(eventReport2.getId())).thenReturn(eventReport2);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), any());
+        doReturn(eventReportPayload1)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(eventReport1);
+        doReturn(eventReportPayload2)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(eventReport2);
+
+        Thread.currentThread().interrupt();
+
+        assertTrue(mSpyEventReportingJobHandler.performScheduledPendingReportsInWindow(1000, 1100));
+
+        // 1 transaction for initial retrieval of pending report ids.
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+
+        // 0 reports processed, since the thread exits early.
+        verify(mMeasurementDao, times(0)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(0))
+                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+    }
+
     @After
     public void tearDown() {
         mMockitoSession.finishMocking();
