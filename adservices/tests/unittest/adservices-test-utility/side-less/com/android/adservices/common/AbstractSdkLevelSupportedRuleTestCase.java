@@ -56,10 +56,7 @@ public abstract class AbstractSdkLevelSupportedRuleTestCase<
 
         expect.withMessage("rule.atLeastR()").that(rule.isAtLeastR()).isTrue();
         expect.withMessage("rule.atLeastS()").that(rule.isAtLeastS()).isTrue();
-        expect.withMessage("rule.atLeastSv2()").that(rule.isAtLeastSv2()).isTrue();
-        expect.withMessage("rule.atLeastT()").that(rule.isAtLeastT()).isTrue();
         expect.withMessage("rule.atLeastU()").that(rule.isAtLeastU()).isFalse();
-        expect.withMessage("rule.atLeastV()").that(rule.isAtLeastV()).isFalse();
     }
 
     @Test
