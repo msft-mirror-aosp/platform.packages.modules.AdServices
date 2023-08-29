@@ -188,6 +188,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
 
+    static final String KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING =
+            "measurement_enable_app_package_name_logging";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -3761,7 +3764,7 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableAraDeduplicationAlignmentV1());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
+                        + KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
@@ -4557,8 +4560,8 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getMeasurementEnableAppPackageNameLogging() {
         return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING,
                 /* defaultValue */ MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING);
     }
 }
