@@ -27,6 +27,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -116,7 +117,7 @@ public class AggregateReportingJobHandler {
                             }
                         });
         if (!pendingAggregateReportsInWindowOpt.isPresent()) {
-            // Failure during event report retrieval
+            // Failure during aggregate report retrieval
             return true;
         }
 
@@ -238,9 +239,46 @@ public class AggregateReportingJobHandler {
                 reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
                 return AdServicesStatusUtils.STATUS_IO_ERROR;
             }
+        } catch (IOException e) {
+            LogUtil.d(e, "Network error occurred when attempting to deliver aggregate report.");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
+            // TODO(b/297579501): Add a new error code and log the error with ErrorLogUtil
+            return AdServicesStatusUtils.STATUS_IO_ERROR;
+        } catch (JSONException e) {
+            LogUtil.d(e, "Serialization error occurred at aggregate report delivery.");
+            // TODO(b/297579501): Update the atom and the status to indicate serialization error
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            // TODO(b/297579501): Log the error with ErrorLogUtil with the serialization error code
+
+            if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
+                // Unrecoverable state - delete the report.
+                mDatastoreManager.runInTransaction(
+                        dao ->
+                                dao.markAggregateReportStatus(
+                                        aggregateReportId,
+                                        AggregateReport.Status.MARKED_TO_DELETE));
+            }
+
+            if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()) {
+                // JSONException is unexpected.
+                throw new IllegalStateException(
+                        "Serialization error occurred at aggregate report delivery", e);
+            }
+            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } catch (CryptoException e) {
+            LogUtil.e(e, e.toString());
+            // TODO(b/297579501): Update the atom and the status to indicate encryption error
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()) {
+                throw e;
+            }
+            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
             LogUtil.e(e, e.toString());
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()) {
+                throw e;
+            }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
