@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.DEBUG_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
 
@@ -33,6 +34,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -163,16 +165,29 @@ public class DebugReportingFallbackJobService extends JobService {
     }
 
     private void sendReports() {
-        EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-        new EventReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
-        new AggregateReportingJobHandler(
-                        enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
-                .setIsDebugInstance(true)
-                .performScheduledPendingReportsInWindow(0, 0);
+        final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
+        if (lock.tryLock()) {
+            try {
+                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
+                DatastoreManager datastoreManager =
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+                new EventReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                ReportingStatus.UploadMethod.UNKNOWN)
+                        .setIsDebugInstance(true)
+                        .performScheduledPendingReportsInWindow(0, 0);
+                new AggregateReportingJobHandler(
+                                enrollmentDao,
+                                datastoreManager,
+                                ReportingStatus.UploadMethod.UNKNOWN)
+                        .setIsDebugInstance(true)
+                        .performScheduledPendingReportsInWindow(0, 0);
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("DebugReportingFallbackJobService did not acquire the lock");
     }
 }

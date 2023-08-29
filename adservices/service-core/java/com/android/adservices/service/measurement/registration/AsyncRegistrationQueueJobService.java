@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ASYNC_REGISTRATION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
@@ -31,6 +32,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -67,13 +69,11 @@ public class AsyncRegistrationQueueJobService extends JobService {
         Instant jobStartTime = Clock.systemUTC().instant();
         LogUtil.d(
                 "AsyncRegistrationQueueJobService.onStartJob " + "at %s", jobStartTime.toString());
-        AsyncRegistrationQueueRunner asyncQueueRunner =
-                AsyncRegistrationQueueRunner.getInstance(getApplicationContext());
 
         AdServicesExecutors.getBackgroundExecutor()
                 .execute(
                         () -> {
-                            asyncQueueRunner.runAsyncRegistrationQueueWorker();
+                            processAsyncRecords();
 
                             boolean shouldRetry = false;
                             AdservicesJobServiceLogger.getInstance(
@@ -89,6 +89,20 @@ public class AsyncRegistrationQueueJobService extends JobService {
                             scheduleIfNeeded(this, /* forceSchedule */ true);
                         });
         return true;
+    }
+
+    private void processAsyncRecords() {
+        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
+        if (lock.tryLock()) {
+            try {
+                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                        .runAsyncRegistrationQueueWorker();
+                return;
+            } finally {
+                lock.unlock();
+            }
+        }
+        LogUtil.d("AsyncRegistrationQueueJobService did not acquire the lock");
     }
 
     @Override
