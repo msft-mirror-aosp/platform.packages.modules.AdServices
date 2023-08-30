@@ -732,6 +732,9 @@ public final class PhFlags implements Flags {
 
     // TODO(b/298090610): Move this flag to FlagsConstants after M10 is fully rolled out.
     public static final String KEY_MAINLINE_TRAIN_VERSION = "mainline_train_version";
+    // TODO(b/297089223): Move this flag to FlagsConstants after M10 is fully rolled out.
+    public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
+            "measurement_app_package_name_logging_allowlist";
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
@@ -3819,6 +3822,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableReportingJobsThrowUnaccountedException());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST
+                        + " = "
+                        + getMeasurementAppPackageNameLoggingAllowlist());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION
                         + " = "
                         + getMeasurementEnableReportingJobsThrowJsonException());
@@ -4771,5 +4779,11 @@ public final class PhFlags implements Flags {
                                         KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
                                 /* defaultValue */
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public String getMeasurementAppPackageNameLoggingAllowlist() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES, KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
     }
 }
