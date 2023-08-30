@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
@@ -30,6 +32,8 @@ import java.util.Objects;
  * artifacts are instantiated, but it also provides other {@code ITestDevice}-related helpers.
  */
 public final class TestDeviceHelper {
+
+    public static final String ADSERVICES_SETTINGS_INTENT = "android.adservices.ui.SETTINGS";
 
     private static final Logger sLogger =
             new Logger(ConsoleLogger.getInstance(), TestDeviceHelper.class);
@@ -93,7 +97,13 @@ public final class TestDeviceHelper {
         }
     }
 
-    @SuppressWarnings("serial")
+    public static void startActivity(String intent) {
+        String startActivityMsg = runShellCommand("am start -a %s", intent);
+        assertWithMessage("result of starting %s", intent)
+                .that(startActivityMsg)
+                .doesNotContain("Error: Activity not started, unable to resolve Intent");
+    }
+
     private static final class DeviceUnavailableException extends IllegalStateException {
         private DeviceUnavailableException(DeviceNotAvailableException cause) {
             super(cause);
