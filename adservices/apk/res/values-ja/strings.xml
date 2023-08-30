@@ -192,13 +192,13 @@
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"広告のトピックを OFF にしますか？"</string>
     <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"このトピックのリストは削除されます。Android は興味 / 関心のあるトピックを記録しなくなりますが、関連性の高い広告が引き続き表示される場合があります。"</string>
     <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"アプリによる広告の提案は ON になっています"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"アプリは広告の提案を開始する可能性があります。広告の提案が開始されると、アプリのリストが表示されます。"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"アプリによる広告の提案が開始される可能性があります。広告の提案が開始されると、アプリのリストが表示されます。"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"アプリによる広告の提案を OFF にしますか？"</string>
     <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"広告の提案に関するデータはすべて削除されます。アプリは広告を提案できなくなりますが、関連性の高い広告が引き続き表示される場合があります。"</string>
     <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"広告の測定は ON になっています"</string>
     <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"アプリが広告のパフォーマンスを測定できるように、Android はごく一部の情報のみをアプリと共有する可能性があります。"</string>
     <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"広告の測定を OFF にしますか？"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"保留中の広告の測定レポートはすべて削除されます。新しいレポートが生成または共有されることはありません。"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"保留中の広告の測定レポートはすべて削除されます。新しいレポートは生成も共有もされなくなります。"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"広告プライバシー"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"広告のトピック"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"アプリによる広告の提案"</string>
