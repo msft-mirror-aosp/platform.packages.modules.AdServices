@@ -28,7 +28,6 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -54,7 +53,6 @@ import java.util.Objects;
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
     private final EnrollmentDao mEnrollmentDao;
-    private final Flags mFlags;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -70,7 +68,6 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         super(input, output);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
-        mFlags = Mockito.mock(Flags.class);
     }
 
     public enum Action {

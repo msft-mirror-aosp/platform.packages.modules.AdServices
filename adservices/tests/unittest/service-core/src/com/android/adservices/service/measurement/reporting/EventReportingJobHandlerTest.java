@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -165,7 +166,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -181,7 +182,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -211,7 +212,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyDebugEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -225,7 +226,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventDebugReportDelivered(any());
         verify(mSpyDebugEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -253,7 +254,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -269,7 +270,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -297,7 +298,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -313,7 +314,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -342,7 +343,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -357,7 +358,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -384,7 +385,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -396,7 +397,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -423,7 +424,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doThrow(new IOException())
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -435,7 +436,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -457,7 +458,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doThrow(new JSONException("cause message"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -485,10 +486,11 @@ public class EventReportingJobHandlerTest {
 
         doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(true).when(mFlags).getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doThrow(new JSONException("cause message"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -503,6 +505,40 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao)
                 .markEventReportStatus(eventReport.getId(), EventReport.Status.MARKED_TO_DELETE);
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performReport_throwsJsonEnabledToThrowNoSampling_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+
+        doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
+        doReturn(true).when(mFlags).getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+        doThrow(new JSONException("cause message"))
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
+        verify(mMeasurementDao)
+                .markEventReportStatus(
+                        eq(eventReport.getId()), eq(EventReport.Status.MARKED_TO_DELETE));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -530,7 +566,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -560,10 +596,11 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         try {
             mSpyEventReportingJobHandler.performReport(eventReport.getId(), new ReportingStatus());
@@ -572,6 +609,37 @@ public class EventReportingJobHandlerTest {
             assertEquals("unknown exception", e.getMessage());
         }
 
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_enabledToThrowNoSampling_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+
+        doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+        doThrow(new RuntimeException("unknown exception"))
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
+        verify(mMeasurementDao, never()).markEventReportStatus(anyString(), anyInt());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -593,7 +661,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(0))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -640,7 +708,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport2.getId())).thenReturn(eventReport2);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any());
         doReturn(eventReportPayload1)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(eventReport1);
@@ -652,7 +720,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(2)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(2))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
     }

@@ -130,6 +130,7 @@ public class SQLDatastoreManagerTest {
         doThrow(new DatastoreException(null)).when(mFunction).apply(any());
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         // Execution
         try {
@@ -205,12 +206,42 @@ public class SQLDatastoreManagerTest {
     }
 
     @Test
+    public void runInTransaction_throwsDataStoreExceptionSamplingDisabled_logsDbVersion()
+            throws DatastoreException {
+        // Setup
+        doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+
+        // Execution
+        mSQLDatastoreManager.runInTransaction(mConsumer);
+
+        // Execution & assertion
+        ExtendedMockito.verify(
+                () ->
+                        LogUtil.w(
+                                eq(
+                                        "Underlying datastore version: "
+                                                + MeasurementDbHelper.CURRENT_DATABASE_VERSION)));
+        int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(),
+                                eq(errorCode),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)));
+    }
+
+    @Test
     public void runInTransaction_throwsDataStoreExceptionExceptionEnable_logsDbVersion()
             throws DatastoreException {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         // Execution
         try {
