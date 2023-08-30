@@ -163,7 +163,10 @@ public final class VerboseDebugReportingJobService extends JobService {
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new DebugReportingJobHandler(
-                                enrollmentDao, datastoreManager, FlagsFactory.getFlags())
+                                enrollmentDao,
+                                datastoreManager,
+                                FlagsFactory.getFlags(),
+                                ReportingStatus.UploadMethod.REGULAR)
                         .performScheduledPendingReports();
                 return;
             } finally {
